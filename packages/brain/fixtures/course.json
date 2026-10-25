@@ -1,0 +1,30 @@
+{
+  "title": "Introductory Statistics (OpenStax excerpt)",
+  "syllabus": "syllabus.txt",
+  "chapters": [
+    {
+      "id": "ch2",
+      "title": "Descriptive Statistics: center and spread",
+      "file": "ch2-descriptive-statistics.pdf",
+      "summary": "Mean, median, mode and when each is the better measure of the center.\nSkewness and outliers; standard deviation as the measure of spread."
+    },
+    {
+      "id": "ch3",
+      "title": "Probability Topics",
+      "file": "ch3-probability-topics.pdf",
+      "summary": "Terminology of probability: experiment, outcome, sample space, event, equally likely outcomes.\nIndependent versus mutually exclusive events, sampling with and without replacement."
+    },
+    {
+      "id": "ch6",
+      "title": "The Normal Distribution",
+      "file": "ch6-the-normal-distribution.pdf",
+      "summary": "The standard normal distribution and z-scores.\nThe Empirical Rule (68-95-99.7) and using the normal distribution to find probabilities."
+    },
+    {
+      "id": "ch12",
+      "title": "Linear Regression and Correlation",
+      "file": "ch12-linear-regression.pdf",
+      "summary": "Linear equations, scatter plots and the least-squares line of best fit.\nResiduals, the sum of squared errors (SSE), the correlation coefficient r and r squared."
+    }
+  ]
+}
