@@ -564,11 +564,15 @@ export function describeActivity(
   }
   const lastShared = shared.at(-1);
   let thought: ThoughtView;
-  const ctxLine = [...recent].reverse().map((r) => words(r).context).find((c) => !!c);
-  if (lastShared && (!latest || lastShared.at >= latest.at - 20_000))
+  let ctxLine: { at: number; text: string } | undefined;
+  for (let i = recent.length - 1; i >= 0 && !ctxLine; i--) {
+    const c = words(recent[i]!).context;
+    if (c) ctxLine = { at: recent[i]!.at, text: c };
+  }
+  // The newer of what the agent said and what the stream shows wins (a tie goes to the agent's own words).
+  if (lastShared && (!ctxLine || lastShared.at >= ctxLine.at))
     thought = { text: lastShared.text, source: 'shared' };
-  else if (ctxLine) thought = { text: ctxLine, source: 'stream' };
-  else if (lastShared) thought = { text: lastShared.text, source: 'shared' };
+  else if (ctxLine) thought = { text: ctxLine.text, source: 'stream' };
   else
     thought = {
       text: state === 'idle' && !thinking ? 'Resting: nothing in progress' : NO_REASONING,
