@@ -61,6 +61,7 @@ export default function SetupPage() {
   const step: StepId = isStepId(stepParam) ? stepParam : 'phone';
   const headingRef = useRef<HTMLHeadingElement>(null);
   const filesRef = useRef(new Map<string, File>());
+  const startedRef = useRef(new Set<string>());
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
@@ -76,26 +77,23 @@ export default function SetupPage() {
     if (active.length === 0) return;
     if (cfg.mode !== 'mock' && cfg.hubUrl) {
       const ctx = { hubUrl: cfg.hubUrl, token: cfg.token };
-      let cancelled = false;
       for (const c of active.filter((x) => x.status === 'queued')) {
+        if (startedRef.current.has(c.id)) continue;
+        startedRef.current.add(c.id);
         const file = filesRef.current.get(c.id);
         dispatch({ type: 'courses/progress', id: c.id, progress: 0.05, status: 'reading' });
         if (!file) continue;
         uploadCourse(ctx, file).then(
           () => {
-            if (!cancelled)
-              dispatch({ type: 'courses/progress', id: c.id, progress: 1, status: 'ready' });
+            dispatch({ type: 'courses/progress', id: c.id, progress: 1, status: 'ready' });
           },
           (e: unknown) => {
-            if (cancelled) return;
             if (e instanceof HubError && e.code === 'offline') setOffline(true);
             dispatch({ type: 'courses/progress', id: c.id, progress: 0, status: 'failed' });
           },
         );
       }
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
     const t = setInterval(() => {
       for (const c of active) {
@@ -519,6 +517,21 @@ function CalendarStep({
       return;
     }
     setError(null);
+    if (cfg.mode !== 'mock' && cfg.hubUrl) {
+      setBusy(true);
+      try {
+        await postCalendar({ hubUrl: cfg.hubUrl, token: cfg.token }, { ics: text, name: f.name });
+      } catch (err) {
+        setError(
+          err instanceof HubError && err.code === 'offline'
+            ? 'Cannot reach the hub. Try again in a moment.'
+            : 'We could not send that calendar to your agent.',
+        );
+        setBusy(false);
+        return;
+      }
+      setBusy(false);
+    }
     dispatch({ type: 'calendar/set', blocks, source: 'ics' });
   };
   const n = state.calendar.blocks.length;
