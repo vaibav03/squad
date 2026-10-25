@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { VILLAGE_EVENT_TYPES, validateReplay } from '@squad/core';
+import { VILLAGE_EVENT_TYPES, validateReplay, type LlmStatus } from '@squad/core';
 import WebSocket from 'ws';
 import type { RunningHub } from '../../src/server';
 import { boot, emit, get, login, openSse, post, auth } from '../helpers';
@@ -405,7 +405,7 @@ describe('GET /v1/status', () => {
     expect(r.body.notice).toMatch(/GEMINI_API_KEY/);
   });
   it('reflects the runtime: real, then credits_depleted', async () => {
-    let llm: import('@squad/core').LlmStatus = { llm: 'real' };
+    let llm: LlmStatus = { llm: 'real' };
     hub.deps.runtime = { llm: () => llm, tts: () => true, ports: () => 'real' };
     const live = await get<Record<string, unknown>>(url, '/v1/status');
     expect(live.body).toMatchObject({ llm: 'gemini', tts: 'elevenlabs', demo: false });
