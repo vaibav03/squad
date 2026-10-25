@@ -153,6 +153,8 @@ export const ChatSendBodySchema = z.strictObject({
     .optional(),
   /** Client-generated id: a retry of the same send returns the first message instead of posting a duplicate. */
   clientId: z.string().min(1).max(64).optional(),
+  /** With `clientId`: the first send landed but no answer arrived; ask the bot again for the SAME message (never a new prompt). */
+  retryAnswer: z.boolean().optional(),
   /** Set when this text answers a confirm card: rejected with 409 `stale_confirm` unless that card is still pending. */
   confirmTaskId: z.string().min(1).max(200).optional(),
   /** Imported items attached with "Ask Cubbie" (the hub re-derives every field from the source; see chat-context.ts). */

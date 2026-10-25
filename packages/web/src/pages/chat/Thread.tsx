@@ -28,7 +28,16 @@ import { chatErrorText } from './api';
 import { MessageBubble } from './Bubble';
 import { Composer, type ComposerHandle } from './Composer';
 import { MemberStack, TypingIndicator } from './parts';
-import { QUICK_PROMPTS_DM, QUICK_PROMPTS_GROUP, buildRows, dmIdFor, type ThreadRow } from './model';
+import { AnswerWait } from './AnswerWait';
+import {
+  dropRedelivered,
+  foldCouncilProse,
+  QUICK_PROMPTS_DM,
+  QUICK_PROMPTS_GROUP,
+  buildRows,
+  dmIdFor,
+  type ThreadRow,
+} from './model';
 import type { ChatController } from './useChat';
 import { ImessageIndicator } from './sync/ImessageIndicator';
 import { useImessageStatus } from './sync/useImessageStatus';
@@ -129,7 +138,7 @@ function visibleCouncils(ctl: ChatController, chatId: string): CouncilTruth[] {
 export function useHeaderTruth(ctl: ChatController, chatId: string) {
   const v = useCouncilTruthVersion();
   const items = ctl.thread(chatId);
-  const councils = useMemo(() => visibleCouncils(ctl, chatId), [items, v, chatId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const councils = useMemo(() => visibleCouncils(ctl, chatId), [items, v, chatId]);
   const t = headerTruth({
     conn:
       ctl.conn === 'expired'
@@ -271,7 +280,10 @@ function MessageList({
   onOpenChat?: (id: string) => void;
 }) {
   const bucket = ctl.bucket(chat.id);
-  const items = useMemo(() => ctl.thread(chat.id), [ctl.thread, chat.id]);
+  const items = useMemo(
+    () => foldCouncilProse(dropRedelivered(ctl.thread(chat.id))),
+    [ctl.thread, chat.id],
+  );
   const rows = useMemo(() => buildRows(collapsePlanCards(items), ctl.me), [items, ctl.me]);
   const el = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
@@ -530,7 +542,7 @@ function MessageList({
                   ),
                 )}
               </ol>
-              <TypingIndicator names={typing} reduced={reduced} />
+              <AnswerWait chat={chat} ctl={ctl} items={items} reduced={reduced} typing={typing} />
             </>
           )}
           {rows.length === 0 && typing.length ? (
@@ -540,7 +552,7 @@ function MessageList({
         {!atBottom && newCount > 0 ? (
           <button type="button" className="sqc-pill" data-testid="chat-new-pill" onClick={toBottom}>
             <Icon name="arrow-down" size={14} />
-            New messages
+            Jump to latest ({newCount} new)
           </button>
         ) : null}
         {ownSourceHost && <SourceViewerHost />}

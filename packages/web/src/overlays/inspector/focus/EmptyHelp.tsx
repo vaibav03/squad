@@ -98,6 +98,31 @@ export function EmptyHelp({
         <LvIcon name={TIER_ICON[badge.tier]} size={14} aria-hidden="true" />
         <span>{badge.text}</span>
       </p>
+      <p className="af-dim af-meta" data-testid="af-meta">
+        {last ? (
+          <>
+            <span className="af-k">Updated</span>{' '}
+            <time dateTime={new Date(last.startedAt).toISOString()} title={new Date(last.startedAt).toLocaleString()}>
+              {agoWords(last.startedAt, now)}
+            </time>
+            {' · '}
+            <span className="af-k">Source</span> {last.transport?.kind === 'demo' ? 'scripted example' : 'Gemini council run'}
+            {' · '}
+            <span className="af-k">Mode</span> {modeInfo(last.mode).word}
+          </>
+        ) : (
+          <>
+            <span className="af-k">As of</span>{' '}
+            <time dateTime={new Date(now).toISOString()} title={new Date(now).toLocaleString()}>
+              {new Date(now).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+            </time>
+            {' · '}
+            <span className="af-k">Source</span> {hub ? 'council runs on your hub' : 'built-in example'}
+            {' · '}
+            <span className="af-k">Mode</span> {badge.text.split(':')[0]}
+          </>
+        )}
+      </p>
       {isCouncil ? (
         last ? (
           <p className="af-dim" data-testid="af-last-run">

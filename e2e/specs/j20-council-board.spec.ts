@@ -16,7 +16,7 @@ async function snap(page: Page, name: string): Promise<void> {
   }
 }
 
-const board = (page: Page) => page.getByRole('dialog', { name: /Council|Ask council/ });
+const board = (page: Page) => page.locator('[aria-labelledby="cb-title"]');
 
 test('J20 council board on the track4 replay: org chart, feed filters, verdict with dissent, Demo badge', async ({
   browser,
@@ -149,6 +149,7 @@ test('J20 Calm: the board is static and still complete', async ({ browser }) => 
   const dlg = board(page);
   await expect(dlg).toBeVisible({ timeout: 30_000 });
   await expect(dlg.getByTestId('cb-verdict')).toBeVisible({ timeout: 30_000 });
+  await dlg.getByRole('button', { name: 'Message feed' }).click();
   const anim = await dlg
     .locator('.cb-row')
     .first()
@@ -271,7 +272,7 @@ test('J20 Hierarchy tab in the Agent Inspector shows position, delegations and o
       break;
     await next.click();
   }
-  await panel.getByRole('tab', { name: /^Activity/ }).click();
+  await panel.getByRole('tab', { name: /^Structure/ }).click();
   const h = panel.getByTestId('hierarchy');
   await expect(h.locator('.cb-mode')).toContainText('Demo');
   await expect(h).toContainText('Chair');

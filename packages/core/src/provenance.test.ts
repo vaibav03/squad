@@ -66,8 +66,12 @@ describe('composeProvenance', () => {
     ).toBe('Quiz question from ch6');
   });
   it('carries mode and the channel', () => {
-    const p = composeProvenance({ ...base, citations: [], mode: 'degraded', via: 'imessage' })
-      .provenance;
+    const p = composeProvenance({
+      ...base,
+      citations: [],
+      mode: 'degraded',
+      via: 'imessage',
+    }).provenance;
     expect(p).toMatchObject({ mode: 'degraded', via: 'imessage' });
   });
   it('every composed provenance has chips or a non-empty label', () => {
@@ -105,7 +109,11 @@ describe('planBadge', () => {
     });
     expect(
       planBadge({ mode: 'degraded', source: 'x', note: '', kind: 'fallback', reason: 'quota' }),
-    ).toMatchObject({ label: 'Degraded: quota', kindLabel: 'Fallback sample plan', fallback: true });
+    ).toMatchObject({
+      label: 'Degraded: quota',
+      kindLabel: 'Fallback sample plan',
+      fallback: true,
+    });
     expect(planBadge({ mode: 'demo', source: 'x', note: '' })).toMatchObject({
       label: 'Demo: sample data, scripted',
       kindLabel: 'Fallback sample plan',
@@ -116,7 +124,13 @@ describe('planBadge', () => {
 describe('imessageIndicator', () => {
   const now = 1_000_000_000;
   const squad = { squadId: 'sq', name: 'Squad Demo', bound: 1, lastSyncAt: now - 3 * 60_000 };
-  const on: ImessageStatus = { enabled: true, mode: 'live', transport: 'ok', queued: 2, squads: [squad] };
+  const on: ImessageStatus = {
+    enabled: true,
+    mode: 'live',
+    transport: 'ok',
+    queued: 2,
+    squads: [squad],
+  };
   const g = { kind: 'group' as const, squadId: 'sq' };
   it('DMs are web only', () => {
     expect(imessageIndicator(on, { kind: 'dm' }, now)).toMatchObject({
@@ -125,7 +139,9 @@ describe('imessageIndicator', () => {
     });
   });
   it('off or unknown is not connected (setup) for a group', () => {
-    expect(imessageIndicator({ enabled: false, mode: 'off', killSwitch: true }, g, now)).toMatchObject({
+    expect(
+      imessageIndicator({ enabled: false, mode: 'off', killSwitch: true }, g, now),
+    ).toMatchObject({
       state: 'not_connected',
       label: 'iMessage: not connected (setup)',
       setup: true,
@@ -134,7 +150,8 @@ describe('imessageIndicator', () => {
   });
   it('running with no bound group is not connected', () => {
     expect(
-      imessageIndicator({ ...on, squads: [{ ...squad, bound: 0, lastSyncAt: null }] }, g, now).state,
+      imessageIndicator({ ...on, squads: [{ ...squad, bound: 0, lastSyncAt: null }] }, g, now)
+        .state,
     ).toBe('not_connected');
   });
   it('dry run', () => {

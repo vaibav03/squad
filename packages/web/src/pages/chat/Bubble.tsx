@@ -1,5 +1,11 @@
 import { useLayoutEffect, useRef } from 'react';
-import { messageTruth, TRUTH_LABELS, type ChatCitation, type ChatMessage, type HubStatus } from '@squad/core';
+import {
+  messageTruth,
+  TRUTH_LABELS,
+  type ChatCitation,
+  type ChatMessage,
+  type HubStatus,
+} from '@squad/core';
 import { Icon } from '../../primitives/Icon';
 import { Markdown } from '../../primitives/Markdown';
 import { renderCard } from './card-registry';
@@ -67,7 +73,7 @@ function useLinkHosts(ref: React.RefObject<HTMLElement | null>, text: string) {
 }
 
 export function MessageBubble(p: BubbleProps) {
-  const { row, api, status } = p;
+  const { row, api } = p;
   const cfg = useSquadConfig();
   const hub = cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token ?? null } : null;
   const m = row.message;

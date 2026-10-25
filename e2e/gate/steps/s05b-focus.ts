@@ -16,7 +16,7 @@ export const S5b: StepDef<GateCtx> = {
     const { page } = act;
     try {
       await page.goto('/squad/village?replay=track4&board=1');
-      const board = page.getByRole('dialog', { name: /Council|Ask council/ });
+      const board = page.locator('[aria-labelledby="cb-title"]');
       await board.waitFor({ timeout: 30_000 });
       const nodes = board.locator('.cb-node');
       await nodes.nth(3).waitFor({ timeout: 30_000 });

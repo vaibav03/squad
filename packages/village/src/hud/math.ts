@@ -8,11 +8,22 @@ export const STATE_LABEL: Record<AgentState, string> = {
 };
 /** The status word on a HUD chip (always shown with an icon, never colour, a dot or a letter alone). */
 export const STATUS_WORD: Record<AgentState, string> = {
-  idle: 'Resting',
-  studying: 'Thinking',
-  in_call: 'Speaking',
-  waiting_for_student: 'Waiting',
+  idle: 'Idle',
+  studying: 'Working',
+  in_call: 'On a call',
+  waiting_for_student: 'Waiting on you',
 };
+/** One plain sentence on what each kind of agent does (tooltip and the hint line under the rail title). */
+export const KIND_BLURB: Record<AgentInfo['kind'], string> = {
+  student: 'Studies for a classmate and shares only its public activity.',
+  expert: 'Knows one chapter by heart and answers questions about it.',
+  dean: 'Keeps the squad organised and knows everyone.',
+  mediator: 'Keeps trades between study agents fair and private.',
+  council: 'Sits on the council: weighs answers, ranks them and helps decide.',
+};
+/** Accessible name of a rail button: 'Tutor, idle: open'. */
+export const chipName = (name: string, state: AgentState): string =>
+  `${name}, ${STATUS_WORD[state].toLowerCase()}: open`;
 export const KIND_ROLE: Record<AgentInfo['kind'], string> = {
   student: 'Student',
   dean: 'Dean',

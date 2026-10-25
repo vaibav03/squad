@@ -1578,7 +1578,7 @@
   mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent);
 }
 .sqc-card--council[data-expanded] .sqc-card__body {
-  max-height: calc(70dvh - 44px);
+  max-height: calc(var(--sqc-card-max) * 1.6 - 44px);
 }
 .sqc-card__h {
   margin: 0 0 var(--space-1);
@@ -1655,9 +1655,15 @@
   background: var(--muted-foreground);
   box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--card) 70%, transparent);
 }
-.sqc-crest[data-member='skeptic'] { background: #c0554a; }
-.sqc-crest[data-member='teacher'] { background: #3f7fbf; }
-.sqc-crest[data-member='practitioner'] { background: #4a9a64; }
+.sqc-crest[data-member='skeptic'] {
+  background: #c0554a;
+}
+.sqc-crest[data-member='teacher'] {
+  background: #3f7fbf;
+}
+.sqc-crest[data-member='practitioner'] {
+  background: #4a9a64;
+}
 /* thinking / retry placeholder */
 .sqc-wait {
   display: flex;

@@ -140,7 +140,9 @@ export function ChatCouncilCard({
                 <h4 className="sqc-card__h">Dissent</h4>
                 <p>
                   <strong>{v.dissent.member}</strong>: {v.dissent.view}
-                  {v.dissent.why ? <span className="sqc-card__dim"> Why: {v.dissent.why}</span> : null}
+                  {v.dissent.why ? (
+                    <span className="sqc-card__dim"> Why: {v.dissent.why}</span>
+                  ) : null}
                 </p>
               </section>
             ) : null}
@@ -208,12 +210,15 @@ function MemberRow({ m }: { m: CouncilResult['members'][number] }) {
       >
         <span className="sqc-crest" data-member={m.id} aria-hidden="true" />
         <span className="sqc-member__name">{m.name}</span>
-        <span className="sqc-member__stance">
-          {failed ? 'did not answer this time' : m.answer || m.stance}
-        </span>
+        <span className="sqc-member__stance">{failed ? 'did not answer this time' : m.stance}</span>
       </button>
       <div id={id} className="sqc-member__full" hidden={!open}>
-        {open ? <p>{failed ? `${m.name} did not answer this time.` : m.text}</p> : null}
+        {open ? (
+          <p>
+            {failed ? `${m.name} did not answer this time.` : m.text}
+            {!failed && m.answer ? <strong> Answer: {m.answer}</strong> : null}
+          </p>
+        ) : null}
       </div>
     </li>
   );
