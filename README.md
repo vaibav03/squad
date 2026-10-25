@@ -9,6 +9,12 @@ Squad puts a study group's agents where the group already talks. Type `@cubbie` 
 
 ![Squad village at night: the notice board says Ben kept his calendar hidden while Ana's agent sends 168 blinded tokens](docs/design/shots/merge1/village-track2-desk.png)
 
+## Deployed demo
+
+- Hub (Railway): https://hub-production-6c01.up.railway.app (`/health`, `/v1/status`). Setup: `deploy/railway/README.md`.
+- Web (Vercel, project `squad`): built from `vercel.json`; its build reads `VITE_HUB_URL` (the Railway hub URL above).
+- The public hub runs in demo mode (`HUB_ALLOW_DEMO=1`): fixture students and Canvas/Google demo workspaces, labelled Demo. Live Canvas, Google, Sendblue and voices need real credentials (see "Demo mode versus real keys").
+
 ## What Squad is
 
 - A group-chat bot (`@cubbie`) with skills: grounded doubt answers, quizzes, Feynman practice, step-by-step solution diffs, study plans, podcasts and explainers.
