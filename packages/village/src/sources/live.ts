@@ -2,6 +2,7 @@ import { VILLAGE_EVENT_TYPES, safeParseVillageEvent } from '@squad/core';
 import type { VillageEvent, VillageSource } from '@squad/core';
 import type { Clock, EventMeta, SourceLogger, Unsubscribe } from './types';
 import { setRoster } from '../adapter/labels';
+import { SharedEventSource } from './shared-stream';
 import { consoleLogger, systemClock } from './types';
 
 export type LiveErrorKind = 'snapshot' | 'stream';
@@ -287,7 +288,10 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
 
   async function openStream(): Promise<void> {
     if (closed) return;
-    const ES = opts.EventSource ?? (globalThis as { EventSource?: EventSourceCtor }).EventSource;
+    // the browser holds ONE hub connection for all tabs (shared-stream.ts); a test or host may inject its own
+    const native = (globalThis as { EventSource?: EventSourceCtor }).EventSource;
+    const ES =
+      opts.EventSource ?? (native ? (SharedEventSource as unknown as EventSourceCtor) : undefined);
     if (!ES) {
       startPolling();
       return;
