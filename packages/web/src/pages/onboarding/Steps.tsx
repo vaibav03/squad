@@ -175,7 +175,7 @@ export function ConnectStep({ t }: { t: TourData }) {
           <PhaseLine phase={sum.calendar.phase} />
           {!googleHas ? (
             <div style={row}>
-              {t.googleLive ? (
+              {t.googleReady ? (
                 <Button
                   size="sm"
                   variant="secondary"
@@ -200,7 +200,7 @@ export function ConnectStep({ t }: { t: TourData }) {
               )}
             </div>
           ) : null}
-          {!googleHas && !t.googleLive ? (
+          {!googleHas && !t.googleReady ? (
             <p style={{ margin: 0 }}>
               Not set up yet: Google sign-in is not turned on for this Squad, so only demo data is
               available.

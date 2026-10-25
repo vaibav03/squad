@@ -89,6 +89,11 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     // No nav item: mastery lives in the village. This path only redirects to /squad/village?mastery=1.
   },
   {
+    key: 'review-import',
+    path: '/squad/connections/review',
+    title: 'Review imported context',
+  },
+  {
     key: 'health',
     path: '/squad/connections/health',
     title: 'Connections',

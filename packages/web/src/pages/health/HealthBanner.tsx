@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { plural } from '../../lib/plural';
 import { bannerChecks } from './model';
 import { useHealth } from './useHealth';
 import './health.css';
@@ -25,7 +26,7 @@ export function HealthBanner({ reloadKey }: { reloadKey?: unknown }) {
       role="status"
     >
       <strong>
-        {fails ? `${fails} integration link${fails === 1 ? '' : 's'} failing` : 'Integration needs attention'}
+        {fails ? `${plural(fails, 'integration link')} failing` : 'Integration needs attention'}
       </strong>
       <span>{bad.slice(0, 2).map((c) => c.label).join(', ')}{bad.length > 2 ? ` and ${bad.length - 2} more` : ''}</span>
       <Link to="/squad/connections/health">See health and fixes</Link>
