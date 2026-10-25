@@ -121,16 +121,20 @@ export default function SquadMembersPage() {
                     {m.name}
                     {m.you ? <span className="sq-members__you"> (you)</span> : null}
                   </span>
-                  <Badge
-                    tone={m.role === 'owner' ? 'ember' : 'neutral'}
-                    label={m.role === 'owner' ? 'Owner' : 'Member'}
-                  />
+                  <span
+                    className="sq-members__role"
+                    title={m.role === 'owner' ? 'Owner' : 'Member'}
+                  >
+                    <Badge tone={m.role === 'owner' ? 'ember' : 'neutral'} dot />
+                    {m.role === 'owner' ? 'Owner' : 'Member'}
+                  </span>
                   {owner && !m.you ? (
                     <span className="sq-members__tools">
                       {m.role !== 'owner' ? (
                         <Button
                           size="sm"
-                          variant="ghost"
+                          variant="secondary"
+                          className="sq-members__btn"
                           onClick={() => setConfirm({ kind: 'owner', id: m.id, name: m.name })}
                         >
                           Make owner
@@ -138,7 +142,8 @@ export default function SquadMembersPage() {
                       ) : null}
                       <Button
                         size="sm"
-                        variant="ghost"
+                        variant="secondary"
+                        className="sq-members__btn"
                         onClick={() => setConfirm({ kind: 'remove', id: m.id, name: m.name })}
                       >
                         Remove
