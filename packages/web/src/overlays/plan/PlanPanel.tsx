@@ -1,5 +1,11 @@
 import { useId, useState } from 'react';
-import type { PlanItem, PlanItemFields, PlanItemPatch, PlanView } from '@squad/core';
+import {
+  planBadge,
+  type PlanItem,
+  type PlanItemFields,
+  type PlanItemPatch,
+  type PlanView,
+} from '@squad/core';
 import { LvIcon, OverlayFrame } from '../kit';
 import {
   MODE_LABEL,
@@ -8,6 +14,8 @@ import {
   dayLabel,
   groupByDate,
   minutesWords,
+  savedWords,
+  syncWords,
   type PlanStatus,
 } from './model';
 import './plan.css';
@@ -30,6 +38,49 @@ export interface PlanPanelProps {
   /** Sends a chat phrase to the squad chat; absent in replays. */
   onAsk?: (phrase: string) => void;
   onRetry?: () => void;
+  /** Starts the real planner flow for an exam day (`YYYY-MM-DD`); absent in replays. */
+  onPropose?: (examDate: string) => void;
+  /** Clock for the "x min ago" words (tests). */
+  now?: number;
+}
+
+const inDays = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
+
+function ProposeForm({
+  busy,
+  onPropose,
+}: {
+  busy?: boolean | undefined;
+  onPropose: (d: string) => void;
+}) {
+  const [date, setDate] = useState(() => inDays(14));
+  return (
+    <form
+      className="pl-edit"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onPropose(date);
+      }}
+    >
+      <label>
+        Exam day
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          data-testid="plan-propose-date"
+        />
+      </label>
+      <button
+        type="submit"
+        className="lv-btn lv-btn--primary"
+        data-testid="plan-propose"
+        disabled={busy || !date}
+      >
+        {busy ? 'Building the plan...' : 'Propose a plan'}
+      </button>
+    </form>
+  );
 }
 
 const fieldsText = (f: PlanItemFields, name: (id: string) => string) =>
@@ -167,11 +218,22 @@ export function PlanPanel(props: PlanPanelProps) {
 
         {status !== 'loading' && !plan && status === 'ready' && (
           <section className="rr-sec" data-testid="plan-empty">
-            <h3 className="rr-sec__h">No plan yet</h3>
+            <h3 className="rr-sec__h">No study plan yet</h3>
             <p className="rr-sec__p rr-dim">
-              Ask Cubbie in the group chat, for example "@cubbie study plan for the exam on 10 Nov".
-              The whole squad gets the proposal to accept.
+              Propose one here or ask Cubbie in the group chat, for example "@cubbie study plan for
+              the exam on 10 Nov". The whole squad gets the proposal to accept.
             </p>
+            {props.onPropose && <ProposeForm busy={busy} onPropose={props.onPropose} />}
+            {busy && (
+              <p className="rr-sec__p" role="status" data-testid="plan-building">
+                Building the plan...
+              </p>
+            )}
+            {notice && (
+              <p className="pl-note" role="alert" data-testid="plan-notice">
+                {notice}
+              </p>
+            )}
             {props.onAsk && (
               <button
                 type="button"
@@ -213,6 +275,29 @@ export function PlanPanel(props: PlanPanelProps) {
               </span>
             </p>
             <p className="rr-dim pl-mode-text">{MODE_TEXT[plan.generator.mode]}</p>
+            <p className="pl-status">
+              <span
+                className={`pl-badge pl-badge--${plan.generator.mode}`}
+                data-testid="plan-mode-badge"
+                data-mode={plan.generator.mode}
+              >
+                {planBadge(plan.generator).label}
+              </span>{' '}
+              <span className="rr-dim" data-testid="plan-kind">
+                {planBadge(plan.generator).kindLabel}
+              </span>
+            </p>
+            <p className="rr-dim" data-testid="plan-saved">
+              {savedWords(plan, props.now ?? Date.now(), nameOf)}
+            </p>
+            <p className="rr-dim" data-testid="plan-sync">
+              {syncWords(plan, props.now ?? Date.now())}
+            </p>
+            {plan.rationale && (
+              <p className="rr-sec__p" data-testid="plan-rationale">
+                {plan.rationale}
+              </p>
+            )}
             {plan.error && (
               <p className="pl-note" role="alert">
                 {plan.error}
@@ -305,15 +390,16 @@ export function PlanPanel(props: PlanPanelProps) {
                     </button>
                   )}
                 </div>
-                <ul className="pl-chips" aria-label="Who answered">
-                  {plan.members.map((m) => (
-                    <li key={m.id} className="pl-chip">
-                      {m.name}: {m.response === 'pending' ? 'not yet' : m.response}
-                    </li>
-                  ))}
-                </ul>
               </section>
             )}
+
+            <ul className="pl-chips" aria-label="Acceptance" data-testid="plan-members">
+              {plan.members.map((m) => (
+                <li key={m.id} className="pl-chip" data-testid={`plan-member-${m.id}`}>
+                  {m.name}: {m.response === 'pending' ? 'pending' : m.response}
+                </li>
+              ))}
+            </ul>
 
             <section className="rr-sec" aria-labelledby={`${titleId}-load`}>
               <h3 id={`${titleId}-load`} className="rr-sec__h">
@@ -369,6 +455,11 @@ export function PlanPanel(props: PlanPanelProps) {
                                 {i.status === 'done' ? ', done' : ''}
                               </span>
                             </div>
+                            {i.why && (
+                              <p className="rr-dim" data-testid="plan-why">
+                                {i.why}
+                              </p>
+                            )}
                             {mine && busyIds.has(i.id) && (
                               <p className="pl-busy" data-testid="plan-busy">
                                 You look busy then. Consider moving it.

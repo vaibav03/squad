@@ -1,5 +1,11 @@
 import { timedFetch } from '../../lib/http';
-import type { PlanItem, PlanItemPatch, PlanMode, PlanView } from '@squad/core';
+import {
+  agoWords,
+  type PlanItem,
+  type PlanItemPatch,
+  type PlanMode,
+  type PlanView,
+} from '@squad/core';
 
 export type PlanStatus = 'loading' | 'ready' | 'error' | 'offline';
 
@@ -90,8 +96,34 @@ async function call(hub: PlanHub, method: string, path: string, body?: unknown):
   }
 }
 
+/** `Saved, version 3, last edited by Ana 4 min ago` (the plan lives in the hub, so a reload shows the same words). */
+export function savedWords(plan: PlanView, now: number, nameOf: (id: string) => string): string {
+  const s = plan.saved;
+  if (!s) return `Saved, version ${plan.rev}`;
+  return `Saved, version ${s.rev}, last edited by ${nameOf(s.lastEditedBy)} ${agoWords(s.lastEditedAt, now)}`;
+}
+
+export const SYNC_WORDS: Record<PlanView['sync']['imessage'], string> = {
+  off: 'iMessage off',
+  web_only: 'Web only',
+  queued: 'Queued to iMessage',
+  sent: 'Sent to iMessage',
+  delivered: 'Delivered to iMessage',
+  dry_run: 'iMessage dry run, not sent',
+  failed: 'iMessage failed',
+};
+
+export function syncWords(plan: PlanView, now: number): string {
+  const s = plan.sync;
+  if (!s) return 'Not posted to chat yet';
+  const chat = s.posted ? `Posted to chat ${agoWords(s.posted.at, now)}` : 'Not posted to chat yet';
+  return `${chat} / ${SYNC_WORDS[s.imessage]}`;
+}
+
 export const planApi = {
   current: (h: PlanHub) => call(h, 'GET', '/v1/plans/current'),
+  get: (h: PlanHub, id: string) => call(h, 'GET', `/v1/plans/${encodeURIComponent(id)}`),
+  propose: (h: PlanHub, examDate: string) => call(h, 'POST', '/v1/plans', { examDate }),
   respond: (h: PlanHub, id: string, response: 'accept' | 'decline') =>
     call(h, 'POST', `/v1/plans/${encodeURIComponent(id)}/respond`, { response }),
   confirm: (h: PlanHub, id: string) =>

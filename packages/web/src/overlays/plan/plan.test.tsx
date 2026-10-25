@@ -102,6 +102,74 @@ describe('PlanPanel', () => {
   });
 });
 
+describe('PlanPanel persistence and propose', () => {
+  it('shows saved version, editor, time, members, badge, rationale and sync', () => {
+    const base = planView();
+    const plan = planView({
+      generator: { mode: 'live', source: 'planner', note: '', kind: 'agent' },
+      rationale: 'Ch6 first because it is weakest.',
+      items: base.items.map((i, n) => (n === 0 ? { ...i, why: 'Weakest chapter' } : i)),
+    });
+    render(<PlanPanel {...props({ plan, now: 1_000_000 })} />);
+    expect(screen.getByTestId('plan-saved').textContent).toBe(
+      'Saved, version 3, last edited by Ben 4 min ago',
+    );
+    expect(screen.getByTestId('plan-member-s_ben').textContent).toBe('Ben: pending');
+    expect(screen.getByTestId('plan-member-s_ana').textContent).toBe('Ana: accepted');
+    expect(screen.getByTestId('plan-mode-badge').textContent).toBe('Live');
+    expect(screen.getByTestId('plan-kind').textContent).toBe('Planner agent');
+    expect(screen.getByTestId('plan-rationale').textContent).toContain('weakest');
+    expect(screen.getByTestId('plan-why').textContent).toBe('Weakest chapter');
+    expect(screen.getByTestId('plan-sync').textContent).toBe(
+      'Posted to chat 5 min ago / iMessage dry run, not sent',
+    );
+  });
+
+  it('fallback plans are labelled as fallback', () => {
+    render(
+      <PlanPanel
+        {...props({
+          plan: planView({ generator: { mode: 'demo', source: 's', note: '', kind: 'fallback' } }),
+        })}
+      />,
+    );
+    expect(screen.getByTestId('plan-kind').textContent).toBe('Fallback sample plan');
+    expect(screen.getByTestId('plan-mode-badge').textContent).toBe('Demo: sample data, scripted');
+  });
+
+  it('empty state proposes with the chosen exam day', () => {
+    const onPropose = vi.fn();
+    render(<PlanPanel {...props({ plan: null, onPropose })} />);
+    expect(screen.getByText('No study plan yet')).toBeTruthy();
+    fireEvent.change(screen.getByTestId('plan-propose-date'), { target: { value: '2026-12-01' } });
+    fireEvent.click(screen.getByTestId('plan-propose'));
+    expect(onPropose).toHaveBeenCalledWith('2026-12-01');
+  });
+
+  it('layer reloads the saved plan from the hub on mount and proposes through POST /v1/plans', async () => {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        calls.push(`${init?.method ?? 'GET'} ${url} ${init?.body ?? ''}`);
+        return new Response(JSON.stringify({ plan: init?.method === 'POST' ? planView() : null }), {
+          status: 200,
+        });
+      }),
+    );
+    render(<PlanLayer hub={{ hubUrl: 'http://h', token: 't' }} initialOpen pollMs={60_000} />);
+    fireEvent.change(await screen.findByTestId('plan-propose-date'), {
+      target: { value: '2026-12-01' },
+    });
+    fireEvent.click(screen.getByTestId('plan-propose'));
+    await screen.findByTestId('plan-saved');
+    expect(calls[0]).toContain('GET http://h/v1/plans/current');
+    expect(
+      calls.some((c) => c.startsWith('POST http://h/v1/plans {"examDate":"2026-12-01"}')),
+    ).toBe(true);
+  });
+});
+
 describe('PlanLayer', () => {
   it('loads on open and posts the pick with the plan id', async () => {
     const calls: string[] = [];
