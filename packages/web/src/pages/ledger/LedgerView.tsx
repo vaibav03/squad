@@ -4,12 +4,12 @@ import {
   Avatar,
   ConnectionBadge,
   LvIcon,
-  PageHeader,
   Segmented,
   StateBlock,
   useMedia,
   type Connection,
 } from '../../overlays/kit';
+import { Notice, Page, Skeleton } from '../../primitives';
 import { barWidth, rowsByStudent, summarize, type LedgerRow, type RosterMember } from './model';
 import './ledger.css';
 
@@ -74,13 +74,13 @@ export function LedgerView(props: LedgerViewProps) {
   );
 
   return (
-    <div className="lv-page lv-ledger" data-projector={projector || undefined}>
-      <PageHeader
-        eyebrow="Glass Box"
-        title={title}
-        subtitle="Everything your agents shared, and everything they kept back. Withheld details never leave their owner."
-        status={<ConnectionBadge connection={connection} />}
-        actions={
+    <Page
+      className="lv-ledger"
+      eyebrow="Glass Box"
+      title={title}
+      actions={
+        <>
+          <ConnectionBadge connection={connection} />
           <Segmented
             label="Viewing mode"
             value={projector ? 'projector' : 'me'}
@@ -94,14 +94,18 @@ export function LedgerView(props: LedgerViewProps) {
               },
             ]}
           />
-        }
-      />
+        </>
+      }
+    >
+      <p className="lv-lede">
+        Everything your agents shared, and everything they kept back. Withheld details never leave
+        their owner.
+      </p>
 
       {projector && (
-        <p className="lv-ledger__note" role="note">
-          <LvIcon name="eye-off" size={16} />
+        <Notice tone="info">
           Demo projector is on. Other students&rsquo; entries stay blurred until you select them.
-        </p>
+        </Notice>
       )}
 
       {status === 'loading' && <LedgerSkeleton />}
@@ -186,7 +190,7 @@ export function LedgerView(props: LedgerViewProps) {
           )}
         </>
       )}
-    </div>
+    </Page>
   );
 }
 
@@ -261,9 +265,9 @@ function LedgerSkeleton() {
       <span className="lv-vh">Loading the board</span>
       {[0, 1, 2].map((c) => (
         <div key={c} className="lv-col lv-col--skel">
-          <span className="lv-skeleton" style={{ width: '60%', height: 24 }} />
+          <Skeleton width="60%" height={24} />
           {[0, 1, 2].map((r) => (
-            <span key={r} className="lv-skeleton" style={{ width: '100%', height: 64 }} />
+            <Skeleton key={r} shape="block" height={64} />
           ))}
         </div>
       ))}

@@ -10,6 +10,9 @@
   font-family: var(--lv-font-ui);
   pointer-events: none;
 }
+.lv-ovl[data-fixed='true'] {
+  position: fixed;
+}
 .lv-ovl > * {
   pointer-events: auto;
 }
@@ -155,9 +158,10 @@
   background: transparent;
 }
 .lv-btn--danger {
-  background: var(--lv-alert);
+  /* darkened so white label text clears 4.5:1 on the night palette */
+  background: color-mix(in oklab, var(--lv-alert) 78%, black);
   border-color: transparent;
-  color: #fff;
+  color: white;
 }
 @media (hover: hover) and (pointer: fine) {
   .lv-btn--danger:hover:not(:disabled) {
@@ -214,7 +218,7 @@
   }
 }
 .lv-eyebrow {
-  font: 400 var(--text-tag-lg) / 1 var(--lv-font-caps);
+  font: 600 var(--text-xs) / var(--lh-xs) var(--lv-font-ui);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--lv-text-dim);
@@ -222,7 +226,7 @@
 .lv-close {
   position: absolute;
   top: var(--lv-s2);
-  right: var(--lv-s2);
+  right: var(--lv-s3);
   width: var(--lv-tap);
   height: var(--lv-tap);
   padding: 0;

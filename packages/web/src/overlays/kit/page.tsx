@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
+import { Button, EmptyState } from '../../primitives';
 import { LvIcon } from './icons';
 import { propArt, type PropName } from './art';
 import './bridge.css';
@@ -16,33 +17,6 @@ export function useMedia(query: string): boolean {
     return () => mq.removeEventListener('change', on);
   }, [query]);
   return match;
-}
-
-export interface PageHeaderProps {
-  eyebrow?: string;
-  title: string;
-  subtitle?: ReactNode;
-  status?: ReactNode;
-  actions?: ReactNode;
-}
-
-/** Page heading used by the web-live pages: eyebrow caps, 28/34 title, subtitle, status and actions row. */
-export function PageHeader({ eyebrow, title, subtitle, status, actions }: PageHeaderProps) {
-  return (
-    <header className="lv-ph">
-      <div className="lv-ph__main">
-        {eyebrow && <p className="lv-ph__eyebrow">{eyebrow}</p>}
-        <h1 className="lv-ph__title">{title}</h1>
-        {subtitle && <p className="lv-ph__sub">{subtitle}</p>}
-      </div>
-      {(status || actions) && (
-        <div className="lv-ph__side">
-          {status}
-          {actions}
-        </div>
-      )}
-    </header>
-  );
 }
 
 export type Connection = 'live' | 'replaying' | 'connecting' | 'polling' | 'offline' | 'error';
@@ -116,7 +90,7 @@ export interface StateBlockProps {
   retryLabel?: string;
 }
 
-/** Designed empty / loading / error / offline block. Sprite sits on a sky-deep plate at an integer scale. */
+/** Designed empty / loading / error / offline block, built on the shell EmptyState. Sprites stay at an integer scale. */
 export function StateBlock({
   kind,
   title,
@@ -126,32 +100,36 @@ export function StateBlock({
   retryLabel = 'Try again',
 }: StateBlockProps) {
   const a = art ? propArt[art] : undefined;
-  const scale = a ? Math.max(1, Math.min(4, Math.floor(96 / Math.max(a.w, a.h)))) : 1;
+  const scale = a ? Math.max(1, Math.min(4, Math.floor(48 / Math.max(a.w, a.h)))) : 1;
+  const plate =
+    kind === 'loading' ? (
+      <span className="lv-state__dots">
+        <i />
+        <i />
+        <i />
+      </span>
+    ) : kind === 'offline' ? (
+      <LvIcon name="wifi-off" size={28} />
+    ) : kind === 'error' ? (
+      <span className="lv-state__bang">!</span>
+    ) : a ? (
+      <img className="sq-sprite" src={a.url} width={a.w * scale} height={a.h * scale} alt="" />
+    ) : undefined;
   return (
     <div className="lv-state" data-kind={kind} role={kind === 'error' ? 'alert' : 'status'}>
-      <div className="lv-state__plate" aria-hidden="true">
-        {kind === 'loading' ? (
-          <span className="lv-state__dots">
-            <i />
-            <i />
-            <i />
-          </span>
-        ) : kind === 'offline' ? (
-          <LvIcon name="wifi-off" size={28} />
-        ) : kind === 'error' ? (
-          <span className="lv-state__bang">!</span>
-        ) : a ? (
-          <img className="sq-sprite" src={a.url} width={a.w * scale} height={a.h * scale} alt="" />
-        ) : null}
-      </div>
-      <h2 className="lv-state__title">{title}</h2>
-      {body && <p className="lv-state__body">{body}</p>}
-      {onRetry && (
-        <button type="button" className="lv-pbtn" onClick={onRetry}>
-          <LvIcon name="refresh" size={16} />
-          {retryLabel}
-        </button>
-      )}
+      <EmptyState
+        tone={kind === 'error' || kind === 'offline' ? 'error' : 'default'}
+        title={title}
+        body={body}
+        art={plate}
+        action={
+          onRetry ? (
+            <Button variant="secondary" onClick={onRetry}>
+              {retryLabel}
+            </Button>
+          ) : undefined
+        }
+      />
     </div>
   );
 }

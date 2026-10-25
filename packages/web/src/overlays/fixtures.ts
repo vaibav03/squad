@@ -124,8 +124,10 @@ export const callPanelFixtures = {
 
 const choiceQuiz: QuizPayload = {
   quizId: 'q_ch5_2',
-  chapter: 'Ch5',
+  chapter: 'Ch 5',
   label: 'Q2',
+  index: 2,
+  total: 5,
   question: 'Where in the cell does glycolysis take place?',
   choices: [
     { id: 'a', label: 'The mitochondrial matrix' },

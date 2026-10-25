@@ -20,7 +20,7 @@ import { fetchPersonas, fetchPreviewBlob, fetchVoices, savePersona } from './api
 import { PERSONAS, VOICES, type PersonaDraft, type VoiceOption } from './fixtures';
 import { initPersonas, isDirty, personasReducer } from './model';
 import { PreviewPlayer, type PreviewState } from './preview-audio';
-import { AVATAR_CHOICES, PORTRAITS } from './portraits';
+import { PIXEL_CAST, pixelPortrait } from '../../pixel/portraits';
 import './personas.css';
 
 type Load =
@@ -52,7 +52,18 @@ export default function PersonasPage() {
     }
     const ctx = { hubUrl: cfg.hubUrl, token: cfg.token };
     Promise.all([fetchPersonas(ctx, PERSONAS), fetchVoices(ctx, VOICES)]).then(
-      ([personas, voices]) => !cancelled && setLoad({ status: 'ready', personas, voices }),
+      ([personas, voices]) =>
+        !cancelled &&
+        setLoad({
+          status: 'ready',
+          // Personas the hub has no voice for yet start on the first voice the hub offers.
+          personas: personas.map((p) =>
+            voices.some((v) => v.id === p.voiceId)
+              ? p
+              : { ...p, voiceId: voices[0]?.id ?? p.voiceId },
+          ),
+          voices,
+        }),
       (e: unknown) => !cancelled && setLoad({ status: 'error', offline: e instanceof TypeError }),
     );
     return () => {
@@ -197,9 +208,10 @@ function Studio({ personas, voices }: { personas: PersonaDraft[]; voices: VoiceO
           <div className="sq-pz__stage">
             <Avatar
               name={draft.name}
-              src={PORTRAITS[draft.avatarId]}
+              src={pixelPortrait(draft.avatarId)}
               size="xl"
               frame="portrait"
+              pixel
               state={talking ? 'talking' : 'idle'}
               level={level}
             />
@@ -278,17 +290,28 @@ function Studio({ personas, voices }: { personas: PersonaDraft[]; voices: VoiceO
               Avatar
             </h3>
             <div className="sq-pz__avatars" role="radiogroup" aria-label="Avatar">
-              {AVATAR_CHOICES.map((a) => (
+              {PIXEL_CAST.map((a) => (
                 <button
                   key={a.id}
                   type="button"
                   role="radio"
-                  aria-checked={draft.avatarId === a.id}
+                  aria-checked={pixelPortrait(draft.avatarId) === pixelPortrait(a.id)}
                   aria-label={a.label}
+                  title={a.role}
                   className="sq-pz__avatar"
                   onClick={() => dispatch({ type: 'edit', patch: { avatarId: a.id } })}
                 >
-                  <img src={PORTRAITS[a.id]} alt="" width="56" height="56" />
+                  <img
+                    className="sq-pz__avatar-img"
+                    src={pixelPortrait(a.id)}
+                    alt=""
+                    width="64"
+                    height="64"
+                    draggable={false}
+                  />
+                  <span className="sq-pz__avatar-name" aria-hidden="true">
+                    {a.label}
+                  </span>
                 </button>
               ))}
             </div>

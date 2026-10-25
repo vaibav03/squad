@@ -33,7 +33,7 @@ export const HUD_CSS = `
 .sqv-calm .sqv-chip::before{animation:none!important;opacity:.55}
 .sqv-glyph{position:absolute;right:-6px;bottom:-6px;min-width:18px;height:18px;padding:0 3px;border-radius:9px;background:var(--ink);border:2px solid var(--secondary);font-size:18.667px;display:grid;place-items:center;color:var(--idle)}
 .sqv-chip[data-state=studying] .sqv-glyph{color:var(--glow)}.sqv-chip[data-state=in_call] .sqv-glyph{color:var(--ok)}.sqv-chip[data-state=waiting_for_student] .sqv-glyph{color:var(--ember)}
-.sqv-chip img{width:32px;height:32px;object-fit:none;object-position:center top;image-rendering:pixelated}
+.sqv-chip img{width:32px;height:32px;border-radius:5px;image-rendering:pixelated;display:block}
 @keyframes sqv-ring{from{transform:scale(1);opacity:.6}to{transform:scale(1.15);opacity:0}}
 .sqv-seg{display:flex;padding:3px;gap:3px}
 .sqv-btn{min-width:48px;height:44px;padding:0 12px;font:inherit;color:var(--muted);background:transparent;border:0;border-radius:9px;cursor:pointer;transition:color .15s ease,background-color .15s ease,transform .16s var(--ease-out);white-space:nowrap}

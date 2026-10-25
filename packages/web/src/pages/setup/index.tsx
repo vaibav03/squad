@@ -23,7 +23,7 @@ import { Stepper } from '../../primitives/Stepper';
 import { TextField } from '../../primitives/TextField';
 import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
-import { PORTRAITS } from '../personas/portraits';
+import { pixelPortrait } from '../../pixel/portraits';
 import { HubError, postCalendar, uploadCourse } from './api';
 import { demoBlocks, PERSONA_CHOICES, SAMPLE_COURSES } from './fixtures';
 import { parseIcs } from './ics';
@@ -593,10 +593,18 @@ function PersonaStep({ state, dispatch, onStudio }: StepProps & { onStudio: () =
           value: p.id,
           label: p.name,
           description: p.blurb,
-          leading: <Avatar name={p.name} src={PORTRAITS[p.portrait]} size="lg" frame="portrait" />,
+          leading: (
+            <Avatar
+              name={p.name}
+              src={pixelPortrait(p.portrait)}
+              pixel
+              size="lg"
+              frame="portrait"
+            />
+          ),
         }))}
       />
-      <Button variant="ghost" iconEnd="arrow-right" onClick={onStudio}>
+      <Button variant="ghost" iconEnd="arrow-right" onClick={onStudio} className="sq-setup__studio">
         Open the personas studio
       </Button>
     </div>
@@ -608,7 +616,7 @@ function DoneStep({ completed }: { completed: StepId[] }) {
   const missing = STEPS.filter((s) => !completed.includes(s.id));
   return (
     <div className="sq-setup__stack sq-setup__done">
-      <Avatar name="Squad" src={PORTRAITS['persona-01-mascot-bear']} size="xl" frame="portrait" />
+      <Avatar name="Squad" src={pixelPortrait('student')} size="xl" frame="portrait" pixel />
       <p className="sq-setup__lede">Your agent is ready. The village is lit and waiting.</p>
       {missing.length ? (
         <Notice tone="info" title="Still to do">

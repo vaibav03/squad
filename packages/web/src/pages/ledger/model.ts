@@ -31,15 +31,34 @@ export const emptyLedger = (taskId: string): LedgerState => ({ taskId, rows: [],
 type LedgerEvent = Extract<VillageEvent, { t: 'ledger.entry' }>;
 
 /** Snapshot entry from GET /v1/ledger/:taskId (already viewer-filtered by the hub). */
-export const SnapshotEntrySchema = z.object({
-  student: z.string(),
-  field: z.string(),
-  shared: z.string().optional(),
-  withheld: z.literal('hidden').optional(),
-  blocked: z.literal(true).optional(),
-  ts: z.number().optional(),
-});
-export type SnapshotEntry = z.infer<typeof SnapshotEntrySchema>;
+export const SnapshotEntrySchema = z
+  .object({
+    student: z.string(),
+    field: z.string(),
+    shared: z.string().optional(),
+    // The owner's own rows carry the raw value; the board never keeps it, only the fact that something was held back.
+    withheld: z.string().optional(),
+    blocked: z.literal(true).optional(),
+    ts: z.number().optional(),
+  })
+  .transform(({ withheld, ...rest }): SnapshotEntryShape => ({
+    ...rest,
+    ...(withheld ? { withheld: 'hidden' as const } : {}),
+  }));
+interface SnapshotEntryShape {
+  student: string;
+  field: string;
+  shared?: string;
+  withheld?: 'hidden';
+  blocked?: true;
+  ts?: number;
+}
+/** `GET /v1/ledger/:taskId` answers `{ taskId, entries }`; a bare array is accepted too. */
+export const LedgerResponseSchema = z.union([
+  SnapshotEntrySchema.array(),
+  z.object({ entries: SnapshotEntrySchema.array() }).transform((o) => o.entries),
+]);
+export type SnapshotEntry = SnapshotEntryShape;
 
 function rowKey(e: {
   student: string;

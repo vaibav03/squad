@@ -36,7 +36,7 @@
   font-size: var(--text-base);
   border-radius: var(--radius-lg);
 }
-@media (pointer: coarse) {
+@media (pointer: coarse), (max-width: 767px) {
   .sq-btn {
     min-height: var(--touch-min);
   }
@@ -60,7 +60,7 @@
   --btn-fg: var(--foreground);
 }
 .sq-btn--danger {
-  --btn-bg: var(--destructive);
+  --btn-bg: color-mix(in oklab, var(--destructive) 78%, black);
   --btn-fg: #fff;
   --btn-border: transparent;
   --btn-hover: color-mix(in oklab, var(--destructive) 88%, white);
@@ -105,6 +105,14 @@
 .sq-btn[aria-disabled='true']:not(.is-loading) {
   opacity: 0.5;
   cursor: not-allowed;
+}
+/* Disabled primaries read as unavailable, not as a washed-out call to action. */
+.sq-btn--primary:disabled {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  border-color: var(--border);
+  opacity: 1;
+  box-shadow: none;
 }
 .sq-btn.is-loading {
   cursor: progress;

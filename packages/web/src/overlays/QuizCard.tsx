@@ -6,8 +6,19 @@ import './QuizCard.css';
 const KEYS = 'ABCDEFGH';
 
 export function QuizCard(props: QuizCardProps) {
-  const { open, onClose, returnFocusTo, calm, phase, quiz, result, message, onSubmit, onRetry } =
-    props;
+  const {
+    open,
+    onClose,
+    returnFocusTo,
+    calm,
+    phase,
+    quiz,
+    result,
+    message,
+    onSubmit,
+    onRetry,
+    onNext,
+  } = props;
   const titleId = useId();
   const textId = useId();
   const [choice, setChoice] = useState<string | null>(null);
@@ -84,9 +95,25 @@ export function QuizCard(props: QuizCardProps) {
           {quiz ? (
             <>
               <span className="lv-quiz__chip">{quiz.chapter}</span>
-              {quiz.label && <span className="lv-quiz__label">{quiz.label}</span>}
+              {quiz.label && (
+                <span className="lv-quiz__label">
+                  {quiz.label}
+                  {quiz.total ? ` of ${quiz.total}` : ''}
+                </span>
+              )}
+              {quiz.total && quiz.index ? (
+                <span
+                  className="lv-quiz__pills"
+                  role="img"
+                  aria-label={`Question ${quiz.index} of ${quiz.total}`}
+                >
+                  {Array.from({ length: quiz.total }, (_, i) => (
+                    <i key={i} data-on={i < quiz.index! || undefined} />
+                  ))}
+                </span>
+              ) : null}
             </>
-          ) : (
+          ) : phase === 'error' ? null : (
             <span className="lv-skel" style={{ width: 96 }} />
           )}
         </header>
@@ -174,14 +201,9 @@ export function QuizCard(props: QuizCardProps) {
             {showFeedback && (
               <div className="lv-quiz__feedback" data-verdict={verdict} role="status">
                 <p className="lv-quiz__verdict">
-                  <LvIcon
-                    name={
-                      verdict === 'correct' ? 'check' : verdict === 'incorrect' ? 'info' : 'check'
-                    }
-                    size={18}
-                  />
+                  <LvIcon name={verdict === 'incorrect' ? 'x' : 'check'} size={18} />
                   {verdict === 'correct'
-                    ? 'Correct'
+                    ? 'Recorded: correct'
                     : verdict === 'incorrect'
                       ? 'Not quite'
                       : 'Answer recorded'}
@@ -197,8 +219,12 @@ export function QuizCard(props: QuizCardProps) {
 
             <footer className="lv-quiz__foot">
               {phase === 'done' ? (
-                <button type="button" className="lv-btn lv-btn--primary" onClick={onClose}>
-                  Done
+                <button
+                  type="button"
+                  className="lv-btn lv-btn--primary"
+                  onClick={onNext ?? onClose}
+                >
+                  {onNext ? 'Next' : 'Done'}
                 </button>
               ) : (
                 <button

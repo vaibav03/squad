@@ -44,4 +44,6 @@ export interface SquadSession {
   name: string;
   token: string;
   avatarUrl?: string;
+  /** True when `token` is a real hub bearer token (dev-login). Demo sessions have no live token. */
+  live?: boolean;
 }

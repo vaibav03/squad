@@ -11,6 +11,7 @@ export function ConfirmSheet(props: ConfirmSheetProps) {
     onClose,
     returnFocusTo,
     calm,
+    fixed,
     question,
     options = DEFAULT_OPTIONS,
     details,
@@ -23,6 +24,7 @@ export function ConfirmSheet(props: ConfirmSheetProps) {
   const done = phase === 'done';
   const chosen = useRef<number | null>(null);
   const firstBtn = useRef<HTMLButtonElement | null>(null);
+  const heading = useRef<HTMLHeadingElement | null>(null);
 
   const choose = (opt: string, i: number) => {
     if (busy || done) return;
@@ -36,15 +38,17 @@ export function ConfirmSheet(props: ConfirmSheetProps) {
       onClose={onClose}
       returnFocusTo={returnFocusTo}
       calm={calm}
+      fixed={fixed}
       labelledBy={titleId}
       size="sm"
-      initialFocus={() => firstBtn.current}
+      // A consent prompt: focus the question, never the Yes button, so Enter on open cannot commit.
+      initialFocus={() => heading.current}
       className="lv-confirm"
     >
       <span className="lv-grip" aria-hidden="true" />
       <div className="lv-confirm__body">
         <p className="lv-eyebrow">Waiting for your yes</p>
-        <h2 id={titleId} className="lv-confirm__q">
+        <h2 id={titleId} ref={heading} tabIndex={-1} className="lv-confirm__q">
           {question}
         </h2>
 

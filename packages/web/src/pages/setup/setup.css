@@ -284,3 +284,7 @@
 .sq-week {
   margin: 0;
 }
+
+.sq-setup__studio {
+  align-self: flex-start;
+}

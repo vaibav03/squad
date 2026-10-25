@@ -41,6 +41,7 @@ function SignInRoute() {
   if (session) return <Navigate to="/squad" replace />;
   return (
     <SignInStub
+      hubUrl={HUB_URL}
       onSignIn={(s) => {
         setSession(s);
         navigate('/squad');
@@ -64,7 +65,11 @@ function ShellLayout() {
     <SquadProvider hubUrl={HUB_URL} session={session} onSignOut={onSignOut}>
       <RouterAppShell
         user={{ id: session.userId, name: session.name, avatarUrl: session.avatarUrl }}
-        status={{ connection: HUB_URL ? 'live' : 'replay', label: HUB_URL ? 'Live' : 'Demo data' }}
+        status={
+          HUB_URL && session.live
+            ? { connection: 'live', label: 'Live' }
+            : { connection: 'replay', label: 'Demo data' }
+        }
         onSignOut={onSignOut}
         fullBleed={meta?.fullBleed}
       >

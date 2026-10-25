@@ -110,5 +110,6 @@ export function formatElapsed(ms: number): string {
 
 /** "Ch5 p12" from a citation. */
 export function citationLabel(c: { chapter: string; page?: number }): string {
-  return c.page != null ? `${c.chapter} p${c.page}` : c.chapter;
+  const ch = /^ch(\d+)$/i.test(c.chapter) ? `Ch${c.chapter.slice(2)}` : c.chapter;
+  return c.page != null ? `${ch} p${c.page}` : ch;
 }

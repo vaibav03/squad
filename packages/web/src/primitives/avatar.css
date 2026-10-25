@@ -40,6 +40,45 @@
   border-radius: calc(var(--s) * 0.16);
   background: var(--sq-sky-deep);
 }
+/* Pixel portraits: 32x32 source at an integer scale (1x/2x/3x/4x/6x), opaque tile, no smoothing. */
+.sq-avatar.is-pixel.sq-avatar--xs {
+  --s: 32px;
+}
+.sq-avatar.is-pixel.sq-avatar--sm {
+  --s: 64px;
+}
+.sq-avatar.is-pixel.sq-avatar--md {
+  --s: 96px;
+}
+.sq-avatar.is-pixel.sq-avatar--lg {
+  --s: 128px;
+}
+.sq-avatar.is-pixel.sq-avatar--xl {
+  --s: 192px;
+}
+.sq-avatar.is-pixel .sq-avatar__body {
+  border-radius: var(--radius-sm, 4px);
+  background: var(--sq-sky-deep);
+  box-shadow: var(--pixel-outline);
+}
+.sq-avatar.is-pixel .sq-avatar__body img {
+  object-fit: fill;
+  padding: 0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.sq-avatar.is-pixel .sq-avatar__ring {
+  border-radius: var(--radius-md, 8px);
+}
+.sq-avatar.is-pixel.is-idle .sq-avatar__body,
+.sq-avatar.is-pixel.is-muted .sq-avatar__body {
+  animation: none;
+}
+.sq-avatar.is-pixel.is-talking .sq-avatar__body {
+  /* whole pixels only: 0, -1 or -2px, never a fractional shimmer or a scale */
+  transform: translateY(calc(round(var(--lvl) * 2, 1) * -1px));
+  transition: none;
+}
 .sq-avatar__body img {
   width: 100%;
   height: 100%;
@@ -54,12 +93,8 @@
   image-rendering: crisp-edges;
 }
 .sq-avatar__initials {
-  font: 400 calc(var(--s) * 0.42)/1 var(--font-pixel);
+  font: 600 max(12px, calc(var(--s) * 0.4))/1 var(--font-sans);
   color: var(--sq-moon);
-  -webkit-font-smoothing: none;
-}
-.sq-avatar--xs .sq-avatar__initials {
-  font-size: 12px;
 }
 .sq-avatar__ring {
   position: absolute;

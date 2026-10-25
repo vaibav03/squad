@@ -5,7 +5,7 @@ import {
   emptyLedger,
   ledgerFromSnapshot,
   ledgerReducer,
-  SnapshotEntrySchema,
+  LedgerResponseSchema,
   type LedgerState,
 } from './model';
 import { recordedScript, snapshot, TASK_ID } from './fixtures';
@@ -36,7 +36,7 @@ export function useLedger(taskId: string = TASK_ID) {
       });
       if (!res.ok) throw new Error(`ledger ${res.status}`);
       const body: unknown = await res.json();
-      const entries = SnapshotEntrySchema.array().parse(body);
+      const entries = LedgerResponseSchema.parse(body);
       setState(ledgerFromSnapshot(taskId, entries));
       setStatus('ready');
     } catch {
