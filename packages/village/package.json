@@ -10,7 +10,8 @@
     "./a11y": "./src/a11y/index.ts",
     "./rooms": "./src/scenes/rooms.ts",
     "./inspector": "./src/inspector/index.ts",
-    "./council": "./src/council/index.ts"
+    "./council": "./src/council/index.ts",
+    "./portraits": "./src/hud/portraits.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",

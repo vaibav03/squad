@@ -27,43 +27,60 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     nav: { label: 'Chat', icon: 'message', order: 2, primary: true },
   },
   {
-    key: 'squad-create',
-    path: '/squad/new',
-    title: 'Create a squad',
+    key: 'connections',
+    path: '/squad/connections',
+    title: 'Connections',
+    nav: { label: 'Connections', icon: 'link', order: 3, primary: true },
+  },
+  {
+    key: 'courses',
+    path: '/squad/courses/:courseId?',
+    title: 'Courses',
+    nav: { label: 'Courses', icon: 'book', order: 4 },
+  },
+  {
+    key: 'ledger',
+    path: '/squad/ledger/:taskId?',
+    title: 'Privacy ledger',
+    nav: { label: 'Privacy ledger', icon: 'ledger', order: 6 },
+  },
+  {
+    key: 'personas',
+    path: '/squad/personas',
+    title: 'Study buddies',
+    nav: { label: 'Study buddies', icon: 'sparkle', order: 7 },
   },
   {
     key: 'squad-members',
     path: '/squad/members',
     title: 'Members',
+    nav: { label: 'Squad and members', icon: 'users', order: 8 },
   },
   {
     key: 'setup',
     path: '/squad/setup/:step?',
     title: 'Set up',
-    nav: { label: 'Setup', icon: 'sparkle', order: 5 },
+    nav: { label: 'Setup guide', icon: 'check', order: 9 },
   },
   {
-    key: 'personas',
-    path: '/squad/personas',
-    title: 'Personas',
-    nav: { label: 'Personas', icon: 'users', order: 6 },
+    key: 'onboarding',
+    path: '/squad/welcome-tour/:step?',
+    title: 'Welcome tour',
   },
   {
-    key: 'ledger',
-    path: '/squad/ledger/:taskId?',
-    title: 'Ledger',
-    nav: { label: 'Ledger', icon: 'ledger', order: 3, primary: true },
+    key: 'squad-create',
+    path: '/squad/new',
+    title: 'Create a squad',
   },
   {
     key: 'trip',
     path: '/squad/trips/:tripId?',
     title: 'Trip',
-    nav: { label: 'Trip', icon: 'plane', order: 4 },
   },
   {
     key: 'status',
     path: '/squad/status',
-    title: 'Status',
+    title: 'System status',
   },
   {
     key: 'mastery',
@@ -72,21 +89,9 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     // No nav item: mastery lives in the village. This path only redirects to /squad/village?mastery=1.
   },
   {
-    key: 'connections',
-    path: '/squad/connections',
-    title: 'Connections',
-    nav: { label: 'Connections', icon: 'link', order: 8 },
-  },
-  {
     key: 'health',
     path: '/squad/connections/health',
-    title: 'Integration health',
-  },
-  {
-    key: 'courses',
-    path: '/squad/courses/:courseId?',
-    title: 'Courses',
-    nav: { label: 'Courses', icon: 'book', order: 7 },
+    title: 'Connections',
   },
 ];
 
@@ -99,6 +104,7 @@ export const squadNav: NavItem[] = squadRouteMeta
     icon: r.nav!.icon,
     order: r.nav!.order,
     primary: r.nav!.primary,
+    ...(r.nav!.also ? { also: r.nav!.also } : {}),
     to: r.path.replace(/\/:[a-zA-Z]+\??/g, ''),
   }))
   .sort((a, b) => a.order - b.order);

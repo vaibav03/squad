@@ -109,6 +109,7 @@ export const SYNC_WORDS: Record<PlanView['sync']['imessage'], string> = {
   queued: 'Queued to iMessage',
   sent: 'Sent to iMessage',
   delivered: 'Delivered to iMessage',
+  read: 'Read in iMessage',
   dry_run: 'iMessage dry run, not sent',
   failed: 'iMessage failed',
 };

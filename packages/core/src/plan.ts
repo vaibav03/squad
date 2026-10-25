@@ -183,7 +183,7 @@ export interface PlanView extends Omit<Plan, 'log'> {
   /** Where the last decision went: said in the squad chat, and how its iMessage mirror is doing. */
   sync: {
     posted: { at: number; text: string } | null;
-    imessage: 'off' | 'web_only' | 'queued' | 'sent' | 'delivered' | 'dry_run' | 'failed';
+    imessage: 'off' | 'web_only' | 'queued' | 'sent' | 'delivered' | 'read' | 'dry_run' | 'failed';
   };
 }
 

@@ -371,10 +371,14 @@ export function exchangesFromEvent(e: VillageEvent, ctx: ExchangeCtx): Omit<Exch
     case 'discussion.started':
     case 'discussion.ended':
     case 'discussion.takeaway':
-    case 'a2a.message':
     case 'council.stage':
-      // Additive kinds: a2a.* plugs in later via registerExchangeMapper('a2a.', ...); no exchange until then.
       return [];
+    case 'a2a.message': {
+      // The council A2A envelope is a core kind now: its public fields (from, to, kind, summary) become an exchange so the
+      // Agents and Chat tabs show the thread, live and from a stored run (the registered 'a2a.' mapper reads them).
+      const m = mapperFor('a2a.message');
+      return m ? m(e as unknown as Record<string, unknown>, { ...(me ? { me } : {}), mine }) : [];
+    }
     default: {
       const _x: never = e;
       void _x;

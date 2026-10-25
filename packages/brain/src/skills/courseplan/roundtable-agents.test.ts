@@ -1,9 +1,15 @@
-import { LlmError, validateA2aTrace, type A2aMessage, type VillageEvent } from '@squad/core';
+import {
+  LlmError,
+  councilRunActions,
+  validateA2aTrace,
+  type A2aMessage,
+  type VillageEvent,
+} from '@squad/core';
 import { describe, expect, it } from 'vitest';
 import { createCouncilAgents } from '../../agents/factory';
 import { FakeTransport, call, step, submit } from '../../agents/test-kit';
 import { makeSkillKit, msg } from '../testkit';
-import { runCoursePlanAgents } from './roundtable-agents';
+import { roundTableActions, runCoursePlanAgents } from './roundtable-agents';
 import { createCoursePlanSkill } from './skill';
 import { MOCK_COMPLETED, eligibleCourses, loadCatalog, validatePlan } from './index';
 
@@ -96,6 +102,38 @@ describe('round table on the agent runtime', () => {
     expect(res.usedFallback).toBe(false);
     expect(res.replyText).not.toMatch(/Demo|Degraded/);
     expect(events.some((e) => e.t === 'council.verdict' && e.outcome)).toBe(true);
+    // action items (docs/a2a.md convention): one status envelope per item, from the chairman, parent = the verdict
+    const verdictMsg = m.find((x) => x.kind === 'verdict')!;
+    const acts = m.filter((x) => x.stage === 'actions');
+    expect(acts.length).toBeGreaterThanOrEqual(2);
+    expect(acts.length).toBeLessThanOrEqual(4);
+    for (const a of acts) {
+      expect(a.kind).toBe('status');
+      expect(a.to).toBe('room');
+      expect(a.source).toBe('code');
+      expect(a.parentMessageId).toBe(verdictMsg.id);
+      expect(a.summary!.length).toBeLessThanOrEqual(120);
+    }
+    expect(acts[0]!.summary).toMatch(
+      /^Take [A-Z]{2,4} \d{3}(, [A-Z]{2,4} \d{3})*( and [A-Z]{2,4} \d{3})? in Fall$/,
+    );
+    expect(acts.at(-1)!.summary).toMatch(/real advisor/);
+    expect(councilRunActions(verdictMsg.correlationId).map((a) => a.id)).toEqual(
+      acts.map((a) => a.id),
+    );
+  });
+
+  it('roundTableActions pairs the courses and adds the advisor steps', () => {
+    expect(roundTableActions(['MAT 111', 'CSL 110', 'ENG 101'], 'Fall')).toEqual([
+      'Take MAT 111 and CSL 110 in Fall',
+      'Take ENG 101 in Fall',
+      'Confirm the plan with your real advisor before registering',
+    ]);
+    expect(roundTableActions([], 'Fall', 'grind')).toEqual([
+      'Ask your advisor which courses are open to you',
+      "Ask your advisor about Grind's different pick",
+      'Confirm the plan with your real advisor before registering',
+    ]);
   });
 
   it('each agent has its own system instruction and the chairman owns delegate', async () => {
