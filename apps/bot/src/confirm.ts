@@ -189,6 +189,19 @@ export function createConfirmManager(deps: ConfirmDeps): ConfirmApi {
       }
       return true;
     },
+    cancel(student, taskId) {
+      const a = active.get(student);
+      if (a?.taskId === taskId) {
+        finish(a, 'timeout');
+        return true;
+      }
+      const q = queues.get(student);
+      const i = q?.findIndex((e) => e.taskId === taskId) ?? -1;
+      if (!q || i < 0) return false;
+      const [e] = q.splice(i, 1);
+      e!.resolve('timeout');
+      return true;
+    },
     hasPending(student) {
       return active.has(student) || (queues.get(student)?.length ?? 0) > 0;
     },

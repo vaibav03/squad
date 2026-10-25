@@ -50,3 +50,8 @@ export function purgeContextBusy(deps: HubDeps, student: string, connectionId: s
   }
   return n;
 }
+
+/** Trip planning hook: before each constraint check, make the members' connected-calendar busy blocks current. */
+export function refreshBusyForTrip(deps: HubDeps, members: string[]): void {
+  for (const m of members) mergeContextBusy(deps, m);
+}

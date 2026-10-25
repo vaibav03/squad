@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ledgerFromSnapshot, ledgerReducer, emptyLedger, summarize } from './ledger/model';
 import { snapshot, recordedScript, TASK_ID } from './ledger/fixtures';
-import { splitTotal, tripReducer, withDerived, parseTripEvent, move } from './trip/model';
-import { tripVoted, TRIP_ID } from './trip/fixtures';
+import { tripReducer, parseTripEvent, move, claimCutscene } from './trip/model';
+import { tripVoting, tripConfirmed, TRIP_ID } from './trip/fixtures';
 import { sanitize, weakestConcepts } from '../overlays/mastery/model';
 import { masteryData } from '../overlays/mastery/fixtures';
 import { playRecorded } from '../overlays/kit';
@@ -45,25 +45,21 @@ describe('ledger privacy and reduction', () => {
 });
 
 describe('trip', () => {
-  it('splits so shares add up exactly', () => {
-    expect(splitTotal(1180, 4)).toEqual([295, 295, 295, 295]);
-    const s = splitTotal(1000, 3);
-    expect(s.reduce((a, b) => a + b, 0)).toBe(1000);
-  });
-  it('trip.confirmed and all-confirmed both flip confirmed once', () => {
-    const t = { ...tripVoted, tripId: TRIP_ID };
-    expect(tripReducer(t, { t: 'trip.confirmed', taskId: TRIP_ID, squadId: 'sq' }).confirmed).toBe(
-      true,
-    );
-    expect(tripReducer(t, { t: 'trip.confirmed', taskId: 'x', squadId: 'sq' }).confirmed).toBe(
-      false,
-    );
+  it('trip.updated replaces the view for the same trip and ignores another trip', () => {
+    expect(tripReducer(tripVoting, { t: 'trip.updated', trip: tripConfirmed })).toBe(tripConfirmed);
     expect(
-      withDerived({ ...t, members: t.members.map((m) => ({ ...m, confirmed: true })) }).confirmed,
-    ).toBe(true);
+      tripReducer(tripVoting, { t: 'trip.updated', trip: { ...tripConfirmed, tripId: 'other' } }),
+    ).toBe(tripVoting);
+    expect(tripReducer(tripVoting, { t: 'trip.confirmed', taskId: TRIP_ID })).toBe(tripVoting);
+    expect(tripReducer(null, { t: 'trip.updated', trip: tripConfirmed })).toBe(tripConfirmed);
+  });
+  it('claims the cutscene once per trip', () => {
+    expect(claimCutscene('t_once')).toBe(true);
+    expect(claimCutscene('t_once')).toBe(false);
   });
   it('has no limits for others by construction and rejects malformed events', () => {
-    expect(parseTripEvent({ t: 'trip.updated', trip: { nope: 1 } })).toBeNull();
+    expect(parseTripEvent({ t: 'trip.updated', trip: { nope: 1 } })).toEqual({ t: 'refresh' });
+    expect(parseTripEvent({ t: 'bogus' })).toBeNull();
     expect(move(['a', 'b', 'c'], 0, 1)).toEqual(['b', 'a', 'c']);
   });
 });

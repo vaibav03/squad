@@ -1,5 +1,6 @@
 import type { Db } from '@squad/core';
 import type { Directory, TripRecord, TripStore, TripView, Viewer } from '../types';
+import { buildTripView } from '../trips/view';
 import { ensureHubSchema } from './schema';
 
 const clone = <T>(v: T): T => structuredClone(v);
@@ -62,6 +63,7 @@ export function createTripStore(db?: Db): TripStore {
     },
     upsert(t) {
       const prev = trips.get(t.tripId);
+      if (prev?.collab) return; // the hub owns collaborative trips; the mesh only posts limits
       const c = clone(t) as TripRecord;
       c.limits = { ...(prev?.limits ?? {}) };
       for (const [s, l] of Object.entries(t.limits ?? {}))
@@ -81,8 +83,14 @@ export function createTripStore(db?: Db): TripStore {
     },
     get: (id) => (trips.has(id) ? clone(trips.get(id)!) : undefined),
     byTask(taskId) {
-      const t = [...trips.values()].find((x) => x.taskId === taskId);
+      const t = [...trips.values()].find(
+        (x) => x.taskId === taskId || x.collab?.runs.includes(taskId),
+      );
       return t ? clone(t) : undefined;
+    },
+    put(t) {
+      trips.set(t.tripId, clone(t));
+      persist(t);
     },
     list: (squadId) =>
       [...trips.values()].filter((t) => !squadId || t.squadId === squadId).map(clone),
@@ -120,23 +128,7 @@ export function createTripStore(db?: Db): TripStore {
     },
     view(tripId, viewer: Viewer, ctx: { directory: Directory }): TripView | null {
       const t = trips.get(tripId);
-      if (!t || t.squadId !== viewer.squadId) return null;
-      const small = ctx.directory.isSmall(viewer.squadId);
-      const voted = new Set(t.votes.map((v) => v.student)).size;
-      const mineVote = t.votes.find((v) => v.student === viewer.studentId)?.ranking;
-      const mine = t.limits[viewer.studentId];
-      return {
-        tripId: t.tripId,
-        taskId: t.taskId,
-        status: t.status,
-        options: clone(t.options),
-        dates: t.dates,
-        myVote: mineVote ? [...mineVote] : null,
-        voteProgress: small ? null : { voted, of: members(t).length },
-        vetoed: clone(t.vetoed),
-        confirmations: t.confirmations.map((c) => ({ student: c.student, confirmed: c.confirmed })),
-        myLimits: mine && !viewer.projector ? { ...mine } : null,
-      };
+      return t ? buildTripView(t, viewer, ctx) : null;
     },
     clear() {
       trips.clear();

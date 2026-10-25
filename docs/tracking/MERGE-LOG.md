@@ -585,3 +585,18 @@ Branch `merge/batch21` (worktree `squad-wt/merge21`), one `--no-ff` merge commit
 
 - Landing merge commit: `09494f1274503d1e2bec2cfb3d56f074d5b09afe` (parents `64aef4d85469208361014a617f17221bc2d23adb` = tag `pre-merge-batch21`, `5f7c724c09c759860d002a638c50546b0796d71f` = merge/batch21; only tracker docs differ).
 - Rollback: `git revert -m 1 09494f1274503d1e2bec2cfb3d56f074d5b09afe`.
+
+## Batch 22 (C): feature/trip-collab (+ two requested wirings) into main
+
+Branch `merge/batch22` (worktree `squad-wt/merge22`), landed as a true `--no-ff` merge. trip-collab head `b6b66e40` (lead reported `pnpm check` 0 and j21 8 steps).
+
+- Conflicts: `apps/hub/src/app.ts` and `packages/core/src/index.ts` (kept both: plans + tripSvc, plan + trip exports). `packages/web/src/pages/trip/TripView.tsx` and `useTrip.ts`: took trip-collab's rewrite (it supersedes main's single-vote page and the empty-state "Plan a trip" onPlan prompt, which is dropped from `trip/index.tsx`) and kept blank-shell's `timedFetch` on every hub call in `useTrip`.
+- Interaction fix in `useTrip`: main's stream-retry kit made `refresh` run again after a blip and flipped a shown trip to the error state (the lead's "failed poll keeps the view" test failed after the merge). A failed refresh now keeps a trip that is already on screen; the first load still shows the error.
+- Wiring 1 (done): `deps.tripSvc.setBeforeConstraints(...)` in the hub app calls the new `refreshBusyForTrip(deps, members)` (`apps/hub/src/context/busy.ts`), i.e. `mergeContextBusy` from nook-parity: connected Canvas/Google calendars feed the constraints check, busy blocks only, titles never stored. Test in `context/wiring.test.ts`.
+- Wiring 2 (done): the trip chat intents' own `@cubbie|cubbi|squad|planner|council` regex is replaced by `addressesTrip()` over the shared `parseMentions` (agents cubbie, planner, council). Behaviour change by design: tags inside quotes, code, URLs and emails no longer address the trip. Test `trips/chat.test.ts` (11 cases).
+- Checks: `pnpm check` exit 0 (after the merge and again after the wirings); `pnpm demo:live` OK; hub smoke 138/138; browser smoke (fresh Playwright context, hub :8970 / web :5370 / agents 4841+, new squad `summa`): 3 routes render, build marker equal, chat sends and answers, `@cubbie plan a trip to Cabo in March` is answered in chat and /squad/trips then shows "Cabo in March" in Voting, 0 page errors.
+
+### Landing (batch 22)
+
+- Landing merge commit: `1b90bb305f422a6faee2696a0cfd1bad6801fc2a` (parents `7437d77c545d8bf66986250cda161258fc03f054` = tag `pre-merge-batch22`, `66c4bb2aa19c579283903ea9edf0115134207276` = merge/batch22; only tracker docs differ).
+- Rollback: `git revert -m 1 1b90bb305f422a6faee2696a0cfd1bad6801fc2a`.
