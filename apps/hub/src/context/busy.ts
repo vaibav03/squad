@@ -1,5 +1,6 @@
 import { BUSY_TITLE, type BusyBlock } from '@squad/core';
 import { deriveTripConstraints } from '@squad/brain';
+import { agentUrlsFromEnv } from '../wire';
 import { contextServiceFor } from './service';
 import type { HubDeps } from '../types';
 
@@ -52,6 +53,31 @@ export function purgeContextBusy(deps: HubDeps, student: string, connectionId: s
 }
 
 /** Trip planning hook: before each constraint check, make the members' connected-calendar busy blocks current. */
-export function refreshBusyForTrip(deps: HubDeps, members: string[]): void {
-  for (const m of members) mergeContextBusy(deps, m);
+export async function refreshBusyForTrip(
+  deps: HubDeps,
+  members: string[],
+  agentUrls: Record<string, string> = agentUrlsFromEnv(),
+): Promise<void> {
+  for (const m of members) {
+    mergeContextBusy(deps, m);
+    // The mesh agent computes the overlap from ITS calendar, so hand it the current busy intervals (no titles).
+    const url = agentUrls[m];
+    if (!url) continue;
+    const events = deps.db
+      .prepare('SELECT start, end, title FROM hub_busy_blocks WHERE student=? ORDER BY start')
+      .all(m);
+    try {
+      await fetch(`${url.replace(/\/+$/, '')}/internal/calendar`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'X-Nook-Internal': deps.config.internalSecret,
+        },
+        body: JSON.stringify({ events }),
+        signal: AbortSignal.timeout(3000),
+      });
+    } catch {
+      /* agent offline: the trip service reports that itself */
+    }
+  }
 }

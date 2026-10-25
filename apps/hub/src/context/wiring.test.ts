@@ -99,13 +99,13 @@ describe('context wiring in the hub', () => {
     expect(JSON.stringify(rows)).not.toContain('Doctor');
   });
 
-  it("trip planning refreshes every member's calendar busy blocks (busy only, no titles)", () => {
+  it("trip planning refreshes every member's calendar busy blocks (busy only, no titles)", async () => {
     const { h, add } = hub();
     add('s_ana', 'gcal_event', 'e2', 'Therapy session', {
       startsAt: T0 + 86_400_000,
       endsAt: T0 + 86_400_000 + 3_600_000,
     });
-    refreshBusyForTrip(h.deps, ['s_ana', 's_ben']);
+    await refreshBusyForTrip(h.deps, ['s_ana', 's_ben'], {});
     expect(busyBlocksOf(h.deps, 's_ana')).toHaveLength(1);
     expect(busyBlocksOf(h.deps, 's_ben')).toHaveLength(0);
     expect(JSON.stringify(busyBlocksOf(h.deps, 's_ana'))).not.toContain('Therapy');

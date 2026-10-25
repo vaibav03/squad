@@ -124,7 +124,7 @@ export function calendarReply(
     perDay.set(d, (perDay.get(d) ?? 0) + 1);
   }
   const busiest = [...perDay].sort((a, b) => b[1] - a[1])[0]![0];
-  const aggregate = `For ${r.label} you have ${inRange.length} calendar event${inRange.length === 1 ? '' : 's'}, about ${hoursText(busyMs)} busy, busiest on ${busiest}. Titles stay private: only you see the details.`;
+  const aggregate = `For ${r.label} you have ${inRange.length} calendar event${inRange.length === 1 ? '' : 's'}, about ${hoursText(busyMs)} busy, busiest on ${busiest}. Only you can see which events they are.`;
   const lines = inRange.slice(0, 8).map((s) => {
     const when = new Date(s.startsAt!).toLocaleString('en-US', {
       weekday: 'short',
