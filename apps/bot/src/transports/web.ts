@@ -22,9 +22,12 @@ import {
 
 /** Structured citations first (they carry non-PDF sources), then the ones parsed from the text, without duplicates. */
 function mergeCitations(structured: readonly ChatCitation[], parsed: readonly ChatCitation[]): ChatCitation[] {
-  const out = [...structured];
-  for (const c of parsed)
-    if (!out.some((x) => x.file === c.file && x.page === c.page)) out.push(c);
+  const key = (c: ChatCitation) =>
+    c.source ? `${c.source.kind}/${c.source.id}#${c.source.anchor ?? ''}` : `${c.file}#${c.page}`;
+  const out: ChatCitation[] = [];
+  for (const c of [...structured, ...parsed])
+    if (!out.some((x) => key(x) === key(c) || (!x.source && !c.source && x.file === c.file && x.page === c.page)))
+      out.push(c);
   return out;
 }
 
