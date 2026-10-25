@@ -22,6 +22,8 @@
     "demo:preflight": "tsx scripts/demo/preflight.ts",
     "demo:live": "tsx scripts/demo/live.ts",
     "dev:all": "tsx scripts/dev/all.ts",
+    "live:verify": "tsx scripts/live/verify.ts",
+    "live:images": "python3 scripts/live/make_images.py",
     "doctor": "tsx scripts/doctor.ts",
     "squad:doctor": "tsx scripts/doctor.ts"
   },
