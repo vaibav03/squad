@@ -124,7 +124,7 @@ export interface HostCtx {
 interface SeatStore {
   readonly selected: string | null;
   readonly room: { slot: string; who: string } | null;
-  select(id: string | null, room?: { slot: string; who: string }): void;
+  select(id: string | null, room?: { slot: string; who: string; initialTab?: 'chat' }): void;
   setSide(s: 'left' | 'right'): void;
   isThinking?(id: string, who?: string): boolean;
 }
@@ -377,7 +377,7 @@ const mod = {
       if (!seat || !st || !inside) return;
       const cx = Math.round(scene.scale.width / 2);
       st.setSide(cx - INT_W / 2 + seat.x > scene.scale.width / 2 ? 'left' : 'right');
-      st.select(seat.agent, { slot: inside.p.slotId, who: seat.who });
+      st.select(seat.agent, { slot: inside.p.slotId, who: seat.who, initialTab: 'chat' });
     }
     /** Rebuild the hit zones when the cast of the room changes (council seats fill in as members speak). */
     function syncSeats(live: Live): void {
