@@ -147,7 +147,14 @@ async function settle(page, expectTitle, isDock, t0) {
         if (expectTitle && !again.title.startsWith(expectTitle)) why.push(`title=${again.title}`);
         if (expectTitle && again.hasMain && again.mainLabel && again.mainLabel !== expectTitle)
           why.push(`main=${again.mainLabel}`);
-        return { ok: why.length === 0, ms: firstMs, snap: again, why: why.join(';') || 'ok', busy, hidden };
+        return {
+          ok: why.length === 0,
+          ms: firstMs,
+          snap: again,
+          why: why.join(';') || 'ok',
+          busy,
+          hidden,
+        };
       }
       firstMs = null;
     }
@@ -170,7 +177,8 @@ async function markedPid() {
   if (_pid) return _pid;
   const { stdout } = await sh('ps', ['-axo', 'pid=,command=']);
   for (const l of stdout.split('\n'))
-    if (l.includes(`--mt-marker=${MARK}`) && !l.includes('--type=')) return (_pid = Number(l.trim().split(/\s+/)[0]));
+    if (l.includes(`--mt-marker=${MARK}`) && !l.includes('--type='))
+      return (_pid = Number(l.trim().split(/\s+/)[0]));
   throw new Error('browser pid not found');
 }
 /** pids of the browser process and all descendants */
@@ -184,18 +192,23 @@ async function browserPids(root) {
   }
   const out = new Set([root]);
   const q = [root];
-  while (q.length) for (const c of kids.get(q.shift()) ?? []) if (!out.has(c)) {
-      out.add(c);
-      q.push(c);
-    }
+  while (q.length)
+    for (const c of kids.get(q.shift()) ?? [])
+      if (!out.has(c)) {
+        out.add(c);
+        q.push(c);
+      }
   return out;
 }
 /** ESTABLISHED sockets owned by the browser tree whose REMOTE side is the hub port */
 async function establishedToHub(root) {
   const pids = await browserPids(root);
-  const { stdout } = await sh('lsof', ['-nP', `-iTCP:${HUB_PORT}`, '-sTCP:ESTABLISHED', '-Fpn']).catch(
-    (e) => ({ stdout: e.stdout ?? '' }),
-  );
+  const { stdout } = await sh('lsof', [
+    '-nP',
+    `-iTCP:${HUB_PORT}`,
+    '-sTCP:ESTABLISHED',
+    '-Fpn',
+  ]).catch((e) => ({ stdout: e.stdout ?? '' }));
   let pid = 0;
   let n = 0;
   for (const l of stdout.split('\n')) {
@@ -206,7 +219,10 @@ async function establishedToHub(root) {
 }
 
 async function iteration(browser, token, iter) {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+  const ctx = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    reducedMotion: 'reduce',
+  });
   await ctx.addInitScript((t) => {
     try {
       if (!localStorage.getItem('squad.token')) localStorage.setItem('squad.token', t);
@@ -250,7 +266,9 @@ async function iteration(browser, token, iter) {
         const page = pages[i];
         const isDock = name === 'dock';
         // all gotos fire together; 'commit' returns as soon as the response head arrives (or never, when starved)
-        page.goto(`${WEB}${path}`, { waitUntil: 'commit', timeout: DEADLINE }).catch(() => undefined);
+        page
+          .goto(`${WEB}${path}`, { waitUntil: 'commit', timeout: DEADLINE })
+          .catch(() => undefined);
         if (isDock) {
           page
             .getByTestId('chat-dock-open')
@@ -292,13 +310,28 @@ try {
     );
     if (VERBOSE)
       for (const t of r.tabs)
-        console.error('  ', t.name, t.ok ? 'ok' : t.why, t.ms, t.busy ? 'BUSY' : '', JSON.stringify(t.snap?.text?.slice(0, 60)));
+        console.error(
+          '  ',
+          t.name,
+          t.ok ? 'ok' : t.why,
+          t.ms,
+          t.busy ? 'BUSY' : '',
+          JSON.stringify(t.snap?.text?.slice(0, 60)),
+        );
   }
   const byRoute = {};
   const allMs = [];
   for (const r of results)
     for (const t of r.tabs) {
-      const b = (byRoute[t.route] ??= { n: 0, ok: 0, blank: 0, stuck: 0, other: 0, busy: 0, ms: [] });
+      const b = (byRoute[t.route] ??= {
+        n: 0,
+        ok: 0,
+        blank: 0,
+        stuck: 0,
+        other: 0,
+        busy: 0,
+        ms: [],
+      });
       b.n++;
       if (t.ok) {
         b.ok++;
@@ -311,14 +344,19 @@ try {
   for (const at of SAMPLE_AT) {
     const v = results.map((r) => r.samples[at]).filter((x) => x >= 0);
     sampleStats[`t${at / 1000}s`] = v.length
-      ? { min: Math.min(...v), max: Math.max(...v), avg: +(v.reduce((a, b) => a + b, 0) / v.length).toFixed(1) }
+      ? {
+          min: Math.min(...v),
+          max: Math.max(...v),
+          avg: +(v.reduce((a, b) => a + b, 0) / v.length).toFixed(1),
+        }
       : null;
   }
   const totalTabs = results.reduce((a, r) => a + r.tabs.length, 0);
   const okTabs = results.reduce((a, r) => a + r.tabs.filter((t) => t.ok).length, 0);
   const iterAllOk = results.filter((r) => r.tabs.every((t) => t.ok)).length;
   const reqTotals = {};
-  for (const r of results) for (const [k, v] of Object.entries(r.reqPaths)) reqTotals[k] = (reqTotals[k] ?? 0) + v;
+  for (const r of results)
+    for (const [k, v] of Object.entries(r.reqPaths)) reqTotals[k] = (reqTotals[k] ?? 0) + v;
   const reqPerIter = Object.fromEntries(
     Object.entries(reqTotals)
       .sort((a, b) => b[1] - a[1])
@@ -343,13 +381,24 @@ try {
     byRoute: Object.fromEntries(
       Object.entries(byRoute).map(([k, b]) => [
         k,
-        { n: b.n, ok: b.ok, blank: b.blank, stuck: b.stuck, other: b.other, busy: b.busy, p50: pct(b.ms, 50), p95: pct(b.ms, 95) },
+        {
+          n: b.n,
+          ok: b.ok,
+          blank: b.blank,
+          stuck: b.stuck,
+          other: b.other,
+          busy: b.busy,
+          p50: pct(b.ms, 50),
+          p95: pct(b.ms, 95),
+        },
       ]),
     ),
     hubRequestsPerIteration: reqPerIter,
   };
   console.log(JSON.stringify(summary));
-  console.error(`\n${LABEL} who=${WHO} mode=${MODE} tabs=${TABS} n=${N}  ok ${okTabs}/${totalTabs}  all-ok iterations ${iterAllOk}/${N}`);
+  console.error(
+    `\n${LABEL} who=${WHO} mode=${MODE} tabs=${TABS} n=${N}  ok ${okTabs}/${totalTabs}  all-ok iterations ${iterAllOk}/${N}`,
+  );
   console.error('route      n   ok blank stuck other busy  p50   p95');
   for (const [k, b] of Object.entries(summary.byRoute))
     console.error(
