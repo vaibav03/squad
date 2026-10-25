@@ -14,7 +14,8 @@
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "test:smoke": "node scripts/smoke.mjs",
     "format": "prettier --write .",
-    "dev": "pnpm -r --parallel --if-present run dev"
+    "dev": "pnpm -r --parallel --if-present run dev",
+    "bot:chat": "pnpm --filter @squad/bot chat"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
