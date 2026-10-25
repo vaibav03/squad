@@ -27,6 +27,7 @@ import { pixelPortrait } from '../../pixel/portraits';
 import { HubError, postCalendar, uploadCourse } from './api';
 import { demoBlocks, PERSONA_CHOICES, SAMPLE_COURSES } from './fixtures';
 import { parseIcs } from './ics';
+import { saveSetupDone } from './progress';
 import {
   completedSteps,
   formatBytes,
@@ -108,6 +109,9 @@ export default function SetupPage() {
 
   const go = useCallback((s: StepId | 'done') => navigate(`/squad/setup/${s}`), [navigate]);
   const completed = completedSteps(state);
+  useEffect(() => {
+    saveSetupDone(completed);
+  }, [completed.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
   const canSkip = step === 'calendar' || step === 'persona';
   const next = nextStep(step);
   const prev = prevStep(step);
@@ -260,6 +264,9 @@ function PhoneStep({ state, dispatch }: StepProps) {
       <p className="sq-setup__lede">
         Your number only connects iMessage to your own agent. Other students never see it.
       </p>
+      <Notice tone="info" title="Demo step">
+        Phone linking is a demo for now: the number is not stored and no code is sent.
+      </Notice>
       <TextField
         label="Mobile number"
         type="tel"
@@ -281,7 +288,7 @@ function PhoneStep({ state, dispatch }: StepProps) {
             autoComplete="one-time-code"
             maxLength={6}
             value={code}
-            hint="We just texted you a code."
+            hint="Demo mode: no text is sent. Enter any 6 digits."
             onChange={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
             onBlur={() => setCodeTouched(true)}
             error={codeErr ?? undefined}
