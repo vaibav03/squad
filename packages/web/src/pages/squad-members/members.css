@@ -41,3 +41,24 @@
   gap: var(--space-2);
   flex-wrap: wrap;
 }
+
+.sq-members__role {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: 500 var(--text-sm) / var(--lh-sm) var(--font-sans);
+  color: var(--foreground);
+}
+.sq-members__btn {
+  border: 1px solid var(--muted-foreground);
+  color: var(--foreground);
+}
+@media (max-width: 639px) {
+  .sq-members__tools {
+    gap: var(--space-2);
+  }
+  .sq-members__btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

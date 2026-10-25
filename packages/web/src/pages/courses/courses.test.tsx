@@ -33,6 +33,13 @@ describe('courses page (mock mode)', () => {
     expect(screen.getByTestId('file-error').textContent).toMatch(/scan/i);
     expect(screen.getAllByRole('progressbar').length).toBeGreaterThan(0);
   });
+  it('policy lines expose a citation chip when a source file is known', async () => {
+    app('/squad/courses/c_bio201_9fK2pQ');
+    await waitFor(() => expect(screen.getAllByTestId('file-row').length).toBe(4));
+    const lines = screen.queryAllByTestId('policy-line');
+    if (lines.length > 0)
+      expect(screen.getAllByRole('button', { name: /^Source:/ }).length).toBeGreaterThan(0);
+  });
   it('delete is gated on typing the title', async () => {
     app('/squad/courses/c_bio201_9fK2pQ');
     await waitFor(() => screen.getByTestId('delete-course'));

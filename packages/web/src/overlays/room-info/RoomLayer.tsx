@@ -168,6 +168,17 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
                 }
               : undefined
           }
+          extraAction={
+            slot === 'council-hall'
+              ? {
+                  label: 'Ask the council',
+                  onClick: () => {
+                    setOpen(false);
+                    window.dispatchEvent(new Event('squad:council-open'));
+                  },
+                }
+              : undefined
+          }
           returnFocusTo={helpRef.current}
           calm={calm}
           speaking={speaking}

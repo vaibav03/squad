@@ -15,6 +15,8 @@ export interface RoomInfoPanelProps {
   calm?: boolean;
   /** Who is speaking right now in the live room ('chill', 'Grind', 'chair'...); that member's avatar plays its talking loop. */
   speaking?: string | null;
+  /** Optional extra button under the room header (e.g. "Ask the council"). */
+  extraAction?: { label: string; onClick: () => void };
 }
 
 /** Copy to the clipboard; falls back to a hidden textarea. Never throws. Resolves true on success. */
@@ -44,7 +46,7 @@ export async function copyText(text: string): Promise<boolean> {
 }
 
 export function RoomInfoPanel(props: RoomInfoPanelProps) {
-  const { info, open, onClose, onRun, returnFocusTo, calm, speaking } = props;
+  const { info, open, onClose, onRun, returnFocusTo, calm, extraAction, speaking } = props;
   const speakingId = speaking ? castName(speaking) : undefined;
   const titleId = useId();
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
@@ -80,6 +82,16 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
             {info.title}
           </h2>
           <p className="rr-panel__tagline">{info.tagline}</p>
+          {extraAction ? (
+            <button
+              type="button"
+              className="lv-btn lv-btn--primary rr-ask"
+              onClick={extraAction.onClick}
+            >
+              <LvIcon name="users" size={18} />
+              {extraAction.label}
+            </button>
+          ) : null}
         </header>
 
         <section className="rr-sec">

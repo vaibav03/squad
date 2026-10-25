@@ -126,6 +126,27 @@ describe('createResilientLlm (injected client, no network)', () => {
     expect((await llm.complete({ messages: 'q' })).text).toBe('real');
   });
 
+  it('a cheaper tier that still answers does not flip the status back while the failing tier keeps failing', async () => {
+    const generateContent = vi.fn(async (req: { model: string }) => {
+      if (/pro/.test(req.model)) throw CREDITS;
+      return { text: 'flash ok' };
+    });
+    let t = 0;
+    const llm = createResilientLlm({
+      real: mk(generateContent, { models: { main: 'gemini-pro', fast: 'gemini-flash' } }),
+      fake: new FakeLlm(),
+      now: () => t,
+    });
+    await llm.complete({ messages: 'q' }); // main tier: 402
+    t = 61_000;
+    llm.status();
+    await tick();
+    t = 200_000;
+    llm.status();
+    await tick();
+    expect(llm.status()).toMatchObject({ llm: 'fake', reason: 'credits_depleted' });
+  });
+
   it('429 after retries serves the fake with reason rate_limited and recovers on a successful probe', async () => {
     const generateContent = vi
       .fn()
