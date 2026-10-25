@@ -4,6 +4,7 @@ import type { HubCtx } from '../pages/village/hub';
 import { OverlayFrame } from '../overlays/kit/OverlayFrame';
 import { LvIcon } from '../overlays/kit/icons';
 import { usePrefersReducedMotion } from '../overlays/kit/hooks';
+import { SourceViewerHost, hasSourceHost } from '../components/source-viewer';
 import { LiveDiscussion } from './LiveDiscussion';
 import { mockLiveTransport } from './fixtures';
 import type { LiveTransport } from './live-client';
@@ -105,6 +106,8 @@ export function LivePanel(p: LivePanelProps) {
   const titleId = useId();
   const inputId = useId();
   const area = useRef<HTMLTextAreaElement>(null);
+  // citation chips open the source viewer; the village and chat pages have no host of their own
+  const [ownHost] = useState(() => !hasSourceHost());
   const [draft, setDraft] = useState('');
   const [started, setStarted] = useState<{ topic: string; mode: LiveMode } | null>(null);
   const [mode, setMode] = useState<LiveMode>('audio');
@@ -145,123 +148,127 @@ export function LivePanel(p: LivePanelProps) {
   );
 
   return (
-    <OverlayFrame
-      open={open}
-      onClose={() => {
-        // leaving mid-discussion is handled by Room's own cleanup (stop is sent by the Leave button; Esc just closes)
-        onClose();
-      }}
-      returnFocusTo={returnFocusTo}
-      calm={calm}
-      labelledBy={room ? 'ld-title' : titleId}
-      placement="dock"
-      size="lg"
-      dismissOnScrim={false}
-      className={room || direct ? 'ld-panel ld-panel--room' : 'ld-panel'}
-      initialFocus={() => area.current}
-    >
-      <button
-        type="button"
-        className="lv-btn lv-close"
-        onClick={onClose}
-        aria-label="Close the discussion"
+    <>
+      <OverlayFrame
+        open={open}
+        onClose={() => {
+          // leaving mid-discussion is handled by Room's own cleanup (stop is sent by the Leave button; Esc just closes)
+          onClose();
+        }}
+        returnFocusTo={returnFocusTo}
+        calm={calm}
+        labelledBy={room ? 'ld-title' : titleId}
+        placement="dock"
+        fixed
+        size="lg"
+        dismissOnScrim={false}
+        className={room || direct ? 'ld-panel ld-panel--room' : 'ld-panel'}
+        initialFocus={() => area.current}
       >
-        <LvIcon name="x" size={20} />
-      </button>
-      {room || direct ? (
-        <RoomRunner
-          p={p}
-          topic={room?.topic ?? ctxTopic}
-          mode={room?.mode ?? 'captions'}
-          reduced={reduced}
-          transport={transport}
-        />
-      ) : (
-        <div className="ld-entry">
-          <span className="ld-door">
-            <span className="ld-door__lamp" aria-hidden="true" />
-            <span className="ld-pixel">Council Chamber</span>
-          </span>
-          <h2 id={titleId} className="ld-entry__title">
-            Start a discussion
-          </h2>
-          <p className="ld-lede">
-            Five study agents talk it through out loud or in captions. You can interrupt, ask one
-            directly, and leave with takeaways.
-          </p>
-          <form onSubmit={begin} className="ld-entry__form">
-            <label htmlFor={inputId} className="ld-eyebrow">
-              What should they discuss?
-            </label>
-            <textarea
-              id={inputId}
-              ref={area}
-              rows={3}
-              value={draft}
-              maxLength={LIVE_TOPIC_MAX}
-              placeholder="Should I switch my major?"
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) begin(e);
-              }}
-            />
-            <div className="ld-chips" role="group" aria-label="Suggested topics">
-              {LIVE_SUGGESTIONS.map((s) => (
-                <button key={s} type="button" className="ld-chipbtn" onClick={() => setDraft(s)}>
-                  {s}
-                </button>
-              ))}
-            </div>
-            <fieldset className="ld-modes">
-              <legend className="ld-eyebrow">How do you want to join?</legend>
-              <label className="ld-mode">
-                <input
-                  type="radio"
-                  name="ld-mode"
-                  checked={mode === 'audio'}
-                  onChange={() => setMode('audio')}
-                />
-                <span>
-                  <b>Audio</b> and captions
-                </span>
+        <button
+          type="button"
+          className="lv-btn lv-close"
+          onClick={onClose}
+          aria-label="Close the discussion"
+        >
+          <LvIcon name="x" size={20} />
+        </button>
+        {room || direct ? (
+          <RoomRunner
+            p={p}
+            topic={room?.topic ?? ctxTopic}
+            mode={room?.mode ?? 'captions'}
+            reduced={reduced}
+            transport={transport}
+          />
+        ) : (
+          <div className="ld-entry">
+            <span className="ld-door">
+              <span className="ld-door__lamp" aria-hidden="true" />
+              <span className="ld-pixel">Council Chamber</span>
+            </span>
+            <h2 id={titleId} className="ld-entry__title">
+              Start a discussion
+            </h2>
+            <p className="ld-lede">
+              Five study agents talk it through out loud or in captions. You can interrupt, ask one
+              directly, and leave with takeaways.
+            </p>
+            <form onSubmit={begin} className="ld-entry__form">
+              <label htmlFor={inputId} className="ld-eyebrow">
+                What should they discuss?
               </label>
-              <label className="ld-mode">
-                <input
-                  type="radio"
-                  name="ld-mode"
-                  checked={mode === 'captions'}
-                  onChange={() => setMode('captions')}
-                />
-                <span>
-                  <b>Captions only</b>, no sound
-                </span>
-              </label>
-            </fieldset>
-            {mode === 'audio' && intro && (
-              <div className="ld-intro" role="note">
-                <LvIcon name="mic" size={16} />
-                <p>
-                  If you talk, your voice is turned into text in your browser, and only that text is
-                  sent. Audio is not recorded or kept. Nothing is heard unless you hold the talk
-                  button.
-                </p>
-                <button type="button" className="lv-btn" onClick={() => setMode('captions')}>
-                  Use text instead
+              <textarea
+                id={inputId}
+                ref={area}
+                rows={3}
+                value={draft}
+                maxLength={LIVE_TOPIC_MAX}
+                placeholder="Should I switch my major?"
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) begin(e);
+                }}
+              />
+              <div className="ld-chips" role="group" aria-label="Suggested topics">
+                {LIVE_SUGGESTIONS.map((s) => (
+                  <button key={s} type="button" className="ld-chipbtn" onClick={() => setDraft(s)}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <fieldset className="ld-modes">
+                <legend className="ld-eyebrow">How do you want to join?</legend>
+                <label className="ld-mode">
+                  <input
+                    type="radio"
+                    name="ld-mode"
+                    checked={mode === 'audio'}
+                    onChange={() => setMode('audio')}
+                  />
+                  <span>
+                    <b>Audio</b> and captions
+                  </span>
+                </label>
+                <label className="ld-mode">
+                  <input
+                    type="radio"
+                    name="ld-mode"
+                    checked={mode === 'captions'}
+                    onChange={() => setMode('captions')}
+                  />
+                  <span>
+                    <b>Captions only</b>, no sound
+                  </span>
+                </label>
+              </fieldset>
+              {mode === 'audio' && intro && (
+                <div className="ld-intro" role="note">
+                  <LvIcon name="mic" size={16} />
+                  <p>
+                    If you talk, your voice is turned into text in your browser, and only that text
+                    is sent. Audio is not recorded or kept. Nothing is heard unless you hold the
+                    talk button.
+                  </p>
+                  <button type="button" className="lv-btn" onClick={() => setMode('captions')}>
+                    Use text instead
+                  </button>
+                </div>
+              )}
+              <div className="ld-row">
+                <button type="submit" className="lv-btn lv-btn--primary" disabled={!can}>
+                  Start the discussion
                 </button>
               </div>
-            )}
-            <div className="ld-row">
-              <button type="submit" className="lv-btn lv-btn--primary" disabled={!can}>
-                Start the discussion
-              </button>
-            </div>
-            <p className="ld-fine">
-              AI-generated. It can be wrong. Answers that cite your course show the page they came
-              from.
-            </p>
-          </form>
-        </div>
-      )}
-    </OverlayFrame>
+              <p className="ld-fine">
+                AI-generated. It can be wrong. Answers that cite your course show the page they came
+                from.
+              </p>
+            </form>
+          </div>
+        )}
+      </OverlayFrame>
+      {ownHost && open && <SourceViewerHost />}
+    </>
   );
 }

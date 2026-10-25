@@ -41,6 +41,8 @@ export const getCurrent = (): SourceCitation | null => current;
 export function useCurrentSource(): SourceCitation | null {
   return useSyncExternalStore(subscribe, getCurrent, () => null);
 }
+/** Is a `<SourceViewerHost />` already mounted somewhere on the page? */
+export const hasSourceHost = (): boolean => hosts > 0;
 export function registerHost(): () => void {
   hosts += 1;
   return () => {

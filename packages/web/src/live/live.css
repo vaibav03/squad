@@ -296,7 +296,7 @@
 
 .ld-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px 320px;
+  grid-template-columns: minmax(440px, 1fr) 320px 320px;
   grid-template-areas: 'stage tx tk';
   grid-template-rows: minmax(0, 1fr);
   flex: 1 1 auto;
@@ -343,7 +343,7 @@
 }
 @media (max-width: 1179px) {
   .ld-grid {
-    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-columns: minmax(440px, 1fr) 320px;
     grid-template-areas:
       'stage tabs'
       'stage pane';
@@ -989,4 +989,11 @@
 }
 .ld-caps__line {
   flex: 1 1 0;
+}
+
+.ld-caps__row {
+  flex-wrap: wrap;
+}
+.ld-caps__line {
+  flex: 1 1 240px;
 }
