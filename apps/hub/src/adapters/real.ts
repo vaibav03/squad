@@ -34,6 +34,8 @@ import {
 import { contextServiceFor } from '../context/service';
 import { contextBusyBlocks } from '../context/busy';
 import { createCouncilViewerData } from '../council/viewer-data';
+import { createCouncilLiveHub } from '../council/live/hub';
+import { createLiveCouncilFactory } from '../council/live/factory';
 import {
   createAudioServices,
   createCallPort,
@@ -143,6 +145,12 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     courseId: () => courseId,
     demo: councilDemo,
     agents: councilAgents,
+    live: createLiveCouncilFactory({
+      hub: (deps.councilLive ??= createCouncilLiveHub(o.env ?? process.env, () => deps.now())),
+      env: o.env ?? process.env,
+      emit,
+      health: () => (deps.runtime ? deps.runtime.llm() : undefined),
+    }),
     ...(o.rawLlm ? { triageLlm: o.rawLlm } : {}),
   });
 

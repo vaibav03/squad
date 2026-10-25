@@ -348,7 +348,8 @@ export async function runAskV2(
     }
 
     // ---- critiques: each answered specialist ranks the others anonymously (a real turn, only with 3+ answers)
-    await R.stage('critiques');
+    // (a spoken Live council has no anonymous rankings: ranks need structured output, so the stage is skipped)
+    if (!liveSpeech) await R.stage('critiques');
     change((x) => void (x.phase = 'rankings'));
     const names = answered.map((a) => a.name);
     const byName = new Map(answeredTurns.map((t) => [t.agent.displayName, t]));
@@ -404,7 +405,10 @@ export async function runAskV2(
     change((x) => void (x.phase = 'verdict'));
     const top = answered.find((a) => a.name === consensus[0]) ?? answered[0]!;
     const topTurn = byName.get(top.name)!;
-    const against = answered.filter((a) => normaliseText(a.answer) !== normaliseText(top.answer));
+    // (a spoken verdict names its dissenter itself: free speech never matches word for word, so no text comparison)
+    const against = liveSpeech
+      ? []
+      : answered.filter((a) => normaliseText(a.answer) !== normaliseText(top.answer));
     if (against.length > 0) await R.stage('dissent');
     const verdictCtx = {
       stage: 'verdict',
@@ -438,8 +442,13 @@ export async function runAskV2(
 
     const nameOf = new Map(answered.map((a) => [nameKey(a.name), a.name]));
     const verdictAnswer = out?.answer?.trim() || top.answer;
+    const spokenDissent = liveSpeech ? nameOf.get(nameKey(out?.dissent?.member ?? '')) : undefined;
     let agreeing = answered
-      .filter((a) => normaliseText(a.answer) === normaliseText(verdictAnswer))
+      .filter((a) =>
+        liveSpeech
+          ? a.name !== spokenDissent
+          : normaliseText(a.answer) === normaliseText(verdictAnswer),
+      )
       .map((a) => a.name);
     if (!out) agreeing = [top.name];
     const dissenters = answered.filter((a) => !agreeing.includes(a.name));
@@ -453,7 +462,7 @@ export async function runAskV2(
     } else if (dissenters.length >= 2) {
       cap = 'uncertain';
       note = 'The council split three ways.';
-    } else if (dis && consensus[0] === dis.name) {
+    } else if (dis && !liveSpeech && consensus[0] === dis.name) {
       cap = 'uncertain';
       note = `${dis.name}, the top-ranked member, disagreed with the verdict.`;
     } else if (dis) {
@@ -506,6 +515,7 @@ export async function runAskV2(
       next: cut(next, 400),
     };
 
+    if (liveSpeech && spokenDissent) await R.stage('dissent');
     await R.stage('verdict');
     const dissentRefs = dissenterTurn?.message ? [dissenterTurn.message.id] : [];
     let verdictMsgId: string | undefined;
