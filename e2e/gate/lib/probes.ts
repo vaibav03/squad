@@ -17,8 +17,11 @@ const git = (...args: string[]): string | undefined => {
 
 /** origin/<branch> is an ancestor of HEAD (merged into the tree under test). */
 export function branchLanded(branch: string): boolean {
-  if (git('rev-parse', '--verify', '--quiet', `refs/remotes/origin/${branch}`) === undefined)
-    return false;
+  if (git('rev-parse', '--verify', '--quiet', `refs/remotes/origin/${branch}`) === undefined) {
+    // the branch was deleted after landing: a merge commit on this tree names it
+    const hit = git('log', 'HEAD', '--merges', '-n1', '--format=%h', '-F', `--grep=Merge ${branch}`);
+    return !!hit;
+  }
   try {
     execFileSync('git', ['merge-base', '--is-ancestor', `origin/${branch}`, 'HEAD'], {
       cwd: REPO,
