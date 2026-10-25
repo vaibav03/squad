@@ -15,7 +15,7 @@ function Stage({ children }: { children: React.ReactNode }) {
         position: 'relative',
         width: '100%',
         height: '100%',
-        minHeight: 640,
+        minHeight: '100dvh',
         overflow: 'hidden',
         background:
           'linear-gradient(180deg, var(--sq-sky-deep) 0%, var(--sq-sky-mid) 55%, var(--sq-sky-low) 78%, var(--sq-hill-mid) 78%, var(--sq-hill-near) 90%, var(--sq-ground) 90%)',

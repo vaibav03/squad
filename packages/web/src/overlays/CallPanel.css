@@ -10,45 +10,55 @@
   }
 }
 .lv-call__head {
+  padding-right: var(--lv-tap);
+  min-height: var(--lv-tap);
   display: flex;
   align-items: center;
-  gap: var(--lv-s4);
-  padding-right: var(--lv-tap);
+}
+.lv-call__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--lv-s3);
+  padding: var(--lv-s4) var(--lv-s4) var(--lv-s3);
+  border-radius: var(--lv-r3);
+  background: var(--sq-ink);
+  border: 1px solid var(--lv-line);
 }
 .lv-call__portrait {
   position: relative;
   flex: none;
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  height: 96px;
 }
 .lv-call__portrait > img,
 .lv-call__tile {
   position: absolute;
-  inset: 6px;
-  width: calc(100% - 12px);
-  height: calc(100% - 12px);
+  inset: 8px;
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
   border-radius: 50%;
   object-fit: cover;
-  background: var(--lv-surface-3);
+  background: var(--sq-sky-deep);
   border: 2px solid var(--sq-ink);
 }
 .lv-call__tile {
   display: grid;
   place-items: center;
-  font: 400 var(--text-pixel-sm) / 1 var(--lv-font-pixel);
+  font: 400 var(--text-pixel-md) / 1 var(--lv-font-pixel);
   color: var(--lv-text);
 }
 .lv-call__ring {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 2px solid var(--lv-accent);
-  box-shadow: 0 0 16px 2px var(--lv-accent);
+  border: 2px solid var(--sq-glow);
+  box-shadow: 0 0 16px 2px var(--sq-glow);
   opacity: var(--lv-glow-o, 0);
   transition: opacity var(--dur-fast) var(--lv-ease-out);
 }
-.lv-call__portrait[data-speaking] > img,
-.lv-call__portrait[data-speaking] > .lv-call__tile {
+.lv-call__stage[data-speaking] .lv-call__portrait > img,
+.lv-call__stage[data-speaking] .lv-call__tile {
   animation: lv-bob 0.5s steps(2, jump-none) infinite alternate;
 }
 @keyframes lv-bob {
@@ -177,7 +187,7 @@
   text-align: right;
 }
 .lv-cap__who {
-  font: 400 var(--text-tag) / 1 var(--lv-font-caps);
+  font: 600 var(--text-xs) / var(--lh-xs) var(--lv-font-ui);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--lv-text-dim);
@@ -188,8 +198,12 @@
 .lv-cap[data-speaker='you'] .lv-cap__who {
   color: var(--lv-ok);
 }
+.lv-cap:not(:last-child) .lv-cap__text {
+  color: var(--lv-text-dim);
+}
 .lv-cap__text {
   margin: 0;
+  transition: color var(--dur-fast) var(--lv-ease-out);
   max-width: 34ch;
   font: 500 var(--text-base) / var(--lh-base) var(--lv-font-ui);
   text-wrap: pretty;

@@ -1,4 +1,4 @@
-// Usage: node review-live/shoot.mjs [filter] [--out dir]   (dev server must be running on :5191)
+// Usage: node review-live/shoot.mjs [filter] [--out dir]   (dev server must be running on :5291)
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -7,10 +7,11 @@ const root = path.resolve(new URL('.', import.meta.url).pathname, '../../..');
 const out = path.join(root, 'docs/design/shots/web-live');
 mkdirSync(out, { recursive: true });
 const filter = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : '';
-const base = 'http://localhost:5191/';
+const base = 'http://localhost:5291/';
 const browser = await chromium.launch();
 const probe = await browser.newPage();
 await probe.goto(base);
+await probe.waitForSelector('li a', { timeout: 20000 });
 const ids = await probe.$$eval('li a', (as) => as.map((a) => a.textContent));
 await probe.close();
 const sizes = [

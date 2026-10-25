@@ -78,16 +78,6 @@ export function CallPanel(props: CallPanelProps) {
       </button>
 
       <header className="lv-call__head">
-        <div className="lv-call__portrait" data-speaking={speaking === 'agent' || undefined} style={{ ['--lv-glow-o' as string]: glow }}>
-          <span className="lv-call__ring" aria-hidden="true" />
-          {agent.portrait ? (
-            <img src={agent.portrait} alt="" />
-          ) : (
-            <span className="lv-call__tile" aria-hidden="true">
-              {agent.emoji ?? initials(agent.name)}
-            </span>
-          )}
-        </div>
         <div className="lv-call__who">
           <h2 id={titleId} className="lv-call__name">
             {agent.name}
@@ -101,7 +91,19 @@ export function CallPanel(props: CallPanelProps) {
         </div>
       </header>
 
-      <Waveform level={live ? level : undefined} tone={tone} reduced={reduced} />
+      <div className="lv-call__stage" data-speaking={speaking === 'agent' || undefined}>
+        <div className="lv-call__portrait" style={{ ['--lv-glow-o' as string]: glow }}>
+          <span className="lv-call__ring" aria-hidden="true" />
+          {agent.portrait ? (
+            <img src={agent.portrait} alt="" />
+          ) : (
+            <span className="lv-call__tile" aria-hidden="true">
+              {agent.emoji ?? initials(agent.name)}
+            </span>
+          )}
+        </div>
+        <Waveform level={live ? level : undefined} tone={muted && speaking !== 'agent' ? 'idle' : tone} reduced={reduced} />
+      </div>
 
       {(status === 'reconnecting' || status === 'error') && (
         <div className="lv-call__notice" role={status === 'error' ? 'alert' : 'status'} data-status={status}>
@@ -171,7 +173,7 @@ export function CallPanel(props: CallPanelProps) {
               disabled={status === 'connecting'}
             >
               <LvIcon name="hand" size={20} />
-              <span>{handRaised ? 'Hand up' : 'I have a question'}</span>
+              <span>{handRaised ? 'Hand up' : 'Raise hand'}</span>
             </button>
             <button type="button" className="lv-btn lv-btn--danger lv-call__ctl lv-call__leave" onClick={onLeave}>
               <LvIcon name="phone-off" size={20} />
