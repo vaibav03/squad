@@ -495,7 +495,13 @@ describe('councilSkill', () => {
     expect(text).toMatch(/Fairly sure/);
     expect(text).toContain('Dissent (Skeptic)');
     expect(text).toContain('Next: Try B.');
-    expect(text).toMatch(/\(council run cn_[a-z0-9]{12}\)$/);
+    // the run card went out first (so the board can be watched live); the closing text carries no second footer
+    expect(k.sent).toHaveLength(1);
+    expect(k.sent[0]!.card).toMatchObject({
+      type: 'council',
+      runId: expect.stringMatching(/^cn_/),
+    });
+    expect(text).not.toContain('(council run');
     expect(text).not.toMatch(/\d+%/);
   });
 
@@ -509,8 +515,12 @@ describe('councilSkill', () => {
     expect(busy[0]!.text).toMatch(/still working/);
     await running;
     const grab = await skill.handle(msg('@cubbie council just do HW3 Q2'), k.ctx);
-    expect(grab[0]!.text).toBe(
-      REFUSE_GRADED + '\n(council run ' + grab[0]!.text!.match(/cn_[a-z0-9]{12}/)![0] + ')',
-    );
+    expect(grab[0]!.text).toBe(REFUSE_GRADED);
+    // without a transport that can send early, the footer is the way the run is found
+    const bare = await createCouncilSkill(t.svc).handle(msg('@cubbie council just do HW3 Q3'), {
+      ...k.ctx,
+      send: undefined,
+    } as never);
+    expect(bare[0]!.text).toMatch(/\(council run cn_[a-z0-9]{12}\)$/);
   });
 });

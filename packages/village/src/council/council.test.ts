@@ -203,3 +203,20 @@ describe('board from a CouncilResult snapshot and the status line', () => {
     expect(run.stage).toBe('verdict');
   });
 });
+
+describe('stage never regresses', () => {
+  it('a stale snapshot with an earlier stage does not move a finished run back', () => {
+    const store = createCouncilBoardStore({ now: () => 1 });
+    const ev = (stage: string) => ({
+      t: 'council.stage',
+      councilId: 'council:ask',
+      correlationId: 'cn_aaaaaaaaaaaa',
+      stage,
+      mode: 'live',
+    });
+    store.apply(ev('opinions'));
+    store.apply(ev('done'));
+    store.apply(ev('actions')); // a poll answered late
+    expect(store.run()?.stage).toBe('done');
+  });
+});

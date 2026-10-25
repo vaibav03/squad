@@ -249,6 +249,12 @@ export function createCouncilBoardStore(opts: CouncilBoardOptions = {}): Council
       if (!corr || !councilId || !stage) return;
       a2aCouncils.add(councilId);
       const run = runFor(corr, councilId);
+      // a stale snapshot (poll or closed stream) must never move a run back: stages only go forward
+      if (run.stage && stageIndex(stage) < stageIndex(run.stage as A2aStage)) {
+        const q0 = str(ev.question);
+        if (q0 && !run.question) run.question = q0;
+        return;
+      }
       run.stage = stage;
       run.stageMode = str(ev.mode);
       const q = str(ev.question);

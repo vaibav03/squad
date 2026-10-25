@@ -220,7 +220,10 @@ test('J23 Council Hall panel: mode badge, stage and agents of the run, and the b
   if (!(await ask.isVisible().catch(() => false)))
     await page.getByRole('button', { name: 'Ask the council' }).click();
   await expect(ask).toBeVisible({ timeout: 30_000 });
-  await page.locator('.cn-chip').first().click();
+  // a typed study question (the first chip can be off-topic and a live triage then rightly refuses it)
+  await page
+    .locator('textarea[placeholder="What do you want the council to settle?"]')
+    .fill('When is the median a better summary than the mean for skewed data?');
   await page.locator('form.cn-ask button[type=submit]').click();
 
   // while it runs and after: badge, step words and who is on the council

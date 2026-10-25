@@ -68,6 +68,7 @@ describe('RunStrip', () => {
     expect(screen.queryByRole('list')).toBeNull();
     expect(stageWords({ stage: undefined, status: 'done' })).toBeUndefined();
     expect(stageWords({ stage: 'done', status: 'done' })).toBe('All steps done');
+    expect(stageWords({ stage: 'question', status: 'refused' })).toBeUndefined();
   });
 });
 

@@ -489,9 +489,6 @@ export async function runAskV2(
     change((x) => {
       if (actions.length) x.actions = actions;
       x.verdict = verdict;
-      x.status = 'done';
-      x.phase = 'done';
-      x.finishedAt = d.now();
     });
     await safeEmit({
       t: 'council.verdict',
@@ -504,6 +501,13 @@ export async function runAskV2(
       ...(verdict.dissent ? { dissenter: verdict.dissent.member } : {}),
     });
     await R.stage('done');
+    // status flips LAST: a stream that closes on the first non-running snapshot must already see stage `done`
+    change((x) => {
+      x.stage = R.currentStage();
+      x.status = 'done';
+      x.phase = 'done';
+      x.finishedAt = d.now();
+    });
     await idle();
   } catch (e) {
     console.warn(`[${COUNCIL_AGENT}] run failed`, (e as Error).message);

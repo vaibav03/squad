@@ -118,6 +118,22 @@ const stagesOf = (events: VillageEvent[]): string[] =>
   events.flatMap((e) => (e.t === 'council.stage' ? [e.stage] : []));
 const dedupe = (xs: string[]): string[] => xs.filter((x, i) => x !== xs[i - 1]);
 
+describe('Ask council v2: the finished snapshot', () => {
+  it('the first snapshot that is no longer running already carries stage done (streams close on it)', async () => {
+    const { svc } = build();
+    const h = svc.ask({
+      question: 'Is B or A right for problem 3?',
+      askedBy: 's_ana',
+      chatId: 'group:sq',
+    });
+    const seen: { status: string; stage?: string }[] = [];
+    svc.subscribe(h.id, (snap) => void seen.push({ status: snap.status, stage: snap.stage }));
+    await h.done;
+    const firstDone = seen.find((s) => s.status !== 'running');
+    expect(firstDone).toEqual({ status: 'done', stage: 'done' });
+  });
+});
+
 describe('Ask council v2: demo run (no key)', () => {
   it('is an honestly labelled scripted run end to end', async () => {
     const { ask, events } = build();

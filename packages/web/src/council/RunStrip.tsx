@@ -18,7 +18,8 @@ export const modeOfResult = (r: CouncilResult): string => resultMode(r);
 
 /** Reader words for the run's current step. */
 export function stageWords(r: Pick<CouncilResult, 'stage' | 'status'>): string | undefined {
-  if (!r.stage) return undefined;
+  // a refused run never got past the question: no step to show
+  if (!r.stage || r.status === 'refused') return undefined;
   if (r.stage === 'done') return 'All steps done';
   const i = STEPS.findIndex((s) => s.stage === r.stage);
   return i < 0 ? undefined : `Step ${i + 1} of ${STEPS.length}: ${STEPS[i]!.label}`;
