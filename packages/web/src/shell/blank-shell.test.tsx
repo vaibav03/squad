@@ -170,7 +170,7 @@ const CONCRETE: Record<string, string> = {
 };
 // mastery has no page of its own: it redirects into the village overlay (covered by its own test below)
 const TOP = squadRouteMeta
-  .filter((m) => m.key !== 'mastery')
+  .filter((m) => m.key !== 'mastery' && m.key !== 'ledger')
   .map((m) => ({
     path: CONCRETE[m.path] ?? m.path,
     title: m.title,
@@ -225,7 +225,7 @@ async function expectRoute(path: string, title: string) {
 describe('router location drives title, landmark and content', () => {
   it('routeTitleFor resolves every route to its own title', () => {
     for (const t of TOP) expect(routeTitleFor(t.path)).toBe(t.title);
-    expect(routeTitleFor('/squad/ledger/task_1')).toBe('Privacy ledger');
+    expect(routeTitleFor('/squad/ledger/task_1')).toBe('Ledger');
     expect(routeTitleFor('/welcome')).toBe('Welcome');
   });
 

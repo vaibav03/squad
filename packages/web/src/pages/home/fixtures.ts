@@ -43,10 +43,10 @@ export const HOME_CHECKLIST: readonly ChecklistItem[] = [
  */
 export const HOME_STATIC_LINKS = [
   {
-    to: '/squad/ledger',
+    to: '/squad/chat?view=ledger',
     icon: 'ledger',
-    title: 'Privacy ledger',
-    body: 'What agents shared, and what they kept private.',
+    title: 'Group ledger',
+    body: 'What your group decided, voted on and edited, and where it came from.',
   },
   {
     to: '/squad/mastery',
