@@ -95,7 +95,12 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
   const waitingCount = () => [...recs.values()].filter((r) => r.state === 'waiting_for_student').length;
 
   const isMine = (e: VillageEvent): boolean => {
+    const meId = me === undefined ? undefined : `student:${me}`;
     switch (e.t) {
+      case 'agent.state':
+        return e.agent === meId;
+      case 'agent.message':
+        return e.from === meId;
       case 'confirm.pending':
       case 'confirm.done':
       case 'mastery.changed':

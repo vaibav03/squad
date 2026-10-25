@@ -560,7 +560,7 @@ export function describeActivity(
     const raw = (r.event as { thought?: string }).thought;
     if (!raw?.trim()) continue;
     if (!isMe && !r.mine && !PUBLIC_THOUGHT_KINDS.has(r.event.t)) continue;
-    shared.push({ at: r.at, text: safe(raw.trim(), isMe || r.mine) });
+    shared.push({ at: r.at, text: safe(raw.trim(), r.mine) });
   }
   const lastShared = shared.at(-1);
   let thought: ThoughtView;
