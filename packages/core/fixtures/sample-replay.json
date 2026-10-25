@@ -141,7 +141,38 @@
     },
     { "at": 5000, "event": { "t": "agent.state", "agent": "student:s_ana", "state": "in_call" } },
     { "at": 5200, "event": { "t": "agent.state", "agent": "dean", "state": "idle" } },
-    { "at": 6000, "event": { "t": "trip.confirmed", "taskId": "task_trip", "squadId": "squad_1" } }
+    { "at": 6000, "event": { "t": "trip.confirmed", "taskId": "task_trip", "squadId": "squad_1" } },
+    {
+      "at": 6100,
+      "event": { "t": "discussion.started", "discussionId": "ld_abcdefabcdef", "demo": true }
+    },
+    {
+      "at": 6200,
+      "event": {
+        "t": "discussion.turn",
+        "discussionId": "ld_abcdefabcdef",
+        "member": "tutor",
+        "text": "Let's start with chapter 5."
+      }
+    },
+    {
+      "at": 6300,
+      "event": {
+        "t": "discussion.interrupted",
+        "discussionId": "ld_abcdefabcdef",
+        "member": "user"
+      }
+    },
+    {
+      "at": 6400,
+      "event": {
+        "t": "discussion.takeaway",
+        "discussionId": "ld_abcdefabcdef",
+        "kind": "decision",
+        "text": "Review chapter 5 first."
+      }
+    },
+    { "at": 6500, "event": { "t": "discussion.ended", "discussionId": "ld_abcdefabcdef" } }
   ],
   "checkpoints": { "council": 1200, "trip": 6000 }
 }

@@ -55,6 +55,21 @@ const SAMPLES = {
   'call.end': { t: 'call.end', agent: 'expert:ch5', callId: 'c1' },
   'trip.confirmed': { t: 'trip.confirmed', taskId: 'trip', squadId: 'sq1' },
   'mastery.changed': { t: 'mastery.changed', student: 's_ana', chapter: 'ch5', box: 3 },
+  'discussion.started': { t: 'discussion.started', discussionId: 'ld_abcdefabcdef' },
+  'discussion.turn': {
+    t: 'discussion.turn',
+    discussionId: 'ld_abcdefabcdef',
+    member: 'tutor',
+    text: 'Hi.',
+  },
+  'discussion.interrupted': { t: 'discussion.interrupted', discussionId: 'ld_abcdefabcdef' },
+  'discussion.takeaway': {
+    t: 'discussion.takeaway',
+    discussionId: 'ld_abcdefabcdef',
+    kind: 'decision',
+    text: 'Do ch5.',
+  },
+  'discussion.ended': { t: 'discussion.ended', discussionId: 'ld_abcdefabcdef' },
 } satisfies Record<VillageEventType, VillageEvent>;
 
 describe('adapter exhaustiveness', () => {

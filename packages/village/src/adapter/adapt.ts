@@ -357,6 +357,43 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
         },
       ];
 
+    case 'discussion.started':
+      return [
+        {
+          type: 'announce',
+          text: event.demo ? 'A study discussion started (demo).' : 'A study discussion started.',
+          politeness: 'polite',
+        },
+      ];
+
+    case 'discussion.turn': {
+      const text = event.text ?? '';
+      const member = event.member ?? 'chair';
+      return [
+        { type: 'councilOpinion', councilId: `discussion:${event.discussionId}`, member, text },
+        {
+          type: 'announce',
+          text: text ? `${member}: ${text}` : `${member} is speaking.`,
+          politeness: 'polite',
+        },
+      ];
+    }
+
+    case 'discussion.interrupted':
+      return [{ type: 'announce', text: 'The discussion was interrupted.', politeness: 'polite' }];
+
+    case 'discussion.takeaway':
+      return [
+        {
+          type: 'announce',
+          text: event.text ? `Takeaway: ${event.text}` : 'A new takeaway was noted.',
+          politeness: 'polite',
+        },
+      ];
+
+    case 'discussion.ended':
+      return [{ type: 'announce', text: 'The discussion wrapped up.', politeness: 'polite' }];
+
     default: {
       const _exhaustive: never = event;
       void _exhaustive;
