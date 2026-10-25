@@ -3,6 +3,7 @@ import { GOOGLE_SCOPES } from './types';
 import {
   ConnectorAuthError,
   ConnectorExpiredError,
+  ConnectorRevokedError,
   ConnectorRateLimitError,
   type ListOpts,
   type CanvasAuth,
@@ -35,6 +36,8 @@ export interface FakeControls {
   set(behavior: FakeBehavior, key?: string): void;
   /** When true, `refresh()` fails (the expired token cannot be renewed). */
   refreshFails: boolean;
+  /** The refresh is refused with invalid_grant (the provider says the grant is revoked). */
+  refreshRevoked: boolean;
   /** Names of the connector methods called, in order (no secrets). */
   readonly calls: string[];
   /** Options of the most recent listItems call (cursor / window assertions). */
@@ -61,6 +64,7 @@ function controls() {
       }
     },
     refreshFails: false,
+    refreshRevoked: false,
     lastOpts: undefined,
     calls: [],
     revoked: 0,
@@ -376,6 +380,8 @@ export function createFakeGoogleConnector(): GoogleConnector & { controls: FakeC
     },
     async refresh(a) {
       ctl.calls.push('refresh');
+      if (ctl.refreshRevoked || ctl.behaviorFor(key(a)) === 'revoked')
+        throw new ConnectorRevokedError('invalid_grant');
       if (ctl.refreshFails || !a.refreshToken)
         throw new ConnectorExpiredError('refresh token rejected');
       ctl.set('ok', key(a));

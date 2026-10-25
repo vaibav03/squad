@@ -72,7 +72,12 @@ export interface ContextStore {
     >,
   ): void;
   /** Delete every derived row for the connection (sources, chunks, shares), leave tombstones, mark revoked. */
-  revokeConnection(id: string, reason: 'revoked' | 'removed', at: number): PurgeResult;
+  revokeConnection(
+    id: string,
+    reason: 'revoked' | 'removed',
+    at: number,
+    note?: string,
+  ): PurgeResult;
   /** Delete the connection row itself (after a purge). */
   deleteConnection(id: string): void;
 
@@ -293,7 +298,7 @@ export function createContextStore(db: Db, opts: { retentionMs?: number } = {}):
     setStatus(id, status, note, degraded = false) {
       store.patchConnection(id, { status, statusNote: note, degraded });
     },
-    revokeConnection(id, reason, at) {
+    revokeConnection(id, reason, at, note) {
       const rows = db
         .prepare('SELECT id, owner_id FROM ctx_sources WHERE connection_id=?')
         .all(id) as {
@@ -307,7 +312,7 @@ export function createContextStore(db: Db, opts: { retentionMs?: number } = {}):
       store.patchConnection(id, {
         status: 'revoked',
         degraded: false,
-        statusNote: 'Disconnected. All imported data was deleted.',
+        statusNote: note ?? 'Disconnected. All imported data was deleted.',
         expiresAt: null,
       });
       store.patchSyncState(id, {

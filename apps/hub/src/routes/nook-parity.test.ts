@@ -471,8 +471,8 @@ describe('Nook parity: Google OAuth through the hub (routes/integrations.ts)', (
     list = (await call('GET', '/v1/connections', 's_ana')).json.connections;
     expect(list).toHaveLength(1);
 
-    // refresh failure -> expired, data kept, no upstream sync call
-    const dead = fakeGoogle({ accessToken: AT, refreshToken: RT, refreshInvalidGrant: true });
+    // refresh refused (not "revoked") -> expired, data KEPT, no upstream sync call
+    const dead = fakeGoogle({ accessToken: AT, refreshToken: RT, refreshRefused: true });
     hub.deps.context = createContextService(hub.deps, { googleOAuth: G_CFG, fetch: dead });
     t += 3_600_000;
     list = (await call('GET', '/v1/connections', 's_ana')).json.connections;
@@ -487,6 +487,29 @@ describe('Nook parity: Google OAuth through the hub (routes/integrations.ts)', (
     const del = await call('DELETE', `/v1/connections/${id}`, 's_ana');
     expect(del.json).toMatchObject({ status: 'revoked', purged: { sources: 2 } });
     expect(revoked).toEqual(['revoked']);
+
+    // reconnect imports again; then Google answers invalid_grant on refresh -> revoked, data purged, honest message
+    const state4 = new URL(
+      (await call('GET', '/v1/connections/google/authorize', 's_ana')).json.authorization_url,
+    ).searchParams.get('state')!;
+    await raw('GET', `/oauth/google/callback?state=${state4}&code=good-code`, null);
+    const live = (await call('GET', '/v1/connections', 's_ana')).json.connections.find(
+      (x: { state: string }) => x.state === 'live',
+    );
+    expect(live.sources.total).toBe(2);
+    const gone = fakeGoogle({ accessToken: AT, refreshToken: RT, refreshInvalidGrant: true });
+    hub.deps.context = createContextService(hub.deps, { googleOAuth: G_CFG, fetch: gone });
+    t += 3_600_000;
+    const after = (await call('GET', '/v1/connections', 's_ana')).json.connections.find(
+      (x: { id: string }) => x.id === live.id,
+    );
+    expect(after).toMatchObject({
+      state: 'revoked',
+      needsReconnect: true,
+      stateLabel:
+        'Google access was revoked. Imported data was removed. Reconnect to import again.',
+    });
+    expect(after.sources.total).toBe(0);
 
     // P20 sentinel scan: responses, logs, the redirect URLs, and every plaintext table
     const secrets = [G_CFG.clientSecret, AT, RT];

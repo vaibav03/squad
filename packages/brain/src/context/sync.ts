@@ -2,6 +2,7 @@ import type { Connector } from './connectors/types';
 import {
   ConnectorAuthError,
   ConnectorExpiredError,
+  ConnectorRevokedError,
   ConnectorRateLimitError,
   type ListOpts,
 } from './connectors/types';
@@ -47,13 +48,24 @@ export interface SyncDeps {
   retentionMs?: number;
   /** Force a full (backfill) pass: manual "resync everything" and tests. */
   full?: boolean;
+  /** Called once with the renewed token after a 401 was healed by a refresh, so the caller can persist it. */
+  onRefreshed?: (r: { accessToken: string; expiresAt: number | null }) => void | Promise<void>;
 }
+
+const providerLabel = (p: string) => (p === 'canvas' ? 'Canvas' : 'Google');
+/** The one wording for an upstream-revoked grant (UI, API, docs/nook-parity.md): data is purged, reconnecting re-imports. */
+export const revokedNote = (provider: string) =>
+  `${providerLabel(provider)} access was revoked. Imported data was removed. Reconnect to import again.`;
+/** The grant could not be renewed but the provider did not say it was revoked: data is kept, marked stale. */
+export const expiredNote = (provider: string) =>
+  `${providerLabel(provider)} access expired and could not be renewed. Imported data is kept but may be out of date. Reconnect to resume syncing.`;
 
 /**
  * One sync pass: probe status, list (backfill window on the first and daily full passes, otherwise only changes
  * since the cursor), fetch, normalise (chunk + hash), dedupe, index. Expired connections never call upstream; a
- * rate-limited one waits out `retryAfter`; a revoked grant purges everything; a 401 marks the connection degraded and
- * keeps what was already imported. Deletions are only detected on full passes. Never throws on upstream failure.
+ * rate-limited one waits out `retryAfter`; a revoked grant purges everything; a 401 first refreshes the access token
+ * ONCE and retries (refresh refused with invalid_grant => revoked + purge; any other refusal => expired, data kept and
+ * flagged stale); a 403 marks the connection degraded and keeps what was already imported. Deletions are only detected on full passes. Never throws on upstream failure.
  */
 export async function syncConnection<A>(
   deps: SyncDeps,
@@ -94,11 +106,18 @@ export async function syncConnection<A>(
     windowFrom: now() - BACKFILL_PAST_MS,
     windowTo: now() + BACKFILL_FUTURE_MS,
   };
-  try {
-    const st = await connector.status(auth);
+  let refreshed = false;
+  const canRefresh = typeof connector.refresh === 'function';
+  const purgeRevoked = (): SyncReport => {
+    const purged = store.revokeConnection(conn.id, 'revoked', now(), revokedNote(conn.provider));
+    return { ...empty('revoked', revokedNote(conn.provider)), removed: purged.sources };
+  };
+  const pass = async (a: A): Promise<SyncReport> => {
+    const st = await connector.status(a);
     if (st.state === 'revoked') {
-      const purged = store.revokeConnection(conn.id, 'revoked', now());
-      return { ...empty('revoked', st.note), removed: purged.sources };
+      // A probe 401 may only mean the access token lapsed: heal it with one refresh before concluding anything.
+      if (canRefresh) throw new ConnectorAuthError(401);
+      return purgeRevoked();
     }
     if (st.state === 'expired') {
       store.setStatus(conn.id, 'expired', st.note ?? 'The credential expired.');
@@ -109,13 +128,13 @@ export async function syncConnection<A>(
       store.setStatus(conn.id, 'error', st.note ?? 'Upstream rejected the credential.', true);
       return done(empty('degraded', st.note), 'degraded');
     }
-    const items = await connector.listItems(auth, undefined, opts);
+    const items = await connector.listItems(a, undefined, opts);
     const report: SyncReport = { ...empty('ok'), pass: full ? 'backfill' : 'incremental' };
     const seen = new Set<string>();
     let high = prior.cursor?.updatedAt ?? null;
     for (const item of items) {
       try {
-        const content = await connector.fetchContent(auth, item);
+        const content = await connector.fetchContent(a, item);
         const { source, pieces } = normalizeItem(
           {
             ownerId: conn.ownerId,
@@ -166,6 +185,23 @@ export async function syncConnection<A>(
       ...(full && report.failed === 0 ? { lastFullAt: now() } : {}),
     });
     return done(report, 'ok');
+  };
+  let cur = auth;
+  try {
+    for (;;) {
+      try {
+        return await pass(cur);
+      } catch (e) {
+        if (!refreshed && canRefresh && e instanceof ConnectorAuthError && e.httpStatus === 401) {
+          refreshed = true;
+          const r = await connector.refresh!(cur);
+          cur = Object.assign({}, cur, { accessToken: r.accessToken }) as A;
+          await deps.onRefreshed?.(r);
+          continue;
+        }
+        throw e;
+      }
+    }
   } catch (e) {
     if (e instanceof ConnectorRateLimitError) {
       const until = now() + Math.max(1_000, e.retryAfterMs);
@@ -177,8 +213,12 @@ export async function syncConnection<A>(
       store.patchSyncState(conn.id, { retryAfter: until });
       return done({ ...empty('rate_limited', 'rate limited'), retryAfter: until }, 'rate_limited');
     }
-    if (e instanceof ConnectorExpiredError) {
-      store.setStatus(conn.id, 'expired', 'The credential expired. Reconnect to resume syncing.');
+    if (e instanceof ConnectorRevokedError) return purgeRevoked();
+    if (
+      e instanceof ConnectorExpiredError ||
+      (e instanceof ConnectorAuthError && refreshed && e.httpStatus === 401)
+    ) {
+      store.setStatus(conn.id, 'expired', expiredNote(conn.provider));
       return done(empty('expired', 'credential expired'), 'expired');
     }
     if (e instanceof ConnectorAuthError) {
