@@ -2,14 +2,12 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { Page } from '@playwright/test';
-import { actor, expect, shot, test } from '../lib/helpers';
+import { actor, expect, test } from '../lib/helpers';
 
-const J = 'j20-council-board';
 const DESKTOP = path.join(os.homedir(), 'Desktop', 'squad-demo');
 
-/** Screenshots for review: the journey shot dir plus ~/Desktop/squad-demo/council-board-<name>.png. */
+/** Screenshots for review go to ~/Desktop/squad-demo/council-board-<name>.png (never into the repo). */
 async function snap(page: Page, name: string): Promise<void> {
-  await shot(page, J, name);
   try {
     fs.mkdirSync(DESKTOP, { recursive: true });
     await page.screenshot({ path: path.join(DESKTOP, `council-board-${name}.png`) });
