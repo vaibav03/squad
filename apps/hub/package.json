@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --dir src --passWithNoTests",
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
-    "dev": "echo \"@squad/hub: dev not implemented yet\""
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.5",
