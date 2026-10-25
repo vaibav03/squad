@@ -26,6 +26,19 @@ const samples: VillageEvent[] = [
   { t: 'council.rank', councilId: 'council:x', member: 'm', order: ['a'] },
   { t: 'council.verdict', councilId: 'council:x', member: 'm', dissent: true, dissenter: 'a' },
   { t: 'quiz.question', quizId: 'q', chapter: 'c', target: 's_ana' },
+  { t: 'quiz.question', quizId: 'q', chapter: 'c', target: 's_ana', text: 'What is a stack?' },
+  {
+    t: 'council.verdict',
+    councilId: 'council:planner',
+    member: 'chair',
+    text: 'Plan agreed',
+    outcome: {
+      title: 'Fall plan',
+      items: [{ label: 'CSE 110', detail: '3 cr' }],
+      facts: [{ label: 'Credits', value: '12' }],
+      why: [{ who: 'chill', text: 'Keeps sleep.' }],
+    },
+  },
   { t: 'quiz.answer', quizId: 'q', chapter: 'c', student: 's_ana' },
   { t: 'quiz.result', quizId: 'q', chapter: 'c', correct: true },
   { t: 'call.start', agent: 'expert:c', callId: 'k', student: 's_ana' },
@@ -78,6 +91,33 @@ describe('VillageEvent schema', () => {
         student: 's',
         field: 'f',
         blocked: false,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('outcome and quiz text are optional, bounded and strict', () => {
+    const base = { t: 'council.verdict', councilId: 'council:planner', member: 'chair' } as const;
+    const ok = { title: 'T', items: [], facts: [], why: [] };
+    expect(VillageEventSchema.safeParse({ ...base, outcome: ok }).success).toBe(true);
+    expect(VillageEventSchema.safeParse(base).success).toBe(true);
+    expect(VillageEventSchema.safeParse({ ...base, outcome: { ...ok, extra: 1 } }).success).toBe(
+      false,
+    );
+    expect(
+      VillageEventSchema.safeParse({ ...base, outcome: { ...ok, title: 'x'.repeat(121) } }).success,
+    ).toBe(false);
+    expect(
+      VillageEventSchema.safeParse({
+        ...base,
+        outcome: { ...ok, items: Array(41).fill({ label: 'a' }) },
+      }).success,
+    ).toBe(false);
+    expect(
+      VillageEventSchema.safeParse({
+        t: 'quiz.question',
+        quizId: 'q',
+        chapter: 'c',
+        text: 'x'.repeat(601),
       }).success,
     ).toBe(false);
   });
