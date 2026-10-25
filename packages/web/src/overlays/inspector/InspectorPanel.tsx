@@ -84,21 +84,21 @@ export function InspectorPanel({
     return () => document.removeEventListener('keydown', onKey, true);
   }, [open, store]);
 
-  // Opened from the keyboard (focus is on a chip, not the stage or body): move focus to the panel title.
+  // Opened from the keyboard (a focus-visible HUD chip had focus): move focus to the panel title once it is mounted.
   const openedId = view?.id;
+  const wantFocus = useRef(false);
   useEffect(() => {
     if (!openedId) return;
     const a = document.activeElement as HTMLElement | null;
-    if (
-      a &&
-      root.current &&
-      !root.current.contains(a) &&
-      a.matches(':focus-visible') &&
-      a.closest('.sqv-hud')
-    ) {
+    wantFocus.current =
+      !!a && !root.current?.contains(a) && a.matches(':focus-visible') && !!a.closest('.sqv-hud');
+  }, [openedId]);
+  useEffect(() => {
+    if (wantFocus.current && root.current) {
+      wantFocus.current = false;
       root.current.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true });
     }
-  }, [openedId]);
+  });
 
   if (!mounted || !v) return null;
   const go = (dir: 1 | -1) => {

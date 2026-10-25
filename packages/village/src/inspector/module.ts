@@ -166,6 +166,20 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
           cam.scrollX + cam.width - 2 - tag.width,
         );
         tag.setPosition(snap(x), snap(hover.sprite.getBounds().y - tag.height - 3));
+        gfx.fillStyle(COLOR.ink, 0.88);
+        gfx.fillRect(
+          snap(tag.x) - 3,
+          snap(tag.y) - 2,
+          Math.ceil(tag.width) + 6,
+          Math.ceil(tag.height) + 4,
+        );
+        gfx.lineStyle(1, COLOR.hillMid, 1);
+        gfx.strokeRect(
+          snap(tag.x) - 2.5,
+          snap(tag.y) - 1.5,
+          Math.ceil(tag.width) + 5,
+          Math.ceil(tag.height) + 3,
+        );
       } else tag.setVisible(false);
       // follow: ease the camera toward the selected character (whole pixels, no zoom change)
       if (store.follow && selSprite && now - followAt > FOLLOW_EVERY_MS) {
