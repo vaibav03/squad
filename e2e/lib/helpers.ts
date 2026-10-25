@@ -16,7 +16,8 @@ export interface Actor {
   ctx: BrowserContext;
   page: Page;
   token: string;
-  bodies: string[]; // every text response body seen by this context (privacy scans)
+  bodies: string[]; // JSON/text responses from the hub (privacy scans)
+  assets: string[]; // js/css/html served by the web host (secret scans)
   consoleErrors: string[];
   pageErrors: string[];
 }
@@ -75,7 +76,7 @@ export async function actor(
     }
   }, session);
   const page = await ctx.newPage();
-  const a: Actor = { id, ctx, page, token, bodies: [], consoleErrors: [], pageErrors: [] };
+  const a: Actor = { id, ctx, page, token, bodies: [], assets: [], consoleErrors: [], pageErrors: [] };
   page.on('console', (m) => {
     if (m.type() === 'error') a.consoleErrors.push(m.text());
   });
@@ -83,8 +84,9 @@ export async function actor(
   ctx.on('response', async (r) => {
     try {
       const ct = r.headers()['content-type'] ?? '';
-      if (/json|text\/(plain|html)|javascript|css/.test(ct) && !ct.includes('event-stream'))
-        a.bodies.push(`${r.url()}\n${await r.text()}`);
+      if (ct.includes('event-stream')) return;
+      if (/json|text\/plain/.test(ct) && r.url().startsWith(HUB)) a.bodies.push(`${r.url()}\n${await r.text()}`);
+      else if (/javascript|css|html/.test(ct)) a.assets.push(`${r.url()}\n${await r.text()}`);
     } catch {
       /* body unavailable (redirect, aborted) */
     }

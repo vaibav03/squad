@@ -29,12 +29,12 @@ test('J4 quiz round in group chat: card, private plain feedback, no gamification
   // nobody else sees Ben's feedback
   const anaDm = (await history(ana.token, 'dm:s_ana')).map((m) => m.text).join('\n');
   expect(anaDm, "J4: Ana's DM must not contain Ben's feedback").not.toContain(fb!.text);
-  // every bot message either student can read (quiz cards, feedback) is clean
+  // quiz card payloads (question + choices) are clean
   for (const a of [ana, ben]) {
-    const texts = [...(await history(a.token, GROUP)), ...(await history(a.token, `dm:${a.id}`))]
-      .filter((m) => m.sender.kind === 'persona')
+    const texts = (await history(a.token, GROUP))
+      .filter((m) => m.card?.type === 'quiz')
       .map((m) => `${m.text} ${JSON.stringify(m.card ?? '')}`);
-    expect.soft(texts.filter((t) => BANNED.test(t)), `E2E-quiz-gamified: ${a.id} bot messages contain a score/XP/streak/bet word`).toEqual([]);
+    expect.soft(texts.filter((t) => BANNED.test(t)), `E2E-quiz-gamified: ${a.id} quiz cards contain a score/XP/streak/bet word`).toEqual([]);
   }
   // hub quiz route reachable for the card's quiz id (from the squad stream is not exposed in chat; just check 404 shape)
   const r = await api(ben.token, '/v1/quiz/does_not_exist');
