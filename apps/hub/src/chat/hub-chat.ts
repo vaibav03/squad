@@ -421,7 +421,9 @@ export function createChatHub(
         const cv = { studentId: viewer.studentId, squadIds: [viewer.squadId] };
         for (const c of body.context) {
           const r = deps.context
-            ? buildContextRef(deps.context.store, cv, c.sourceId, c.location?.anchor, (src) => deps.context!.courses.name(src.connectionId, src.courseId))
+            ? buildContextRef(deps.context.store, cv, c.sourceId, c.location?.anchor, (src) =>
+                deps.context!.courses.name(src.connectionId, src.courseId),
+              )
             : undefined;
           if (!r?.ok) return { ok: false, status: 404, code: 'context_unreadable' };
           ctxFull.push(r.ref);
@@ -506,6 +508,18 @@ export function createChatHub(
         }
       }
       const replyTo = trigger.getStore()?.id;
+      if (card?.type === 'confirm' && replyTo && !card.reask) {
+        // "Ask again": remember the student's own message that started this question, but only when it is already
+        // visible to the card's reader (a group message, or a message in this same DM).
+        const t = store.get(replyTo);
+        if (
+          t &&
+          t.sender.kind === 'student' &&
+          (t.chatId.startsWith('group:') || t.chatId === p.chatId) &&
+          t.text.trim()
+        )
+          card = { ...card, reask: { chatId: t.chatId, text: t.text.slice(0, 4000) } };
+      }
       // a redelivered trigger can never produce a second identical answer (same trigger id + same text)
       if (replyTo && !card) {
         const prior = store.findReply(p.chatId, replyTo, text);

@@ -211,14 +211,22 @@ export async function attachChatEngine(
     if (sq) roster.chats.push({ id: `group:${id}`, name: sq.name, members: [...sq.members] });
   }
 
+  // How long a confirm stays answerable (bot default 10 min; SQUAD_CONFIRM_TIMEOUT_MS overrides, e.g. for demos).
+  const confirmTtl =
+    Number(env.SQUAD_CONFIRM_TIMEOUT_MS) > 0 ? Number(env.SQUAD_CONFIRM_TIMEOUT_MS) : 600_000;
   const transport = new WebTransport({
     onMessage: (m) => {
-      deps.chat.postBot(m);
+      deps.chat.postBot(
+        m.card?.type === 'confirm'
+          ? { ...m, card: { ...m.card, expiresAt: deps.now() + confirmTtl } }
+          : m,
+      );
     },
     onConfirmResolved: (student, taskId, answer) =>
       deps.chat.resolveConfirm(student, taskId, answer),
   });
   const bot = createBot({
+    confirmTimeoutMs: confirmTtl,
     skills,
     llm,
     transport,
@@ -242,6 +250,8 @@ export async function attachChatEngine(
 
   // The village ConfirmSheet and POST /v1/confirms/:taskId can answer a chat confirm card too: a yes/no is typed into
   // the student's DM, exactly as if they had answered in the chat (the bot's own confirm manager resolves it).
+  const isPast = (c: { expiresAt?: number }) =>
+    c.expiresAt !== undefined && deps.now() >= c.expiresAt;
   const pending = (student: string, taskId: string) => {
     const m = deps.chat.store.findConfirm(dmChatId(student), taskId);
     return m?.card?.type === 'confirm' ? m.card : undefined;
@@ -254,9 +264,30 @@ export async function attachChatEngine(
       const c = pending(v.studentId, taskId);
       return c?.status === 'pending' || (c !== undefined && !deps.trips.byTask(taskId));
     },
+    closed(v, taskId) {
+      const card = pending(v.studentId, taskId);
+      if (!card) return undefined;
+      if (card.status === 'answered')
+        return { state: 'answered', ...(card.answer ? { answer: card.answer } : {}) };
+      return card.status === 'timeout' || isPast(card)
+        ? { state: 'expired', ...(card.reask ? { reask: card.reask } : {}) }
+        : undefined;
+    },
+    expireAll(v) {
+      const dm = dmChatId(v.studentId);
+      let n = 0;
+      for (const m of deps.chat.store.history(dm, { limit: 100 }).messages)
+        if (
+          m.card?.type === 'confirm' &&
+          m.card.status === 'pending' &&
+          bot.confirms.cancel(v.studentId, m.card.taskId)
+        )
+          n++;
+      return n;
+    },
     preview(v, taskId) {
       const card = pending(v.studentId, taskId);
-      if (card?.status !== 'pending') return undefined;
+      if (card?.status !== 'pending' || isPast(card)) return undefined;
       const yn = card.options.length === 2 && /^yes$/i.test(card.options[0] ?? '');
       return {
         taskId,
@@ -264,12 +295,15 @@ export async function attachChatEngine(
         options: card.options,
         kind: 'bot',
         mode: yn ? 'yesno' : 'pick',
+        ...(card.expiresAt ? { expiresAt: card.expiresAt } : {}),
+        ...(card.reask ? { reask: card.reask } : {}),
       };
     },
     async answer(v, taskId, a) {
       const card = pending(v.studentId, taskId);
       if (!card) return { ok: false, code: 'unknown_task' };
       if (card.status === 'answered') return { ok: false, code: 'already_answered' };
+      if (card.status === 'timeout' || isPast(card)) return { ok: false, code: 'expired' };
       if (card.status !== 'pending') return { ok: false, code: 'unknown_task' };
       // The option the student picked goes in as its number, so any option text resolves; a bare yes/no
       // (no optionId) maps to the first option / the typed word.

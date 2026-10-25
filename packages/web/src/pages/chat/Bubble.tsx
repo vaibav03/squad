@@ -54,6 +54,8 @@ export interface BubbleProps {
   quizAnswer: (messageId: string) => string | undefined;
   onQuizAnswer: (m: ChatMessage, choice: string) => Promise<boolean>;
   onConfirm: (m: ChatMessage, n: number) => Promise<ConfirmResult>;
+  /** "Ask again" on an expired confirm: re-sends the original question as a NEW message. */
+  onReask?: (m: ChatMessage) => Promise<boolean>;
   onOpenDm?: () => void;
 }
 

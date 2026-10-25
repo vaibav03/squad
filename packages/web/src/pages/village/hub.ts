@@ -109,6 +109,14 @@ export interface ConfirmTarget {
   /** Real choices the bot offered (a debate verdict has two sides), shown as the sheet buttons. */
   options?: string[];
   question?: string;
+  /** Set when the hub says the question can no longer be answered: buttons go away, the sheet says why. */
+  closed?: 'expired' | 'answered';
+  /** The option that was chosen, when `closed` is 'answered' and the hub says which. */
+  answer?: string;
+  /** The question's own expiry (epoch ms), when the hub provides it. */
+  expiresAt?: number;
+  /** Original ask, re-sent by "Ask again" to create a NEW confirm. */
+  reask?: { chatId: string; text: string };
 }
 
 const Preview = z.object({
@@ -117,6 +125,8 @@ const Preview = z.object({
   options: z.array(z.string()),
   kind: z.string(),
   mode: z.enum(['pick', 'yesno']),
+  expiresAt: z.number().optional(),
+  reask: z.object({ chatId: z.string(), text: z.string() }).optional(),
 });
 
 async function tripTarget(c: HubCtx, taskId: string): Promise<Partial<ConfirmTarget>> {
@@ -157,18 +167,37 @@ export async function previewConfirm(
   };
   let kind: string | undefined;
   try {
-    const res = await ok(
-      await timedFetch(`${base(c)}/v1/confirms/${encodeURIComponent(taskId)}`, {
-        headers: auth(c),
-      }),
-      'confirm preview',
-    );
+    const raw = await timedFetch(`${base(c)}/v1/confirms/${encodeURIComponent(taskId)}`, {
+      headers: auth(c),
+    });
+    // The hub says why a visible task is closed: 404 expired, 409 already answered. Neither can be answered again.
+    if (raw.status === 404) {
+      const b = (await raw.json().catch(() => ({}))) as {
+        error?: { code?: unknown };
+        reask?: unknown;
+      };
+      // only the hub's explicit `expired` closes the sheet; an unknown task still falls back to the event's data
+      if (b.error?.code === 'expired') {
+        const r = z.object({ chatId: z.string(), text: z.string() }).safeParse(b.reask);
+        return { ...target, closed: 'expired', ...(r.success ? { reask: r.data } : {}) };
+      }
+    } else if (raw.status === 409) {
+      const b = (await raw.json().catch(() => ({}))) as { answer?: unknown };
+      return {
+        ...target,
+        closed: 'answered',
+        ...(typeof b.answer === 'string' ? { answer: b.answer } : {}),
+      };
+    }
+    const res = await ok(raw, 'confirm preview');
     const p = parseOrThrow(Preview, await res.json());
     kind = p.kind;
     target = {
       ...target,
       question: p.question,
       ...(p.mode === 'pick' && p.options.length ? { options: p.options } : {}),
+      ...(p.expiresAt ? { expiresAt: p.expiresAt } : {}),
+      ...(p.reask ? { reask: p.reask } : {}),
     };
   } catch {
     /* no preview endpoint / unknown to the preview: use the event's data */
@@ -213,6 +242,22 @@ export async function resolveConfirm(
       body: JSON.stringify({ yes, ...(opt ? { optionId: opt } : {}) }),
     }),
     'confirm',
+  );
+}
+
+/**
+ * "Ask again": posts the original question as a NEW chat message (fresh clientId, so the hub's clientId dedupe never
+ * swallows it) and the bot creates a new confirm. The old one stays closed.
+ */
+export async function askAgain(c: HubCtx, reask: { chatId: string; text: string }): Promise<void> {
+  const clientId = `reask_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  await ok(
+    await timedFetch(`${base(c)}/v1/chat/send`, {
+      method: 'POST',
+      headers: { ...json, ...auth(c) },
+      body: JSON.stringify({ chatId: reask.chatId, text: reask.text, clientId }),
+    }),
+    'ask again',
   );
 }
 

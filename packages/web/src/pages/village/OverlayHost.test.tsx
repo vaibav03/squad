@@ -88,11 +88,95 @@ describe('OverlayHost', () => {
         calls.some((c) => c.startsWith('POST') && c.endsWith('/v1/confirms/task_debate_1')),
       ).toBe(true);
     });
-    it('an expired task says so, not "Nothing was shared"', async () => {
+    it('a 404 on answering closes the sheet as expired: no buttons, never "Your answer is in"', async () => {
       await open(404);
       fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
       await wait(50);
-      expect(screen.getByRole('alert').textContent).toMatch(/expired/);
+      expect(screen.getByTestId('confirm-closed').textContent).toMatch(/This question expired\./);
+      expect(screen.queryByRole('button', { name: 'Yes' })).toBeNull();
+      expect(screen.queryByText(/Your answer is in/)).toBeNull();
+    });
+    it('a 409 on answering says Already answered and removes the buttons', async () => {
+      await open(409);
+      fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
+      await wait(50);
+      expect(screen.getByTestId('confirm-closed').textContent).toMatch(/Already answered/);
+      expect(screen.queryByRole('button', { name: 'Yes' })).toBeNull();
+    });
+  });
+
+  describe('closed confirms (hub says expired / answered)', () => {
+    const hub = { hubUrl: 'http://hub.test', token: 't' };
+    const reask = { chatId: 'group:sq_demo', text: '@cubbie debate: should exams be open book?' };
+    const ev: OverlayEvent = {
+      type: 'openConfirm',
+      taskId: 'task_debate_9',
+      question: 'Which side argued better?',
+    };
+    const mount = async (
+      previewRes: () => Response,
+      sends: { body: Record<string, unknown> }[] = [],
+    ) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (url: string, init?: RequestInit) => {
+          if (init?.method === 'POST' && url.endsWith('/v1/chat/send')) {
+            sends.push({ body: JSON.parse(String(init.body)) });
+            return new Response('{}', { status: 200 });
+          }
+          if (url.includes('/v1/confirms/')) return previewRes();
+          return new Response('{}', { status: 404 });
+        }),
+      );
+      render(<OverlayHost event={ev} mode="live" hub={hub} onClosed={vi.fn()} />);
+      await wait(80);
+    };
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('expired preview: buttons removed, state line, and Ask again re-sends the original question with a fresh clientId', async () => {
+      const sends: { body: Record<string, unknown> }[] = [];
+      await mount(
+        () => Response.json({ error: { code: 'expired' }, reask }, { status: 404 }),
+        sends,
+      );
+      expect(screen.getByTestId('confirm-closed').textContent).toMatch(/This question expired\./);
+      expect(screen.queryByRole('button', { name: 'Yes' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'No' })).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Ask again' }));
+      await wait(50);
+      expect(sends).toHaveLength(1);
+      expect(sends[0]!.body).toMatchObject({ chatId: reask.chatId, text: reask.text });
+      expect(String(sends[0]!.body.clientId)).toMatch(/^reask_/);
+      expect(screen.getByText(/Asked again/)).toBeTruthy();
+    });
+    it('already answered preview (409): shows the chosen option and no buttons', async () => {
+      await mount(() =>
+        Response.json(
+          { error: { code: 'already_answered' }, answer: 'For: open book' },
+          { status: 409 },
+        ),
+      );
+      const t = screen.getByTestId('confirm-closed').textContent ?? '';
+      expect(t).toMatch(/Already answered/);
+      expect(t).toMatch(/For: open book/);
+      expect(screen.queryByRole('button', { name: 'Yes' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Ask again' })).toBeNull();
+    });
+    it('a pending preview whose own expiresAt has passed closes as expired', async () => {
+      await mount(() =>
+        Response.json({
+          taskId: 'task_debate_9',
+          question: 'Which side argued better?',
+          options: ['A', 'B'],
+          kind: 'bot',
+          mode: 'pick',
+          expiresAt: Date.now() + 30,
+          reask,
+        }),
+      );
+      await wait(150);
+      expect(screen.getByTestId('confirm-closed').textContent).toMatch(/expired/);
+      expect(screen.getByRole('button', { name: 'Ask again' })).toBeTruthy();
     });
   });
 });

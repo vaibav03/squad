@@ -534,6 +534,11 @@ function MessageList({
                             ? ctl.confirm(m.chatId, m.card.taskId, n)
                             : Promise.resolve('failed' as const)
                         }
+                        onReask={(m) =>
+                          m.card?.type === 'confirm' && m.card.reask
+                            ? ctl.send(m.card.reask.chatId, { text: m.card.reask.text })
+                            : Promise.resolve(false)
+                        }
                         onOpenDm={
                           onOpenChat && chat.id !== dmId ? () => onOpenChat(dmId) : undefined
                         }

@@ -74,7 +74,12 @@ export const CARD_REGISTRY: Registry = {
   confirm: {
     framed: false,
     render: (card, { m, p }) => (
-      <ConfirmMessageCard card={card} onChoose={(n) => p.onConfirm(m, n)} disabled={p.paused} />
+      <ConfirmMessageCard
+        card={card}
+        onChoose={(n) => p.onConfirm(m, n)}
+        {...(p.onReask ? { onReask: () => p.onReask!(m) } : {})}
+        disabled={p.paused}
+      />
     ),
   },
 };
