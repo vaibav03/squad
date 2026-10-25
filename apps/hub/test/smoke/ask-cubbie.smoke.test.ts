@@ -222,7 +222,7 @@ describe('study plan seeded from imports persists', () => {
 });
 
 describe('due windows and relevance in chat answers', () => {
-  it('"what is due from Canvas this week" lists only the next 7 days, with course names and exact dates, no later items', async () => {
+  it('"what is due from Canvas this week" lists the next 7 days with course names and exact dates; later items only under "Next after this week"', async () => {
     add('s_chi', 'canvas_assignment', 'w1', 'seed', {}, 'seed'); // another student's data never appears
     const soon = add(
       's_ana',
@@ -248,10 +248,12 @@ describe('due windows and relevance in chat answers', () => {
     const reply = out.replies.map((m) => m.text).join('\n');
     expect(reply).toContain('HIST 140 Reading response 2 (HIST 140: World History)');
     expect(reply).toMatch(/due \w+day, \w+ \d+, \d+:\d\d (AM|PM) UTC/);
-    expect(reply).not.toContain('Term paper');
+    const [thisWeek, after] = reply.split('Next after this week:');
+    expect(thisWeek).not.toContain('Term paper');
+    expect(after ?? '').toContain('Term paper');
     const chips = out.replies.flatMap((m) => m.citations);
     expect(chips.some((c) => c.source?.id === soon.id && c.source.courseName === 'HIST 140: World History')).toBe(true);
-    expect(chips.every((c) => !/Term paper/.test(c.label))).toBe(true);
+    expect(chips.some((c) => /Term paper/.test(c.label))).toBe(true);
   });
 
   it('nothing in the window: says so, names the next item, offers the follow-up; the follow-up lists later items', async () => {
