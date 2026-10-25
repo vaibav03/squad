@@ -6,7 +6,9 @@ import type {
   ChatCard,
   ChatCitation,
   ChatMessage,
+  ChatSender,
   ChatSendBody,
+  ChatSyncFields,
   ChatSummary,
   ChatTyping,
   ChatUpdate,
@@ -49,12 +51,17 @@ export type ChatWire =
   | { event: 'chat.message'; id: number; data: ChatMessage }
   | { event: 'chat.update'; data: ChatUpdate }
   | { event: 'chat.typing'; data: ChatTyping }
-  | { event: 'chat.resync'; data: { seq: number } };
+  | { event: 'chat.resync'; data: { seq: number } }
+  /** Additive (iMessage sync): a message's delivery state or other sync fields changed. */
+  | { event: 'chat.sync'; data: { chatId: string; messageId: string; patch: Partial<ChatSyncFields> } };
 
 export interface ChatSub {
   readonly events: AsyncIterable<ChatWire>;
   close(): void;
 }
+
+/** Where an inbound message really came from (the iMessage bridge). `ts` is the origin's own message time. */
+export type ChatOrigin = Partial<ChatSyncFields> & { ts?: number };
 
 export type SendResult =
   | { ok: true; message: ChatMessage }
@@ -67,7 +74,24 @@ export interface ChatHub {
   setEngine(e: ChatEngine): void;
   subscribe(viewer: Viewer, afterSeq?: number): ChatSub;
   /** `via` names the channel a student message came from ('web' by default; the iMessage bridge passes 'imessage'). */
-  send(viewer: Viewer, body: ChatSendBody, o?: { via?: string }): Promise<SendResult>;
+  send(
+    viewer: Viewer,
+    body: ChatSendBody,
+    o?: { via?: string; origin?: ChatOrigin },
+  ): Promise<SendResult>;
+  /**
+   * Store and stream a message that came from another surface and must NOT go to the bot (context from a sender who is
+   * not a linked squad member, or an old message found by backfill). Group chats only.
+   */
+  postExternal(p: {
+    chatId: string;
+    sender: ChatSender;
+    text: string;
+    origin: ChatOrigin;
+    attachments?: ChatAttachment[];
+  }): ChatMessage | undefined;
+  /** Merge sync fields into a stored message and tell its viewers. */
+  annotate(id: string, patch: Partial<ChatSyncFields>): ChatMessage | undefined;
   postBot(p: BotPost): ChatMessage | undefined;
   /** Observe every stored bot message (after the leak guard), e.g. to mirror it to iMessage. Returns an unsubscribe. */
   onBotPost(fn: (m: ChatMessage) => void): () => void;
@@ -281,15 +305,17 @@ export function createChatHub(
         attachments = c.attachments;
         paths = c.paths;
       }
+      const { ts: originTs, ...originFields } = o?.origin ?? {};
       const message = store.append({
         chatId: body.chatId,
-        ts: t,
+        ts: originTs ?? t,
         sender: { kind: 'student', id: viewer.studentId, name: nameOf(viewer.studentId) },
         text,
         private: body.chatId.startsWith('dm:'),
         attachments,
         citations: [],
         demo: false,
+        ...originFields,
       });
       publish(message);
       notify(studentListeners, message, o?.via ?? 'web');
@@ -318,6 +344,28 @@ export function createChatHub(
         void run();
       }
       return { ok: true, message };
+    },
+    postExternal(p) {
+      if (!/^group:[A-Za-z0-9_-]{1,64}$/.test(p.chatId)) return undefined;
+      const { ts, ...fields } = p.origin;
+      const m = store.append({
+        chatId: p.chatId,
+        ts: ts ?? deps.now(),
+        sender: p.sender,
+        text: p.text,
+        private: false,
+        attachments: p.attachments ?? [],
+        citations: [],
+        demo: false,
+        ...fields,
+      });
+      publish(m);
+      return m;
+    },
+    annotate(id, patch) {
+      const m = store.annotate(id, patch);
+      if (m) fan(m.chatId, { event: 'chat.sync', data: { chatId: m.chatId, messageId: m.id, patch } });
+      return m;
     },
     postBot(p) {
       if (!/^(group|dm):[A-Za-z0-9_-]{1,64}$/.test(p.chatId)) return undefined;

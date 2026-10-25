@@ -15,6 +15,8 @@ export interface IMessageHandle {
   bridge: IMessageBridge;
   gateway: IMessageGateway;
   stop(): Promise<void>;
+  /** The watcher came back (or a manual nudge): fetch what the bound chats missed and flush the queue. */
+  reconnect(): Promise<{ chats: number; messages: number }>;
 }
 
 export interface AttachIMessageOptions {
@@ -25,6 +27,8 @@ export interface AttachIMessageOptions {
   now?: () => number;
   sleep?: (ms: number) => Promise<void>;
   minGapMs?: number;
+  /** false: no retry and backfill timers (tests). */
+  timers?: boolean;
 }
 
 /** The hub's logger takes (message, fields); the bot's takes (fields, message). */
@@ -66,23 +70,35 @@ export async function attachIMessage(
     ...(o.now ? { now: o.now } : {}),
     ...(o.sleep ? { sleep: o.sleep } : {}),
     ...(o.minGapMs !== undefined ? { minGapMs: o.minGapMs } : {}),
-    seen: (g) => deps.imessage.seen(g),
+    // the identity map is the dedupe: a guid is done once stored or handled (hub restart safe)
+    seen: (g) => deps.imessage.inboundDone(g),
   });
   const bridge = createIMessageBridge({
     deps,
     gateway,
     store: deps.imessage,
     ...(o.now ? { now: o.now } : {}),
+    ...(o.timers !== undefined ? { timers: o.timers } : {}),
   });
+  deps.imessageSync = bridge.sync;
   await gateway.start((m) => bridge.handleInbound(m));
+  // pick up what chat.db received while the hub was down (cursor per bound chat), then keep retrying queued sends
+  await bridge.sync.backfillAll().catch(() => undefined);
+  void bridge.sync.drain();
   deps.log.info(
     `imessage: running (dryRun=${config.dryRun}, chats=${config.allowedChats.length}, handles=${config.allowedHandles.length}, allowAll=${config.allowAll})`,
   );
   return {
     bridge,
     gateway,
+    async reconnect() {
+      const r = await bridge.sync.backfillAll();
+      await bridge.sync.drain();
+      return r;
+    },
     async stop() {
       bridge.stop();
+      deps.imessageSync = undefined;
       await gateway.stop();
     },
   };
