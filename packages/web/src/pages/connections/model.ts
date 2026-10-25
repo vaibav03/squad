@@ -35,7 +35,7 @@ export const SCOPE_WORDS: Record<string, string> = {
     'Your own Classroom coursework. No grades.',
   'canvas.calendar_feed': 'Your Canvas calendar feed: due dates and events.',
   'canvas.api_token.read': 'Your Canvas courses, assignments and files, read only. No grades.',
-  'canvas.session.read':
+  'canvas.browser_session.read':
     'Your Canvas courses, assignments and files, read through your own browser session. No grades.',
 };
 export const scopeWords = (s: string): string =>
