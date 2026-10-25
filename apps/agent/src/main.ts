@@ -7,6 +7,7 @@ import { GeminiLlm, loadConfig, openDb } from '@squad/core/node';
 import { FakeLlm, type Llm } from '@squad/core';
 import { createSqliteLedger } from '@squad/mesh';
 import { confirmFromEnv } from './confirm';
+import { createHubPort } from './hub';
 import { createHttpNet, createHubEmitter } from './net';
 import { loadProfile } from './profile';
 import { createAgentApp } from './server';
@@ -46,6 +47,7 @@ const { app } = createAgentApp({
   url: `http://localhost:${port}`,
   secret: process.env.INTERNAL_EVENTS_SECRET ?? '',
   ledger: createSqliteLedger(db),
+  hub: createHubPort(),
   log: (l) => console.log(`[${id}] ${l}`),
   ...(process.env.AGENT_SEED ? { seed: process.env.AGENT_SEED } : {}),
 });

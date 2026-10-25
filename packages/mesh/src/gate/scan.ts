@@ -32,7 +32,8 @@ function textNeedles(s: string, category: string): Needle[] {
   if (t.length < MIN_TEXT) return [];
   const out: Needle[] = [{ kind: 'text', value: t, collapsed: collapse(t), whole: true, category }];
   for (const w of t.split(/[^a-z0-9]+/)) {
-    if (w.length >= MIN_WORD && w !== t) out.push({ kind: 'text', value: w, collapsed: w, whole: false, category });
+    if (w.length >= MIN_WORD && w !== t)
+      out.push({ kind: 'text', value: w, collapsed: w, whole: false, category });
   }
   return out;
 }
@@ -54,7 +55,9 @@ export function buildNeedles(f: PrivateFields): Needle[] {
   for (const h of f.hardNos ?? []) out.push(...textNeedles(h.reason, 'hard-no reason'));
   for (const t of f.weakTopics ?? []) out.push(...textNeedles(t, 'weak topic'));
   for (const s of f.secrets ?? []) {
-    out.push(...(typeof s === 'number' ? numNeedles(s, 'private value') : textNeedles(s, 'private value')));
+    out.push(
+      ...(typeof s === 'number' ? numNeedles(s, 'private value') : textNeedles(s, 'private value')),
+    );
   }
   return out;
 }
@@ -69,7 +72,9 @@ function stringHits(s: string, n: Needle): boolean {
     return new RegExp(`(?<![\\d.,])${esc}(?![\\d]|[.,]\\d)`).test(low);
   }
   if (low.includes(n.value)) return true;
-  return n.collapsed !== undefined && n.collapsed.length >= MIN_TEXT && collapse(s).includes(n.collapsed);
+  return (
+    n.collapsed !== undefined && n.collapsed.length >= MIN_TEXT && collapse(s).includes(n.collapsed)
+  );
 }
 
 /** Returns the category of the first leaked private value found anywhere in `value` (keys and values), or undefined. */
@@ -78,7 +83,9 @@ export function findPrivateLeak(
   needles: readonly Needle[],
   publicTokens: ReadonlySet<string> = new Set(),
 ): string | undefined {
-  const live = needles.filter((n) => n.whole || !publicTokens.has(n.value)).filter((n) => !publicTokens.has(n.value) || n.whole && n.kind === 'text');
+  const live = needles
+    .filter((n) => n.whole || !publicTokens.has(n.value))
+    .filter((n) => !publicTokens.has(n.value) || (n.whole && n.kind === 'text'));
   const walk = (v: unknown): string | undefined => {
     if (typeof v === 'string') {
       for (const n of live) {
@@ -88,7 +95,12 @@ export function findPrivateLeak(
     } else if (typeof v === 'number') {
       if (Math.abs(v) >= 100) {
         for (const n of live) {
-          if (n.kind === 'num' && !publicTokens.has(n.value) && n.value === String(Math.trunc(Math.abs(v)))) return n.category;
+          if (
+            n.kind === 'num' &&
+            !publicTokens.has(n.value) &&
+            n.value === String(Math.trunc(Math.abs(v)))
+          )
+            return n.category;
         }
       }
     } else if (Array.isArray(v)) {

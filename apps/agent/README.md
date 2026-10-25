@@ -55,6 +55,13 @@ Everything goes through core `postEvent`: `agent.state`, `agent.message` (labels
 (`withheld` is always `'hidden'`; `blocked: true` for refusals), `option_dropped` / `conflict` / `query_denied` from `'mediator'`,
 `confirm.*`, and `trip.confirmed` exactly once, only after every student answered yes.
 
+## Hub private channel
+
+Besides VillageEvents, each agent posts two owner-only envelopes through core `postHubEnvelope` (`src/hub.ts`): `x.ledger.private`
+(its own student's ledger rows with the raw withheld value) and, from the coordinator, `x.trip.upsert` (public trip state: options,
+dates, vetoed labels from `'mediator'`, confirmations; `votes` is always `[]` because the ballot is secret; `limits` holds only the
+coordinator's own limits since no agent knows another's). `trip.confirmed` is emitted only after an upsert in which every member is confirmed.
+
 ## Trust table (say it exactly like this)
 
 | Truly cryptographic (semi-honest model)                                                       | Data minimization (trust our code)                                      |

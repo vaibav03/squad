@@ -27,6 +27,7 @@ export async function runTrip(c: Coord): Promise<FlowOutcome> {
 
   const cantAfford = await c.sum('cantAfford', 0);
   const veto = await c.sum('veto', 0);
+  const vetoed: { optionId: string; by: 'mediator'; reason: string }[] = [];
   const { survivors, dropped } = filterOptions({
     optionIds: ids,
     cantAfford,
@@ -35,8 +36,14 @@ export async function runTrip(c: Coord): Promise<FlowOutcome> {
   });
   for (const d of dropped) {
     await c.emit(toOptionDroppedEvent(taskId, d.reason));
+    vetoed.push({
+      optionId: d.optionId,
+      by: 'mediator',
+      reason: d.reason === 'budget' ? 'option dropped: budget' : 'dropped: veto',
+    });
     await c.tell('option_dropped', d);
   }
+  await c.trip({ vetoed, status: 'voting' });
   if (survivors.length === 0) return stop('no_option', 'no_option');
 
   const borda = await c.sum('borda', 0);
@@ -60,9 +67,15 @@ export async function runTrip(c: Coord): Promise<FlowOutcome> {
       counts: null,
       rounds: round,
     };
+    await c.trip({
+      dates: `${dates[0]} to ${dates.at(-1)}`,
+      status: 'confirming',
+      confirmations: c.members.map((m) => ({ student: m, confirmed: false, optionId })),
+    });
     if (!(await c.confirm(proposal, optionId))) continue;
 
     // Every student said yes: the only place trip.confirmed is emitted.
+    await c.trip({ status: 'confirmed' });
     await c.emit({ t: 'trip.confirmed', taskId, squadId: open.squadId ?? taskId });
     const cents = splitEvenly(o.perPerson * 100 * c.memberCount, c.members);
     const venmo = c.members

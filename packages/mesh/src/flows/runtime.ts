@@ -26,7 +26,7 @@ import {
   splitVector,
   sumShareVectors,
 } from '../secretshare';
-import { optionsOf, psiInput, vectorFor, type TaskView } from './hooks';
+import { optionsOf, ownLimits, psiInput, rawWithheld, vectorFor, type TaskView } from './hooks';
 import type {
   AgentDeps,
   Coord,
@@ -34,6 +34,7 @@ import type {
   FlowOutcome,
   StudentId,
   TripOptionPublic,
+  TripRecordLike,
   WireReply,
 } from './types';
 import { runStudy } from './study';
@@ -94,12 +95,35 @@ export function createAgent(deps: AgentDeps): FlowAgent {
   const tasks = new Map<string, TaskCtx>();
   const confirms = new Map<string, ConfirmWait>();
   const coordinated = new Set<string>();
+  const tripRecs = new Map<string, TripRecordLike>();
+  const publishTrip = async (taskId: string): Promise<void> => {
+    const rec = tripRecs.get(taskId);
+    if (!rec) return;
+    try {
+      await deps.hub?.tripUpsert(structuredClone(rec));
+    } catch {
+      /* hub is best effort */
+    }
+  };
 
   const emit = async (e: VillageEvent): Promise<void> => {
     try {
       await emitter.emit(e);
     } catch {
       /* emitting must never break a flow */
+    }
+  };
+  const privateRow = async (row: {
+    taskId: string;
+    student: string;
+    field: string;
+    shared: string;
+    ts: number;
+  }): Promise<void> => {
+    try {
+      await deps.hub?.ledgerPrivate({ ...row, withheld: rawWithheld(row.field, profile) });
+    } catch {
+      /* the owner view is best effort */
     }
   };
   const state = (s: 'studying' | 'idle') =>
@@ -114,7 +138,11 @@ export function createAgent(deps: AgentDeps): FlowAgent {
     o: { quiet?: boolean } = {},
   ): Promise<AgentMessage> {
     const r: GateResult = g.send(msg);
-    if (g === gate) for (const row of r.ledger) await emit(toLedgerEvent(row));
+    if (g === gate)
+      for (const row of r.ledger) {
+        await emit(toLedgerEvent(row));
+        await privateRow(row);
+      }
     if (!r.ok) {
       log(`gate blocked ${msg.kind}: ${r.reason}`);
       throw new FlowError('blocked');
@@ -335,7 +363,10 @@ export function createAgent(deps: AgentDeps): FlowAgent {
         const before = ledger.list(taskId).length;
         const denied = answerQuery(gate, ledger, msg);
         if (!denied) return fail(taskId, 'not_target');
-        for (const row of ledger.list(taskId).slice(before)) await emit(toLedgerEvent(row));
+        for (const row of ledger.list(taskId).slice(before)) {
+          await emit(toLedgerEvent(row));
+          await privateRow(row);
+        }
         const about = (msg.payload as Payload<'query'>).about;
         await emit(toQueryDeniedEvent(taskId, msg.from, about));
         return ok(taskId, 'completed', denied);
@@ -349,6 +380,13 @@ export function createAgent(deps: AgentDeps): FlowAgent {
     if (kind === 'confirm.result') {
       const w = confirms.get(msg.taskId);
       const p = msg.payload as Payload<'confirm.result'>;
+      const rec = tripRecs.get(msg.taskId);
+      if (rec && p.optionId !== 'none') {
+        const row = rec.confirmations.find((c) => c.student === msg.from);
+        if (row) Object.assign(row, { confirmed: p.accept, optionId: p.optionId });
+        rec.status = 'confirming';
+        await publishTrip(msg.taskId);
+      }
       if (w && p.optionId === w.optionId) {
         if (!p.accept) w.done(false);
         else {
@@ -471,8 +509,33 @@ export function createAgent(deps: AgentDeps): FlowAgent {
     });
     if (!m.ok) throw new FlowError('blocked');
     const { taskId } = a;
+    if (flow === 'trip') {
+      tripRecs.set(taskId, {
+        tripId: taskId,
+        taskId,
+        squadId: a.squadId ?? taskId,
+        status: 'planning',
+        options: (a.options ?? []).map((o) => ({
+          id: o.id,
+          label: o.label,
+          estCost: `$${o.perPerson}`,
+        })),
+        dates: null,
+        votes: [],
+        vetoed: [],
+        confirmations: members.map((m) => ({ student: m, confirmed: false })),
+        limits: { [id]: ownLimits(profile) },
+      });
+      await publishTrip(taskId);
+    }
 
     const coord: Coord = {
+      async trip(patch) {
+        const rec = tripRecs.get(taskId);
+        if (!rec) return;
+        Object.assign(rec, patch);
+        await publishTrip(taskId);
+      },
       taskId,
       self: id,
       members,

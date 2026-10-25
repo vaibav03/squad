@@ -91,3 +91,34 @@ export function vectorFor(
       });
   }
 }
+
+/** The student's own raw withheld value for a ledger field (owner view only; never leaves via events). */
+export function rawWithheld(field: string, p: PrivateProfile): string {
+  switch (field) {
+    case 'budget':
+      return `$${p.budget} cap`;
+    case 'calendar':
+      return p.calendar.map((e) => e.title).join('; ') || 'busy hours';
+    case 'hardNo':
+      return p.hardNos.map((h) => h.reason).join('; ') || 'none';
+    case 'topics':
+      return p.topics.weak.join(', ') || 'none';
+    case 'vote':
+      return p.tripRanking.join(' > ');
+    case 'softCost':
+      return Object.entries(p.hourCost)
+        .map(([h, c]) => `${h}:00 cost ${c}`)
+        .join(', ');
+    default:
+      return 'private';
+  }
+}
+
+/** Limits shown to the owner on the trip page. */
+export function ownLimits(p: PrivateProfile): Record<string, string> {
+  return {
+    budget: `$${p.budget} cap`,
+    ...(p.tripExtrasPerDay ? { extras: `$${p.tripExtrasPerDay} per day` } : {}),
+    ...(p.hardNos.length ? { hardNo: p.hardNos.map((h) => h.reason).join('; ') } : {}),
+  };
+}

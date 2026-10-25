@@ -4,7 +4,8 @@ import type { LedgerRow } from './ledger';
 type LedgerEvt = Extract<VillageEvent, { t: 'ledger.entry' }>;
 type MsgEvt = Extract<VillageEvent, { t: 'agent.message' }>;
 
-const toAgent = (id: string): string => (id === 'mediator' || id === 'commons' ? id : agentId.student(id));
+const toAgent = (id: string): string =>
+  id === 'mediator' || id === 'commons' ? id : agentId.student(id);
 
 /** Public projection of a ledger row: labels only, withheld is the literal 'hidden'. */
 export function toLedgerEvent(row: LedgerRow): LedgerEvt {
@@ -53,13 +54,22 @@ export function toOptionDroppedEvent(taskId: string, reason: 'budget' | 'veto'):
   };
 }
 
-export function toConflictEvent(taskId: string, reason: 'no_common_slot' | 'no_option' | 'no_plan'): MsgEvt {
+export function toConflictEvent(
+  taskId: string,
+  reason: 'no_common_slot' | 'no_option' | 'no_plan',
+): MsgEvt {
   return {
     t: 'agent.message',
     from: 'mediator',
     to: 'commons',
     taskId,
     kind: 'conflict',
-    shared: [reason === 'no_common_slot' ? 'no slot works for everyone' : reason === 'no_option' ? 'no option works for everyone' : 'no plan found'],
+    shared: [
+      reason === 'no_common_slot'
+        ? 'no slot works for everyone'
+        : reason === 'no_option'
+          ? 'no option works for everyone'
+          : 'no plan found',
+    ],
   };
 }

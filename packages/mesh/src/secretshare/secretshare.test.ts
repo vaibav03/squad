@@ -15,7 +15,10 @@ describe('secret sharing', () => {
   it('sums reconstruct totals', () => {
     fc.assert(
       fc.property(
-        fc.array(fc.array(fc.integer({ min: 0, max: 1000 }), { minLength: 4, maxLength: 4 }), { minLength: 1, maxLength: 6 }),
+        fc.array(fc.array(fc.integer({ min: 0, max: 1000 }), { minLength: 4, maxLength: 4 }), {
+          minLength: 1,
+          maxLength: 6,
+        }),
         fc.string(),
         (rows, seed) => {
           const inputs: Record<string, number[]> = {};

@@ -1,4 +1,5 @@
-export type TaskState = 'submitted' | 'working' | 'input-required' | 'completed' | 'failed' | 'canceled';
+export type TaskState =
+  'submitted' | 'working' | 'input-required' | 'completed' | 'failed' | 'canceled';
 
 const NEXT: Record<TaskState, readonly TaskState[]> = {
   submitted: ['working', 'failed', 'canceled'],

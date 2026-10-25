@@ -53,12 +53,40 @@ export interface Emitter {
   emit(e: VillageEvent): Promise<void>;
 }
 
+/** Private owner-only channel to the hub (x.* envelopes). Never streamed by the hub; never part of VillageEvents. */
+export interface HubPort {
+  /** The student's own ledger row with the RAW withheld value (owner view only). */
+  ledgerPrivate(e: {
+    taskId: string;
+    student: string;
+    field: string;
+    shared: string;
+    withheld: string;
+    ts: number;
+  }): Promise<void>;
+  /** Trip state for the trip page. `limits` holds only what THIS process knows (its own student's). */
+  tripUpsert(rec: TripRecordLike): Promise<void>;
+}
+export interface TripRecordLike {
+  tripId: string;
+  taskId: string;
+  squadId: string;
+  status: 'planning' | 'voting' | 'confirming' | 'confirmed';
+  options: { id: string; label: string; estCost?: string }[];
+  dates: string | null;
+  votes: { student: string; ranking: string[] }[]; // always [] from the mesh: the ballot is secret
+  vetoed: { optionId: string; by: 'mediator'; reason: string }[];
+  confirmations: { student: string; confirmed: boolean; optionId?: string }[];
+  limits: Record<string, Record<string, string>>;
+}
+
 export interface AgentDeps {
   profile: PrivateProfile;
   net: Net;
   emitter: Emitter;
   askConfirm: AskConfirm;
   llm: Llm; // used only for explanations to the student; never for agent-to-agent text
+  hub?: HubPort;
   seed?: string; // rng seed (deterministic for scripted/tests; secureRng when undefined in production)
   queryBudget?: number; // per-task cap on query + psi.blind sends (default 8)
   ledger?: Ledger;
@@ -137,5 +165,7 @@ export interface Coord {
   /** Propose to every student; true only if EVERY student answers yes. Timeout/offline = no. */
   confirm(proposal: Payload<'result'>, optionId: string): Promise<boolean>;
   emit(e: VillageEvent): Promise<void>;
+  /** Patch the trip record kept by the coordinator and publish it to the hub (no-op without a HubPort). */
+  trip(patch: Partial<Omit<TripRecordLike, 'tripId' | 'taskId' | 'squadId'>>): Promise<void>;
   venmoOf(): string;
 }

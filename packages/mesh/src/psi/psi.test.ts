@@ -43,7 +43,9 @@ describe('ring PSI', () => {
     const a = runRingPsi(parties, { padTo: 8, seed: 'k' });
     const b = runRingPsi(parties, { padTo: 8, seed: 'k' });
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-    expect(JSON.stringify(runRingPsi(parties, { padTo: 8, seed: 'k2' }))).not.toBe(JSON.stringify(a));
+    expect(JSON.stringify(runRingPsi(parties, { padTo: 8, seed: 'k2' }))).not.toBe(
+      JSON.stringify(a),
+    );
   });
 
   it('rejects invalid points', () => {

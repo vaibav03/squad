@@ -20,7 +20,8 @@ function randomFe(rng: Rng): bigint {
 function toFe(value: number | bigint): bigint {
   let v: bigint;
   if (typeof value === 'number') {
-    if (!Number.isSafeInteger(value) || value < 0) throw new RangeError('share: value must be a non-negative safe integer');
+    if (!Number.isSafeInteger(value) || value < 0)
+      throw new RangeError('share: value must be a non-negative safe integer');
     v = BigInt(value);
   } else {
     v = value;

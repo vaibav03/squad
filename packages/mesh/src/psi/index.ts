@@ -44,7 +44,8 @@ export function psiKeygen(rng: Rng): bigint {
 }
 
 function checkSecret(secret: bigint): void {
-  if (typeof secret !== 'bigint' || secret < 1n || secret >= ORDER) throw new RangeError('psi: secret out of range');
+  if (typeof secret !== 'bigint' || secret < 1n || secret >= ORDER)
+    throw new RangeError('psi: secret out of range');
 }
 
 export function psiPrepare(
@@ -57,7 +58,8 @@ export function psiPrepare(
   if (items.length > o.padTo) throw new RangeError('psi: padTo smaller than item count');
   const seen = new Set<string>();
   for (const it of items) {
-    if (typeof it !== 'string' || it.length === 0) throw new Error('psi: items must be non-empty strings');
+    if (typeof it !== 'string' || it.length === 0)
+      throw new Error('psi: items must be non-empty strings');
     if (seen.has(it)) throw new Error('psi: duplicate item');
     seen.add(it);
   }
@@ -146,4 +148,3 @@ export function runRingPsi(
   });
   return { common: out, mediatorView: { tokenCounts, common }, wire };
 }
-

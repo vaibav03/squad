@@ -7,18 +7,48 @@ import type {
   AgentDeps,
   Emitter,
   FlowAgent,
+  HubPort,
   Net,
   PrivateProfile,
   TripOptionPublic,
+  TripRecordLike,
   WireReply,
 } from './types';
 
 export const SENTINELS = ['$187', '187', 'therapy', 'under 21', 'tuesday 2pm', 'tue 2pm'] as const;
 
+export type TimelineItem =
+  | { ch: 'event'; event: VillageEvent }
+  | { ch: 'hub'; kind: 'ledger.private' | 'trip.upsert'; data: unknown };
+
 export class RecordingEmitter implements Emitter {
   readonly events: VillageEvent[] = [];
+  constructor(readonly timeline: TimelineItem[] = []) {}
   async emit(e: VillageEvent): Promise<void> {
     this.events.push(structuredClone(e));
+    this.timeline.push({ ch: 'event', event: structuredClone(e) });
+  }
+}
+
+/** Records what would go to the hub's private x.* envelopes (owner-only data). */
+export class RecordingHub implements HubPort {
+  readonly ledger: {
+    taskId: string;
+    student: string;
+    field: string;
+    shared: string;
+    withheld: string;
+    ts: number;
+  }[] = [];
+  readonly trips: TripRecordLike[] = [];
+  constructor(private readonly timeline: TimelineItem[]) {}
+  async ledgerPrivate(e: RecordingHub['ledger'][number]): Promise<void> {
+    this.ledger.push(structuredClone(e));
+    this.timeline.push({ ch: 'hub', kind: 'ledger.private', data: structuredClone(e) });
+  }
+  async tripUpsert(rec: TripRecordLike): Promise<void> {
+    this.trips.push(structuredClone(rec));
+    this.timeline.push({ ch: 'hub', kind: 'trip.upsert', data: structuredClone(rec) });
   }
 }
 
@@ -115,6 +145,7 @@ export interface TestMesh {
   agents: Record<string, FlowAgent>;
   ledgers: Record<string, Ledger>;
   emitter: RecordingEmitter;
+  hub: RecordingHub;
   logs: string[];
   profiles: PrivateProfile[];
   /** Everything an observer could see: events + logs + ledger rows as JSON. */
@@ -126,6 +157,7 @@ export interface TestMesh {
 export function createTestMesh(o: MeshOptions = {}): TestMesh {
   const profiles = o.profiles ?? demoProfiles();
   const emitter = new RecordingEmitter();
+  const hub = new RecordingHub(emitter.timeline);
   const logs = o.logs ?? [];
   const agents: Record<string, FlowAgent> = {};
   const ledgers: Record<string, Ledger> = {};
@@ -163,6 +195,7 @@ export function createTestMesh(o: MeshOptions = {}): TestMesh {
       askConfirm,
       llm: new FakeLlm(),
       ledger,
+      hub,
       log: (l) => logs.push(`[${p.id}] ${l}`),
       ...(o.seed !== undefined ? { seed: `${o.seed}|${p.id}` } : {}),
       ...(o.timeouts ? { timeouts: o.timeouts } : {}),
@@ -175,6 +208,7 @@ export function createTestMesh(o: MeshOptions = {}): TestMesh {
     agents,
     ledgers,
     emitter,
+    hub,
     logs,
     profiles,
     wire,

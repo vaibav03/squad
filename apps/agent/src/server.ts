@@ -9,7 +9,7 @@ import {
   type Net,
   type PrivateProfile,
 } from '@squad/mesh';
-import type { Ledger } from '@squad/mesh';
+import type { HubPort, Ledger } from '@squad/mesh';
 
 export interface AgentAppOptions {
   profile: PrivateProfile;
@@ -21,6 +21,7 @@ export interface AgentAppOptions {
   secret: string; // INTERNAL_EVENTS_SECRET: guards /internal/*
   seed?: string;
   ledger?: Ledger;
+  hub?: HubPort;
   timeouts?: { peerMs?: number; confirmMs?: number };
   log?: (line: string) => void;
 }
@@ -63,6 +64,7 @@ export function createAgentApp(o: AgentAppOptions): { app: Hono; agent: FlowAgen
     llm: o.llm,
     ...(o.seed !== undefined ? { seed: o.seed } : {}),
     ...(o.ledger ? { ledger: o.ledger } : {}),
+    ...(o.hub ? { hub: o.hub } : {}),
     ...(o.timeouts ? { timeouts: o.timeouts } : {}),
     ...(o.log ? { log: o.log } : {}),
   });

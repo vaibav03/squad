@@ -6,3 +6,4 @@ export * from './confirm';
 export * from './server';
 export * from './mesh';
 export * from './google';
+export * from './hub';
