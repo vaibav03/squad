@@ -565,14 +565,12 @@ export async function planChapterConflict(c: GateCtx, a: Asserts): Promise<void>
   const pending = (await getPlan(rhea, id))?.members.filter((m) => m.response === 'pending') ?? [];
   if (pending.length >= 2) {
     const rs = await Promise.all(
-      pending
-        .slice(0, 2)
-        .map((m) =>
-          api(byId(c, m.id)!.token, R.planRespond(id), {
-            method: 'POST',
-            json: { response: 'accept' },
-          }),
-        ),
+      pending.slice(0, 2).map((m) =>
+        api(byId(c, m.id)!.token, R.planRespond(id), {
+          method: 'POST',
+          json: { response: 'accept' },
+        }),
+      ),
     );
     a.eq(
       'simultaneous acceptances never conflict',

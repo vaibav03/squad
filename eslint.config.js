@@ -16,7 +16,11 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-imports': 'error',
     },
   },
-  { files: ['**/*.test.ts', '**/test/**'], rules: { '@typescript-eslint/no-explicit-any': 'off' } },
+  {
+    // the gate harness reads untyped JSON from the hub and the fakes
+    files: ['**/*.test.ts', '**/test/**', 'e2e/gate/**'],
+    rules: { '@typescript-eslint/no-explicit-any': 'off' },
+  },
   {
     files: ['scripts/**', '**/scripts/**', '**/review-live/**', '**/*.mjs', '*.config.js'],
     rules: { 'no-undef': 'off' },

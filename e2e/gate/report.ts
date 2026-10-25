@@ -18,7 +18,7 @@ import {
 } from './lib/config';
 import { allBlockers } from './lib/blockers';
 import { branchTable } from './lib/probes';
-import type { Mode, StepResult } from './lib/types';
+import type { StepResult } from './lib/types';
 
 export const JOURNEY = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10'];
 export const VARIANTS = Array.from({ length: 12 }, (_, i) => `V${i + 1}`);

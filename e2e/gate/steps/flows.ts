@@ -1,28 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- the gate reads untyped hub JSON */
 // Reusable journey fragments (used by the steps and by the variants). All are API-level and side-effect aware.
-// Aligned to the REAL hub contract (lib/contract.ts): /v1/connections*, /v1/context/search|source, Google authorize +
-// /oauth/google/callback through the hub's labelled consent simulator. The hub's fixture upstreams are in-process, so
-// upstream misbehaviour goes through the gate-hub control server (hubCtx).
-import { SENTINELS } from '../lib/config';
+// Aligned to the REAL hub contract (lib/contract.ts). The hub's real connectors run against the HTTP fakes through the
+// fetch seam in gate-hub.ts; upstream misbehaviour goes through the fakes' controls (fakes/client.ts).
+import { GOOGLE, SENTINELS } from '../lib/config';
 import { api, history, isBot, waitBot, type HMsg } from '../lib/hub';
-import { canvas, google, hubCtx, im, type World, type WorldUser } from '../lib/fakes/client';
-import { HUB_FIXTURE } from '../lib/fakes/content';
-import {
-  CANVAS_FIXTURE_BASE,
-  CANVAS_SCOPE,
-  CANVAS_SECRET,
-  ROUTES,
-  type UpstreamBehavior,
-} from '../lib/contract';
+import { canvas, google, im, type World, type WorldUser } from '../lib/fakes/client';
+import { DRIVE_FILES } from '../lib/fakes/content';
+import { CANVAS_TOKEN } from '../lib/fakes/fake-canvas';
+import { CANVAS_FIXTURE_BASE, CANVAS_SCOPE, ROUTES } from '../lib/contract';
 
 export const asSet = (x: string[]) => [...new Set(x)].sort();
-const quiet = async (p: Promise<unknown>) => {
-  try {
-    await p;
-  } catch {
-    /* the HTTP fakes are optional: the hub cannot reach them today */
-  }
-};
 
 // ------------------------------------------------------------------------------------------------------- shapes
 export interface ConnView {
@@ -108,71 +94,128 @@ export async function connectionStatus(
   return [...(live.length ? live : list)].sort((a, b) => b.createdAt - a.createdAt)[0];
 }
 
-/** Canvas through the student-token variant in fixture mode (assignments, announcement, file with page text). */
+/**
+ * Canvas through the student-token variant in LIVE mode: the hub's real Canvas REST connector runs against the fake
+ * Canvas (the gate hub maps https://canvas.fixture.invalid to it). `feed` is the in-process fixture connector (mode
+ * fixture), kept for the honest-label check.
+ */
+export async function connectCanvasToken(u: WorldUser) {
+  return api(u.token, ROUTES.connections, {
+    method: 'POST',
+    json: {
+      provider: 'canvas',
+      variant: 'token',
+      mode: 'live',
+      scopes: [CANVAS_SCOPE.token],
+      token: CANVAS_TOKEN,
+      baseUrl: CANVAS_FIXTURE_BASE,
+    },
+  });
+}
 export async function connectCanvas(u: WorldUser, variant: 'token' | 'feed' = 'token') {
-  const body =
-    variant === 'token'
-      ? {
-          provider: 'canvas',
-          variant: 'token',
-          scopes: [CANVAS_SCOPE.token],
-          token: CANVAS_SECRET,
-          baseUrl: CANVAS_FIXTURE_BASE,
-        }
-      : {
-          provider: 'canvas',
-          variant: 'feed',
-          scopes: [CANVAS_SCOPE.feed],
-          feedUrl: `${CANVAS_FIXTURE_BASE}/feeds/${CANVAS_SECRET}/calendar.ics`,
-        };
-  return api(u.token, ROUTES.connections, { method: 'POST', json: body });
+  if (variant === 'token') return connectCanvasToken(u);
+  return api(u.token, ROUTES.connections, {
+    method: 'POST',
+    json: {
+      provider: 'canvas',
+      variant: 'feed',
+      scopes: [CANVAS_SCOPE.feed],
+      feedUrl: `${CANVAS_FIXTURE_BASE}/feeds/${SENTINELS.feedSecret}_feed/calendar.ics`,
+    },
+  });
 }
 
 const unesc = (s: string) => s.replace(/&amp;/g, '&');
 
 /**
- * The whole Nook-shaped Google consent dance against the hub's labelled simulator: authorize -> consent page -> callback.
- * `picked` are the Drive Picker selections (drive.file is per file). `deny` clicks Cancel instead of Allow.
+ * The whole Nook-shaped Google consent dance against the fake Google, with the hub's REAL OAuth code: authorize returns
+ * the accounts.google.com URL, the gate rewrites its origin to the fake, follows the fake consent page's #allow link
+ * (redirect_uri + code + state) against the hub callback, and may replay it. `picked` are the Drive Picker selections.
+ * `shortLived` makes the fake issue a 30 s access token so the hub's refresh path (within 60 s of expiry) is reachable.
  */
 export async function connectGoogle(
   u: WorldUser,
-  opts: { picked?: string[]; replayCallback?: boolean; deny?: boolean; returnTo?: string } = {},
+  opts: {
+    picked?: string[];
+    replayCallback?: boolean;
+    deny?: boolean;
+    returnTo?: string;
+    shortLived?: boolean;
+  } = {},
 ) {
-  const picked = opts.picked ?? [HUB_FIXTURE.google.picked.id];
+  const picked = opts.picked ?? [DRIVE_FILES.picked.id];
   const q = new URLSearchParams({ return_to: opts.returnTo ?? '/squad/connections' });
   if (picked.length) q.set('picked', picked.join(','));
   const auth = await api(u.token, `${ROUTES.googleAuthorize}?${q.toString()}`);
   const url: string | undefined = auth.json?.authorization_url;
   if (auth.status !== 200 || !url)
     return { ok: false as const, why: `authorize answered ${auth.status}`, auth };
-  const consentUrl = new URL(url);
-  if (consentUrl.pathname !== ROUTES.googleSimConsent)
+  const authUrl = new URL(url);
+  if (authUrl.host !== 'accounts.google.com')
     return {
       ok: false as const,
-      why: 'authorization_url is not the hub simulator (hub is in live mode)',
+      why: `authorization_url host is ${authUrl.host}, not accounts.google.com (hub not in live mode)`,
       auth,
     };
-  const consent = await api(null, consentUrl.pathname + consentUrl.search);
-  const allow = /href="([^"]*code=sim[^"]*)"/.exec(consent.text)?.[1];
-  const cancel = /href="([^"]*error=access_denied[^"]*)"/.exec(consent.text)?.[1];
-  const target = opts.deny ? cancel : allow;
-  if (!target)
-    return { ok: false as const, why: 'consent page has no allow/cancel link', auth, consent };
-  const first = await api(null, unesc(target));
-  const replay = opts.replayCallback ? await api(null, unesc(target)) : undefined;
+  const params = authUrl.searchParams;
+  const consentRes = await fetch(
+    `${GOOGLE}/__h/accounts.google.com${authUrl.pathname}${authUrl.search}`,
+  );
+  const consentHtml = await consentRes.text();
+  const allow = /id="allow" href="([^"]+)"/.exec(consentHtml)?.[1];
+  const deny = /id="deny" href="([^"]+)"/.exec(consentHtml)?.[1];
+  const target = opts.deny ? deny : allow;
+  if (!target) return { ok: false as const, why: 'fake consent page has no allow/deny link', auth };
+  const cb = new URL(unesc(target));
+  const cbPath = cb.pathname + cb.search;
+  if (opts.shortLived) await google.ttl(30);
+  const first = await api(null, cbPath);
+  if (opts.shortLived) await google.ttl(3600);
+  const replay = opts.replayCallback ? await api(null, cbPath) : undefined;
   return {
     ok: true as const,
     auth,
     mode: auth.json?.mode as string,
-    /** scopes the hub says it requests */
+    /** the `scope` parameter of the real authorize URL (identity scopes included) */
+    scopeParam: (params.get('scope') ?? '').split(' ').filter(Boolean),
+    /** what the hub says it requests */
     requested: (auth.json?.scopes ?? []) as string[],
-    consentHtml: consent.text,
-    /** scope names the consent page lists (last path segment) */
-    consentScopes: [...consent.text.matchAll(/<li>([^<]+)<\/li>/g)].map((m) => m[1]!),
+    authParams: Object.fromEntries(params.entries()) as Record<string, string>,
+    consentHtml,
+    consentScopes: [...consentHtml.matchAll(/data-scope="([^"]+)"/g)].map((m) => m[1]!),
     callbackStatus: first.status,
+    callbackUrl: cb.toString(),
     location: first.headers.get('location') ?? '',
     replayStatus: replay?.status,
-    state: consentUrl.searchParams.get('state') ?? '',
+    replayText: replay?.text ?? '',
+    state: params.get('state') ?? '',
+  };
+}
+
+/** connectGoogle plus what ended up granted (the hub's connection view), for variants. */
+export async function connectGoogleFull(
+  u: WorldUser,
+  opts: { picked?: string[]; replayCallback?: boolean; shortLived?: boolean } = {},
+) {
+  const r = await connectGoogle(u, opts);
+  if (!r.ok)
+    return {
+      ok: false as const,
+      why: r.why,
+      requested: [] as string[],
+      granted: [] as string[],
+      callbackStatus: 0,
+      replayStatus: undefined as number | undefined,
+    };
+  const view = await connectionStatus(u, 'google');
+  return {
+    ok: true as const,
+    why: '',
+    requested: r.scopeParam,
+    granted: view?.scopes ?? [],
+    callbackStatus: r.callbackStatus,
+    replayStatus: r.replayStatus,
+    connectionId: view?.id,
   };
 }
 
@@ -244,16 +287,14 @@ export async function items(u: WorldUser, squadId?: string): Promise<SourceRow[]
 }
 /** Queries that together reach every fixture source (used to enumerate what a squad member can read). */
 export const SQUAD_PROBES = [
-  'sampling distributions assignment',
-  'confidence intervals assignment',
-  'osmosis potato cores lab report',
-  'midterm review session moved Thursday room',
-  'week5 sampling lecture central limit theorem standard error',
-  'sampling distributions my notes',
-  'study group library annex sampling distributions',
-  'office hours teaching assistant confidence intervals',
-  'class survey summary commute time',
-  'reflection when does the mean mislead',
+  'homework sampling distributions standard error',
+  'lab confidence intervals dorm sleep survey',
+  'midterm exam chapters central limit theorem',
+  'lecture slides pdf',
+  'lecture notes central limit theorem sample mean',
+  'reading response',
+  'review session office hours',
+  'private notes unpicked',
 ];
 
 // ------------------------------------------------------------------------------------------------------- sharing
@@ -331,46 +372,40 @@ export async function openSource(
 
 // ------------------------------------------------------------------------------------------------ upstream chaos
 /**
- * Variant helpers. They drive the hub's in-process fixture upstreams through the gate-hub control server and, best
- * effort, the HTTP fakes (a hub with a base-URL override would use those). Each returns whether the hub-side control
- * was reachable so a variant can report `BLOCKED`/note instead of silently passing.
+ * Variant helpers over the fakes' HTTP controls. The hub only refreshes a Google token within 60 s of its expiry, so
+ * for refresh cases connect with `connectGoogle(u, { shortLived: true })` first, then `expireUpstream()`, then list
+ * connections (GET /v1/connections runs the credential tick).
  */
 export async function revokeUpstream(provider: 'google' | 'canvas' = 'google') {
-  const r = await hubCtx.upstream(provider, 'revoked');
-  if (provider === 'google') await quiet(google.revoke());
-  return { hubControl: r.ok, status: r.status };
+  if (provider === 'google') await google.revoke();
+  else await canvas.tokenValid(false);
+  return { ok: true };
 }
 
-/** Access token past its life. Refresh works unless `refreshFails` (then the connection ends `expired`, needs reconnect). */
-export async function expireUpstream(
-  o: { provider?: 'google' | 'canvas'; refreshFails?: boolean } = {},
+/** Access tokens past their life. Refresh works unless `refreshFails` (then the connection ends `expired`). */
+export async function expireUpstream(o: { refreshFails?: boolean } = {}) {
+  await google.expire();
+  if (o.refreshFails) await google.failRefresh(99);
+  return { ok: true };
+}
+
+/** The Canvas upstream misbehaves: 404, 410, a redirect, a rate limit, or a revoked/invalid token. */
+export async function canvasFeedBroken(
+  mode: 'ok' | '404' | '410' | 'moved' | 'rate_limited' | 'big' | 'bad_token',
 ) {
-  const provider = o.provider ?? 'google';
-  const a = await hubCtx.upstream(provider, 'ok', o.refreshFails ?? false);
-  const b = await hubCtx.expireClock(provider);
-  if (provider === 'google') {
-    await quiet(google.expire());
-    if (o.refreshFails) await quiet(google.failRefresh(99));
-  }
-  return { hubControl: a.ok && b.ok, status: b.status };
-}
-
-/** The Canvas feed/token upstream misbehaves. The in-process fixture cannot speak HTTP, so statuses map to behaviours. */
-export async function canvasFeedBroken(mode: 'ok' | '404' | '410' | 'moved' | UpstreamBehavior) {
-  const behavior: UpstreamBehavior =
-    mode === '404' || mode === 'moved' ? 'unauthorized' : mode === '410' ? 'revoked' : mode;
-  const r = await hubCtx.upstream('canvas', behavior);
-  if (mode === 'ok' || mode === '404' || mode === '410' || mode === 'moved')
-    await quiet(canvas.mode(mode));
-  return { hubControl: r.ok, status: r.status, behavior };
+  if (mode === 'bad_token') await canvas.tokenValid(false);
+  else await canvas.mode(mode);
+  return { ok: true };
 }
 
 export async function resetUpstreams() {
-  const r = await hubCtx.reset();
-  await quiet(canvas.reset());
-  await quiet(google.reset());
-  return { hubControl: r.ok };
+  await canvas.reset();
+  await google.reset();
+  return { ok: true };
 }
+
+/** The sources the user owns across every connection. */
+export const sourcesOf = (u: WorldUser) => items(u);
 
 /** Makes a later step self-sufficient: connects whatever is missing and (with a squadId) opts the squad in. */
 export async function ensureConnected(u: WorldUser, squadId?: string): Promise<boolean> {

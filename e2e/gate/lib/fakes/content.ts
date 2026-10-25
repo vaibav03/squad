@@ -85,69 +85,37 @@ export const CLASSROOM = {
   submissionGrade: SENTINELS.grade,
 };
 
-/**
- * What the HUB's own fixture upstream holds (packages/brain/fixtures/connectors/{canvas,google}.json, served by the
- * in-process fake connectors). These, not the HTTP fakes' data above, are what S1-S3 assert against.
- * Synthetic and original; no real course, institution or person.
- */
-export const HUB_FIXTURE = {
-  canvas: {
-    assignments: [
-      { title: 'Assignment 3: Sampling Distributions', due: 'Nov 2' },
-      { title: 'Assignment 4: Confidence Intervals', due: 'Nov 16' },
-      { title: 'Lab Report 2: Osmosis in Potato Cores', due: 'Nov 5' },
-    ],
-    announcement: {
-      title: 'Midterm review session moved',
-      needle: 'midterm review session moved Thursday room',
-    },
-    file: {
-      title: 'week5-sampling-lecture.pdf',
-      /** verbatim sentence on page 3 of the file */
-      quote:
-        'The standard error of the mean equals the population standard deviation divided by the square root of the sample size.',
-    },
-    /** sources one Canvas fixture connection yields: 3 assignments + 1 announcement (canvas_event) + 1 file */
-    counts: { canvas_assignment: 3, canvas_event: 1, canvas_file: 1 } as Record<string, number>,
-  },
-  google: {
-    picked: { id: 'doc-notes-1', title: 'Sampling distributions: my notes' },
-    /** in the fixture Drive but NOT picked in the Picker: drive.file must never see it */
-    unpicked: {
-      id: 'file-sheet-2',
-      title: 'survey-results-summary.txt',
-      textNeedle: 'Class survey summary',
-    },
-    /** private calendar titles: never in hub_busy_blocks, never bulk-shared */
-    eventTitles: [
-      'Study group: sampling distributions',
-      'Office hours with the teaching assistant',
-    ],
-    eventNeedle: 'study group library annex sampling distributions',
-    classroom: { title: 'Reflection: when does the mean mislead?' },
-    /** with only `picked` chosen: 2 calendar events + 1 picked doc + 1 Classroom item */
-    counts: { gcal_event: 2, gdoc: 1, classroom_item: 1 } as Record<string, number>,
-  },
-  /** raw upstream account ids the hub must never store or return (only a salted hash is kept) */
-  rawAccountIds: ['fixture-canvas-user-1', 'fixture.student@example.invalid'],
-} as const;
+/** The Canvas file the fake serves (metadata only: the hub never extracts Canvas file text). */
+export const CANVAS_FILE = { id: 'f_slides5', title: 'Lecture 5 slides.pdf' } as const;
 
-/** Strings that exist only in data that must never reach a squad surface (unpicked Drive file, private calendar titles). */
+/** Source kinds and counts one full connect (Canvas token + Google with only the lecture doc picked) must yield. */
+export const EXPECTED_SOURCES: Record<string, number> = {
+  canvas_assignment: ASSIGNMENTS.length,
+  canvas_file: 1,
+  gcal_event: EVENTS.length + 1, // the two public events and the private-title one (readable by its owner only)
+  gdoc: 1,
+  classroom_item: CLASSROOM.work.length,
+};
+
+/** Calendar titles: owner-private, never in hub_busy_blocks, never bulk-shared with a squad. */
+export const CAL_TITLES: string[] = [...EVENTS.map((e) => e.title), PRIVATE_EVENT.summary];
+
+/** Strings that must never reach a squad surface (unpicked Drive file, private calendar title). */
 export const PRIVATE_FIXTURE: string[] = [
-  HUB_FIXTURE.google.unpicked.title,
-  HUB_FIXTURE.google.unpicked.textNeedle,
-  ...HUB_FIXTURE.google.eventTitles,
+  DRIVE_FILES.unpicked.name,
+  DRIVE_FILES.unpicked.text,
+  PRIVATE_EVENT.summary,
 ];
 
-/** What a fixture-world question should be answered from (stable facts for S3/S5 assertions; real hub fixture). */
+/** What a fixture-world question should be answered from (stable facts for S3/S5 assertions). */
 export const FACTS = {
   /** Nook "what is due" answer: deterministic, produced from the asker's own Canvas sources before any model runs. */
   hw4Question: 'when is the stats homework due?',
-  hw4Needle: 'Assignment 3: Sampling Distributions',
-  hw4DueDay: 'Nov 2',
-  /** content question: answered from retrieved chunks by the model (needs a real LLM to be grounded). */
+  hw4Needle: 'Homework 4',
+  hw4DueDay: 'Oct 29',
+  /** content question: answered from retrieved chunks (needs a real LLM to be grounded in chat). */
   cltQuestion: 'what does the standard error of the mean equal?',
-  cltQuote: HUB_FIXTURE.canvas.file.quote,
+  cltQuote: 'The standard error of the mean equals sigma divided by the square root of n.',
   unsupported: 'what is the capital of Burkina Faso?',
 };
 

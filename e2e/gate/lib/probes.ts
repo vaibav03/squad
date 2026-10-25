@@ -19,7 +19,15 @@ const git = (...args: string[]): string | undefined => {
 export function branchLanded(branch: string): boolean {
   if (git('rev-parse', '--verify', '--quiet', `refs/remotes/origin/${branch}`) === undefined) {
     // the branch was deleted after landing: a merge commit on this tree names it
-    const hit = git('log', 'HEAD', '--merges', '-n1', '--format=%h', '-F', `--grep=Merge ${branch}`);
+    const hit = git(
+      'log',
+      'HEAD',
+      '--merges',
+      '-n1',
+      '--format=%h',
+      '-F',
+      `--grep=Merge ${branch}`,
+    );
     return !!hit;
   }
   try {

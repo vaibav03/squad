@@ -11,13 +11,21 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const e2e = dirname(here);
 const root = dirname(e2e);
-const run = (cwd, cmd, args, env = process.env) => spawnSync(cmd, args, { cwd, stdio: 'inherit', env });
+const run = (cwd, cmd, args, env = process.env) =>
+  spawnSync(cmd, args, { cwd, stdio: 'inherit', env });
 
 if (!existsSync(join(e2e, 'node_modules/.bin/playwright'))) {
   if (run(e2e, 'pnpm', ['install', '--ignore-workspace']).status !== 0) process.exit(2);
 }
 run(e2e, 'pnpm', ['exec', 'playwright', 'install', 'chromium']);
-const pw = run(e2e, 'pnpm', ['exec', 'playwright', 'test', '--config', 'gate/playwright.config.ts', ...process.argv.slice(2)]);
+const pw = run(e2e, 'pnpm', [
+  'exec',
+  'playwright',
+  'test',
+  '--config',
+  'gate/playwright.config.ts',
+  ...process.argv.slice(2),
+]);
 const rep = run(root, 'pnpm', ['exec', 'tsx', 'e2e/gate/report.ts']);
 const code = rep.status ?? 2;
 process.exit(code === 0 && pw.status ? 1 : code);

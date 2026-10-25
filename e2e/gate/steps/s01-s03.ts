@@ -1,21 +1,31 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- the gate reads untyped hub JSON */
 // S1 connect, S2 ingest, S3 retrieve. Asserts the REAL feature (feature/nook-parity on feature/context-store):
 // docs/context-store.md, docs/nook-parity.md, apps/hub/src/routes/connections.ts. Routes live in lib/contract.ts.
 //
-// What the fixture run can and cannot prove (see the report): the hub's fixture upstreams are in-process fakes that read
-// packages/brain/fixtures/connectors/*.json, Google consent is the hub's labelled simulator, and a context-grounded chat
-// answer needs a real model (the demo LLM does not serve the context-claims prompt). Those limits are noted, not hidden.
+// The hub runs its REAL Google (PKCE/state/token exchange/refresh/revoke) and Canvas (token variant) connector code
+// against the gate's HTTP fakes (fetch seam in gate-hub.ts). What a fixture run still cannot prove: a context-grounded
+// chat answer needs a real model (the demo LLM does not serve the context-claims prompt). That is noted, not hidden.
+import fs from 'node:fs';
+import path from 'node:path';
 import { P } from '../lib/probes';
-import { SENTINELS, WEB } from '../lib/config';
-import { api } from '../lib/hub';
-import { im } from '../lib/fakes/client';
-import { HUB_FIXTURE, FACTS, PRIVATE_FIXTURE } from '../lib/fakes/content';
+import { SENTINELS, TMP, WEB } from '../lib/config';
+import { api, openGroupChat } from '../lib/hub';
+import { canvas, google, im } from '../lib/fakes/client';
+import { CANVAS_TOKEN } from '../lib/fakes/fake-canvas';
+import {
+  ASSIGNMENTS,
+  CAL_TITLES,
+  DRIVE_FILES,
+  EVENTS,
+  EXPECTED_SOURCES,
+  FACTS,
+  PRIVATE_EVENT,
+  PRIVATE_FIXTURE,
+} from '../lib/fakes/content';
 import {
   CALENDAR_KINDS,
   CANVAS_ALLOWED,
   CANVAS_FIXTURE_BASE,
   CANVAS_SCOPE,
-  CANVAS_SECRET,
   FORBIDDEN_SCOPE,
   GOOGLE_ALLOWED,
   GOOGLE_SCOPE,
@@ -27,7 +37,6 @@ import { citationKeys } from '../lib/cites';
 import type { Probe } from '../lib/types';
 import type { StepDef } from '../lib/runner';
 import type { GateCtx } from '../lib/ctx';
-import { openGroupChat } from '../lib/hub';
 import {
   asSet,
   ask,
@@ -56,17 +65,20 @@ const P_NOOK: Probe = {
   why: 'Nook-parity connections: /v1/connections*, Google authorize + callback, context search and source viewer',
 };
 
-/** Secrets and credential-shaped strings that must never appear in a response, the DOM, storage or the database. */
-const SECRETS = [
-  SENTINELS.feedSecret,
-  SENTINELS.refreshToken,
-  CANVAS_SECRET,
-  'fixture-refresh-',
-  'fixture-access-',
-];
-/** What a squad surface must never show: the unpicked Drive file and the private calendar titles. */
+/** Credential-shaped strings that must never appear in a response, the DOM, storage, logs or the database. */
+const SECRETS = [SENTINELS.refreshToken, SENTINELS.feedSecret, CANVAS_TOKEN, 'ya29.fake.'];
+/** What a squad surface must never show: the unpicked Drive file and the private calendar title. */
 const PRIVATE = [...defaultSentinels(), ...PRIVATE_FIXTURE];
+/** Raw upstream account identifiers the fakes return; the hub keeps only a salted hash. */
+const RAW_ACCOUNT = ['gate-google-sub-1', 'gate.student@fixture.invalid', 'Gate Student'];
 const ID_PATTERNS_NO_PHONE = RAW_ID_PATTERNS.filter(([n]) => n !== 'phone number'); // ISO dates look like phone numbers
+const IDENTITY = ['openid', 'email'];
+const GOOGLE_API_SCOPES = [
+  'calendar.readonly',
+  'drive.file',
+  'classroom.courses.readonly',
+  'classroom.coursework.me.readonly',
+];
 
 const byKind = (rows: { kind: string }[]) => {
   const out: Record<string, number> = {};
@@ -75,24 +87,33 @@ const byKind = (rows: { kind: string }[]) => {
 };
 const blobLen = (x: any): number =>
   x?.data?.length ?? (x && typeof x === 'object' ? Object.keys(x).length : String(x ?? '').length);
+const hubLog = (): string => {
+  try {
+    return fs.readFileSync(path.join(TMP, 'hub.log'), 'utf8');
+  } catch {
+    return '';
+  }
+};
 
 export const S1: StepDef<GateCtx> = {
   id: 'S1',
   title: 'Connect Canvas and Google Workspace with minimal permissions',
   needs: [P.context, P_NOOK],
   realNeeds: ['google_client', 'google_account', 'canvas_feed'],
-  label:
-    'fixture (hub simulator and in-process fixture upstreams; no real Google or Canvas account)',
+  label: 'fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)',
   fixture: async (c, a) => {
     const u = c.world.users.rhea;
     const cy = c.world.users.cy;
     const ben = c.world.users.ben;
+    const seen: string[] = []; // every hub response body this step sees
+    const note = (...t: string[]) => seen.push(...t);
     await resetUpstreams();
 
     // 0. what the hub declares, against an independent oracle
     const l0 = await listConnections(u);
+    note(l0.text);
     a.eq('GET /v1/connections is 200', l0.status, 200);
-    a.eq('hub runs in fixture mode (no Google OAuth client configured)', l0.mode, 'fixture');
+    a.eq('hub has a Google OAuth client (fake) and runs the real flow', l0.mode, 'live');
     a.eq(
       'hub declares exactly the minimal Google scopes',
       asSet(l0.allowedScopes.google ?? []),
@@ -115,16 +136,17 @@ export const S1: StepDef<GateCtx> = {
       0,
     );
 
-    // 1. refusals: broad scopes, honest live mode, bad URLs
+    // 1. refusals: broad scopes, bad URLs, a rejected token
     const refuse = async (name: string, json: object, status: number, code: string, user = u) => {
       const r = await api(user.token, ROUTES.connections, { method: 'POST', json });
+      note(r.text);
       a.ok(
         name,
         r.status === status && r.json?.error?.code === code,
         `got ${r.status} ${r.json?.error?.code}`,
       );
     };
-    const tok = { token: CANVAS_SECRET, baseUrl: CANVAS_FIXTURE_BASE };
+    const tok = { token: CANVAS_TOKEN, baseUrl: CANVAS_FIXTURE_BASE };
     await refuse(
       'bulk Drive scope is refused',
       { provider: 'google', scopes: ['https://www.googleapis.com/auth/drive'] },
@@ -147,24 +169,32 @@ export const S1: StepDef<GateCtx> = {
       'scope_not_allowed',
     );
     await refuse(
-      'Google "live" without an OAuth client is refused honestly',
+      'Google connect with mode live is refused (use the OAuth sign-in)',
       { provider: 'google', scopes: [GOOGLE_SCOPE.calendar], mode: 'live' },
       501,
       'live_not_available',
     );
     await refuse(
       'Canvas refuses a Google scope',
-      { provider: 'canvas', variant: 'token', scopes: [GOOGLE_SCOPE.calendar], ...tok },
+      {
+        provider: 'canvas',
+        variant: 'token',
+        mode: 'live',
+        scopes: [GOOGLE_SCOPE.calendar],
+        ...tok,
+      },
       400,
       'scope_not_allowed',
     );
     await refuse(
-      'Canvas feed must be https',
+      'Canvas token needs an https base URL',
       {
         provider: 'canvas',
-        variant: 'feed',
-        scopes: [CANVAS_SCOPE.feed],
-        feedUrl: 'http://canvas.fixture.invalid/a.ics',
+        variant: 'token',
+        mode: 'live',
+        scopes: [CANVAS_SCOPE.token],
+        token: CANVAS_TOKEN,
+        baseUrl: 'http://canvas.fixture.invalid',
       },
       400,
       'invalid_request',
@@ -185,26 +215,42 @@ export const S1: StepDef<GateCtx> = {
       (await api(null, ROUTES.connections, { method: 'POST', json: {} })).status,
       401,
     );
+    await canvas.tokenValid(false);
+    await refuse(
+      'Canvas rejecting the token fails the connect honestly',
+      { provider: 'canvas', variant: 'token', mode: 'live', scopes: [CANVAS_SCOPE.token], ...tok },
+      401,
+      'credential_rejected',
+    );
+    await canvas.tokenValid(true);
+    a.eq(
+      'a rejected connect leaves no connection behind',
+      (await listConnections(u)).connections.length,
+      0,
+    );
 
-    // 2. Canvas (student token variant, fixture mode)
+    // 2. Canvas (student token, real REST connector against the fake Canvas)
     const cv = await connectCanvas(u);
+    note(cv.text);
     a.eq('Canvas connect is accepted (201)', cv.status, 201);
     a.noLeak('Canvas connect response', cv.text, SECRETS);
     const cview = cv.json?.connection;
     a.eq('Canvas granted scopes equal exactly its one allowed scope', cview?.scopes, [
       CANVAS_SCOPE.token,
     ]);
-    a.eq('Canvas connection says mode fixture', cview?.mode, 'fixture');
-    a.eq('Canvas connection state is fixture (never "live")', cview?.state, 'fixture');
+    a.eq(
+      'Canvas connection is live (token variant)',
+      [cview?.mode, cview?.state],
+      ['live', 'live'],
+    );
     a.ok(
-      'Canvas mode label is honest',
-      /demo data/i.test(cview?.modeLabel ?? '') &&
-        /no real canvas account/i.test(cview?.modeLabel ?? ''),
+      'Canvas mode label says live and is not a demo label',
+      /live canvas/i.test(cview?.modeLabel ?? '') && !/demo/i.test(cview?.modeLabel ?? ''),
       String(cview?.modeLabel),
     );
     a.ok(
-      'first sync ran on connect and imported sources',
-      cv.json?.sync?.outcome === 'ok' && cv.json?.sync?.added > 0,
+      'first sync ran on connect: 3 assignments + 1 file',
+      cv.json?.sync?.outcome === 'ok' && cv.json?.sync?.added === ASSIGNMENTS.length + 1,
       JSON.stringify(cv.json?.sync),
     );
     a.eq(
@@ -212,25 +258,62 @@ export const S1: StepDef<GateCtx> = {
       (await connectCanvas(u)).json?.error?.code,
       'already_connected',
     );
+    const creq = (await canvas.requests()).map((r) => r.path);
+    a.ok(
+      'hub read only users/self, courses, assignments and files from Canvas',
+      creq.length > 0 &&
+        creq.every((p) =>
+          /^\/api\/v1\/(users\/self|courses(\/[^/]+\/(assignments|files))?)$/.test(p),
+        ),
+      [...new Set(creq)].join(', '),
+    );
+    a.ok(
+      'hub never asked Canvas for submissions or grades',
+      !creq.some((p) => /submission|grade|gradebook/i.test(p)),
+    );
 
-    // 3. Google through the Nook-shaped consent dance (authorize -> consent -> callback)
+    // 3. Google through the Nook-shaped consent dance, real OAuth code, a consent that over-grants
+    await google.overGrant(true);
     const g = await connectGoogle(u, { replayCallback: true });
     if (!g.ok) a.fail('google consent flow', g.why);
     else {
-      a.eq('authorize reports mode fixture', g.mode, 'fixture');
+      note(g.auth.text, g.location, g.replayText);
+      const p = g.authParams;
       a.eq(
-        'hub requests exactly the allowed Google scopes',
-        asSet(g.requested),
+        'authorize talks to the real Google authorize endpoint shape',
+        [p.response_type, p.access_type],
+        ['code', 'offline'],
+      );
+      a.eq('PKCE S256 is used', p.code_challenge_method, 'S256');
+      a.ok(
+        'PKCE challenge present, verifier never in the URL',
+        !!p.code_challenge && !('code_verifier' in p),
+      );
+      a.ok('state is an opaque one-time value', /^gst_/.test(p.state ?? ''));
+      a.ok(
+        'redirect_uri is the hub callback',
+        /\/oauth\/google\/callback$/.test(p.redirect_uri ?? ''),
+        p.redirect_uri,
+      );
+      a.eq(
+        'requested scopes are exactly identity + the allowed set',
+        asSet(g.scopeParam),
+        asSet([...IDENTITY, ...GOOGLE_ALLOWED]),
+      );
+      a.eq(
+        'requested scopes minus identity equal exactly the allowed set',
+        asSet(g.scopeParam.filter((s) => !IDENTITY.includes(s))),
         asSet(GOOGLE_ALLOWED),
       );
-      a.eq(
-        'consent page lists exactly the allowed scopes',
-        asSet(g.consentScopes),
-        asSet(GOOGLE_ALLOWED.map((s) => s.split('/').pop()!)),
-      );
       a.ok(
-        'consent page labels itself as demo, not a real Google account',
-        /demo data, not a real google account/i.test(g.consentHtml),
+        'no requested scope is a bulk or write grant',
+        !g.scopeParam.some((s) => FORBIDDEN_SCOPE.test(s)),
+      );
+      a.eq('the hub reports the same scopes it requests', asSet(g.requested), asSet(g.scopeParam));
+      a.eq(
+        'the consent page lists exactly what was requested',
+        asSet(g.consentScopes),
+        asSet(g.scopeParam),
       );
       a.eq('callback redirects (302)', g.callbackStatus, 302);
       let loc: URL | undefined;
@@ -245,12 +328,16 @@ export const S1: StepDef<GateCtx> = {
         g.location,
       );
       a.eq('callback reports status=connected', loc?.searchParams.get('status'), 'connected');
-      a.eq('callback reports mode=fixture', loc?.searchParams.get('mode'), 'fixture');
-      a.eq('OAuth state is single use (replay is 400)', g.replayStatus, 400);
+      a.eq('callback reports mode=live', loc?.searchParams.get('mode'), 'live');
+      a.eq('replaying the callback is refused (single-use state)', g.replayStatus, 400);
+      a.ok(
+        'the replay creates no duplicate event or connection',
+        /oauth_state_invalid/.test(g.replayText),
+      );
     }
     a.eq(
       'a bogus OAuth state is refused',
-      (await api(null, `${ROUTES.googleCallback}?state=nope&code=sim`)).status,
+      (await api(null, `${ROUTES.googleCallback}?state=nope&code=x`)).status,
       400,
     );
     a.eq(
@@ -263,72 +350,91 @@ export const S1: StepDef<GateCtx> = {
       ).status,
       400,
     );
-    const denied = await connectGoogle(u, { deny: true });
+    const grants = await google.grants();
     a.ok(
-      'cancelling consent redirects with status=error',
-      denied.ok && /status=error/.test(denied.location),
-      denied.ok ? denied.location : denied.why,
+      'the fake really over-granted a Gmail scope (control check)',
+      (grants.at(-1)?.scopes ?? []).some((s) => /gmail/.test(s)),
     );
-    await connectGoogle(u); // reconnect the same account: an upsert, never a duplicate
+    await google.overGrant(false);
     const l1 = await listConnections(u);
-    const canvasC = l1.connections.filter((x) => x.provider === 'canvas' && x.status !== 'revoked');
-    const googleC = l1.connections.filter((x) => x.provider === 'google' && x.status !== 'revoked');
-    a.eq('exactly one Canvas connection', canvasC.length, 1);
-    a.eq('reconnecting Google keeps exactly one connection', googleC.length, 1);
-    const gv = googleC[0];
-
-    // 4. what was granted
+    note(l1.text);
+    const gv = l1.connections.find((x) => x.provider === 'google' && x.status !== 'revoked');
     a.eq(
-      'granted Google scopes equal exactly the allowed set',
+      'granted scopes are only the allowed set, despite the over-grant',
       asSet(gv?.scopes ?? []),
       asSet(GOOGLE_ALLOWED),
     );
     a.ok(
       'no granted scope is a bulk or write grant',
-      ![...(gv?.scopes ?? []), ...(canvasC[0]?.scopes ?? [])].some((s) => FORBIDDEN_SCOPE.test(s)),
+      !(gv?.scopes ?? []).some((s) => FORBIDDEN_SCOPE.test(s)),
     );
     a.eq(
       'Drive access is per file only (drive.file, nothing else with "drive")',
       (gv?.scopes ?? []).filter((s) => /drive/.test(s)),
       [GOOGLE_SCOPE.drive],
     );
-    a.ok(
-      'Calendar is read-only',
-      (gv?.scopes ?? []).includes(GOOGLE_SCOPE.calendar) &&
-        !(gv?.scopes ?? []).some((s) => /calendar(\.events)?$/.test(s)),
-    );
-    a.eq('Google connection says mode fixture', gv?.mode, 'fixture');
-    a.eq('Google connection state is fixture (never "live")', gv?.state, 'fixture');
-    a.ok(
-      'Google mode label is honest',
-      /demo data/i.test(gv?.modeLabel ?? '') && /no real google account/i.test(gv?.modeLabel ?? ''),
-      String(gv?.modeLabel),
-    );
-    a.ok(
-      'Google state label says demo data, not a real account',
-      /demo data, not a real account/i.test(gv?.stateLabel ?? ''),
-      String(gv?.stateLabel),
-    );
-    a.eq('Google variant is oauth', gv?.variant, 'oauth');
 
-    // 5. no secret echoed, encrypted at rest
-    a.noLeak('connections list', l1.text, SECRETS);
+    const denied = await connectGoogle(u, { deny: true });
+    a.ok(
+      'cancelling consent redirects with status=error',
+      denied.ok && /status=error/.test(denied.location),
+      denied.ok ? denied.location : denied.why,
+    );
+    const again = await connectGoogle(u); // reconnect the same account: an upsert, never a duplicate
+    a.ok('reconnecting works', again.ok && again.callbackStatus === 302);
+    const l2 = await listConnections(u);
+    note(l2.text);
+    const act = l2.connections.filter((x) => x.status !== 'revoked');
+    a.eq('exactly one Canvas connection', act.filter((x) => x.provider === 'canvas').length, 1);
+    a.eq(
+      'reconnecting Google keeps exactly one connection',
+      act.filter((x) => x.provider === 'google').length,
+      1,
+    );
+    const gv2 = act.find((x) => x.provider === 'google');
+    a.eq(
+      'Google connection is live with the same granted set',
+      [gv2?.state, asSet(gv2?.scopes ?? [])],
+      ['live', asSet(GOOGLE_ALLOWED)],
+    );
+    a.ok(
+      'Google mode label says live and is not a demo label',
+      /live google/i.test(gv2?.modeLabel ?? '') && !/demo/i.test(gv2?.modeLabel ?? ''),
+      String(gv2?.modeLabel),
+    );
+    a.eq('Google variant is oauth', gv2?.variant, 'oauth');
+
+    // 4. what the hub asked Google for
+    const greq = await google.requests();
+    a.ok(
+      'every Google API call used an allowed scope and none was refused',
+      greq
+        .filter((r) => r.scope)
+        .every((r) => GOOGLE_API_SCOPES.includes(r.scope!) && r.status < 400),
+      JSON.stringify(greq.filter((r) => r.scope && r.status >= 400).slice(0, 3)),
+    );
+    a.ok(
+      'hub never touched Gmail or the unpicked Drive file',
+      !greq.some((r) => /gmail/i.test(r.path) || r.path.includes(DRIVE_FILES.unpicked.id)),
+    );
+
+    // 5. no secret echoed, encrypted at rest, absent from logs
+    a.noLeak('every hub response in this step', seen.join('\n'), SECRETS);
     a.ok(
       'connection view carries no credential, account or hash field',
       !/accountHash|accessToken|refreshToken|feedUrl|"token"|"baseUrl"/i.test(
-        JSON.stringify(l1.connections),
+        JSON.stringify(l2.connections),
       ),
     );
     a.noLeak('/v1/status', (await api(null, ROUTES.status)).text, SECRETS);
     const dump = await im.dbDump();
-    a.ok('Canvas token is nowhere in the database in plaintext', !dump.includes(CANVAS_SECRET));
     a.ok(
-      'Google credentials are nowhere in the database in plaintext',
-      !dump.includes('fixture-refresh-') && !dump.includes('fixture-access-'),
+      'no credential is in the database in plaintext (refresh sentinel, access token, Canvas token)',
+      !SECRETS.some((s) => dump.includes(s)),
     );
     a.ok(
       'raw upstream account ids are never stored (salted hash only)',
-      !HUB_FIXTURE.rawAccountIds.some((id) => dump.includes(id)),
+      !RAW_ACCOUNT.some((id) => dump.includes(id)),
     );
     const rows = (await dbRows('ctx_connections')).filter(
       (r) => String(r.owner_id) === u.id && r.status !== 'revoked',
@@ -340,14 +446,34 @@ export const S1: StepDef<GateCtx> = {
     );
     const toks = await dbRows('ctx_tokens');
     a.ok(
-      'each connection has an encrypted token row',
+      'each connection has an AES-GCM token row (12-byte iv, non-empty ciphertext)',
       rows.length > 0 &&
         rows.every((r) =>
           toks.some((t) => t.connection_id === r.id && blobLen(t.ct) > 0 && blobLen(t.iv) === 12),
         ),
     );
+    const log = hubLog();
+    if (log) a.noLeak('hub log', log, SECRETS);
+    else a.note('hub log not found under .tmp/hub.log: log sweep skipped');
 
-    // 6. Nook's browser-session path: register rules (a second user, so the main journey is unaffected)
+    // 6. Canvas fixture feed keeps its honest demo label; Nook's browser-session register rules (Cy)
+    const feed = await connectCanvas(cy, 'feed');
+    a.eq('feed connect is accepted', feed.status, 201);
+    a.noLeak('feed connect response', feed.text, SECRETS);
+    a.eq(
+      'a feed connection is fixture-mode and says so',
+      [feed.json?.connection?.mode, feed.json?.connection?.state],
+      ['fixture', 'fixture'],
+    );
+    a.ok(
+      'feed mode label is an honest demo label',
+      /demo data/i.test(feed.json?.connection?.modeLabel ?? '') &&
+        /demo data, not a real account/i.test(feed.json?.connection?.stateLabel ?? ''),
+    );
+    if (feed.json?.connection?.id) {
+      await disconnect(cy, feed.json.connection.id);
+      await disconnect(cy, feed.json.connection.id, { remove: true });
+    }
     const reg = (user: typeof u, origin: string, id: string) =>
       api(user.token, ROUTES.canvasRegister, {
         method: 'POST',
@@ -410,11 +536,13 @@ export const S1: StepDef<GateCtx> = {
     if (c.actors.rhea) {
       const page = c.actors.rhea.page;
       await page.goto('/squad/connections');
-      const card = page.locator('article[aria-label="canvas connection"]');
-      const shown = await card.waitFor({ timeout: 15_000 }).then(
-        () => true,
-        () => false,
-      );
+      const shown = await page
+        .locator('article[aria-label="canvas connection"]')
+        .waitFor({ timeout: 15_000 })
+        .then(
+          () => true,
+          () => false,
+        );
       a.ok('web Connections page shows the Canvas card', shown);
       const text = await page
         .locator('body')
@@ -427,22 +555,14 @@ export const S1: StepDef<GateCtx> = {
           .count()
           .then((n) => n > 0),
       );
-      a.ok(
-        'web labels the data honestly as demo data, not a real account',
-        /demo data, not a real account/i.test(text),
-      );
+      a.ok('web shows both connections as connected', (text.match(/Connected/g) ?? []).length >= 2);
       a.ok(
         'web explains Drive access in plain words (only picked files)',
         /only the drive files you pick/i.test(text),
       );
       a.noLeak('Connections page text', text, SECRETS);
-      a.ok(
-        'no raw ids on the Connections page',
-        !ID_PATTERNS_NO_PHONE.some(([, re]) => re.test(text)),
-        ID_PATTERNS_NO_PHONE.filter(([, re]) => re.test(text))
-          .map(([n]) => n)
-          .join(', '),
-      );
+      const hits = ID_PATTERNS_NO_PHONE.filter(([, re]) => re.test(text)).map(([n]) => n);
+      a.ok('no raw ids on the Connections page', hits.length === 0, hits.join(', '));
       a.noLeak('web responses', c.actors.rhea.bodies.join('\n'), SECRETS);
       const ls = await page
         .evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }))
@@ -458,7 +578,7 @@ export const S2: StepDef<GateCtx> = {
   title: 'Ingest and normalize permitted context',
   needs: [P.context, P_NOOK],
   realNeeds: ['google_client', 'canvas_feed'],
-  label: 'fixture (in-process fixture upstreams; no real Google or Canvas account)',
+  label: 'fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)',
   fixture: async (c, a) => {
     const u = c.world.users.rhea;
     const ben = c.world.users.ben;
@@ -471,11 +591,13 @@ export const S2: StepDef<GateCtx> = {
     // normalized sources
     const first = await items(u);
     const kinds = byKind(first);
-    for (const [k, n] of Object.entries({
-      ...HUB_FIXTURE.canvas.counts,
-      ...HUB_FIXTURE.google.counts,
-    }))
+    for (const [k, n] of Object.entries(EXPECTED_SOURCES))
       a.eq(`${n} ${k} source(s) imported`, kinds[k] ?? 0, n);
+    a.eq(
+      'nothing beyond the expected kinds',
+      Object.keys(kinds).filter((k) => !(k in EXPECTED_SOURCES)),
+      [],
+    );
     a.eq(
       'no Drive file beyond the picked one (drive.file is per file)',
       (kinds.gdoc ?? 0) + (kinds.gdrive_file ?? 0),
@@ -483,19 +605,25 @@ export const S2: StepDef<GateCtx> = {
     );
     a.ok(
       'the picked Drive file is the one imported',
-      first.some((s) => s.kind === 'gdoc' && s.title === HUB_FIXTURE.google.picked.title),
+      first.some((s) => s.kind === 'gdoc' && s.title === DRIVE_FILES.picked.name),
     );
     a.ok(
       'the unpicked Drive file was never imported',
-      !first.some((s) => s.title === HUB_FIXTURE.google.unpicked.title),
+      !first.some((s) => s.title === DRIVE_FILES.unpicked.name),
     );
     a.ok(
-      'every source has an https deep link to its origin',
-      first.length > 0 && first.every((s) => /^https:\/\//.test(String(s.url))),
+      'the private-title calendar event is held, owner-private',
+      first.some((s) => s.title === PRIVATE_EVENT.summary && s.visibility === 'private'),
     );
     a.ok(
-      'every source says it is fixture data',
-      first.every((s) => String(s.provenance).endsWith(':fixture')),
+      'assignments, Drive doc and Classroom items link to https origins',
+      first
+        .filter((s) => ['canvas_assignment', 'gdoc', 'classroom_item'].includes(s.kind))
+        .every((s) => /^https:\/\//.test(String(s.url))),
+    );
+    a.ok(
+      'every source says which live connector produced it',
+      first.every((s) => /^(canvas|google):live$/.test(String(s.provenance))),
     );
     a.ok(
       'every source starts private and shared with nobody',
@@ -535,7 +663,8 @@ export const S2: StepDef<GateCtx> = {
         .length === 0,
     );
 
-    // idempotent re-sync
+    // idempotent re-sync, with the fake Drive now exposing BOTH files (the hub must still fetch only the picked one)
+    await google.pick([DRIVE_FILES.picked.id, DRIVE_FILES.unpicked.id]);
     const hashes = (rows: any[]) => rows.map((r) => `${r.id}:${r.content_hash}`).sort();
     const before = hashes(dbSources);
     const sync = await syncAll(u);
@@ -561,29 +690,32 @@ export const S2: StepDef<GateCtx> = {
     );
     c.state.canvasItemIds = first.filter((s) => s.kind.startsWith('canvas_')).map((s) => s.id);
 
-    // what was never stored
+    // what was never fetched or stored
+    const greq = await google.requests();
+    a.ok(
+      'the unpicked Drive file was never requested from Google',
+      !greq.some((r) => r.path.includes(DRIVE_FILES.unpicked.id)),
+    );
+    await google.pick([DRIVE_FILES.picked.id]);
     const dump = await im.dbDump();
     a.ok(
       'unpicked Drive file (name and text) is never stored',
-      !dump.includes(HUB_FIXTURE.google.unpicked.title) &&
-        !dump.includes(HUB_FIXTURE.google.unpicked.textNeedle),
+      !dump.includes(DRIVE_FILES.unpicked.name) && !dump.includes(DRIVE_FILES.unpicked.text),
     );
-    a.ok('no grade string is stored', !dump.includes(SENTINELS.grade));
     a.ok(
-      'no credential-shaped string is stored in plaintext',
-      !SECRETS.some((s) => dump.includes(s)),
+      'no grade string is stored (the fake Canvas sends one on the wire)',
+      !dump.includes(SENTINELS.grade),
     );
+    a.ok('no credential is stored in plaintext', !SECRETS.some((s) => dump.includes(s)));
     const busy = (await dbRows('hub_busy_blocks')).filter((r) => r.student === u.id);
     const busyJson = JSON.stringify(busy);
     a.ok(
       'busy blocks hold no titles',
-      busy.every((r) => r.title === 'busy') &&
-        !HUB_FIXTURE.google.eventTitles.some((t) => busyJson.includes(t)) &&
-        !/study group|office hours/i.test(busyJson),
+      busy.every((r) => r.title === 'busy') && !CAL_TITLES.some((t) => busyJson.includes(t)),
     );
-    if (Date.now() < Date.parse('2026-10-31T00:00:00Z'))
+    if (Date.now() < Date.parse('2026-11-09T00:00:00Z'))
       a.ok(
-        'busy blocks were derived from the connected calendars',
+        'busy blocks were derived from the connected calendar',
         busy.length >= 1,
         `rows ${busy.length}`,
       );
@@ -602,7 +734,7 @@ export const S2: StepDef<GateCtx> = {
     );
     a.eq(
       '...also with no squad header',
-      (await searchContext(ben, 'sampling distributions assignment')).results.length,
+      (await searchContext(ben, 'homework sampling distributions')).results.length,
       0,
     );
     const conn0 = conns[0];
@@ -653,7 +785,7 @@ export const S2: StepDef<GateCtx> = {
     const sh = await shareToSquad(u, squad, { all: true });
     a.ok('share all accepted', sh.length === conns.length && sh.every((r) => r.status === 200));
     a.eq(
-      'share all covers every non-calendar source (3+1 Canvas, 1 Drive doc, 1 Classroom item)',
+      'share all covers every non-calendar source',
       sh.reduce((n, r) => n + (r.json?.count ?? 0), 0),
       nonCal.length,
     );
@@ -692,11 +824,11 @@ export const S2: StepDef<GateCtx> = {
     );
     const probeHits = (await searchContext(ben, FACTS.cltQuestion, { squadId: squad })).results;
     a.ok(
-      'shared hits are marked shared, owner-private provenance stays fixture',
+      'shared hits are marked shared with live provenance',
       probeHits.length > 0 &&
-        probeHits.every((h) => h.shared === true && String(h.provenance).endsWith(':fixture')),
+        probeHits.every((h) => h.shared === true && /:live$/.test(String(h.provenance))),
     );
-    for (const t of PRIVATE_FIXTURE) {
+    for (const t of [...PRIVATE_FIXTURE, ...CAL_TITLES]) {
       const r = (await searchContext(ben, t, { squadId: squad })).results;
       a.ok(
         `squad search for a private string finds none of it (${t.slice(0, 14)}...)`,
@@ -718,12 +850,11 @@ export const S2: StepDef<GateCtx> = {
     }
 
     // a calendar event is shared only when listed explicitly, then withdrawn
-    const ev = own.find((s) => s.kind === 'gcal_event');
+    const ev = own.find((s) => s.kind === 'gcal_event' && s.title === EVENTS[0].title);
     if (ev) {
       const con = (await listConnections(u)).connections.find((x) => x.provider === 'google')!;
       await shareToSquad(u, squad, { connectionId: con.id, sourceIds: [ev.id] });
-      const seen = (await searchContext(ben, HUB_FIXTURE.google.eventNeedle, { squadId: squad }))
-        .results;
+      const seen = (await searchContext(ben, EVENTS[0].title, { squadId: squad })).results;
       a.ok(
         'an explicitly shared calendar event becomes readable',
         seen.some((h) => h.sourceId === ev.id),
@@ -731,11 +862,11 @@ export const S2: StepDef<GateCtx> = {
       await shareToSquad(u, squad, { connectionId: con.id, sourceIds: [ev.id], shared: false });
       a.ok(
         'and is gone again once withdrawn',
-        !(
-          await searchContext(ben, HUB_FIXTURE.google.eventNeedle, { squadId: squad })
-        ).results.some((h) => h.sourceId === ev.id),
+        !(await searchContext(ben, EVENTS[0].title, { squadId: squad })).results.some(
+          (h) => h.sourceId === ev.id,
+        ),
       );
-    }
+    } else a.fail('public calendar event present for the explicit-share check', EVENTS[0].title);
 
     // opting out removes access at once; then opt back in for S3
     await optIn(u, squad, false);
@@ -790,21 +921,21 @@ export const S3: StepDef<GateCtx> = {
     const real = c.llm.llm === 'gemini';
     if (await ensureConnected(rhea, squad))
       a.note('S3 connected and shared the accounts itself (earlier steps did not)');
-    const file = HUB_FIXTURE.canvas.file;
+    const doc = DRIVE_FILES.picked;
 
     // A. retrieval and the source viewer contract (deterministic, no model)
     const res = await searchContext(ben, FACTS.cltQuestion, { squadId: squad });
     a.eq('GET /v1/context/search is 200', res.status, 200);
-    const hit = res.results.find((h) => h.title === file.title && h.text.includes(file.quote));
+    const hit = res.results.find((h) => h.title === doc.name && h.text.includes(FACTS.cltQuote));
     a.ok(
-      'the shared lecture chunk is retrieved for the squad member',
+      'the shared lecture-notes chunk is retrieved for the squad member',
       !!hit,
       res.results.map((h) => h.title).join(' | '),
     );
     if (hit) {
       a.ok(
-        'hit is marked shared and fixture',
-        hit.shared === true && hit.provenance === 'canvas:fixture',
+        'hit is marked shared and live-sourced from Google',
+        hit.shared === true && hit.provenance === 'google:live',
       );
       a.ok(
         'hit citation quote is a verbatim sentence of the chunk',
@@ -828,18 +959,21 @@ export const S3: StepDef<GateCtx> = {
         'the quoted line is highlighted',
         Array.isArray(v?.lines) && v.lines.some((l: any) => l.hit),
       );
-      a.eq('viewer says fixture provenance', v?.provenance, 'fixture');
-      a.eq('viewer names the provider', v?.provider, 'canvas');
+      a.eq(
+        'viewer says live provenance and names the provider',
+        [v?.provenance, v?.provider],
+        ['live', 'google'],
+      );
       a.ok(
-        'viewer links to the Canvas deep link',
-        String(v?.externalUrl).startsWith(CANVAS_FIXTURE_BASE),
+        'viewer links to the Drive document',
+        String(v?.externalUrl).includes(`/document/d/${doc.id}`),
         String(v?.externalUrl),
       );
       a.eq('viewer tells the member it is shared by someone else', v?.shared, true);
       const full = await openSource(
         ben,
         { id: hit.sourceId, kind: hit.kind, anchor: hit.anchor },
-        file.quote,
+        FACTS.cltQuote,
         squad,
       );
       a.eq('the lecture sentence itself is verified on its page', full.json?.quoteVerified, true);
@@ -861,13 +995,14 @@ export const S3: StepDef<GateCtx> = {
       a.noLeak('source viewer response', viewed.text, PRIVATE);
     }
     const own = await items(rhea);
-    const cal = own.find((s) => s.kind === 'gcal_event');
+    const cal = own.find((s) => s.kind === 'gcal_event' && s.title === PRIVATE_EVENT.summary);
     if (cal)
       a.eq(
-        'a calendar event Rhea did not share is 404 for Ben',
+        'the private-title calendar event Rhea did not share is 404 for Ben',
         (await openSource(ben, { id: cal.id }, undefined, squad)).status,
         404,
       );
+    else a.fail('private-title calendar event present for the 404 check', PRIVATE_EVENT.summary);
     const none = await searchContext(ben, FACTS.unsupported, { squadId: squad });
     a.eq('retrieval returns nothing for an unsupported question', none.results.length, 0);
     for (const t of PRIVATE_FIXTURE)
@@ -884,18 +1019,19 @@ export const S3: StepDef<GateCtx> = {
     const dueMsg = due.reply;
     if (a.ok('a bot answer arrived for the due question', !!dueMsg)) {
       const t = dueMsg!.text;
-      const order = HUB_FIXTURE.canvas.assignments.map((x) => t.indexOf(x.title));
-      a.ok(
-        "answer lists the assignments from Rhea's synced Canvas",
-        order.every((i) => i >= 0),
-        order.join(','),
-      );
-      a.ok(
-        'sorted by due date (Nov 2, Nov 5, Nov 16)',
-        order[0]! < order[2]! && order[2]! < order[1]!,
-        order.join(','),
-      );
-      a.ok('answer carries the due date in UTC', t.includes(FACTS.hw4DueDay) && /UTC/.test(t));
+      if (Date.now() < Date.parse('2026-10-29T00:00:00Z')) {
+        const order = ASSIGNMENTS.map((x) => t.indexOf(x.title));
+        a.ok(
+          "answer lists the assignments from Rhea's synced Canvas, in due order",
+          order.every((i, k) => i >= 0 && (k === 0 || i > order[k - 1]!)),
+          order.join(','),
+        );
+        a.ok(
+          'answer carries the first due date in UTC',
+          t.includes(FACTS.hw4DueDay) && /UTC/.test(t),
+        );
+      } else
+        a.ok('answer names the homework', t.includes(FACTS.hw4Needle) || /due|nothing/i.test(t));
       a.noLeak('due answer', t, PRIVATE);
       a.noRawIds('due answer', t);
       a.eq('answer demo flag matches the model mode', !!dueMsg!.demo, !real);
@@ -927,8 +1063,8 @@ export const S3: StepDef<GateCtx> = {
           'ChatMessage.citations is empty',
         );
         a.ok(
-          'a citation points into the shared lecture file',
-          cites.some((x) => x.source?.kind === 'canvas_file' || x.file === file.title),
+          'a citation points into the shared lecture notes',
+          cites.some((x) => x.source?.kind === 'gdoc' || x.file === doc.name),
         );
         a.ok('the answer states the grounded formula', /square root/i.test(gm!.text));
       } else {
@@ -984,10 +1120,7 @@ export const S3: StepDef<GateCtx> = {
         a.ok('the due answer is visible in the web chat', there);
         if (there) {
           const text = await b.innerText();
-          a.ok(
-            'the web bubble shows the assignment list',
-            text.includes(HUB_FIXTURE.canvas.assignments[0]!.title),
-          );
+          a.ok('the web bubble shows the assignment list', text.includes(ASSIGNMENTS[0].title));
           a.noLeak('web chat bubble', text, PRIVATE);
           const label = await b.getByTestId('chat-demo-label').count();
           a.ok(

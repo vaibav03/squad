@@ -1,17 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- the gate reads untyped hub JSON */
 // The hub HTTP contract the gate asserts. ALIGNED TO THE REAL FEATURE (feature/nook-parity on top of
 // feature/context-store): apps/hub/src/routes/connections.ts, docs/context-store.md, docs/nook-parity.md.
 // ONE place to edit when a route changes: change it here, the steps follow.
 //
-// HOW THE HUB IS POINTED AT UPSTREAMS (verified in apps/hub/src/context/service.ts and
-// packages/brain/src/context/connectors/*): there is NO base-URL override. Fixture mode is two IN-PROCESS fake
-// connectors (createFakeCanvasConnector / createFakeGoogleConnector) that read
-// packages/brain/fixtures/connectors/{canvas,google}.json and the hub's labelled consent simulator
-// (GET /v1/connections/google/sim-consent). Google live talks to the hard-coded googleapis.com hosts and only turns on
-// when GOOGLE_OAUTH_CLIENT_ID/SECRET are set (which the gate must NEVER do). The HTTP fakes on 8940/8941 are therefore
-// not reachable from the hub; upstream misbehaviour (revoke, expiry, refresh failure, feed gone) is driven through the
-// gate-hub control server instead (HUB_CTL below), which flips the in-process fake's FakeControls.
-import { SENTINELS } from './config';
+// HOW THE HUB IS POINTED AT UPSTREAMS: gate-hub.ts installs a fetch seam that sends the Google hosts to the fake Google
+// (`${GOOGLE}/__h/<host>/<path>`) and https://canvas.fixture.invalid to the fake Canvas, and stack.ts sets fake
+// GOOGLE_OAUTH_CLIENT_ID/SECRET, so the hub runs its REAL Google (PKCE, state, token exchange, refresh, revoke) and Canvas
+// (token variant) connector code. Upstream misbehaviour is driven through the fakes' HTTP controls (fakes/client.ts).
 
 export const ROUTES = {
   status: '/v1/status',
@@ -63,47 +57,12 @@ export const ROUTES = {
 } as const;
 
 /**
- * Gate-hub control routes (CTL_PORT, loopback). The in-process fakes cannot be reached over the hub's HTTP surface, so
- * the gate-hub entrypoint must expose these (see the report to the lead for the exact snippet):
- *   POST /ctl/ctx/upstream     { provider:'canvas'|'google', behavior:'ok'|'expired'|'revoked'|'unauthorized'|'rate_limited', refreshFails?:boolean }
- *   POST /ctl/ctx/expire-clock { provider?:'google'|'canvas' }  -> sets ctx_connections.expires_at into the past so the next listing runs the refresh path
- *   POST /ctl/ctx/reset        {}                               -> every fake back to behavior 'ok', refreshFails=false
- */
-export const HUB_CTL = {
-  upstream: '/ctl/ctx/upstream',
-  expireClock: '/ctl/ctx/expire-clock',
-  reset: '/ctl/ctx/reset',
-} as const;
-
-export type UpstreamBehavior = 'ok' | 'expired' | 'revoked' | 'unauthorized' | 'rate_limited';
-
-/**
- * Environment the gate hub needs for connectors. There is intentionally no base-URL variable (the hub has none).
+ * Environment the gate hub needs for connectors (stack.ts spreads it and sets the fake OAuth client itself).
  * CONTEXT_TOKEN_KEY: 32 bytes as 64 hex chars (AES-256-GCM key for ctx_tokens; a gate-only value, not a secret).
  */
 export const CONNECTOR_ENV: Record<string, string> = {
   CONTEXT_TOKEN_KEY: '5a7e1c3b9d2f4a6c8e0b1d3f5a7c9e2b4d6f8a0c2e4b6d8f0a1c3e5b7d9f1a3c',
 };
-
-/**
- * Names that must be ABSENT from the hub (and every child) environment, even if the developer's shell or .env sets
- * them: with a Google OAuth client configured the hub leaves fixture mode and talks to accounts.google.com.
- * `GOOGLE_CLIENT_ID` etc. are not read by the hub; they are listed because the old stack.ts block set them.
- */
-export const CONNECTOR_ENV_UNSET: string[] = [
-  'GOOGLE_OAUTH_CLIENT_ID',
-  'GOOGLE_OAUTH_CLIENT_SECRET',
-  'GOOGLE_OAUTH_REDIRECT_URI',
-  'GOOGLE_CLIENT_ID',
-  'GOOGLE_CLIENT_SECRET',
-  'GOOGLE_AUTH_URL',
-  'GOOGLE_TOKEN_URL',
-  'GOOGLE_REVOKE_URL',
-  'GOOGLE_API_BASE',
-  'GOOGLE_REDIRECT_URI',
-  'CANVAS_ALLOWED_HOSTS',
-  'CONNECTIONS_KEY',
-];
 
 // ---- scopes: an INDEPENDENT oracle of what the hub declares (ALLOWED_SCOPES in packages/brain connectors/types.ts)
 export const GOOGLE_SCOPE = {
@@ -137,8 +96,6 @@ export const SOURCE_KINDS = [
 /** Calendar kinds are never bulk-shared (`share all` skips them). */
 export const CALENDAR_KINDS: ReadonlySet<string> = new Set(['gcal_event', 'canvas_event']);
 
-/** Canvas token the gate sends. It is a secret by construction and must never be echoed or stored in plaintext. */
-export const CANVAS_SECRET = `${SENTINELS.feedSecret}_tok_9f3a1c`;
 export const CANVAS_FIXTURE_BASE = 'https://canvas.fixture.invalid';
 
 export const NOT_IN_MATERIALS = 'Not in the materials. Ask the TA.';
