@@ -51,6 +51,7 @@ import { createDirectory } from './store/directory';
 import { createSquadsStore } from './store/squads';
 import { createImessageStore } from './imessage/store';
 import { createImessageRoutes } from './imessage/routes';
+import { createSendblueWebhookRoutes } from './imessage/sendblue/webhook';
 import { createEventLog } from './store/eventlog';
 import { createLedgerStore } from './store/ledger';
 import { createSquadState } from './store/state';
@@ -206,6 +207,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createMemberRoutes(deps),
     createInviteRoutes(deps),
     createImessageRoutes(deps),
+    createSendblueWebhookRoutes(deps),
     createInternalRoutes(deps),
     createStatusRoutes(deps),
     createStateRoutes(deps),

@@ -181,16 +181,30 @@ export function createImessageSync(o: SyncOptions): ImessageSync {
     for (const m of touched) refresh(m);
   }
 
-  const syncOnReceipt = (r: { guid: string; state: 'delivered' | 'failed'; reason?: string }) => {
+  const RANK: Record<string, number> = { queued: 0, sent: 1, delivered: 2, read: 3 };
+  const syncOnReceipt = (r: {
+    guid: string;
+    state: 'sent' | 'delivered' | 'read' | 'failed';
+    reason?: string;
+  }) => {
     const row = store.outByExt(r.guid);
     if (!row) return;
-    store.patchOut(
-      row.id,
-      r.state === 'delivered'
-        ? { state: 'delivered' }
-        : { state: 'failed', reason: 'receipt_failed' },
-      now(),
-    );
+    // receipts can arrive out of order: a state never moves backwards, and a delivered/read message never "fails"
+    const cur = RANK[row.state];
+    if (r.state === 'failed') {
+      if (cur !== undefined && cur >= RANK.delivered!) return;
+      store.patchOut(
+        row.id,
+        {
+          state: 'failed',
+          reason: r.reason?.startsWith('sb:') ? `receipt:${r.reason.slice(3)}` : 'receipt_failed',
+        },
+        now(),
+      );
+    } else {
+      if (cur !== undefined && RANK[r.state]! <= cur && row.state !== 'failed') return;
+      store.patchOut(row.id, { state: r.state, reason: null }, now());
+    }
     refresh(row.messageId);
   };
   gateway.onReceipt(syncOnReceipt);

@@ -8,8 +8,20 @@ import {
   type IMessageSdkLike,
   type Logger,
 } from '@squad/bot';
+import { FakeIMessageTransport } from '@squad/bot';
 import type { HubDeps } from '../types';
 import { createIMessageBridge, type IMessageBridge } from './bridge';
+import { createSendblueClient } from './sendblue/client';
+import {
+  missingSendblueEnv,
+  providerFromEnv,
+  sendblueConfigFromEnv,
+  type ImessageProvider,
+} from './sendblue/config';
+import { createMediaSigner } from './sendblue/media';
+import { createSendblueRuntime } from './sendblue/runtime';
+import { createSendblueSdk, GROUP_PREFIX } from './sendblue/sdk';
+import { createSendblueStore } from './sendblue/store';
 
 export interface IMessageHandle {
   bridge: IMessageBridge;
@@ -24,6 +36,10 @@ export interface AttachIMessageOptions {
   /** Tests inject a fake SDK; production loads @photon-ai/imessage-kit. */
   sdk?: IMessageSdkLike;
   config?: IMessageConfig;
+  /** sendblue | local | fake | off. Default: IMESSAGE_PROVIDER, else local when IMESSAGE_ENABLED=1, else off. */
+  provider?: ImessageProvider;
+  /** Tests: the fetch the Sendblue client and media download use (default: the global fetch). */
+  fetch?: (url: string, init?: RequestInit) => Promise<Response>;
   now?: () => number;
   sleep?: (ms: number) => Promise<void>;
   minGapMs?: number;
@@ -57,15 +73,71 @@ export async function attachIMessage(
   o: AttachIMessageOptions = {},
 ): Promise<IMessageHandle | undefined> {
   const { deps } = hub;
-  const config = o.config ?? imessageConfigFromEnv(o.env ?? process.env);
+  const env = o.env ?? process.env;
+  // an injected sdk or config is the pre-Sendblue (local) path: keep it working unchanged
+  const provider: ImessageProvider =
+    o.provider ?? (o.sdk || o.config ? 'local' : providerFromEnv(env));
+  if (provider === 'off') {
+    deps.log.info('imessage: not started (IMESSAGE_PROVIDER is off)');
+    return undefined;
+  }
+  let config = o.config ?? imessageConfigFromEnv(env);
+  let sdk = o.sdk;
+  let sbParts:
+    | {
+        cfg: ReturnType<typeof sendblueConfigFromEnv>;
+        sdk: ReturnType<typeof createSendblueSdk>;
+        client: ReturnType<typeof createSendblueClient>;
+        store: ReturnType<typeof createSendblueStore>;
+        media: ReturnType<typeof createMediaSigner>;
+      }
+    | undefined;
+  if (provider === 'fake') {
+    // fixture transport: nothing real is ever read or sent, so the allowlist is not needed
+    sdk ??= new FakeIMessageTransport();
+    config = o.config ?? { ...config, enabled: true, dryRun: false, allowAll: true };
+  }
+  if (provider === 'sendblue') {
+    const cfg = sendblueConfigFromEnv(env, deps.config.baseUrl);
+    const missing = missingSendblueEnv(cfg);
+    if (missing.length) {
+      deps.log.info(`imessage: Sendblue not started (missing env: ${missing.join(', ')})`);
+      return undefined;
+    }
+    // a bare Sendblue group_id in the allowlist means the chat guid Sendblue;+;<group_id>
+    config = {
+      ...config,
+      allowedChats: config.allowedChats.map((c) => (c.includes(';') ? c : `${GROUP_PREFIX}${c}`)),
+    };
+  }
   const problem = configProblem(config);
   if (problem) {
     deps.log.info(`imessage: not started (${problem})`);
     return undefined;
   }
+  if (provider === 'sendblue') {
+    const cfg = sendblueConfigFromEnv(env, deps.config.baseUrl);
+    const client = createSendblueClient(cfg, o.fetch);
+    const media = createMediaSigner(`sb-media:${deps.config.authSecret}`, o.now ?? deps.now);
+    sbParts = {
+      cfg,
+      client,
+      media,
+      store: createSendblueStore(deps.db),
+      sdk: createSendblueSdk({
+        cfg,
+        client,
+        media,
+        safety: config,
+        log: botLog(deps),
+        ...(o.fetch ? { fetchFn: o.fetch } : {}),
+      }),
+    };
+    sdk = sbParts.sdk;
+  }
   const gateway = createIMessageGateway({
     config,
-    ...(o.sdk ? { sdk: o.sdk } : {}),
+    ...(sdk ? { sdk } : {}),
     log: botLog(deps),
     ...(o.now ? { now: o.now } : {}),
     ...(o.sleep ? { sleep: o.sleep } : {}),
@@ -73,10 +145,13 @@ export async function attachIMessage(
     // the identity map is the dedupe: a guid is done once stored or handled (hub restart safe)
     seen: (g) => deps.imessage.inboundDone(g),
   });
+  deps.imessageInfo = { provider, dryRun: config.dryRun, gateway };
+  if (sbParts) deps.sendblue = createSendblueRuntime({ deps, safety: config, gateway, ...sbParts });
   const bridge = createIMessageBridge({
     deps,
     gateway,
     store: deps.imessage,
+    provider: provider === 'sendblue' ? 'sendblue' : provider === 'fake' ? 'fixture' : 'photon',
     ...(o.now ? { now: o.now } : {}),
     ...(o.timers !== undefined ? { timers: o.timers } : {}),
   });
@@ -99,6 +174,8 @@ export async function attachIMessage(
     async stop() {
       bridge.stop();
       deps.imessageSync = undefined;
+      deps.sendblue = undefined;
+      deps.imessageInfo = undefined;
       await gateway.stop();
     },
   };
