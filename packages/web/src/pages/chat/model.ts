@@ -245,7 +245,10 @@ export function resolveCitations(text: string, citations: readonly ChatCitation[
   return uniqueCitations([...out, ...citations]);
 }
 
-const citeKey = (c: Pick<ChatCitation, 'file' | 'page'>) => `${norm(c.file)}#${c.page}`;
+const citeKey = (c: Pick<ChatCitation, 'file' | 'page'> & { source?: ChatCitation['source'] }) =>
+  c.source
+    ? `${c.source.kind}/${c.source.id}#${c.source.anchor ?? ''}`
+    : `${norm(c.file)}#${c.page}`;
 
 /**
  * Prepares message text for the Markdown primitive: every marker becomes a small numbered chip (`[cite: 2]`) that

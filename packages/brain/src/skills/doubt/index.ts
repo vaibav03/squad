@@ -1,4 +1,4 @@
-import type { InboundMessage, OutboundMessage, Skill } from '@squad/core';
+import type { ChatCitation, InboundMessage, OutboundMessage, Skill } from '@squad/core';
 import {
   isBehindIntent,
   isGradedGrab,
@@ -37,6 +37,7 @@ export function createDoubtSkill(brain: Brain, opts: DoubtOptions = {}): Skill {
     async handle(m): Promise<OutboundMessage[]> {
       const question = stripMention(m.text);
       let text: string;
+      let citations: ChatCitation[] = [];
       try {
         const viewer = opts.viewerFor?.(m);
         const a = await brain.ask(
@@ -45,11 +46,27 @@ export function createDoubtSkill(brain: Brain, opts: DoubtOptions = {}): Skill {
           viewer ? { viewer, contextCourseId: null } : undefined,
         );
         text = a.grounded || a.reason === 'nothing_connected' ? a.text : NOT_IN_MATERIALS;
+        // Canvas/Drive/Calendar/Classroom citations travel structurally (chips that open the source viewer).
+        citations = a.grounded
+          ? a.citations.flatMap((c) =>
+              c.source
+                ? [
+                    {
+                      file: c.file,
+                      page: 1,
+                      label: c.file,
+                      source: c.source,
+                      ...(c.quote ? { quote: c.quote.slice(0, 600) } : {}),
+                    },
+                  ]
+                : [],
+            )
+          : [];
       } catch {
         // Any failure is answered honestly; nothing is invented from model memory.
         text = UNAVAILABLE_TEXT;
       }
-      return [{ chatId: m.chatId, text }];
+      return [{ chatId: m.chatId, text, ...(citations.length ? { citations } : {}) }];
     },
   };
 }

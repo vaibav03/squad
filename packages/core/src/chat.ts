@@ -36,6 +36,8 @@ export const ChatCitationSchema = z.strictObject({
   label: z.string(),
   /** Set for non-PDF sources; `file` is then the display title and `page` is 1. */
   source: CitationSourceSchema.optional(),
+  /** Verbatim sentence the claim rests on (non-PDF sources); the source viewer highlights it. */
+  quote: z.string().max(600).optional(),
 });
 export type ChatCitation = z.infer<typeof ChatCitationSchema>;
 

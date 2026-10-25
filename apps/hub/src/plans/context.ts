@@ -11,9 +11,14 @@ const isoDay = (s: string): string | undefined => {
   return d;
 };
 
-export function createDefaultPlanContext(db: Db, defaultCourse: string): PlanContext {
+export function createDefaultPlanContext(
+  db: Db,
+  defaultCourse: string,
+  extra: Pick<PlanContext, 'contextDue'> = {},
+): PlanContext {
   const courses = createCourseStore(db);
   return {
+    ...extra,
     defaultCourse: () => defaultCourse,
     courseTitle: (id) => courses.getCourse(id)?.title ?? id,
     chapters: (id) =>

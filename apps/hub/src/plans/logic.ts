@@ -22,6 +22,14 @@ export interface DueLite {
   dueAt: number;
   kind: string;
 }
+/** A due date imported from one member's Canvas / Google Classroom. The title is present only when shared with the squad. */
+export interface ContextDueLite {
+  ownerId: string;
+  dueAt: number;
+  courseId: string | null;
+  title: string | null;
+  source?: NonNullable<PlanSource['source']>;
+}
 
 export { addDays, daysBetween, isRealDate, parseExamDate, ymd };
 
@@ -35,6 +43,8 @@ export interface GenInput {
   /** PRIVATE: student -> busy `YYYY-MM-DD` days. Used to avoid clashes only. */
   busyDays: ReadonlyMap<string, ReadonlySet<string>>;
   due: DueLite[];
+  /** Imported due dates of the members (owner-private unless shared); each seeds one prep item. */
+  contextDue?: ContextDueLite[];
   examDate: string | null;
   newId: () => string;
 }
@@ -102,6 +112,35 @@ export function generateItems(g: GenInput): Generated {
       sources: [src],
     });
   });
+  // Imported Classroom/Canvas due dates: a prep item for the owner the day before, cited to its source when shared.
+  const ctxDue = (g.contextDue ?? []).filter((d) => d.dueAt >= g.now).slice(0, 12);
+  for (const d of ctxDue) {
+    const dueDay = ymd(d.dueAt);
+    let day = addDays(dueDay, -1);
+    if (day < firstDay) day = firstDay;
+    if (day > lastDay) day = lastDay;
+    const busy = g.busyDays.get(d.ownerId);
+    for (let k = 0; k < 7 && busy?.has(day) && addDays(day, -1) >= firstDay; k++)
+      day = addDays(day, -1);
+    const src: PlanSource = {
+      kind: 'due',
+      label: `${d.title ?? 'A due date'}: ${dueDay}`,
+      ...(d.source ? { source: d.source } : {}),
+    };
+    dueSources.push(src);
+    items.push({
+      id: `it_${g.newId()}`,
+      ownerId: d.ownerId,
+      ownerName: nameOf(d.ownerId),
+      kind: 'review',
+      title: (d.title ? `Prep: ${d.title}` : `Prep for a deadline on ${dueDay}`).slice(0, 120),
+      date: day,
+      durationMin: 45,
+      status: 'todo',
+      rev: 1,
+      sources: [src],
+    });
+  }
   if (sorted.length > 1) {
     items.push({
       id: `it_${g.newId()}`,

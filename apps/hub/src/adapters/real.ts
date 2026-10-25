@@ -33,6 +33,7 @@ import {
 } from '@squad/brain';
 import { contextServiceFor } from '../context/service';
 import { contextBusyBlocks } from '../context/busy';
+import { councilContext } from '../context/council';
 import {
   createAudioServices,
   createCallPort,
@@ -136,6 +137,8 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     courseId: () => courseId,
     demo: councilDemo,
     agents: councilAgents,
+    // The council's retrieve tool also reads the asker's imported Canvas/Google context, scoped to the asker.
+    viewer: (askedBy, visibility) => ({ context: councilContext(deps, askedBy, visibility) }),
     ...(o.rawLlm ? { triageLlm: o.rawLlm } : {}),
   });
 

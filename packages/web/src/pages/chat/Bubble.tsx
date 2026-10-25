@@ -248,7 +248,7 @@ export function MessageBubble(p: BubbleProps) {
           <div className="sqc-sources" role="group" aria-label="Sources">
             {cites.map((c, i) => (
               <button
-                key={`${c.file}-${c.page}`}
+                key={`${c.source ? `${c.source.kind}/${c.source.id}#${c.source.anchor ?? ''}` : c.file}-${c.page}`}
                 type="button"
                 className="sqc-cite"
                 data-testid="chat-citation-chip"
