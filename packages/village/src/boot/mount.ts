@@ -93,6 +93,10 @@ export function mountVillage(
       g.scale.resize(s.logicalW, s.logicalH);
       const c = g.canvas;
       c.style.imageRendering = 'pixelated';
+      // Phaser's ScaleManager (mode NONE) can keep the previous canvas CSS size after a zoom/size change (rotating a
+      // phone from portrait to landscape left a 195x270 picture in an 844x244 stage). The stage size is the truth.
+      c.style.width = `${s.cssW}px`;
+      c.style.height = `${s.cssH}px`;
     }
     return s;
   };
