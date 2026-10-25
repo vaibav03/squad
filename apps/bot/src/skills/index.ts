@@ -7,21 +7,15 @@ import {
   chapterIdsFromStore,
   chapterProviderFromStore,
   createBrain,
-<<<<<<< HEAD
   type Brain,
   type MasteryStore,
   createCoursePlanSkill,
   createDebateSkill,
   createDevilTaSkill,
-=======
   councilLlmFor,
   createCouncilService,
   createCouncilSkill,
   type CouncilService,
-  type Brain,
-  type MasteryStore,
-  createCoursePlanSkill,
->>>>>>> origin/council/ask
   createFeynmanSkill,
   createMasteryStore,
   createOracleSkill,
