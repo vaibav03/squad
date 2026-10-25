@@ -91,8 +91,16 @@ export class TtsService {
   async speak(personaId: string, text: string, opts: SpeakOptions = {}): Promise<SpeakResult> {
     const clean = text.trim();
     if (!clean) throw new Error('speak: empty text');
-    const model = opts.model ?? 'flash';
     const { voiceId } = this.o.voices.resolve(personaId);
+    return this.speakVoice(voiceId, clean, opts);
+  }
+
+  /** Same as `speak` but for an explicit voiceId (voice picker previews, podcast hosts). */
+  async speakVoice(voiceId: string, text: string, opts: SpeakOptions = {}): Promise<SpeakResult> {
+    const clean = text.trim();
+    if (!clean) throw new Error('speak: empty text');
+    const model = opts.model ?? 'flash';
+    const personaId = 'voice';
     const wantT = !!opts.timings;
     const flightKey = `${personaId}|${model}|${voiceId}|${wantT}|${clean}`;
     const existing = this.inflight.get(flightKey);
