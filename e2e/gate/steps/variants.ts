@@ -17,6 +17,7 @@ import {
   revokeUpstream,
   searchContext,
   syncAll,
+  syncConnection,
 } from './flows';
 import type { StepDef } from '../lib/runner';
 import type { GateCtx } from '../lib/ctx';
@@ -102,9 +103,13 @@ export const V2: StepDef<GateCtx> = {
   },
 };
 
+const REVOKED_MSG =
+  'Google access was revoked. Imported data was removed. Reconnect to import again.';
+
 export const V3: StepDef<GateCtx> = {
   id: 'V3',
-  title: 'Revoked auth: needs reconnect, data marked not deleted, the other source keeps working',
+  title:
+    'Revoked auth: state revoked, imported data purged (deliberate, privacy first), honest reconnect message, the other source keeps working',
   needs: [...CONNECT_NEEDS, P.mentions],
   fixture: async (c, a) => {
     const { rhea } = c.world.users;
@@ -112,24 +117,24 @@ export const V3: StepDef<GateCtx> = {
     await connectEverything(rhea);
     const before = await items(rhea);
     const googleBefore = before.filter((s) => s.provider === 'google').length;
+    a.ok('Google items exist before the revoke', googleBefore > 0);
     await revokeUpstream('google');
     await syncAll(rhea);
     const g = await connectionStatus(rhea, 'google');
-    a.ok('Google is no longer live', !!g && g.state !== 'live', `state ${g?.state}`);
+    a.eq('Google connection state is revoked', g?.state, 'revoked');
     a.note(
-      `after revoke: state=${g?.state} label=${g?.stateLabel} status=${g?.status} degraded=${g?.degraded} note=${g?.note}`,
+      `after revoke: state=${g?.state} label=${g?.stateLabel} status=${g?.status} degraded=${g?.degraded}`,
     );
-    a.ok(
-      'the label says to reconnect in words',
-      /reconnect|expired|sign in/i.test(`${g?.stateLabel ?? ''} ${g?.note ?? ''}`),
+    a.eq('the label states what happened and what to do', g?.stateLabel, REVOKED_MSG);
+    a.ok('the API asks for a reconnect', g?.needsReconnect === true);
+    const after = await items(rhea);
+    a.eq(
+      'imported Google data is purged (privacy first; documented difference from Nook)',
+      after.filter((s) => s.provider === 'google').length,
+      0,
     );
     const cv = await connectionStatus(rhea, 'canvas');
     a.eq('Canvas is unaffected', cv?.state, 'live');
-    const after = await items(rhea);
-    a.ok(
-      'Google-derived items are kept (stale), not deleted',
-      after.filter((s) => s.provider === 'google').length >= Math.min(1, googleBefore),
-    );
     const hit = await searchContext(rhea, 'homework');
     a.ok('retrieval still answers from the valid source', hit.results.length > 0);
     a.noLeak('search payload', hit.text);
@@ -139,7 +144,8 @@ export const V3: StepDef<GateCtx> = {
 
 export const V4: StepDef<GateCtx> = {
   id: 'V4',
-  title: 'Expired access token: transparent refresh; refresh failure falls to V3',
+  title:
+    'Expired access token: one refresh and retry; a refused refresh is revoked (provider says so) or expired with data kept, never live',
   needs: CONNECT_NEEDS,
   fixture: async (c, a) => {
     const { rhea } = c.world.users;
@@ -156,7 +162,7 @@ export const V4: StepDef<GateCtx> = {
     );
     a.eq('and the connection stays live with no user-visible failure', g1?.state, 'live');
     a.eq('a sync then works', (await syncAll(rhea)).status, 200);
-    // B. a refresh Google refuses (invalid_grant) is what ends a connection (the V3 state)
+    // B. a refresh Google refuses with invalid_grant (the provider says the grant is revoked) is the V3 state
     await disconnectAll(rhea);
     await resetUpstreams();
     await connectGoogle(rhea, { shortLived: true });
@@ -164,11 +170,9 @@ export const V4: StepDef<GateCtx> = {
     const g2 = (await listConnections(rhea)).connections.find(
       (x) => x.provider === 'google' && x.status !== 'revoked',
     );
-    a.ok(
-      'a refused refresh ends needing reconnect',
-      !g2 || g2.state !== 'live',
-      `state ${g2?.state}`,
-    );
+    const g2r = await connectionStatus(rhea, 'google');
+    a.ok('a refused refresh never leaves the state live', !g2 && g2r?.state !== 'live');
+    a.eq('invalid_grant ends revoked with the honest message', g2r?.stateLabel, REVOKED_MSG);
     // C. the plan's case: the access token dies at Google before the hub expects it; one refresh and one retry, no failure
     await disconnectAll(rhea);
     await resetUpstreams();
@@ -181,6 +185,37 @@ export const V4: StepDef<GateCtx> = {
       'a 401 on sync triggers one refresh and a retry (no user-visible failure)',
       sync.status === 200 && g3?.state === 'live' && (await tokenCalls()) > t1,
       `sync ${sync.status}, state ${g3?.state}, refresh calls ${(await tokenCalls()) - t1}`,
+    );
+    a.eq('exactly one refresh for that 401', (await tokenCalls()) - t1, 1);
+    // D. a refresh the provider refuses without saying "revoked": expired, data KEPT, sync stopped, stale, reconnect prompt
+    await disconnectAll(rhea);
+    await resetUpstreams();
+    await connectGoogle(rhea, { shortLived: true });
+    await syncAll(rhea);
+    const kept = (await items(rhea)).filter((s) => s.provider === 'google').length;
+    a.ok('Google data was imported before the refusal', kept > 0);
+    await google.failRefresh(99);
+    const g4 = (await listConnections(rhea)).connections.find(
+      (x) => x.provider === 'google' && x.status !== 'revoked',
+    );
+    a.eq('a refused refresh (not invalid_grant) ends expired, never live', g4?.state, 'expired');
+    a.ok('and asks for a reconnect', g4?.needsReconnect === true);
+    a.eq(
+      'imported data is kept',
+      (await items(rhea)).filter((s) => s.provider === 'google').length,
+      kept,
+    );
+    a.eq(
+      'sync is stopped (409 connection_expired)',
+      g4 ? (await syncConnection(rhea, g4.id)).status : 0,
+      409,
+    );
+    const hit = await searchContext(rhea, 'central limit theorem standard error');
+    const stale = hit.results.filter((h) => h.provenance?.startsWith('google'));
+    a.ok(
+      'retrieval still answers from the kept data and flags it stale',
+      stale.length > 0 && stale.every((h) => (h as { stale?: boolean }).stale === true),
+      `${stale.length} google hits`,
     );
     await resetUpstreams();
   },

@@ -99,6 +99,8 @@ export interface ContextStore {
     v: ContextViewer,
     opts?: { courseId?: string; limit?: number; kinds?: SourceKind[] },
   ): ChunkHit[];
+  /** How many sources the viewer may read (own plus squad-shared); 0 means nothing is connected for them. */
+  readableCount(v: ContextViewer): number;
   /** Purge sources whose retention has elapsed. */
   purgeExpired(now: number): PurgeResult;
   setStatus(id: string, status: ConnectionStatus, note: string | null, degraded?: boolean): void;
@@ -463,6 +465,19 @@ export function createContextStore(db: Db, opts: { retentionMs?: number } = {}):
     readable(sourceId, v) {
       const s = store.source(sourceId);
       return s && store.canRead(s, v) ? s : undefined;
+    },
+    readableCount(v) {
+      const marks = v.squadIds.map(() => '?').join(',');
+      const row = db
+        .prepare(
+          `SELECT COUNT(*) n FROM ctx_sources s WHERE s.owner_id=? ${
+            v.squadIds.length
+              ? `OR (s.visibility='squad' AND EXISTS(SELECT 1 FROM ctx_shares h WHERE h.source_id=s.id AND h.squad_id IN (${marks})))`
+              : ''
+          }`,
+        )
+        .get(v.studentId, ...v.squadIds) as { n: number };
+      return row.n;
     },
     search(query, v, o = {}) {
       const q = [...new Set(tokenize(query))];

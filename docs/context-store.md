@@ -128,8 +128,13 @@ dedicated "Access to this source was revoked" state.
   only; the shared logger also redacts token-shaped keys. Tests scan every response, log line and plaintext table for
   sentinel secrets.
 * Refresh: before each sync or listing, a Google grant within 60 s of `expiresAt` calls `connector.refresh`. Success
-  stores the new access token and moves `expiresAt`; failure sets `status: expired` and sync stops (no upstream call).
-* Upstream revoked (status probe) deletes everything. Upstream 401/403 sets `status: error`, `degraded: true` with the
+  stores the new access token and moves `expiresAt` to the real expiry (a short-lived token is never stretched). A 401 on
+  sync refreshes once and retries (`syncConnection` `onRefreshed` persists the new token). A refresh the provider
+  refuses with `invalid_grant` sets `status: revoked`, purges the imported data and says "Google access was revoked.
+  Imported data was removed. Reconnect to import again." (`needsReconnect: true`). Any other refusal sets
+  `status: expired`: data kept, sync stops (409 `connection_expired`), `stale: true` on the view and on every
+  `/v1/context/search` hit of that connection, Reconnect prompt. Never left `live`.
+* Upstream 403 sets `status: error`, `degraded: true` with the
   label "Degraded: the provider rejected the credential; showing the last imported data" and keeps imported data.
 * Canvas feed and API-token URLs must be https, non-IP, non-localhost, no embedded credentials (SSRF guard for the real
   connector).

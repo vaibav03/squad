@@ -194,7 +194,12 @@ export async function syncConnection<A>(
       } catch (e) {
         if (!refreshed && canRefresh && e instanceof ConnectorAuthError && e.httpStatus === 401) {
           refreshed = true;
-          const r = await connector.refresh!(cur);
+          // Any refusal other than "revoked" or a rate limit only means the token could not be renewed.
+          const r = await connector.refresh!(cur).catch((re: unknown) => {
+            if (re instanceof ConnectorRevokedError || re instanceof ConnectorRateLimitError)
+              throw re;
+            throw new ConnectorExpiredError('refresh failed');
+          });
           cur = Object.assign({}, cur, { accessToken: r.accessToken }) as A;
           await deps.onRefreshed?.(r);
           continue;

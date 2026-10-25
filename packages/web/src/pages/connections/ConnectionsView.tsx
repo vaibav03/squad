@@ -24,6 +24,7 @@ import {
   oauthReturn,
   relTime,
   scopeWords,
+  squadLabel,
   STATE_TONE,
 } from './model';
 import type { ConnectionsState } from './useConnections';
@@ -138,7 +139,7 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
       {c.state === 'rate_limited' && c.retryAfter ? (
         <p className="sq-conn__meta">Will retry {relTime(c.retryAfter, p.now)}.</p>
       ) : null}
-      {c.note ? <p className="sq-conn__meta">{c.note}</p> : null}
+      {c.note && c.note !== c.stateLabel ? <p className="sq-conn__meta">{c.note}</p> : null}
       <dl className="sq-conn__facts">
         <dt>Last sync</dt>
         <dd>
@@ -159,7 +160,9 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
         <dd>{counts.length ? counts.join(', ') : 'nothing'}</dd>
         <dt>Shared with</dt>
         <dd>
-          {c.sharedWithSquads.length ? c.sharedWithSquads.join(', ') : 'nobody (private to you)'}
+          {c.sharedWithSquads.length
+            ? c.sharedWithSquads.map((id) => squadLabel(id, p.squadNames)).join(', ')
+            : 'nobody (private to you)'}
         </dd>
         <dt>Access</dt>
         <dd>
@@ -187,7 +190,7 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
               and use Connect in the Canvas card to sync again.
             </p>
           ) : null}
-          {c.state === 'expired' || c.state === 'error' ? (
+          {c.needsReconnect || c.state === 'error' ? (
             <Button size="sm" variant="secondary" onClick={reconnect}>
               Reconnect
             </Button>

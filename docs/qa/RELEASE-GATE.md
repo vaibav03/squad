@@ -161,8 +161,8 @@ badges (Demo shown exactly when the model is the stand-in).
 |---|---|
 | V1 fresh setup | an empty account sees optional, skippable connect offers; asking before connecting says nothing is connected; no error toast |
 | V2 reconnect | disconnect then reconnect: derived data is purged, a new sync recreates the same ids and content hashes; chat history untouched |
-| V3 revoked auth | Google revokes the grant: `needs_reauth`, stale items kept but marked, answers say which source is stale |
-| V4 expired token | access token expires mid-sync: transparent refresh, no user-visible failure; refresh failure falls to V3 |
+| V3 revoked auth | Google revokes the grant: state `revoked`, imported data purged on purpose (privacy first), "Google access was revoked. Imported data was removed. Reconnect to import again." and a Reconnect button |
+| V4 expired token | access token expires mid-sync: one refresh and retry, no user-visible failure; refresh refused with `invalid_grant` falls to V3, any other refusal is `expired` with data kept, sync stopped, retrieval flagged stale |
 | V5 Canvas feed gone | 404/410/moved: degraded with the last good items and a last-synced time, never a silent empty |
 | V6 duplicate events | the same GUID x3, a replayed OAuth callback, a replayed sync: one message, one reply, one connection, one outbound |
 | V7 offline/backfill | watcher dropped, messages arrive in chat.db, hub restart: both appear once, in message-time order, flagged late, one reply |
