@@ -70,12 +70,42 @@ const SAMPLES = {
     text: 'Do ch5.',
   },
   'discussion.ended': { t: 'discussion.ended', discussionId: 'ld_abcdefabcdef' },
+  'a2a.message': {
+    t: 'a2a.message',
+    msg: {
+      id: 'am_a1b2c3d4e5f6',
+      correlationId: 'cn_k3j9x0a1b2c3',
+      seq: 2,
+      from: 'council:ask-chair',
+      to: 'council:ask-skeptic',
+      kind: 'delegate',
+      stage: 'delegation',
+      summary: 'Check the claim.',
+      status: 'done',
+      mode: 'live',
+      source: 'model',
+      redaction: 'public',
+      ts: 1,
+    },
+  },
+  'council.stage': {
+    t: 'council.stage',
+    councilId: 'council:ask',
+    correlationId: 'cn_k3j9x0a1b2c3',
+    stage: 'delegation',
+    mode: 'live',
+  },
 } satisfies Record<VillageEventType, VillageEvent>;
 
 describe('adapter exhaustiveness', () => {
-  it.each(VILLAGE_EVENT_TYPES)('%s yields commands', (t) => {
+  // Additive A2A kinds are deliberately ignored by the scene adapter until W6 (message arrows).
+  const SCENE_SILENT = new Set<string>(['a2a.message', 'council.stage']);
+  it.each(VILLAGE_EVENT_TYPES.filter((t) => !SCENE_SILENT.has(t)))('%s yields commands', (t) => {
     const out = adapt(SAMPLES[t], ctx);
     expect(out.length).toBeGreaterThan(0);
+  });
+  it.each([...SCENE_SILENT])('%s is tolerated and yields no scene commands', (t) => {
+    expect(adapt(SAMPLES[t as VillageEventType], ctx)).toEqual([]);
   });
   it('is deterministic', () => {
     for (const t of VILLAGE_EVENT_TYPES) {

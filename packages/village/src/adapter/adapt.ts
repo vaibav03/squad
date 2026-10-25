@@ -394,6 +394,11 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
     case 'discussion.ended':
       return [{ type: 'announce', text: 'The discussion wrapped up.', politeness: 'polite' }];
 
+    case 'a2a.message':
+    case 'council.stage':
+      // Additive kinds (docs/a2a.md): the village ignores them until the arrow primitive lands (W6).
+      return [];
+
     default: {
       const _exhaustive: never = event;
       void _exhaustive;

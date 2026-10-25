@@ -1,4 +1,4 @@
-import { VillageEventSchema, type VillageEvent } from '@squad/core';
+import { VillageEventSchema, a2aSkeleton, hasBannedKey, type VillageEvent } from '@squad/core';
 import type { FilterCtx, FilterFn, FilterVillageFn, LoggedEvent, Viewer, WireEvent } from './types';
 
 /**
@@ -41,6 +41,43 @@ const filterVillageEventRaw: FilterVillageFn = (event, viewer, ctx) => {
       const owner = ctx.calls.ownerOf(event.callId);
       if (owner === undefined) return null; // unknown call: default deny
       return owner === null || owner === viewer.studentId ? event : null;
+    }
+    case 'a2a.message': {
+      // Default deny on an unknown run. Squad runs: public envelopes to everyone, asker_only to the asker.
+      // Private runs: everyone but the asker gets a skeleton (arrows, kinds, status; no text).
+      const run = ctx.councils?.ownerOf(event.msg.correlationId);
+      if (run === undefined || run.squadId !== viewer.squadId || hasBannedKey(event.msg))
+        return null;
+      const asker = run.askedBy === viewer.studentId;
+      if (event.msg.redaction === 'asker_only' && !asker) return null;
+      const { thought, message, work, ...rest } = event;
+      void thought;
+      void message;
+      void work;
+      if (run.private && !asker) {
+        return {
+          ...(rest.mode !== undefined ? { mode: rest.mode } : {}),
+          t: 'a2a.message',
+          msg: a2aSkeleton(event.msg),
+        };
+      }
+      const msg = { ...event.msg };
+      // quiz-key blindness: the committed answer never leaves, for anyone.
+      if (/^council:quiz-?key/.test(msg.from) || /^council:quiz-?key/.test(msg.to))
+        delete msg.answer;
+      return { ...event, msg };
+    }
+    case 'council.stage': {
+      const run = ctx.councils?.ownerOf(event.correlationId);
+      if (run === undefined || run.squadId !== viewer.squadId) return null;
+      // No text rides on a stage change; the extras that could carry text are dropped.
+      return {
+        t: 'council.stage',
+        councilId: event.councilId,
+        correlationId: event.correlationId,
+        stage: event.stage,
+        mode: event.mode,
+      };
     }
     case 'call.start':
     case 'call.end':

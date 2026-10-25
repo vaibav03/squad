@@ -439,6 +439,58 @@
       }
     },
     {
+      "at": 86000,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:planner",
+        "correlationId": "cn_p1a2n3n4e5r6",
+        "stage": "delegation",
+        "mode": "demo"
+      }
+    },
+    {
+      "at": 86500,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000001",
+          "correlationId": "cn_p1a2n3n4e5r6",
+          "seq": 0,
+          "from": "council:planner-chair",
+          "to": "council:planner-chill",
+          "kind": "delegate",
+          "stage": "delegation",
+          "summary": "Argue for the lighter plan.",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000086500
+        }
+      }
+    },
+    {
+      "at": 87000,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000002",
+          "correlationId": "cn_p1a2n3n4e5r6",
+          "seq": 1,
+          "from": "council:planner-chair",
+          "to": "council:planner-grind",
+          "kind": "delegate",
+          "stage": "delegation",
+          "summary": "Argue for the heavier plan.",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000087000
+        }
+      }
+    },
+    {
       "at": 88000,
       "event": {
         "t": "council.opinion",
@@ -452,7 +504,8 @@
           "thinking": true,
           "skill": "Council"
         },
-        "message": "Two short evenings are enough if the quiz went well."
+        "message": "Two short evenings are enough if the quiz went well.",
+        "mode": "demo"
       }
     },
     {
@@ -469,7 +522,8 @@
           "thinking": true,
           "skill": "Council"
         },
-        "message": "I disagree: regression needs a third pass before the exam."
+        "message": "I disagree: regression needs a third pass before the exam.",
+        "mode": "demo"
       }
     },
     {
@@ -486,7 +540,8 @@
           "thinking": true,
           "skill": "Council"
         },
-        "message": "I ranked the answers without names: the cautious one first, the short one second."
+        "message": "I ranked the answers without names: the cautious one first, the short one second.",
+        "mode": "demo"
       }
     },
     {
@@ -504,7 +559,8 @@
           "thinking": false,
           "skill": "Council"
         },
-        "message": "My verdict is a middle plan: two evenings plus a short third pass. One member disagreed and that is on record."
+        "message": "My verdict is a middle plan: two evenings plus a short third pass. One member disagreed and that is on record.",
+        "mode": "demo"
       }
     },
     {

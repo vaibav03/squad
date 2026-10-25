@@ -315,6 +315,9 @@ export function exchangesFromEvent(e: VillageEvent, ctx: ExchangeCtx): Omit<Exch
     case 'discussion.started':
     case 'discussion.ended':
     case 'discussion.takeaway':
+    case 'a2a.message':
+    case 'council.stage':
+      // Additive kinds: a2a.* plugs in later via registerExchangeMapper('a2a.', ...); no exchange until then.
       return [];
     default: {
       const _x: never = e;
