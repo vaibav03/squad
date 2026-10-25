@@ -29,11 +29,17 @@ export interface AgentFeedSnapshot {
   readonly entries: readonly FeedEntry[];
 }
 export interface Announcement {
+  readonly agent?: string;
   readonly text: string;
   readonly politeness: 'polite' | 'assertive';
 }
 
 export interface FeedOptions {
+  /**
+   * The agent the user is focused on (the inspector's selection). While set, an agent-state announcement about ANY other
+   * agent is dropped, so the live region never names a different agent than the open panel.
+   */
+  focusAgent?: () => string | null | undefined;
   me: string;
   /** Squad size when known; under 3 the list shows no counts. */
   squadSize?: number;
@@ -312,7 +318,11 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
           tripConfirmed = true;
           break;
         case 'announce':
-          enqueue({ text: c.text, politeness: c.politeness });
+          {
+            const focus = opts.focusAgent?.();
+            if (c.agent && focus && c.agent !== focus) break;
+          }
+          enqueue({ text: c.text, politeness: c.politeness, ...(c.agent ? { agent: c.agent } : {}) });
           break;
         default:
           break;

@@ -30,6 +30,7 @@ export const JOURNEY = [
   'S3e',
   'S4',
   'S5',
+  'S5b',
   'S6',
   'S7',
   'S8',

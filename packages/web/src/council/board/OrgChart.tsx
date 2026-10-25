@@ -62,7 +62,7 @@ export function OrgChart({ store, run, calm, selected, onSelect }: OrgChartProps
   };
 
   const node = (a: (typeof run.agents)[number]) => {
-    const press = () => onSelect(selected === a.id ? '' : a.id);
+    const press = () => onSelect(a.id);
     const label = [
       `${a.name}, ${ROLE_LABEL[a.role]}`,
       STATUS_LABEL[a.status],
@@ -72,22 +72,14 @@ export function OrgChart({ store, run, calm, selected, onSelect }: OrgChartProps
       .filter(Boolean)
       .join('. ');
     return (
-      <div
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
         className={classes('cb-node', selected === a.id && 'is-selected')}
-        aria-pressed={selected === a.id}
-        aria-label={`${label}. Press to show only their messages.`}
+        aria-label={`${label}. Press to open ${a.name}'s panel.`}
         onClick={press}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            press();
-          }
-        }}
       >
         <AgentCard agent={a} {...(calm ? { calm: true } : {})} selected={selected === a.id} />
-      </div>
+      </button>
     );
   };
 

@@ -11,6 +11,9 @@ import { postCouncilAction, type ActionKind } from './actions-api';
 import { OverlayFrame } from '../../overlays/kit/OverlayFrame';
 import { LvIcon } from '../../overlays/kit/icons';
 import { DelegationCards } from './DelegationCards';
+import { BoardFocusPanel } from './BoardFocusPanel';
+import { FilterToggle } from '../../overlays/inspector/focus/parts';
+import { HandoffTimeline } from '../../overlays/inspector/focus/HandoffTimeline';
 import { Feed, NO_FILTER, type FeedFilter } from './Feed';
 import { ModeBadge } from './ModeBadge';
 import { OrgChart } from './OrgChart';
@@ -78,6 +81,21 @@ export function CouncilBoard({
   const run = store.run();
   const runs = store.runs();
   const [filter, setFilter] = useState<FeedFilter>(NO_FILTER);
+  // The focused agent: one panel, swapped in place. Esc or Close returns focus to the control that opened it.
+  const [focus, setFocus] = useState<string | null>(null);
+  const [view, setView] = useState<'timeline' | 'feed'>('timeline');
+  const origin = useRef<HTMLElement | null>(null);
+  const openFocus = useCallback((id: string) => {
+    const a = document.activeElement as HTMLElement | null;
+    if (a && a !== document.body && !a.closest('.cb-focus')) origin.current = a;
+    setFocus(id);
+  }, []);
+  const closeFocus = useCallback(() => {
+    setFocus(null);
+    const o = origin.current;
+    origin.current = null;
+    if (o?.isConnected) requestAnimationFrame(() => o.focus({ preventScroll: true }));
+  }, []);
   const [selectedMsg, setSelectedMsg] = useState<string | null>(null);
   const [jump, setJump] = useState<{ id: string; n: number } | undefined>();
   const announce = useAnnouncer(open ? run : undefined);
@@ -88,7 +106,9 @@ export function CouncilBoard({
 
   useEffect(() => {
     if (open) setFilter(NO_FILTER);
+    setFocus(null);
   }, [open, run?.runId]);
+  // An agent asked for by the opener (`openBoard({ agent })`) is only highlighted in the chart; a click focuses it.
 
   const onJump = useCallback((id: string) => {
     setSelectedMsg(id);
@@ -195,27 +215,61 @@ export function CouncilBoard({
                 store={store}
                 run={run}
                 {...(calm ? { calm: true } : {})}
-                selected={filter.agent || focusAgent || ''}
-                onSelect={(id) => setFilter((f) => ({ ...f, agent: id }))}
+                selected={focus || focusAgent || ''}
+                onSelect={(id) => (id ? openFocus(id) : closeFocus())}
               />
               <VerdictCard run={run} onJump={onJump} act={act} sendOffReason={sendOff} />
               <DelegationCards delegations={run.delegations} onSeeAnswer={onJump} />
             </div>
             <div className="cb-col cb-col--right">
-              <Feed
-                run={run}
-                filter={filter}
-                onFilter={setFilter}
-                jumpTo={jump}
-                selectedId={selectedMsg}
-                onSelect={(id) => setSelectedMsg((cur) => (cur === id ? null : id))}
-              />
+              <div className="cb-views">
+                <FilterToggle<'timeline' | 'feed'>
+                  label="Communication view"
+                  value={view}
+                  onChange={setView}
+                  options={[
+                    { id: 'timeline', label: 'Handoff timeline' },
+                    { id: 'feed', label: 'Message feed' },
+                  ]}
+                />
+              </div>
+              {view === 'timeline' ? (
+                <div className="cb-timeline-scroll">
+                  <HandoffTimeline
+                    run={run}
+                    defaultFilter="all"
+                    timeStyle="clock"
+                    onSelectAgent={openFocus}
+                  />
+                </div>
+              ) : (
+                <Feed
+                  run={run}
+                  filter={filter}
+                  onFilter={setFilter}
+                  jumpTo={jump}
+                  selectedId={selectedMsg}
+                  onSelect={(id) => setSelectedMsg((cur) => (cur === id ? null : id))}
+                />
+              )}
             </div>
           </div>
         </>
       ) : (
         <EmptyCouncilState hub={hub} store={store} hideStrip />
       )}
+      {run && focus ? (
+        <BoardFocusPanel
+          store={store}
+          run={run}
+          agentId={focus}
+          record={record}
+          replay={replay}
+          calm={calm}
+          onClose={closeFocus}
+          onSelectAgent={openFocus}
+        />
+      ) : null}
       <p className="cb-sr" role="status" aria-live="polite" aria-atomic="true">
         {announce}
       </p>

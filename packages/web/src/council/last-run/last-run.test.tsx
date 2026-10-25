@@ -308,19 +308,19 @@ describe('inspector with a stored run', () => {
   }
   it('an idle council agent says what the last council was, never a bare Idle', async () => {
     await open('council:ask-skeptic');
-    fireEvent.click(screen.getByRole('tab', { name: 'Activity' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Reasoning summary' }));
     expect(screen.queryByText('Idle')).toBeNull();
     expect(screen.getAllByText(/Last council, 4 min ago, Live/).length).toBeGreaterThan(0);
   });
   it('Thinking shows the last public status instead of "no reasoning shared"', async () => {
     await open('council:ask-skeptic');
-    fireEvent.click(screen.getByRole('tab', { name: 'Activity' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Reasoning summary' }));
     expect(screen.queryByText(/no reasoning shared/)).toBeNull();
     expect(screen.getByText(/Last said: Condition on the first toss/)).toBeTruthy();
   });
   it('Hierarchy shows the last run (chair, specialists, label) and Agents shows its A2A thread', async () => {
     await open('council:ask-chair');
-    fireEvent.click(screen.getByRole('tab', { name: 'Activity' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Structure' }));
     const hier = screen.getByTestId('hierarchy');
     expect(within(hier).getByText(/Last council, 4 min ago, Live/)).toBeTruthy();
     expect(within(hier).getByRole('region', { name: 'Delegations out' })).toBeTruthy();
@@ -335,9 +335,9 @@ describe('inspector with a stored run', () => {
     await settle();
     expect(screen.queryByText('Idle')).toBeNull();
     expect(screen.getAllByText('Not part of a council run yet').length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole('tab', { name: 'Activity' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Structure' }));
     expect(screen.getAllByText('Not part of a council run yet').length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole('tab', { name: 'Activity' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Structure' }));
     expect(screen.getByText('Not part of a council run yet.')).toBeTruthy();
   });
 });

@@ -48,9 +48,9 @@ describe('council voices in the inspector', () => {
     fireEvent.click(screen.getByRole('button', { name: /Chill.*Open in the inspector/ }));
     await settle();
     expect(screen.getByRole('tab', { name: 'Conversation', selected: true })).toBeTruthy();
-    fireEvent.click(screen.getByRole('tab', { name: 'Activity' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Reasoning summary' }));
     expect(screen.getByText('Light plan if the quiz went well')).toBeTruthy();
-    fireEvent.click(screen.getByRole('tab', { name: 'Decisions' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Reasoning summary' }));
     expect(screen.getByText('Regression needs a third pass.')).toBeTruthy(); // other members' positions
     fireEvent.click(screen.getByRole('tab', { name: 'Conversation' }));
     expect(screen.getByRole('button', { name: /^Just Chill/ })).toBeTruthy();
