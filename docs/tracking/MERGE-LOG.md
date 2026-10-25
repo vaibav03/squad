@@ -370,3 +370,24 @@ Frames: `docs/design/shots/merge7/` (01-06 happy path, 07/08 status banner attem
 
 - Landing merge commit: `753b212` (parents `a026ecc` = tag `pre-merge-honest-status`, `0f57097` = origin/merge/honest-status). Main had moved by batch 8 (cast art, agent inspector, 149 files) after the branch was verified on `1cf2c30`; the only merge conflict was this log (both sides appended, both kept), and `pnpm typecheck`, `pnpm lint` and `pnpm test` were re-run on the combined tree: all exit 0. The browser run and smoke/demo/doctor were not repeated on the combined tree.
 - Rollback: `git revert -m 1 753b212`.
+
+## Batch 9: fix/village-hover-box into main
+
+Branch `merge/batch9` (worktree `squad-wt/merge9`), landed as a true `--no-ff` merge. Not merged (leads still running): e2e/acceptance, feature/live-discussion, fix/live-verify-findings.
+
+- Merged cleanly; one file, `packages/village/src/inspector/module.ts` (hovering a character shows a small name tag, no rectangle).
+- Compiled Python caches: 7 `*.pyc` files were tracked (and one was modified in the fix worktree, discarded there, never committed). They are now removed from tracking (`git rm --cached`) and `__pycache__/` and `*.pyc` are in `.gitignore`. Python regenerates them; nothing reads them from git.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check`, `pnpm demo:live` | pass |
+| Browser, `?replay=track2` (hub :18899, web :15299) | hovering a character: no rectangle, only the small name tag under the feet (screenshot looked at); clicking opens the inspector (Doing, Thinking, Chat, Agents); 0 page errors |
+
+Frames: `docs/design/shots/merge9/`.
+
+### Landing (batch 9)
+
+- Landing merge commit: `0eb62bcfcb7b3ea20b0a31dc8e3722b38a441261` (parents `148b909fd8f7dd00a7b66ce2683d653caf0119cc` = tag `pre-merge-batch9`, `fa3da9ac624bd1705eff44647039da20b738c7e4` = origin/merge/batch9; diff empty).
+- Rollback: `git revert -m 1 0eb62bcfcb7b3ea20b0a31dc8e3722b38a441261`.
