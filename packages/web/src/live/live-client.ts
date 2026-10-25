@@ -1,3 +1,4 @@
+import { timedFetch } from '../lib/http';
 import {
   LiveActionResultSchema,
   LiveSnapshotSchema,
@@ -46,7 +47,7 @@ async function send(url: string, init: RequestInit): Promise<Response> {
   if (isOffline()) throw new LiveClientError('offline');
   let res: Response;
   try {
-    res = await fetch(url, init);
+    res = await timedFetch(url, init);
   } catch {
     throw new LiveClientError('offline');
   }
@@ -123,7 +124,7 @@ const defaultFactory: EventSourceFactory | undefined =
 async function streamToken(hub: HubCtx): Promise<string | undefined> {
   if (!hub.token || isOffline()) return undefined;
   try {
-    const res = await fetch(`${base(hub)}/v1/squad/stream-token`, {
+    const res = await timedFetch(`${base(hub)}/v1/squad/stream-token`, {
       method: 'POST',
       headers: auth(hub),
     });

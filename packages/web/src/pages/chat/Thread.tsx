@@ -85,8 +85,8 @@ export function ChatBanners({ ctl, className }: { ctl: ChatController; className
 export function pausedCopy(ctl: ChatController): string | null {
   if (ctl.phase === 'expired' || ctl.conn === 'expired')
     return 'Your session ended. Sign in again.';
-  if (!ctl.online) return 'You are offline. Sending is paused until you reconnect.';
-  if (ctl.conn === 'offline') return 'Reconnecting. Sending is paused for a moment.';
+  // offline or reconnecting never blocks Send: the message shows Sending, then Failed with Retry and Delete
+  // (its text is kept), and the connection chip says Offline or Reconnecting
   return null;
 }
 
@@ -339,12 +339,12 @@ function MessageList({
         aria-label={`Messages in ${chat.title}`}
         aria-live={quiet || quietOlder ? 'off' : 'polite'}
         aria-relevant="additions text"
-        aria-busy={bucket.loading || undefined}
+        aria-busy={(!bucket.loaded && !bucket.error) || undefined}
         data-testid="chat-thread"
         data-chat-id={chat.id}
         onScroll={onScroll}
       >
-        {bucket.loading && !bucket.loaded ? (
+        {!bucket.loaded && !bucket.error ? (
           <div className="sqc-skeletons" role="status" aria-label="Loading messages">
             {[70, 45, 82, 38].map((w, i) => (
               <div key={i} className={`sqc-skel${i % 3 === 1 ? ' is-own' : ''}`}>
@@ -356,13 +356,14 @@ function MessageList({
         ) : bucket.error && !bucket.loaded ? (
           <ErrorState
             title="Messages did not load"
-            error="Check your connection and try again."
+            error={bucket.errorText}
+            retryLabel="Retry"
             onRetry={() => void ctl.loadHistory(chat.id)}
           />
         ) : rows.length === 0 ? (
           <EmptyState
             icon="message"
-            title={chat.kind === 'dm' ? 'A private chat with Cubbie' : 'Nothing here yet'}
+            title={chat.kind === 'dm' ? 'A private chat with Cubbie' : 'No messages yet, say hi'}
             body={
               chat.kind === 'dm'
                 ? 'Only you can see this. Ask about your progress, your notes, or a chapter.'

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Avatar } from '../primitives/Avatar';
 import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
@@ -7,7 +7,10 @@ import { Sheet } from '../primitives/Sheet';
 import { StatusDot, type Status } from '../primitives/StatusDot';
 import { Switch } from '../primitives/Switch';
 import { useCalmMode } from '../hooks/useCalmMode';
-import { squadNav } from './routes';
+import { routeTitleFor, squadNav } from './routes';
+import { FailureState } from './ErrorBoundary';
+import { useRenderWatchdog } from './RenderWatchdog';
+import { BuildMarker } from './BuildMarker';
 import { ShellContext } from './shell-context';
 import type { NavItem } from './types';
 import { useTheme, type ThemeChoice } from './useTheme';
@@ -75,7 +78,13 @@ export function AppShell({
   pathname,
   children,
 }: AppShellProps) {
-  const [title, setTitleState] = useState('');
+  // A page may refine the title (for example "Trip: Cabo"); the override only applies to the pathname it was set on,
+  // so a navigation always falls back to the title of the destination route.
+  const [override, setOverride] = useState<{ path: string; title: string } | null>(null);
+  const pathRef = useRef(pathname);
+  pathRef.current = pathname;
+  const routeTitle = routeTitleFor(pathname);
+  const title = (override && override.path === pathname && override.title) || routeTitle;
   const [actions, setActions] = useState<ReactNode>(null);
   const [fullBleedState, setFullBleed] = useState<boolean | null>(null);
   const fullBleed = fullBleedState ?? fullBleedProp;
@@ -84,11 +93,13 @@ export function AppShell({
   const [theme, setTheme] = useTheme();
   const [calm, setCalm] = useCalmMode();
   const mainRef = useRef<HTMLElement>(null);
+  const [pageKey, setPageKey] = useState(0);
+  const dog = useRenderWatchdog(mainRef, `${pathname}:${pageKey}`);
 
-  const setTitle = useCallback((t: string) => {
-    setTitleState(t);
-    if (typeof document !== 'undefined') document.title = t ? `${t} · Squad` : 'Squad';
-  }, []);
+  const setTitle = useCallback((t: string) => setOverride({ path: pathRef.current, title: t }), []);
+  useEffect(() => {
+    if (typeof document !== 'undefined') document.title = title ? `${title} · Squad` : 'Squad';
+  }, [title]);
   const api = useMemo(() => ({ setTitle, setActions, setFullBleed }), [setTitle]);
 
   // route change: move focus to main without scrolling; reset page-provided state
@@ -178,9 +189,23 @@ export function AppShell({
           tabIndex={-1}
           className="sq-shell__main"
           aria-label={title || undefined}
+          data-route={pathname}
         >
-          {children}
+          {dog.stalled ? (
+            <FailureState
+              title={`${title || 'This page'} did not appear`}
+              body="Something went wrong while opening this page."
+              onRetry={() => {
+                setPageKey((n) => n + 1);
+                dog.reset();
+              }}
+            />
+          ) : (
+            <Fragment key={pageKey}>{children}</Fragment>
+          )}
         </main>
+
+        <BuildMarker />
 
         <nav className="sq-shell__tabs" aria-label="Main">
           {primary.map((n) =>

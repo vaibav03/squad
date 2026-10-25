@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import { useEffect, useState } from 'react';
 import { ChatMessageSchema, type ChatMessage } from '@squad/core';
 import { z } from 'zod';
@@ -28,7 +29,7 @@ export function useDmHistory(
     let dead = false;
     const load = async () => {
       try {
-        const r = await fetch(
+        const r = await timedFetch(
           `${hubUrl.replace(/\/+$/, '')}/v1/chat/history?chatId=${encodeURIComponent(`dm:${studentId}`)}&limit=30`,
           { headers: { Authorization: `Bearer ${token}` } },
         );
