@@ -125,7 +125,7 @@ export function CourseDetailView({
           body={
             status === 'offline'
               ? 'It loads when your connection is back.'
-              : 'The hub did not answer. Try again.'
+              : 'Squad did not answer. Try again.'
           }
           onRetry={d.reload}
           retryLabel={status === 'offline' ? 'Check again' : 'Try again'}

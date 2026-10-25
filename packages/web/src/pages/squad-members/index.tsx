@@ -57,7 +57,12 @@ export default function SquadMembersPage() {
 
   if (!activeSquadId)
     return (
-      <Page title="Members" width="narrow">
+      <Page
+        title="Squad and members"
+        lede="The people in your study group."
+        next="Create a squad or join one with a friend's code."
+        width="narrow"
+      >
         <EmptyState
           icon="users"
           title="You are not in a squad yet"
@@ -88,7 +93,13 @@ export default function SquadMembersPage() {
   const owner = squad?.role === 'owner';
 
   return (
-    <Page title={squad?.name ?? 'Members'} eyebrow={squad?.course ?? 'Squad'} width="narrow">
+    <Page
+      title={squad?.name ?? 'Squad and members'}
+      eyebrow={squad?.course ?? 'Squad'}
+      lede="The people in your study group and how to invite more."
+      next="Share the invite link so classmates can join; their agents join the chat with them."
+      width="narrow"
+    >
       {state === 'loading' ? (
         <div aria-busy="true" aria-label="Loading members">
           <Skeleton height={64} />

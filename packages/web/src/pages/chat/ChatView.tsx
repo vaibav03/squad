@@ -104,7 +104,7 @@ export function ChatView({
         <EmptyState
           icon="message"
           title="Chat is offline"
-          body="Connect to a hub to talk with your squad and Cubbie. Sign in with a hub URL to start."
+          body="Sign in to talk with your squad and Cubbie."
         />
       </div>,
     );

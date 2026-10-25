@@ -38,7 +38,10 @@ export interface ChatApi {
   send(body: ChatSendInput): Promise<ChatMessage>;
   upload(file: File): Promise<ChatAttachment>;
   /** A hub-verified context ref for "Ask Cubbie" (`groupView` is what a group chat may show). Rejects when unreadable. */
-  contextRef?(sourceId: string, anchor?: string): Promise<{ ref: ChatContextRef; groupView: ChatContextRef }>;
+  contextRef?(
+    sourceId: string,
+    anchor?: string,
+  ): Promise<{ ref: ChatContextRef; groupView: ChatContextRef }>;
   /** `context` is the answer text: the hub opens the page at the sentence that best matches it. */
   citation(file: string, page: number, context?: string): Promise<ChatCitationExcerpt>;
   /** Absolute URL an <img>/<audio> can load for an attachment. */
@@ -88,8 +91,8 @@ export const CHAT_TIMEOUT_MS = 8_000;
 export function chatLoadReason(e: unknown, online = true): string {
   if (!online) return 'You are offline. Reconnect and try again.';
   if (e instanceof ChatApiError) {
-    if (e.timedOut) return 'The hub took too long to answer (over 8 seconds). Try again.';
-    if (e.status === 0) return 'We could not reach the hub. Check your connection and try again.';
+    if (e.timedOut) return 'Squad took too long to answer (over 8 seconds). Try again.';
+    if (e.status === 0) return 'We could not reach Squad. Check your connection and try again.';
     if (e.status === 401) return 'Your session ended. Sign in again.';
     if (e.code === 'context_unreadable')
       return 'That imported item is not available to attach (removed, or not shared with you).';
@@ -97,7 +100,7 @@ export function chatLoadReason(e: unknown, online = true): string {
     if (e.status === 429) return 'Too many requests. Wait a few seconds, then try again.';
     if (e.status === 409) return 'Create or join a squad to chat with it.';
     if (e.status === 404) return 'This chat was not found. Try again, or pick another squad.';
-    if (e.status >= 500) return 'The hub had a problem answering. Try again in a moment.';
+    if (e.status >= 500) return 'Squad had a problem answering. Try again in a moment.';
   }
   return 'Something went wrong loading chat. Try again.';
 }
@@ -225,12 +228,13 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
           if (!r.ok) throw new ChatApiError(r.status);
           const p = StatusSchema.safeParse(await r.json().catch(() => null));
           if (!p.success) throw new ChatApiError(502, 'bad_response');
-          const { llm, tts, demo, notice, probing, ttsReason, ttsNotice } = p.data;
+          const { llm, tts, demo, notice, reason, probing, ttsReason, ttsNotice } = p.data;
           return {
             llm,
             tts,
             demo,
             ...(notice ? { notice } : {}),
+            ...(reason ? { reason } : {}),
             ...(probing ? { probing } : {}),
             ...(ttsReason ? { ttsReason } : {}),
             ...(ttsNotice ? { ttsNotice } : {}),

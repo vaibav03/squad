@@ -134,7 +134,7 @@ describe('full page: chat list', () => {
     render(
       <Page api={hub({ chats: () => Promise.reject(new TypeError('Failed to fetch')) }).api} />,
     );
-    expect(await screen.findByText(/could not reach the hub/)).toBeTruthy();
+    expect(await screen.findByText(/could not reach Squad/)).toBeTruthy();
   });
 
   it('offline: the reason is the connection, with Retry', async () => {

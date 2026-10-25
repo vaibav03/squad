@@ -81,7 +81,13 @@ export default function SquadCreatePage() {
   if (phase.kind === 'done') {
     const { squad, invite, inviteError } = phase;
     return (
-      <Page title={`${squad.name} is ready`} eyebrow="Squad created" width="narrow">
+      <Page
+        title={`${squad.name} is ready`}
+        eyebrow="Squad created"
+        lede="Your squad exists. Now bring your classmates in."
+        next="Send the invite, then connect your accounts so your agent has something to study."
+        width="narrow"
+      >
         <Banner />
         <Card padding="lg" className="sq-create__card">
           <div className="sq-create__lead">
@@ -138,7 +144,13 @@ export default function SquadCreatePage() {
   }
 
   return (
-    <Page title="Create a squad" eyebrow="New squad" width="narrow">
+    <Page
+      title="Create a squad"
+      eyebrow="New squad"
+      lede="A squad is the small group you study with."
+      next="Name it and you get an invite link to send to classmates."
+      width="narrow"
+    >
       <Banner />
       <Card padding="lg" className="sq-create__card" as="section">
         <form className="sq-create__form" onSubmit={(e) => void submit(e)} noValidate>
