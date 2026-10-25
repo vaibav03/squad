@@ -144,3 +144,22 @@ describe('VillageEvent schema', () => {
     expect(seen).toEqual(new Set(VILLAGE_EVENT_TYPES));
   });
 });
+
+describe('optional thought and work (agent inspector)', () => {
+  it('accepts a short thought and work info on any kind', () => {
+    for (const e of samples) {
+      const r = safeParseVillageEvent({
+        ...e,
+        thought: 'Comparing two sources for the question',
+        work: { tier: 'fast', demo: true, skill: 'study', thinking: true },
+      });
+      expect(r.success).toBe(true);
+    }
+  });
+  it('rejects an over-long thought, an unknown tier and stray work keys', () => {
+    const base = { t: 'agent.state', agent: 'dean', state: 'idle' };
+    expect(safeParseVillageEvent({ ...base, thought: 'x'.repeat(241) }).success).toBe(false);
+    expect(safeParseVillageEvent({ ...base, work: { tier: 'huge' } }).success).toBe(false);
+    expect(safeParseVillageEvent({ ...base, work: { key: 'a' } }).success).toBe(false);
+  });
+});

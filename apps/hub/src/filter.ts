@@ -25,13 +25,15 @@ const filterVillageEventRaw: FilterVillageFn = (event, viewer, ctx) => {
       return event.student === viewer.studentId ? event : null;
     case 'quiz.answer':
     case 'quiz.result': {
-      const { correct, ...rest } = event;
+      // `thought` could hint at correctness or the key: never forwarded on answers or results.
+      const { correct, thought: _thought, ...rest } = event;
+      void _thought;
       const own = event.student === viewer.studentId;
       const allowed =
         correct !== undefined &&
         ctx.directory.settings(viewer.squadId).revealQuizCorrectness &&
         (own || !ctx.directory.isSmall(viewer.squadId));
-      return allowed ? event : rest;
+      return allowed ? { ...rest, correct } : rest;
     }
     case 'call.caption': {
       const owner = ctx.calls.ownerOf(event.callId);
