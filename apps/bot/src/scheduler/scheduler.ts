@@ -330,9 +330,18 @@ export function createScheduler(opts: SchedulerOptions): Scheduler {
   function where(f: JobFilter): { sql: string; args: unknown[] } {
     const parts: string[] = [];
     const args: unknown[] = [];
-    if (f.student) (parts.push('student=?'), args.push(f.student));
-    if (f.kind) (parts.push('kind=?'), args.push(f.kind));
-    if (f.kindPrefix) (parts.push("kind LIKE ? ESCAPE '\\'"), args.push(`${esc(f.kindPrefix)}%`));
+    if (f.student) {
+      parts.push('student=?');
+      args.push(f.student);
+    }
+    if (f.kind) {
+      parts.push('kind=?');
+      args.push(f.kind);
+    }
+    if (f.kindPrefix) {
+      parts.push("kind LIKE ? ESCAPE '\\'");
+      args.push(`${esc(f.kindPrefix)}%`);
+    }
     if (f.status) {
       const st = [f.status].flat();
       parts.push(`status IN (${st.map(() => '?').join(',')})`);

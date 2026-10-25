@@ -24,6 +24,8 @@ import {
 } from '@squad/brain';
 import type { ExplainerDeps, PodcastDeps } from '@squad/media';
 import { buildRegistry } from './registry';
+import { createProactive } from '../scheduler/wire';
+import type { Scheduler } from '../scheduler/scheduler';
 import { chatSkill } from './chat';
 import { createMediaSkills } from './media';
 
@@ -46,6 +48,8 @@ export interface SkillDeps {
   /** Load the committed OpenStax sample course when the store is empty (offline, no LLM). Default true. */
   seedFixtureCourse?: boolean;
   now?: () => number;
+  /** Shared proactive scheduler (main starts it once the bot exists). A private one is created if omitted. */
+  proactive?: Scheduler;
 }
 
 // Static, dependency-free fallback (chat only). The full registry is built by `createSkills`.
@@ -124,7 +128,13 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
         courseId: course,
       })
     : [];
-  return buildRegistry([chatSkill], mediaSkills, brainSkills);
+  const proactive = createProactive({
+    db: d.db,
+    ...(d.now ? { now: d.now } : {}),
+    ...(d.proactive ? { scheduler: d.proactive } : {}),
+    courseId: course,
+  });
+  return buildRegistry([chatSkill], mediaSkills, brainSkills, proactive.skills);
 }
 
 export { buildRegistry, chatSkill };

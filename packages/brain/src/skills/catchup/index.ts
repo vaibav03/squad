@@ -67,17 +67,22 @@ export function resolveChat(db: Db, m: InboundMessage): string | undefined {
 const isOwnReply = (r: Row) =>
   r.from_id === 'bot' && (r.text.includes(HEADER) || r.text.includes(OFFER_MARK));
 
-function lastOwnId(db: Db, chat: string, student: string): number {
-  const r = db
-    .prepare('SELECT MAX(id) AS id FROM messages WHERE chat_id=? AND from_id=?')
-    .get(chat, student) as { id: number | null };
-  return r.id ?? 0;
+/**
+ * Id of the student's last message in the chat. The router stores the request itself before the skill
+ * runs, so when `current` text is given the newest row with exactly that text is not counted.
+ */
+function lastOwnId(db: Db, chat: string, student: string, current?: string): number {
+  const rows = db
+    .prepare('SELECT id, text FROM messages WHERE chat_id=? AND from_id=? ORDER BY id DESC LIMIT 2')
+    .all(chat, student) as { id: number; text: string }[];
+  if (current !== undefined && rows[0] && rows[0].text === current) return rows[1]?.id ?? 0;
+  return rows[0]?.id ?? 0;
 }
 
-export function unreadCount(db: Db, chat: string, student: string): number {
+export function unreadCount(db: Db, chat: string, student: string, current?: string): number {
   const r = db
     .prepare("SELECT COUNT(*) AS n FROM messages WHERE chat_id=? AND from_id!='bot' AND id>?")
-    .get(chat, lastOwnId(db, chat, student)) as { n: number };
+    .get(chat, lastOwnId(db, chat, student, current)) as { n: number };
   return r.n;
 }
 
@@ -105,7 +110,10 @@ function parseWindow(text: string): { hours?: number; count?: number } {
 function gather(db: Db, chat: string, m: InboundMessage, now: number): Line[] {
   const win = parseWindow(m.text);
   let rows: Row[];
-  const base = `SELECT id, from_id, text, ts FROM messages WHERE chat_id=? AND text!=''`;
+  const cur = db
+    .prepare('SELECT MAX(id) AS id FROM messages WHERE chat_id=? AND from_id=? AND text=?')
+    .get(chat, m.from, m.text) as { id: number | null };
+  const base = `SELECT id, from_id, text, ts FROM messages WHERE chat_id=? AND text!=''${cur.id ? ` AND id!=${Number(cur.id)}` : ''}`;
   if (win.count) {
     rows = db
       .prepare(`${base} ORDER BY id DESC LIMIT ?`)
@@ -119,7 +127,7 @@ function gather(db: Db, chat: string, m: InboundMessage, now: number): Line[] {
   } else {
     rows = db
       .prepare(`${base} AND id>? ORDER BY id DESC LIMIT ?`)
-      .all(chat, lastOwnId(db, chat, m.from), MAX_MSGS) as Row[];
+      .all(chat, lastOwnId(db, chat, m.from, m.text), MAX_MSGS) as Row[];
     rows.reverse();
     rows = rows.filter((r) => !isOwnReply(r));
     const fresh = rows.filter((r) => r.from_id !== m.from).length;
@@ -278,7 +286,7 @@ export function createCatchUpSkill(deps: CatchUpDeps = {}): Skill {
     if (!chat) return undefined;
     const last = readMemory(db, 'student', m.from, 'catchup.offered');
     if (typeof last === 'number' && clock(m) - last < OFFER_COOLDOWN_MS) return undefined;
-    const n = unreadCount(db, chat, m.from);
+    const n = unreadCount(db, chat, m.from, m.text);
     return n >= OFFER_UNREAD ? n : undefined;
   }
 
