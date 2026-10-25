@@ -6,6 +6,7 @@ import { put } from '../../assets';
 import { easeOut, progress } from '../../curves';
 import { frameAt, lanternFrame, triangle, visibleBubbles } from '../../model/base';
 import { isChair } from '../../council-hall/state';
+import { bubbleChars } from '../../art/bubble';
 import {
   EXPERT,
   dimmed,
@@ -171,19 +172,22 @@ export function paintInterior(s: DebateStageState, o: PaintOpts): Raster {
   }
 
   const headTop = FEET_Y - 30;
+  const debaterCount = bubbles.filter(
+    (v) => v.b.who !== EXPERT && !isChair(v.b.who) && v.b.style !== 'announce',
+  ).length;
   for (const v of bubbles) {
     const w = v.b.who;
     const drop = enterDrop(v, o.calm);
     if (v.b.style === 'announce') continue;
     if (w === EXPERT) {
-      placeBubble(r, v.b.text, v.b.style, 112, 98 + drop, v.alpha, { maxChars: 16, maxLines: 4 });
+      placeBubble(r, v.b.text, v.b.style, 112, 98 + drop, v.alpha, { maxChars: 30, maxLines: 3 });
     } else if (isChair(w)) {
-      placeBubble(r, v.b.text, v.b.style, 112, 98 + drop, v.alpha, { maxChars: 16, maxLines: 3 });
+      placeBubble(r, v.b.text, v.b.style, 112, 98 + drop, v.alpha, { maxChars: 30, maxLines: 3 });
     } else {
       const side = lecternOf(s.debaters, w);
       placeBubble(r, v.b.text, v.b.style, LECTERN_X[side]!, headTop + drop, v.alpha, {
-        maxChars: 12,
-        maxLines: 4,
+        maxChars: bubbleChars(debaterCount, 24, 30),
+        maxLines: 3,
       });
     }
   }
@@ -199,7 +203,7 @@ function paintVerdict(r: Raster, s: DebateStageState, o: PaintOpts): void {
   const enter = o.calm ? 1 : easeOut(progress(o.t, v.since, 240));
   const exit = age > 8000 ? 1 - (age - 8000) / 120 : 1;
   placeBubble(r, v.text, 'announce', 112, 98, Math.max(0, Math.min(enter, exit)), {
-    maxChars: 16,
+    maxChars: 30,
     maxLines: 4,
   });
 }

@@ -14,7 +14,7 @@ import { DIM, type PaletteName } from '../pixel/palette';
 import { drawText, textWidth } from '../pixel/font';
 import { put, type AssetInfo, type AssetLib } from '../assets';
 import { initBase, visibleBubbles, type BaseState, reduceBase } from '../model/base';
-import { clip, eventAgent } from '../model/events';
+import { clip, CAPTION_CHARS, eventAgent } from '../model/events';
 import { routeAgent } from '../routing';
 import { bubble } from './bubble';
 
@@ -178,7 +178,7 @@ function commonMap(spec: LbSpec, e: VillageEvent): SceneCommand[] | undefined {
         { c: 'portrait', on: true },
       ];
     case 'call.caption': {
-      const text = clip((e.text ?? '').trim());
+      const text = clip((e.text ?? '').trim(), CAPTION_CHARS);
       const cmds: SceneCommand[] = [{ c: 'portrait', on: true }];
       if (text) cmds.push({ c: 'bubble', bubble: { who: EXPERT, text, style: 'caption' } });
       return cmds;
@@ -416,7 +416,7 @@ export function paintLbBubbles(
   o: PaintOpts,
   tipX: number,
   tipY: number,
-  maxChars = 24,
+  maxChars = 30,
   maxLines = 3,
 ): void {
   for (const v of visibleBubbles(s, o)) {

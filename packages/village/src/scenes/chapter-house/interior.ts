@@ -2,7 +2,8 @@ import { Raster } from '../pixel/raster';
 import { drawText, textWidth } from '../pixel/font';
 import type { PaintOpts } from '../contract';
 import { put } from '../assets';
-import { bubble } from '../art/bubble';
+import { bubble, wrap } from '../art/bubble';
+import { fontSafe } from '../art/planSheet';
 import { frameAt, glowNow, triangle, visibleBubbles, type BaseState } from '../model/base';
 import { dimmed, swapped } from './exterior';
 import { paletteNameOf, type PaletteName } from '../pixel/palette';
@@ -73,10 +74,31 @@ function tint(r: Raster, a: number): void {
   for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) r.px(x, y, 'sky-deep', a);
 }
 
+/** The public question prompt, wrapped on the board (never the key); title above, mark below. */
+function questionOnBoard(r: Raster, o: PaintOpts, s: BaseState): void {
+  const marked = s.chalk.mark !== 'none';
+  const title = fontSafe(s.chalk.text || s.title).slice(0, 16);
+  drawText(r, 80, 22, title, 'glow');
+  r.hline(80, 28, 64, 'cloud-lo');
+  const max = marked ? 3 : 5;
+  let lines = wrap(fontSafe(s.chalk.question ?? ''), 16);
+  if (lines.length > max) {
+    lines = lines.slice(0, max);
+    lines[max - 1] = `${(lines[max - 1] ?? '').slice(0, 14)}..`;
+  }
+  lines.forEach((ln, i) => drawText(r, 80, 31 + i * 6, ln, 'wall-lit'));
+  if (s.chalk.mark === 'tick') put(r, o.assets.image('prop.chalk-tick'), 112, 58);
+  else if (s.chalk.mark === 'cross') put(r, o.assets.image('prop.chalk-cross'), 112, 58);
+}
+
 function slate(r: Raster, o: PaintOpts, s: BaseState): void {
   // the composed board is 72x45 at x76..147,y19..63: wipe the sample chalk, write ours
   r.rect(76, 19, 72, 45, 'leaf-dark');
   r.dither(76, 19, 72, 3, 'leaf-lit', 0);
+  if (s.chalk.question) {
+    questionOnBoard(r, o, s);
+    return;
+  }
   const label = splitLabel(s.chalk.text || s.title);
   label.forEach((ln, i) => {
     const t = ln.slice(0, 8);
@@ -163,7 +185,7 @@ export function paintInterior(s: BaseState, o: PaintOpts): Raster {
   }
 
   for (const bv of visibleBubbles(s, o)) {
-    const art = bubble(bv.b.text, bv.b.style, 22, 3);
+    const art = bubble(bv.b.text, bv.b.style, 30, 3);
     const bx = Math.max(4, Math.min(INT_W - 4 - art.r.w, Math.round(at.x - art.tail.x)));
     const by = Math.max(4, at.y - 31 - art.tail.y);
     r.blit(art.r, bx, by, { alpha: bv.alpha });

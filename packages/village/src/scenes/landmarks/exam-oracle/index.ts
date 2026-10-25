@@ -14,7 +14,14 @@ export type ExamOracleState = LbState;
  */
 export function mapOracleQuestion(e: VillageEvent): SceneCommand[] {
   if (e.t !== 'quiz.question') return [];
-  return [{ c: 'chalk', text: `${chapterLabel(e.chapter).toLowerCase()} next?`, mark: 'none' }];
+  return [
+    {
+      c: 'chalk',
+      text: `${chapterLabel(e.chapter).toLowerCase()} next?`,
+      mark: 'none',
+      question: (e.text ?? '').trim(),
+    },
+  ];
 }
 
 export const examOracle = defineLb<ExamOracleState>({

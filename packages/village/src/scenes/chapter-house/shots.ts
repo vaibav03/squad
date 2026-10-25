@@ -156,6 +156,22 @@ export function shotBundles(
       sample: [300, 2000],
     },
     {
+      name: 'interior-question-text',
+      view: 'interior',
+      instance: 'ch5',
+      title: 'Chapter 5',
+      script: [
+        {
+          at: 0,
+          event: {
+            ...quiz('quiz.question', 'ch5'),
+            text: 'A stack holds three items. You push two and pop one. How many remain, and which is on top?',
+          } as VillageEvent,
+        },
+      ],
+      sample: [600, 2000],
+    },
+    {
       name: 'interior-chalk-cross',
       view: 'interior',
       instance: 'ch5',

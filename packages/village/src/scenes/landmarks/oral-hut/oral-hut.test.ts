@@ -46,7 +46,7 @@ describe('oral hut mapEvent', () => {
     const e: VillageEvent = { t: 'agent.state', agent: 'expert:examiner', state: 'in_call' };
     expect(def.handles(e, s, ctx)).toBe(true);
   });
-  it('call.start / caption / end: portrait, clipped 60 char caption, then back to idle', () => {
+  it('call.start / caption / end: portrait, clipped 90 char caption, then back to idle', () => {
     const s = { ...def.init(), access: 'open' as const };
     expect(def.mapEvent({ t: 'call.start', agent: A, callId: 'c' }, s, ctx)).toEqual([
       { c: 'setOccupant', state: 'in_call' },
@@ -58,7 +58,7 @@ describe('oral hut mapEvent', () => {
     const cap = def.mapEvent({ t: 'call.caption', agent: A, callId: 'c', text: long }, s, ctx);
     expect(cap[0]).toEqual({ c: 'portrait', on: true });
     const b = cap[1] as { c: 'bubble'; bubble: { text: string; style: string } };
-    expect(b.bubble.text.length).toBeLessThanOrEqual(60);
+    expect(b.bubble.text.length).toBeLessThanOrEqual(90);
     expect(b.bubble.style).toBe('caption');
     expect(def.mapEvent({ t: 'call.end', agent: A, callId: 'c' }, s, ctx)).toEqual([
       { c: 'setOccupant', state: 'idle' },

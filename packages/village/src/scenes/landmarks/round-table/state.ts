@@ -65,6 +65,7 @@ export function mapPlannerCouncil(
         text: (e.text ?? '').trim() || 'Plan agreed',
         ...(e.dissenter ? { dissenter: e.dissenter } : {}),
       });
+      if (e.outcome) cmds.push({ c: 'outcome', outcome: e.outcome });
       cmds.push({ c: 'lantern', mode: dissenting ? 'flicker' : 'steady' });
       break;
     }

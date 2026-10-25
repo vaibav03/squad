@@ -183,6 +183,6 @@ export function paintInterior(s: LbState, o: PaintOpts): Raster {
   r.rect(0, 40, INT_W, FLOOR_Y - 40, 'ember', 0.05);
   if (s.ring) doorRing(r, a, 112, FLOOR_Y + 8, o);
   if (s.portrait) callPortrait(r, a, 'ta', 8, 8, o);
-  paintLbBubbles(r, s, o, 52, FLOOR_Y - 36, 18, 4);
+  paintLbBubbles(r, s, o, 52, FLOOR_Y - 36, 30, 3);
   return r;
 }
