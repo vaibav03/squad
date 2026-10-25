@@ -16,6 +16,7 @@ const MAX_FRAME = 256 * 1024;
 const ClientMsg = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('user.text'), text: z.string().min(1).max(2000) }),
   z.strictObject({ type: z.literal('mute'), muted: z.boolean() }),
+  z.strictObject({ type: z.literal('audio.end') }),
   z.strictObject({ type: z.literal('end') }),
 ]);
 type EndReason = 'client' | 'agent' | 'timeout' | 'server';
@@ -114,6 +115,16 @@ export function attachCallWs(
         return void send({ type: 'error', code: 'invalid_message' });
       }
       if (msg.type === 'end') return void end('client');
+      if (msg.type === 'audio.end' || (msg.type === 'mute' && msg.muted)) {
+        // end of a mic turn: transcribe what was buffered and answer; no-op for sessions without audio support
+        const turn = session.replyToAudio?.bind(session);
+        if (turn)
+          queue = queue
+            .then(() => speak(turn()))
+            .catch(() => void send({ type: 'error', code: 'agent_failed' }));
+        else if (msg.type === 'audio.end') send({ type: 'error', code: 'audio_unsupported' });
+        return;
+      }
       if (msg.type === 'user.text') {
         const text = msg.text;
         send({ type: 'caption', seq: ++seq, speaker: 'you', text });

@@ -49,6 +49,7 @@ export function createStubCall(): CallPort {
       const kind = parseAgentId(agent).kind;
       if (!['expert', 'dean', 'council'].includes(kind)) return null;
       let closed = false;
+      let micBytes = 0;
       return {
         greeting: () =>
           seq([
@@ -60,6 +61,23 @@ export function createStubCall(): CallPort {
         reply(text) {
           if (closed) return seq([]);
           return seq((REPLIES[hash(text) % REPLIES.length] ?? []).map((t) => ({ ...t })));
+        },
+        audio(chunk) {
+          micBytes += chunk.length; // buffered, never stored
+        },
+        replyToAudio() {
+          const n = micBytes;
+          micBytes = 0;
+          return seq(
+            n === 0 || closed
+              ? []
+              : [
+                  {
+                    text: 'I heard you. Could you say that once more as text?',
+                    cite: cite(1, 'chapter overview'),
+                  },
+                ],
+          );
         },
         async close() {
           closed = true;

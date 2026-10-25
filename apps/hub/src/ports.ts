@@ -32,6 +32,8 @@ export interface CallSession {
   greeting(): AsyncIterable<CallTurn>;
   reply(userText: string): AsyncIterable<CallTurn>;
   audio?(chunk: Uint8Array): void;
+  /** End of a mic turn (`audio.end` frame or `mute:true`): transcribe the buffered audio and answer. */
+  replyToAudio?(): AsyncIterable<CallTurn>;
   close(): Promise<void>;
 }
 export interface CallPort {

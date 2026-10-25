@@ -1,11 +1,11 @@
-import type { VillageEvent } from '@squad/core';
+import { VillageEventSchema, type VillageEvent } from '@squad/core';
 import type { FilterCtx, FilterFn, FilterVillageFn, LoggedEvent, Viewer, WireEvent } from './types';
 
 /**
  * The one per-viewer filter (docs/hub-api.md section 6). Default deny: anything not explicitly handled
  * is dropped. Events are rebuilt from allowed fields so an unexpected extra key can never pass through.
  */
-export const filterVillageEvent: FilterVillageFn = (event, viewer, ctx) => {
+const filterVillageEventRaw: FilterVillageFn = (event, viewer, ctx) => {
   switch (event.t) {
     case 'ledger.entry': {
       const out: VillageEvent = {
@@ -51,6 +51,14 @@ export const filterVillageEvent: FilterVillageFn = (event, viewer, ctx) => {
     default:
       return null;
   }
+};
+
+/** Defense in depth: whatever the rules above produced must still be a valid strict VillageEvent. */
+export const filterVillageEvent: FilterVillageFn = (event, viewer, ctx) => {
+  const out = filterVillageEventRaw(event, viewer, ctx);
+  if (!out) return null;
+  const check = VillageEventSchema.safeParse(out);
+  return check.success ? check.data : null;
 };
 
 function filterX(e: LoggedEvent, viewer: Viewer, ctx: FilterCtx): unknown | null {
