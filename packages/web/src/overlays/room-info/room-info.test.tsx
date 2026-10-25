@@ -225,18 +225,34 @@ describe('RoomLayer', () => {
     expect(onRun).toHaveBeenCalledWith('plan my fall term');
   });
 
+  it('shows no transcript strip in the open village or in any room but the hall', async () => {
+    const s = createRoomSession();
+    mount(s);
+    expect(screen.queryByRole('log')).toBeNull();
+    expect(screen.queryByText('What they are saying')).toBeNull();
+    for (const slot of ['round-table', 'feynman-porch', 'debate-stage']) {
+      await act(async () => s.enter(slot));
+      expect(screen.queryByRole('log')).toBeNull();
+      expect(screen.queryByText('What they are saying')).toBeNull();
+    }
+    await act(async () => s.enter('council-hall'));
+    expect(screen.getByRole('log', { name: 'What they are saying' })).toBeTruthy();
+    await act(async () => s.leave());
+    expect(screen.queryByRole('log')).toBeNull();
+  });
+
   it('streams the transcript and shows the outcome card with Hide / Show plan', async () => {
     const s = createRoomSession();
     mount(s);
-    await act(async () => s.enter('round-table'));
+    await act(async () => s.enter('council-hall'));
     await act(async () => {
       s.record(
-        'round-table',
+        'council-hall',
         { t: 'council.opinion', councilId: 'c', member: 'chill', text: 'Keep it light.' },
         1,
       );
       s.record(
-        'round-table',
+        'council-hall',
         {
           t: 'council.verdict',
           councilId: 'c',
@@ -264,7 +280,7 @@ describe('RoomLayer', () => {
       (globalThis as Record<string, unknown>)['__squadRoomSession'] = s;
       globalThis.dispatchEvent(new Event('squad:room-session'));
     });
-    await act(async () => s.enter('round-table'));
+    await act(async () => s.enter('council-hall'));
     expect(screen.getByRole('log')).toBeTruthy();
     (globalThis as Record<string, unknown>)['__squadRoomSession'] = undefined;
   });

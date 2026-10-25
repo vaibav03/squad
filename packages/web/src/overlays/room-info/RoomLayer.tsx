@@ -43,6 +43,12 @@ function markSeen(slot: string): void {
   }
 }
 
+/** The transcript strip belongs to the one meeting place (the Council Hall). Never in the open village or other rooms. */
+export const TRANSCRIPT_SLOTS: readonly string[] = ['council-hall'];
+export function showsTranscript(slot: string | null | undefined): boolean {
+  return !!slot && TRANSCRIPT_SLOTS.includes(slot);
+}
+
 export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: RoomLayerProps) {
   const late = useSyncExternalStore(subscribeLate, getRoomSession, () => undefined);
   const session = given ?? late;
@@ -147,13 +153,15 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
             )}
           </div>
         ) : null}
-        <RoomTranscript
-          entries={entries}
-          outcome={outcome}
-          info={info}
-          onRun={run}
-          compact={!!outcome && planShown}
-        />
+        {showsTranscript(slot) ? (
+          <RoomTranscript
+            entries={entries}
+            outcome={outcome}
+            info={info}
+            onRun={run}
+            compact={!!outcome && planShown}
+          />
+        ) : null}
       </div>
 
       {info ? (
