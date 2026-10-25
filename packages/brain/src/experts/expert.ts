@@ -3,6 +3,7 @@ import type { Llm } from '@squad/core';
 import { renderAnswer, verifyClaims } from '../citations';
 import type { CourseStore } from '../ingest/types';
 import { BrainUnavailableError } from './errors';
+import { loadPrompt } from './prompts';
 import { expertAgent, withAgentState } from './emit';
 import {
   NOT_IN_MATERIALS,
@@ -14,6 +15,7 @@ import {
 } from './types';
 
 export const MAX_CLAIMS = 4;
+const TASK = loadPrompt(import.meta.url, 'expert.task.md');
 
 export const ExpertOutputSchema = z.object({
   answer: z.string().default(''),
@@ -50,7 +52,7 @@ async function askModel(
         model: 'main',
         system,
         cache,
-        messages: `Student question: ${question}\n\nAnswer from the chapter text only, as JSON.`,
+        messages: `${TASK}\n\nStudent question: ${question}`,
         schema: ExpertOutputSchema,
         temperature: 0,
       });
