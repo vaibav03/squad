@@ -102,7 +102,10 @@ export function createImessageSync(o: SyncOptions): ImessageSync {
   const degraded = () => gateway.health().state === 'degraded';
 
   function refresh(messageId: string) {
-    const d = aggregateDelivery(store.outOfMessage(messageId), { degraded: degraded(), now: now() });
+    const d = aggregateDelivery(store.outOfMessage(messageId), {
+      degraded: degraded(),
+      now: now(),
+    });
     if (d) deps.chat.annotate(messageId, { deliveryState: d });
   }
 
@@ -208,14 +211,20 @@ export function createImessageSync(o: SyncOptions): ImessageSync {
       refresh(messageId);
     },
     drain() {
-      lock = lock.then(drainOnce).catch((e: Error) => log.error('imessage: drain failed', { err: e.name }));
+      lock = lock
+        .then(drainOnce)
+        .catch((e: Error) => log.error('imessage: drain failed', { err: e.name }));
       return lock as Promise<void>;
     },
     retry(messageId) {
       let n = 0;
       for (const r of store.outOfMessage(messageId))
         if (r.state === 'failed') {
-          store.patchOut(r.id, { state: 'queued', reason: null, attempts: 0, nextAt: now() }, now());
+          store.patchOut(
+            r.id,
+            { state: 'queued', reason: null, attempts: 0, nextAt: now() },
+            now(),
+          );
           n++;
         }
       if (n) refresh(messageId);
@@ -237,7 +246,12 @@ export function createImessageSync(o: SyncOptions): ImessageSync {
       }
       for (const d of o.dmChats()) {
         const cur = store.cursor(d.threadKey);
-        if (cur) chats.push({ key: d.threadKey, guid: d.chatGuid, since: cur.lastTs - BACKFILL_OVERLAP_MS });
+        if (cur)
+          chats.push({
+            key: d.threadKey,
+            guid: d.chatGuid,
+            since: cur.lastTs - BACKFILL_OVERLAP_MS,
+          });
       }
       let messages = 0;
       for (const c of chats) messages += await gateway.backfill(c.guid, c.since);
@@ -261,7 +275,10 @@ export function createImessageSync(o: SyncOptions): ImessageSync {
       const attachments: ChatAttachment[] = [];
       const skipped: SkippedAttachment[] = [];
       for (const a of atts) {
-        const base = { mime: a.mime, ...(a.name ? { name: a.name.replace(/[^\w .-]/g, '_').slice(0, 80) } : {}) };
+        const base = {
+          mime: a.mime,
+          ...(a.name ? { name: a.name.replace(/[^\w .-]/g, '_').slice(0, 80) } : {}),
+        };
         if (attachments.length >= ATTACH_MAX_PER_MESSAGE) {
           skipped.push({ ...base, reason: 'too_large' });
           continue;

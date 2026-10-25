@@ -52,17 +52,25 @@ export function sniffAttachment(b: Uint8Array): string | undefined {
   if (at(b, 0, 0x49, 0x44, 0x33) || at(b, 0, 0xff, 0xfb)) return 'audio/mpeg';
   return undefined;
 }
-const DECLARED_OK = /^(image\/(png|jpeg|webp|gif)|application\/pdf|audio\/(mp4|x-m4a|mpeg|wav|x-wav))$/;
+const DECLARED_OK =
+  /^(image\/(png|jpeg|webp|gif)|application\/pdf|audio\/(mp4|x-m4a|mpeg|wav|x-wav))$/;
 
 /** Type and size caps. `declared` is what Apple says; the bytes decide. */
-export function classifyAttachment(declared: string, size: number, head: Uint8Array): AttachVerdict {
+export function classifyAttachment(
+  declared: string,
+  size: number,
+  head: Uint8Array,
+): AttachVerdict {
   if (size > ATTACH_MAX_BYTES) return { ok: false, reason: 'too_large' };
   if (!DECLARED_OK.test(declared.toLowerCase())) return { ok: false, reason: 'unsupported_type' };
   const real = sniffAttachment(head);
   if (!real) return { ok: false, reason: 'unsupported_type' };
   // a declared image must be an image, etc.: no smuggling by relabelling
   const fam = (m: string) => m.split('/')[0];
-  if (fam(real) !== fam(declared.toLowerCase()) && !(real === 'audio/mp4' && declared.startsWith('audio/')))
+  if (
+    fam(real) !== fam(declared.toLowerCase()) &&
+    !(real === 'audio/mp4' && declared.startsWith('audio/'))
+  )
     return { ok: false, reason: 'unsupported_type' };
   return { ok: true, mime: real };
 }

@@ -58,7 +58,10 @@ export const ChatSyncFieldsSchema = z.strictObject({
 export type ChatSyncFields = z.infer<typeof ChatSyncFieldsSchema>;
 
 /** The shared thread order: message time, then hub sequence (arrival) as the tie-breaker. */
-export function compareThread(a: { ts: number; seq: number }, b: { ts: number; seq: number }): number {
+export function compareThread(
+  a: { ts: number; seq: number },
+  b: { ts: number; seq: number },
+): number {
   return a.ts - b.ts || a.seq - b.seq;
 }
 export function orderThread<T extends { ts: number; seq: number }>(messages: readonly T[]): T[] {

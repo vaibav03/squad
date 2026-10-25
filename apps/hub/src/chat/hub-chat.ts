@@ -53,7 +53,10 @@ export type ChatWire =
   | { event: 'chat.typing'; data: ChatTyping }
   | { event: 'chat.resync'; data: { seq: number } }
   /** Additive (iMessage sync): a message's delivery state or other sync fields changed. */
-  | { event: 'chat.sync'; data: { chatId: string; messageId: string; patch: Partial<ChatSyncFields> } };
+  | {
+      event: 'chat.sync';
+      data: { chatId: string; messageId: string; patch: Partial<ChatSyncFields> };
+    };
 
 export interface ChatSub {
   readonly events: AsyncIterable<ChatWire>;
@@ -364,7 +367,8 @@ export function createChatHub(
     },
     annotate(id, patch) {
       const m = store.annotate(id, patch);
-      if (m) fan(m.chatId, { event: 'chat.sync', data: { chatId: m.chatId, messageId: m.id, patch } });
+      if (m)
+        fan(m.chatId, { event: 'chat.sync', data: { chatId: m.chatId, messageId: m.id, patch } });
       return m;
     },
     postBot(p) {

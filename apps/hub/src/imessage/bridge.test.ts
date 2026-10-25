@@ -383,21 +383,32 @@ describe('group chat goes through the hub chat', () => {
       text: '@cubbie what is a standard deviation?',
     });
     // a message that @mentions an agent is mirrored as "<name> (via Squad): ..." and then the bot's reply follows
-    await waitFor(() => sentTo(G1).some((t) => /^\u{1F43B} Cubbie: /u.test(t)));
+    await waitFor(() =>
+      sentTo(G1)
+        .slice(before)
+        .some((t) => /^\u{1F43B} Cubbie: /u.test(t)),
+    );
     expect(sentTo(G1)[before]).toBe('Ben (via Squad): @cubbie what is a standard deviation?');
   });
 
   it('a linked person who is not in the squad, and an unlinked number, are not routed to the bot', async () => {
     await bind();
+    const sentBefore = sentTo(G1).length; // the bind summary is itself a Cubbie message
     await c.sdk.group(G1, CY, 'I am not in the squad');
     await c.sdk.group(G1, ZED, 'neither am I');
     await settle();
     // shown as read-only context under a masked label, never routed to the bot and never with the raw number
     const ctx = history(`group:${c.squadId}`);
     expect(ctx.map((m) => m.text)).toEqual(['I am not in the squad', 'neither am I']);
-    expect(ctx.every((m) => m.sender.kind === 'system' && m.senderLabel?.startsWith('•'))).toBe(true);
+    expect(ctx.every((m) => m.sender.kind === 'system' && m.senderLabel?.startsWith('•'))).toBe(
+      true,
+    );
     expect(JSON.stringify(ctx)).not.toContain('5550000099');
-    expect(sentTo(G1).filter((t) => t.includes('Cubbie'))).toHaveLength(0);
+    expect(
+      sentTo(G1)
+        .slice(sentBefore)
+        .filter((t) => t.includes('Cubbie')),
+    ).toHaveLength(0);
     await c.sdk.group(G1, ZED, '@cubbie hello?');
     await c.sdk.group(G1, ZED, '@cubbie hello??');
     await c.im.bridge.flush();

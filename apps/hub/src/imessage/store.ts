@@ -245,19 +245,16 @@ export function createImessageStore(db: Db, now: () => number): ImessageStore {
       return took.changes > 0 ? 'new' : 'duplicate';
     },
     finishInbound(extId, status, messageId) {
-      db.prepare('UPDATE imsg_xref SET status=?, message_id=COALESCE(?,message_id) WHERE ext_id=?').run(
-        status,
-        messageId ?? null,
-        extId,
-      );
+      db.prepare(
+        'UPDATE imsg_xref SET status=?, message_id=COALESCE(?,message_id) WHERE ext_id=?',
+      ).run(status, messageId ?? null, extId);
     },
     releaseInbound(extId) {
       db.prepare(`DELETE FROM imsg_xref WHERE ext_id=? AND status='pending'`).run(extId);
     },
     inboundDone(extId) {
       const r = db.prepare('SELECT status FROM imsg_xref WHERE ext_id=?').get(extId) as
-        | { status: string }
-        | undefined;
+        { status: string } | undefined;
       return !!r && r.status !== 'pending';
     },
     xrefByExt(extId) {
@@ -266,10 +263,9 @@ export function createImessageStore(db: Db, now: () => number): ImessageStore {
     },
     xrefsOfMessage(messageId) {
       return (
-        db.prepare('SELECT * FROM imsg_xref WHERE message_id=? ORDER BY origin_ts').all(messageId) as Record<
-          string,
-          unknown
-        >[]
+        db
+          .prepare('SELECT * FROM imsg_xref WHERE message_id=? ORDER BY origin_ts')
+          .all(messageId) as Record<string, unknown>[]
       ).map(toXref);
     },
     recordOutXref(extId, threadKey, messageId, originTs) {
@@ -279,9 +275,9 @@ export function createImessageStore(db: Db, now: () => number): ImessageStore {
       ).run(extId, 'out', threadKey, messageId, originTs, now());
     },
     cursor(k) {
-      const r = db.prepare('SELECT last_ts, last_guid FROM imsg_cursor WHERE thread_key=?').get(k) as
-        | { last_ts: number; last_guid: string | null }
-        | undefined;
+      const r = db
+        .prepare('SELECT last_ts, last_guid FROM imsg_cursor WHERE thread_key=?')
+        .get(k) as { last_ts: number; last_guid: string | null } | undefined;
       return r ? { lastTs: r.last_ts, lastGuid: r.last_guid } : undefined;
     },
     advanceCursor(k, ts, guid) {
@@ -325,10 +321,9 @@ export function createImessageStore(db: Db, now: () => number): ImessageStore {
     },
     outOfMessage(messageId) {
       return (
-        db.prepare('SELECT * FROM imsg_out WHERE message_id=? ORDER BY id').all(messageId) as Record<
-          string,
-          unknown
-        >[]
+        db
+          .prepare('SELECT * FROM imsg_out WHERE message_id=? ORDER BY id')
+          .all(messageId) as Record<string, unknown>[]
       ).map(toOut);
     },
     outByExt(extId) {
@@ -371,9 +366,9 @@ export function createImessageStore(db: Db, now: () => number): ImessageStore {
       return { queued: q('queued'), failed: q('failed') };
     },
     syncSettings(squadId) {
-      const r = db.prepare('SELECT mirror, show_unlinked FROM imsg_squad_settings WHERE squad_id=?').get(
-        squadId,
-      ) as { mirror: string; show_unlinked: number } | undefined;
+      const r = db
+        .prepare('SELECT mirror, show_unlinked FROM imsg_squad_settings WHERE squad_id=?')
+        .get(squadId) as { mirror: string; show_unlinked: number } | undefined;
       return {
         mirror: (MIRROR_MODES as readonly string[]).includes(r?.mirror ?? '')
           ? (r!.mirror as MirrorMode)

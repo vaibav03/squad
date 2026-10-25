@@ -85,7 +85,9 @@ export interface IMessageGateway {
   health(): GatewayHealth;
   capabilities(): Promise<GatewayCapabilities>;
   /** Delivery receipts from transports that have them (matched by the guid `sendOne` returned). */
-  onReceipt(fn: (r: { guid: string; state: 'delivered' | 'failed'; reason?: string }) => void): void;
+  onReceipt(
+    fn: (r: { guid: string; state: 'delivered' | 'failed'; reason?: string }) => void,
+  ): void;
   /**
    * Fetch what a chat received since `since` and feed it to the inbound handler, flagged `late`. Safety, dedupe and
    * allowlists apply. Returns how many messages were handed on (0 when the transport cannot backfill).
