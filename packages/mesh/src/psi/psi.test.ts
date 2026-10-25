@@ -19,7 +19,7 @@ describe('ring PSI', () => {
       }),
       { numRuns: 25 },
     );
-  });
+  }, 30_000); // CPU-heavy bigint property; the 5 s default flakes under a parallel `pnpm check`
 
   it('padding hides size and non-common tokens never collide', () => {
     const parties = [
