@@ -148,6 +148,29 @@ registers it, and the hub's per-viewer A2A filter keeps the quiz-key envelopes f
 `apps/hub/src/routes/council-a2a.test.ts`). Without a student the run stays unowned and its envelopes are still dropped (default deny),
 legacy events flow either way. A real quiz-key run was not made (budget: the quiz generation needs a larger real flow).
 
+## Viewer data ports and action items (council follow-up)
+
+* **Viewer ports in production.** `apps/hub/src/council/viewer-data.ts` (`createCouncilViewerData`) builds the
+  `AskViewerData` the council runs use. It is wired where the hub builds its councils: `adapters/real.ts` (the shared
+  `CouncilService`, so Ask, `@council` and the Council Hall), `chat/engine.ts` (`createSkills`, so the Round Table skill) and
+  the demo service in `routes/council.ts`.
+  * `calendar_summary(range)`: busy and free hours (waking hours 8am to 10pm), busiest and freest day, from the asker's connected
+    Canvas/Google calendars through `deriveTripConstraints` (start/end only, titles never read). A squad average line appears
+    only in a squad (non-DM) run and only when 3+ squadmates have connected calendars; it is one number, never per person.
+    No calendar connected: the tool says so. The asker's own event and assignment titles are handed to the runtime as
+    `privateNeedles`, so a model repeating one is scrubbed to `[private]`.
+  * `mastery_summary()`: the asker's own words and pips per chapter ("Chapter 1: Getting there (3 of 5 pips)"); a squad average
+    word per chapter only with 3+ members in a squad run. Other students' rows are never listed.
+  * Tools are offered only when the port exists: no mastery store (the demo hub) means no `mastery_summary`. Tests:
+    `apps/hub/src/council/viewer-data.test.ts` (sentinels `$180`/`therapy`, isolation, the 3-member rule, DM runs, roster offers).
+* **Action items for Round Table and Debate** (same envelope convention as Ask, `docs/a2a.md`; derived by code from the checked plan or
+  the verified citations, no model call): Round Table `Take MAT 111 and CSL 110 in Fall`, an advisor check on a dissent, and
+  `Confirm the plan with your real advisor before registering`; Debate `Review ch6 p.3 before the exam`, a line on why the other side
+  lost, a TA question on room dissent, a notes check when ungrounded. At most 4, shared helper `councils/action-items.ts`.
+  Because these runs are not `CouncilService` runs, each item is also recorded by run id (`core/src/council-registry.ts`,
+  `recordCouncilAction`) and `POST /v1/council/:id/actions/plan|chat` resolves them from that record with the same scoping (private
+  run = owner only, squad run = same squad, unknown item = 404, the client sends only the id). The Round Table now also ends at stage `done`.
+
 ## Failure matrix (what the tests prove)
 
 All FakeTransport/FakeLive, no network: `agents/*.test.ts`, `councils/ask-v2.test.ts`, `skills/courseplan/roundtable-agents.test.ts`,
@@ -175,11 +198,9 @@ says the model is unusable at start). Single-agent judges' fallbacks (oracle/rub
 ## Gaps
 
 * The Council Hall, Round Table panels, chat card and the board header are wired to `CouncilResult.mode|stage|agents|messages`
-  (`packages/web/src/council/RunStrip.tsx`, `docs/council-board.md`); only the Round Table room panel is covered by component tests
-  rather than a live e2e.
-* `calendar_summary` / `mastery_summary` ports exist and are tested, but the hub does not supply the viewer ports in
-  production yet (needs the nook-parity context retrieval); the tools are only offered to agents when a port exists.
-* Round Table and Debate do not emit action items yet (Ask does); the Debate chair plan still costs one model call (it frames the positions).
+  (`packages/web/src/council/RunStrip.tsx`, `docs/council-board.md`); the Round Table room panel now has its own e2e
+  (`e2e/specs/j24-roundtable.spec.ts`, fixture mode in CI, `LIVE=1` for one real run).
+* Debate's action items are derived from the cited pages and the losing side, not from a model; the Debate chair plan still costs one model call (it frames the positions).
 * A real quiz-key run was not made; its owner registration is covered by tests only.
 * Live transport is probe-only (TEXT modality unsupported on `gemini-3.8-live`, AUDIO setup gave 1011).
 * Gemini latency has a long tail (one of ten runs took 50 s with the same 6 calls); the median target holds, the maximum does not.

@@ -73,7 +73,7 @@ There is deliberately **no field** for thinking text, reasoning, raw model outpu
 
 ## Action items convention (additive, no new envelope field)
 
-The chair's `actions` stage emits one envelope per action item: `kind: status`, `stage: actions`, `from` the chair,
+The chair's `actions` stage (Ask, Round Table and Debate alike, helper `councils/action-items.ts`) emits one envelope per action item: `kind: status`, `stage: actions`, `from` the chair,
 `to: room`, `summary` = the item title (plain words, the run caps it at 120), `parentMessageId` = the verdict. Source is
 `code` (derived from the verdict's next step, no extra model call) unless a model wrote it. At most 4 per run. The
 run result mirrors them as `CouncilResult.actions: [{ id, title, detail? }]` where `id` is the envelope id, so the hub
@@ -144,3 +144,7 @@ These are scripted, so every envelope says `source: "script"`, `mode: "demo"`. R
 3. Never invent text for a skeleton envelope; draw the arrow and kind only.
 4. Exhaustive `switch (e.t)` sites need the two new cases (village adapter, inspector `describe`/`conversation` already
    return no-op/safe defaults here).
+
+Round Table and Debate emit the same items (helper `packages/brain/src/councils/action-items.ts`); they have no `CouncilResult`, so each item is
+also recorded by run id (`recordCouncilAction` / `councilRunActions` in `packages/core/src/council-registry.ts`) and the hub endpoints
+resolve it from there with the same scoping.

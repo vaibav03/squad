@@ -54,3 +54,7 @@ A polite live region announces steps and new messages by display name. Raw ids n
   `POST /v1/council/:id/actions/chat`, `Add to plan` calls `POST /v1/council/:id/actions/plan` (shared study plan, `docs/study-plan.md`),
   each with pending, success and failure states. Scripted fixtures are not hub runs, so their buttons report "Could not send".
 - Tests: `e2e/specs/j20-council-board.spec.ts`, `e2e/specs/j23-council-live.spec.ts` (fixture stack by default, `LIVE=1` for real Gemini).
+- Round Table room panel: under the header it shows the mode badge, the step words and the four cast portraits (Chairman, Chill, Grind,
+  Advisor) with their state (`RoomExtras`, `e2e/specs/j24-roundtable.spec.ts`). The board opens over the panel; nested dialogs share one
+  focus-trap stack, so only the top dialog moves focus or answers Esc (the first Esc closes the board, the second the panel).
+- Round Table and Debate action items appear in the same Verdict card with Send to chat and Add to plan.

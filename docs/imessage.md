@@ -318,3 +318,14 @@ Own account and own chats only; never a third party; never read the real Message
    "Failed: ..." and Retry works.
 4. Send yourself a PNG and a `.mov`: the PNG shows, the `.mov` shows an "Attachment not shown" placeholder.
 5. Kill switch: unset `IMESSAGE_ENABLED`, restart: nothing is read or sent. Remove the binding afterwards.
+
+## Links in outbound text
+
+Bot replies can carry app links, often as markdown with a relative path (`[Connections](/squad/connections)`,
+`/squad?council=cn_...`, `/squad?m=...`, `/squad/trips/...`). A phone cannot open those, so every outbound iMessage and Discord text goes
+through `absolutizeLinks` (`packages/core/src/outbound-links.ts`): markdown link syntax is removed (`label url`), relative app paths get
+the configured public web URL, and with NO public web URL the reply names the page ("the Connections page", "the Council board") and
+carries no link. The public web URL is `HUB_WEB_URL` (the variable invite links already use; the standalone bot also accepts
+`PUBLIC_WEB_URL`). Applied in the hub bridge (`imessage/bridge.ts`, `HubConfig.publicWebUrl`) and in the bot transports
+(`transports/imessage.ts`, `transports/discord.ts`, option `webUrl`). Tests: `packages/core/src/outbound-links.test.ts`,
+`apps/bot/src/transports/outbound-links.test.ts`, `apps/hub/src/imessage/bridge.test.ts`.

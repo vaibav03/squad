@@ -174,6 +174,17 @@ export async function attachChatEngine(
         });
       },
     },
+    // the asker's own calendar/mastery through the privacy gate (Round Table agents; Ask uses the shared service)
+    viewer: createCouncilViewerData(deps, {
+      courseId: () => courseId,
+      ...(shared?.mastery ? { mastery: shared.mastery } : {}),
+      ...(shared?.brain
+        ? {
+            chapters: (id: string) =>
+              shared!.brain!.store.listChapters(id).map((c) => ({ id: c.id, title: c.title })),
+          }
+        : {}),
+    }),
     demo: () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : true),
     ...(real ? { rawLlm: real } : {}),
     env,

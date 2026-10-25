@@ -1,5 +1,4 @@
 import {
-  COUNCIL_ACTIONS_MAX,
   type AgentId,
   type AgentMode,
   type CouncilAction,
