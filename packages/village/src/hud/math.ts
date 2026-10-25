@@ -43,3 +43,22 @@ export function formatClock(hours: number): string {
 }
 export const initialOf = (name: string) =>
   (name.replace(/^(the|chapter)\s+/i, '').trim()[0] ?? '?').toUpperCase();
+
+/** A HUD popover: a panel toggled through `data-open` plus the button that controls it. */
+export interface HudPopover {
+  panel: { dataset: Record<string, string | undefined> };
+  button: { setAttribute(name: string, value: string): void };
+}
+
+/** Closes every open popover; returns true when at least one was open (the Escape was consumed). */
+export function closePopovers(pops: HudPopover[]): boolean {
+  let closed = false;
+  for (const p of pops) {
+    if (p.panel.dataset.open === 'true') {
+      p.panel.dataset.open = 'false';
+      p.button.setAttribute('aria-expanded', 'false');
+      closed = true;
+    }
+  }
+  return closed;
+}

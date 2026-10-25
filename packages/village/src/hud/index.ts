@@ -10,7 +10,7 @@ import type {
   AgentRegistry,
 } from '../world/api';
 import { nearestInteractable } from '../world/interact';
-import { STATE_GLYPH, STATE_LABEL, chipOrder, formatClock, initialOf } from './math';
+import { STATE_GLYPH, STATE_LABEL, chipOrder, closePopovers, formatClock, initialOf } from './math';
 import { HUD_CSS } from './style';
 
 export interface HudDeps {
@@ -169,6 +169,22 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
   });
   mid.appendChild(help);
 
+  // Escape closes the Controls / menu popovers (and is not also treated as "leave the building").
+  const onEsc = (e: KeyboardEvent) => {
+    if (e.key !== 'Escape') return;
+    const hadFocus = root.contains(document.activeElement);
+    if (
+      closePopovers([
+        { panel: help, button: helpBtn },
+        { panel: pop, button: menuBtn },
+      ])
+    ) {
+      e.stopPropagation();
+      if (hadFocus) d.parent.focus?.();
+    }
+  };
+  document.addEventListener('keydown', onEsc, true);
+
   root.append(chips, clockWrap, ctrl, menuWrap, mid, bottom);
   d.parent.appendChild(root);
   mid.appendChild(pop);
@@ -283,6 +299,7 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
     },
     destroy() {
       unsubs.forEach((u) => u());
+      document.removeEventListener('keydown', onEsc, true);
       ro.disconnect();
       root.remove();
       style.remove();
