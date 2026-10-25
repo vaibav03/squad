@@ -5,6 +5,7 @@ import {
   type BoardDelegation,
   type CouncilBoardStore,
 } from '@squad/village/council';
+import { LvIcon } from '../kit';
 import { openBoard, useBoardVersion } from '../../council/board/bridge';
 import { ModeBadge } from '../../council/board/ModeBadge';
 import { EmptyCouncilState, LastRunLabel } from '../../council/last-run/components';
@@ -12,9 +13,9 @@ import { useCouncilHub } from '../../council/last-run/hub';
 import { useLastRunsState } from '../../council/last-run/store';
 
 const STATE_WORD = {
-  pending: { glyph: '…', word: 'Pending' },
-  answered: { glyph: '✓', word: 'Answered' },
-  failed: { glyph: '✕', word: 'Failed' },
+  pending: { icon: 'circle-dashed', word: 'Pending' },
+  answered: { icon: 'circle-check', word: 'Answered' },
+  failed: { icon: 'circle-x', word: 'Failed' },
 } as const;
 
 function Chip({ agent, inspector }: { agent: BoardAgent; inspector: InspectorStore }) {
@@ -58,7 +59,7 @@ function Delegations({
                 </p>
                 <div className="ai-msg__meta">
                   <span className="ai-kind">
-                    <span aria-hidden="true">{st.glyph} </span>
+                    <LvIcon name={st.icon} size={12} />
                     {st.word}
                   </span>
                 </div>

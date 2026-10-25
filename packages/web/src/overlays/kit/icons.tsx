@@ -25,6 +25,17 @@ import {
   Vote,
   Clock,
   LayoutGrid,
+  Radio,
+  Loader,
+  CircleX,
+  CircleCheck,
+  CircleDashed,
+  ArrowRight,
+  ArrowLeft,
+  ArrowLeftRight,
+  PencilLine,
+  Wifi,
+  History,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -55,6 +66,17 @@ const ICONS = {
   vote: Vote,
   clock: Clock,
   grid: LayoutGrid,
+  radio: Radio,
+  loader: Loader,
+  'circle-x': CircleX,
+  'circle-check': CircleCheck,
+  'circle-dashed': CircleDashed,
+  'arrow-right': ArrowRight,
+  'arrow-left': ArrowLeft,
+  'arrow-left-right': ArrowLeftRight,
+  pencil: PencilLine,
+  wifi: Wifi,
+  history: History,
 } as const satisfies Record<string, LucideIcon>;
 
 export type LvIconName = keyof typeof ICONS;

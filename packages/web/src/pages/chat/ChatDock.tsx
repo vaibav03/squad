@@ -11,6 +11,7 @@ import { ThreadPane } from './Thread';
 import { useChat } from './useChat';
 import './chat.css';
 import './dock.css';
+import { useChatPrefill } from './prefill';
 
 export interface ChatDockProps {
   /** false in replay mode or without a hub token: nothing renders and no request is made */
@@ -58,6 +59,12 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
   useEffect(() => {
     if (open) requestAnimationFrame(() => composer.current?.focus());
   }, [open, group?.id]);
+
+  // Another surface (the council decision card) asks for a drafted message: open the dock and fill the composer.
+  useChatPrefill((text) => {
+    setOpen(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => composer.current?.fill(text)));
+  });
 
   const close = () => {
     setOpen(false);

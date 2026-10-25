@@ -15,7 +15,7 @@ const EMOJI = /\p{Extended_Pictographic}|️|\p{Regional_Indicator}/u;
 // Marker glyphs used as visible decoration. Arrows and ≠/≡ are only flagged in JSX text or string literals.
 const MARKERS = /[●•◆▲○◐◑⚙✓✕≠≡→◇■□▪▫★☆♥]/u;
 const ESCAPED = /\\u(25[a-f0-9]{2}|26[a-f0-9]{2}|27[0-9a-f]{2}|2022|2B[0-9A-F]{2}|\{1f[0-9a-f]{3,4}\})|\\u\{1[fF][0-9a-fA-F]{3,4}\}|&(bull|#x?(25|26|27|2022|1f)[0-9a-f]*);/i;
-const DOT_CSS = /border-radius:\s*50%/;
+const DOT_CSS = /border-radius:\s*(50%|100%|999px|9999px|var\(--radius-pill\))/;
 
 const allow = existsSync(join(ROOT, 'scripts/audit-chrome.allow.json'))
   ? JSON.parse(readFileSync(join(ROOT, 'scripts/audit-chrome.allow.json'), 'utf8')).entries
@@ -45,8 +45,8 @@ function cssDots(rel, text, area) {
   while ((m = re.exec(text))) {
     const body = m[2];
     if (!DOT_CSS.test(body)) continue;
-    const w = /(?:^|[;\s])width:\s*(\d+)px/.exec(body);
-    const h = /(?:^|[;\s])height:\s*(\d+)px/.exec(body);
+    const w = /(?:^|[;\s])(?:inline-size|width):\s*(\d+)px/.exec(body);
+    const h = /(?:^|[;\s])(?:block-size|height):\s*(\d+)px/.exec(body);
     if (!w || !h || +w[1] > 12 || +h[1] > 12 || !/background(-color)?:\s*(?!transparent|none)/.test(body)) continue;
     const sel = m[1].trim().split('\n').pop();
     const line = text.slice(0, m.index + m[1].length).split('\n').length;

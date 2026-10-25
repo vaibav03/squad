@@ -133,7 +133,7 @@ export function MessageBubble(p: BubbleProps) {
         {row.head ? (
           <div className="sqc-msg__head">
             {!row.own ? (
-              <span className="sqc-msg__name" aria-hidden="true">
+              <span className="sqc-msg__name" data-user-content aria-hidden="true">
                 {sender.name}
               </span>
             ) : null}
@@ -171,6 +171,8 @@ export function MessageBubble(p: BubbleProps) {
           <div
             ref={bubbleRef}
             className="sqc-bubble"
+            data-testid="chat-message-body"
+            data-user-content
             title={timeLabel(m.ts)}
             onClick={cites.length ? onBubbleClick : undefined}
           >

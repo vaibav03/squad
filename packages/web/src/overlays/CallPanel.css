@@ -100,26 +100,11 @@
   text-transform: uppercase;
   color: var(--lv-text-dim);
 }
-.lv-call__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--state-idle);
-}
 .lv-call__status[data-status='live'] {
   color: var(--lv-ok);
 }
-.lv-call__status[data-status='live'] .lv-call__dot {
-  background: var(--state-call);
-}
-.lv-call__status[data-status='reconnecting'] .lv-call__dot {
-  background: var(--state-waiting);
-}
 .lv-call__status[data-status='error'] {
   color: var(--lv-alert-text);
-}
-.lv-call__status[data-status='error'] .lv-call__dot {
-  background: var(--state-conflict);
 }
 .lv-call__time {
   font-variant-numeric: tabular-nums;
