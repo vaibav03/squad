@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T10:33:22.559Z",
+  "at": "2026-10-25T14:51:45.484Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -435,12 +435,6 @@
     "ms": 8322
    },
    {
-    "title": "J16 clicking the ground never moves the player; clicking a character opens the inspector",
-    "status": "pass",
-    "note": "",
-    "ms": 10501
-   },
-   {
     "title": "J11 mastery: no tab, redirect opens the in-village panel",
     "status": "pass",
     "note": "",
@@ -457,6 +451,24 @@
     "status": "pass",
     "note": "",
     "ms": 71697
+   },
+   {
+    "title": "J32 council board on the track4 replay: card and timeline chip open one panel; Conversation shows only that agent",
+    "status": "pass",
+    "note": "",
+    "ms": 15756
+   },
+   {
+    "title": "J16 clicking the ground never moves the player; clicking a character opens the inspector",
+    "status": "pass",
+    "note": "",
+    "ms": 11558
+   },
+   {
+    "title": "J32 village: a sprite and a HUD chip each open ONE focused panel that swaps; Escape returns focus",
+    "status": "fail",
+    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed",
+    "ms": 20417
    }
   ]
  }

@@ -175,6 +175,28 @@ describe('Council board', () => {
     expect(document.activeElement).toBe(nodes[1]);
   });
 
+  it('board shows the handoff timeline of ALL communication by default; Esc closes the focused panel first, then the board', async () => {
+    const store = loaded();
+    const { dlg, onClose } = await open(store, {}, 'timeline');
+    const tl = within(dlg).getByRole('region', { name: 'Handoff timeline' });
+    expect(tl.getAttribute('data-filter')).toBe('all');
+    expect(within(tl).getAllByTestId('af-row').length).toBe(store.run()!.messages.length);
+    const node = [...dlg.querySelectorAll<HTMLElement>('.cb-node')].find((n) =>
+      n.textContent?.includes('Skeptic'),
+    )!;
+    node.focus();
+    fireEvent.click(node);
+    await settle();
+    const panel = screen.getByRole('dialog', { name: /^Skeptic/ });
+    const sel = within(panel).getByRole('button', { name: 'Selected agent' });
+    expect(sel.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.keyDown(panel.querySelector('h2')!, { key: 'Escape' });
+    await settle();
+    expect(screen.queryByTestId('agent-focus-panel')).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(node);
+  });
+
   it('verdict: confidence in words, dissent linked to the dissenting message', async () => {
     const { dlg } = await open(loaded());
     const v = screen.getByTestId('cb-verdict');
