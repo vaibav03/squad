@@ -115,12 +115,25 @@ export function saidBy(who: string, e: Pick<TranscriptEntry, 'who' | 'kind'>): b
 }
 
 /** Name tag over a character: small, filled, no outline. Painted into the interior raster. */
-export function paintSeatTag(r: Raster, seat: RoomSeat, focused: boolean): void {
-  const w = textWidth(seat.label) + 6;
+export function paintSeatTag(
+  r: Raster,
+  seat: RoomSeat,
+  focused: boolean,
+  think?: { on: boolean; t: number; calm: boolean },
+): void {
+  const dots = think?.on ? 14 : 0;
+  const w = textWidth(seat.label) + 6 + dots;
   const x = Math.max(1, Math.min(r.w - w - 1, Math.round(seat.x - w / 2)));
   const y = Math.max(1, seat.y - SEAT_BOX.h - 10);
   r.rect(x, y, w, 9, 'ink');
   drawText(r, x + 3, y + 2, seat.label, focused ? 'glow-core' : 'cloud-hi');
+  if (think?.on) {
+    // three dots, opacity only (steady in Calm mode)
+    for (let i = 0; i < 3; i++) {
+      const a = think.calm ? 0.9 : 0.35 + 0.65 * Math.max(0, Math.sin(think.t / 260 - i * 0.9));
+      r.rect(x + w - 12 + i * 4, y + 4, 2, 2, 'cloud-hi', a);
+    }
+  }
 }
 
 /** Ring under the feet of the selected or keyboard-focused character. */

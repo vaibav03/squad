@@ -5,11 +5,12 @@ import {
   type InspectorStore,
   type Party,
   type ThreadLine,
+  type VoiceView,
 } from '@squad/village/inspector';
 import { CitationChip } from '../../components/source-viewer';
 import { LvIcon } from '../kit';
 import { useDmHistory, type InspectorHub } from './useDmHistory';
-import { RoomChat } from './RoomChat';
+import { RoomChat, VoiceChat } from './RoomChat';
 
 const ARROW = { out: '→', in: '←', seen: '↔' } as const;
 const KIND_WORDS: Record<string, string> = {
@@ -154,6 +155,7 @@ export function ChatTab({
   now,
   mode,
   room,
+  voice,
 }: {
   view: ActivityView;
   convo: Conversation;
@@ -162,10 +164,18 @@ export function ChatTab({
   mode: 'live' | 'replay';
   /** Set when the inspector was opened from a character inside a room. */
   room?: { slot: string; who: string } | null;
+  /** Set for council agents: the member's (or the whole council's) thread. */
+  voice?: { view: VoiceView; title: string } | null;
 }) {
   const own = view.isMe && mode === 'live';
   const dm = useDmHistory(hub, own ? storeStudent(view.id) : undefined, own);
   const private_ = view.kind === 'student' && !view.isMe;
+  if (voice)
+    return (
+      <div className="ai-tabpanel">
+        <VoiceChat voice={voice.view} title={voice.title} now={now} />
+      </div>
+    );
   if (room)
     return (
       <div className="ai-tabpanel">
