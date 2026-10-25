@@ -20,7 +20,18 @@ export interface SheetProps {
 
 const EXIT_MS = 200;
 
-export function Sheet({ open, onClose, title, description, side = 'bottom', initialFocusRef, dismissible = true, scene, children, footer }: SheetProps) {
+export function Sheet({
+  open,
+  onClose,
+  title,
+  description,
+  side = 'bottom',
+  initialFocusRef,
+  dismissible = true,
+  scene,
+  children,
+  footer,
+}: SheetProps) {
   const [mounted, setMounted] = useState(open);
   const [shown, setShown] = useState(false);
   const titleId = useId();
@@ -42,26 +53,51 @@ export function Sheet({ open, onClose, title, description, side = 'bottom', init
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && dismissible) { e.stopPropagation(); closeRef.current(); }
+      if (e.key === 'Escape' && dismissible) {
+        e.stopPropagation();
+        closeRef.current();
+      }
     };
     document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
   }, [open, dismissible]);
 
   if (!mounted || typeof document === 'undefined') return null;
   return createPortal(
-    <div className={`sq-sheet sq-sheet--${side}${scene ? ' sq-scene' : ''}`} data-state={shown ? 'open' : 'closed'}>
-      <div className="sq-sheet__scrim" onClick={dismissible ? onClose : undefined} aria-hidden="true" />
+    <div
+      className={`sq-sheet sq-sheet--${side}${scene ? ' sq-scene' : ''}`}
+      data-state={shown ? 'open' : 'closed'}
+    >
+      <div
+        className="sq-sheet__scrim"
+        onClick={dismissible ? onClose : undefined}
+        aria-hidden="true"
+      />
       <FocusTrap className="sq-sheet__trap" active={open} initialFocusRef={initialFocusRef}>
-        <div className="sq-sheet__panel" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={description ? descId : undefined}>
+        <div
+          className="sq-sheet__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          aria-describedby={description ? descId : undefined}
+        >
           {side === 'bottom' ? <span className="sq-sheet__handle" aria-hidden="true" /> : null}
           <header className="sq-sheet__header">
-            <h2 id={titleId} className="sq-sheet__title">{title}</h2>
+            <h2 id={titleId} className="sq-sheet__title">
+              {title}
+            </h2>
             {dismissible ? <IconButton label="Close" icon="x" onClick={onClose} /> : null}
           </header>
-          {description ? <p id={descId} className="sq-sheet__desc">{description}</p> : null}
+          {description ? (
+            <p id={descId} className="sq-sheet__desc">
+              {description}
+            </p>
+          ) : null}
           <div className="sq-sheet__content">{children}</div>
           {footer ? <footer className="sq-sheet__footer">{footer}</footer> : null}
         </div>

@@ -17,9 +17,19 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
   { label, icon, variant = 'ghost', size = 'md', pressed, className, type = 'button', ...rest },
   ref,
 ) {
-  const cls = ['sq-iconbtn', `sq-iconbtn--${variant}`, `sq-iconbtn--${size}`, className].filter(Boolean).join(' ');
+  const cls = ['sq-iconbtn', `sq-iconbtn--${variant}`, `sq-iconbtn--${size}`, className]
+    .filter(Boolean)
+    .join(' ');
   return (
-    <button ref={ref} type={type} className={cls} aria-label={label} title={label} aria-pressed={pressed} {...rest}>
+    <button
+      ref={ref}
+      type={type}
+      className={cls}
+      aria-label={label}
+      title={label}
+      aria-pressed={pressed}
+      {...rest}
+    >
       <Icon name={icon} size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} />
     </button>
   );

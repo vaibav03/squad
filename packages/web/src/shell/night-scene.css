@@ -1,5 +1,36 @@
-.sq-night { position: relative; overflow: hidden; isolation: isolate; background: var(--sq-sky-deep); }
-.sq-night__layer { position: absolute; inset: 0; background-repeat: repeat-x; background-position: center bottom; background-size: calc(480px * var(--k)) calc(270px * var(--k)); image-rendering: pixelated; image-rendering: crisp-edges; pointer-events: none; }
-.sq-night__sky { background-repeat: repeat; background-position: left bottom; background-size: 100% calc(270px * var(--k)); }
-.sq-night__moon { position: absolute; left: calc(50% - 160px * var(--k)); top: calc(16px * var(--k)); width: calc(80px * var(--k)); height: calc(80px * var(--k)); background-size: 100% 100%; image-rendering: pixelated; pointer-events: none; }
-@media (max-width: 599px) { .sq-night__moon { left: calc(50% - 150px * var(--k)); } }
+.sq-night {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--sq-sky-deep);
+}
+.sq-night__layer {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat-x;
+  background-position: center bottom;
+  background-size: calc(480px * var(--k)) calc(270px * var(--k));
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+}
+.sq-night__sky {
+  background-repeat: repeat;
+  background-position: left bottom;
+  background-size: 100% calc(270px * var(--k));
+}
+.sq-night__moon {
+  position: absolute;
+  left: calc(50% - 160px * var(--k));
+  top: calc(16px * var(--k));
+  width: calc(80px * var(--k));
+  height: calc(80px * var(--k));
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+@media (max-width: 599px) {
+  .sq-night__moon {
+    left: calc(50% - 150px * var(--k));
+  }
+}

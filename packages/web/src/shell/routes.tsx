@@ -5,13 +5,49 @@ import { EmptyState } from '../primitives/EmptyState';
 import { Skeleton } from '../primitives/Skeleton';
 
 export const squadRouteMeta: SquadRouteMeta[] = [
-  { key: 'home', path: '/squad', title: 'Home', nav: { label: 'Home', icon: 'home', order: 0, primary: true } },
-  { key: 'village', path: '/squad/village', title: 'Village', fullBleed: true, nav: { label: 'Village', icon: 'map', order: 1, primary: true } },
-  { key: 'setup', path: '/squad/setup/:step?', title: 'Setup', nav: { label: 'Setup', icon: 'sparkle', order: 4 } },
-  { key: 'personas', path: '/squad/personas', title: 'Personas', nav: { label: 'Personas', icon: 'users', order: 5 } },
-  { key: 'ledger', path: '/squad/ledger/:taskId?', title: 'Glass Box', nav: { label: 'Ledger', icon: 'ledger', order: 2, primary: true } },
-  { key: 'trip', path: '/squad/trips/:tripId', title: 'Trip', nav: { label: 'Trip', icon: 'plane', order: 3, primary: true } },
-  { key: 'mastery', path: '/squad/mastery/:courseId?', title: 'Mastery', nav: { label: 'Mastery', icon: 'book', order: 6 } },
+  {
+    key: 'home',
+    path: '/squad',
+    title: 'Home',
+    nav: { label: 'Home', icon: 'home', order: 0, primary: true },
+  },
+  {
+    key: 'village',
+    path: '/squad/village',
+    title: 'Village',
+    fullBleed: true,
+    nav: { label: 'Village', icon: 'map', order: 1, primary: true },
+  },
+  {
+    key: 'setup',
+    path: '/squad/setup/:step?',
+    title: 'Setup',
+    nav: { label: 'Setup', icon: 'sparkle', order: 4 },
+  },
+  {
+    key: 'personas',
+    path: '/squad/personas',
+    title: 'Personas',
+    nav: { label: 'Personas', icon: 'users', order: 5 },
+  },
+  {
+    key: 'ledger',
+    path: '/squad/ledger/:taskId?',
+    title: 'Glass Box',
+    nav: { label: 'Ledger', icon: 'ledger', order: 2, primary: true },
+  },
+  {
+    key: 'trip',
+    path: '/squad/trips/:tripId',
+    title: 'Trip',
+    nav: { label: 'Trip', icon: 'plane', order: 3, primary: true },
+  },
+  {
+    key: 'mastery',
+    path: '/squad/mastery/:courseId?',
+    title: 'Mastery',
+    nav: { label: 'Mastery', icon: 'book', order: 6 },
+  },
 ];
 
 /** nav links resolve params-free targets */

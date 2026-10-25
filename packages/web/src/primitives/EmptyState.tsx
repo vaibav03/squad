@@ -15,9 +15,21 @@ export interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({ title, body, icon, art, action, tone = 'default', className }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  body,
+  icon,
+  art,
+  action,
+  tone = 'default',
+  className,
+}: EmptyStateProps) {
   return (
-    <div className={['sq-empty', tone === 'error' && 'sq-empty--error', className].filter(Boolean).join(' ')}>
+    <div
+      className={['sq-empty', tone === 'error' && 'sq-empty--error', className]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <div className="sq-empty__art" aria-hidden="true">
         {art ?? (icon ? <Icon name={icon} size={28} /> : null)}
       </div>
@@ -28,15 +40,34 @@ export function EmptyState({ title, body, icon, art, action, tone = 'default', c
   );
 }
 
-export function ErrorState({ error, title = 'Something went wrong', onRetry }: { error?: unknown; title?: string; onRetry?: () => void }) {
-  const message = error instanceof Error ? error.message : typeof error === 'string' ? error : 'We could not load this. Check your connection and try again.';
+export function ErrorState({
+  error,
+  title = 'Something went wrong',
+  onRetry,
+}: {
+  error?: unknown;
+  title?: string;
+  onRetry?: () => void;
+}) {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : 'We could not load this. Check your connection and try again.';
   return (
     <EmptyState
       tone="error"
       icon="alert"
       title={title}
       body={message}
-      action={onRetry ? <Button variant="secondary" iconStart="arrow-right" onClick={onRetry}>Try again</Button> : undefined}
+      action={
+        onRetry ? (
+          <Button variant="secondary" iconStart="arrow-right" onClick={onRetry}>
+            Try again
+          </Button>
+        ) : undefined
+      }
     />
   );
 }
@@ -47,7 +78,13 @@ export function OfflineState({ onRetry }: { onRetry?: () => void }) {
       icon="link"
       title="You are offline"
       body="Squad cannot reach the hub right now. Your work is safe, and this page will pick up where it left off."
-      action={onRetry ? <Button variant="secondary" onClick={onRetry}>Retry connection</Button> : undefined}
+      action={
+        onRetry ? (
+          <Button variant="secondary" onClick={onRetry}>
+            Retry connection
+          </Button>
+        ) : undefined
+      }
     />
   );
 }

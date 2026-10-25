@@ -1,4 +1,27 @@
-.sq-labs { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
-.sq-labs__link { display: flex; flex-direction: column; gap: 2px; padding: var(--space-4); border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--card); color: inherit; text-decoration: none; }
-.sq-labs__link span { color: var(--muted-foreground); font-size: var(--text-sm); }
-@media (hover: hover) and (pointer: fine) { .sq-labs__link:hover { background: var(--accent); } }
+.sq-labs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.sq-labs__link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: inherit;
+  text-decoration: none;
+}
+.sq-labs__link span {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sq-labs__link:hover {
+    background: var(--accent);
+  }
+}

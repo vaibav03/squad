@@ -15,9 +15,15 @@ export function parseSession(raw: string | null): SquadSession | null {
     const v: unknown = JSON.parse(raw);
     if (!v || typeof v !== 'object') return null;
     const o = v as Record<string, unknown>;
-    if (typeof o.userId !== 'string' || typeof o.name !== 'string' || typeof o.token !== 'string') return null;
+    if (typeof o.userId !== 'string' || typeof o.name !== 'string' || typeof o.token !== 'string')
+      return null;
     if (!o.userId || !o.name) return null;
-    return { userId: o.userId, name: o.name, token: o.token, avatarUrl: typeof o.avatarUrl === 'string' ? o.avatarUrl : undefined };
+    return {
+      userId: o.userId,
+      name: o.name,
+      token: o.token,
+      avatarUrl: typeof o.avatarUrl === 'string' ? o.avatarUrl : undefined,
+    };
   } catch {
     return null;
   }

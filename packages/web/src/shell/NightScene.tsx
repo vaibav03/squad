@@ -33,20 +33,40 @@ export function NightScene({ scale, className, children }: NightSceneProps) {
     return () => ro.disconnect();
   }, [scale]);
   const layer = (src: string, extra?: CSSProperties) => (
-    <i className="sq-night__layer" aria-hidden="true" style={{ backgroundImage: `url(${src})`, ...extra }} />
+    <i
+      className="sq-night__layer"
+      aria-hidden="true"
+      style={{ backgroundImage: `url(${src})`, ...extra }}
+    />
   );
   return (
-    <div ref={ref} className={['sq-night', className].filter(Boolean).join(' ')} style={{ ['--k' as string]: k }}>
-      <i className="sq-night__layer sq-night__sky" aria-hidden="true" style={{ backgroundImage: `url(${sky})` }} />
+    <div
+      ref={ref}
+      className={['sq-night', className].filter(Boolean).join(' ')}
+      style={{ ['--k' as string]: k }}
+    >
+      <i
+        className="sq-night__layer sq-night__sky"
+        aria-hidden="true"
+        style={{ backgroundImage: `url(${sky})` }}
+      />
       {layer(stars)}
-      <i className="sq-night__moon" aria-hidden="true" style={{ backgroundImage: `url(${moon})` }} />
+      <i
+        className="sq-night__moon"
+        aria-hidden="true"
+        style={{ backgroundImage: `url(${moon})` }}
+      />
       {layer(cloudsFar)}
       {layer(cloudsNear)}
       {layer(hillsFar)}
       {layer(hillsMid)}
       {layer(hillsNear)}
       {layer(fence)}
-      {layer(ground, { height: 'calc(30px * var(--k))', backgroundSize: 'calc(480px * var(--k)) calc(30px * var(--k))', top: 'auto' })}
+      {layer(ground, {
+        height: 'calc(30px * var(--k))',
+        backgroundSize: 'calc(480px * var(--k)) calc(30px * var(--k))',
+        top: 'auto',
+      })}
       {children}
     </div>
   );

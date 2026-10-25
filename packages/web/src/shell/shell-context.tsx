@@ -6,5 +6,9 @@ export interface ShellApi {
   setFullBleed: (v: boolean) => void;
 }
 const noop = () => {};
-export const ShellContext = createContext<ShellApi>({ setTitle: noop, setActions: noop, setFullBleed: noop });
+export const ShellContext = createContext<ShellApi>({
+  setTitle: noop,
+  setActions: noop,
+  setFullBleed: noop,
+});
 export const useShell = (): ShellApi => useContext(ShellContext);

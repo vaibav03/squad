@@ -4,7 +4,8 @@ const KEY = 'squad.calm';
 
 function read(): boolean {
   try {
-    if (typeof document !== 'undefined' && document.documentElement.dataset.calm === 'true') return true;
+    if (typeof document !== 'undefined' && document.documentElement.dataset.calm === 'true')
+      return true;
     return typeof localStorage !== 'undefined' && localStorage.getItem(KEY) === '1';
   } catch {
     return false;

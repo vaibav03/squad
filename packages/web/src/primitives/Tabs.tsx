@@ -3,7 +3,13 @@ import { Icon } from './Icon';
 import type { IconName } from './icon-names';
 import './tabs.css';
 
-export interface TabItem { value: string; label: string; icon?: IconName; badge?: ReactNode; disabled?: boolean }
+export interface TabItem {
+  value: string;
+  label: string;
+  icon?: IconName;
+  badge?: ReactNode;
+  disabled?: boolean;
+}
 export interface TabsProps {
   value: string;
   onValueChange: (v: string) => void;
@@ -15,7 +21,15 @@ export interface TabsProps {
   className?: string;
 }
 
-export function Tabs({ value, onValueChange, items, variant = 'underline', panelId = 'tabs', label, className }: TabsProps) {
+export function Tabs({
+  value,
+  onValueChange,
+  items,
+  variant = 'underline',
+  panelId = 'tabs',
+  label,
+  className,
+}: TabsProps) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
   const enabled = items.filter((i) => !i.disabled);
   const onKey = (e: KeyboardEvent) => {
@@ -32,13 +46,20 @@ export function Tabs({ value, onValueChange, items, variant = 'underline', panel
     refs.current[target.value]?.focus();
   };
   return (
-    <div className={['sq-tabs', `sq-tabs--${variant}`, className].filter(Boolean).join(' ')} role="tablist" aria-label={label} onKeyDown={onKey}>
+    <div
+      className={['sq-tabs', `sq-tabs--${variant}`, className].filter(Boolean).join(' ')}
+      role="tablist"
+      aria-label={label}
+      onKeyDown={onKey}
+    >
       {items.map((it) => {
         const selected = it.value === value;
         return (
           <button
             key={it.value}
-            ref={(el) => { refs.current[it.value] = el; }}
+            ref={(el) => {
+              refs.current[it.value] = el;
+            }}
             type="button"
             role="tab"
             id={`${panelId}-tab-${it.value}`}
@@ -59,9 +80,25 @@ export function Tabs({ value, onValueChange, items, variant = 'underline', panel
   );
 }
 
-export function TabPanel({ value, active, panelId = 'tabs', children }: { value: string; active: boolean; panelId?: string; children: ReactNode }) {
+export function TabPanel({
+  value,
+  active,
+  panelId = 'tabs',
+  children,
+}: {
+  value: string;
+  active: boolean;
+  panelId?: string;
+  children: ReactNode;
+}) {
   return (
-    <div role="tabpanel" id={`${panelId}-panel-${value}`} aria-labelledby={`${panelId}-tab-${value}`} hidden={!active} tabIndex={0}>
+    <div
+      role="tabpanel"
+      id={`${panelId}-panel-${value}`}
+      aria-labelledby={`${panelId}-tab-${value}`}
+      hidden={!active}
+      tabIndex={0}
+    >
       {active ? children : null}
     </div>
   );

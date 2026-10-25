@@ -20,7 +20,14 @@ export interface AppShellProps {
   onSignOut?: () => void;
   fullBleed?: boolean;
   /** Router adapter so AppShell stays router-agnostic: render a link. */
-  renderLink: (item: { to: string; className: string; children: ReactNode; 'aria-current'?: 'page'; onClick?: () => void; key?: string }) => ReactNode;
+  renderLink: (item: {
+    to: string;
+    className: string;
+    children: ReactNode;
+    'aria-current'?: 'page';
+    onClick?: () => void;
+    key?: string;
+  }) => ReactNode;
   /** Current pathname, to compute the active item. */
   pathname: string;
   children: ReactNode;
@@ -35,7 +42,14 @@ const STATUS_MAP: Record<'live' | 'replay' | 'offline', { status: Status; label:
 function Wordmark() {
   return (
     <span className="sq-shell__brand">
-      <svg className="sq-shell__lantern" viewBox="0 0 7 10" width="14" height="20" shapeRendering="crispEdges" aria-hidden="true">
+      <svg
+        className="sq-shell__lantern"
+        viewBox="0 0 7 10"
+        width="14"
+        height="20"
+        shapeRendering="crispEdges"
+        aria-hidden="true"
+      >
         <rect x="2" y="0" width="3" height="1" fill="var(--sq-wood-lit)" />
         <rect x="1" y="1" width="5" height="1" fill="var(--sq-wood)" />
         <rect x="1" y="2" width="5" height="5" fill="var(--sq-glow)" />
@@ -48,7 +62,16 @@ function Wordmark() {
   );
 }
 
-export function AppShell({ nav = squadNav, user, status = { connection: 'live' }, onSignOut, fullBleed: fullBleedProp = false, renderLink, pathname, children }: AppShellProps) {
+export function AppShell({
+  nav = squadNav,
+  user,
+  status = { connection: 'live' },
+  onSignOut,
+  fullBleed: fullBleedProp = false,
+  renderLink,
+  pathname,
+  children,
+}: AppShellProps) {
   const [title, setTitleState] = useState('');
   const [actions, setActions] = useState<ReactNode>(null);
   const [fullBleedState, setFullBleed] = useState<boolean | null>(null);
@@ -70,7 +93,10 @@ export function AppShell({ nav = squadNav, user, status = { connection: 'live' }
   useEffect(() => {
     setActions(null);
     setFullBleed(null as unknown as boolean);
-    if (first.current) { first.current = false; return; }
+    if (first.current) {
+      first.current = false;
+      return;
+    }
     mainRef.current?.focus({ preventScroll: true });
     window.scrollTo?.(0, 0);
   }, [pathname]);
@@ -78,55 +104,142 @@ export function AppShell({ nav = squadNav, user, status = { connection: 'live' }
   const sorted = [...nav].sort((a, b) => a.order - b.order);
   const primary = sorted.filter((n) => n.primary);
   const secondary = sorted.filter((n) => !n.primary);
-  const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
+  const isActive = (to: string) =>
+    pathname === to || (to !== '/squad' && pathname.startsWith(`${to}/`));
   const conn = STATUS_MAP[status.connection];
   const moreActive = secondary.some((n) => isActive(n.to));
 
   const link = (n: NavItem, cls: string, children: ReactNode, onClick?: () => void) =>
-    renderLink({ key: n.key, to: n.to, className: `${cls}${isActive(n.to) ? ' is-active' : ''}`, 'aria-current': isActive(n.to) ? 'page' : undefined, children, onClick });
+    renderLink({
+      key: n.key,
+      to: n.to,
+      className: `${cls}${isActive(n.to) ? ' is-active' : ''}`,
+      'aria-current': isActive(n.to) ? 'page' : undefined,
+      children,
+      onClick,
+    });
 
-  const themes: { value: ThemeChoice; label: string }[] = [{ value: 'system', label: 'System' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }];
+  const themes: { value: ThemeChoice; label: string }[] = [
+    { value: 'system', label: 'System' },
+    { value: 'light', label: 'Light' },
+    { value: 'dark', label: 'Dark' },
+  ];
 
   return (
     <ShellContext.Provider value={api}>
       <div className={`sq-shell${fullBleed ? ' is-bleed sq-scene' : ''}`}>
-        <a className="sq-shell__skip" href="#main">Skip to content</a>
+        <a className="sq-shell__skip" href="#main">
+          Skip to content
+        </a>
         <header className="sq-shell__header">
           <div className="sq-shell__bar">
-            {renderLink({ to: '/squad', className: 'sq-shell__home', 'aria-current': undefined, children: <Wordmark />, key: 'home' })}
+            {renderLink({
+              to: '/squad',
+              className: 'sq-shell__home',
+              'aria-current': undefined,
+              children: <Wordmark />,
+              key: 'home',
+            })}
             <nav className="sq-shell__nav" aria-label="Main">
-              {sorted.map((n) => link(n, 'sq-shell__navlink', <><Icon name={n.icon} size={18} /><span>{n.label}</span></>))}
+              {sorted.map((n) =>
+                link(
+                  n,
+                  'sq-shell__navlink',
+                  <>
+                    <Icon name={n.icon} size={18} />
+                    <span>{n.label}</span>
+                  </>,
+                ),
+              )}
             </nav>
             <div className="sq-shell__right">
               {actions ? <div className="sq-shell__actions">{actions}</div> : null}
-              <span className="sq-shell__status"><StatusDot status={conn.status} label={status.label ?? conn.label} /></span>
-              <button type="button" className="sq-shell__account" onClick={() => setAccount(true)} aria-label={`Account menu for ${user.name}`}>
+              <span className="sq-shell__status">
+                <StatusDot status={conn.status} label={status.label ?? conn.label} />
+              </span>
+              <button
+                type="button"
+                className="sq-shell__account"
+                onClick={() => setAccount(true)}
+                aria-label={`Account menu for ${user.name}`}
+              >
                 <Avatar name={user.name} src={user.avatarUrl} size="sm" />
               </button>
             </div>
           </div>
         </header>
 
-        <main id="main" ref={mainRef} tabIndex={-1} className="sq-shell__main" aria-label={title || undefined}>
+        <main
+          id="main"
+          ref={mainRef}
+          tabIndex={-1}
+          className="sq-shell__main"
+          aria-label={title || undefined}
+        >
           {children}
         </main>
 
         <nav className="sq-shell__tabs" aria-label="Main">
-          {primary.map((n) => link(n, 'sq-shell__tab', <><span className="sq-shell__tabicon"><Icon name={n.icon} size={22} /></span><span className="sq-shell__tablabel">{n.label}</span></>))}
-          <button type="button" className={`sq-shell__tab${moreActive ? ' is-active' : ''}`} onClick={() => setMore(true)} aria-haspopup="dialog">
-            <span className="sq-shell__tabicon"><Icon name="menu" size={22} />{secondary.length ? <Badge dot tone="ember" className="sq-shell__morebadge" /> : null}</span>
+          {primary.map((n) =>
+            link(
+              n,
+              'sq-shell__tab',
+              <>
+                <span className="sq-shell__tabicon">
+                  <Icon name={n.icon} size={22} />
+                </span>
+                <span className="sq-shell__tablabel">{n.label}</span>
+              </>,
+            ),
+          )}
+          <button
+            type="button"
+            className={`sq-shell__tab${moreActive ? ' is-active' : ''}`}
+            onClick={() => setMore(true)}
+            aria-haspopup="dialog"
+          >
+            <span className="sq-shell__tabicon">
+              <Icon name="menu" size={22} />
+              {secondary.length ? <Badge dot tone="ember" className="sq-shell__morebadge" /> : null}
+            </span>
             <span className="sq-shell__tablabel">More</span>
           </button>
         </nav>
 
-        <Sheet open={more} onClose={() => setMore(false)} title="More" side="bottom" scene={fullBleed}>
+        <Sheet
+          open={more}
+          onClose={() => setMore(false)}
+          title="More"
+          side="bottom"
+          scene={fullBleed}
+        >
           <ul className="sq-shell__morelist">
             {secondary.map((n) => (
-              <li key={n.key}>{link(n, 'sq-shell__morelink', <><Icon name={n.icon} size={20} /><span>{n.label}</span><Icon name="chevron-right" size={18} /></>, () => setMore(false))}</li>
+              <li key={n.key}>
+                {link(
+                  n,
+                  'sq-shell__morelink',
+                  <>
+                    <Icon name={n.icon} size={20} />
+                    <span>{n.label}</span>
+                    <Icon name="chevron-right" size={18} />
+                  </>,
+                  () => setMore(false),
+                )}
+              </li>
             ))}
             <li>
-              <button type="button" className="sq-shell__morelink" onClick={() => { setMore(false); setAccount(true); }}>
-                <Icon name="user" size={20} /><span>Account and display</span><Icon name="chevron-right" size={18} />
+              <button
+                type="button"
+                className="sq-shell__morelink"
+                onClick={() => {
+                  setMore(false);
+                  setAccount(true);
+                }}
+              >
+                <Icon name="user" size={20} />
+                <span>Account and display</span>
+                <Icon name="chevron-right" size={18} />
               </button>
             </li>
           </ul>
@@ -139,15 +252,37 @@ export function AppShell({ nav = squadNav, user, status = { connection: 'live' }
           description="Signed in with the demo account."
           side="center"
           scene={fullBleed}
-          footer={<Button variant="secondary" iconStart="arrow-right" onClick={() => { setAccount(false); onSignOut?.(); }}>Sign out</Button>}
+          footer={
+            <Button
+              variant="secondary"
+              iconStart="arrow-right"
+              onClick={() => {
+                setAccount(false);
+                onSignOut?.();
+              }}
+            >
+              Sign out
+            </Button>
+          }
         >
           <div className="sq-shell__acct">
             <fieldset className="sq-shell__theme">
               <legend>Chrome theme</legend>
               <div className="sq-shell__seg" role="radiogroup" aria-label="Chrome theme">
                 {themes.map((t) => (
-                  <button key={t.value} type="button" role="radio" aria-checked={theme === t.value} className="sq-shell__segbtn" onClick={() => setTheme(t.value)}>
-                    {t.value === 'light' ? <Icon name="sun" size={16} /> : t.value === 'dark' ? <Icon name="moon" size={16} /> : null}
+                  <button
+                    key={t.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={theme === t.value}
+                    className="sq-shell__segbtn"
+                    onClick={() => setTheme(t.value)}
+                  >
+                    {t.value === 'light' ? (
+                      <Icon name="sun" size={16} />
+                    ) : t.value === 'dark' ? (
+                      <Icon name="moon" size={16} />
+                    ) : null}
                     {t.label}
                   </button>
                 ))}

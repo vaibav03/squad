@@ -14,7 +14,9 @@ export function Badge({ tone = 'neutral', count, dot, label, className }: BadgeP
   const text = count === undefined ? null : count > 99 ? '99+' : String(count);
   return (
     <span
-      className={['sq-badge', `sq-badge--${tone}`, dot && 'sq-badge--dot', className].filter(Boolean).join(' ')}
+      className={['sq-badge', `sq-badge--${tone}`, dot && 'sq-badge--dot', className]
+        .filter(Boolean)
+        .join(' ')}
       role={label ? 'img' : undefined}
       aria-label={label}
     >

@@ -10,13 +10,22 @@ export interface PageProps {
   className?: string;
 }
 
-export function Page({ title, eyebrow, actions, width = 'default', children, className }: PageProps) {
+export function Page({
+  title,
+  eyebrow,
+  actions,
+  width = 'default',
+  children,
+  className,
+}: PageProps) {
   return (
     <div className={['sq-page', `sq-page--${width}`, className].filter(Boolean).join(' ')}>
       <header className="sq-page__header">
         <div className="sq-page__heading">
           {eyebrow ? <p className="sq-page__eyebrow">{eyebrow}</p> : null}
-          <h1 className="sq-page__title" tabIndex={-1} data-page-title>{title}</h1>
+          <h1 className="sq-page__title" tabIndex={-1} data-page-title>
+            {title}
+          </h1>
         </div>
         {actions ? <div className="sq-page__actions">{actions}</div> : null}
       </header>
@@ -25,7 +34,17 @@ export function Page({ title, eyebrow, actions, width = 'default', children, cla
   );
 }
 
-export function PageSection({ title, description, children, actions }: { title?: string; description?: string; children?: ReactNode; actions?: ReactNode }) {
+export function PageSection({
+  title,
+  description,
+  children,
+  actions,
+}: {
+  title?: string;
+  description?: string;
+  children?: ReactNode;
+  actions?: ReactNode;
+}) {
   return (
     <section className="sq-section">
       {title || actions ? (

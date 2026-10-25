@@ -5,7 +5,9 @@ import { EmptyState, Page, Skeleton, type LabMeta } from '@squad/web';
 const metaModules = import.meta.glob<{ meta: LabMeta }>('./*/meta.ts', { eager: true });
 const pageModules = import.meta.glob<{ default: ComponentType }>('./*/index.tsx');
 
-export interface LabEntry extends LabMeta { dir: string }
+export interface LabEntry extends LabMeta {
+  dir: string;
+}
 
 export const labEntries: LabEntry[] = Object.entries(metaModules)
   .map(([file, m]) => ({ ...m.meta, dir: file.split('/')[1]! }))
@@ -13,7 +15,12 @@ export const labEntries: LabEntry[] = Object.entries(metaModules)
 
 function LabHost({ dir }: { dir: string }) {
   const loader = pageModules[`./${dir}/index.tsx`];
-  if (!loader) return createElement(EmptyState, { title: 'Lab page missing', body: `lab/${dir}/index.tsx has no default export.`, icon: 'alert' });
+  if (!loader)
+    return createElement(EmptyState, {
+      title: 'Lab page missing',
+      body: `lab/${dir}/index.tsx has no default export.`,
+      icon: 'alert',
+    });
   const Lazy = lazy(loader);
   return (
     <Suspense fallback={<Skeleton shape="block" height={320} />}>
@@ -26,7 +33,11 @@ export function LabsIndex() {
   return (
     <Page title="Labs" eyebrow="Developer" width="narrow">
       {labEntries.length === 0 ? (
-        <EmptyState icon="sparkle" title="No lab pages yet" body="Lab pages register themselves: add lab/<name>/meta.ts and lab/<name>/index.tsx." />
+        <EmptyState
+          icon="sparkle"
+          title="No lab pages yet"
+          body="Lab pages register themselves: add lab/<name>/meta.ts and lab/<name>/index.tsx."
+        />
       ) : (
         <ul className="sq-labs">
           {labEntries.map((l) => (
@@ -45,5 +56,7 @@ export function LabsIndex() {
 
 export const labRoutes: RouteObject[] = [
   { path: '/__labs', element: <LabsIndex /> },
-  ...labEntries.map((l) => ({ path: `/${l.path}`, element: <LabHost dir={l.dir} /> }) satisfies RouteObject),
+  ...labEntries.map(
+    (l) => ({ path: `/${l.path}`, element: <LabHost dir={l.dir} /> }) satisfies RouteObject,
+  ),
 ];

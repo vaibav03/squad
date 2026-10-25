@@ -24,7 +24,9 @@ export function SignInStub({ onSignIn }: { onSignIn: (s: SquadSession) => void }
                 className="sq-signin__student"
                 onClick={() => setPicked(s.id)}
               >
-                <span className="sq-signin__avatar"><img src={s.avatarUrl} alt="" width="64" height="64" /></span>
+                <span className="sq-signin__avatar">
+                  <img src={s.avatarUrl} alt="" width="64" height="64" />
+                </span>
                 <span className="sq-signin__name">{s.name}</span>
                 <span className="sq-signin__blurb">{s.blurb}</span>
               </button>
@@ -35,7 +37,14 @@ export function SignInStub({ onSignIn }: { onSignIn: (s: SquadSession) => void }
             size="lg"
             fullWidth
             iconEnd="arrow-right"
-            onClick={() => onSignIn({ userId: student.id, name: student.name, token: `dev-${student.id}`, avatarUrl: student.avatarUrl })}
+            onClick={() =>
+              onSignIn({
+                userId: student.id,
+                name: student.name,
+                token: `dev-${student.id}`,
+                avatarUrl: student.avatarUrl,
+              })
+            }
           >
             Enter the village as {student.name}
           </Button>

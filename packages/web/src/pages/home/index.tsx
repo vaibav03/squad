@@ -16,19 +16,30 @@ export default function HomePage() {
   const { session } = useAuth();
   const { setTitle } = useShell();
   const [ready, setReady] = useState(false);
-  useEffect(() => { setTitle('Home'); const t = setTimeout(() => setReady(true), 120); return () => clearTimeout(t); }, [setTitle]);
+  useEffect(() => {
+    setTitle('Home');
+    const t = setTimeout(() => setReady(true), 120);
+    return () => clearTimeout(t);
+  }, [setTitle]);
   const name = session?.name ?? 'there';
   const done = HOME_CHECKLIST.filter((c) => c.done).length;
 
   return (
-    <Page title={`Good evening, ${name}`} eyebrow="Your squad" >
+    <Page title={`Good evening, ${name}`} eyebrow="Your squad">
       <section className="sq-home__hero sq-scene" aria-labelledby="hero-title">
         <NightScene className="sq-home__scene" />
         <div className="sq-home__heroinner">
           <p className="sq-home__tag">Tonight</p>
-          <h2 id="hero-title" className="sq-home__herotitle">Enter the Village</h2>
-          <p className="sq-home__herolede">Your study agents are awake. Walk down to the council hall, pick up a call, or check on the group.</p>
-          <Button as="a" href="/squad/village" variant="primary" size="lg" iconEnd="arrow-right">Enter the Village</Button>
+          <h2 id="hero-title" className="sq-home__herotitle">
+            Enter the Village
+          </h2>
+          <p className="sq-home__herolede">
+            Your study agents are awake. Walk down to the council hall, pick up a call, or check on
+            the group.
+          </p>
+          <Button as="a" href="/squad/village" variant="primary" size="lg" iconEnd="arrow-right">
+            Enter the Village
+          </Button>
         </div>
       </section>
 
@@ -40,9 +51,21 @@ export default function HomePage() {
                 {HOME_CHECKLIST.map((c) => (
                   <li key={c.key}>
                     <Link to={c.to} className="sq-home__row">
-                      <span className={`sq-home__check${c.done ? ' is-done' : ''}`} aria-hidden="true">{c.done ? <Icon name="check" size={14} /> : null}</span>
-                      <span className="sq-home__rowtext"><strong>{c.title}</strong><span>{c.body}</span></span>
-                      {c.done ? <span className="sq-home__done">Done</span> : <span className="sq-home__todo">To do</span>}
+                      <span
+                        className={`sq-home__check${c.done ? ' is-done' : ''}`}
+                        aria-hidden="true"
+                      >
+                        {c.done ? <Icon name="check" size={14} /> : null}
+                      </span>
+                      <span className="sq-home__rowtext">
+                        <strong>{c.title}</strong>
+                        <span>{c.body}</span>
+                      </span>
+                      {c.done ? (
+                        <span className="sq-home__done">Done</span>
+                      ) : (
+                        <span className="sq-home__todo">To do</span>
+                      )}
                       <Icon name="chevron-right" size={18} />
                     </Link>
                   </li>
@@ -50,7 +73,14 @@ export default function HomePage() {
               </ul>
             </Card>
           ) : (
-            <Card padding="md"><div className="sq-home__skel"><Skeleton height={20} /><Skeleton height={20} /><Skeleton height={20} /><Skeleton height={20} /></div></Card>
+            <Card padding="md">
+              <div className="sq-home__skel">
+                <Skeleton height={20} />
+                <Skeleton height={20} />
+                <Skeleton height={20} />
+                <Skeleton height={20} />
+              </div>
+            </Card>
           )}
         </PageSection>
 
@@ -58,8 +88,13 @@ export default function HomePage() {
           <div className="sq-home__links">
             {HOME_LINKS.map((l) => (
               <Link key={l.to} to={l.to} className="sq-home__link">
-                <span className="sq-home__linkicon"><Icon name={l.icon as IconName} size={20} /></span>
-                <span className="sq-home__linktext"><strong>{l.title}</strong><span>{l.body}</span></span>
+                <span className="sq-home__linkicon">
+                  <Icon name={l.icon as IconName} size={20} />
+                </span>
+                <span className="sq-home__linktext">
+                  <strong>{l.title}</strong>
+                  <span>{l.body}</span>
+                </span>
                 <Icon name="chevron-right" size={18} />
               </Link>
             ))}
