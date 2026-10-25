@@ -88,7 +88,7 @@ export interface EmptyCouncilStateProps {
 
 /**
  * Honest "no council has ever run": what a run is, the provider state, and a primary "Convene the council" that starts a
- * real run (Live when configured and switched on, otherwise streaming; with no key the hub runs a labelled demo run).
+ * real run (Live when configured and switched on, otherwise streaming; with no key the server runs a labelled demo run).
  */
 export function EmptyCouncilState({
   hub,

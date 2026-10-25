@@ -106,7 +106,7 @@ export function EmptyHelp({
         ) : (
           <p className="af-dim" data-testid="af-no-run">
             No council has run yet
-            {hub ? '.' : '. Without a hub this plays a scripted sample, labelled as an example.'}
+            {hub ? '.' : '. Without a sign-in this plays a scripted sample, labelled as an example.'}
           </p>
         )
       ) : (

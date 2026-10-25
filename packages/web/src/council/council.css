@@ -745,3 +745,50 @@
 .cn-board-btn {
   align-self: flex-start;
 }
+
+/* ---- entry guide: who, what, how long, Gemini or practice */
+.cn-guide {
+  padding: var(--lv-s3);
+  border: 1px solid var(--lv-line);
+  border-radius: var(--lv-r3, 10px);
+  background: var(--lv-surface-2, transparent);
+}
+.cn-guide__list {
+  display: grid;
+  gap: var(--lv-s3);
+  margin: 0;
+}
+.cn-guide__list dt {
+  font: 600 var(--text-xs) / var(--lh-xs) var(--lv-font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--lv-text-dim);
+}
+.cn-guide__list dd {
+  margin: 2px 0 0;
+  font: 400 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
+  color: var(--lv-text);
+}
+.cn-guide__people {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+}
+.cn-guide dd[data-state='practice'],
+.cn-guide dd[data-state='notset'],
+.cn-guide dd[data-state='partial'] {
+  font-weight: 600;
+}
+
+/* ---- result actions */
+.cn-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--lv-s2);
+}
+.cn-result-actions .lv-btn {
+  text-decoration: none;
+}

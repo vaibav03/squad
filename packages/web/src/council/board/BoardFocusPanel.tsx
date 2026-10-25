@@ -19,7 +19,14 @@ import { InitialTile } from './AgentCard';
 import { ModeBadge } from './ModeBadge';
 import { ROLE_LABEL, STATUS_LABEL } from './common';
 
-const ICON = { queued: 'clock', working: 'refresh', done: 'check', failed: 'alert', skipped: 'x', partial: 'alert' } as const;
+const ICON = {
+  queued: 'clock',
+  working: 'refresh',
+  done: 'check',
+  failed: 'alert',
+  skipped: 'x',
+  partial: 'alert',
+} as const;
 
 export interface BoardFocusPanelProps {
   store: CouncilBoardStore;
@@ -36,7 +43,16 @@ export interface BoardFocusPanelProps {
  * The focused agent panel inside the Council board: the same Conversation | Activity | Decisions panel as the village
  * inspector, docked on the right of the board. One panel; picking another agent swaps its content in place.
  */
-export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onClose, onSelectAgent }: BoardFocusPanelProps) {
+export function BoardFocusPanel({
+  store,
+  run,
+  agentId,
+  record,
+  replay,
+  calm,
+  onClose,
+  onSelectAgent,
+}: BoardFocusPanelProps) {
   const agent = run.agents.find((a) => a.id === agentId);
   const [tab, setTab] = useState<FocusTab>('conversation');
   const titleId = useId();
@@ -101,12 +117,20 @@ export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onC
     <div className="ai-tabpanel">
       <h3 className="ai-label">Who {agent.name} works with</h3>
       {partners.size === 0 ? (
-        <EmptyHelp isCouncil topic={agent.name} title={`${agent.name} has not worked with anyone yet`} />
+        <EmptyHelp
+          isCouncil
+          topic={agent.name}
+          title={`${agent.name} has not worked with anyone yet`}
+        />
       ) : (
         <ul className="ai-partners">
           {[...partners].map(([id, n]) => (
             <li key={id}>
-              <button type="button" className="ai-party ai-party--btn" onClick={() => onSelectAgent(id)}>
+              <button
+                type="button"
+                className="ai-party ai-party--btn"
+                onClick={() => onSelectAgent(id)}
+              >
                 {a2aPartyName(id)}
               </button>
               <span className="ai-count">

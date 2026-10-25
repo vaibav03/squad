@@ -229,7 +229,7 @@ describe('Council board', () => {
     const send = within(v).getAllByRole('button', { name: /^Send to chat/ });
     expect(send.length).toBeGreaterThan(0);
     expect((send[0] as HTMLButtonElement).disabled).toBe(true);
-    expect(v.textContent).toContain('Sign in to a hub');
+    expect(v.textContent).toContain('Sign in to send these');
   });
 
   it('action items: replays never send', async () => {

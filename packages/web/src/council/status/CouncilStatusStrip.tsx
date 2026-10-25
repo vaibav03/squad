@@ -9,6 +9,7 @@ import {
   type StripRun,
   type TranscriptState,
 } from './derive';
+import { notSetUp } from '../../lib/state-labels';
 import './status-strip.css';
 
 export interface CouncilStatusStripProps {
@@ -58,7 +59,7 @@ export function CouncilStatusStrip({
           <span className="cs-k">Provider</span> {v.provider}
         </li>
         <li data-testid="cs-transport">
-          <span className="cs-k">Transport</span> {v.transport}
+          <span className="cs-k">Connection</span> {v.transport}
         </li>
         {v.mode ? (
           <li data-testid="cs-mode" data-tier={v.mode.tier}>
@@ -67,7 +68,7 @@ export function CouncilStatusStrip({
           </li>
         ) : null}
         <li data-testid="cs-key" data-state={v.key.state}>
-          <span className="cs-k">Key</span> <span aria-hidden="true">{v.key.glyph}</span>{' '}
+          <span className="cs-k">Gemini key</span> <span aria-hidden="true">{v.key.glyph}</span>{' '}
           {v.key.word}
         </li>
         <li data-testid="cs-models">
@@ -86,8 +87,8 @@ export function CouncilStatusStrip({
         </li>
         {v.counters ? (
           <li data-testid="cs-a2a">
-            <span className="cs-k">A2A</span> {v.counters.messages} messages,{' '}
-            {v.counters.delegations} delegations, stage: {v.counters.stage}
+            <span className="cs-k">Handoffs</span> {v.counters.messages} messages passed between
+            agents, {v.counters.delegations} tasks handed over, step: {v.counters.stage}
           </li>
         ) : null}
       </ul>
@@ -98,7 +99,10 @@ export function CouncilStatusStrip({
       ) : null}
       {keyBad || variant === 'full' ? (
         <p className="cs-fix" data-testid="cs-fix" data-state={v.key.state}>
-          <span className="cs-k">Fix</span> {v.key.fix}
+          <span className="cs-k">Fix</span>{' '}
+          {v.key.state === 'no_key'
+            ? notSetUp('the Gemini key')
+            : v.key.fix.replace(/GEMINI_API_KEY/g, 'the Gemini key')}
         </p>
       ) : null}
     </section>

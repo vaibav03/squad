@@ -18,6 +18,7 @@ import { useShell } from '../../shell/shell-context';
 import { PanelDockRoot } from '../../shell/panel-dock';
 import { ChatDock } from '../chat/ChatDock';
 import { RoomLayer } from '../../overlays/room-info';
+import { PanelUrlSync } from './PanelUrlSync';
 import { MasteryLayer } from '../../overlays/mastery';
 import { PlanLayer, PlanPill } from '../../overlays/plan';
 import { InspectorPanel } from '../../overlays/inspector';
@@ -254,12 +255,13 @@ export default function VillagePage({ world }: { world?: string }) {
         <EmptyState
           icon="map"
           title="The village is offline"
-          body="Connect to a hub to watch your squad. Sign in with a hub URL, or open a recorded replay."
+          body="Sign in to watch your squad, or open a recorded replay."
         />
       </div>
     );
   return (
     <PanelDockRoot className="sq-world" onKeyDown={onRootKeyDown}>
+      <PanelUrlSync />
       <div ref={stage} className="sq-world__stage" />
       {state === 'loading' && (
         <div className="sq-world__loading">

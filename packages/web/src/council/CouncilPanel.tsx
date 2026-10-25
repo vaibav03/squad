@@ -13,8 +13,11 @@ import { noteCouncilResult, setPendingVoices } from '../overlays/inspector/bridg
 import { OverlayFrame } from '../overlays/kit/OverlayFrame';
 import { LvIcon } from '../overlays/kit/icons';
 import { usePrefersReducedMotion } from '../overlays/kit/hooks';
-import { ResultBoardButton, RunStrip } from './RunStrip';
+import { ResultBoardButton, RunStrip, plainStep } from './RunStrip';
 import { ResultStatusStrip } from './status/CouncilStatusStrip';
+import { useCouncilStatus } from './status/useCouncilStatus';
+import { EntryGuide } from './EntryGuide';
+import { ResultActions } from './ResultActions';
 import { hubTransport, type CouncilTransport } from './council-client';
 import { useCouncilRun } from './useCouncilRun';
 import {
@@ -75,6 +78,7 @@ export function CouncilPanel(props: CouncilPanelProps) {
   const t = useMemo(() => transport ?? (hub ? hubTransport(hub) : null), [transport, hub]);
   const run = useCouncilRun(t);
   const { status, result, view } = run;
+  const { status: hubStatus } = useCouncilStatus(hub);
 
   const trimmed = draft.trim();
   const canSend = trimmed.length >= COUNCIL_QUESTION_MIN && trimmed.length <= COUNCIL_QUESTION_MAX;
@@ -241,6 +245,7 @@ export function CouncilPanel(props: CouncilPanelProps) {
                 </button>
               </div>
             </form>
+            <EntryGuide status={hub ? hubStatus : 'unknown'} />
             <div className="cn-chips" role="group" aria-label="Sample questions">
               {COUNCIL_SAMPLES.map((s) => (
                 <button
@@ -285,6 +290,11 @@ export function CouncilPanel(props: CouncilPanelProps) {
             </div>
 
             {result ? <RunStrip result={result} showMode={!view.verdict} /> : null}
+            {playing && !stopped && !result?.stage ? (
+              <p className="cn-dim cn-small" role="status" data-testid="cn-phase">
+                {plainStep(view.rankings ? 2 : view.members > 0 ? 1 : 0)}
+              </p>
+            ) : null}
 
             {(status === 'error' || status === 'offline') && run.error && (
               <ErrorBlock message={run.error} offline={status === 'offline'} onRetry={run.retry} />
@@ -323,6 +333,10 @@ export function CouncilPanel(props: CouncilPanelProps) {
 
             {result && !idle ? <ResultBoardButton result={result} hub={hub} calm={calm} /> : null}
 
+            {result && view.settled ? (
+              <ResultActions result={result} onEdit={editQuestion} />
+            ) : null}
+
             <div className="cn-actions">
               {canSkip && (
                 <button type="button" className="lv-btn" onClick={run.skip}>
@@ -338,7 +352,7 @@ export function CouncilPanel(props: CouncilPanelProps) {
                     </button>
                   )}
                   {view.settled && (
-                    <button type="button" className="lv-btn lv-btn--primary" onClick={askAnother}>
+                    <button type="button" className="lv-btn" onClick={askAnother}>
                       Ask something else
                     </button>
                   )}

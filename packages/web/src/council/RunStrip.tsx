@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CouncilResult } from '@squad/core';
 import {
-  STEPS,
   createCouncilBoardStore,
   syncResultToBoard,
   type CouncilBoardStore,
@@ -16,13 +15,31 @@ import type { HubCtx } from '../pages/village/hub';
 /** Honest mode of a result: the runtime's own `mode` (v2), else the member-based fallback for legacy runs. */
 export const modeOfResult = (r: CouncilResult): string => resultMode(r);
 
-/** Reader words for the run's current step. */
+/** The four steps a customer sees, in plain words. The board keeps its own finer-grained steps. */
+export const PLAIN_STEPS = [
+  'the question is going to the members',
+  'members are discussing',
+  'members are comparing notes',
+  'the Chair is writing the verdict',
+] as const;
+const PLAIN_STEP_OF: Record<string, number> = {
+  question: 0,
+  delegation: 0,
+  opinions: 1,
+  critiques: 2,
+  dissent: 2,
+  verdict: 3,
+  actions: 3,
+};
+export const plainStep = (i: number): string => `Step ${i + 1} of 4: ${PLAIN_STEPS[i]}`;
+
+/** Reader words for the run's current step ("Step 2 of 4: members are discussing"). */
 export function stageWords(r: Pick<CouncilResult, 'stage' | 'status'>): string | undefined {
   // a refused run never got past the question: no step to show
   if (!r.stage || r.status === 'refused') return undefined;
   if (r.stage === 'done') return 'All steps done';
-  const i = STEPS.findIndex((s) => s.stage === r.stage);
-  return i < 0 ? undefined : `Step ${i + 1} of ${STEPS.length}: ${STEPS[i]!.label}`;
+  const i = PLAIN_STEP_OF[r.stage];
+  return i === undefined ? undefined : plainStep(i);
 }
 
 const STATE_WORD: Record<string, string> = {

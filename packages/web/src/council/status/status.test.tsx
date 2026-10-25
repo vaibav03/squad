@@ -176,7 +176,9 @@ describe('CouncilStatusStrip', () => {
     expect(text('cs-mic')).toContain('Mic unavailable');
     expect(text('cs-audio')).toContain('Audio unavailable');
     expect(text('cs-transcript')).toContain('No transcript');
-    expect(text('cs-a2a')).toContain('9 messages, 2 delegations, stage: Opinions');
+    expect(text('cs-a2a')).toContain(
+      '9 messages passed between agents, 2 tasks handed over, step: Opinions',
+    );
     expect(text('cs-fix')).toContain(COUNCIL_KEY_FIX.ok);
     expect(screen.getByTestId('cs-banner').getAttribute('role')).toBe('status');
   });
@@ -191,7 +193,7 @@ describe('CouncilStatusStrip', () => {
     expect(text('cs-banner')).toContain('◆');
     expect(text('cs-models')).toContain('No model used (scripted)');
     expect(text('cs-key')).toContain('No key');
-    expect(text('cs-fix')).toContain('GEMINI_API_KEY');
+    expect(text('cs-fix')).toContain('Not set up yet: add the Gemini key to turn this on');
   });
   it('degraded: the reason in words, the fix when the key is the cause', () => {
     render(

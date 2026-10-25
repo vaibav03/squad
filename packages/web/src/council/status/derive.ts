@@ -137,7 +137,7 @@ export function deriveStrip(i: StripInput): StripView {
   const key = {
     state: keyState,
     ...KEY_WORDS[keyState],
-    fix: st ? st.key.fix : 'The hub did not report its key state.',
+    fix: st ? st.key.fix : 'Squad could not report its Gemini key state.',
   };
 
   let transport: string;

@@ -103,7 +103,7 @@ export function DecisionCard(props: DecisionCardProps) {
   const askOff = replay
     ? 'This is a recorded replay, so nothing is sent.'
     : !hub?.token
-      ? 'Sign in to a hub to ask the council again.'
+      ? 'Sign in to ask the council again.'
       : '';
 
   const runAll = async (kind: ActionKind) => {

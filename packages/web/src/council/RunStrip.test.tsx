@@ -71,7 +71,7 @@ describe('RunStrip', () => {
   it('shows the run mode, the current step in words and every agent with its state', () => {
     render(<RunStrip result={v2()} />);
     expect(screen.getByText('Degraded: no turn')).toBeTruthy();
-    expect(screen.getByText('Step 3 of 7: Opinions')).toBeTruthy();
+    expect(screen.getByText('Step 2 of 4: members are discussing')).toBeTruthy();
     const list = screen.getByRole('list', { name: 'Who is on the council' });
     expect(within(list).getByText('Teacher').parentElement!.textContent).toContain(
       'did not answer',
@@ -128,7 +128,7 @@ describe('panels and the shared board', () => {
       target: { value: 'Mean or median?' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Ask the council' }));
-    expect(await screen.findByText('Step 3 of 7: Opinions')).toBeTruthy();
+    expect(await screen.findByText('Step 2 of 4: members are discussing')).toBeTruthy();
     expect(screen.getByText('Degraded: no turn', { selector: '.cb-mode__word' })).toBeTruthy();
     expect(screen.getByRole('list', { name: 'Who is on the council' })).toBeTruthy();
   });

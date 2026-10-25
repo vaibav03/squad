@@ -66,7 +66,7 @@ export function CouncilHall({
   const q = useMemo(() => new URLSearchParams(location.search), []);
   const mode = q.get('council');
   const fixture = mode === 'fixture';
-  const forced = mode === '1' || fixture;
+  const forced = mode === '1' || fixture || q.get('panel') === 'council';
   const liveForced = q.get('live') === '1' || q.get('livemock') === '1';
   const inside = useInCouncilHall();
   const canBoard = useCanOpenBoard();

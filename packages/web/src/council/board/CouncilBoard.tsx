@@ -125,7 +125,7 @@ export function CouncilBoard({
   );
   const sendOff = replay
     ? 'This is a recorded replay, so nothing is sent.'
-    : 'Sign in to a hub to send these to your chat.';
+    : 'Sign in to send these to your chat.';
 
   const initialFocus = useCallback(
     () => document.querySelector<HTMLElement>('.cb-panel .cb-close'),

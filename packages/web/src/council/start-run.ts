@@ -30,7 +30,7 @@ export async function startCouncilRun(o: {
 
 /**
  * Which transport a start asks for: Live only when the hub has it enabled, its last attempt did not fail AND the user's
- * "Use Gemini Live" toggle is on; otherwise streaming (the hub runs a labelled demo run when there is no key).
+ * "Use Gemini Live" toggle is on; otherwise streaming (the server runs a labelled demo run when there is no key).
  */
 export function chooseStartTransport(
   status: CouncilStatus | null | 'unknown',

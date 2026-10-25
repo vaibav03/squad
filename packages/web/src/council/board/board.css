@@ -784,17 +784,19 @@
 
 /* focused agent panel docked on the right of the board: the dominant surface while an agent is selected */
 .cb-focus {
-  position: absolute;
-  z-index: 5;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(520px, 100%);
+  /* A region of the board, never a layer on top of it: the decision card keeps its own space above.
+     Desktop and phone alike it is a bottom sheet inside the panel (the body above shrinks and scrolls). */
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  height: min(46%, 380px);
+  min-height: 220px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   background: var(--lv-surface, var(--card));
-  border-left: 2px solid var(--sq-ink);
-  box-shadow: -12px 0 32px rgb(0 0 0 / 0.35);
+  border-top: 2px solid var(--sq-ink);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 0.25);
   overflow: hidden;
 }
 .cb-focus .ai-body {
