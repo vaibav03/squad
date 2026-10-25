@@ -113,15 +113,15 @@ export const groundingCheck: Check = {
     );
     const p = percentiles(lat);
     t.metric('ask latency p50/p95 ms', `${p.p50} / ${p.p95} (n=${p.n})`);
-    if (total > 0)
-      rate <= maxStrike
-        ? t.pass(
-            'citation strike rate within bound',
-            `${(rate * 100).toFixed(1)}% <= ${maxStrike * 100}%`,
-          )
-        : t.fail(
-            'citation strike rate too high',
-            `${(rate * 100).toFixed(1)}% > ${maxStrike * 100}%: quotes are being struck; see runbook (quote strictness / prompt)`,
-          );
+    if (total > 0) {
+      const pct = `${(rate * 100).toFixed(1)}%`;
+      if (rate <= maxStrike)
+        t.pass('citation strike rate within bound', `${pct} <= ${maxStrike * 100}%`);
+      else
+        t.fail(
+          'citation strike rate too high',
+          `${pct} > ${maxStrike * 100}%: quotes are being struck; see runbook (quote strictness / prompt)`,
+        );
+    }
   },
 };

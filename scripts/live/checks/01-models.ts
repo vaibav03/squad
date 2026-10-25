@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import type { z } from 'zod';
 import { QuestionsSchema } from '@squad/brain';
 import { ExpertOutputSchema } from '../../../packages/brain/src/experts/expert';
 import { ScriptSchema } from '../../../packages/media/src/podcast/script';
