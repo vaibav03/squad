@@ -1,0 +1,169 @@
+{
+  "description": "Time-of-day support. The engine keeps the same layer art and (a) swaps the sky strip, (b) multiplies a flat tint overlay on listed layers: tint = {color: palette name, alpha: 0..1} drawn with normal blend over the layer (clipped to its opaque pixels). DUSK overlays ember (low alpha) and roof-wine on hills/clouds; DAWN overlays cloud-hi and glow. Window/light layers (buildings with glowing windows, lanterns, chimney smoke glow) are NEVER tinted. Stars fade to alpha 0 at day, moon is hidden at day (dusk: moon visible, dawn: moon low alpha 0.6). Only palette colors are used.",
+  "sky": {
+    "night": "0_sky.png",
+    "dusk": "0_sky_dusk.png",
+    "dawn": "0_sky_dawn.png",
+    "day": "0_sky_day.png"
+  },
+  "day_replace_colors": {
+    "sky-deep": "sky-low",
+    "sky-mid": "cloud-lo",
+    "sky-low": "cloud-hi",
+    "note": "applies to buildings/props that use sky colors for unlit windows"
+  },
+  "layers": {
+    "1_stars": {
+      "dusk": {
+        "alpha": 0.5
+      },
+      "dawn": {
+        "alpha": 0.35
+      },
+      "day": {
+        "alpha": 0.0
+      }
+    },
+    "2_moon": {
+      "dusk": {
+        "alpha": 1.0
+      },
+      "dawn": {
+        "alpha": 0.6
+      },
+      "day": {
+        "alpha": 0.0
+      }
+    },
+    "3_clouds_far": {
+      "dusk": {
+        "tint": "roof-wine",
+        "alpha": 0.35
+      },
+      "dawn": {
+        "tint": "cloud-hi",
+        "alpha": 0.25
+      },
+      "day": {
+        "tint": "cloud-hi",
+        "alpha": 0.45
+      }
+    },
+    "4_clouds_near": {
+      "dusk": {
+        "tint": "ember",
+        "alpha": 0.3
+      },
+      "dawn": {
+        "tint": "glow",
+        "alpha": 0.22
+      },
+      "day": {
+        "tint": "cloud-hi",
+        "alpha": 0.35
+      }
+    },
+    "5_hills_far": {
+      "dusk": {
+        "tint": "roof-wine",
+        "alpha": 0.35
+      },
+      "dawn": {
+        "tint": "cloud-hi",
+        "alpha": 0.28
+      },
+      "day": {
+        "tint": "cloud-lo",
+        "alpha": 0.3
+      }
+    },
+    "6_hills_mid": {
+      "dusk": {
+        "tint": "roof-shade",
+        "alpha": 0.25
+      },
+      "dawn": {
+        "tint": "cloud-lo",
+        "alpha": 0.22
+      },
+      "day": {
+        "tint": "hill-far",
+        "alpha": 0.28
+      }
+    },
+    "7_hills_near": {
+      "dusk": {
+        "tint": "roof-shade",
+        "alpha": 0.2
+      },
+      "dawn": {
+        "tint": "cloud-lo",
+        "alpha": 0.16
+      },
+      "day": {
+        "tint": "hill-mid",
+        "alpha": 0.22
+      }
+    },
+    "8_fenceline": {
+      "dusk": {
+        "tint": "ember",
+        "alpha": 0.18
+      },
+      "dawn": {
+        "tint": "glow",
+        "alpha": 0.15
+      },
+      "day": {
+        "tint": "wood-lit",
+        "alpha": 0.2
+      }
+    },
+    "9_ground": {
+      "dusk": {
+        "tint": "ember",
+        "alpha": 0.12
+      },
+      "dawn": {
+        "tint": "glow",
+        "alpha": 0.1
+      },
+      "day": {
+        "tint": "leaf-lit",
+        "alpha": 0.18
+      }
+    },
+    "10_foreground": {
+      "dusk": {
+        "tint": "roof-shade",
+        "alpha": 0.15
+      },
+      "dawn": {
+        "tint": "sky-mid",
+        "alpha": 0.1
+      },
+      "day": {
+        "tint": "leaf-dark",
+        "alpha": 0.1
+      }
+    }
+  },
+  "never_tint": [
+    "windows",
+    "lanterns",
+    "chimney-smoke-glow",
+    "ui"
+  ],
+  "sky_overlay": {
+    "dusk": {
+      "color": "ember",
+      "alpha": 0.0,
+      "note": "sky strip already carries the dusk bands"
+    },
+    "dawn": {
+      "color": "glow",
+      "alpha": 0.0
+    }
+  },
+  "transition": "crossfade the sky strips over ~6s (alpha); tint alphas lerp linearly; palette-only at rest."
+}
