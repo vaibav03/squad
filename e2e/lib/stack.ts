@@ -43,7 +43,9 @@ export const baseEnv = (): NodeJS.ProcessEnv => ({
   HUB_BASE_URL: HUB,
   DB_PATH: path.join(TMP, 'hub.db'),
   INTERNAL_EVENTS_SECRET: SECRET,
-  HUB_CORS_ORIGINS: `${WEB},http://127.0.0.1:${WEB_PORT}`,
+  // The usual dev origin (5173) is listed FIRST on purpose: the hub must still send the OAuth callback back to the
+  // origin the browser actually started on (j28), not to the first configured one.
+  HUB_CORS_ORIGINS: `http://localhost:5173,${WEB},http://127.0.0.1:${WEB_PORT}`,
   VITE_HUB_URL: HUB,
   AGENT_PEERS: peers(),
   FORCE_COLOR: '0',
