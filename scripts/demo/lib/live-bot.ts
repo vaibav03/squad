@@ -32,9 +32,10 @@ export function createStudentsConfirm(
   const timer = setInterval(() => {
     while (seen < bot.sent.length) {
       const m = bot.sent[seen++]!;
-      if (process.env.DEMO_DEBUG) console.log('dm', m.chatId, JSON.stringify(m.text).slice(0, 90));
+      if (process.env.DEMO_DEBUG)
+        console.log('dm', m.chatId, JSON.stringify(m.text ?? '').slice(0, 90));
       const who = students.find((s) => m.chatId === `dm:${s}`);
-      if (who && /^Reply /m.test(m.text)) {
+      if (who && /^Reply /m.test(m.text ?? '')) {
         bot.advance(1_000); // the bot drops identical (chat, sender, ts, text) as duplicates
         void bot.answerConfirm(who, answer);
       }
@@ -45,6 +46,6 @@ export function createStudentsConfirm(
     bot,
     askConfirm: () => (student, question, options, taskId) =>
       bot.bot.confirms.ask(student, question, options, taskId),
-    dms: () => bot.sent.map((m) => m.text),
+    dms: () => bot.sent.map((m) => m.text ?? ''),
   };
 }

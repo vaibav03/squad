@@ -17,5 +17,8 @@ export default tseslint.config(
     },
   },
   { files: ['**/*.test.ts', '**/test/**'], rules: { '@typescript-eslint/no-explicit-any': 'off' } },
-  { files: ['scripts/**', '*.config.js'], rules: { 'no-undef': 'off' } },
+  {
+    files: ['scripts/**', '**/scripts/**', '**/review-live/**', '*.config.js'],
+    rules: { 'no-undef': 'off' },
+  },
 );
