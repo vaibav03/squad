@@ -6,6 +6,7 @@ import { publishRoomSession } from './rooms';
 import { eventChapter } from './model/events';
 import { Raster } from './pixel/raster';
 import { PLACEMENTS, chapterSlotFor, type Placement } from './registry';
+import { SEAT_BOX, paintSeatRing, paintSeatTag, roomSeats, type RoomSeat } from './roomSeats';
 
 /**
  * Phaser binding for the buildings half (docs/village-api.md section 2). Scenes are pure Raster
@@ -23,7 +24,8 @@ interface Img {
   setVisible(v: boolean): Img;
   setScrollFactor(x: number, y?: number): Img;
   setPosition(x: number, y: number): Img;
-  setInteractive(): Img;
+  setInteractive(opts?: { useHandCursor?: boolean }): Img;
+  setData(key: string, value: unknown): Img;
   on(ev: string, fn: () => void): Img;
   destroy(): void;
 }
@@ -107,6 +109,13 @@ export interface HostCtx {
   me: string | undefined;
   readonly calm: boolean;
   log(msg: string, extra?: unknown): void;
+}
+/** The slice of the inspector store the room seats use (the store itself lives in ../inspector). */
+interface SeatStore {
+  readonly selected: string | null;
+  readonly room: { slot: string; who: string } | null;
+  select(id: string | null, room?: { slot: string; who: string }): void;
+  setSide(s: 'left' | 'right'): void;
 }
 interface Instance {
   update?(timeMs: number, deltaMs: number): void;
@@ -204,6 +213,15 @@ const mod = {
     let fading = false;
     let alphaNow = 0;
     let destroyed = false;
+    // clickable characters inside the room (Agent Inspector targets)
+    let seats: RoomSeat[] = [];
+    let seatKey = '';
+    let zones: Img[] = [];
+    let hoverSeat = -1;
+    let kbSeat = -1;
+    let seatsDirty = false;
+    const store = (): SeatStore | undefined =>
+      ctx.registry.get('inspector') as SeatStore | undefined;
 
     const sceneCtx = (): SceneCtx => ({
       ...DEFAULT_CTX,
@@ -271,15 +289,123 @@ const mod = {
         .setAlpha(0)
         .setVisible(false)
         .setInteractive()
-        .on('pointerdown', leave);
+        .on('pointerdown', () => {
+          // a click on empty space closes the inspector first; the room stays
+          if (store()?.selected) return;
+          leave();
+        });
       interiorImg = scene.add
         .image(cx - INT_W / 2, cy - INT_H / 2, 'scene-interior')
         .setOrigin(0, 0)
         .setScrollFactor(0)
         .setDepth(depth.lighting + 6)
         .setAlpha(0)
-        .setVisible(false);
+        .setVisible(false)
+        // the room itself swallows clicks: only the dark veil around it walks you out
+        .setInteractive()
+        .on('pointerdown', () => undefined);
     }
+
+    const agentOf = (live: Live): string => {
+      if (live.p.agent) return live.p.agent;
+      for (const [chapter, slotId] of chapterSlots)
+        if (slotId === live.p.slotId) return `expert:${chapter}`;
+      return 'expert:chapter';
+    };
+    const clearZones = (): void => {
+      zones.forEach((z) => z.destroy());
+      zones = [];
+      seats = [];
+      seatKey = '';
+      hoverSeat = -1;
+      kbSeat = -1;
+    };
+    function openSeat(i: number): void {
+      const seat = seats[i];
+      const st = store();
+      if (!seat || !st || !inside) return;
+      const cx = Math.round(scene.scale.width / 2);
+      st.setSide(cx - INT_W / 2 + seat.x > scene.scale.width / 2 ? 'left' : 'right');
+      st.select(seat.agent, { slot: inside.p.slotId, who: seat.who });
+    }
+    /** Rebuild the hit zones when the cast of the room changes (council seats fill in as members speak). */
+    function syncSeats(live: Live): void {
+      const next = roomSeats(live.p.slotId, agentOf(live), live.state);
+      const key = next.map((n) => `${n.agent}|${n.who}|${n.x}|${n.y}`).join(';');
+      if (key === seatKey) return;
+      zones.forEach((z) => z.destroy());
+      seatKey = key;
+      seats = next;
+      const cx = Math.round(scene.scale.width / 2);
+      const cy = Math.round(scene.scale.height / 2);
+      zones = next.map((seat, i) =>
+        scene.add
+          .rectangle(
+            cx - INT_W / 2 + seat.x,
+            cy - INT_H / 2 + seat.y - SEAT_BOX.h / 2 + 2,
+            SEAT_BOX.w,
+            SEAT_BOX.h,
+            0xffffff,
+            0.01,
+          )
+          .setScrollFactor(0)
+          .setDepth(depth.lighting + 7)
+          .setData('inspect', `${seat.agent}#${seat.who}`)
+          .setInteractive({ useHandCursor: true })
+          .on('pointerover', () => {
+            hoverSeat = i;
+            seatsDirty = true;
+          })
+          .on('pointerout', () => {
+            if (hoverSeat === i) hoverSeat = -1;
+            seatsDirty = true;
+          })
+          .on('pointerdown', () => openSeat(i)),
+      );
+      session.setSeats?.(
+        next.map((n) => ({ slot: live.p.slotId, agent: n.agent, who: n.who, label: n.label })),
+      );
+      seatsDirty = true;
+    }
+    function paintRoom(live: Live, o: { t: number; calm: boolean; assets: AssetLib }): Raster {
+      const r = live.def.paint(live.state, 'interior', o).clone();
+      const st = store();
+      seats.forEach((seat, i) => {
+        const picked = !!st && st.selected === seat.agent && st.room?.who === seat.who;
+        if (picked || i === kbSeat) paintSeatRing(r, seat);
+        if (i === hoverSeat || i === kbSeat) paintSeatTag(r, seat, i === kbSeat);
+      });
+      return r;
+    }
+    // Keyboard in a room: Tab / arrows move between the characters, Enter opens the inspector on one.
+    const onRoomKey = (e: KeyboardEvent): void => {
+      if (!inside || e.metaKey || e.ctrlKey || e.altKey || seats.length === 0) return;
+      const t = e.target as HTMLElement | null;
+      if (t && t !== document.body && !t.closest?.('.sqv-stage')) return;
+      const dir =
+        e.key === 'ArrowRight' || (e.key === 'Tab' && !e.shiftKey)
+          ? 1
+          : e.key === 'ArrowLeft' || (e.key === 'Tab' && e.shiftKey)
+            ? -1
+            : 0;
+      if (dir !== 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        kbSeat =
+          kbSeat < 0
+            ? dir === 1
+              ? 0
+              : seats.length - 1
+            : (kbSeat + dir + seats.length) % seats.length;
+        seatsDirty = true;
+        ctx.bus.emit('announce', `${seats[kbSeat]!.label}. Press Enter to read the chat.`);
+      } else if (e.key === 'Enter' && kbSeat >= 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        openSeat(kbSeat);
+      }
+    };
+    document.addEventListener('keydown', onRoomKey, true);
 
     function enter(live: Live): void {
       if (inside || !assets) return;
@@ -290,14 +416,11 @@ const mod = {
       ctx.registry.set('playerX', ctx.player.x);
       ctx.player.sprite.setVisible(false);
       session.enter(live.p.slotId);
+      syncSeats(live);
       ctx.bus.emit('enter', { slotId: live.p.slotId });
       fade = { from: alphaNow, to: 1, since: now, dur: ctx.calm ? 120 : 200 };
       fading = true;
-      if (assets)
-        blit(
-          interiorTex,
-          live.def.paint(live.state, 'interior', { t: now, calm: ctx.calm, assets }),
-        );
+      if (assets) blit(interiorTex, paintRoom(live, { t: now, calm: ctx.calm, assets }));
       veil?.setVisible(true);
       interiorImg?.setVisible(true);
       ctx.bus.emit('announce', `Inside ${live.def.describe(live.state)}`);
@@ -312,6 +435,8 @@ const mod = {
       ctx.player.sprite.setVisible(true);
       releaseInput?.();
       releaseInput = null;
+      if (store()?.room) store()?.select(null); // the popup belongs to the room
+      clearZones();
       session.leave();
       ctx.bus.emit('leave', { slotId: live.p.slotId });
     }
@@ -399,7 +524,11 @@ const mod = {
             }
           }
         }
-        if (inside && dirty) blit(interiorTex, inside.def.paint(inside.state, 'interior', o));
+        if (inside) syncSeats(inside);
+        if (inside && (dirty || seatsDirty)) {
+          seatsDirty = false;
+          blit(interiorTex, paintRoom(inside, o));
+        }
       },
       destroy() {
         if (destroyed) return;
@@ -408,6 +537,8 @@ const mod = {
         offEvent();
         offLeave();
         scene.input.keyboard?.off('keydown-ESC', leave);
+        document.removeEventListener('keydown', onRoomKey, true);
+        clearZones();
         releaseInput?.();
         interiorImg?.destroy();
         veil?.destroy();

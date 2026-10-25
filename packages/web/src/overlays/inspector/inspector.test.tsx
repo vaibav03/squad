@@ -154,3 +154,63 @@ describe('InspectorPanel', () => {
     expect(screen.getByText(/Public activity only/)).toBeTruthy();
   });
 });
+
+describe('InspectorPanel opened from a room', () => {
+  it('opens on Chat with the whole room thread, highlights the clicked speaker, privacy intact', async () => {
+    const { createRoomSession, publishRoomSession } = await import('@squad/village/rooms');
+    const session = createRoomSession();
+    publishRoomSession(session);
+    const store = createInspectorStore({ me: 's_ana' });
+    const say = (member: string, text: string) =>
+      session.record(
+        'council-hall',
+        { t: 'council.opinion', councilId: 'council:quizkey', member, text },
+        1,
+      );
+    say('solver-a', 'MSE averages squared errors, so choice 1.');
+    say('solver-b', 'I agree with choice 1.');
+    session.record(
+      'council-hall',
+      {
+        t: 'council.verdict',
+        councilId: 'council:quizkey',
+        member: 'chair',
+        text: 'Verified: the solvers agree.',
+        dissent: false,
+      },
+      2,
+    );
+    session.enter('council-hall');
+    session.setSeats?.([
+      { slot: 'council-hall', agent: 'council:quizkey', who: 'solver-a', label: 'Solver A' },
+      { slot: 'council-hall', agent: 'council:quizkey', who: 'chair', label: 'Chair' },
+    ]);
+    render(<InspectorPanel store={store} />);
+    act(() => store.select('council:quizkey', { slot: 'council-hall', who: 'chair' }));
+    await settle();
+    expect(screen.getByRole('tab', { name: 'Chat', selected: true })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Chair' })).toBeTruthy();
+    expect(screen.getByText('MSE averages squared errors, so choice 1.')).toBeTruthy();
+    expect(screen.getByText('Verified: the solvers agree.')).toBeTruthy();
+    // the chair's own line is marked, the members' are not
+    const own = screen.getByText('Verified: the solvers agree.').closest('li')!;
+    expect(own.getAttribute('data-focus')).toBe('true');
+    expect(
+      screen.getByText('I agree with choice 1.').closest('li')!.getAttribute('data-focus'),
+    ).toBeNull();
+    // just this agent
+    fireEvent.click(screen.getByRole('button', { name: /^Just Chair/ }));
+    expect(screen.queryByText('I agree with choice 1.')).toBeNull();
+    // next seat keeps the room context
+    fireEvent.click(screen.getByRole('button', { name: 'Next agent' }));
+    await settle();
+    expect(store.room?.who).toBe('solver-a');
+    expect(screen.getByRole('heading', { name: 'Solver A' })).toBeTruthy();
+    // Esc closes the popup
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await settle(400);
+    expect(store.selected).toBeNull();
+    expect(findLeak(document.body.textContent ?? '')).toBeUndefined();
+    session.leave();
+  });
+});
