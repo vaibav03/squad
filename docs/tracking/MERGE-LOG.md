@@ -553,3 +553,17 @@ Branch `merge/batch19` (worktree `squad-wt/merge19`), landed as a true `--no-ff`
 
 - Landing merge commit: `408ce998ea30d6a0c72e254a98a955c80bb6d8f7` (parents `0699dc5bfaa4b89194acbe6097335e8059cc619d` = tag `pre-merge-batch19`, `98bad225eca7c16103d5c80e9056762e976f272f` = origin/merge/batch19; diff empty).
 - Rollback: `git revert -m 1 408ce998ea30d6a0c72e254a98a955c80bb6d8f7`.
+
+## Batch 20 (A): fix/floating-chat + fix/blank-shell into main (release blockers)
+
+Branch `merge/batch20` (worktree `squad-wt/merge20`), each branch its own `--no-ff` merge, then landed as one true merge.
+
+- fix/floating-chat (head `7f29458b`) merged cleanly.
+- fix/blank-shell (final head `0d9dcbf9`) conflicted in `apps/bot/src/store.ts` and `apps/bot/src/store.test.ts`: both branches fixed the same `students.handle` UNIQUE crash on hub restart. Kept BOTH behaviours: the pre-check keeps the readable hint (`handle (id)`), the try/catch fallback to the id stays as a safety net; both tests kept.
+- A first merge of blank-shell (head `aa0c564b`) failed lint (2 eslint errors, prettier) in `e2e/blank-rate.mjs` and `e2e/specs/j18-routes.spec.ts`; I fixed them in a lint-only commit, then the lead pushed the same fixes as `0d9dcbf9`, which was merged (took the lead's version of the conflicting file).
+- Checks: `pnpm check` exit 0; `pnpm demo:live` OK; hub smoke 107/107; browser smoke (fresh Playwright context, hub :8940 / web :5340 / agents 4801+, `pnpm dev:all` with agents, brand-new account + squad `summa`): /squad, /squad/setup, /squad/village render header and content, build marker web sha equals hub sha, floating chat loads, sends `Customer test: hello squad` (state Sent) and gets a Cubbie answer, 0 page errors. Browser smoke ran on the tree before the final docs/lint-only re-merge (no apps/ or packages/ diff since).
+
+### Landing (batch 20)
+
+- Landing merge commit: `2f8b2707eeb63305acc98454e3ba5e4f9aee2dd2` (parents `cb9d7085f415957053166258a04500ac21563772` = tag `pre-merge-batch20`, `947f008f` = merge/batch20).
+- Rollback: `git revert -m 1 2f8b2707eeb63305acc98454e3ba5e4f9aee2dd2`.
