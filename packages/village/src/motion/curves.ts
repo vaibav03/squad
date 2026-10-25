@@ -66,6 +66,27 @@ export function spring(opts: { duration?: number; bounce?: number } = {}): Curve
   };
 }
 
+/**
+ * Pop for rare-delight entrances: scale goes `from` (0.9) up to `peak` (~1.05) and settles on 1.
+ * Use as the curve of a tween from `from` to 1: value = from + (1 - from) * curve(t).
+ * The shape is the spring above (bounce within 0.1-0.3); only the overshoot part is scaled so the
+ * peak lands on `peak`. Endpoints are exact.
+ */
+export function popCurve(o: { from?: number; peak?: number; bounce?: number } = {}): Curve {
+  const from = o.from ?? 0.9;
+  const peak = o.peak ?? 1.05;
+  const bounce = Math.min(0.3, Math.max(0.1, o.bounce ?? 0.3));
+  const base = spring({ bounce });
+  let m = 1;
+  for (let i = 0; i <= 1000; i++) m = Math.max(m, base(i / 1000));
+  const target = 1 + (peak - 1) / (1 - from); // curve value that yields `peak`
+  const gain = m > 1 ? (target - 1) / (m - 1) : 1;
+  return (t: number): number => {
+    const v = base(t);
+    return v <= 1 ? v : 1 + (v - 1) * gain;
+  };
+}
+
 export const linear: Curve = (t) => clamp01(t);
 export const easeOut: Curve = cubicBezier(0.23, 1, 0.32, 1);
 export const easeInOut: Curve = cubicBezier(0.77, 0, 0.175, 1);

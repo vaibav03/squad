@@ -36,6 +36,11 @@ export function dayNight(
   tint: { setTint(rgb: number): void },
   o: { from: number; to: number; at?: 'dusk' | 'dawn' },
 ): MotionHandle {
+  // The slow 20 s shift only happens at dusk or dawn; any other call is a plain snap.
+  if (o.at !== 'dusk' && o.at !== 'dawn') {
+    tint.setTint(o.to);
+    return doneHandle();
+  }
   const dur = rt.reduced ? DURATION.dayNightReduced : DURATION.dayNight;
   let elapsed = 0;
   tint.setTint(o.from);

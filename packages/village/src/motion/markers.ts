@@ -1,4 +1,4 @@
-import { CURVES, spring } from './curves';
+import { CURVES, popCurve } from './curves';
 import { loopJob, type RingHandle } from './loop';
 import { doneHandle, type MotionRuntime } from './runtime';
 import { CONFLICT_TINT, DURATION } from './tokens';
@@ -25,8 +25,8 @@ export function conflictMarker(
     { alpha: 1, scale: 1 },
     {
       duration: DURATION.conflictPop,
-      curve: spring({ duration: 0.35, bounce: 0.2 }),
-      from: { alpha: 0, scale: 0.6 },
+      curve: popCurve({ from: 0.9, peak: 1.05, bounce: 0.2 }),
+      from: { alpha: 0, scale: 0.9 },
     },
   );
 }

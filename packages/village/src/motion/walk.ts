@@ -74,7 +74,23 @@ function facingFor(dx: number, dy: number): 'left' | 'right' | 'up' | 'down' {
  * last stretch, 4-frame cycle at 8 fps (idleFrame on stop). Never accelerates.
  * Reduced/Calm: fade out 60 ms, snap to target, fade in 60 ms, no frames.
  */
+const activeWalks = new WeakMap<object, MotionHandle>();
+
+/** A new walkTo on the same walker cancels the previous one (no two tweens fighting). */
 export function walkTo(
+  rt: MotionRuntime,
+  who: Walker,
+  to: Point,
+  o: { speedPxPerSec?: number; onArrive?: () => void; idleFrame?: number } = {},
+): MotionHandle {
+  const prev = activeWalks.get(who);
+  if (prev && !prev.done) prev.cancel();
+  const h = startWalk(rt, who, to, o);
+  activeWalks.set(who, h);
+  return h;
+}
+
+function startWalk(
   rt: MotionRuntime,
   who: Walker,
   to: Point,

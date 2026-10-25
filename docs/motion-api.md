@@ -44,6 +44,7 @@ export type Curve = (t: number) => number; // t in [0,1] -> [0,1] (spring may ov
 ```ts
 export const CURVES: { linear: Curve; easeOut: Curve; easeInOut: Curve; easeDrawer: Curve };
 export function cubicBezier(x1: number, y1: number, x2: number, y2: number): Curve; // exact endpoints 0 and 1
+export function popCurve(opts?: { from?: number /*0.9*/; peak?: number /*1.05*/; bounce?: number /*0.1-0.3*/ }): Curve; // tween from `from` to 1
 export function spring(opts?: { duration?: number; bounce?: number }): Curve; // default { duration: 0.5, bounce: 0.2 }
 export const CSS_VARS: { '--ease-out': string; '--ease-in-out': string; '--ease-drawer': string };
 export const DURATION: {
@@ -242,7 +243,7 @@ export function conflictMarker(
   marker: Animatable & { setTint?(rgb: number): void },
   o?: { tint?: number /* red, default 0xC8442F */ },
 ): MotionHandle;
-// one pop, spring {0.35 s, bounce .2}, tint holds, NO shake. Reduced: static marker at scale 1 alpha 1, tint set.
+// one pop from scale 0.9 (never lower) via `popCurve` (spring shape, bounce 0.1-0.3, peak ~1.05, settles on 1), 0.35 s, tint holds, NO shake. Reduced: static marker at scale 1 alpha 1, tint set.
 export function waitingRing(
   rt: MotionRuntime,
   ring: Animatable,
@@ -370,7 +371,7 @@ export function tripCutscene(
     card?: Animatable;
   },
 ): CutsceneHandle;
-// road scroll 2.4 s easeInOut, vehicle drives off linear, then Trip door pop spring 0.5 s bounce .2. Reduced: static card, 200 ms fade. Plays once (caller guards), any key skips.
+// road scroll 2.4 s easeInOut, vehicle drives off linear, then Trip door pop 0.5 s from scale 0.9 via `popCurve` (peak ~1.05). Reduced: static card, 200 ms fade. Plays once (caller guards), any key skips.
 ```
 
 ## 13. DOM side (`@squad/web/motion`)
@@ -405,6 +406,7 @@ export function createUseCalmMode(useSyncExternalStore): () => [boolean, (on: bo
 Route `/__motion` in apps/web-host, registered from `apps/web-host/src/lab/motion/index.ts` with one registration line in the web-shell lab registry. Every primitive above has a looped entry at 1x and 0.25x, a reduced-motion toggle, and a frame stepper.
 
 ## Changelog
+- v1.2: pops start at scale 0.9 (popCurve, peak ~1.05); dayNight honors `at`; buildingTransition passes `direction` to onMidpoint; a new walkTo cancels the previous walkTo on the same walker.
 
 - v1.1: useCalmMode is a factory (createUseCalmMode) + calmModeStore (no react dep); extras: teleport(), DURATION.dayNightReduced/tripCardFade, tripCutscene opts card/roadDistance/vehicleTravel; DOM vars are --m-ease-_/--m-dur-_ falling back to tokens.css --ease-*; loops settle to rest if Calm turns on mid-run; bubble hold is never shorter than bubbleHoldMs.
 - v1 (initial publish): all signatures above. Phaser objects satisfy `Animatable`/`CameraLike` structurally; no `phaser` import in the motion module.

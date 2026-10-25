@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { easeInOut } from './curves';
+import { walkTo } from './walk';
 import { createRuntime } from './runtime';
 import {
   conflictMarker,
@@ -27,7 +28,7 @@ describe('conflictMarker (row 9)', () => {
       },
     });
     conflictMarker(rt, m);
-    expect(m.scaleX).toBeCloseTo(0.6, 5);
+    expect(m.scaleX).toBeCloseTo(0.9, 5);
     expect(m.tint).toBe(0xc8442f);
     let max = 0;
     for (let i = 0; i < 21; i++) {
@@ -35,7 +36,8 @@ describe('conflictMarker (row 9)', () => {
       max = Math.max(max, m.scaleX);
     }
     expect(m.scaleX).toBe(1);
-    expect(max).toBeLessThan(1.3);
+    expect(max).toBeGreaterThan(1.03);
+    expect(max).toBeLessThan(1.07);
     expect(max).toBeGreaterThanOrEqual(1);
     expect(m.x).toBe(0); // no shake
   });
@@ -269,16 +271,48 @@ describe('ambient world (rows 1, 2)', () => {
   it('dayNight is 20 s, and 200 ms when reduced, ends exactly at target', () => {
     const rt = createRuntime();
     const log: number[] = [];
-    const h = dayNight(rt, { setTint: (v) => log.push(v) }, { from: 0xffffff, to: 0x203060 });
+    const h = dayNight(
+      rt,
+      { setTint: (v) => log.push(v) },
+      { from: 0xffffff, to: 0x203060, at: 'dusk' },
+    );
     rt.step(19999);
     expect(h.done).toBe(false);
     rt.step(1);
     expect(h.done).toBe(true);
     expect(log.at(-1)).toBe(0x203060);
     const rt2 = createRuntime({ reduced: true });
-    const h2 = dayNight(rt2, { setTint: () => {} }, { from: 0, to: 1 });
+    const h2 = dayNight(rt2, { setTint: () => {} }, { from: 0, to: 1, at: 'dawn' });
     rt2.step(200);
     expect(h2.done).toBe(true);
+  });
+});
+
+describe('dayNight gating and walkTo exclusivity', () => {
+  it('without dusk/dawn it snaps, no 20 s tween', () => {
+    const rt = createRuntime();
+    let last = -1;
+    const h = dayNight(rt, { setTint: (v) => (last = v) }, { from: 1, to: 2 });
+    expect(h.done).toBe(true);
+    expect(last).toBe(2);
+  });
+  it('building transition reports its direction', () => {
+    const rt = createRuntime();
+    let dir = '';
+    buildingTransition(rt, { direction: 'leave', overlay: a(), onMidpoint: (d) => (dir = d) });
+    rt.step(200);
+    expect(dir).toBe('leave');
+  });
+  it('a new walkTo cancels the previous on the same walker', () => {
+    const rt = createRuntime();
+    const w = a();
+    let arrived = 0;
+    walkTo(rt, w, { x: 100, y: 0 }, { onArrive: () => arrived++ });
+    rt.step(500);
+    walkTo(rt, w, { x: 0, y: 0 });
+    rt.step(5000);
+    expect(arrived).toBe(0);
+    expect(w.x).toBe(0);
   });
 });
 

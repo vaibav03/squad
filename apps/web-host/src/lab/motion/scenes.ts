@@ -24,7 +24,7 @@ import {
   walkTo,
   type MotionRuntime,
 } from './prims';
-import type { Stage} from './stage';
+import type { Stage } from './stage';
 import { PAL, type StageNode } from './stage';
 
 export type DomDemo = 'panel' | 'chip' | 'press' | 'badge' | 'fade';

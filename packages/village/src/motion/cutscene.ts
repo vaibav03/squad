@@ -1,4 +1,4 @@
-import { CURVES, spring } from './curves';
+import { CURVES, popCurve } from './curves';
 import { allHandles, doneHandle, type MotionRuntime } from './runtime';
 import { DURATION } from './tokens';
 import type { Animatable, MotionHandle } from './types';
@@ -227,8 +227,8 @@ export function tripCutscene(
         { alpha: 1, scale: 1 },
         {
           duration: DURATION.tripDoorPop,
-          curve: spring({ duration: 0.5, bounce: 0.2 }),
-          from: { alpha: 0, scale: 0.6 },
+          curve: popCurve({ from: 0.9, peak: 1.05, bounce: 0.2 }),
+          from: { alpha: 0, scale: 0.9 },
         },
       ),
     )

@@ -56,7 +56,11 @@ export function cameraPan(
  */
 export function buildingTransition(
   rt: MotionRuntime,
-  o: { direction: 'enter' | 'leave'; overlay: Animatable; onMidpoint?: () => void },
+  o: {
+    direction: 'enter' | 'leave';
+    overlay: Animatable;
+    onMidpoint?: (direction: 'enter' | 'leave') => void;
+  },
 ): MotionHandle {
   const total = rt.reduced ? DURATION.buildingFadeReduced : DURATION.buildingFade;
   const half = total / 2;
@@ -67,7 +71,7 @@ export function buildingTransition(
   const fireMid = (): void => {
     if (mid) return;
     mid = true;
-    o.onMidpoint?.();
+    o.onMidpoint?.(o.direction);
   };
   const end = (): void => {
     o.overlay.alpha = 0;
