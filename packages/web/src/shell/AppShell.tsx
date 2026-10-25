@@ -252,7 +252,12 @@ export function AppShell({
               <span className="sq-shell__tabicon">
                 <Icon name="menu" size={22} />
                 {secondary.length ? (
-                  <Badge dot tone="ember" className="sq-shell__morebadge" />
+                  <Badge
+                    count={secondary.length}
+                    tone="ember"
+                    label={`${secondary.length} more pages`}
+                    className="sq-shell__morebadge"
+                  />
                 ) : null}
               </span>
               <span className="sq-shell__tablabel">More</span>

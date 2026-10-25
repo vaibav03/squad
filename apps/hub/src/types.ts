@@ -345,6 +345,10 @@ export interface HubDeps {
   imessage: ImessageStore;
   /** The iMessage sync engine while the bridge runs (queue, delivery state, backfill); undefined when iMessage is off. */
   imessageSync?: ImessageSync | undefined;
+  /** The Sendblue provider runtime while it runs (webhook routes, status, health read it); undefined otherwise. */
+  sendblue?: SendblueRuntime | undefined;
+  /** Which iMessage provider the running bridge uses, for the header state and health. */
+  imessageInfo?: BridgeInfo | undefined;
   codeSender: CodeSender;
   /** Shared study plans (docs/study-plan.md). */
   plans: PlanService;
@@ -367,6 +371,8 @@ import type { AccountsStore } from './store/accounts';
 import type { SquadsStore } from './store/squads';
 import type { ImessageStore } from './imessage/store';
 import type { ImessageSync } from './imessage/sync';
+import type { BridgeInfo } from './imessage/sendblue/health';
+import type { SendblueRuntime } from './imessage/sendblue/runtime';
 
 /** Which providers are live right now; read lazily so a mid-run credits switch shows up. */
 export interface HubRuntime {

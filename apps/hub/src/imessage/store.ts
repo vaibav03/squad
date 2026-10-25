@@ -78,7 +78,7 @@ export interface SquadSyncSettings {
   showUnlinked: boolean;
 }
 
-export type OutState = 'queued' | 'sent' | 'delivered' | 'failed' | 'dry_run';
+export type OutState = 'queued' | 'sent' | 'delivered' | 'read' | 'failed' | 'dry_run';
 export interface OutRow {
   id: number;
   messageId: string;

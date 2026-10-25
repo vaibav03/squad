@@ -36,6 +36,8 @@ export interface BridgeOptions {
   deps: HubDeps;
   gateway: IMessageGateway;
   store: ImessageStore;
+  /** Which provider carries the chat, stamped on inbound messages ("via iMessage (Sendblue)"). */
+  provider?: 'sendblue' | 'photon' | 'fixture';
   /** Base of the web links in messages. Default: the hub's HUB_WEB_URL. */
   webUrl?: string;
   now?: () => number;
@@ -235,6 +237,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
     const origin = (skipped: SkippedAttachment[]) => ({
       ts: m.ts,
       transport: 'imessage' as const,
+      ...(o.provider ? { provider: o.provider } : {}),
       externalId: m.guid,
       senderLabel: nameOf(userId),
       ...(h.late ? { receivedLate: true } : {}),
@@ -446,6 +449,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       origin: {
         ts: m.ts,
         transport: 'imessage',
+        ...(o.provider ? { provider: o.provider } : {}),
         externalId: m.guid,
         senderLabel: label,
         ...(h.late ? { receivedLate: true } : {}),
