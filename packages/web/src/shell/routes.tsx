@@ -39,7 +39,7 @@ export const squadRouteMeta: SquadRouteMeta[] = [
   },
   {
     key: 'trip',
-    path: '/squad/trips/:tripId',
+    path: '/squad/trips/:tripId?',
     title: 'Trip',
     nav: { label: 'Trip', icon: 'plane', order: 3, primary: true },
   },

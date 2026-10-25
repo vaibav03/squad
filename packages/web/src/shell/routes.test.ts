@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { matchPath } from 'react-router-dom';
 import { squadNav, squadRouteMeta } from './routes';
 
 describe('route registry', () => {
@@ -12,5 +13,12 @@ describe('route registry', () => {
     expect([...orders].sort((a, b) => a - b)).toEqual(orders);
     for (const n of squadNav) expect(n.to).not.toContain(':');
     expect(squadNav.filter((n) => n.primary)).toHaveLength(4);
+  });
+  it('every nav target resolves to a registered route (no 404 from the nav)', () => {
+    for (const n of squadNav)
+      expect(
+        squadRouteMeta.some((r) => matchPath({ path: r.path, end: true }, n.to)),
+        `nav ${n.key} -> ${n.to}`,
+      ).toBe(true);
   });
 });
