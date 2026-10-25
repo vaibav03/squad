@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T07:40:51.605Z",
+  "at": "2026-10-25T07:53:42.269Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -129,12 +129,6 @@
     "ms": 10976
    },
    {
-    "title": "J10 enter every room, read it, leave with Esc",
-    "status": "fail",
-    "note": "Error: walk prompt for Exam Oracledemo-run 200; still inside after Esc: Council Hall; still inside after Esc: Debate Stage; still inside after Esc: Round Table; still inside after Esc: Feynman Porch; still inside after Esc: Panic Line",
-    "ms": 170797
-   },
-   {
     "title": "J10 replay track2 plays with a Replay badge",
     "status": "pass",
     "note": "replays: {\"replays\":[{\"name\":\"track2\",\"durationMs\":108500,\"eventCount\":80},{\"name\":\"track3\",\"durationMs\":114300,\"eventCount\":50}]",
@@ -151,36 +145,6 @@
     "status": "pass",
     "note": "demo-run 200",
     "ms": 3391
-   },
-   {
-    "title": "J12 every page fits a 390x844 phone with no horizontal scroll and no page errors",
-    "status": "pass",
-    "note": "pages checked: home, village, setup, personas, ledger, trip, mastery",
-    "ms": 16252
-   },
-   {
-    "title": "J12 keyboard only: skip link, tab to the village, camera buttons, back out",
-    "status": "fail",
-    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
-    "ms": 10265
-   },
-   {
-    "title": "J13 hub killed mid-session: state persists and the stream resumes with Last-Event-ID, no duplicates",
-    "status": "fail",
-    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m",
-    "ms": 9553
-   },
-   {
-    "title": "J13 agent offline: hub stays healthy when the owner agent cannot be reached",
-    "status": "pass",
-    "note": "calendar upload with agent offline -> 200",
-    "ms": 1063
-   },
-   {
-    "title": "J13 credits depleted (HTTP 402): banner status, then recovery path",
-    "status": "fail",
-    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22mstatus at boot: fake no_key; status after traffic: fake no_key",
-    "ms": 9072
    },
    {
     "title": "J14 /v1/status reflects reality",
@@ -211,6 +175,42 @@
     "status": "pass",
     "note": "",
     "ms": 8361
+   },
+   {
+    "title": "J13 hub killed mid-session: state persists and the stream resumes with Last-Event-ID, no duplicates",
+    "status": "pass",
+    "note": "seq before 43 after restart 43",
+    "ms": 15688
+   },
+   {
+    "title": "J13 agent offline: hub stays healthy when the owner agent cannot be reached",
+    "status": "pass",
+    "note": "calendar upload with agent offline -> 200",
+    "ms": 26
+   },
+   {
+    "title": "J13 credits depleted (HTTP 402): banner status, then recovery path",
+    "status": "blocked",
+    "note": "blocked: no model call happens without the chat feature (not merged yet); status stays gemini until the first call / status at boot: gemini ; status after traffic: gemini ",
+    "ms": 9072
+   },
+   {
+    "title": "J12 every page fits a 390x844 phone with no horizontal scroll and no page errors",
+    "status": "pass",
+    "note": "pages checked: home, village, setup, personas, ledger, trip, mastery",
+    "ms": 15856
+   },
+   {
+    "title": "J12 keyboard only: skip link, tab to the village, camera buttons, back out",
+    "status": "pass",
+    "note": "tab order: Enter the Village; focused before Enter: A//squad/village/sq-btn sq-btn--primary sq-btn--lg",
+    "ms": 2039
+   },
+   {
+    "title": "J10 enter every room, read it, leave with Esc",
+    "status": "fail",
+    "note": "Error: E2E-005: rooms that never offer an Enter prompt even after the demo run (landmark stays LOCKED)demo-run 200; no walk prompt (locked or unreachable): Exam Oracle, Oral Exam Hut, Rubric Courthouse, Devil's TA",
+    "ms": 311346
    }
   ]
  }

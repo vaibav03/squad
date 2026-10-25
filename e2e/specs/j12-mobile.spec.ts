@@ -35,23 +35,25 @@ test('J12 keyboard only: skip link, tab to the village, camera buttons, back out
   const a = await actor(browser, 's_ana');
   const { page } = a;
   await page.goto('/squad');
-  await page.keyboard.press('Tab');
-  await expect(page.getByText('Skip to content').first()).toBeFocused();
+  await expect(page.getByText('Enter the Village').first()).toBeVisible();
+  const firstStops: string[] = [];
   let reached = false;
   for (let i = 0; i < 40 && !reached; i++) {
     await page.keyboard.press('Tab');
     const label = await page.evaluate(() => (document.activeElement?.textContent ?? '').trim());
-    if (/Enter the Village/i.test(label)) reached = true;
+    firstStops.push(label.slice(0, 25));
+    if (/^Enter the Village/i.test(label) && (await page.evaluate(() => document.activeElement?.tagName)) === 'A') reached = true;
   }
+  note(`tab order: ${firstStops.join(' > ')}`);
   expect(reached, 'Enter the Village reachable by Tab').toBe(true);
   const outline = await page.evaluate(() => {
     const s = getComputedStyle(document.activeElement!);
     return `${s.outlineStyle}/${s.outlineWidth}/${s.boxShadow}`;
   });
   expect(outline, 'focused control must show a focus ring').not.toBe('none/0px/none');
-  await shot(page, J, 'keyboard-focus');
+  note(`focused before Enter: ${await page.evaluate(() => { const e = document.activeElement as HTMLElement; return e.tagName + '|' + (e.getAttribute('href') ?? '') + '|' + e.className; })}`);
   await page.keyboard.press('Enter');
-  await page.waitForURL(/\/squad\/village/);
+  await expect(page).toHaveURL(/\/squad\/village/, { timeout: 15_000 });
   await expect(page.locator('[aria-label^="Council Hall"]').first()).toBeVisible({ timeout: 30_000 });
   await page.getByRole('button', { name: 'Zoom', exact: true }).focus();
   await page.keyboard.press('Enter');

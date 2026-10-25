@@ -8,8 +8,18 @@ const PORT = Number(process.env.E2E_J13_PORT ?? 8893);
 const BASE = `http://localhost:${PORT}`;
 const DB = path.join(TMP, 'j13.db');
 
+function dotenvKey(name: string): string | undefined {
+  try {
+    const m = new RegExp(`^${name}=["']?([^"'\\s#]+)`, 'm').exec(fs.readFileSync(path.join(REPO, '.env'), 'utf8'));
+    return m?.[1];
+  } catch {
+    return undefined;
+  }
+}
 function hubEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv {
+  const gemini = process.env.GEMINI_API_KEY ?? dotenvKey('GEMINI_API_KEY');
   return {
+    ...(gemini ? { GEMINI_API_KEY: gemini } : {}),
     ...process.env,
     HUB_PORT: String(PORT),
     HUB_BASE_URL: BASE,
@@ -75,7 +85,7 @@ test('J13 hub killed mid-session: state persists and the stream resumes with Las
   const tok = await login('s_ana');
   await fetch(`${BASE}/__sim/squad/demo-run`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ speed: 50 }) });
   await new Promise((r) => setTimeout(r, 6000));
-  const before = await sse(tok, 2500);
+  const before = await sse(tok, 2500, '0'); // replay from the start of the log
   expect(before.length).toBeGreaterThan(3);
   const lastId = before[Math.floor(before.length / 2)]!.id!;
   const stateBefore = (await (await fetch(`${BASE}/v1/squad/state`, { headers: { authorization: `Bearer ${tok}` } })).json()) as { seq: number };
@@ -113,7 +123,7 @@ test('J13 credits depleted (HTTP 402): banner status, then recovery path', async
   // Needs the real Gemini key. Without injection support (the Gemini endpoint is not configurable) this can only
   // be observed against the real API, which currently answers 402.
   kill9();
-  const hasKey = /GEMINI_API_KEY\s*=\s*\S+/.test(fs.existsSync(path.join(REPO, '.env')) ? fs.readFileSync(path.join(REPO, '.env'), 'utf8') : '') || !!process.env.GEMINI_API_KEY;
+  const hasKey = !!(process.env.GEMINI_API_KEY ?? dotenvKey('GEMINI_API_KEY'));
   if (!hasKey) blocked('no GEMINI_API_KEY available to provoke a real 402; the Gemini endpoint cannot be stubbed (no base-URL env)');
   await up({ FORCE_FAKE_LLM: '' });
   const s0 = (await (await fetch(`${BASE}/v1/status`)).json()) as { llm: string; reason?: string; notice?: string };

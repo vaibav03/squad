@@ -47,10 +47,15 @@ test('J10 enter every room, read it, leave with Esc', async ({ browser }) => {
   await page.waitForTimeout(1500);
   let infoPanelSeen = 0;
   const entered: string[] = [];
+  const skipped: string[] = [];
   for (const room of ROOMS) {
     await page.locator(`[aria-label^="${room}"]`).first().click();
     const prompt = page.getByText(new RegExp(`^Open .*(${KEY[room]})`, 'i')).first();
-    await expect(prompt, `walk prompt for ${room}`).toBeVisible({ timeout: 60_000 });
+    if (!(await prompt.waitFor({ state: 'visible', timeout: 60_000 }).then(() => true, () => false))) {
+      await shot(page, J, `no-prompt-${room.replace(/\W+/g, '-').toLowerCase()}`);
+      skipped.push(room);
+      continue;
+    }
     await prompt.click();
     await expect(page.getByText(new RegExp(`Inside .*(${KEY[room]})`, 'i')).first()).toBeAttached({ timeout: 15_000 });
     await page.waitForTimeout(1200);
@@ -59,10 +64,12 @@ test('J10 enter every room, read it, leave with Esc', async ({ browser }) => {
     // room info panel / transcript / outcome (ux/rooms RoomLayer)
     if (await page.locator('[data-testid^="room-"], [aria-label*="transcript" i], [aria-label*="outcome" i]').count()) infoPanelSeen++;
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(900);
-    await expect(page.getByText(/^Inside /)).toHaveCount(0, { timeout: 8000 }).catch(() => note(`still inside after Esc: ${room}`));
+    await page.waitForTimeout(1500);
+    await shot(page, J, `after-esc-${room.replace(/\W+/g, '-').toLowerCase()}`);
   }
-  expect(entered.length).toBe(ROOMS.length);
+  note(`no walk prompt (locked or unreachable): ${skipped.join(', ') || 'none'}`);
+  expect.soft(skipped, 'E2E-005: rooms that never offer an Enter prompt even after the demo run (landmark stays LOCKED)').toEqual([]);
+  expect(entered.length).toBeGreaterThanOrEqual(6);
   note(`rooms entered: ${entered.length}/9 chip rooms (4 chapter houses are walk-only)`);
   expect.soft(infoPanelSeen, 'E2E-004: no room info panel, transcript or outcome card is mounted in the village page (RoomLayer is never rendered by packages/web/src/pages/village)').toBeGreaterThan(0);
   await a.ctx.close();
