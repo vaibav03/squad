@@ -25,6 +25,8 @@ export interface TtsServiceOptions {
   concurrency?: number;
   /** Stock voice for the fallback engine when the persona has none usable there. */
   fallbackVoiceId?: string;
+  /** Called before any paid engine call (after cache lookups); throws `VoicesUnavailableError` to degrade honestly. */
+  gate?: () => Promise<void>;
   log?: (msg: string, ctx?: Record<string, unknown>) => void;
 }
 
@@ -91,6 +93,7 @@ export class TtsService {
   async speak(personaId: string, text: string, opts: SpeakOptions = {}): Promise<SpeakResult> {
     const clean = text.trim();
     if (!clean) throw new Error('speak: empty text');
+    await this.o.gate?.(); // before resolving: the probe may still be choosing the voice
     const { voiceId } = this.o.voices.resolve(personaId);
     return this.speakVoice(voiceId, clean, opts);
   }
@@ -124,6 +127,7 @@ export class TtsService {
     const hit = await this.lookup(primary, key, wantT);
     if (hit) return hit;
 
+    await this.o.gate?.();
     try {
       this.o.budget?.charge('elevenlabs.chars', text.length);
       return await this.render(
@@ -195,6 +199,7 @@ export class TtsService {
     text: AsyncIterable<string> | string,
     opts: { model?: TtsModel; signal?: AbortSignal } = {},
   ): AsyncIterable<{ audio: Uint8Array; sentence: string }> {
+    await this.o.gate?.();
     const { voiceId } = this.o.voices.resolve(personaId);
     for await (const sentence of sentences(text)) {
       this.o.budget?.charge('elevenlabs.chars', sentence.length);
@@ -213,6 +218,7 @@ export class TtsService {
     inputs: { voiceId: string; text: string }[],
     signal?: AbortSignal,
   ): Promise<Uint8Array> {
+    await this.o.gate?.();
     const e = this.o.engine;
     if (!e.dialogue) throw new Error(`engine ${e.id} has no dialogue endpoint`);
     this.o.budget?.charge(

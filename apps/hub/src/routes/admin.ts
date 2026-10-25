@@ -98,7 +98,7 @@ export function createAdminRoutes(deps: HubDeps, obs: Observability): HubApp {
         gitSha: obs.info.gitSha,
         builtAt: obs.info.builtAt,
         uptimeS: Math.round((now() - obs.info.startedAt) / 1000),
-        ttsState: body.tts === 'none' ? 'off' : 'on',
+        ttsState: body.tts === 'none' ? (body.probing ? 'checking' : 'off') : 'on',
       });
       c.header('cache-control', 'no-store');
     } catch {

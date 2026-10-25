@@ -1,5 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { VILLAGE_EVENT_TYPES, validateReplay, type LlmStatus } from '@squad/core';
+import {
+  VILLAGE_EVENT_TYPES,
+  VoicesUnavailableError,
+  validateReplay,
+  type LlmStatus,
+} from '@squad/core';
 import WebSocket from 'ws';
 import type { RunningHub } from '../../src/server';
 import { boot, emit, get, login, openSse, post, auth } from '../helpers';
@@ -395,6 +400,35 @@ describe('misc', () => {
     expect(r.headers.get('content-type')).toBe('audio/mpeg');
     expect((await r.arrayBuffer()).byteLength).toBeGreaterThan(100);
   });
+  it('voice preview says why when voices are off (503 voices_unavailable, honest message)', async () => {
+    const real = hub.deps.ports;
+    hub.deps.ports = {
+      ...real,
+      media: {
+        ...real.media,
+        preview: async () => {
+          throw new VoicesUnavailableError('paid_plan_required');
+        },
+      },
+    };
+    try {
+      const r = await fetch(`${url}/v1/voices/preview`, {
+        method: 'POST',
+        headers: auth(ana),
+        body: JSON.stringify({ voiceId: 'voice_off', text: 'hello' }),
+      });
+      expect(r.status).toBe(503);
+      expect(await r.json()).toEqual({
+        error: {
+          code: 'voices_unavailable',
+          reason: 'paid_plan_required',
+          message: 'Voices need an ElevenLabs plan that allows API voices',
+        },
+      });
+    } finally {
+      hub.deps.ports = real;
+    }
+  });
 });
 
 describe('GET /v1/status', () => {
@@ -420,6 +454,57 @@ describe('GET /v1/status', () => {
       nextProbeAt: 65,
     });
     expect(dead.body.notice).toMatch(/credits depleted/);
+    hub.deps.runtime = undefined;
+  });
+  it('is truthful while probing, with the speech reason, and never claims real before the probe', async () => {
+    hub.deps.runtime = {
+      llm: () => ({ llm: 'fake', reason: 'probing', probing: true }),
+      tts: () => false,
+      ttsStatus: () => ({ tts: 'none', reason: 'unavailable', probing: true }),
+      ports: () => 'real',
+    };
+    const p = await get<Record<string, unknown>>(url, '/v1/status');
+    expect(p.body).toMatchObject({
+      llm: 'fake',
+      tts: 'none',
+      demo: true,
+      probing: true,
+      reason: 'probing',
+      notice: 'Checking services...',
+      ttsNotice: 'Checking services...',
+    });
+    hub.deps.runtime = {
+      llm: () => ({ llm: 'real' }),
+      tts: () => false,
+      ttsStatus: () => ({ tts: 'none', reason: 'paid_plan_required' }),
+      ports: () => 'real',
+    };
+    const f = await get<Record<string, unknown>>(url, '/v1/status');
+    expect(f.body).toMatchObject({
+      llm: 'gemini',
+      demo: false,
+      probing: false,
+      tts: 'none',
+      ttsReason: 'paid_plan_required',
+      ttsNotice: 'Voices need an ElevenLabs plan that allows API voices',
+    });
+    hub.deps.runtime = {
+      llm: () => ({ llm: 'real' }),
+      tts: () => true,
+      ttsStatus: () => ({ tts: 'elevenlabs', reason: 'ok' }),
+      ports: () => 'real',
+    };
+    const ok = await get<Record<string, unknown>>(url, '/v1/status');
+    expect(ok.body).toMatchObject({ tts: 'elevenlabs', ttsReason: 'ok', probing: false });
+    expect(ok.body.ttsNotice).toBeUndefined();
+    hub.deps.runtime = undefined;
+  });
+  it('legacy runtime without ttsStatus still reports a reason', async () => {
+    hub.deps.runtime = { llm: () => ({ llm: 'real' }), tts: () => true, ports: () => 'real' };
+    expect((await get<Record<string, unknown>>(url, '/v1/status')).body).toMatchObject({
+      tts: 'elevenlabs',
+      ttsReason: 'ok',
+    });
     hub.deps.runtime = undefined;
   });
 });

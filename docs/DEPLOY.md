@@ -22,7 +22,7 @@ Bundle budgets live in `deploy/bundle-budgets.json` (entry 260 KiB gzip, largest
 
 ## Configuration
 
-`cp .env.example .env`. Required: `INTERNAL_EVENTS_SECRET` (random, not `change-me`; compose refuses to start without it). Strongly advised: `HUB_AUTH_SECRET`, `PUBLIC_ORIGIN` (the URL users type, e.g. `https://squad.example.com`). Providers: `GEMINI_API_KEY`, `ELEVENLABS_API_KEY`; leaving them blank serves the demo model and `/v1/status` says so. `HUB_SEED=1` (default in compose) keeps the demo roster and dev-login alive because real accounts do not exist yet; set `HUB_SEED=0` once they do. Env is injected at runtime only; `.env` is in `.dockerignore`.
+`cp .env.example .env`. Required: `INTERNAL_EVENTS_SECRET` (random, not `change-me`; compose refuses to start without it). Strongly advised: `HUB_AUTH_SECRET`, `PUBLIC_ORIGIN` (the URL users type, e.g. `https://squad.example.com`). Providers: `GEMINI_API_KEY`, `ELEVENLABS_API_KEY`; leaving them blank serves the demo model and `/v1/status` says so. Both providers are probed at startup, so `/v1/status` reports `llm`/`tts` truthfully from the first request (`probing: true` for the first moment): a key that exists but cannot work (Gemini credits depleted, HTTP 402; ElevenLabs free plan, HTTP 402 `paid_plan_required`) shows as `fake` / `none` with a reason, never as real. Check the box with `pnpm run doctor` (it runs the same probes and prints the exact fix). `HUB_SEED=1` (default in compose) keeps the demo roster and dev-login alive because real accounts do not exist yet; set `HUB_SEED=0` once they do. Env is injected at runtime only; `.env` is in `.dockerignore`.
 
 Readiness checklist (never prints secrets, never spends credits):
 
@@ -32,6 +32,11 @@ pnpm preflight --image squad-hub:local           # ffmpeg exists inside the imag
 pnpm preflight --hub https://squad.example.com   # /health, /v1/status (Gemini real or demo), /internal blocked
 pnpm preflight --strict                          # warnings fail too
 ```
+
+### Provider requirements (verified 2026-10-25)
+
+- Gemini: prepay credits must be positive. HTTP 402 "prepayment credits are depleted" means add credits at https://ai.studio/projects (open the key's project, then Billing). The hub re-probes every 60 s and switches back by itself; no restart.
+- ElevenLabs: the key needs the `text_to_speech` permission, and the account needs a plan that allows API voices. Free plans get HTTP 402 `paid_plan_required` ("Free users cannot use library voices via the API") for library voices such as `21m00Tcm4TlvDq8ikWAM`. Ways out: a plan that allows API voices; or a voice you own (put its id in `packages/media/src/voices/saved-voices.json` or set `ELEVENLABS_VOICE_ID`); or a key that also has `voices_read` (the hub then tries the account's own voices) and `voices_write` (the hub designs and saves one voice on its own). Until one works the hub serves captions only and every audio feature shows "Voices need an ElevenLabs plan that allows API voices". Restricted keys without `user_read` are fine; the hub never calls `/v1/user`. Each startup (and each 10-minute re-probe) spends one character per candidate voice, typically 1.
 
 ## Path 1: single VM with compose (recommended)
 

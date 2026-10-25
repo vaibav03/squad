@@ -363,7 +363,12 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
     // The demo notice clears itself when real answers return: poll every minute and after each bot reply.
     const refreshStatus = () =>
       void api.status().then(
-        (status) => !dead && dispatch({ t: 'status', status }),
+        (status) => {
+          if (dead) return;
+          dispatch({ t: 'status', status });
+          // the hub is still checking its providers: look again shortly so "Checking services..." resolves
+          if (status.probing) setTimeout(refreshStatus, 1500);
+        },
         () => undefined,
       );
     const statusTimer = setInterval(refreshStatus, 60_000);
@@ -383,6 +388,7 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
           unread[c.id] = c.last && !fromMe && c.last.seq > (seenRef.current[c.id] ?? 0) ? 1 : 0;
         }
         dispatch({ t: 'boot', status, chats, unread });
+        if (status?.probing) setTimeout(refreshStatus, 1500);
         const lastSeq = Math.max(0, ...chats.map((c) => c.last?.seq ?? 0));
         close = api.subscribe(
           {

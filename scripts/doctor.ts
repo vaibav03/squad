@@ -1,22 +1,23 @@
 /**
  * pnpm doctor: tells you whether Squad will run on real providers or stubs, and exactly what to do next.
- * Never prints a key value. Network calls to providers happen ONLY when the key exists AND SQUAD_LIVE=1,
- * and cost one output token (Gemini) and one character (ElevenLabs).
+ * Never prints a key value. Network calls to providers happen only when the key exists (SQUAD_LIVE=0 skips them)
+ * and cost one output token (Gemini) and at most a few characters (ElevenLabs: one per candidate voice).
  *
- *   pnpm doctor                 # offline report
- *   SQUAD_LIVE=1 pnpm doctor    # plus the two tiny live checks
+ *   pnpm doctor                 # reports what really works, what fails and the exact fix
+ *   SQUAD_LIVE=0 pnpm doctor    # offline: no provider calls
  */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { ENV_FILE, loadEnv } from './demo/lib/env';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const { env, fileExists } = loadEnv();
 const get = (k: string): string | undefined => env[k] || undefined;
-const live = get('SQUAD_LIVE') === '1';
+// Live checks are on by default so the report matches what the hub's startup probe sees (SQUAD_LIVE=0 skips them).
+const live = get('SQUAD_LIVE') !== '0';
 
 type Level = 'ok' | 'warn' | 'fail' | 'info';
 const results: { level: Level; text: string }[] = [];
@@ -96,14 +97,9 @@ say(
   get('INTERNAL_EVENTS_SECRET') ? 'ok' : 'info',
   `INTERNAL_EVENTS_SECRET ${get('INTERNAL_EVENTS_SECRET') ? 'set' : 'not set (pnpm dev:all uses a dev default; set a random value for anything shared)'}`,
 );
-say(
-  'info',
-  `SQUAD_LIVE=${live ? '1 (live provider checks enabled)' : 'unset (provider checks skipped)'}`,
-);
+say('info', `live checks ${live ? 'on (provider checks enabled)' : '0 (provider checks skipped)'}`);
 if (!hasGemini)
-  step(
-    'Add GEMINI_API_KEY to .env (https://aistudio.google.com/apikey), then SQUAD_LIVE=1 pnpm doctor',
-  );
+  step('Add GEMINI_API_KEY to .env (https://aistudio.google.com/apikey), then pnpm doctor');
 if (!hasEleven)
   step('Add ELEVENLABS_API_KEY to .env (https://elevenlabs.io/app/settings/api-keys) for voices');
 
@@ -186,7 +182,7 @@ if (live && hasGemini) {
           'The app serves FakeLlm demo answers meanwhile, re-probes Gemini once per 60 s and switches back by itself when credits return (GET /v1/status shows llm, reason, lastProbeAt, nextProbeAt). No restart needed after topping up.',
         );
         step(
-          "Gemini credits are depleted (HTTP 402 RESOURCE_EXHAUSTED). Top up AI Studio prepay billing: https://ai.studio/projects  (open the key's project there, then Billing; docs: https://ai.google.dev/gemini-api/docs/billing), then rerun SQUAD_LIVE=1 pnpm doctor.",
+          "Gemini credits are depleted (HTTP 402 RESOURCE_EXHAUSTED). Top up AI Studio prepay billing: https://ai.studio/projects  (open the key's project there, then Billing; docs: https://ai.google.dev/gemini-api/docs/billing), then rerun pnpm doctor.",
         );
       } else if (c === 'rate_limited')
         step(
@@ -207,57 +203,77 @@ if (live && hasGemini) {
       `Gemini check could not reach the API: ${e instanceof Error ? e.message : String(e)}`,
     );
   }
-} else if (hasGemini)
-  say('info', 'Gemini live check skipped (set SQUAD_LIVE=1 to spend one output token)');
+} else if (hasGemini) say('info', 'Gemini live check skipped (SQUAD_LIVE=0)');
 
 if (live && hasEleven) {
-  // Premade voice "Rachel"; the 1-character request uses the cheapest model and the smallest output format.
-  const voice = get('ELEVENLABS_DOCTOR_VOICE_ID') || '21m00Tcm4TlvDq8ikWAM';
-  try {
-    const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voice)}?output_format=mp3_22050_32`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'xi-api-key': get('ELEVENLABS_API_KEY')! },
-        body: JSON.stringify({ text: 'a', model_id: 'eleven_flash_v2_5' }),
-        signal: AbortSignal.timeout(20_000),
-      },
+  // The same probe the hub runs at startup (packages/media/src/tts/health.ts): saved voice ids, then the
+  // account's listed voices, then the stock voice, one character each. Voice design is off here (read-only).
+  // Loaded by file path: the root has no workspace links, and the doctor must run even before a build.
+  type Health = {
+    start(): Promise<{ tts: string; reason: string }>;
+    voiceId(): string | undefined;
+  };
+  type Media = {
+    TtsHealth: new (o: Record<string, unknown>) => Health;
+    ElevenLabsEngine: new (o: { apiKey: string; retries: number }) => unknown;
+    JsonVoiceStore: new (file: string) => unknown;
+    DEFAULT_FALLBACK_VOICE_ID: string;
+  };
+  const load = <T>(rel: string): Promise<T> =>
+    import(pathToFileURL(path.join(ROOT, rel)).href) as Promise<T>;
+  const { TtsHealth, ElevenLabsEngine, JsonVoiceStore, DEFAULT_FALLBACK_VOICE_ID } =
+    await load<Media>('packages/media/src/index.ts');
+  const { TTS_NOTICES } = await load<{ TTS_NOTICES: Record<string, string> }>(
+    'packages/core/src/index.ts',
+  );
+  const voicesFile = path.join(ROOT, 'packages', 'media', 'src', 'voices', 'saved-voices.json');
+  const health = new TtsHealth({
+    engine: new ElevenLabsEngine({ apiKey: get('ELEVENLABS_API_KEY')!, retries: 0 }),
+    store: new JsonVoiceStore(voicesFile),
+    allowDesign: false,
+    ownVoiceIds: [get('ELEVENLABS_VOICE_ID'), get('ELEVENLABS_FALLBACK_VOICE_ID')].filter(
+      (v): v is string => !!v,
+    ),
+    stockVoiceId: DEFAULT_FALLBACK_VOICE_ID,
+  });
+  const st = await health.start();
+  if (st.tts === 'elevenlabs') {
+    say(
+      'ok',
+      `ElevenLabs text-to-speech works (voice ${health.voiceId()}, 1 character per candidate)`,
     );
-    if (res.ok) {
-      const n = (await res.arrayBuffer()).byteLength;
-      say('ok', `ElevenLabs text-to-speech works (HTTP ${res.status}, ${n} bytes for 1 character)`);
-    } else {
-      const body = await res.text();
-      say('fail', `ElevenLabs HTTP ${res.status}: ${trim(body.replace(/\s+/g, ' '))}`);
-      if (res.status === 401)
-        step(
-          'ElevenLabs rejected the key: regenerate it at https://elevenlabs.io/app/settings/api-keys and update ELEVENLABS_API_KEY.',
-        );
-      else if (res.status === 402 || /quota/i.test(body))
-        step('ElevenLabs quota/credits exhausted: https://elevenlabs.io/app/subscription');
-      else if (res.status === 404)
-        step(
-          `ElevenLabs voice ${voice} not found for this account: set ELEVENLABS_DOCTOR_VOICE_ID to a voice from GET /v1/voices.`,
-        );
-    }
-  } catch (e) {
+  } else {
     say(
       'fail',
-      `ElevenLabs check could not reach the API: ${e instanceof Error ? e.message : String(e)}`,
+      `ElevenLabs cannot speak: reason ${st.reason}. Calls, podcast and previews show: ${TTS_NOTICES[st.reason]}`,
     );
+    if (st.reason === 'paid_plan_required')
+      step(
+        'ElevenLabs free plans cannot use library voices through the API (HTTP 402 paid_plan_required). Either upgrade at https://elevenlabs.io/app/subscription, or put a voice you own in packages/media/src/voices/saved-voices.json / ELEVENLABS_VOICE_ID, or create a key with the text_to_speech, voices_read and voices_write permissions (https://elevenlabs.io/app/settings/api-keys) so the hub can list or design a voice on its own.',
+      );
+    else if (st.reason === 'key_restricted')
+      step(
+        'ElevenLabs rejected the key or it lacks text_to_speech. Create a key with the text_to_speech and voices_read permissions (add voices_write to let the hub design a voice) at https://elevenlabs.io/app/settings/api-keys and update ELEVENLABS_API_KEY.',
+      );
+    else if (st.reason === 'rate_limited')
+      step('ElevenLabs is rate limiting or out of quota: https://elevenlabs.io/app/subscription');
+    else step('ElevenLabs could not be reached or the voice ids were refused: rerun in a minute.');
   }
-} else if (hasEleven)
-  say('info', 'ElevenLabs live check skipped (set SQUAD_LIVE=1 to spend one character)');
+} else if (hasEleven) say('info', 'ElevenLabs live check skipped (SQUAD_LIVE=0)');
 
 // ---- verdict -------------------------------------------------------------------------------------
 const failed = results.some((r) => r.level === 'fail');
-const realLlm = hasGemini && !results.some((r) => r.level === 'fail' && /Gemini/.test(r.text));
-console.log('\nmode');
+const llmOk =
+  hasGemini && live && results.some((r) => r.level === 'ok' && /Gemini .*works/.test(r.text));
+const voiceOk =
+  hasEleven &&
+  live &&
+  results.some((r) => r.level === 'ok' && /ElevenLabs text-to-speech works/.test(r.text));
 console.log(
-  `  LLM    ${realLlm ? (live ? 'REAL (verified)' : 'REAL (key present, not verified: SQUAD_LIVE=1 pnpm doctor)') : 'STUB (FakeLlm)'}`,
+  `  LLM    ${llmOk ? 'REAL (verified)' : !hasGemini ? 'STUB (FakeLlm, no key)' : live ? 'STUB (FakeLlm: Gemini failed, see above)' : 'unverified (live checks off)'}`,
 );
 console.log(
-  `  voice  ${hasEleven && !results.some((r) => r.level === 'fail' && /ElevenLabs/.test(r.text)) ? 'REAL' : 'caption-only (no TTS)'}`,
+  `  voice  ${voiceOk ? 'REAL (verified)' : !hasEleven ? 'caption-only (no key)' : live ? 'caption-only (ElevenLabs cannot speak, see above)' : 'unverified (live checks off)'}`,
 );
 if (nextSteps.length) {
   console.log('\nnext steps');
