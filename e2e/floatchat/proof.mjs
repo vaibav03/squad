@@ -58,6 +58,11 @@ async function iteration(browser, kind, n, shotTag) {
   const sess = await session(kind, n);
   const ctx = await context(browser, sess);
   const page = await ctx.newPage();
+  const consoleLog = [];
+  page.on(
+    'console',
+    (m) => ['error', 'warning'].includes(m.type()) && consoleLog.push(m.text().slice(0, 160)),
+  );
   const ck = (k, ok, extra) => (r.checks[k] = ok ? 'pass' : `FAIL${extra ? ' ' + extra : ''}`);
   try {
     await page.goto(W + '/squad/village');
@@ -91,7 +96,8 @@ async function iteration(browser, kind, n, shotTag) {
       .catch(() => false);
     const sent = await page
       .waitForFunction(
-        () => /^Sent/.test(document.querySelector('[data-testid=chat-msg-state]')?.textContent ?? ''),
+        () =>
+          /^Sent/.test(document.querySelector('[data-testid=chat-msg-state]')?.textContent ?? ''),
         null,
         { timeout: 8000 },
       )
@@ -99,8 +105,12 @@ async function iteration(browser, kind, n, shotTag) {
       .catch(() => false);
     ck('dock_sending_then_sent', sawSending && sent);
     const composerEmpty = (await box.inputValue()) === '';
-    ck('dock_composer_cleared_and_message_visible', composerEmpty && (await dock.getByText('Customer test: hello squad').count()) > 0);
-    if (n === 0) await page.screenshot({ path: path.join(SHOTS, `floatchat-${shotTag}-dock-sent.png`) });
+    ck(
+      'dock_composer_cleared_and_message_visible',
+      composerEmpty && (await dock.getByText('Customer test: hello squad').count()) > 0,
+    );
+    if (n === 0)
+      await page.screenshot({ path: path.join(SHOTS, `floatchat-${shotTag}-dock-sent.png`) });
     // the bot answers an @mention; label honestly from the demo tag
     await box.fill('@cubbie what is a z-score?');
     await box.press('Enter');
@@ -116,7 +126,8 @@ async function iteration(browser, kind, n, shotTag) {
         ? 'demo'
         : 'live'
       : 'none';
-    if (n === 0) await page.screenshot({ path: path.join(SHOTS, `floatchat-${shotTag}-dock-bot.png`) });
+    if (n === 0)
+      await page.screenshot({ path: path.join(SHOTS, `floatchat-${shotTag}-dock-bot.png`) });
     await page.getByTestId('chat-dock-close').click();
 
     // the full page
@@ -134,7 +145,15 @@ async function iteration(browser, kind, n, shotTag) {
       .catch(() => false);
     r.pageMs = now() - t1;
     ck('page_settles_3s', pageOk, `${r.pageMs}ms`);
-    ck('page_history_has_message', (await page.getByText('Customer test: hello squad').count()) > 0);
+    const tH = now();
+    const hist = await page
+      .waitForFunction(() => document.body.innerText.includes('Customer test: hello squad'), null, {
+        timeout: 3000,
+      })
+      .then(() => true)
+      .catch(() => false);
+    r.histMs = now() - tH;
+    ck('page_history_has_message', hist, `${r.histMs}ms`);
     const b2 = page.getByTestId('chat-composer-input');
     await b2.fill('page hello');
     ck('page_send_enabled', await page.getByTestId('chat-send').isEnabled());
@@ -143,7 +162,10 @@ async function iteration(browser, kind, n, shotTag) {
       'page_sent',
       await page
         .waitForFunction(
-          () => [...document.querySelectorAll('[data-testid=chat-msg-state]')].some((e) => /^Sent/.test(e.textContent ?? '')),
+          () =>
+            [...document.querySelectorAll('[data-testid=chat-msg-state]')].some((e) =>
+              /^Sent/.test(e.textContent ?? ''),
+            ),
           null,
           { timeout: 8000 },
         )
@@ -173,8 +195,9 @@ async function iteration(browser, kind, n, shotTag) {
       await page
         .waitForFunction(
           () =>
-            (document.querySelector('[data-testid=chat-dock]')?.innerText ?? '').includes('Customer test: hello squad') &&
-            !/Loading messages/.test(document.body.innerText),
+            (document.querySelector('[data-testid=chat-dock]')?.innerText ?? '').includes(
+              'Customer test: hello squad',
+            ) && !/Loading messages/.test(document.body.innerText),
           null,
           { timeout: 3000 },
         )
@@ -185,11 +208,28 @@ async function iteration(browser, kind, n, shotTag) {
     r.error = String(e.message).split('\n')[0];
     r.checks._exception = 'FAIL';
   }
+  if (Object.values(r.checks).some((v) => v !== 'pass')) {
+    try {
+      r.diag = {
+        url: page.url(),
+        text: (await page.evaluate(() => document.body.innerText))
+          .replace(/\s+/g, ' ')
+          .slice(0, 400),
+        console: consoleLog.slice(-6),
+      };
+      await page.screenshot({
+        path: path.join(process.env.FC_FAIL_DIR || SHOTS, `floatchat-fail-${mode0}-${n}.png`),
+      });
+    } catch {
+      /* page gone */
+    }
+  }
   await ctx.close();
   return r;
 }
 
 const mode = process.argv[2] || 'real';
+var mode0 = mode;
 if (mode === 'hold') {
   // Hub restart mid-session: open the dock, send, signal, wait for the restart, then send again.
   const sigFile = process.argv[3];
@@ -203,7 +243,11 @@ if (mode === 'hold') {
   await box.waitFor({ timeout: 5000 });
   await box.fill('before restart');
   await box.press('Enter');
-  await page.waitForFunction(() => /^Sent/.test(document.querySelector('[data-testid=chat-msg-state]')?.textContent ?? ''), null, { timeout: 8000 });
+  await page.waitForFunction(
+    () => /^Sent/.test(document.querySelector('[data-testid=chat-msg-state]')?.textContent ?? ''),
+    null,
+    { timeout: 8000 },
+  );
   fs.writeFileSync(sigFile + '.ready', 'ready');
   while (!fs.existsSync(sigFile + '.go')) await new Promise((r) => setTimeout(r, 500));
   // hub is down or just back: a send now must end Sent (after Retry if needed) with the text kept
@@ -211,10 +255,16 @@ if (mode === 'hold') {
   await box.press('Enter');
   await page.waitForTimeout(3000);
   await page.screenshot({ path: path.join(SHOTS, 'floatchat-restart-1-during.png') });
-  const out = { initial: await page.evaluate(() => [...document.querySelectorAll('[data-testid=chat-msg-state]')].map((e) => e.textContent)) };
+  const out = {
+    initial: await page.evaluate(() =>
+      [...document.querySelectorAll('[data-testid=chat-msg-state]')].map((e) => e.textContent),
+    ),
+  };
   // wait for the stack to be back, then retry if the message failed
   for (let i = 0; i < 40; i++) {
-    const ok = await fetch(H + '/health').then((r) => r.ok).catch(() => false);
+    const ok = await fetch(H + '/health')
+      .then((r) => r.ok)
+      .catch(() => false);
     if (ok) break;
     await new Promise((r) => setTimeout(r, 1000));
   }
@@ -222,18 +272,34 @@ if (mode === 'hold') {
   const retry = page.getByRole('button', { name: 'Retry' }).first();
   if (await retry.count()) await retry.click();
   const sentAgain = await page
-    .waitForFunction(() => [...document.querySelectorAll('[data-testid=chat-msg-state]')].filter((e) => /^Sent/.test(e.textContent ?? '')).length >= 2, null, { timeout: 15000 })
+    .waitForFunction(
+      () =>
+        [...document.querySelectorAll('[data-testid=chat-msg-state]')].filter((e) =>
+          /^Sent/.test(e.textContent ?? ''),
+        ).length >= 2,
+      null,
+      { timeout: 15000 },
+    )
     .then(() => true)
     .catch(() => false);
   await box.fill('after restart');
   await box.press('Enter');
   const third = await page
-    .waitForFunction(() => [...document.querySelectorAll('[data-testid=chat-msg-state]')].filter((e) => /^Sent/.test(e.textContent ?? '')).length >= 3, null, { timeout: 15000 })
+    .waitForFunction(
+      () =>
+        [...document.querySelectorAll('[data-testid=chat-msg-state]')].filter((e) =>
+          /^Sent/.test(e.textContent ?? ''),
+        ).length >= 3,
+      null,
+      { timeout: 15000 },
+    )
     .then(() => true)
     .catch(() => false);
   await page.screenshot({ path: path.join(SHOTS, 'floatchat-restart-2-after.png') });
   const loadingNow = loading(await page.evaluate(() => document.body.innerText));
-  console.log(JSON.stringify({ restart: { ...out, sentAgain, thirdSent: third, stuckLoading: loadingNow } }));
+  console.log(
+    JSON.stringify({ restart: { ...out, sentAgain, thirdSent: third, stuckLoading: loadingNow } }),
+  );
   await browser.close();
   process.exit(sentAgain && third && !loadingNow ? 0 : 1);
 }
