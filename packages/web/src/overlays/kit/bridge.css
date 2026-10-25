@@ -1,97 +1,57 @@
 /*
- * web-live token bridge. Every web-live component styles itself ONLY with --lv-* variables.
- * Each --lv-* resolves to the design-system token (--sq-*) when tokens.css is loaded and to the
- * master palette (docs/design/palette.json) otherwise. This is the single place raw hex lives.
- * When docs/design/tokens.css lands, only the right-hand var(--sq-*) names here may need a tweak.
+ * web-live token bridge. Every web-live component styles itself ONLY with --lv-* variables, which
+ * alias the design-system tokens in docs/design/tokens.css (shadcn-style semantic names + --sq-*).
+ * Overlays and the notice board sit on the night village: wrap them in `.sq-scene` (the tokens
+ * file re-pins the dark set there) or rely on the dark default.
  */
 :root,
+.sq-scene,
 .lv-scope {
-  /* surfaces (dark chrome is the default; the village is always night) */
-  --lv-bg: var(--sq-bg, #070f1f); /* palette ink */
-  --lv-surface: var(--sq-surface, #0b1d38); /* sky-deep */
-  --lv-surface-2: var(--sq-surface-raised, #0f2744);
-  --lv-surface-3: var(--sq-surface-inset, #0a3a63); /* sky-mid */
-  --lv-line: var(--sq-line, rgb(201 212 228 / 0.14));
-  --lv-line-strong: var(--sq-line-strong, rgb(201 212 228 / 0.28));
-  --lv-scrim: var(--sq-scrim, rgb(7 15 31 / 0.66));
-  --lv-text: var(--sq-text, #c9d4e4); /* wall-lit */
-  --lv-text-strong: var(--sq-text-strong, #f4f7fb);
-  --lv-text-dim: var(--sq-text-dim, #8c9bb8); /* wall-mid */
-  --lv-accent: var(--sq-accent, #ffc857); /* glow */
-  --lv-accent-ink: var(--sq-accent-ink, #070f1f);
-  --lv-ok: var(--sq-ok, #5fcf8a);
-  --lv-alert: var(--sq-alert, #e0485a);
-  --lv-ember: var(--sq-ember, #f08a3a);
-  --lv-violet: var(--sq-violet, #8f7bff);
-  --lv-bar: var(--sq-bar, #000000); /* withheld black bar: always pure black */
-  --lv-focus: var(--sq-focus, #ffc857);
-  --lv-shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 12px 32px -12px rgb(0 0 0 / 0.6);
+  --lv-bg: var(--background);
+  --lv-surface: var(--card);
+  --lv-surface-2: var(--secondary);
+  --lv-surface-3: var(--muted);
+  --lv-hover: var(--accent);
+  --lv-line: var(--border);
+  --lv-line-strong: var(--ring);
+  --lv-scrim: var(--scrim);
+  --lv-text: var(--foreground);
+  --lv-text-dim: var(--muted-foreground);
+  --lv-accent: var(--primary);
+  --lv-accent-ink: var(--primary-foreground);
+  --lv-ok: var(--success);
+  --lv-alert: var(--destructive);
+  --lv-alert-text: var(--destructive-text);
+  --lv-warn: var(--warning);
+  --lv-info: var(--info);
+  --lv-focus: var(--ring);
+  --lv-bar: #000; /* withheld bars are pure black in both themes */
+  --lv-shadow-1: var(--shadow-1);
+  --lv-shadow-2: var(--shadow-2);
+  --lv-shadow-3: var(--shadow-3);
+  --lv-glow: var(--shadow-glow);
 
-  /* geometry: integer pixel scale, 4px base */
-  --lv-s1: 4px;
-  --lv-s2: 8px;
-  --lv-s3: 12px;
-  --lv-s4: 16px;
-  --lv-s5: 24px;
-  --lv-s6: 32px;
-  --lv-s7: 48px;
-  --lv-r1: 4px;
-  --lv-r2: 8px;
-  --lv-r3: 12px;
-  --lv-tap: 44px;
+  --lv-s1: var(--space-1);
+  --lv-s2: var(--space-2);
+  --lv-s3: var(--space-3);
+  --lv-s4: var(--space-4);
+  --lv-s5: var(--space-6);
+  --lv-s6: var(--space-8);
+  --lv-s7: var(--space-12);
+  --lv-r1: var(--radius-sm);
+  --lv-r2: var(--radius-md);
+  --lv-r3: var(--radius-lg);
+  --lv-r4: var(--radius-xl);
+  --lv-tap: var(--touch-min);
 
-  /* type */
-  --lv-font-ui: var(--sq-font-ui, 'Inter', ui-sans-serif, system-ui, sans-serif);
-  --lv-font-display: var(--sq-font-display, 'Press Start 2P', 'Inter', ui-monospace, monospace);
-  --lv-font-mono: var(--sq-font-mono, ui-monospace, 'SF Mono', Menlo, monospace);
+  --lv-font-ui: var(--font-sans);
+  --lv-font-pixel: var(--font-pixel);
+  --lv-font-caps: var(--font-pixel-caps);
+  --lv-font-mono: var(--font-mono);
 
-  /* motion (08-village-motion.md: three curves only) */
-  --lv-ease-out: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-  --lv-ease-in-out: var(--ease-in-out, cubic-bezier(0.77, 0, 0.175, 1));
-  --lv-ease-drawer: var(--ease-drawer, cubic-bezier(0.32, 0.72, 0, 1));
-}
-
-/* light chrome (pages only; overlays sit on the night village and stay dark unless asked) */
-:root[data-theme='light'],
-:root[data-theme='light'] .lv-scope,
-.lv-scope[data-theme='light'] {
-  --lv-bg: var(--sq-bg, #eef2f8);
-  --lv-surface: var(--sq-surface, #ffffff);
-  --lv-surface-2: var(--sq-surface-raised, #f6f8fc);
-  --lv-surface-3: var(--sq-surface-inset, #e3e9f3);
-  --lv-line: var(--sq-line, rgb(7 15 31 / 0.12));
-  --lv-line-strong: var(--sq-line-strong, rgb(7 15 31 / 0.28));
-  --lv-scrim: var(--sq-scrim, rgb(7 15 31 / 0.4));
-  --lv-text: var(--sq-text, #1c2b44);
-  --lv-text-strong: var(--sq-text-strong, #070f1f);
-  --lv-text-dim: var(--sq-text-dim, #56648a);
-  --lv-accent: var(--sq-accent, #b8730a);
-  --lv-accent-ink: var(--sq-accent-ink, #ffffff);
-  --lv-ok: var(--sq-ok, #1f8a52);
-  --lv-alert: var(--sq-alert, #c5303f);
-  --lv-ember: var(--sq-ember, #c0601a);
-  --lv-violet: var(--sq-violet, #5b46d6);
-  --lv-focus: var(--sq-focus, #5b46d6);
-  --lv-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset, 0 10px 28px -14px rgb(7 15 31 / 0.35);
-}
-
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) {
-    --lv-bg: var(--sq-bg, #eef2f8);
-    --lv-surface: var(--sq-surface, #ffffff);
-    --lv-surface-2: var(--sq-surface-raised, #f6f8fc);
-    --lv-surface-3: var(--sq-surface-inset, #e3e9f3);
-    --lv-line: var(--sq-line, rgb(7 15 31 / 0.12));
-    --lv-line-strong: var(--sq-line-strong, rgb(7 15 31 / 0.28));
-    --lv-text: var(--sq-text, #1c2b44);
-    --lv-text-strong: var(--sq-text-strong, #070f1f);
-    --lv-text-dim: var(--sq-text-dim, #56648a);
-    --lv-accent: var(--sq-accent, #b8730a);
-    --lv-accent-ink: var(--sq-accent-ink, #ffffff);
-    --lv-ok: var(--sq-ok, #1f8a52);
-    --lv-alert: var(--sq-alert, #c5303f);
-    --lv-focus: var(--sq-focus, #5b46d6);
-  }
+  --lv-ease-out: var(--ease-out);
+  --lv-ease-in-out: var(--ease-in-out);
+  --lv-ease-drawer: var(--ease-drawer);
 }
 
 .lv-vh {
@@ -104,10 +64,4 @@
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
-}
-
-.lv-focusable:focus-visible,
-.lv-scope :focus-visible {
-  outline: 2px solid var(--lv-focus);
-  outline-offset: 2px;
 }
