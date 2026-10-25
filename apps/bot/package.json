@@ -13,6 +13,15 @@
     "dev": "echo \"@squad/bot: dev not implemented yet\""
   },
   "dependencies": {
-    "@squad/core": "workspace:*"
+    "@photon-ai/imessage-kit": "^3.0.0",
+    "@squad/core": "workspace:*",
+    "better-sqlite3": "^12.11.1",
+    "discord.js": "^14.27.0",
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "fast-check": "^4.10.2"
   }
 }
