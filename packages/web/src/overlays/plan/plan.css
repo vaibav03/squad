@@ -100,3 +100,21 @@
   display: grid;
   gap: var(--lv-s1);
 }
+
+.pl-pill {
+  position: absolute;
+  right: var(--space-3);
+  top: var(--space-3);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hud-border);
+  background: var(--hud-bg);
+  color: var(--foreground);
+  box-shadow: var(--pixel-outline), var(--shadow-2);
+  font: 600 var(--text-sm) / 1 var(--font-sans);
+}

@@ -102,6 +102,21 @@ export class QuizEngine {
       )
       .get(quizId, idx) as ItemRow;
   }
+  /** The file and page the question's explanation was written from (generated with the question), if it named one. */
+  citation(quizId: string, idx: number): { file: string; page: number } | undefined {
+    const row = this.db
+      .prepare('SELECT cite_json FROM quiz_items WHERE quizId=? AND idx=?')
+      .get(quizId, idx) as { cite_json: string | null } | undefined;
+    if (!row?.cite_json) return undefined;
+    try {
+      const c = JSON.parse(row.cite_json) as { file?: unknown; page?: unknown };
+      return typeof c.file === 'string' && Number.isInteger(c.page) && (c.page as number) > 0
+        ? { file: c.file, page: c.page as number }
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  }
   private setPhase(quizId: string, phase: QuizPhase, idx?: number) {
     if (idx === undefined)
       this.db.prepare('UPDATE quiz_rounds SET phase=? WHERE quizId=?').run(phase, quizId);

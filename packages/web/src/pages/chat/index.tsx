@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { createChatApi, type ChatApi } from './api';
 import { ME, fixtureApiFor } from './fixtures';
 import { ChatView } from './ChatView';
+import { SourceViewerHost } from '../../components/source-viewer';
 import { useChat } from './useChat';
 import { hubStudentId } from '../../shell/dev-login';
 import { useSquadConfig, useAuth } from '../../shell/context';
@@ -46,6 +47,9 @@ export default function ChatPage() {
     [setParams],
   );
   return (
-    <ChatView ctl={ctl} activeId={active} onActiveChange={setActive} onSignInAgain={signOut} />
+    <>
+      <ChatView ctl={ctl} activeId={active} onActiveChange={setActive} onSignInAgain={signOut} />
+      <SourceViewerHost />
+    </>
   );
 }
