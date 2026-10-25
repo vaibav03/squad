@@ -1,6 +1,6 @@
 # A2A envelope (agent-to-agent messages)
 
-Status: contract shipped (workstream W0 of `docs/plans/LIVE-COUNCIL.md`). **Nothing emits these events yet**; emitters
+Status: contract shipped (W0); emitted by the agent runtime since W1 (see `docs/live-council.md`). Original note: emitters
 land in W1/W2/W4. Source of truth: `packages/core/src/a2a.ts` (browser-safe, exported from `@squad/core`), the two new
 `VillageEvent` kinds in `packages/core/src/events.ts`, and the per-viewer rules in `apps/hub/src/filter.ts`.
 

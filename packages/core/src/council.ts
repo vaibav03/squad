@@ -80,6 +80,39 @@ export type CouncilVerdict = z.infer<typeof CouncilVerdictSchema>;
 export const CouncilPhaseSchema = z.enum(['opinions', 'rankings', 'verdict', 'done']);
 export type CouncilPhase = z.infer<typeof CouncilPhaseSchema>;
 
+/**
+ * Honest status of a run or an agent (same vocabulary as a2a.ts `AgentModeSchema`; duplicated here because a2a.ts
+ * imports this file and a cycle would break module init). live | degraded:<reason> | demo[:<reason>].
+ */
+export const CouncilModeSchema = z.union([
+  z.literal('live'),
+  z.string().regex(/^degraded:[a-z_]{3,32}$/),
+  z.string().regex(/^demo(:[a-z_]{3,32})?$/),
+]);
+
+/** One participant on the run's org chart (public: names, roles, status; never prompts). */
+export const CouncilAgentInfoSchema = z.strictObject({
+  id: z.string().max(80),
+  role: z.string().max(24),
+  parent: z.string().max(80).optional(),
+  displayName: z.string().max(40),
+  mode: CouncilModeSchema,
+  transport: z.enum(['stream-text', 'live-text', 'live-audio', 'demo', 'code']),
+  status: z.enum(['queued', 'working', 'done', 'failed', 'skipped']),
+});
+export type CouncilAgentInfo = z.infer<typeof CouncilAgentInfoSchema>;
+
+export const COUNCIL_STAGES = [
+  'question',
+  'delegation',
+  'opinions',
+  'critiques',
+  'dissent',
+  'verdict',
+  'actions',
+  'done',
+] as const;
+
 /** The full state of a run; also the final result card (`GET /v1/council/:id`) and every stream step. */
 export const CouncilResultSchema = z.strictObject({
   id: CouncilRunIdSchema,
@@ -101,8 +134,16 @@ export const CouncilResultSchema = z.strictObject({
   /** `private` runs (asked in a DM) are only visible to `askedBy`. */
   visibility: z.enum(['squad', 'private']),
   askedBy: z.string().max(80),
-  /** true when produced by the deterministic demo model (no GEMINI_API_KEY). */
+  /** true when produced by the deterministic demo model (no GEMINI_API_KEY). Equals `mode` starting with `demo`. */
   demo: z.boolean(),
+  /** Honest status, decided once at run start and only ever worsened (live -> degraded:<why>). Absent on legacy (v1) runs. */
+  mode: CouncilModeSchema.optional(),
+  /** Decision-flow stage (agent runtime v2 only). */
+  stage: z.enum(COUNCIL_STAGES).optional(),
+  /** Org chart of the run (agent runtime v2 only). */
+  agents: z.array(CouncilAgentInfoSchema).max(8).optional(),
+  /** Public A2A envelopes so far, newest last, capped (validate with A2aMessageSchema; kept loose here to avoid a cycle). */
+  messages: z.array(z.unknown()).max(60).optional(),
   startedAt: z.number(),
   finishedAt: z.number().optional(),
 });
@@ -124,8 +165,14 @@ export function councilVerdictText(r: CouncilResult): string {
     return r.message ?? 'The council could not answer.';
   const v = r.verdict;
   if (!v) return 'The council is still thinking.';
+  // honest label in plain text too (iMessage, Discord, clipboard)
+  const label = r.mode?.startsWith('degraded')
+    ? `(Degraded: ${r.mode.slice(9).replace(/_/g, ' ')}) `
+    : r.demo || r.mode?.startsWith('demo')
+      ? '(Demo, scripted, not Gemini) '
+      : '';
   const lines = [
-    `Council verdict: ${v.text}`,
+    `${label}Council verdict: ${v.text}`,
     `Confidence: ${COUNCIL_CONFIDENCE_WORDS[v.confidence]}. ${v.confidenceNote}`,
   ];
   if (v.dissent)

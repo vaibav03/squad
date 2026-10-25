@@ -16,8 +16,10 @@ import {
   createDebateSkill,
   createDevilTaSkill,
   councilLlmFor,
+  createCouncilAgents,
   createCouncilService,
   createCouncilSkill,
+  type AskViewerData,
   type CouncilService,
   createFeynmanSkill,
   createMasteryStore,
@@ -62,6 +64,13 @@ export interface SkillDeps {
   now?: () => number;
   /** Stamp council results as demo-model output (true, or a getter when the model can fall back). */
   demo?: boolean | (() => boolean);
+  /** The RAW real model for live council agents (never a resilient wrapper). Omit without a key. */
+  rawLlm?: Llm;
+  env?: Record<string, string | undefined>;
+  /** The asker's own data (calendar/mastery summaries) through the privacy gate, for council agents' tools. */
+  viewer?: (askedBy: string, visibility: 'squad' | 'private') => AskViewerData | undefined;
+  /** Hub-level model health at run start (ResilientLlm.status()). */
+  health?: () => { llm: 'real' | 'fake'; reason?: string } | undefined;
   /** Receives the council service the skills use, so the hub's HTTP routes can share it. */
   onCouncil?: (c: CouncilService) => void;
   /** Share the hub's brain and mastery store so chat, quiz and the village use one instance. */
@@ -110,6 +119,14 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
   const feynman = new FeynmanEngine({ db: d.db, llm: d.llm, emit, mastery, chapters, ...now });
   const stepDiff = new StepDiffEngine({ db: d.db, llm: d.llm, emit, mastery, ...now });
   const courseIdFor = () => course();
+  // one agent runtime for the Ask council and the Round Table (same inputs, one hourly cap)
+  const agents = createCouncilAgents({
+    ...(d.rawLlm ? { real: d.rawLlm } : {}),
+    env: d.env ?? {},
+    ...(d.health ? { health: d.health } : {}),
+    emit,
+    ...now,
+  });
   const council =
     d.shared?.council ??
     createCouncilService({
@@ -122,6 +139,9 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
       brain,
       courseId: course,
       ...(d.demo !== undefined ? { demo: d.demo } : {}),
+      agents,
+      ...(d.viewer ? { viewer: d.viewer } : {}),
+      ...(d.rawLlm ? { triageLlm: d.rawLlm } : {}),
       ...now,
     });
   d.onCouncil?.(council);
@@ -145,7 +165,13 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
       courseIdFor,
     }),
     // After studyPlan so its phrases win ties; scores 0 unless addressed and asking for course planning.
-    createCoursePlanSkill({ emit, llm: d.llm, ...now }),
+    createCoursePlanSkill({
+      emit,
+      llm: d.llm,
+      agents,
+      ...(d.viewer ? { viewerFor: (student) => d.viewer!(student, 'squad') } : {}),
+      ...now,
+    }),
     // Devil's TA: '@cubbie devil's TA ch2' / 'find my mistake'. Judged in code, feedback only.
     createDevilTaSkill({
       emit,
@@ -154,6 +180,7 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
       llm: d.llm,
       courseIdFor,
       defaultChapter: () => chapterIdsFromStore(brain.store)(course())[0],
+      mode: () => agents.decideMode(),
       ...now,
     }),
     // Debate Stage: '@cubbie debate <question>' / 'debate this'. Course questions are grounded in the
@@ -161,6 +188,7 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
     createDebateSkill({
       emit,
       llm: d.llm,
+      agents,
       materialFor: async (question) => {
         const route = await brain.dean.route(course(), question);
         const chapter = route.chapters[0];
@@ -170,9 +198,24 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
       },
     }),
     // Anchored phrases only ('exam oracle', 'rubric check'); both score 0 unless addressed.
-    createOracleSkill({ store: brain.store, mastery, emit, llm: d.llm, courseIdFor, ...now }),
+    createOracleSkill({
+      store: brain.store,
+      mastery,
+      emit,
+      llm: d.llm,
+      courseIdFor,
+      mode: () => agents.decideMode(),
+      ...now,
+    }),
     createOralSkill({ emit }),
-    createRubricSkill({ store: brain.store, emit, llm: d.llm, courseIdFor, ...now }),
+    createRubricSkill({
+      store: brain.store,
+      emit,
+      llm: d.llm,
+      courseIdFor,
+      mode: () => agents.decideMode(),
+      ...now,
+    }),
   ];
   const mediaSkills = d.media
     ? createMediaSkills({

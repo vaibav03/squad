@@ -19,6 +19,7 @@ export * from './create';
 export * from './quiz';
 export * from './studyplan';
 export * from './councils';
+export * from './agents';
 export * from './skills/courseplan';
 export * from './library';
 export * from './context';

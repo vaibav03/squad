@@ -271,7 +271,9 @@ describe('examiner state machine', () => {
       });
       const { ex } = await kit(llm);
       const g = await ex.greeting();
-      expect(g[1]!.text).toBe('Explain, in your own words, the main idea of Topic ch1.');
+      expect(g[1]!.text).toContain('Explain, in your own words, the main idea of Topic ch1.');
+      expect(g[1]!.text).toMatch(/^\(Degraded: /);
+      expect(g[1]!.mode).toMatch(/^degraded:/);
       expect(llm.calls).toHaveLength(1);
       const q2 = await ex.reply(ANSWER); // judge fails: no follow-up, next question
       expect(q2[0]!.text).toContain('Topic ch2');

@@ -371,7 +371,7 @@ describe('rubric skill (FakeLlm)', () => {
     const { kit, c, skill } = await setup(llm);
     const t = (await skill.handle(msg(ASK), kit.ctx))[0]!.text;
     expect(t).toContain('unavailable');
-    expect(t).toContain('demo mode');
+    expect(t).toContain('(Degraded: credits depleted');
     expect(t).toContain('1. Clarity - steps are easy to follow');
     expect(t).not.toMatch(/Met|Not yet/);
     expect(c.events.some((e) => e.t === 'quiz.result')).toBe(false);
