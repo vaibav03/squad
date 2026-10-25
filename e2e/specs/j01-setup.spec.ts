@@ -16,7 +16,9 @@ for (const id of STUDENTS) {
     await page.getByRole('radio', { name: new RegExp(`^${NAMES[id]}`) }).click();
     await page.getByRole('button', { name: new RegExp(`as ${NAMES[id]}`) }).click();
     await page.waitForURL(/\/squad/);
-    await expect(page.getByText(new RegExp(`Good (evening|morning|afternoon), ${NAMES[id]}`))).toBeVisible();
+    await expect(
+      page.getByText(new RegExp(`Good (evening|morning|afternoon), ${NAMES[id]}`)),
+    ).toBeVisible();
     await expect(page.getByRole('button', { name: /Account menu for/ })).toBeVisible();
     const cookies = await ctx.cookies();
     note(`cookies after sign-in: ${cookies.map((c) => c.name).join(',') || 'none'}`);
@@ -41,9 +43,14 @@ test('J1 setup: phone, PDFs, .ics, persona (Ana, through the UI)', async ({ brow
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.waitForURL(/setup\/courses/);
 
-  const pdfs = fs.readdirSync(FIXTURE_PDFS).filter((f) => f.endsWith('.pdf')).map((f) => path.join(FIXTURE_PDFS, f));
+  const pdfs = fs
+    .readdirSync(FIXTURE_PDFS)
+    .filter((f) => f.endsWith('.pdf'))
+    .map((f) => path.join(FIXTURE_PDFS, f));
   expect(pdfs.length).toBeGreaterThanOrEqual(2);
-  const up = page.waitForResponse((r) => r.url().includes('/v1/squad/courses') && r.request().method() === 'POST');
+  const up = page.waitForResponse(
+    (r) => r.url().includes('/v1/squad/courses') && r.request().method() === 'POST',
+  );
   await page.locator('input[type=file]').setInputFiles(pdfs);
   expect((await up).status()).toBe(202);
   await expect(page.getByLabel('Your files')).toBeVisible();
@@ -62,7 +69,12 @@ test('J1 setup: phone, PDFs, .ics, persona (Ana, through the UI)', async ({ brow
   await page.locator('input[type=file]').setInputFiles(ics);
   await expect(page.getByText(/We found \d+ busy blocks?/)).toBeVisible();
   await page.waitForTimeout(1500);
-  expect.soft(calPosts, 'E2E-002: an uploaded .ics must reach the hub (POST /v1/squad/calendar); the UI only parses it locally').toBeGreaterThan(0);
+  expect
+    .soft(
+      calPosts,
+      'E2E-002: an uploaded .ics must reach the hub (POST /v1/squad/calendar); the UI only parses it locally',
+    )
+    .toBeGreaterThan(0);
   await shot(page, J, 'calendar-uploaded');
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.waitForURL(/setup\/persona/);
@@ -84,7 +96,9 @@ test('J1 chapters appear after ingest (hub courses + mastery)', async () => {
   await expect
     .poll(
       async () => {
-        courses = ((await (await api(tok, '/v1/squad/courses')).json()) as { courses: typeof courses }).courses;
+        courses = (
+          (await (await api(tok, '/v1/squad/courses')).json()) as { courses: typeof courses }
+        ).courses;
         return courses.length;
       },
       { timeout: 30_000 },
@@ -102,13 +116,29 @@ test('J1 other students ingest + calendars through the API (needed by later jour
     const tok = await apiLogin(id);
     const fd = new FormData();
     const f = path.join(FIXTURE_PDFS, 'ch6-the-normal-distribution.pdf');
-    fd.append('file', new Blob([fs.readFileSync(f)], { type: 'application/pdf' }), 'ch6-the-normal-distribution.pdf');
-    const r = await fetch(`${HUB}/v1/squad/courses`, { method: 'POST', headers: { authorization: `Bearer ${tok}` }, body: fd });
+    fd.append(
+      'file',
+      new Blob([fs.readFileSync(f)], { type: 'application/pdf' }),
+      'ch6-the-normal-distribution.pdf',
+    );
+    const r = await fetch(`${HUB}/v1/squad/courses`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${tok}` },
+      body: fd,
+    });
     expect(r.status, `${id} course upload`).toBe(202);
     const icsName = id === 's_chi' ? 's_cam.ics' : `${id}.ics`; // fixtures are named after the agent ids
     const cfd = new FormData();
-    cfd.append('file', new Blob([fs.readFileSync(path.join(ICS_DIR, icsName))], { type: 'text/calendar' }), `${id}.ics`);
-    const c = await fetch(`${HUB}/v1/squad/calendar`, { method: 'POST', headers: { authorization: `Bearer ${tok}` }, body: cfd });
+    cfd.append(
+      'file',
+      new Blob([fs.readFileSync(path.join(ICS_DIR, icsName))], { type: 'text/calendar' }),
+      `${id}.ics`,
+    );
+    const c = await fetch(`${HUB}/v1/squad/calendar`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${tok}` },
+      body: cfd,
+    });
     expect(c.status, `${id} calendar upload`).toBe(200);
   }
 });
