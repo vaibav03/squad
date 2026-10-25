@@ -244,7 +244,7 @@ export function TurnFeed({ run, filter, onFilter, jumpTo, selectedId, onSelect }
       <div className="dl-feed__bar">
         <h3 className="dl-h">
           <Icon name="message" size={14} />
-          What they are saying
+          Discussion
         </h3>
         <label className="dl-field">
           <span className="dl-k">Speaker</span>
