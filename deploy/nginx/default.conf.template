@@ -1,0 +1,81 @@
+# One origin: static web host + hub reverse proxy. ${HUB_UPSTREAM} is substituted at container start.
+server {
+  listen 8080;
+  server_name _;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  include /etc/nginx/security-headers.conf;
+
+  location = /healthz { access_log off; default_type text/plain; return 200 "ok\n"; }
+
+  # Hashed bundles: immutable for a year.
+  location /static/ {
+    include /etc/nginx/security-headers.conf;
+    add_header Cache-Control "public, max-age=31536000, immutable" always;
+    try_files $uri =404;
+  }
+  # Repo art is unhashed: cache a day, revalidate.
+  location /assets/ {
+    include /etc/nginx/security-headers.conf;
+    add_header Cache-Control "public, max-age=86400, stale-while-revalidate=604800" always;
+    try_files $uri =404;
+  }
+  location /avatars/ {
+    include /etc/nginx/security-headers.conf;
+    add_header Cache-Control "public, max-age=86400" always;
+    try_files $uri =404;
+  }
+
+  # SPA entry: never cache, so a deploy takes effect immediately.
+  location / {
+    include /etc/nginx/security-headers.conf;
+    add_header Cache-Control "no-cache" always;
+    try_files $uri /index.html;
+  }
+
+  # ---- hub API (same origin, so no CORS) ----
+  # Internal and simulator endpoints are never reachable from the outside.
+  location ^~ /internal/ { return 404; }
+  location ^~ /__sim/ { return 404; }
+
+  # SSE: no buffering, long read timeout.
+  location = /v1/squad/stream {
+    proxy_pass http://${HUB_UPSTREAM};
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+    proxy_buffering off;
+    proxy_cache off;
+    gzip off;
+    proxy_read_timeout 1h;
+    add_header X-Accel-Buffering "no" always;
+    add_header Cache-Control "no-store" always;
+    include /etc/nginx/security-headers.conf;
+  }
+
+  # Call websocket.
+  location ^~ /v1/call/ws/ {
+    proxy_pass http://${HUB_UPSTREAM};
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_read_timeout 1h;
+    proxy_send_timeout 1h;
+  }
+
+  location ~ ^/(v1/|health$) {
+    proxy_pass http://${HUB_UPSTREAM};
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+    proxy_read_timeout 120s;
+    include /etc/nginx/security-headers.conf;
+  }
+}

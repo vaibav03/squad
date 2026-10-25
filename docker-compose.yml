@@ -1,0 +1,127 @@
+# Squad on one box: hub + 4 mesh agents + web host / reverse proxy on ONE origin.
+#   cp .env.example .env   # set INTERNAL_EVENTS_SECRET (and GEMINI_API_KEY for real answers)
+#   docker compose up -d --build
+#   open http://localhost:8080
+# Only the "web" service publishes a port. Hub and agents stay on the private compose network.
+# Optional chat bot: docker compose --profile bot up -d   (needs DISCORD_TOKEN in .env)
+name: squad
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+x-peers: &peers s_ana=http://agent-ana:4101,s_ben=http://agent-ben:4102,s_cam=http://agent-cam:4103,s_dev=http://agent-dev:4104
+
+x-agent: &agent
+  build: { context: ., target: agent }
+  image: squad-agent:${SQUAD_TAG:-local}
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  depends_on:
+    hub: { condition: service_healthy }
+  volumes:
+    - agent-data:/app/apps/agent/data
+  logging: *logging
+
+x-agent-env: &agent-env
+  INTERNAL_EVENTS_SECRET: ${INTERNAL_EVENTS_SECRET:?set INTERNAL_EVENTS_SECRET in .env (not change-me)}
+  HUB_BASE_URL: http://hub:8788
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  FAKE_LLM: ${AGENT_FAKE_LLM:-0}
+  CONFIRM_MODE: web
+  PEERS: *peers
+
+services:
+  hub:
+    build: { context: ., target: hub }
+    image: squad-hub:${SQUAD_TAG:-local}
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    stop_grace_period: 15s
+    volumes:
+      - hub-data:/data
+    logging: *logging
+    environment:
+      NODE_ENV: production
+      HUB_PORT: "8788"
+      # Public URL browsers use (the hub derives the call websocket URL from it).
+      HUB_BASE_URL: ${PUBLIC_ORIGIN:-http://localhost:8080}
+      HUB_CORS_ORIGINS: ${PUBLIC_ORIGIN:-http://localhost:8080}
+      INTERNAL_EVENTS_SECRET: ${INTERNAL_EVENTS_SECRET:?set INTERNAL_EVENTS_SECRET in .env (not change-me)}
+      HUB_AUTH_SECRET: ${HUB_AUTH_SECRET:-}
+      DB_PATH: /data/squad.db
+      # Demo roster + dev-login stay on until the accounts system lands; set HUB_SEED=0 to lock them off.
+      HUB_SEED: ${HUB_SEED:-1}
+      HUB_SIM: ${HUB_SIM:-0}
+      HUB_LOG: ${HUB_LOG:-info}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      GEMINI_MODEL_FAST: ${GEMINI_MODEL_FAST:-}
+      GEMINI_MODEL_MAIN: ${GEMINI_MODEL_MAIN:-}
+      GEMINI_MODEL_CHAIR: ${GEMINI_MODEL_CHAIR:-}
+      FORCE_FAKE_LLM: ${FORCE_FAKE_LLM:-}
+      AGENT_PEERS: *peers
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8788/health"]
+      interval: 15s
+      timeout: 3s
+      start_period: 20s
+      retries: 3
+
+  agent-ana:
+    <<: *agent
+    environment: { <<: *agent-env, AGENT_ID: s_ana, PORT: "4101" }
+  agent-ben:
+    <<: *agent
+    environment: { <<: *agent-env, AGENT_ID: s_ben, PORT: "4102" }
+  agent-cam:
+    <<: *agent
+    environment: { <<: *agent-env, AGENT_ID: s_cam, PORT: "4103" }
+  agent-dev:
+    <<: *agent
+    environment: { <<: *agent-env, AGENT_ID: s_dev, PORT: "4104" }
+
+  web:
+    build: { context: ., target: web }
+    image: squad-web:${SQUAD_TAG:-local}
+    restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      hub: { condition: service_healthy }
+    ports:
+      # 127.0.0.1 by default. Use BIND_ADDR=0.0.0.0 for LAN demo mode, or put TLS in front for the internet.
+      - "${BIND_ADDR:-127.0.0.1}:${WEB_PORT:-8080}:8080"
+    logging: *logging
+    environment:
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:8080}
+      HUB_UPSTREAM: hub:8788
+
+  bot:
+    profiles: [bot]
+    build: { context: ., target: bot }
+    image: squad-bot:${SQUAD_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      hub: { condition: service_healthy }
+    volumes:
+      - bot-data:/app/apps/bot/data
+    logging: *logging
+    environment:
+      TRANSPORT: ${BOT_TRANSPORT:-discord}
+      DISCORD_TOKEN: ${DISCORD_TOKEN:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      INTERNAL_EVENTS_SECRET: ${INTERNAL_EVENTS_SECRET:?set INTERNAL_EVENTS_SECRET in .env (not change-me)}
+      HUB_BASE_URL: http://hub:8788
+
+volumes:
+  hub-data:
+  agent-data:
+  bot-data:
