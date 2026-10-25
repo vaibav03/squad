@@ -65,7 +65,11 @@ export function ItemList(p: ItemListProps) {
                     {shareNames.length ? `Shared with ${shareNames.join(', ')}` : 'Private'}
                   </Chip>
                 </span>
-                {p.squadId && p.share ? (
+                {CALENDAR_KINDS.has(r.kind) ? (
+                  <span className="sq-conn__meta" data-testid="item-freebusy">
+                    Free/busy only, titles never shared.
+                  </span>
+                ) : p.squadId && p.share ? (
                   <Button
                     size="sm"
                     variant="ghost"
@@ -74,9 +78,6 @@ export function ItemList(p: ItemListProps) {
                   >
                     {sharedHere ? 'Stop sharing' : 'Share with squad'}
                   </Button>
-                ) : null}
-                {CALENDAR_KINDS.has(r.kind) && !sharedHere ? (
-                  <span className="sq-conn__meta">Squad sees busy time only.</span>
                 ) : null}
                 {p.squadId ? (
                   <Button

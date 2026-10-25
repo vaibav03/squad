@@ -62,7 +62,10 @@ export function ConnectionsView(p: ViewProps) {
         <Link to="/squad/connections/health" data-testid="health-link">
           Integration health
         </Link>{' '}
-        shows every link from connection to chat, plan and trip.
+        shows every link from connection to chat, plan and trip.{' '}
+        <Link to="/squad/connections/review" data-testid="review-link">
+          Review imported context
+        </Link>
       </p>
       {ret ? (
         <Notice

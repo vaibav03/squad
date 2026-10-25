@@ -55,11 +55,14 @@ export const scopeWords = (s: string): string =>
 
 /** Singular noun per kind; `plural()` makes the count line ('1 Classroom item', '2 Classroom items'). */
 export const KIND_LABEL: Record<string, string> = {
+  canvas_course: 'course',
+  canvas_module: 'module',
   canvas_assignment: 'assignment',
+  canvas_page: 'page',
   canvas_file: 'file',
-  canvas_event: 'Canvas event',
-  gdoc: 'Doc',
-  gdrive_file: 'Drive file',
+  canvas_event: 'calendar event',
+  gdoc: 'Drive doc',
+  gdrive_file: 'Drive doc',
   gcal_event: 'calendar event',
   classroom_item: 'Classroom item',
   classroom_coursework: 'Classroom item',
