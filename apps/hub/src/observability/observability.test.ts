@@ -186,6 +186,43 @@ describe('status extension', () => {
   });
 });
 
+describe('credits depleted', () => {
+  it('public and admin status carry the reason, probe times and the hub fix text', async () => {
+    const prev = hub.deps.runtime;
+    hub.deps.runtime = {
+      llm: () => ({
+        llm: 'fake',
+        reason: 'credits_depleted',
+        since: 1,
+        lastProbeAt: 2,
+        nextProbeAt: 62_000,
+      }),
+      tts: () => false,
+      ports: () => 'stub',
+    };
+    try {
+      const pub = (await (await get('/v1/status')).json()) as Record<string, unknown>;
+      expect(pub).toMatchObject({
+        llm: 'fake',
+        demo: true,
+        reason: 'credits_depleted',
+        nextProbeAt: 62_000,
+      });
+      expect(String(pub.fix)).toContain('Top up Gemini credits');
+      const adm = (await (await get('/v1/admin/status', { 'x-admin-token': ADMIN })).json()) as {
+        llm: { reason: string; fix: string; nextProbeAt: number };
+        credits: { state: string; fix: string };
+      };
+      expect(adm.llm).toMatchObject({ reason: 'credits_depleted', nextProbeAt: 62_000 });
+      expect(adm.llm.fix).toContain('Top up Gemini credits');
+      expect(adm.credits).toMatchObject({ state: 'depleted' });
+      expect(adm.credits.fix).toContain('Top up Gemini credits');
+    } finally {
+      hub.deps.runtime = prev;
+    }
+  });
+});
+
 describe('correlation across hops', () => {
   it('echoes a supplied id, mints one otherwise, and the ingest log runs under it', async () => {
     ingestCorr = [];
