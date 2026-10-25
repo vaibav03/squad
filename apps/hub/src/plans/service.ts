@@ -1,15 +1,19 @@
 // The shared study plan: squad-scoped, versioned, one object the group chat, the web panel and the nudges all read.
 // Every method returns what the group chat should say (`say`); REST callers post it, the chat skill returns it.
 import { randomBytes } from 'node:crypto';
+import { citationLabel } from '@squad/bot';
 import {
+  planBadge,
   planCountdownWords,
   planProgressWords,
   type ChatCard,
+  type ChatCitation,
+  type PlanGenerator,
+  type ProvenanceHint,
   type Plan,
   type PlanItem,
   type PlanItemPatch,
   type PlanMember,
-  type PlanMode,
   type PlanView,
 } from '@squad/core';
 import type { HubDeps, Viewer } from '../types';
@@ -29,6 +33,7 @@ import {
   type PlanChapter,
 } from './logic';
 import type { PlanStore } from './store';
+import { PlannerError, type PlanPlanner, type PlannerContextItem } from './planner';
 
 /** Where plan inputs come from. The default reads the course store, due items and mastery; a context store can replace it. */
 export interface PlanContext {
@@ -41,6 +46,10 @@ export interface PlanContext {
   busyDays(studentId: string): Set<string>;
   /** Course-wide due items only (never one student's calendar). */
   due(courseId: string, from: number, to: number): DueLite[];
+  /** Text of one course page (the planner's quotes are checked against it). */
+  pageText?(courseId: string, file: string, page: number): string | undefined;
+  /** Canvas/Google items the viewer may read (own and squad-shared), through the context store's read gate. */
+  contextItems?(v: Viewer, courseId: string): PlannerContextItem[];
 }
 
 export interface PlanNudgeHook {
@@ -51,6 +60,10 @@ export interface PlanNudgeHook {
 export interface PlanSay {
   text: string;
   card?: ChatCard;
+  /** Verified material the plan was built from (agent plans), shown as chips. */
+  citations?: ChatCitation[];
+  /** What the plan says about itself when it has no citations (the fallback plan). */
+  provenance?: ProvenanceHint;
 }
 export type PlanOk = { ok: true; plan: Plan; say: PlanSay; conflictId?: string };
 export type PlanFail = {
@@ -105,6 +118,10 @@ export interface PlanService {
   hasOpen(v: Viewer): { proposed: boolean; pendingMe: boolean; active: boolean };
   matchOwnOpen(v: Viewer, ref: string): PlanItem[];
   setNudges(h: PlanNudgeHook | undefined): void;
+  /** The planner agent. Without one (no key) the labelled fallback generator builds the plan. */
+  setPlanner(p: PlanPlanner | undefined): void;
+  /** The chips or label the plan's chat message carries. */
+  provenanceOf(p: Plan): Pick<PlanSay, 'citations' | 'provenance'>;
   onChange(fn: (p: Plan, ev: string) => void): () => void;
 }
 
@@ -117,11 +134,13 @@ export const REPLY_HELP =
   'Reply "@cubbie plan 1" to accept, "plan 2" to decline, "plan 3 <item> to <person or date>" to change an item, "plan 4" if you are the organizer to start it now, and "done <item>" when you finish one.';
 
 export function createPlanService(
-  deps: Pick<HubDeps, 'db' | 'directory' | 'chat' | 'now' | 'log' | 'ports' | 'runtime'>,
+  deps: Pick<HubDeps, 'db' | 'directory' | 'chat' | 'now' | 'log' | 'ports' | 'runtime'> &
+    Partial<Pick<HubDeps, 'imessageSync'>>,
   ctx: PlanContext,
   store: PlanStore,
 ): PlanService {
   let nudges: PlanNudgeHook | undefined;
+  let planner: PlanPlanner | undefined;
   const listeners = new Set<(p: Plan, ev: string) => void>();
   const nameOf = (id: string) => deps.directory.student(id)?.name ?? id;
 
@@ -138,21 +157,41 @@ export function createPlanService(
         /* listener errors never break a plan write */
       }
   };
+  const provenanceOf = (p: Plan): Pick<PlanSay, 'citations' | 'provenance'> => {
+    if (p.generator.kind === 'agent') {
+      const citations = p.citations
+        .filter((c) => c.kind === 'material' && c.file && c.page)
+        .map((c) => ({ file: c.file!, page: c.page!, label: citationLabel(c.file!, c.page!) }));
+      return citations.length ? { citations } : { provenance: { kind: 'no_sources' } };
+    }
+    const badge = planBadge(p.generator);
+    return {
+      provenance: {
+        kind: 'sample',
+        label: `${badge.kindLabel}: scripted, not written by an agent${p.generator.reason ? ` (${p.generator.reason})` : ''}`,
+      },
+    };
+  };
   const cardOf = (p: Plan): ChatCard => ({
     type: 'plan',
     planId: p.id,
     rev: p.rev,
     status: p.status,
   });
-  const mode = (): PlanMode => {
-    const llm = deps.runtime?.llm().llm === 'real';
-    const ports = deps.runtime?.ports() === 'real';
-    return llm && ports ? 'live' : ports || llm ? 'degraded' : 'demo';
-  };
+  const llmReal = () => deps.runtime?.llm().llm === 'real';
+  const portsReal = () => deps.runtime?.ports() === 'real';
+  /** Why the live model is not answering, in a few plain words. */
+  const llmReason = () => deps.runtime?.llm().reason ?? 'no Gemini key';
   const log = (p: Plan, by: string, text: string) => {
     p.log.push({ ts: deps.now(), by, text });
     if (p.log.length > 200) p.log.splice(0, p.log.length - 200);
     p.updatedAt = deps.now();
+  };
+  /** How the last plan message is doing on the iMessage side, from its stored delivery state. */
+  const imessageStateOf = (messageId: string): PlanView['sync']['imessage'] => {
+    const st = deps.chat.store.get(messageId)?.deliveryState?.state;
+    if (st) return st;
+    return deps.imessageSync ? 'web_only' : 'off';
   };
   const own = (v: Viewer, p: Plan | undefined): p is Plan => !!p && p.squadId === v.squadId;
   const fail = (
@@ -205,9 +244,10 @@ export function createPlanService(
       personaName: 'Cubbie',
       emoji: '🐻',
       text: say.text,
-      citations: [],
+      citations: say.citations ?? [],
       attachments: [],
       ...(say.card ? { card: say.card } : {}),
+      ...(say.provenance ? { provenance: say.provenance } : {}),
     });
   }
 
@@ -221,9 +261,20 @@ export function createPlanService(
     return true;
   }
 
+  // Remember the last plan message posted to the squad chat so the panel can say where the decision went.
+  deps.chat.onBotPost((m) => {
+    if (m.card?.type !== 'plan' || !m.chatId.startsWith('group:')) return;
+    const p = store.get(m.card.planId);
+    if (!p) return;
+    p.posted = { messageId: m.id, at: m.ts, text: m.text.replace(/\s+/g, ' ').slice(0, 140) };
+    store.save(p);
+  });
+
   const service: PlanService = {
     store,
     setNudges: (h) => void (nudges = h),
+    setPlanner: (p) => void (planner = p),
+    provenanceOf,
     onChange(fn) {
       listeners.add(fn);
       return () => void listeners.delete(fn);
@@ -315,17 +366,76 @@ export function createPlanService(
       const due = examDate ? dueAll.filter((d) => ymd(d.dueAt) <= examDate!) : dueAll;
       try {
         const roster = members.map((m) => ({ id: m.id, name: m.name }));
-        const gen = generateItems({
-          now,
-          members: roster,
-          organizerId: v.studentId,
-          chapters,
-          boxes: new Map(roster.map((m) => [m.id, ctx.boxes(m.id, courseId!)])),
-          busyDays: new Map(roster.map((m) => [m.id, ctx.busyDays(m.id)])),
-          due,
-          examDate,
-          newId: id10,
-        });
+        const boxes = new Map(roster.map((m) => [m.id, ctx.boxes(m.id, courseId!)]));
+        const busyDays = new Map(roster.map((m) => [m.id, ctx.busyDays(m.id)]));
+        // 1) the planner agent, when a real model is answering; 2) the labelled deterministic fallback.
+        let gen: { items: PlanItem[]; citations: Plan['citations'] } | undefined;
+        let generator: PlanGenerator | undefined;
+        let rationale: string | undefined;
+        let fallbackReason = llmReal() ? undefined : llmReason();
+        if (planner && llmReal()) {
+          try {
+            const out = await planner({
+              now,
+              examDate,
+              examLabel,
+              courseId,
+              courseTitle: ctx.courseTitle(courseId),
+              members: roster,
+              organizerId: v.studentId,
+              chapters,
+              pageText: (file, page) => ctx.pageText?.(courseId!, file, page),
+              due,
+              context: ctx.contextItems?.(v, courseId) ?? [],
+              boxes,
+              busyDays,
+              newId: id10,
+            });
+            gen = { items: out.items, citations: out.citations };
+            rationale = out.rationale;
+            const ports = portsReal();
+            generator = {
+              kind: 'agent',
+              mode: ports ? 'live' : 'degraded',
+              ...(ports ? {} : { reason: 'some hub ports are stubbed, the planner agent still ran' }),
+              source: 'planner',
+              model: out.model,
+              ...(out.usage ? { usage: out.usage } : {}),
+              note: `Written by the planner agent (${out.model}) from your course pages, due dates and each member's free days.`,
+            };
+            if (out.repaired.length)
+              deps.log.info('plan: planner output repaired', { n: out.repaired.length });
+          } catch (e) {
+            fallbackReason =
+              e instanceof PlannerError ? e.reason : `the planner failed (${(e as Error).name})`;
+            deps.log.warn('plan: planner failed, using the fallback generator', {
+              reason: fallbackReason,
+            });
+          }
+        } else if (!planner && llmReal()) fallbackReason = 'no planner agent is attached';
+        if (!gen) {
+          gen = generateItems({
+            now,
+            members: roster,
+            organizerId: v.studentId,
+            chapters,
+            boxes,
+            busyDays,
+            due,
+            examDate,
+            newId: id10,
+          });
+          const degraded = llmReal(); // a real model exists but the agent did not deliver
+          generator = {
+            kind: 'fallback',
+            mode: degraded ? 'degraded' : 'demo',
+            reason: fallbackReason ?? 'no live model',
+            source: 'fallback-generator',
+            note: degraded
+              ? `Fallback sample plan: the planner agent did not deliver (${fallbackReason}), so this is the scripted chapter-by-chapter schedule.`
+              : `Fallback sample plan: scripted, not written by an agent (${fallbackReason ?? 'no live model'}). Built from the course chapters and due dates.`,
+          };
+        }
         if (prior) {
           prior.status = 'cancelled';
           log(prior, v.studentId, 'replaced by a new plan');
@@ -337,7 +447,6 @@ export function createPlanService(
           optedIn: true,
           response: m.id === v.studentId ? 'accepted' : 'pending',
         }));
-        const md = mode();
         const plan: Plan = {
           id: `pl_${id10()}`,
           squadId: v.squadId,
@@ -352,16 +461,8 @@ export function createPlanService(
           members: pm,
           conflicts: [],
           citations: gen.citations,
-          generator: {
-            mode: md,
-            source: 'planner',
-            note:
-              md === 'live'
-                ? 'Built by the planner from your course materials and due dates, with study times from your agents.'
-                : md === 'degraded'
-                  ? 'Built by the planner from your course materials and due dates. Part of the live stack is unavailable, so times may be rough.'
-                  : 'Demo plan: built from the sample course materials with scripted scheduling.',
-          },
+          generator: generator!,
+          ...(rationale ? { rationale } : {}),
           createdAt: now,
           updatedAt: now,
           log: [],
@@ -370,6 +471,7 @@ export function createPlanService(
         activateIfReady(plan, v.studentId, 'organizer only'); // a one-person squad needs nobody else
         store.save(plan);
         emitChange(plan, 'proposed');
+        const badge = planBadge(plan.generator);
         const cites = [...new Set(plan.citations.map((c) => c.label))].slice(0, 6).join(', ');
         const tail =
           plan.status === 'active'
@@ -381,8 +483,10 @@ export function createPlanService(
           say: {
             text:
               `${nameOf(v.studentId)} proposed a study plan: ${examWords(plan, now)}, ${plan.items.length} items.\n` +
-              `${lines(plan)}\nBuilt from: ${cites || 'your course materials'}. ${plan.generator.note}\n${tail}`,
+              `${lines(plan)}\n${badge.kindLabel} (${badge.label}). ${plan.rationale ? `Why: ${plan.rationale}\n` : ''}` +
+              `Built from: ${cites || 'your course materials'}. ${plan.generator.note}\n${tail}`,
             card: cardOf(plan),
+            ...provenanceOf(plan),
           },
         };
       } catch (e) {
@@ -754,6 +858,15 @@ export function createPlanService(
         },
         myWeakTopics: weak,
         replyHelp: REPLY_HELP,
+        saved: {
+          rev: p.rev,
+          lastEditedBy: nameOf(p.log[p.log.length - 1]?.by ?? p.organizerId),
+          lastEditedAt: p.updatedAt,
+        },
+        sync: {
+          posted: p.posted ? { at: p.posted.at, text: p.posted.text } : null,
+          imessage: p.posted ? imessageStateOf(p.posted.messageId) : 'off',
+        },
       };
     },
 

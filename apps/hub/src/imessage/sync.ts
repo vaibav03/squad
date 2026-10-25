@@ -42,6 +42,12 @@ export interface SyncStatus {
   watcherDown: boolean;
   backfill: boolean;
   receipts: boolean;
+  /** IMESSAGE_DRY_RUN: parsed and routed, nothing sent. */
+  dryRun: boolean;
+  /** A scripted transport, not Apple's Messages. */
+  fixture: boolean;
+  /** Last successful send to Messages, epoch ms. */
+  lastOkAt?: number;
 }
 
 export interface OutPart {
@@ -81,6 +87,7 @@ export interface SyncOptions {
   /** 1:1 chats worth backfilling: their cursor key and chat guid (shape unverified on real Apple). */
   dmChats(): { threadKey: string; chatGuid: string }[];
   timers?: boolean;
+  fixture?: boolean;
 }
 
 export function createImessageSync(o: SyncOptions): ImessageSync {
@@ -270,6 +277,9 @@ export function createImessageSync(o: SyncOptions): ImessageSync {
         watcherDown: h.watcherDown,
         backfill: caps?.backfill ?? false,
         receipts: caps?.receipts ?? false,
+        dryRun: gateway.config.dryRun,
+        fixture: o.fixture === true,
+        ...(h.lastOkAt !== undefined ? { lastOkAt: h.lastOkAt } : {}),
       };
     },
     intakeAttachments(atts, save) {

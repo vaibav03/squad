@@ -23,6 +23,8 @@ export interface PlanGenerator {
   reason?: string;
   /** Model that wrote an `agent` plan. */
   model?: string;
+  /** Token counts and the estimated cost of the agent call (agent plans only). */
+  usage?: { inputTokens?: number; outputTokens?: number; costUsd?: number };
 }
 
 export interface PlanBadge {
@@ -149,6 +151,8 @@ export interface Plan {
   generator: PlanGenerator;
   /** The planner's written rationale for the whole plan (agent plans only). */
   rationale?: string;
+  /** The last plan message posted to the squad chat (hub message id, time, first words). */
+  posted?: { messageId: string; at: number; text: string };
   /** Present when `status` is `failed`. */
   error?: string;
   createdAt: number;
