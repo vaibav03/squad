@@ -78,6 +78,8 @@ export interface Connection {
   sharedWithSquads: string[];
   /** The grant is gone or could not be renewed: show a Reconnect button. */
   needsReconnect: boolean;
+  /** The provider rejected the credential but it has not expired by the clock. */
+  degraded?: boolean;
   account: { label: string; name: string | null; host: string | null } | null;
   /** Scopes Google/Canvas actually granted (falls back to the requested scopes). */
   grantedScopes: string[];
@@ -113,6 +115,7 @@ export function toConnection(raw: z.infer<typeof RawConnection>): Connection {
     sources: raw.sources,
     sharedWithSquads: raw.sharedWithSquads,
     needsReconnect: raw.needsReconnect ?? (state === 'expired' || state === 'revoked'),
+    degraded: raw.degraded === true,
     account: raw.account
       ? { label: raw.account.label, name: raw.account.name ?? null, host: raw.account.host ?? null }
       : null,

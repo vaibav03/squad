@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { HealthBanner } from '../health/HealthBanner';
 import { Button } from '../../primitives/Button';
@@ -6,7 +6,10 @@ import { Card } from '../../primitives/Card';
 import { Chip } from '../../primitives/Chip';
 import { Notice } from '../../primitives/Notice';
 import { TextField } from '../../primitives/TextField';
-import type { Connection, HubClient } from './api';
+import type { Connection, HubClient, SourceRow } from './api';
+import { askCubbie, pickAskItems } from './askCubbie';
+import { deriveProviderState, type ProviderView } from './connection-state';
+import { plural } from '../../lib/plural';
 import { ItemList } from './ItemList';
 import {
   bridgeRequest,
@@ -26,7 +29,6 @@ import {
   relTime,
   scopeWords,
   squadLabel,
-  STATE_HEADLINE,
   STATE_TONE,
 } from './model';
 import type { ConnectionsState } from './useConnections';
@@ -44,6 +46,10 @@ export function ConnectionsView(p: ViewProps) {
   const ret = oauthReturn(p.search ?? '');
   const canvas = p.connections.filter((c) => c.provider === 'canvas');
   const google = p.connections.filter((c) => c.provider === 'google');
+  const gv = deriveProviderState('google', google, {
+    now: p.now,
+    justReturned: ret?.ok === true && (ret.provider ?? 'google') === 'google',
+  });
   return (
     <div className="sq-conn">
       <p className="sq-conn__lede">
@@ -60,14 +66,16 @@ export function ConnectionsView(p: ViewProps) {
       </p>
       {ret ? (
         <Notice
-          tone={ret.ok ? 'ok' : 'error'}
-          title={ret.ok ? 'Google connected' : 'Google did not connect'}
+          tone={ret.ok ? (gv.state === 'reauth' || gv.state === 'degraded' ? 'warn' : 'ok') : 'error'}
+          title={ret.ok ? `Google: ${gv.label}` : 'Google did not connect'}
         >
-          {ret.ok
-            ? 'Your first sync is running.'
-            : ret.message
-              ? errorCopy(ret.message)
-              : errorCopy('')}
+          <span data-testid="oauth-return-text">
+            {ret.ok
+              ? [gv.text, gv.firstSyncRunning ? null : gv.lastSyncText].filter(Boolean).join(' ')
+              : ret.message
+                ? errorCopy(ret.message)
+                : errorCopy('')}
+          </span>
         </Notice>
       ) : null}
       {p.error ? (
@@ -88,15 +96,15 @@ export function ConnectionsView(p: ViewProps) {
       {p.view === 'loading' ? <p role="status">Loading connections</p> : null}
       {p.view === 'ready' || p.view === 'demo' ? (
         <>
-          <CanvasSection p={p} items={canvas} />
-          <GoogleSection p={p} items={google} />
+          <CanvasSection p={p} items={canvas} v={deriveProviderState('canvas', canvas, { now: p.now })} />
+          <GoogleSection p={p} items={google} v={gv} />
         </>
       ) : null}
     </div>
   );
 }
 
-function CanvasSection({ p, items }: { p: ViewProps; items: Connection[] }) {
+function CanvasSection({ p, items, v }: { p: ViewProps; items: Connection[]; v: ProviderView }) {
   return (
     <section aria-labelledby="sq-conn-canvas" className="sq-conn__section">
       <h2 id="sq-conn-canvas" className="sq-conn__h">
@@ -105,9 +113,9 @@ function CanvasSection({ p, items }: { p: ViewProps; items: Connection[] }) {
       {items.map((c) => (
         <ConnectionCard key={c.id} c={c} p={p} />
       ))}
-      {items.every((c) => c.state === 'revoked') ? (
+      {v.state === 'not_connected' ? (
         <p className="sq-conn__state" data-testid="canvas-not-connected">
-          <Chip tone="neutral">Disconnected</Chip> No Canvas account is connected.
+          <Chip tone="neutral">{v.label}</Chip> {v.text}
         </p>
       ) : null}
       <CanvasConnect p={p} />
@@ -115,7 +123,7 @@ function CanvasSection({ p, items }: { p: ViewProps; items: Connection[] }) {
   );
 }
 
-function GoogleSection({ p, items }: { p: ViewProps; items: Connection[] }) {
+function GoogleSection({ p, items, v }: { p: ViewProps; items: Connection[]; v: ProviderView }) {
   return (
     <section aria-labelledby="sq-conn-google" className="sq-conn__section">
       <h2 id="sq-conn-google" className="sq-conn__h">
@@ -124,12 +132,17 @@ function GoogleSection({ p, items }: { p: ViewProps; items: Connection[] }) {
       {items.map((c) => (
         <ConnectionCard key={c.id} c={c} p={p} />
       ))}
-      {items.every((c) => c.state === 'revoked') ? (
+      {v.state === 'not_connected' ? (
         <p className="sq-conn__state" data-testid="google-not-connected">
-          <Chip tone="neutral">Disconnected</Chip> No Google account is connected.
+          <Chip tone="neutral">{v.label}</Chip> {v.text}
         </p>
       ) : null}
-      <GoogleConnect p={p} />
+      {v.state === 'connecting' ? (
+        <p className="sq-conn__state" data-testid="google-connecting" role="status">
+          <Chip tone="ember">{v.label}</Chip> {v.text}
+        </p>
+      ) : null}
+      {v.showConnectPanel ? <GoogleConnect p={p} /> : null}
     </section>
   );
 }
@@ -139,6 +152,14 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
   const [purged, setPurged] = useState<{ sources: number; chunks: number } | null>(null);
   const live = c.state !== 'revoked';
   const counts = kindCounts(c.sources.byKind);
+  const [open, setOpen] = useState(() => isReviewed(c.id));
+  const [rows, setRows] = useState<SourceRow[] | null>(null);
+  const v = deriveProviderState(c.provider, [c], { now: p.now, reviewed: open });
+  const load = useCallback(() => {
+    if (live && p.client?.sources) void p.client.sources(c.id).then(setRows, () => setRows(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c.id, live, p.client]);
+  useEffect(load, [load, c.lastSyncAt, c.sources.total]);
   const reconnect = () => {
     if (c.provider === 'google') void startGoogle(p);
     else document.getElementById('sq-conn-canvas-connect')?.scrollIntoView?.();
@@ -149,11 +170,21 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
     <Card as="article" className="sq-conn__card" aria-label={`${c.provider} connection`}>
       <div className="sq-conn__row">
         <strong>{c.provider === 'canvas' ? 'Canvas' : 'Google'}</strong>
-        <Chip tone={STATE_TONE[c.state]}>{STATE_HEADLINE[c.state]}</Chip>
-        {c.mode === 'fixture' ? <Chip tone="violet">{FIXTURE_LABEL}</Chip> : null}
-        {c.syncPhase === 'syncing' ? <Chip tone="ember">Syncing</Chip> : null}
+        <span data-testid="conn-state">
+          <Chip tone={v.state === 'degraded' || v.state === 'reauth' ? 'alert' : v.state === 'syncing' ? 'ember' : v.state === 'connected' ? 'ok' : STATE_TONE[c.state]}>
+            {v.label}
+          </Chip>
+        </span>
+        {v.fixture ? <Chip tone="violet">{FIXTURE_LABEL}</Chip> : null}
       </div>
-      <p className="sq-conn__state">{c.stateLabel}</p>
+      <p className="sq-conn__state" data-testid="conn-text">
+        {v.text}
+      </p>
+      {v.fixture ? (
+        <p className="sq-conn__meta" data-testid="conn-fixture-note">
+          This is simulated sample data from the repo. Nothing was read from a real {c.provider === 'canvas' ? 'Canvas' : 'Google'} account.
+        </p>
+      ) : null}
       {c.state === 'rate_limited' && c.retryAfter ? (
         <p className="sq-conn__meta">Will retry {relTime(c.retryAfter, p.now)}.</p>
       ) : null}
@@ -162,7 +193,7 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
         <dt>Account</dt>
         <dd data-testid="conn-account">
           {c.mode === 'fixture'
-            ? 'None: simulated data, not your account'
+            ? 'None'
             : c.account
               ? [c.account.name, c.account.label, c.account.host].filter(Boolean).join(' · ')
               : 'Not reported by this connection'}
@@ -216,9 +247,34 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
               and use Connect in the Canvas card to sync again.
             </p>
           ) : null}
-          {c.needsReconnect || c.state === 'error' ? (
-            <Button size="sm" variant="secondary" onClick={reconnect}>
+          {v.cta === 'reconnect' ? (
+            <Button size="sm" variant="primary" data-testid="reconnect-cta" onClick={reconnect}>
               Reconnect
+            </Button>
+          ) : null}
+          {v.cta === 'review' ? (
+            <Button
+              size="sm"
+              variant="primary"
+              iconStart="sparkle"
+              data-testid="review-imported-context"
+              onClick={() => {
+                markReviewed(c.id);
+                setOpen(true);
+              }}
+            >
+              Review imported context
+            </Button>
+          ) : null}
+          {v.cta === 'ask' && p.squadId && rows ? (
+            <Button
+              size="sm"
+              variant="primary"
+              iconStart="sparkle"
+              data-testid="ask-cubbie-primary"
+              onClick={() => askCubbie(p.squadId!, pickAskItems(rows, p.now), p.navigate)}
+            >
+              Ask Cubbie with this
             </Button>
           ) : null}
           {p.squadId ? (
@@ -246,9 +302,6 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
         </div>
       ) : (
         <div className="sq-conn__actions">
-          <Button size="sm" variant="secondary" onClick={reconnect}>
-            Reconnect
-          </Button>
           <Button
             size="sm"
             variant="ghost"
@@ -258,15 +311,15 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
           </Button>
         </div>
       )}
-      {live && p.client?.sources ? (
+      {live && open && rows ? (
         <ItemList
-          connectionId={c.id}
-          syncKey={`${c.lastSyncAt}:${c.sources.total}`}
+          rows={rows}
           now={p.now}
           squadId={p.squadId}
           squadNames={p.squadNames}
-          load={(id) => p.client!.sources(id)}
+          fixtureConnection={v.fixture}
           share={(r, shared) => sharing({ sourceIds: [r.id], shared })}
+          onChanged={load}
           navigate={p.navigate}
         />
       ) : null}
@@ -285,7 +338,7 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
                   setConfirm(false);
                 }}
               >
-                Delete {c.sources.total} imported item{c.sources.total === 1 ? '' : 's'}
+                Delete {plural(c.sources.total, 'imported item')}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setConfirm(false)}>
                 Keep
@@ -299,12 +352,27 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
       ) : null}
       {purged ? (
         <Notice tone="ok">
-          Deleted {purged.sources} source{purged.sources === 1 ? '' : 's'} and {purged.chunks} text
-          excerpt{purged.chunks === 1 ? '' : 's'}.
+          Deleted {plural(purged.sources, 'source')} and {plural(purged.chunks, 'text excerpt')}.
         </Notice>
       ) : null}
     </Card>
   );
+}
+
+const reviewedKey = (id: string) => `squad.reviewed.${id}`;
+function isReviewed(id: string): boolean {
+  try {
+    return localStorage.getItem(reviewedKey(id)) === '1';
+  } catch {
+    return false;
+  }
+}
+function markReviewed(id: string): void {
+  try {
+    localStorage.setItem(reviewedKey(id), '1');
+  } catch {
+    // per-viewer convenience only
+  }
 }
 
 function CanvasConnect({ p }: { p: ViewProps }) {
@@ -519,10 +587,11 @@ function GoogleConnect({ p }: { p: ViewProps }) {
         <Button
           size="sm"
           variant="primary"
+          data-testid="connect-google"
           disabled={!p.client}
           onClick={() => void startGoogle(p)}
         >
-          Continue to Google
+          Connect Google
         </Button>
       </div>
     </Card>

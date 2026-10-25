@@ -71,7 +71,9 @@ describe('state badges', () => {
         })}
       />,
     );
-    expect(screen.getByText(`label-${state}`)).toBeTruthy();
+    expect(screen.getByTestId('conn-state').textContent).toBe(
+      { live: 'Connected', fixture: 'Connected', expired: 'Reauth required', revoked: 'Disconnected', rate_limited: 'Degraded', error: 'Degraded' }[state],
+    );
     if (state === 'fixture') expect(screen.getAllByText('Fixture (simulated, not your account)').length).toBeGreaterThan(0);
     else expect(screen.queryByText('Fixture (simulated, not your account)')).toBeNull();
     if (state === 'rate_limited') expect(screen.getByText(/Will retry in/)).toBeTruthy();
@@ -100,7 +102,7 @@ describe('state badges', () => {
     );
     expect(screen.getByText('Syncing')).toBeTruthy();
     expect(screen.getByText('2 min ago')).toBeTruthy();
-    expect(screen.getByText('2 assignments, 1 files')).toBeTruthy();
+    expect(screen.getByText('2 assignments, 1 file')).toBeTruthy();
     expect(screen.getByText('Bio Crew')).toBeTruthy();
     expect(screen.getByText(/through your own browser session/)).toBeTruthy();
   });
@@ -162,7 +164,7 @@ describe('actions', () => {
         })}
       />,
     );
-    expect(screen.getAllByRole('button', { name: 'Reconnect' }).length).toBe(2);
+    expect(screen.getAllByRole('button', { name: 'Reconnect' }).length).toBe(1);
     expect(screen.getByRole('button', { name: 'Remove from list' })).toBeTruthy();
   });
   it('google button navigates to the authorization url the hub returns', async () => {
@@ -171,7 +173,7 @@ describe('actions', () => {
       .mockResolvedValue({ authorization_url: 'https://accounts.example/auth', mode: 'live' });
     const navigate = vi.fn();
     render(<ConnectionsView {...props({ navigate }, { googleAuthorize })} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to Google' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Connect Google' }));
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('https://accounts.example/auth'));
     expect(googleAuthorize).toHaveBeenCalledWith('/squad/connections');
     expect(screen.getByText(/only busy times unless you/)).toBeTruthy();
@@ -337,7 +339,7 @@ describe('revoked / expired grants offer Reconnect with an honest message (V3, V
       />,
     );
     expect(screen.getAllByText(msg)).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Reconnect' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Connect Google' })).toBeTruthy();
   });
   it('expired: keeps the data, flags it, shows Reconnect', () => {
     render(

@@ -48,7 +48,7 @@ test('Google fixture consent lands back on the origin the browser started on', a
   const startOrigin = new URL(page.url()).origin;
   expect(startOrigin).toBe(new URL(WEB).origin);
 
-  await page.getByRole('button', { name: 'Continue to Google' }).click();
+  await page.getByRole('button', { name: 'Connect Google' }).click();
   // the honest hub-served consent screen: demo data, minimal read-only scopes, nothing real requested
   await page.waitForURL(/\/v1\/connections\/google\/sim-consent/, { timeout: 20_000 });
   const consent = page.locator('body');
@@ -106,7 +106,7 @@ test('Google denial also returns to the served origin, with an honest error', as
   // a fresh authorize from the browser's own origin (Origin header), then cancel at the consent screen
   await clean(ana.token);
   await page.goto('/squad/connections');
-  await page.getByRole('button', { name: 'Continue to Google' }).click();
+  await page.getByRole('button', { name: 'Connect Google' }).click();
   await page.waitForURL(/sim-consent/);
   await page.getByRole('link', { name: 'Cancel' }).click();
   await page.waitForURL(/\/squad\/connections\?/);

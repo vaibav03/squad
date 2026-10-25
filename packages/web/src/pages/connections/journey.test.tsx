@@ -45,12 +45,13 @@ function props(over: Partial<ViewProps> = {}, client: Partial<HubClient> = {}): 
   };
 }
 const ui = (p: ViewProps) => render(<MemoryRouter><ConnectionsView {...p} /></MemoryRouter>);
+const review = async () => fireEvent.click(await screen.findByTestId('review-imported-context'));
 
 describe('journey: connections', () => {
   it('shows the chosen account (masked e-mail + name) and granted scopes', async () => {
     ui(props());
     expect(screen.getByTestId('conn-account').textContent).toBe('Ana Reyes · a***@gmail.com');
-    expect(screen.getByText('Real account')).toBeTruthy();
+    expect(screen.getByTestId('conn-state').textContent).toBe('Connected');
     expect(screen.getByText(/Your calendar events/)).toBeTruthy();
   });
   it('a Canvas session account shows host + signed-in user name', () => {
@@ -60,7 +61,8 @@ describe('journey: connections', () => {
   });
   it('a fixture connection never claims an account', () => {
     ui(props({ connections: [conn({ mode: 'fixture', state: 'fixture' })] }));
-    expect(screen.getByTestId('conn-account').textContent).toMatch(/simulated data, not your account/);
+    expect(screen.getByTestId('conn-account').textContent).toBe('None');
+    expect(screen.getByTestId('conn-fixture-note').textContent).toMatch(/simulated sample data/);
     expect(screen.getAllByText('Fixture (simulated, not your account)').length).toBeGreaterThan(0);
   });
   it('disconnected: no connection means an explicit Disconnected line', () => {
@@ -70,6 +72,7 @@ describe('journey: connections', () => {
   });
   it('lists imported items with type, course, imported-at, sharing state and labels', async () => {
     ui(props());
+    await review();
     const items = await screen.findAllByTestId('imported-item');
     expect(items).toHaveLength(2);
     expect(items[0]!.textContent).toContain('Classroom coursework');
@@ -79,18 +82,20 @@ describe('journey: connections', () => {
       'Private',
       'Shared with Stats 101 Study Squad',
     ]);
-    expect(items[1]!.textContent).toContain('Fixture (simulated, not your account)');
+    expect(items[1]!.textContent).toContain('Shared with');
     expect(screen.getAllByTestId('ask-cubbie')).toHaveLength(2);
   });
   it('share toggle calls the hub for that one item', async () => {
     const share = vi.fn().mockResolvedValue(undefined);
     ui(props({}, { share }));
+    await review();
     fireEvent.click((await screen.findAllByTestId('item-share-toggle'))[0]!);
     await waitFor(() => expect(share).toHaveBeenCalledWith('conn_g', { squadId: 'sq_1', sourceIds: ['s1'], shared: true }));
   });
   it('Ask Cubbie queues structured context for the group chat and opens it, prefilled, not sent', async () => {
     const go = vi.fn();
     ui(props({ navigate: go }));
+    await review();
     fireEvent.click((await screen.findAllByTestId('ask-cubbie'))[0]!);
     const q = JSON.parse(sessionStorage.getItem(PENDING_CONTEXT_KEY)!);
     expect(q.chatId).toBe('group:sq_1');
@@ -102,7 +107,7 @@ describe('journey: connections', () => {
     const googleAuthorize = vi.fn().mockResolvedValue({ authorization_url: 'https://x', mode: 'live' });
     const go = vi.fn();
     ui(props({ connections: [], navigate: go }, { googleAuthorize }));
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to Google' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Connect Google' }));
     await waitFor(() => expect(go).toHaveBeenCalledWith('https://x'));
   });
   it('maps account and granted scopes from the hub payload and drops unknown fields', () => {
