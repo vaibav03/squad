@@ -114,19 +114,30 @@ describe('FallbackLlm', () => {
     });
   });
 
-  it('a cache made by one model is portable: its context moves into the system prompt', async () => {
-    const seen: (string | undefined)[] = [];
+  it('a cache made by the real model is portable: its context moves into the demo system prompt', async () => {
+    const seen: { system?: string; cache?: unknown }[] = [];
     const demo = new FakeLlm({
       fallback: (req) => {
-        seen.push((req as { system?: string }).system);
+        const r = req as { system?: string; cache?: unknown };
+        seen.push({ system: r.system, cache: r.cache });
         return 'ok';
       },
     });
-    const { llm: real } = failing(402);
+    const real: Llm = {
+      async createCache() {
+        return { id: 'real-cache-1', provider: 'gemini', model: 'main' };
+      },
+      async complete() {
+        throw new ApiError(402, 'depleted');
+      },
+      async json() {
+        throw new ApiError(402, 'depleted');
+      },
+    };
     const l = createFallbackLlm({ real, demo });
     const h = await l.createCache({ system: 'CHAPTER TEXT' });
+    expect(h.id).toBe('real-cache-1');
     await l.complete({ messages: 'q', cache: h });
-    expect(h.provider).toBe('fake');
-    expect(seen.join('|')).not.toBe('');
+    expect(seen).toEqual([{ system: 'CHAPTER TEXT', cache: undefined }]);
   });
 });
