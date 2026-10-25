@@ -104,7 +104,7 @@ const probe = () => {
     text: t.slice(0, 300),
     textLen: t.length,
     canvas,
-    loading: /(loading|connecting|signing you in|opening the village|starting squad)/i.test(t),
+    loading: /\b(loading|connecting|signing you in|opening the village|starting squad)\b/i.test(t),
     skeleton: !!scope?.querySelector('[class*="skeleton" i]') && t.length < 40,
     rootLen: text(root).length,
   };
