@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FakeLlm, type A2aMessage, type VillageEvent } from '@squad/core';
 import { openMemoryDb } from '@squad/core/node';
-import { createCouncilAgents, createCouncilService } from '@squad/brain';
+import { createCouncilAgents, createCouncilService, createQuizKeyVerifier } from '@squad/brain';
 import { createHub } from '../app';
 import { filterVillageEvent } from '../filter';
 import type { Viewer } from '../types';
@@ -118,5 +118,29 @@ describe('council runtime through the hub filter', () => {
     } as unknown as VillageEvent;
     expect(wire(hub, note, v('s_ben', 'sq'))).toBeNull();
     expect(wire(hub, note, v('s_ana', 'sq'))).not.toBeNull();
+  });
+});
+
+describe('quiz-key council through the hub filter', () => {
+  it('a registered owner lets squadmates see the quiz-key envelopes; other squads and unowned runs see nothing', async () => {
+    const { hub } = await setup('group:sq');
+    const events: VillageEvent[] = [];
+    const emit = (e: VillageEvent): void => void events.push(e);
+    const agents = createCouncilAgents({ env: {}, emit });
+    const verifier = createQuizKeyVerifier({ llm: new FakeLlm(), emit, agents });
+    const draft = { kind: 'choice', question: 'Q?', choices: ['a', 'b'], key: 1 } as never;
+    const base = { courseId: 'demo', chapter: 'ch1', chapterContext: 'ctx' };
+    await verifier.verify(draft, { ...base, askedBy: 's_ana' });
+    const owned = a2a(events);
+    expect(owned.length).toBeGreaterThan(3);
+    for (const e of owned) {
+      expect(wire(hub, e, v('s_ben', 'sq'))).not.toBeNull();
+      expect(wire(hub, e, v('s_zed', 'sq2'))).toBeNull();
+    }
+    events.length = 0;
+    await verifier.verify(draft, base); // no owner: default deny
+    const unowned = a2a(events);
+    expect(unowned.length).toBeGreaterThan(3);
+    for (const e of unowned) expect(wire(hub, e, v('s_ben', 'sq'))).toBeNull();
   });
 });

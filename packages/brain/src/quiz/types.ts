@@ -59,7 +59,13 @@ export interface KeyVerdict {
 export interface KeyVerifier {
   verify(
     draft: QuestionDraft,
-    ctx: { courseId: string; chapter: string; chapterContext: string },
+    ctx: {
+      courseId: string;
+      chapter: string;
+      chapterContext: string;
+      /** Student the quiz is for (first of the round): owner of the council run for the hub's per-viewer A2A filter. */
+      askedBy?: string;
+    },
   ): Promise<KeyVerdict>;
 }
 

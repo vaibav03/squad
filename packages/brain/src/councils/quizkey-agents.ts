@@ -130,7 +130,7 @@ export interface QuizKeyOutcome extends KeyVerdict {
 export async function verifyWithAgents(
   o: QuizKeyAgentsOptions,
   draft: QuestionDraft,
-  ctx: { chapterContext: string },
+  ctx: { chapterContext: string; askedBy?: string },
 ): Promise<QuizKeyOutcome> {
   const mode: AgentMode = o.agents.decideMode();
   if (!o.agents.tryStart())
@@ -146,6 +146,7 @@ export async function verifyWithAgents(
     visibility: 'squad',
     roster,
     chairKey: 'checker',
+    ...(ctx.askedBy ? { owner: { askedBy: ctx.askedBy } } : {}),
     privateNeedles: [String(draft.key)],
   });
   const safeEmit = async (e: Parameters<EmitEvent>[0]): Promise<void> => {
