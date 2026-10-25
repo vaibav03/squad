@@ -10,18 +10,36 @@ export type ConfirmOutcome =
   | { ok: true; status?: string }
   | {
       ok: false;
-      code: 'unknown_task' | 'unsupported_kind' | 'invalid_request' | 'upstream_failed';
+      code:
+        | 'unknown_task'
+        | 'unsupported_kind'
+        | 'invalid_request'
+        | 'upstream_failed'
+        | 'already_answered';
       message?: string;
     };
+
+/** Viewer-scoped preview of an open confirm (GET /v1/confirms/:taskId). */
+export interface ConfirmPreview {
+  taskId: string;
+  question: string;
+  options: string[];
+  kind: string;
+  mode: 'pick' | 'yesno';
+}
 
 /** One kind of confirmable task. `owns` must be cheap and side-effect free. */
 export interface ConfirmHandler {
   kind: string;
   owns(taskId: string, viewer: Viewer): boolean;
   answer(viewer: Viewer, taskId: string, a: ConfirmAnswer): Promise<ConfirmOutcome>;
+  /** Optional: what to show for this task (question + options). */
+  preview?(viewer: Viewer, taskId: string): ConfirmPreview | undefined;
 }
 
 export interface ConfirmRouter {
+  /** Preview for the viewer's own open confirm; undefined (404) for unknown tasks and other students' tasks. */
+  preview(viewer: Viewer, taskId: string): ConfirmPreview | undefined;
   register(h: ConfirmHandler): void;
   /** Where each student's mesh agent listens (for the `agent` handler); unset = that kind is unsupported. */
   setAgentUrls(urls: Record<string, string>): void;
@@ -80,6 +98,12 @@ export function createConfirmRouter(
   const agent: ConfirmHandler = {
     kind: 'agent',
     owns: (taskId, v) => deps.state.pendingConfirm(v.studentId, taskId) !== undefined,
+    preview(v, taskId) {
+      const p = deps.state.pendingConfirm(v.studentId, taskId);
+      return p
+        ? { taskId, question: p.question, options: ['Yes', 'No'], kind: 'agent', mode: 'yesno' }
+        : undefined;
+    },
     async answer(v, taskId, a) {
       const url = agentUrls[v.studentId];
       if (!url) return { ok: false, code: 'unsupported_kind', message: 'no agent wired' };
@@ -106,6 +130,9 @@ export function createConfirmRouter(
   return {
     register: (h) => void handlers.unshift(h),
     setAgentUrls: (u) => void (agentUrls = { ...u }),
+    preview(viewer, taskId) {
+      return handlers.find((x) => x.owns(taskId, viewer))?.preview?.(viewer, taskId);
+    },
     async answer(viewer, taskId, a) {
       const h = handlers.find((x) => x.owns(taskId, viewer));
       if (!h) return { ok: false, code: 'unknown_task' };

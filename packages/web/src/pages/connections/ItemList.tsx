@@ -1,19 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { plural } from '../../lib/plural';
 import { Button } from '../../primitives/Button';
 import { Chip } from '../../primitives/Chip';
 import type { SourceRow } from './api';
 import { askCubbie } from './askCubbie';
-import { CALENDAR_KINDS, itemTypeLabel, relTime, squadLabel } from './model';
+import { CALENDAR_KINDS, FIXTURE_LABEL, itemTypeLabel, relTime, squadLabel } from './model';
 
 export interface ItemListProps {
-  connectionId: string;
-  /** Changes when a sync finished, so the list reloads. */
-  syncKey: unknown;
+  rows: SourceRow[];
   now: number;
   squadId: string | null;
   squadNames: Record<string, string>;
-  load: ((id: string) => Promise<SourceRow[]>) | undefined;
+  /** The whole connection is a fixture: the card header already says so once, items do not repeat it. */
+  fixtureConnection: boolean;
   share: ((r: SourceRow, shared: boolean) => Promise<unknown> | undefined) | undefined;
+  onChanged: () => void;
   navigate?: (url: string) => void;
 }
 
@@ -26,26 +27,18 @@ const when = (r: SourceRow, now: number): string | null => {
 
 /** The imported items of one connection: type, course/event, imported-at, sharing state, share toggle, Ask Cubbie. */
 export function ItemList(p: ItemListProps) {
-  const [rows, setRows] = useState<SourceRow[] | null>(null);
   const [all, setAll] = useState(false);
-  const reload = () => p.load?.(p.connectionId).then(setRows, () => setRows(null));
-  useEffect(() => {
-    void reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [p.connectionId, p.syncKey, p.load]);
-  if (!p.load) return null;
-  if (rows === null) return null;
+  const rows = p.rows;
   if (rows.length === 0)
     return (
       <p className="sq-conn__meta" data-testid="items-empty">
-        Nothing imported yet. Items appear here after the first import. Press Sync now if it has
-        been a while.
+        Nothing imported yet. Items appear here after the first sync.
       </p>
     );
   const shown = all ? rows : rows.slice(0, 8);
   return (
     <div className="sq-conn__items" data-testid="imported-items">
-      <h4 className="sq-conn__h4">Imported items ({rows.length})</h4>
+      <h4 className="sq-conn__h4">{plural(rows.length, 'imported item')}</h4>
       <ul className="sq-conn__itemlist" aria-label="Imported items">
         {shown.map((r) => {
           const sharedHere = !!p.squadId && r.sharedWith.includes(p.squadId);
@@ -64,31 +57,32 @@ export function ItemList(p: ItemListProps) {
                 </span>
               </div>
               <div className="sq-conn__itemside">
-                <Chip tone={r.provenance === 'fixture' ? 'violet' : 'ok'}>
-                  {r.provenance === 'fixture' ? 'Demo data' : 'Live'}
-                </Chip>
+                {r.provenance === 'fixture' && !p.fixtureConnection ? (
+                  <Chip tone="violet">{FIXTURE_LABEL}</Chip>
+                ) : null}
                 <span data-testid="item-sharing">
                   <Chip tone={shareNames.length ? 'ember' : 'neutral'}>
                     {shareNames.length ? `Shared with ${shareNames.join(', ')}` : 'Private'}
                   </Chip>
                 </span>
-                {p.squadId && p.share ? (
+                {CALENDAR_KINDS.has(r.kind) ? (
+                  <span className="sq-conn__meta" data-testid="item-freebusy">
+                    Free/busy only, titles never shared.
+                  </span>
+                ) : p.squadId && p.share ? (
                   <Button
                     size="sm"
                     variant="ghost"
                     data-testid="item-share-toggle"
-                    onClick={() => void p.share!(r, !sharedHere)?.then(reload)}
+                    onClick={() => void p.share!(r, !sharedHere)?.then(p.onChanged)}
                   >
                     {sharedHere ? 'Stop sharing' : 'Share with squad'}
                   </Button>
                 ) : null}
-                {CALENDAR_KINDS.has(r.kind) && !sharedHere ? (
-                  <span className="sq-conn__meta">Squad sees busy time only.</span>
-                ) : null}
                 {p.squadId ? (
                   <Button
                     size="sm"
-                    variant="secondary"
+                    variant="primary"
                     iconStart="sparkle"
                     data-testid="ask-cubbie"
                     onClick={() => askCubbie(p.squadId!, r, p.navigate)}

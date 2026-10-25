@@ -19,6 +19,7 @@ import {
   resolveConfirm,
   userMessage,
   type ConfirmTarget,
+  confirmErrorMessage,
   type HubCtx,
 } from './hub';
 
@@ -359,7 +360,10 @@ function ConfirmController(
   useEffect(() => {
     if (mode !== 'live' || !hub) return;
     let dead = false;
-    previewConfirm(hub, ev.taskId).then(
+    previewConfirm(hub, ev.taskId, {
+      question: ev.question,
+      options: (ev as { options?: string[] }).options,
+    }).then(
       (t) => !dead && setTarget(t),
       () => {},
     );
@@ -368,16 +372,19 @@ function ConfirmController(
     };
   }, [mode, hub, ev.taskId]);
 
-  const choose = async (_o: string, i: number) => {
+  const choose = async (o: string, i: number) => {
     setPhase('submitting');
     try {
-      if (mode === 'live' && hub)
-        await resolveConfirm(hub, target ?? (await previewConfirm(hub, ev.taskId)), i === 0);
-      else await new Promise((r) => setTimeout(r, 350));
+      if (mode === 'live' && hub) {
+        const t = target ?? (await previewConfirm(hub, ev.taskId, { question: ev.question }));
+        const picked = t.options && t.options.length > 0;
+        if (picked) await resolveConfirm(hub, t, true, t.options![i] ?? o);
+        else await resolveConfirm(hub, t, i === 0);
+      } else await new Promise((r) => setTimeout(r, 350));
       setPhase('done');
       closer.current = setTimeout(onDone, 700);
     } catch (e) {
-      setMessage(userMessage(e, 'That did not go through. Nothing was shared.'));
+      setMessage(confirmErrorMessage(e));
       setPhase('error');
     }
   };
@@ -387,9 +394,10 @@ function ConfirmController(
       onClose={onDone}
       returnFocusTo={returnFocusTo}
       calm={calm}
-      question={ev.question}
+      question={target?.question ?? ev.question}
+      {...(target?.options?.length ? { options: target.options } : {})}
       details={
-        target
+        target?.label
           ? [
               {
                 label: 'Option',

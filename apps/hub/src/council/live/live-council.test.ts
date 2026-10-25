@@ -137,7 +137,7 @@ interface Setup {
   transports: Map<string, LiveCouncilTransport>;
   hub: ReturnType<typeof createCouncilLiveHub>;
   ask(o?: {
-    transport?: 'stream' | 'live';
+    transport?: 'stream' | 'live' | 'none';
     members?: string[];
     q?: string;
   }): Promise<ReturnType<CouncilService['get']>>;
@@ -199,7 +199,7 @@ function setup(
     transports,
     hub,
     runId: () => lastId,
-    ask: async (a: { transport?: 'stream' | 'live'; q?: string } = {}) => {
+    ask: async (a: { transport?: 'stream' | 'live' | 'none'; q?: string } = {}) => {
       const h = svc.ask({
         question: a.q ?? 'Does a higher yield always mean a lower bond price?',
         askedBy: 's_ana',

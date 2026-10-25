@@ -7,7 +7,7 @@ import type { ConnRows } from './model';
 
 export interface TourData extends ConnectionsState {
   rows: ConnRows[] | null;
-  googleLive: boolean | null;
+  googleReady: boolean | null;
   userId: string | null;
 }
 
@@ -49,5 +49,5 @@ export function useTour(): TourData {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conns.client, key]);
-  return { ...conns, rows, googleLive, userId: cfg.userId };
+  return { ...conns, rows, googleReady: conns.googleLive ?? googleLive, userId: cfg.userId };
 }

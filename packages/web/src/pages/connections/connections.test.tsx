@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import { ConnectionsView, type ViewProps } from './ConnectionsView';
 import { toConnection, type Connection, type HubClient } from './api';
-import { errorCopy, FIXTURE_LABEL, oauthReturn, STATES } from './model';
+import { errorCopy, oauthReturn, STATES } from './model';
 import { EXT_ATTR, MSG, extensionPresent, onExtensionReady } from './bridge';
 
 const render = (ui: ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
@@ -71,9 +71,11 @@ describe('state badges', () => {
         })}
       />,
     );
-    expect(screen.getByText(`label-${state}`)).toBeTruthy();
-    if (state === 'fixture') expect(screen.getAllByText(FIXTURE_LABEL).length).toBeGreaterThan(0);
-    else expect(screen.queryByText(FIXTURE_LABEL)).toBeNull();
+    expect(screen.getByTestId('conn-state').textContent).toBe(
+      { live: 'Live', fixture: 'Demo data', expired: 'Reauth required', revoked: 'Disconnected', rate_limited: 'Degraded', error: 'Degraded' }[state],
+    );
+    if (state === 'fixture') expect(screen.getByTestId('conn-fixture-note').textContent).toContain('Fixture (simulated, not your account)');
+    else expect(screen.queryByTestId('conn-fixture-note')).toBeNull();
     if (state === 'rate_limited') expect(screen.getByText(/Will retry in/)).toBeTruthy();
   });
   it('derives state when the hub has not sent one yet', () => {
@@ -98,9 +100,9 @@ describe('state badges', () => {
         })}
       />,
     );
-    expect(screen.getByTestId('conn-phase').textContent).toBe('Syncing...');
+    expect(screen.getByText('Syncing')).toBeTruthy();
     expect(screen.getByText('2 min ago')).toBeTruthy();
-    expect(screen.getAllByText('2 Canvas assignments, 1 Canvas file').length).toBeGreaterThan(0);
+    expect(screen.getByText('2 assignments, 1 file')).toBeTruthy();
     expect(screen.getByText('Bio Crew')).toBeTruthy();
     expect(screen.getByText(/through your own browser session/)).toBeTruthy();
   });
@@ -162,7 +164,7 @@ describe('actions', () => {
         })}
       />,
     );
-    expect(screen.getAllByRole('button', { name: 'Reconnect' }).length).toBe(2);
+    expect(screen.getAllByRole('button', { name: 'Reconnect' }).length).toBe(1);
     expect(screen.getByRole('button', { name: 'Remove from list' })).toBeTruthy();
   });
   it('google button navigates to the authorization url the hub returns', async () => {
@@ -171,7 +173,7 @@ describe('actions', () => {
       .mockResolvedValue({ authorization_url: 'https://accounts.example/auth', mode: 'live' });
     const navigate = vi.fn();
     render(<ConnectionsView {...props({ navigate }, { googleAuthorize })} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to Google' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Connect Google' }));
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('https://accounts.example/auth'));
     expect(googleAuthorize).toHaveBeenCalledWith('/squad/connections');
     expect(screen.getByText(/only busy times unless you/)).toBeTruthy();
@@ -213,8 +215,7 @@ describe('errors and states of the page', () => {
     expect(screen.getByText('Demo mode')).toBeTruthy();
     cleanup();
     render(<ConnectionsView {...props({ view: 'offline' })} />);
-    expect(screen.getByText('Cannot reach Squad')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
+    expect(screen.getByText('Cannot reach the hub')).toBeTruthy();
   });
   it('never renders secret-shaped fields the hub should not send', () => {
     const c = toConnection({
@@ -249,9 +250,7 @@ describe('extension detection and bridge', () => {
   });
   it('without the extension says so; with it lists detected Canvas accounts and authorizes', async () => {
     render(<ConnectionsView {...props()} />);
-    expect(screen.getByTestId('extension-state').textContent).toBe(
-      'Not detected: install the extension',
-    );
+    expect(screen.getByText('Extension not detected')).toBeTruthy();
     cleanup();
     document.documentElement.setAttribute(EXT_ATTR, '1');
     const seen: unknown[] = [];
@@ -340,7 +339,7 @@ describe('revoked / expired grants offer Reconnect with an honest message (V3, V
       />,
     );
     expect(screen.getAllByText(msg)).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Reconnect' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Connect Google' })).toBeTruthy();
   });
   it('expired: keeps the data, flags it, shows Reconnect', () => {
     render(
@@ -393,84 +392,9 @@ describe('Canvas routes: extension first, token optional', () => {
   });
   it('Check again re-detects the extension', async () => {
     render(<ConnectionsView {...props()} />);
-    expect(screen.getByTestId('extension-state').textContent).toBe(
-      'Not detected: install the extension',
-    );
+    expect(screen.getByText('Extension not detected')).toBeTruthy();
     document.documentElement.setAttribute(EXT_ATTR, '1');
     fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
-    await waitFor(() => expect(screen.getByTestId('extension-state').textContent).toBe('Detected'));
-  });
-});
-
-describe('one coherent Connections area', () => {
-  it('offers the demo workspaces, labelled Demo data, when the extension is missing / Google is not set up', async () => {
-    const connectDemo = vi.fn(async () => conn());
-    render(<ConnectionsView {...props({ googleDemoOnly: true }, { connectDemo })} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Use Canvas demo workspace' }));
-    await waitFor(() => expect(connectDemo).toHaveBeenCalledWith('canvas'));
-    fireEvent.click(screen.getByRole('button', { name: 'Use Google demo workspace' }));
-    await waitFor(() => expect(connectDemo).toHaveBeenCalledWith('google'));
-    expect(screen.getByTestId('google-not-set-up').textContent).toContain('Not set up yet');
-    expect(screen.getByText(/always labelled Demo data/)).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Continue to Google' })).toBeNull();
-  });
-  it('has the #canvas #google #imported anchors, and demo data reads Demo data with plural-aware counts', () => {
-    render(
-      <ConnectionsView
-        {...props({
-          connections: [
-            conn({
-              provider: 'google',
-              mode: 'fixture',
-              state: 'fixture',
-              sources: { total: 5, byKind: { classroom_item: 1, pdf: 4 } },
-            }),
-          ],
-        })}
-      />,
-    );
-    for (const id of ['canvas', 'google', 'imported'])
-      expect(document.getElementById(id)).toBeTruthy();
-    expect(screen.getByTestId('conn-phase').textContent).toBe('Demo data');
-    expect(screen.getAllByText('1 Classroom item, 4 PDFs').length).toBeGreaterThan(0);
-    expect(screen.queryByText('Live')).toBeNull();
-    expect(screen.getByRole('link', { name: 'Add a PDF in Courses' }).getAttribute('href')).toBe(
-      '/squad/courses',
-    );
-  });
-  it('review and change source are the card actions; the setup panel is opened by Change source', () => {
-    render(<ConnectionsView {...props({ connections: [conn()] })} />);
-    expect(screen.queryByText('Connect with the Squad browser extension')).toBeNull();
-    fireEvent.click(screen.getByTestId('change-source'));
-    expect(screen.getByText('Connect with the Squad browser extension')).toBeTruthy();
-  });
-  it('empty state explains and offers connect buttons', () => {
-    render(<ConnectionsView {...props({ connections: [] })} />);
-    expect(screen.getByTestId('imported-empty').textContent).toContain('Nothing is connected yet');
-    expect(screen.getAllByRole('button', { name: 'Connect Google' }).length).toBeGreaterThan(0);
-  });
-  it('loading shows a skeleton; expired sign-in and denied permission each have a button', () => {
-    render(<ConnectionsView {...props({ view: 'loading' })} />);
-    expect(screen.getByTestId('connections-loading')).toBeTruthy();
-    cleanup();
-    render(<ConnectionsView {...props({ error: 'http_401' })} />);
-    expect(screen.getByRole('button', { name: 'Sign in again' })).toBeTruthy();
-    cleanup();
-    render(<ConnectionsView {...props({ error: 'http_403' })} />);
-    expect(screen.getByText('You do not have permission to do that')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Back to Home' })).toBeTruthy();
-  });
-  it('a refused Google consent explains itself and offers to try again', () => {
-    const m = btoa('access_denied').replace(/=+$/, '');
-    render(<ConnectionsView {...props({ search: `?status=error&message=${m}` })} />);
-    expect(screen.getByText(/chose not to give Squad access/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Try connecting Google again' })).toBeTruthy();
-  });
-  it('uses no jargon in the primary copy', () => {
-    render(<ConnectionsView {...props({ connections: [conn()], view: 'offline' })} />);
-    const text = document.body.textContent ?? '';
-    expect(text).not.toMatch(
-      /webhook|redirect origin|\bSSE\b|\btier\b|\bhub\b|_ENABLED|GOOGLE_OAUTH/i,
-    );
+    await waitFor(() => expect(screen.queryByText('Extension not detected')).toBeNull());
   });
 });

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { bannerChecks, customerChecks, customerGroups } from './model';
+import { plural } from '../../lib/plural';
+import { bannerChecks } from './model';
 import { useHealth } from './useHealth';
 import './health.css';
 
@@ -9,20 +10,14 @@ export function HealthBanner({ reloadKey }: { reloadKey?: unknown }) {
   if (h.state === 'unreachable')
     return (
       <div className="sq-hbanner sq-hbanner--fail" data-testid="health-banner" role="status">
-        <strong>Connection check unavailable.</strong>
-        <span>
-          Squad could not check your connections just now, so they are unknown, not healthy.
-        </span>
-        <Link to="/squad/connections#health">Open connections</Link>
+        <strong>Integration health unavailable.</strong>
+        <span>The hub's health check did not answer ({h.error}), so the chain is unknown, not healthy.</span>
+        <Link to="/squad/connections/health">Open health</Link>
       </div>
     );
   if (h.state !== 'ready' || !h.report) return null;
   const bad = bannerChecks(h.report);
   if (bad.length === 0) return null;
-  const report = h.report;
-  const names = customerGroups(report)
-    .filter((g) => g.needsAttention && bad.some((b) => customerChecks(report, g.id).includes(b)))
-    .map((g) => g.title);
   const fails = bad.filter((c) => c.status === 'fail').length;
   return (
     <div
@@ -31,12 +26,10 @@ export function HealthBanner({ reloadKey }: { reloadKey?: unknown }) {
       role="status"
     >
       <strong>
-        {fails
-          ? `${fails} connection problem${fails === 1 ? '' : 's'}`
-          : 'A connection needs attention'}
+        {fails ? `${plural(fails, 'integration link')} failing` : 'Integration needs attention'}
       </strong>
-      <span>{names.length ? names.join(', ') : 'Your connections'}</span>
-      <Link to="/squad/connections#health">See what to fix</Link>
+      <span>{bad.slice(0, 2).map((c) => c.label).join(', ')}{bad.length > 2 ? ` and ${bad.length - 2} more` : ''}</span>
+      <Link to="/squad/connections/health">See health and fixes</Link>
     </div>
   );
 }

@@ -12,6 +12,7 @@ export * from './llm';
 export * from './chat';
 export * from './chat-context';
 export * from './health';
+export * from './integration-state';
 export * from './chat-sync';
 export * from './council';
 export * from './a2a';

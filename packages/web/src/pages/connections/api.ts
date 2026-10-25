@@ -78,6 +78,8 @@ export interface Connection {
   sharedWithSquads: string[];
   /** The grant is gone or could not be renewed: show a Reconnect button. */
   needsReconnect: boolean;
+  /** The provider rejected the credential but it has not expired by the clock. */
+  degraded?: boolean;
   account: { label: string; name: string | null; host: string | null } | null;
   /** Scopes Google/Canvas actually granted (falls back to the requested scopes). */
   grantedScopes: string[];
@@ -113,6 +115,7 @@ export function toConnection(raw: z.infer<typeof RawConnection>): Connection {
     sources: raw.sources,
     sharedWithSquads: raw.sharedWithSquads,
     needsReconnect: raw.needsReconnect ?? (state === 'expired' || state === 'revoked'),
+    degraded: raw.degraded === true,
     account: raw.account
       ? { label: raw.account.label, name: raw.account.name ?? null, host: raw.account.host ?? null }
       : null,
@@ -120,8 +123,29 @@ export function toConnection(raw: z.infer<typeof RawConnection>): Connection {
   };
 }
 
+/** Lenient list parse for other surfaces (Home): invalid rows are skipped, never invented. */
+export function parseConnections(json: unknown): Connection[] {
+  const rows = (json as { connections?: unknown } | null)?.connections;
+  if (!Array.isArray(rows)) return [];
+  return rows.flatMap((r) => {
+    const p = RawConnection.safeParse({
+      id: 'unknown',
+      scopes: [],
+      lastSyncAt: null,
+      sources: { total: 0, byKind: {} },
+      sharedWithSquads: [],
+      ...(r as object),
+    });
+    return p.success ? [toConnection(p.data)] : [];
+  });
+}
+
 const ErrorBody = z.looseObject({ error: z.looseObject({ code: z.string() }) });
-const List = z.looseObject({ connections: z.array(RawConnection) });
+const List = z.looseObject({
+  connections: z.array(RawConnection),
+  /** `live` once a Google OAuth client is configured on the hub; otherwise Google is the labelled demo. */
+  mode: z.enum(['live', 'fixture']).optional(),
+});
 const One = z.looseObject({ connection: RawConnection });
 const Squads = z.looseObject({
   activeSquadId: z.string().nullable().optional(),
@@ -199,6 +223,35 @@ export const hub = (ctx: Ctx) => ({
   async list(): Promise<Connection[]> {
     return (await call(ctx, 'GET', '/v1/connections', List)).connections.map(toConnection);
   },
+  /** Connections plus whether the hub has a real Google OAuth client (`googleLive`). */
+  async overview(): Promise<{ connections: Connection[]; googleLive: boolean }> {
+    const r = await call(ctx, 'GET', '/v1/connections', List);
+    return { connections: r.connections.map(toConnection), googleLive: r.mode === 'live' };
+  },
+  /**
+   * The labelled demo workspace for a provider. Uses fixture-mode connect until the hub's `variant: 'demo'` lands;
+   * the connection comes back with mode `fixture` and is shown as Demo data everywhere.
+   */
+  async connectDemo(provider: 'canvas' | 'google'): Promise<Connection> {
+    const body =
+      provider === 'canvas'
+        ? {
+            provider,
+            variant: 'demo' as const,
+            scopes: ['canvas.demo_workspace'],
+          }
+        : {
+            provider,
+            variant: 'demo' as const,
+            scopes: [
+              'https://www.googleapis.com/auth/calendar.readonly',
+              'https://www.googleapis.com/auth/classroom.courses.readonly',
+              'https://www.googleapis.com/auth/classroom.coursework.me.readonly',
+              'https://www.googleapis.com/auth/drive.file',
+            ],
+          };
+    return toConnection((await call(ctx, 'POST', '/v1/connections', One, body)).connection);
+  },
   async activeSquad(): Promise<string | null> {
     return (await call(ctx, 'GET', '/v1/squads', Squads)).activeSquadId ?? null;
   },
@@ -233,9 +286,7 @@ export const hub = (ctx: Ctx) => ({
         dueAt: s.dueAt ?? null,
         startsAt: s.startsAt ?? null,
         fetchedAt: s.fetchedAt ?? null,
-        provenance: (s.provenance ?? '').endsWith(':fixture')
-          ? ('fixture' as const)
-          : ('real' as const),
+        provenance: (s.provenance ?? '').endsWith(':fixture') ? ('fixture' as const) : ('real' as const),
       }),
     );
   },
@@ -275,35 +326,6 @@ export const hub = (ctx: Ctx) => ({
         baseUrl,
         token,
       },
-    );
-    return toConnection(r.connection);
-  },
-  /** Demo workspace: example items, labelled Demo data everywhere. No real account is read. */
-  async connectDemo(provider: 'canvas' | 'google'): Promise<Connection> {
-    const body =
-      provider === 'canvas'
-        ? {
-            provider,
-            variant: 'feed',
-            scopes: ['canvas.calendar_feed'],
-            feedUrl: 'https://canvas.demo.example/feeds/calendars/demo.ics',
-          }
-        : {
-            provider,
-            mode: 'fixture',
-            scopes: [
-              'https://www.googleapis.com/auth/calendar.readonly',
-              'https://www.googleapis.com/auth/drive.file',
-              'https://www.googleapis.com/auth/classroom.courses.readonly',
-              'https://www.googleapis.com/auth/classroom.coursework.me.readonly',
-            ],
-          };
-    const r = await call(
-      ctx,
-      'POST',
-      '/v1/connections',
-      z.looseObject({ connection: RawConnection }),
-      body,
     );
     return toConnection(r.connection);
   },

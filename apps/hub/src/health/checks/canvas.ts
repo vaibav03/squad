@@ -1,5 +1,6 @@
 import { connectionState, type ContextConnection } from '@squad/brain';
 import { contextServiceFor } from '../../context/service';
+import { integrationStateOf, rollupState } from '../../context/state';
 import { registerHealthCheck, type HealthCtx, type HealthResult } from '../registry';
 
 const CONN = '/squad/connections';
@@ -103,7 +104,19 @@ export function canvasSynced(ctx: HealthCtx): HealthResult {
   };
 }
 
+/** Attaches the shared integration state of this provider to a probe result. */
+const withState =
+  (probe: (ctx: HealthCtx) => HealthResult | Promise<HealthResult>) =>
+  async (ctx: HealthCtx): Promise<HealthResult> => {
+    const svc = contextServiceFor(ctx.deps);
+    const infos = svc.store
+      .connectionsOf(ctx.viewer.studentId)
+      .filter((c) => c.provider === 'canvas')
+      .map((c) => integrationStateOf(c, svc.store.syncState(c.id)));
+    return { ...(await probe(ctx)), integrationState: rollupState(infos).state };
+  };
+
 export function registerCanvasChecks(): void {
-  registerHealthCheck('canvas_connected', 'canvas', 10, canvasConnected);
-  registerHealthCheck('canvas_synced', 'canvas', 11, canvasSynced);
+  registerHealthCheck('canvas_connected', 'canvas', 10, withState(canvasConnected));
+  registerHealthCheck('canvas_synced', 'canvas', 11, withState(canvasSynced));
 }

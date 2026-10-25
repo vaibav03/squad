@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T14:18:16.612Z",
+  "at": "2026-10-25T14:59:36.889Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -481,6 +481,66 @@
     "status": "pass",
     "note": "",
     "ms": 5390
+   },
+   {
+    "title": "0 non-5173 origins; LIVE column is BLOCKED without own credentials",
+    "status": "pass",
+    "note": "",
+    "ms": 4
+   },
+   {
+    "title": "1 empty state: disconnected is honest, health says what is missing",
+    "status": "pass",
+    "note": "",
+    "ms": 579
+   },
+   {
+    "title": "2 connect Canvas by calendar feed (no password/token asked)",
+    "status": "pass",
+    "note": "",
+    "ms": 731
+   },
+   {
+    "title": "3 connect Google (fixture consent) and return to the served origin",
+    "status": "pass",
+    "note": "",
+    "ms": 2109
+   },
+   {
+    "title": "4 imported items are visible with timestamps, type and sharing state",
+    "status": "pass",
+    "note": "",
+    "ms": 1051
+   },
+   {
+    "title": "5 Ask Cubbie: group chat opens with a removable context chip, prompt prefilled, not sent",
+    "status": "pass",
+    "note": "",
+    "ms": 2722
+   },
+   {
+    "title": "6 @cubbie answers from the attached context with provenance + the source viewer opens",
+    "status": "pass",
+    "note": "",
+    "ms": 229
+   },
+   {
+    "title": "7 shared study plan seeded from imports persists across reload; trip availability leaks nothing",
+    "status": "fail",
+    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+    "ms": 20425
+   },
+   {
+    "title": "8 health page: every link is a real probe; breaking links flips the exact check",
+    "status": "skipped",
+    "note": "",
+    "ms": 0
+   },
+   {
+    "title": "9 disconnect purges and flips the chain; reconnect works",
+    "status": "skipped",
+    "note": "",
+    "ms": 0
    }
   ]
  }
