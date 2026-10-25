@@ -1,17 +1,9 @@
-import { useEffect } from 'react';
-import { useShell } from '../../shell/shell-context';
-import { useParams } from 'react-router-dom';
-import { MasteryView } from './MasteryView';
-import { useMastery } from './useMastery';
-import { COURSE_ID } from './fixtures';
+import { Navigate } from 'react-router-dom';
 
-/** /squad/mastery/:courseId? Own row plus the squad average (hidden under 3 members). */
-export default function MasteryPage() {
-  const { setTitle } = useShell();
-  useEffect(() => setTitle('Mastery'), [setTitle]);
-  const { courseId = COURSE_ID } = useParams();
-  const m = useMastery(courseId);
-  return (
-    <MasteryView status={m.status} connection={m.connection} data={m.data} onRetry={m.retry} />
-  );
+/**
+ * Mastery lives in the village now (the Mastery board and the chapter houses). This route stays only so old links,
+ * bookmarks and tests keep working: it sends you to the village with the in-world panel open.
+ */
+export default function MasteryRedirect() {
+  return <Navigate to="/squad/village?mastery=1" replace />;
 }

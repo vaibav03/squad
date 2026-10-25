@@ -22,3 +22,15 @@ describe('route registry', () => {
       ).toBe(true);
   });
 });
+
+describe('mastery lives in the village', () => {
+  it('has no Mastery item in the top navigation', () => {
+    expect(squadNav.map((n) => n.label.toLowerCase())).not.toContain('mastery');
+    expect(squadNav.some((n) => n.to.includes('mastery'))).toBe(false);
+  });
+  it('keeps /squad/mastery as a route that only redirects', async () => {
+    expect(
+      squadRouteMeta.some((r) => matchPath({ path: r.path, end: true }, '/squad/mastery')),
+    ).toBe(true);
+  });
+});

@@ -6,6 +6,7 @@ import { useNow, useSelectedView, useStoreVersion } from './useInspector';
 import { useRoomSnapshot } from './useRoomSession';
 import { AgentsTab, ChatTab } from './Conversation';
 import type { InspectorHub } from './useDmHistory';
+import { MasterySummary, useChapterFor } from '../mastery/MasterySummary';
 import './inspector.css';
 
 type Tab = 'doing' | 'thinking' | 'chat' | 'agents';
@@ -73,6 +74,7 @@ export function InspectorPanel({
   const last = useRef<ActivityView | undefined>(undefined);
   if (view) last.current = view;
   const v = view ?? last.current; // keep the last content while the exit transition runs
+  const mastery = useChapterFor(v?.kind === 'expert' ? v.id : undefined);
 
   const close = () => {
     store.select(null);
@@ -253,6 +255,12 @@ export function InspectorPanel({
                 )}
               </dl>
             </section>
+            {mastery && (
+              <section className="ai-mastery" aria-label="Your mastery of this chapter">
+                <h3 className="ai-label">Your mastery</h3>
+                <MasterySummary chapter={mastery} />
+              </section>
+            )}
             <section className="ai-log" aria-label="Recent activity">
               <h3 className="ai-label">Recent</h3>
               {v.log.length === 0 ? (

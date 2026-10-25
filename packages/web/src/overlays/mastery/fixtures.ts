@@ -1,8 +1,6 @@
-import type { VillageEvent } from '@squad/core';
-import type { RecordedScript } from '../../overlays/kit';
 import type { MasteryData } from './model';
 
-/** Default course for /squad/mastery: the demo hub seeds `cse310`. */
+/** Default course the panel asks the hub about: the demo hub seeds `cse310`. */
 export const COURSE_ID = 'cse310';
 const c = (id: string, label: string, box: number, squadAvg?: number) => ({
   id,
@@ -67,8 +65,3 @@ export const masteryEmpty: MasteryData = {
   })),
 };
 export const masteryNoCourse: MasteryData = { ...masteryData, chapters: [] };
-
-export const recordedScript: RecordedScript<VillageEvent> = [
-  { at: 3000, event: { t: 'mastery.changed', student: 's_ana', chapter: 'ch5', box: 3 } },
-  { at: 7000, event: { t: 'mastery.changed', student: 's_ana', chapter: 'ch6', box: 3 } },
-];

@@ -13,7 +13,13 @@ import { nearestInteractable } from '../world/interact';
 import { STATE_GLYPH, STATE_LABEL, chipOrder, closePopovers, formatClock, initialOf } from './math';
 import { HUD_CSS } from './style';
 import type { InspectorStore } from '../inspector/store';
-import { getMastery, masteryLevel, masteryPips, masteryWord, MASTERY_PIPS } from '../scenes/mastery';
+import {
+  getMastery,
+  masteryLevel,
+  masteryPips,
+  masteryWord,
+  MASTERY_PIPS,
+} from '../scenes/mastery';
 
 export interface HudDeps {
   parent: HTMLElement;

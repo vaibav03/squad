@@ -3,6 +3,7 @@ import type { RoomInfo } from '@squad/village/rooms';
 import { OverlayFrame, LvIcon } from '../kit';
 import { SpeakerDot } from './RoomTranscript';
 import { CastAvatar, CAST_STATE_LABEL, castName } from '../../components/cast-avatar';
+import { MasterySummary, useChapterFor } from '../mastery/MasterySummary';
 import './room-info.css';
 
 export interface RoomInfoPanelProps {
@@ -52,6 +53,7 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const phrase = info.how.phrase;
+  const mastery = useChapterFor(info.slot.startsWith('chapter-') ? info.slot : undefined);
 
   const copy = async () => {
     if (!phrase) return;
@@ -98,6 +100,13 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
           <h3 className="rr-sec__h">What this room is for</h3>
           <p className="rr-sec__p">{info.purpose}</p>
         </section>
+
+        {mastery ? (
+          <section className="rr-sec" aria-label="Your mastery of this chapter">
+            <h3 className="rr-sec__h">Your mastery</h3>
+            <MasterySummary chapter={mastery} />
+          </section>
+        ) : null}
 
         <section className="rr-sec">
           <h3 className="rr-sec__h">Who is in here and what they do for you</h3>

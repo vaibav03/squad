@@ -599,7 +599,8 @@ const mod = {
         scene.input.keyboard?.off('keydown-ESC', leave);
         offBoard();
         boardImage.destroy();
-        if (scene.textures.exists('scene-mastery-board')) scene.textures.remove('scene-mastery-board');
+        if (scene.textures.exists('scene-mastery-board'))
+          scene.textures.remove('scene-mastery-board');
         document.removeEventListener('keydown', onRoomKey, true);
         clearZones();
         releaseInput?.();
