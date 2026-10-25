@@ -168,7 +168,7 @@ describe('round table on the agent runtime', () => {
   it('chair failure: code delegates, the checked plan still ships, chair is degraded', async () => {
     const t = Object.assign(new Error('timeout'), { name: 'TimeoutError' });
     const real = new FakeTransport()
-      .script(ID('chairman'), t, t)
+      .script(ID('chairman'), t, t, t, t)
       .script(ID('chill'), opinion(3), rank())
       .script(ID('grind'), opinion(5), rank())
       .script(ID('advisor'), opinion(4), rank());

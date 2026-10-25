@@ -29,6 +29,7 @@ export function createStreamTextTransport(llm: Llm): AgentTransport {
       return {
         async send(input: string | ToolResultInput[], so: SendOptions = {}): Promise<StepResult> {
           if (closed) throw new Error('reason:session_closed');
+          const mark = history.length;
           history.push(
             typeof input === 'string'
               ? { role: 'user', content: input }
@@ -42,16 +43,27 @@ export function createStreamTextTransport(llm: Llm): AgentTransport {
                   })),
                 },
           );
-          const res = await llm.complete({
-            model: o.spec.tier,
-            system: o.system,
-            messages: history,
-            tools: declare(so.tools ?? o.tools),
-            maxToolRounds: 0, // the runtime owns the loop
-            maxTokens: o.maxOutputTokens,
-            ...(o.temperature !== undefined ? { temperature: o.temperature } : {}),
-            ...(so.signal ? { signal: so.signal } : {}),
-          });
+          let res: Awaited<ReturnType<Llm['complete']>>;
+          try {
+            res = await llm.complete({
+              model: o.spec.tier,
+              system: o.system,
+              messages: history,
+              tools: declare(so.tools ?? o.tools),
+              maxToolRounds: 0, // the runtime owns the loop
+              maxTokens: o.maxOutputTokens,
+              ...(o.temperature !== undefined ? { temperature: o.temperature } : {}),
+              ...(so.forceTool?.length
+                ? { toolChoice: { mode: 'any' as const, allow: so.forceTool } }
+                : {}),
+              ...(so.thinking ? { thinking: so.thinking } : {}),
+              ...(so.signal ? { signal: so.signal } : {}),
+            });
+          } catch (e) {
+            // a failed call leaves no trace in the conversation, so the runtime can retry the same input
+            history.length = mark;
+            throw e;
+          }
           history.push({
             role: 'assistant',
             content: [

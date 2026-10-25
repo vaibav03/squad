@@ -142,7 +142,7 @@ describe('runDebateV2 (live, FakeTransport)', () => {
 
   it('judge cannot frame: neutral code labels, never scripted stock', async () => {
     const t = new FakeTransport();
-    t.script(ID('judge'), new Error('boom'), verdict('draw'));
+    t.script(ID('judge'), new Error('boom'), new Error('boom'), verdict('draw'));
     t.script(ID('pro'), arg('A', 'x'));
     t.script(ID('con'), arg('B', 'y'));
     const s = setup(t);

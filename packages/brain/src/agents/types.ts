@@ -55,7 +55,7 @@ export interface AgentLimits {
 }
 
 export const DEFAULT_AGENT_LIMITS: AgentLimits = {
-  maxModelCalls: 5,
+  maxModelCalls: 6,
   maxOutputTokens: 3000,
   maxPeerAsks: 1,
 };
@@ -86,6 +86,10 @@ export interface SendOptions {
   signal?: AbortSignal;
   /** Tools usable for THIS step (stream-text re-declares them per call; live sessions keep the connect-time set). */
   tools?: ToolDecl[];
+  /** Force a function call this step (Gemini mode ANY), limited to these tool names. Stream-text only; live ignores it. */
+  forceTool?: ToolName[];
+  /** Reasoning effort for this step. A retry after a timeout drops it to `minimal`. */
+  thinking?: 'minimal' | 'low' | 'medium' | 'high';
   /**
    * Opaque structured context from the orchestrator. Real transports IGNORE it (the prompt carries everything);
    * only the scripted demo transport reads it, so the demo stays deterministic without parsing prompts.
@@ -191,6 +195,12 @@ export interface CallOptions {
   omitAnswer?: boolean;
   /** Stay `redaction: asker_only` (tool results about the asker's own data). */
   redaction?: 'public' | 'asker_only';
+  /**
+   * End the turn in code after the first tool round (no model call just to write a summary). Used for the chair's
+   * delegation plan: once the delegates answered there is nothing left for the model to say. The closing envelope is
+   * `source: code`.
+   */
+  endAfterTools?: { summary: string };
 }
 
 export type CouncilEmitFn = (e: VillageEvent) => void | Promise<unknown>;

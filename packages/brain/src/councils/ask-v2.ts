@@ -179,6 +179,7 @@ export async function runAskV2(
       mode,
       visibility: r.visibility,
       owner: { askedBy: input.askedBy },
+      ...(course ? { prefetchQuery: q } : {}),
       roster,
       ports,
       ...(viewer?.needles?.length ? { privateNeedles: viewer.needles } : {}),
@@ -198,6 +199,9 @@ export async function runAskV2(
       to: 'room',
       depth: 0,
       temperature: 0.2,
+      endAfterTools: {
+        summary: `Delegated to ${list(members.map((m) => `the ${m.displayName}`))}.`,
+      },
       context: planCtx,
       prompt: `Question from a student:\n${q}\n\nDelegate to your specialists now (one delegate call each for ${members
         .map((m) => m.key)

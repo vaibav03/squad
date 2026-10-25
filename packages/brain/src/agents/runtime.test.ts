@@ -11,7 +11,7 @@ import {
   submit,
   type Harness,
 } from './test-kit';
-import type { AgentTurn, CallOptions } from './types';
+import type { AgentTurn, CallOptions, SendOptions, StepResult } from './types';
 
 const ans = (a: string, extra: Record<string, unknown> = {}) =>
   submit({ summary: `I pick ${a}.`, stance: `leaning ${a}`, answer: a, ...extra });
@@ -234,6 +234,7 @@ describe('submit_turn is the only output path', () => {
       idOf('alpha'),
       { text: 'prose 1', toolCalls: [] },
       { text: 'prose 2', toolCalls: [] },
+      { text: 'prose 3', toolCalls: [] },
     );
     const h = makeHarness({ real });
     const t = await h.run.callAgent(h.specs.alpha!, opinion());
@@ -413,7 +414,11 @@ describe('failures are labelled degraded, never demo', () => {
 
   it('timeout', async () => {
     const real = new FakeTransport();
-    real.script(idOf('alpha'), () => new Promise(() => {}));
+    real.script(
+      idOf('alpha'),
+      () => new Promise(() => {}),
+      () => new Promise(() => {}),
+    );
     const h = makeHarness({ real, deps: { budget: { callTimeoutMs: 10 } } });
     const t = await h.run.callAgent(h.specs.alpha!, opinion());
     expect(t.reason).toBe('timeout');
@@ -656,5 +661,123 @@ describe('publishFinal and dissent', () => {
         h.msgs().map((m) => (m.kind === 'verdict' ? { ...m, dissentRefs: [] } : m)),
       ).map((i) => i.code),
     ).toContain('verdict_missing_dissent');
+  });
+});
+
+describe('reliable turns: forced tool use, nudges and one retry', () => {
+  it('forces a function call every step and only submit_turn on the final one', async () => {
+    const real = new FakeTransport();
+    const seen: { force?: string[]; thinking?: string }[] = [];
+    const rec = (r: StepResult) => (_i: unknown, so: SendOptions) => {
+      seen.push({ force: so.forceTool, thinking: so.thinking });
+      return r;
+    };
+    real.script(
+      idOf('alpha'),
+      rec(step(call('retrieve_course', { query: 'x' }))),
+      rec(submit({ summary: 'A', stance: 's', answer: 'a' })),
+    );
+    const h = makeHarness({ real });
+    const t = await h.run.callAgent(h.specs.alpha!, opinion());
+    expect(t.status).toBe('done');
+    expect(seen[0]!.force).toContain('retrieve_course');
+    expect(seen[0]!.force).toContain('submit_turn');
+    expect(seen[0]!.thinking).toBe('low');
+  });
+
+  it('after the tool rounds only submit_turn is offered', async () => {
+    const real = new FakeTransport();
+    const forced: (string[] | undefined)[] = [];
+    const loop = (_i: unknown, so: SendOptions) => {
+      forced.push(so.forceTool);
+      return step(call('retrieve_course', { query: 'again' }));
+    };
+    real.script(idOf('alpha'), loop, loop, (_i, so) => {
+      forced.push(so.forceTool);
+      return submit({ summary: 'A', stance: 's', answer: 'a' });
+    });
+    const h = makeHarness({ real });
+    const t = await h.run.callAgent(h.specs.alpha!, opinion());
+    expect(t.status).toBe('done');
+    expect(forced[2]).toEqual(['submit_turn']);
+  });
+
+  it('an empty reply is nudged and the second try succeeds (still live)', async () => {
+    const real = new FakeTransport();
+    real.script(idOf('alpha'), { text: '', toolCalls: [] }, ans('A'));
+    const h = makeHarness({ real });
+    const t = await h.run.callAgent(h.specs.alpha!, opinion());
+    expect(t.status).toBe('done');
+    expect(h.run.mode()).toBe('live');
+    expect(h.real.inputsOf(idOf('alpha'))[1]).toMatch(/submit_turn/);
+  });
+
+  it('a timeout is retried once with minimal thinking and the run stays live', async () => {
+    const real = new FakeTransport();
+    const thinking: (string | undefined)[] = [];
+    real.script(
+      idOf('alpha'),
+      () => new Promise(() => {}),
+      (_i, so) => {
+        thinking.push(so.thinking);
+        return submit({ summary: 'A', stance: 's', answer: 'a' });
+      },
+    );
+    const h = makeHarness({ real, deps: { budget: { callTimeoutMs: 10 } } });
+    const t = await h.run.callAgent(h.specs.alpha!, opinion());
+    expect(t.status).toBe('done');
+    expect(thinking).toEqual(['minimal']);
+    expect(h.run.mode()).toBe('live');
+  });
+
+  it('a second consecutive failure is still honest: degraded, never scripted', async () => {
+    const real = new FakeTransport();
+    real.script(idOf('alpha'), new Error('boom'), new Error('boom'));
+    const h = makeHarness({ real });
+    const t = await h.run.callAgent(h.specs.alpha!, opinion());
+    expect(t.status).toBe('failed');
+    expect(t.mode).toBe('degraded:model_error');
+  });
+
+  it('endAfterTools closes the chair plan in code after the delegations, no extra model call', async () => {
+    const real = new FakeTransport();
+    real.script(idOf('chair'), step(call('delegate', { to: 'alpha', question: 'q', why: 'w' })));
+    real.script(idOf('alpha'), ans('A'));
+    const h = makeHarness({ real });
+    const t = await h.run.callAgent(h.specs.chair!, {
+      ...opinion(),
+      kind: 'status',
+      stage: 'delegation',
+      endAfterTools: { summary: 'Delegated to the Alpha.' },
+    });
+    expect(t.status).toBe('done');
+    expect(t.source).toBe('code');
+    expect(real.sendCount).toBe(2); // chair delegate step + alpha answer; no chair summary call
+    expect(h.msgs().at(-1)!.summary).toBe('Delegated to the Alpha.');
+  });
+
+  it('prefetches the course once and hands the pages to specialists in their prompt', async () => {
+    const real = new FakeTransport();
+    real.script(idOf('alpha'), ans('A'));
+    let lookups = 0;
+    const h = makeHarness({
+      real,
+      start: { prefetchQuery: 'what is a median' },
+      ports: {
+        async retrieve() {
+          lookups++;
+          return {
+            grounded: true,
+            quotes: [],
+            pages: [{ file: 'book.pdf', page: 3, text: 'The median resists outliers.' }],
+          };
+        },
+      },
+    });
+    const t = await h.run.callAgent(h.specs.alpha!, opinion());
+    expect(t.status).toBe('done');
+    expect(lookups).toBe(1);
+    expect(String(h.real.inputsOf(idOf('alpha'))[0])).toContain('The median resists outliers.');
+    expect(h.msgs().some((m) => m.to === 'tool:retrieve' && m.source === 'code')).toBe(true);
   });
 });
