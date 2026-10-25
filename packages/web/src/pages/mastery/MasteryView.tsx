@@ -151,38 +151,40 @@ function ChapterCard({ c, showSquad }: { c: Chapter; showSquad: boolean }) {
           {LEVEL_LABEL[lvl]}
         </span>
       </header>
-      <table className="lv-grid">
-        <thead>
-          <tr>
-            <th scope="col">Concept</th>
-            <th scope="col">You</th>
-            {showSquad && <th scope="col">Squad average</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {c.concepts.map((x) => (
-            <tr key={x.id}>
-              <th scope="row">{x.label}</th>
-              <td>
-                <Pips box={x.box} label={`You: ${LEVEL_LABEL[levelOf(x.box)]}`} />
-                <span className="lv-grid__word">{LEVEL_LABEL[levelOf(x.box)]}</span>
-              </td>
-              {showSquad && (
-                <td>
-                  {x.squadAvg !== undefined ? (
-                    <Pips
-                      box={x.squadAvg}
-                      label={`Squad average: ${LEVEL_LABEL[levelOf(Math.round(x.squadAvg))]}`}
-                    />
-                  ) : (
-                    <span className="lv-grid__word">Not enough data</span>
-                  )}
-                </td>
-              )}
+      {c.concepts.length > 0 && (
+        <table className="lv-grid">
+          <thead>
+            <tr>
+              <th scope="col">Concept</th>
+              <th scope="col">You</th>
+              {showSquad && <th scope="col">Squad average</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {c.concepts.map((x) => (
+              <tr key={x.id}>
+                <th scope="row">{x.label}</th>
+                <td>
+                  <Pips box={x.box} label={`You: ${LEVEL_LABEL[levelOf(x.box)]}`} />
+                  <span className="lv-grid__word">{LEVEL_LABEL[levelOf(x.box)]}</span>
+                </td>
+                {showSquad && (
+                  <td>
+                    {x.squadAvg !== undefined ? (
+                      <Pips
+                        box={x.squadAvg}
+                        label={`Squad average: ${LEVEL_LABEL[levelOf(Math.round(x.squadAvg))]}`}
+                      />
+                    ) : (
+                      <span className="lv-grid__word">Not enough data</span>
+                    )}
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </section>
   );
 }

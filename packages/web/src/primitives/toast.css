@@ -15,6 +15,13 @@
     bottom: calc(var(--space-16) + var(--space-5) + var(--safe-bottom));
   }
 }
+@media (min-width: 1024px) {
+  .sq-toast-region {
+    left: auto;
+    right: var(--gutter);
+    transform: none;
+  }
+}
 .sq-toast {
   --t: var(--info);
   pointer-events: auto;

@@ -363,6 +363,7 @@ export function CourseDetailView({
 
       <PolicyPanel
         policy={c.policy}
+        courseId={c.id}
         canEdit={can}
         onPaste={async (text) => {
           try {

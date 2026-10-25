@@ -12,6 +12,8 @@ export interface RoomInfoPanelProps {
   onRun?: (phrase: string) => void;
   returnFocusTo?: HTMLElement | null;
   calm?: boolean;
+  /** Optional extra button under the room header (e.g. "Ask the council"). */
+  extraAction?: { label: string; onClick: () => void };
 }
 
 /** Copy to the clipboard; falls back to a hidden textarea. Never throws. Resolves true on success. */
@@ -41,7 +43,7 @@ export async function copyText(text: string): Promise<boolean> {
 }
 
 export function RoomInfoPanel(props: RoomInfoPanelProps) {
-  const { info, open, onClose, onRun, returnFocusTo, calm } = props;
+  const { info, open, onClose, onRun, returnFocusTo, calm, extraAction } = props;
   const titleId = useId();
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,6 +78,16 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
             {info.title}
           </h2>
           <p className="rr-panel__tagline">{info.tagline}</p>
+          {extraAction ? (
+            <button
+              type="button"
+              className="lv-btn lv-btn--primary rr-ask"
+              onClick={extraAction.onClick}
+            >
+              <LvIcon name="users" size={18} />
+              {extraAction.label}
+            </button>
+          ) : null}
         </header>
 
         <section className="rr-sec">
