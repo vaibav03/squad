@@ -174,6 +174,7 @@ export function CouncilPanel(props: CouncilPanelProps) {
   return (
     <OverlayFrame
       open={open}
+      dock="council"
       onClose={close}
       returnFocusTo={returnFocusTo}
       calm={calm}

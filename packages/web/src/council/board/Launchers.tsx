@@ -1,6 +1,7 @@
 import { LvIcon } from '../../overlays/kit/icons';
 import { ModeBadge } from './ModeBadge';
 import { CouncilRoomStatus } from '../last-run/components';
+import { useDockBusy } from '../../shell/panel-dock';
 import { openBoard, useBoardOpen, useBoardStoreRef, useBoardVersion } from './bridge';
 
 /**
@@ -55,8 +56,9 @@ export function HudButton() {
   const store = useBoardStoreRef();
   useBoardVersion(store);
   const { open } = useBoardOpen();
+  const busy = useDockBusy();
   const has = store?.runs().length ?? 0;
-  if (!store || has === 0 || open) return null;
+  if (!store || has === 0 || open || busy) return null;
   const run = store.run();
   return (
     <button

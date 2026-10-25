@@ -5,13 +5,13 @@
 .sq-auth__shade {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: var(--sq-z-canvas);
   background: linear-gradient(to bottom, rgb(7 15 31 / 0.35), rgb(7 15 31 / 0) 40%);
   pointer-events: none;
 }
 .sq-auth__top {
   position: relative;
-  z-index: 1;
+  z-index: var(--sq-z-stage);
   padding: calc(var(--space-4) + var(--safe-top)) var(--gutter) 0;
   display: flex;
 }
@@ -31,7 +31,7 @@
 }
 .sq-auth__main {
   position: relative;
-  z-index: 1;
+  z-index: var(--sq-z-stage);
   min-height: calc(100dvh - 64px);
   display: grid;
   place-items: center;
