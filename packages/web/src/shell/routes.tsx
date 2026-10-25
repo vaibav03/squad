@@ -78,6 +78,11 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     nav: { label: 'Connections', icon: 'link', order: 8 },
   },
   {
+    key: 'health',
+    path: '/squad/connections/health',
+    title: 'Integration health',
+  },
+  {
     key: 'courses',
     path: '/squad/courses/:courseId?',
     title: 'Courses',

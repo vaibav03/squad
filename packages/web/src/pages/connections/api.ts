@@ -46,6 +46,15 @@ const RawConnection = z.looseObject({
   sources: z.object({ total: z.number(), byKind: z.record(z.string(), z.number()) }),
   sharedWithSquads: z.array(z.string()).default([]),
   needsReconnect: z.boolean().optional(),
+  /** The CHOSEN account, already masked by the hub (e.g. `a***@gmail.com`; Canvas host + signed-in user name). */
+  account: z
+    .looseObject({
+      label: z.string(),
+      name: z.string().nullish(),
+      host: z.string().nullish(),
+    })
+    .nullish(),
+  grantedScopes: z.array(z.string()).optional(),
 });
 
 export interface Connection {
@@ -69,6 +78,9 @@ export interface Connection {
   sharedWithSquads: string[];
   /** The grant is gone or could not be renewed: show a Reconnect button. */
   needsReconnect: boolean;
+  account: { label: string; name: string | null; host: string | null } | null;
+  /** Scopes Google/Canvas actually granted (falls back to the requested scopes). */
+  grantedScopes: string[];
 }
 
 /** Only the allow-listed fields are kept: anything else the hub might send (it should send no secrets) is dropped. */
@@ -101,6 +113,10 @@ export function toConnection(raw: z.infer<typeof RawConnection>): Connection {
     sources: raw.sources,
     sharedWithSquads: raw.sharedWithSquads,
     needsReconnect: raw.needsReconnect ?? (state === 'expired' || state === 'revoked'),
+    account: raw.account
+      ? { label: raw.account.label, name: raw.account.name ?? null, host: raw.account.host ?? null }
+      : null,
+    grantedScopes: raw.grantedScopes ?? raw.scopes,
   };
 }
 
@@ -124,6 +140,13 @@ const SourceRows = z.looseObject({
       kind: z.string(),
       title: z.string(),
       sharedWith: z.array(z.string()).default([]),
+      courseId: z.string().nullish(),
+      dueAt: z.number().nullish(),
+      startsAt: z.number().nullish(),
+      modifiedAt: z.number().nullish(),
+      fetchedAt: z.number().nullish(),
+      provenance: z.string().nullish(),
+      url: z.string().nullish(),
     }),
   ),
 });
@@ -132,6 +155,12 @@ export interface SourceRow {
   kind: string;
   title: string;
   sharedWith: string[];
+  courseId: string | null;
+  dueAt: number | null;
+  startsAt: number | null;
+  fetchedAt: number | null;
+  /** `fixture` is simulated data, never the person's account. */
+  provenance: 'real' | 'fixture';
 }
 
 async function call<T>(
@@ -193,7 +222,20 @@ export const hub = (ctx: Ctx) => ({
     return r.purged ?? { sources: 0, chunks: 0 };
   },
   async sources(id: string): Promise<SourceRow[]> {
-    return (await call(ctx, 'GET', `/v1/connections/${enc(id)}/sources`, SourceRows)).sources;
+    // Adapter: when the hub ships GET /v1/connections/items this is the one place to switch.
+    return (await call(ctx, 'GET', `/v1/connections/${enc(id)}/sources`, SourceRows)).sources.map(
+      (s) => ({
+        id: s.id,
+        kind: s.kind,
+        title: s.title,
+        sharedWith: s.sharedWith,
+        courseId: s.courseId ?? null,
+        dueAt: s.dueAt ?? null,
+        startsAt: s.startsAt ?? null,
+        fetchedAt: s.fetchedAt ?? null,
+        provenance: (s.provenance ?? '').endsWith(':fixture') ? ('fixture' as const) : ('real' as const),
+      }),
+    );
   },
   async share(
     id: string,
