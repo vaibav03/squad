@@ -17,6 +17,7 @@ import {
   chapterProviderFromStore,
   createBrain,
   createMasteryStore,
+  createOralExaminer,
   loadFixtureCourse,
   QuizEngine,
   type Brain,
@@ -30,6 +31,7 @@ import {
   MemoryVoiceStore,
   type AnswerFn,
   type AnswerSentence,
+  type ScriptedAgent,
   type TtsEngine,
 } from '@squad/media';
 import { listPersonas } from '@squad/media/personas';
@@ -392,11 +394,31 @@ function createAudioPorts(
   const knownAgent = (agent: string) =>
     ['expert', 'dean', 'council'].includes(parseAgentId(agent).kind);
 
+  // Oral Exam Hut: `expert:oral` and `expert:examiner` run the scripted examiner through the same call
+  // machinery (call.start / call.caption / call.end). Works with typed `user.text`, no mic and no TTS needed.
+  const examiner = createOralExaminer({ store: brain.store, llm: o.llm, courseId: defaultCourse });
+  const isOral = (agent: string) => {
+    const a = parseAgentId(agent);
+    return a.kind === 'expert' && (a.ref === 'oral' || a.ref === 'examiner');
+  };
+  const agentFor = ({ agent, student }: { agent: string; student: StudentId }): ScriptedAgent | undefined => {
+    if (!isOral(agent)) return undefined;
+    const ex = examiner.begin({ student });
+    return {
+      greeting: () => ex.greeting(),
+      reply: (text) => ex.reply(text),
+      done: () => ex.done(),
+    };
+  };
+  // VoiceService.resolve maps by regex and `expert:oral` would land on the chapter-expert voice, so the
+  // examiner agents are pinned to the 'examiner' persona (voice profile 'examiner'); everything else is unchanged.
+  const personaFor = (agent: string) => (isOral(agent) ? 'examiner' : agent);
+
   const audio = o.tts || process.env.ELEVENLABS_API_KEY ? tryAudio(o) : undefined;
   if (audio)
     return {
       media: audio.mediaPort(() => listPersonas()),
-      call: audio.callPort({ answer, knownAgent }),
+      call: audio.callPort({ answer, knownAgent, agentFor, personaFor }),
     };
 
   // No speech engine: captions only (a failing TTS yields text-only turns), previews unavailable.
@@ -412,7 +434,7 @@ function createAudioPorts(
       tts: { speakVoice: async () => Promise.reject(new Error('tts unavailable')) },
       store,
     }),
-    call: createCallPort({ tts: noTts, answer, knownAgent }),
+    call: createCallPort({ tts: noTts, answer, knownAgent, agentFor, personaFor }),
   };
 }
 

@@ -19,3 +19,6 @@ export * from './studyplan';
 export * from './skills/courseplan';
 export * from './skills/debate';
 export * from './skills/devilta';
+export * from './skills/oracle';
+export * from './skills/rubric';
+export * from './skills/oral';

@@ -36,6 +36,8 @@ export interface CallSession {
   audio?(chunk: Uint8Array): void;
   /** End of a mic turn (`audio.end` frame or `mute:true`): transcribe the buffered audio and answer. */
   replyToAudio?(): AsyncIterable<CallTurn>;
+  /** True once a scripted agent (oral examiner) is done; the websocket then ends the call with reason 'server'. */
+  finished?(): boolean;
   close(): Promise<void>;
 }
 export interface CallPort {
