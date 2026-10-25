@@ -11,7 +11,7 @@ assets/sprites/
   cast.meta.json      cast roster: ids, roles, anchors, anim table (same data as below, merged)
   <id>/sheet.png      per-persona strip: frames laid out left-to-right in the order of frames.json
   <id>/frames.json    per-persona atlas, see below
-  <id>/portrait.png   native-size pixel portrait, 38x38, transparent background
+  <id>/portrait.png   native-size pixel portrait, 40x40 (38 px Faceset art + 1 px ink margin), transparent background
   <id>/portrait@2x.png  @3x @4x @6x   nearest-neighbour integer upscales, for UI chrome
   wall/persona-wall.html  + wall-light.png, wall-dark.png   review sheets
 ```
@@ -77,7 +77,7 @@ Speaking: swap `talk_f_0/1` (or `talk_r_*`) at 8 fps while `call.caption` audio 
 ```tsx
 import { listPersonas, getPersona } from '@squad/media/personas';
 const p = getPersona('cubbie');
-p.portrait       // "assets/sprites/cubbie/portrait.png" (38x38 native; use <img class="pixelated" width={38*4}>) 
+p.portrait       // "assets/sprites/cubbie/portrait.png" (40x40 native; use <img class="pixelated" width={40*4}>) 
 p.spriteSheet    // "assets/sprites/cubbie/frames.json"
 ```
 The portrait pack also has `@2x/@3x/@4x/@6x` files; a CSS `image-rendering: pixelated` upscale of `portrait.png` is identical. Fluent 3D art stays available at `assets/fluent-characters/**` and each persona keeps an optional `fluentPortrait` path, but the default portrait is pixel art so the village, picker and ledger share one look. (Deviation from spec 05: portraits are the pack's hand-drawn Faceset art, quantized to the master palette, instead of Fluent 3D stickers. Say so if you need the Fluent default back; it is one field.)
