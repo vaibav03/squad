@@ -506,6 +506,8 @@ export function createChatHub(
         citations,
         verify: verifyCitation,
         mode,
+        isFixture: (c) =>
+          !!c.source && !!deps.context?.store.source(c.source.id)?.provenance.endsWith(':fixture'),
         hint: p.provenance,
         via: lastVia.get(p.chatId) ?? 'web',
       });
