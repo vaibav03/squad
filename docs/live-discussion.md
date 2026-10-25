@@ -35,7 +35,28 @@ Read through a page-to-markdown summarizer, so treat exact field names as "docs 
 - Demo mode: the same `LiveAgentClient` interface has a deterministic `FakeLive` implementation, used automatically when there is no key or Gemini answers 401, 402, 429 (or closes with a credits/auth/quota reason), and when `FORCE_FAKE_LIVE=1`. It is labelled "Demo mode" in the UI.
 - Budget guard: max turns, max seconds, max chars per turn, one active run per viewer, hourly start cap, hard stop timer.
 
+## Real-run evidence (2026-10-25, key from .env, credits working)
+
+Three real discussion runs through the hub (3 agents: Chair, Tutor, Skeptic; `LIVE_MAX_TURNS=4`), plus free metadata calls. Takeaways in these runs used the scripted builder (`FORCE_FAKE_LLM=1`); the LLM builder was checked separately on a 5-turn transcript.
+
+| Item | Result |
+|---|---|
+| Model id | `models.list` on this key includes `gemini-3.8-live`, `gemini-3.8-live-extended-thinking`, `gemini-3.1-flash-live-preview`, `gemini-2.5-flash-native-audio-*`, `gemini-3.5-live-translate-preview`, `gemini-3.5-transcribe-live`. Default `gemini-3.8-live` connects and answers. |
+| `sendRealtimeInput({ text })` | Works mid-conversation on all three sessions: each reply is a native-audio turn with `outputTranscription`. |
+| Turn-taking relay | Chair, Tutor, Skeptic, Tutor, Chair in order; each finished transcript relayed as text to the next speaker; one floor holder at all times. |
+| Transcription | `outputTranscription` deltas stream as captions; first caption 1.0 to 1.3 s after start. |
+| Interruption | User text at about 24 s: `interrupted` emitted for the in-flight turn within 40 ms (turn marked "(cut off)"), the user line is relayed, the Chair answered it about 8 s later and the run wrapped up normally. |
+| Audio | Audio run: 176 chunks, 2.8 MB, 58.5 s of 24 kHz 16-bit PCM for a 62 s discussion (speech is generated about real time). |
+| Browser playback | Playwright with an `AudioContext` hook: 163 buffer sources scheduled, 55.0 s total duration, context state `running`, no page errors. (Can not hear it; counts and durations only.) |
+| Per-turn latency | About 10 to 14 s per turn (a 25 to 40 word turn is spoken in real time); 5 turns (4 plus wrap-up) in 46 to 62 s. |
+| Cost | Native audio output is billed per audio second ($0.018/min): about $0.02 per 60 s discussion, so a 14-turn run (about 3 min) is about $0.06 plus text. Captions-only still pays for the audio (native-audio models are audio-only); the server just drops the chunks. Three runs cost well under $0.10. |
+| Bad key | Close code 1007 "API key not valid" is mapped to `auth` and triggers the Demo fallback (unit-tested; observed with a bogus key). |
+| Credits depleted | Close code 1011 "prepayment credits are depleted" (seen earlier today) is mapped to `credits` and triggers the Demo fallback. |
+| LLM takeaways | `createLlmTakeaways` on a 5-turn transcript: 3 decisions, a kept Tutor/Skeptic disagreement with why, 1 next step, 2 quiz questions, each linked to a turn, in about 2.0 s. |
+| `contextWindowCompression` + `sessionResumption` | Accepted in the setup config (sessions connect and run). |
+
 ## Not verified
 
-- A real end-to-end Live run (credits were depleted). The Gemini client is unit-tested against an injected fake `ai.live.connect` and the observed close shape.
-- Exact behaviour of `sendRealtimeInput({ text })` mid-conversation on the 3.8 model (docs show it, we have not heard a reply).
+- GoAway and the 10-minute connection limit (runs here are about 1 minute; the budget did not allow a long session). Session resumption after a GoAway is coded but untested.
+- A run grounded on a real course (the dev hub has no course loaded in real mode, so agents said "we have no sources"); grounding and citation chips are verified in demo mode against the fixture course only.
+- Hearing the audio (counts and durations only).

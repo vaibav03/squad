@@ -1,3 +1,4 @@
+import { LivePersonaIdSchema, type LivePersonaId } from '@squad/core';
 export interface LiveLimits {
   maxTurns: number;
   maxSeconds: number;
@@ -33,3 +34,12 @@ export function fakeSpeedFromEnv(env: NodeJS.ProcessEnv = process.env): number {
 
 export const liveModelFromEnv = (env: NodeJS.ProcessEnv = process.env): string =>
   env.GEMINI_LIVE_MODEL?.trim() || 'gemini-3.8-live';
+
+/** Optional roster override (cost control), e.g. `LIVE_PERSONAS=chair,tutor,skeptic`. Needs 3 to 5 known ids. */
+export function livePersonasFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): LivePersonaId[] | undefined {
+  const raw = env.LIVE_PERSONAS?.split(',').map((s) => s.trim());
+  const ok = raw?.filter((s): s is LivePersonaId => LivePersonaIdSchema.safeParse(s).success);
+  return ok && ok.length >= 3 && ok.length <= 5 ? ok : undefined;
+}

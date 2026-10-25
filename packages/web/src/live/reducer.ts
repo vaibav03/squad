@@ -117,7 +117,8 @@ export function liveReducer(s: LiveState, a: LiveAction): LiveState {
         open: s.open.filter((o) => o.turnId !== e.turn.id),
       };
     case 'audio':
-      return s;
+      // The first chunk proves audio is flowing even if the snapshot was taken before the sessions connected.
+      return s.audio ? s : { ...s, audio: true };
     case 'interrupted': {
       const o = s.open.find((x) => x.turnId === e.turnId);
       const existing = s.turns.find((t) => t.id === e.turnId);

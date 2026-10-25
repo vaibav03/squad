@@ -1,4 +1,5 @@
 import { LiveRun, type EngineDeps, type LiveRunInit } from './engine';
+import { livePersonasFromEnv } from './env';
 
 export class LiveBusyError extends Error {
   override readonly name = 'LiveBusyError';
@@ -54,7 +55,9 @@ export function createLiveService(deps: EngineDeps & { newId?: () => string }): 
         ...(i.chatId ? { chatId: i.chatId } : {}),
         visibility: i.visibility,
         mode: i.mode ?? 'audio',
-        ...(i.personas ? { personas: i.personas } : {}),
+        ...((i.personas ?? livePersonasFromEnv())
+          ? { personas: (i.personas ?? livePersonasFromEnv()) as NonNullable<typeof i.personas> }
+          : {}),
       });
       runs.set(run.id, run);
       if (runs.size > KEEP) runs.delete(runs.keys().next().value as string);
