@@ -500,6 +500,15 @@ export function createChatHub(
           );
         }
       }
+      // A reply that cites any fixture/demo import is Demo, whatever the model mode: sources decide, never "Live".
+      if (
+        mode !== 'demo' &&
+        citations.some((c) => {
+          const s = c.source ? deps.context?.store.source(c.source.id) : undefined;
+          return !!s && /fixture|demo/i.test(s.provenance);
+        })
+      )
+        mode = 'demo';
       // ONE rule for what a reply may claim: only verified citations survive; the rest is an explicit label.
       const composed = composeProvenance({
         text,

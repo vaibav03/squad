@@ -60,7 +60,7 @@ export function createCanvasAnswerSkill(store: ContextStore, opts: CanvasAnswerO
         DEADLINE_ONLY.test(m.text) &&
         !/\b(slides?|ppts?|pptx|powerpoints?|pdfs?)\b/i.test(m.text)
       ) {
-        const due = dueReply(store, sources, t);
+        const due = dueReply(store, sources, t, new Map(), m.text);
         if (due)
           return [
             {

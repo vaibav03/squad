@@ -52,28 +52,65 @@ export function chatCitationFor(
   };
 }
 
+/**
+ * The window a due question asks for, as "now .. now + N days". "This week" is the rolling next 7 days (documented in
+ * docs/context-store.md); with no window words the reply is the legacy "next 5 due". `later` is the band shown under
+ * "Next after this week".
+ */
+export function dueWindow(q: string, now: number): { to: number; label: string } | null {
+  if (/\btoday\b/i.test(q)) return { to: now + DAY, label: 'today' };
+  if (/\btomorrow\b/i.test(q)) return { to: now + 2 * DAY, label: 'tomorrow' };
+  if (/\bnext week\b/i.test(q)) return { to: now + 14 * DAY, label: 'the next 14 days' };
+  if (/\b(this week|the week|week)\b/i.test(q)) return { to: now + 7 * DAY, label: 'this week' };
+  return null;
+}
+
+/** "CS 101: Intro to Computing", else whichever half is known, else the bare course id. */
+const courseLabel = (a: ContextSource, names: ReadonlyMap<string, string>): string => {
+  const code = a.courseCode?.trim();
+  const name = (a.courseName ?? (a.courseId ? names.get(a.courseId) : undefined))?.trim();
+  if (code && name) return `${code}: ${name}`;
+  return code || name || a.courseId || '';
+};
+
 /** "What is due?": Canvas assignments and Classroom items, soonest first, one citation per listed item. */
 export function dueReply(
   store: ContextStore,
   sources: ContextSource[],
   now: number,
   courseNames: ReadonlyMap<string, string> = new Map(),
+  question = '',
 ): RichReply | null {
   const all = sources.filter((s) => DUE_KINDS.has(s.kind));
   if (all.length === 0) return null;
   const upcoming = all
     .filter((a) => a.dueAt === null || a.dueAt >= now - DAY)
     .sort((a, b) => (a.dueAt ?? Infinity) - (b.dueAt ?? Infinity));
-  if (upcoming.length === 0) return { text: "Nothing due. You're all caught up.", citations: [] };
-  const top = upcoming.slice(0, 5);
-  const lines = top.map((a) => {
-    const course = a.courseId ? (courseNames.get(a.courseId) ?? '') : '';
+  const win = dueWindow(question, now);
+  const line = (a: ContextSource): string => {
+    const course = courseLabel(a, courseNames);
     const where = a.kind === 'classroom_item' ? ' [Google Classroom]' : '';
-    return `- ${a.title}${course ? ` (${course})` : ''}${where}: ${fmtDue(a.dueAt, now)}`;
-  });
+    return `- ${course ? `${course}: ` : ''}${a.title}${where}: ${fmtDue(a.dueAt, now)}`;
+  };
+  if (!win) {
+    if (upcoming.length === 0) return { text: "Nothing due. You're all caught up.", citations: [] };
+    const top = upcoming.slice(0, 5);
+    return {
+      text: `Next ${top.length} due:\n${top.map(line).join('\n')}`,
+      citations: top.map((a) => chatCitationFor(store, a)),
+    };
+  }
+  const inWin = upcoming.filter((a) => a.dueAt !== null && a.dueAt < win.to).slice(0, 8);
+  const after = upcoming.filter((a) => a.dueAt !== null && a.dueAt >= win.to).slice(0, 3);
+  const head = inWin.length
+    ? `Due ${win.label} (${inWin.length}):\n${inWin.map(line).join('\n')}`
+    : `Nothing is due ${win.label}.`;
+  const tail = after.length ? `\n\nNext after ${win.label}:\n${after.map(line).join('\n')}` : '';
+  if (!inWin.length && !after.length)
+    return { text: "Nothing due. You're all caught up.", citations: [] };
   return {
-    text: `Next ${top.length} due:\n${lines.join('\n')}`,
-    citations: top.map((a) => chatCitationFor(store, a)),
+    text: head + tail,
+    citations: [...inWin, ...after].map((a) => chatCitationFor(store, a)),
   };
 }
 
