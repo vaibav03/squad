@@ -229,6 +229,7 @@ export async function attachChatEngine(
   // on the web card or by the village sheet; the council narrator uses the same resilient model as every skill.
   deps.tripSvc.setAsk((student, question, options, taskId) =>
     bot.ctx.askConfirm(student, question, options, taskId).then((a) => (typeof a === 'string' ? a : 'timeout')),
+    (student, taskId) => void bot.confirms.cancel(student, taskId),
   );
   deps.tripSvc.setNarrator({
     narrate: async (prompt) => (await llm.complete({ messages: prompt })).text,

@@ -31,7 +31,12 @@ export type Fail = {
   extra?: Record<string, unknown>;
 };
 export type Res<T = TripViewV2> = { ok: true; trip: T } | Fail;
-const fail = (status: Fail['status'], code: string, message: string, extra?: Fail['extra']): Fail => ({
+const fail = (
+  status: Fail['status'],
+  code: string,
+  message: string,
+  extra?: Fail['extra'],
+): Fail => ({
   ok: false,
   status,
   code,
@@ -50,7 +55,7 @@ export type Narrate = (prompt: string) => Promise<string>;
 export interface TripService {
   agents: TripAgents;
   setAgentUrls(urls: Record<string, string>): void;
-  setAsk(fn: AskMember | undefined): void;
+  setAsk(fn: AskMember | undefined, cancel?: (student: string, taskId: string) => void): void;
   setNarrator(n: { narrate: Narrate; real: () => boolean } | undefined): void;
   /** Runs before each constraint check so connection-derived busy blocks (Canvas/Google, titles never stored) are current. */
   setBeforeConstraints(fn: ((members: string[]) => Promise<void> | void) | undefined): void;
@@ -65,7 +70,13 @@ export interface TripService {
     optionId: string,
     body: { baseRev: number; label?: string; days?: number; perPerson?: number; replace?: boolean },
   ): Res;
-  removeOption(v: Viewer, id: string, optionId: string, baseRev: number | undefined, replace?: boolean): Res;
+  removeOption(
+    v: Viewer,
+    id: string,
+    optionId: string,
+    baseRev: number | undefined,
+    replace?: boolean,
+  ): Res;
   vote(v: Viewer, id: string, body: { ranking: string[]; baseRev?: number }): Res;
   confirm(v: Viewer, id: string, body: { optionId?: string; yes: boolean; baseRev?: number }): Res;
   closeVoting(v: Viewer, id: string): Res;
@@ -97,18 +108,21 @@ export function createTripService(
   deps: HubDeps,
   o: { agents?: TripAgents; sweepMs?: number } = {},
 ): TripService {
-  const agents =
-    o.agents ?? createTripAgents({ secret: () => deps.config.internalSecret });
+  const agents = o.agents ?? createTripAgents({ secret: () => deps.config.internalSecret });
   const nameOf = (id: string) => deps.directory.student(id)?.name ?? id;
   const now = () => deps.now();
   let ask: AskMember | undefined;
+  let cancelAsk: ((student: string, taskId: string) => void) | undefined;
   let narr: { narrate: Narrate; real: () => boolean } | undefined;
   let before: ((members: string[]) => Promise<void> | void) | undefined;
   const chains = new Map<string, Promise<void>>();
   let timer: ReturnType<typeof setInterval> | undefined;
   const lastRetry = new Map<string, number>();
+  /** `tripId|student` of vote cards still waiting for an answer (one at a time per member). */
+  const outstanding = new Set<string>();
 
-  const view = (t: TripRecord, v: Viewer) => buildTripView(t, v, { directory: deps.directory, now: now() });
+  const view = (t: TripRecord, v: Viewer) =>
+    buildTripView(t, v, { directory: deps.directory, now: now() });
   const touch = (t: TripRecord) => void deps.ingest.x('x.trip.touch', { tripId: t.tripId });
   const save = (t: TripRecord) => {
     deps.trips.put(t);
@@ -137,13 +151,20 @@ export function createTripService(
   const load = (v: Viewer, id: string): { t: TripRecord } | Fail => {
     const t = deps.trips.get(id) ?? deps.trips.byTask(id);
     if (!t || t.squadId !== v.squadId) return fail(404, 'not_found', 'No such trip in your squad.');
-    if (!t.collab) return fail(422, 'legacy_trip', 'This trip was created by the demo agents and cannot be edited here.');
+    if (!t.collab)
+      return fail(
+        422,
+        'legacy_trip',
+        'This trip was created by the demo agents and cannot be edited here.',
+      );
     return { t };
   };
   const expireIfDue = (t: TripRecord): boolean => {
     const c = t.collab;
     if (!c || !ACTIVE.includes(t.status) || now() <= c.deadline) return false;
     t.status = 'expired';
+    dropCards(t, 'vote');
+    dropCards(t, 'confirm');
     c.failure = {
       code: 'expired',
       message: 'The deadline passed before everyone confirmed. The organizer can reopen it.',
@@ -155,13 +176,15 @@ export function createTripService(
       const m = t.collab!.optionMeta[o.id]!;
       return { id: o.id, label: o.label, days: m.days, perPerson: m.perPerson };
     });
-  const live = (t: TripRecord) => t.options.filter((o) => !t.vetoed.some((x) => x.optionId === o.id));
+  const live = (t: TripRecord) =>
+    t.options.filter((o) => !t.vetoed.some((x) => x.optionId === o.id));
   const perOf = (t: TripRecord) => (id: string) => t.collab?.optionMeta[id]?.perPerson ?? 0;
 
   const syncMembers = (t: TripRecord) => {
     if (!['planning', 'voting'].includes(t.status)) return;
     for (const m of squadMembers(t.squadId))
-      if (!t.confirmations.some((c) => c.student === m)) t.confirmations.push({ student: m, confirmed: false });
+      if (!t.confirmations.some((c) => c.student === m))
+        t.confirmations.push({ student: m, confirmed: false });
   };
 
   // ---------- recommendation ----------
@@ -170,7 +193,8 @@ export function createTripService(
     const voters = new Set(t.votes.map((x) => x.student)).size;
     const small = deps.directory.isSmall(t.squadId);
     const leader = !small && voters >= MIN_GROUP ? (tally(t, perOf(t))[0]?.optionId ?? null) : null;
-    const skippedFor = c.constraints.state === 'skipped' ? c.constraints.waitingFor.map((w) => nameOf(w.id)) : [];
+    const skippedFor =
+      c.constraints.state === 'skipped' ? c.constraints.waitingFor.map((w) => nameOf(w.id)) : [];
     const base = recommend({
       options: optsPublic(t),
       droppedIds: t.vetoed.map((x) => x.optionId),
@@ -196,10 +220,16 @@ export function createTripService(
         try {
           const raw = await Promise.race([
             narr!.narrate(prompt),
-            new Promise<string>((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000).unref?.()),
+            new Promise<string>((_, rej) =>
+              setTimeout(() => rej(new Error('timeout')), 8000).unref?.(),
+            ),
           ]);
-          const j = JSON.parse(/\{[\s\S]*\}/.exec(raw)?.[0] ?? '{}') as { chair?: string; planner?: string };
-          if (j.chair && j.planner && narr!.real()) next = { chair: j.chair.slice(0, 300), planner: j.planner.slice(0, 300), mode: 'live' };
+          const j = JSON.parse(/\{[\s\S]*\}/.exec(raw)?.[0] ?? '{}') as {
+            chair?: string;
+            planner?: string;
+          };
+          if (j.chair && j.planner && narr!.real())
+            next = { chair: j.chair.slice(0, 300), planner: j.planner.slice(0, 300), mode: 'live' };
         } catch {
           /* stays degraded: the rules text above is still true */
         }
@@ -227,7 +257,9 @@ export function createTripService(
 
   function enqueue(tripId: string, job: () => Promise<void>): void {
     const prev = chains.get(tripId) ?? Promise.resolve();
-    const next = prev.then(job).catch((e) => deps.log.error('trip job failed', { err: (e as Error).name }));
+    const next = prev
+      .then(job)
+      .catch((e) => deps.log.error('trip job failed', { err: (e as Error).name }));
     chains.set(tripId, next);
   }
 
@@ -241,7 +273,13 @@ export function createTripService(
       const members = squadMembers(t.squadId);
       if (members.length < 2) {
         t = deps.trips.get(tripId)!;
-        t.collab!.constraints = { state: 'skipped', waitingFor: [], overlapDays: null, note: 'Only you are in the squad so far. Invite members, then retry.', checkedAt: now() };
+        t.collab!.constraints = {
+          state: 'skipped',
+          waitingFor: [],
+          overlapDays: null,
+          note: 'Only you are in the squad so far. Invite members, then retry.',
+          checkedAt: now(),
+        };
         openVoting(t, 'Only one member so far, so there is nothing to compare yet.');
         return;
       }
@@ -252,14 +290,20 @@ export function createTripService(
         const prevWait = t.collab!.constraints.waitingFor.map((w) => w.id).join(',');
         t.collab!.constraints = {
           state: 'waiting',
-          waitingFor: off.map((id) => ({ id, reason: c.agents[id]?.state === 'no_agent' ? 'no_agent' : 'offline' })),
+          waitingFor: off.map((id) => ({
+            id,
+            reason: c.agents[id]?.state === 'no_agent' ? 'no_agent' : 'offline',
+          })),
           overlapDays: null,
           note: waitNote(off, c.agents),
           checkedAt: null,
         };
         save(t);
         if (prevWait !== off.join(','))
-          mirror(t, `${waitNote(off, c.agents)}. Nothing is checked until they are back, or ${nameOf(t.collab!.organizer)} continues without them.`);
+          mirror(
+            t,
+            `${waitNote(off, c.agents)}. Nothing is checked until they are back, or ${nameOf(t.collab!.organizer)} continues without them.`,
+          );
         return;
       }
       try {
@@ -294,7 +338,11 @@ export function createTripService(
       : `${first}'s agent is offline, trip waits for ${first}${n.length > 1 ? ` and ${n.length - 1} more` : ''}`;
   };
 
-  function applyOutcome(t: TripRecord, res: Awaited<ReturnType<TripAgents['start']>>, members: string[]): void {
+  function applyOutcome(
+    t: TripRecord,
+    res: Awaited<ReturnType<TripAgents['start']>>,
+    members: string[],
+  ): void {
     const c = t.collab!;
     if (!res.ok) {
       c.constraints = {
@@ -315,22 +363,36 @@ export function createTripService(
     }
     const out = res.outcome;
     if (out.status === 'constraints') {
-      c.constraints = { state: 'done', waitingFor: [], overlapDays: out.common, note: null, checkedAt: now() };
+      c.constraints = {
+        state: 'done',
+        waitingFor: [],
+        overlapDays: out.common,
+        note: null,
+        checkedAt: now(),
+      };
       t.vetoed = out.dropped.map((d) => ({
         optionId: d.optionId,
         by: 'mediator' as const,
-        reason: d.reason === 'budget' ? 'Over at least one private budget' : 'Ruled out by at least one member',
+        reason:
+          d.reason === 'budget'
+            ? 'Over at least one private budget'
+            : 'Ruled out by at least one member',
       }));
       if (out.common.length === 0) {
         c.constraints.state = 'failed';
-        c.constraints.note = 'No day is free for everyone inside this window. Cancel and plan again with a different month.';
+        c.constraints.note =
+          'No day is free for everyone inside this window. Cancel and plan again with a different month.';
       } else if (out.survivors.length === 0) {
         c.constraints.state = 'failed';
-        c.constraints.note = 'Every option is over someone\'s budget or ruled out. Propose another option and the check re-runs.';
+        c.constraints.note =
+          "Every option is over someone's budget or ruled out. Propose another option and the check re-runs.";
       }
       setReco(t);
       if (c.constraints.state === 'done') {
-        openVoting(t, `Free days for all ${members.length}: ${fmtDays(out.common)}.${t.vetoed.length ? ` ${t.vetoed.length} option${t.vetoed.length === 1 ? '' : 's'} dropped by budget or a hard no (nobody is named).` : ''}`);
+        openVoting(
+          t,
+          `Free days for all ${members.length}: ${fmtDays(out.common)}.${t.vetoed.length ? ` ${t.vetoed.length} option${t.vetoed.length === 1 ? '' : 's'} dropped by budget or a hard no (nobody is named).` : ''}`,
+        );
       } else {
         save(t);
         mirror(t, c.constraints.note!);
@@ -341,7 +403,10 @@ export function createTripService(
       state: 'failed',
       waitingFor: [],
       overlapDays: null,
-      note: out.status === 'no_plan' && out.reason === 'offline' ? 'An agent dropped out while checking. Retry to try again.' : 'The agents could not finish checking. Retry in a moment.',
+      note:
+        out.status === 'no_plan' && out.reason === 'offline'
+          ? 'An agent dropped out while checking. Retry to try again.'
+          : 'The agents could not finish checking. Retry in a moment.',
       checkedAt: null,
     };
     save(t);
@@ -367,12 +432,23 @@ export function createTripService(
     promptVotes(t);
   }
 
+  /** A card whose subject is over must not keep swallowing the member's DMs: drop it. */
+  function dropCards(t: TripRecord, kind: 'vote' | 'confirm'): void {
+    for (const r of t.confirmations) {
+      if (kind === 'vote') outstanding.delete(`${t.tripId}|${r.student}`);
+      cancelAsk?.(r.student, `${t.tripId}:${kind}`);
+    }
+  }
+
   function promptVotes(t: TripRecord): void {
     if (!ask) return;
     const options = live(t);
     if (options.length < 2) return;
     for (const m of t.confirmations.map((r) => r.student)) {
       if (t.votes.some((x) => x.student === m)) continue;
+      const key = `${t.tripId}|${m}`;
+      if (outstanding.has(key)) continue;
+      outstanding.add(key);
       void ask(
         m,
         `Trip vote: where to? Your pick is secret.`,
@@ -384,10 +460,15 @@ export function createTripService(
           const idx = options.findIndex((o) => a.startsWith(o.label));
           if (idx < 0) return;
           const cur = deps.trips.get(t.tripId);
-          if (!cur?.collab || cur.status !== 'voting' || cur.votes.some((x) => x.student === m)) return;
-          applyVote(cur, m, [options[idx]!.id, ...options.filter((_, i) => i !== idx).map((o) => o.id)]);
+          if (!cur?.collab || cur.status !== 'voting' || cur.votes.some((x) => x.student === m))
+            return;
+          applyVote(cur, m, [
+            options[idx]!.id,
+            ...options.filter((_, i) => i !== idx).map((o) => o.id),
+          ]);
         })
-        .catch(() => undefined);
+        .catch(() => undefined)
+        .finally(() => void outstanding.delete(key));
     }
   }
 
@@ -434,17 +515,25 @@ export function createTripService(
     if (!top) {
       c.failure = { code: 'no_option', message: 'No option is left to choose from.' };
       t.status = 'failed';
+      dropCards(t, 'vote');
       save(t);
       mirror(t, c.failure.message);
       return;
     }
     const opt = t.options.find((o) => o.id === top.optionId)!;
     const meta = c.optionMeta[opt.id]!;
-    const run = c.constraints.overlapDays ? earliestRun(c.constraints.overlapDays, meta.days) : null;
+    const run = c.constraints.overlapDays
+      ? earliestRun(c.constraints.overlapDays, meta.days)
+      : null;
     c.chosen = { optionId: opt.id, dates: run ? fmtRange(run) : null };
     t.dates = c.chosen.dates;
     t.status = 'confirming';
-    t.confirmations = t.confirmations.map((r) => ({ student: r.student, confirmed: false, optionId: opt.id }));
+    dropCards(t, 'vote');
+    t.confirmations = t.confirmations.map((r) => ({
+      student: r.student,
+      confirmed: false,
+      optionId: opt.id,
+    }));
     c.declined = [];
     bump(t);
     log(t, c.organizer, `Voting closed on ${opt.label}`, opt.id);
@@ -466,6 +555,7 @@ export function createTripService(
       row.confirmed = false;
       if (!c.declined.includes(student)) c.declined.push(student);
       t.status = 'failed';
+      dropCards(t, 'confirm');
       c.failure = {
         code: 'declined',
         message: `${nameOf(student)} can't make ${opt?.label ?? 'this option'}. The organizer can reopen voting to pick another.`,
@@ -479,6 +569,7 @@ export function createTripService(
     deps.ingest.village({ t: 'confirm.done', student, taskId: t.taskId, question: 'Confirm trip' });
     const all = t.confirmations.every((r) => r.confirmed);
     if (all) t.status = 'confirmed';
+    if (all) dropCards(t, 'confirm');
     save(t);
     if (all) {
       deps.ingest.village({ t: 'trip.confirmed', taskId: t.taskId, squadId: t.squadId });
@@ -495,7 +586,9 @@ export function createTripService(
   // ---------- conflict helper ----------
   function conflict(t: TripRecord, optionId: string | undefined, msg: string): Fail {
     const c = t.collab!;
-    const ch = [...c.changes].reverse().find((x) => !optionId || x.optionId === optionId) ?? c.changes.at(-1);
+    const ch =
+      [...c.changes].reverse().find((x) => !optionId || x.optionId === optionId) ??
+      c.changes.at(-1);
     const opt = optionId ? t.options.find((x) => x.id === optionId) : undefined;
     const meta = optionId ? c.optionMeta[optionId] : undefined;
     return fail(409, 'conflict', msg, {
@@ -503,7 +596,14 @@ export function createTripService(
         rev: c.rev,
         change: ch ? { ...ch, byName: nameOf(ch.by) } : null,
         option: opt
-          ? { id: opt.id, label: opt.label, estCost: money(meta?.perPerson ?? 0), days: meta?.days, perPerson: meta?.perPerson, rev: meta?.rev }
+          ? {
+              id: opt.id,
+              label: opt.label,
+              estCost: money(meta?.perPerson ?? 0),
+              days: meta?.days,
+              perPerson: meta?.perPerson,
+              rev: meta?.rev,
+            }
           : null,
       },
     });
@@ -519,7 +619,8 @@ export function createTripService(
     t.options.some((o) => o.id !== except && o.label.toLowerCase() === label.toLowerCase());
 
   function rerun(t: TripRecord): void {
-    if (t.collab!.constraints.state === 'done' || t.collab!.constraints.state === 'failed') runConstraints(t.tripId);
+    if (t.collab!.constraints.state === 'done' || t.collab!.constraints.state === 'failed')
+      runConstraints(t.tripId);
   }
 
   const svc: TripService = {
@@ -531,19 +632,30 @@ export function createTripService(
         timer.unref?.();
       }
     },
-    setAsk: (fn) => void (ask = fn),
+    setAsk(fn, cancel) {
+      ask = fn;
+      cancelAsk = cancel;
+    },
     setNarrator: (n) => void (narr = n),
     setBeforeConstraints: (fn) => void (before = fn),
     current(v) {
       const all = deps.trips.list(v.squadId);
-      const collab = all.filter((t) => t.collab).sort((a, b) => b.collab!.createdAt - a.collab!.createdAt);
+      const collab = all
+        .filter((t) => t.collab)
+        .sort((a, b) => b.collab!.createdAt - a.collab!.createdAt);
       const pick = collab.find((t) => isActive(t, now())) ?? collab[0] ?? all[0];
       if (!pick) return null;
       if (expireIfDue(pick)) deps.trips.put(pick);
       return view(pick, v);
     },
     list(v) {
-      return deps.trips.list(v.squadId).map((t) => ({ tripId: t.tripId, title: t.collab?.title ?? 'Group trip', status: t.status }));
+      return deps.trips
+        .list(v.squadId)
+        .map((t) => ({
+          tripId: t.tripId,
+          title: t.collab?.title ?? 'Group trip',
+          status: t.status,
+        }));
     },
     get(v, id) {
       const t = deps.trips.get(id) ?? deps.trips.byTask(id);
@@ -556,12 +668,31 @@ export function createTripService(
       const squadId = v.squadId;
       const active = deps.trips.list(squadId).find((t) => t.collab && isActive(t, now()));
       if (active)
-        return fail(409, 'trip_in_progress', `There is already a trip in progress: ${active.collab!.title} (${active.status}).`, { tripId: active.tripId });
+        return fail(
+          409,
+          'trip_in_progress',
+          `There is already a trip in progress: ${active.collab!.title} (${active.status}).`,
+          { tripId: active.tripId },
+        );
       const n = now();
-      let window = body.from && body.to ? { from: body.from, to: body.to } : body.month ? monthWindow(body.month, n) : defaultWindow(n);
-      if (body.from && !body.to) window = { from: body.from, to: new Date(Date.parse(`${body.from}T00:00:00Z`) + 30 * DAY_MS).toISOString().slice(0, 10) };
-      const span = (Date.parse(`${window.to}T00:00:00Z`) - Date.parse(`${window.from}T00:00:00Z`)) / DAY_MS + 1;
-      if (!(span >= 1) || span > MAX_WINDOW_DAYS) return fail(400, 'invalid_request', `The window must be 1 to ${MAX_WINDOW_DAYS} days.`);
+      let window =
+        body.from && body.to
+          ? { from: body.from, to: body.to }
+          : body.month
+            ? monthWindow(body.month, n)
+            : defaultWindow(n);
+      if (body.from && !body.to)
+        window = {
+          from: body.from,
+          to: new Date(Date.parse(`${body.from}T00:00:00Z`) + 30 * DAY_MS)
+            .toISOString()
+            .slice(0, 10),
+        };
+      const span =
+        (Date.parse(`${window.to}T00:00:00Z`) - Date.parse(`${window.from}T00:00:00Z`)) / DAY_MS +
+        1;
+      if (!(span >= 1) || span > MAX_WINDOW_DAYS)
+        return fail(400, 'invalid_request', `The window must be 1 to ${MAX_WINDOW_DAYS} days.`);
       const label = body.destination.trim();
       const cat = CATALOG.find((c) => c.label.toLowerCase() === label.toLowerCase());
       const days = Math.min(body.days ?? cat?.days ?? 3, Math.max(1, span));
@@ -588,7 +719,13 @@ export function createTripService(
           rev: 1,
           optionMeta: {},
           changes: [],
-          constraints: { state: 'pending', waitingFor: [], overlapDays: null, note: null, checkedAt: null },
+          constraints: {
+            state: 'pending',
+            waitingFor: [],
+            overlapDays: null,
+            note: null,
+            checkedAt: null,
+          },
           runs: [],
           agents: {},
           chosen: null,
@@ -599,11 +736,20 @@ export function createTripService(
       };
       const add = (lbl: string, by: string, d: number, p: number, est: boolean) => {
         const id = optionId(t, lbl);
-        t.options.push({ id, label: lbl, estCost: est ? `${money(p)} est.` : money(p), days: d, perPerson: p });
+        t.options.push({
+          id,
+          label: lbl,
+          estCost: est ? `${money(p)} est.` : money(p),
+          days: d,
+          perPerson: p,
+        });
         t.collab!.optionMeta[id] = { by, rev: 1, days: d, perPerson: p };
       };
       add(label, v.studentId, days, perPerson, !body.perPerson && !!cat);
-      for (const c of CATALOG.filter((x) => x.label.toLowerCase() !== label.toLowerCase()).slice(0, 2))
+      for (const c of CATALOG.filter((x) => x.label.toLowerCase() !== label.toLowerCase()).slice(
+        0,
+        2,
+      ))
         add(c.label, 'council', Math.min(c.days, Math.max(1, span)), c.perPerson, true);
       syncMembers(t);
       log(t, v.studentId, `Started the plan for ${label}`);
@@ -614,7 +760,9 @@ export function createTripService(
         `${nameOf(v.studentId)} started a trip plan for ${label}, ${fmtRange([window.from, window.to])} window. Council added ${t.options
           .filter((o) => t.collab!.optionMeta[o.id]!.by === 'council')
           .map((o) => o.label)
-          .join(' and ')} as alternatives. Agents are checking free days and budgets; nobody's calendar or limits are shared.`,
+          .join(
+            ' and ',
+          )} as alternatives. Agents are checking free days and budgets; nobody's calendar or limits are shared.`,
       );
       runConstraints(tripId);
       return { ok: true, trip: view(deps.trips.get(tripId)!, v)! };
@@ -624,8 +772,12 @@ export function createTripService(
       const r = load(v, id);
       if ('ok' in r) return r;
       const t = r.t;
-      if (expireIfDue(t)) { deps.trips.put(t); return fail(409, 'expired', 'This trip expired.'); }
-      if (!['planning', 'voting'].includes(t.status)) return fail(409, 'locked', 'Options are locked once voting has closed.');
+      if (expireIfDue(t)) {
+        deps.trips.put(t);
+        return fail(409, 'expired', 'This trip expired.');
+      }
+      if (!['planning', 'voting'].includes(t.status))
+        return fail(409, 'locked', 'Options are locked once voting has closed.');
       if (t.options.length >= 8) return fail(409, 'too_many', 'A trip can have at most 8 options.');
       if (dup(t, body.label)) return fail(409, 'duplicate', `${body.label} is already an option.`);
       const rev = bump(t);
@@ -638,6 +790,8 @@ export function createTripService(
       setReco(t);
       save(t);
       mirror(t, `${nameOf(v.studentId)} proposed ${body.label} (${days} days, ${money(p)} each).`);
+      // A second live option is what makes a ballot possible: members without a card get one now.
+      if (t.status === 'voting') promptVotes(t);
       rerun(t);
       return { ok: true, trip: view(deps.trips.get(t.tripId)!, v)! };
     },
@@ -646,13 +800,15 @@ export function createTripService(
       const r = load(v, id);
       if ('ok' in r) return r;
       const t = r.t;
-      if (!['planning', 'voting'].includes(t.status)) return fail(409, 'locked', 'Options are locked once voting has closed.');
+      if (!['planning', 'voting'].includes(t.status))
+        return fail(409, 'locked', 'Options are locked once voting has closed.');
       const o = t.options.find((x) => x.id === optId);
       const meta = t.collab!.optionMeta[optId];
       if (!o || !meta) return fail(404, 'not_found', 'That option no longer exists.');
       if (body.baseRev < meta.rev && !body.replace)
         return conflict(t, optId, 'Someone changed this option while you were editing.');
-      if (body.label && dup(t, body.label, optId)) return fail(409, 'duplicate', `${body.label} is already an option.`);
+      if (body.label && dup(t, body.label, optId))
+        return fail(409, 'duplicate', `${body.label} is already an option.`);
       const before = `${o.label}, ${meta.days}d, ${money(meta.perPerson)}`;
       if (body.label) o.label = body.label;
       if (body.days !== undefined) meta.days = body.days;
@@ -662,7 +818,12 @@ export function createTripService(
       o.estCost = money(meta.perPerson);
       meta.rev = bump(t);
       const replaced = body.replace && body.baseRev < meta.rev - 1;
-      log(t, v.studentId, `${nameOf(v.studentId)} changed ${before} to ${o.label}, ${meta.days}d, ${money(meta.perPerson)}${replaced ? ' (replaced a newer change)' : ''}`, optId);
+      log(
+        t,
+        v.studentId,
+        `${nameOf(v.studentId)} changed ${before} to ${o.label}, ${meta.days}d, ${money(meta.perPerson)}${replaced ? ' (replaced a newer change)' : ''}`,
+        optId,
+      );
       setReco(t);
       save(t);
       mirror(t, t.collab!.changes.at(-1)!.summary + '.');
@@ -674,19 +835,31 @@ export function createTripService(
       const r = load(v, id);
       if ('ok' in r) return r;
       const t = r.t;
-      if (!['planning', 'voting'].includes(t.status)) return fail(409, 'locked', 'Options are locked once voting has closed.');
+      if (!['planning', 'voting'].includes(t.status))
+        return fail(409, 'locked', 'Options are locked once voting has closed.');
       const o = t.options.find((x) => x.id === optId);
       const meta = t.collab!.optionMeta[optId];
       if (!o || !meta) return fail(404, 'not_found', 'That option no longer exists.');
       if (meta.by !== v.studentId && t.collab!.organizer !== v.studentId)
-        return fail(403, 'forbidden', 'Only who proposed an option, or the organizer, can remove it.');
+        return fail(
+          403,
+          'forbidden',
+          'Only who proposed an option, or the organizer, can remove it.',
+        );
       if (baseRev !== undefined && baseRev < meta.rev && !replace)
-        return conflict(t, optId, 'Someone changed this option while you were deciding to remove it.');
-      if (t.options.length <= 1) return fail(409, 'last_option', 'A trip needs at least one option.');
+        return conflict(
+          t,
+          optId,
+          'Someone changed this option while you were deciding to remove it.',
+        );
+      if (t.options.length <= 1)
+        return fail(409, 'last_option', 'A trip needs at least one option.');
       t.options = t.options.filter((x) => x.id !== optId);
       delete t.collab!.optionMeta[optId];
       t.vetoed = t.vetoed.filter((x) => x.optionId !== optId);
-      t.votes = t.votes.map((x) => ({ ...x, ranking: x.ranking.filter((q) => q !== optId) })).filter((x) => x.ranking.length > 0);
+      t.votes = t.votes
+        .map((x) => ({ ...x, ranking: x.ranking.filter((q) => q !== optId) }))
+        .filter((x) => x.ranking.length > 0);
       bump(t);
       log(t, v.studentId, `${nameOf(v.studentId)} removed ${o.label}`, optId);
       setReco(t);
@@ -699,20 +872,44 @@ export function createTripService(
       const r = load(v, id);
       if ('ok' in r) return r;
       const t = r.t;
-      if (expireIfDue(t)) { deps.trips.put(t); return fail(409, 'expired', 'This trip expired.'); }
+      if (expireIfDue(t)) {
+        deps.trips.put(t);
+        return fail(409, 'expired', 'This trip expired.');
+      }
       if (t.status !== 'voting')
-        return fail(409, 'not_voting', t.status === 'planning' ? 'Voting opens once agents have checked free days and budgets.' : 'Voting is closed.');
-      if (!t.confirmations.some((x) => x.student === v.studentId)) return fail(403, 'forbidden', 'You are not part of this trip.');
+        return fail(
+          409,
+          'not_voting',
+          t.status === 'planning'
+            ? 'Voting opens once agents have checked free days and budgets.'
+            : 'Voting is closed.',
+        );
+      if (!t.confirmations.some((x) => x.student === v.studentId))
+        return fail(403, 'forbidden', 'You are not part of this trip.');
       const c = t.collab!;
       const ids = new Set(t.options.map((o) => o.id));
       if (body.baseRev !== undefined && body.baseRev < c.rev) {
-        const touched = c.changes.filter((x) => x.rev > body.baseRev! && x.optionId && (body.ranking.includes(x.optionId) || !ids.has(x.optionId)));
-        if (touched.length) return conflict(t, touched.at(-1)!.optionId, 'An option you ranked changed while you were voting.');
+        const touched = c.changes.filter(
+          (x) =>
+            x.rev > body.baseRev! &&
+            x.optionId &&
+            (body.ranking.includes(x.optionId) || !ids.has(x.optionId)),
+        );
+        if (touched.length)
+          return conflict(
+            t,
+            touched.at(-1)!.optionId,
+            'An option you ranked changed while you were voting.',
+          );
       }
-      if (body.ranking.some((x) => !ids.has(x))) return fail(400, 'invalid_request', 'unknown option');
-      if (body.ranking.some((x) => t.vetoed.some((q) => q.optionId === x))) return fail(400, 'invalid_request', 'option was dropped by the group limits');
+      if (body.ranking.some((x) => !ids.has(x)))
+        return fail(400, 'invalid_request', 'unknown option');
+      if (body.ranking.some((x) => t.vetoed.some((q) => q.optionId === x)))
+        return fail(400, 'invalid_request', 'option was dropped by the group limits');
       const seen = [...new Set(body.ranking)];
-      const rest = live(t).map((o) => o.id).filter((x) => !seen.includes(x));
+      const rest = live(t)
+        .map((o) => o.id)
+        .filter((x) => !seen.includes(x));
       applyVote(t, v.studentId, [...seen, ...rest]);
       return { ok: true, trip: view(deps.trips.get(t.tripId)!, v)! };
     },
@@ -721,16 +918,27 @@ export function createTripService(
       const r = load(v, id);
       if ('ok' in r) return r;
       const t = r.t;
-      if (expireIfDue(t)) { deps.trips.put(t); return fail(409, 'expired', 'This trip expired.'); }
+      if (expireIfDue(t)) {
+        deps.trips.put(t);
+        return fail(409, 'expired', 'This trip expired.');
+      }
       if (t.status === 'confirmed') return { ok: true, trip: view(t, v)! };
-      if (t.status !== 'confirming') return fail(409, 'not_confirming', 'Confirmation opens when voting closes.');
+      if (t.status !== 'confirming')
+        return fail(409, 'not_confirming', 'Confirmation opens when voting closes.');
       const c = t.collab!;
-      if (!t.confirmations.some((x) => x.student === v.studentId)) return fail(403, 'forbidden', 'You are not part of this trip.');
+      if (!t.confirmations.some((x) => x.student === v.studentId))
+        return fail(403, 'forbidden', 'You are not part of this trip.');
       const optId = body.optionId ?? c.chosen!.optionId;
-      if (optId !== c.chosen!.optionId) return conflict(t, optId, 'The option up for confirmation changed.');
-      if (body.baseRev !== undefined && body.baseRev < c.rev && c.changes.some((x) => x.rev > body.baseRev! && x.optionId === optId))
+      if (optId !== c.chosen!.optionId)
+        return conflict(t, optId, 'The option up for confirmation changed.');
+      if (
+        body.baseRev !== undefined &&
+        body.baseRev < c.rev &&
+        c.changes.some((x) => x.rev > body.baseRev! && x.optionId === optId)
+      )
         return conflict(t, optId, 'This option changed after you opened it.');
-      if (t.confirmations.find((x) => x.student === v.studentId)?.confirmed && body.yes) return { ok: true, trip: view(t, v)! };
+      if (t.confirmations.find((x) => x.student === v.studentId)?.confirmed && body.yes)
+        return { ok: true, trip: view(t, v)! };
       applyConfirm(t, v.studentId, optId, body.yes);
       return { ok: true, trip: view(deps.trips.get(t.tripId)!, v)! };
     },
@@ -739,7 +947,8 @@ export function createTripService(
       const r = load(v, id);
       if ('ok' in r) return r;
       const t = r.t;
-      if (t.collab!.organizer !== v.studentId) return fail(403, 'forbidden', 'Only the organizer can close voting.');
+      if (t.collab!.organizer !== v.studentId)
+        return fail(403, 'forbidden', 'Only the organizer can close voting.');
       if (t.status !== 'voting') return fail(409, 'not_voting', 'Voting is not open.');
       if (t.votes.length === 0) return fail(409, 'no_votes', 'Nobody has voted yet.');
       closeNow(t, `${nameOf(v.studentId)} closed voting.`);
@@ -750,7 +959,8 @@ export function createTripService(
       const r = load(v, id);
       if ('ok' in r) return r;
       const t = r.t;
-      if (!['planning', 'voting'].includes(t.status)) return fail(409, 'not_open', 'This trip is no longer collecting constraints.');
+      if (!['planning', 'voting'].includes(t.status))
+        return fail(409, 'not_open', 'This trip is no longer collecting constraints.');
       const last = lastRetry.get(t.tripId) ?? 0;
       if (now() - last < 2000) return fail(409, 'too_soon', 'Retry just ran. Give it a moment.');
       lastRetry.set(t.tripId, now());
@@ -764,9 +974,12 @@ export function createTripService(
       if ('ok' in r) return r;
       const t = r.t;
       const c = t.collab!;
-      if (c.organizer !== v.studentId) return fail(403, 'forbidden', 'Only the organizer can continue without an agent.');
-      if (!['planning', 'voting'].includes(t.status)) return fail(409, 'not_open', 'This trip is no longer collecting constraints.');
-      if (!['waiting', 'failed'].includes(c.constraints.state)) return fail(409, 'not_waiting', 'Nothing is waiting.');
+      if (c.organizer !== v.studentId)
+        return fail(403, 'forbidden', 'Only the organizer can continue without an agent.');
+      if (!['planning', 'voting'].includes(t.status))
+        return fail(409, 'not_open', 'This trip is no longer collecting constraints.');
+      if (!['waiting', 'failed'].includes(c.constraints.state))
+        return fail(409, 'not_waiting', 'Nothing is waiting.');
       const names = c.constraints.waitingFor.map((w) => nameOf(w.id));
       c.constraints = {
         state: 'skipped',
@@ -786,9 +999,13 @@ export function createTripService(
       if ('ok' in r) return r;
       const t = r.t;
       const c = t.collab!;
-      if (c.organizer !== v.studentId) return fail(403, 'forbidden', 'Only the organizer can reopen a trip.');
-      if (!['failed', 'expired'].includes(t.status)) return fail(409, 'not_reopenable', 'Only failed or expired trips can be reopened.');
+      if (c.organizer !== v.studentId)
+        return fail(403, 'forbidden', 'Only the organizer can reopen a trip.');
+      if (!['failed', 'expired'].includes(t.status))
+        return fail(409, 'not_reopenable', 'Only failed or expired trips can be reopened.');
       t.status = 'voting';
+      dropCards(t, 'vote');
+      dropCards(t, 'confirm');
       t.votes = [];
       t.confirmations = t.confirmations.map((x) => ({ student: x.student, confirmed: false }));
       c.chosen = null;
@@ -810,10 +1027,16 @@ export function createTripService(
       const r = load(v, id);
       if ('ok' in r) return r;
       const t = r.t;
-      if (t.collab!.organizer !== v.studentId) return fail(403, 'forbidden', 'Only the organizer can cancel the trip.');
+      if (t.collab!.organizer !== v.studentId)
+        return fail(403, 'forbidden', 'Only the organizer can cancel the trip.');
       if (!ACTIVE.includes(t.status)) return fail(409, 'not_active', 'This trip is not active.');
       t.status = 'cancelled';
-      t.collab!.failure = { code: 'cancelled', message: `${nameOf(v.studentId)} cancelled the trip.` };
+      dropCards(t, 'vote');
+      dropCards(t, 'confirm');
+      t.collab!.failure = {
+        code: 'cancelled',
+        message: `${nameOf(v.studentId)} cancelled the trip.`,
+      };
       save(t);
       mirror(t, `${nameOf(v.studentId)} cancelled the trip.`);
       return { ok: true, trip: view(t, v)! };
@@ -827,7 +1050,10 @@ export function createTripService(
           mirror(t, 'The deadline passed. The organizer can reopen voting.');
           continue;
         }
-        if (['planning', 'voting'].includes(t.status) && ['waiting'].includes(t.collab.constraints.state)) {
+        if (
+          ['planning', 'voting'].includes(t.status) &&
+          ['waiting'].includes(t.collab.constraints.state)
+        ) {
           const off = await refreshAgents(t);
           const cur = deps.trips.get(t.tripId);
           if (!cur?.collab) continue;

@@ -346,6 +346,32 @@ describe('honest agent states', () => {
   });
 });
 
+describe('a ballot needs two live options', () => {
+  it('no vote cards while one option survives; proposing a second sends them', async () => {
+    const cur = (await current('s_ana'))!;
+    await post(url, `/v1/trips/${cur.tripId}/cancel`, {}, tok.s_ana);
+    outcome = (b) => ({
+      status: 'constraints',
+      common: ['2027-05-03', '2027-05-04'],
+      survivors: [(b.options as { id: string }[])[0]!.id],
+      dropped: (b.options as { id: string }[]).slice(1).map((o) => ({ optionId: o.id, reason: 'budget' })),
+    });
+    const cards = async () => texts(await history('s_dev', 'dm:s_dev')).filter((x) => /Trip vote: where to\?/.test(x)).length;
+    const before = await cards();
+    const made = await post<{ trip: TripViewV2 }>(url, '/v1/trips', { destination: 'Denver', month: 5 }, tok.s_ben);
+    expect(made.status).toBe(200);
+    await idle();
+    const t = (await current('s_ben'))!;
+    expect(t.status).toBe('voting');
+    expect(await cards()).toBe(before);
+    const add = await post(url, `/v1/trips/${t.tripId}/options`, { label: 'Boulder', days: 2, perPerson: 80 }, tok.s_ana);
+    expect(add.status).toBe(200);
+    await waitFor(async () => (await cards()) === before + 1);
+    outcome = defaultOutcome;
+    await post(url, `/v1/trips/${t.tripId}/cancel`, {}, tok.s_ben);
+  });
+});
+
 describe('squads are isolated; a squad with no trip says so', () => {
   it('another squad never sees, votes in or confirms this squad\'s trips', async () => {
     const s = await post<{ challengeId: string }>(url, '/v1/auth/start', { name: 'Eve', phone: '4155550777' });

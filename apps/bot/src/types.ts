@@ -97,6 +97,8 @@ export interface ConfirmApi {
   /** Router calls this first for every DM: true => consumed by a pending confirm (router must not route it). */
   tryConsume(m: InboundMessage): boolean;
   hasPending(student: StudentId): boolean;
+  /** Drop a pending or queued card whose subject is gone (its ask resolves as 'timeout'). True when one was dropped. */
+  cancel(student: StudentId, taskId: string): boolean;
 }
 
 export interface MemoryApi {
