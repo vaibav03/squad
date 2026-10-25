@@ -34,6 +34,6 @@ export type PalKey = keyof typeof PAL;
 export const hex = (c: string): number => parseInt(c.slice(1), 16);
 export const COLOR = Object.fromEntries(Object.entries(PAL).map(([k, v]) => [k, hex(v)])) as Record<PalKey, number>;
 
-/** Pixel font shipped with the Ninja Adventure pack (CC0), see assets/pixel/ui/fonts. */
-export const FONT_FAMILY = 'NinjaAdventure';
-export const FONT_STACK = `${FONT_FAMILY}, monospace`;
+/** Jersey 10 (OFL), docs/design/typography.md; 9.333 px is exactly one art pixel. */
+export const FONT_FAMILY = "'Jersey 10'";
+export const FONT_STACK = `${FONT_FAMILY}, ui-monospace, Menlo, monospace`;
