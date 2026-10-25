@@ -116,13 +116,21 @@ export function createActors(ctx: VillageContext): ActorManager {
       .setDepth(ctx.depth.actors - 1)
       .setAlpha(0);
     tween(ctx, [sprite, shadow], { alpha: 1 }, { ms: 180 });
-    const tag = pixelText(ctx, agentName(id), { color: 'wallLit', size: 9.333 })
+    const tag = pixelText(ctx, agentName(id), { color: 'cloudHi', size: 9.333 })
+      .setShadow(1, 1, '#070f1f', 0, false, true)
       .setDepth(ctx.depth.actorFx)
       .setVisible(false);
     let chain: Promise<void> = Promise.resolve();
     let moving: Phaser.Tweens.Tween | undefined;
     let tagOn = false;
-    const placeTag = () => tag.setPosition(snap(sprite.x - tag.width / 2), snap(sprite.y + 3));
+    const placeTag = () => {
+      const cam = ctx.scene.cameras.main;
+      const x = Math.min(
+        Math.max(sprite.x - tag.width / 2, cam.scrollX + 4),
+        cam.scrollX + cam.width - 4 - tag.width,
+      );
+      tag.setPosition(snap(x), snap(sprite.y + 2));
+    };
 
     const walk = (to: number) =>
       new Promise<void>((resolve) => {

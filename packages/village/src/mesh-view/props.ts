@@ -98,7 +98,7 @@ export function createCampfire(ctx: VillageContext): Campfire {
 
   return {
     x,
-    visitorSpot: (i) => x + [-30, -48, 18, -14, 10, -62][i % 6]!,
+    visitorSpot: (i) => x + [-38, -58, 32, -78, 56, -98][i % 6]!,
     pinSpot: (i) => ({ x: x + 36 + (i % 3) * 10, y: g - 23 }),
     update() {
       const wantsAnim = !ctx.calm;

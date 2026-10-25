@@ -151,6 +151,7 @@ export function createMeshView(
           ...(cmd.lines ? { lines: cmd.lines } : {}),
           minMs: cmd.minMs,
           ...(cmd.tone ? { tone: cmd.tone } : {}),
+          ...(cmd.tone && cmd.at.kind === 'commons' ? { icon: false } : {}),
           anchor: bubbleAnchor(cmd.at),
           ...(cmd.at.kind === 'commons'
             ? { lane: BUBBLE_LANE_COMMONS }

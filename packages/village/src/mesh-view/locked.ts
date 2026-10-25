@@ -93,3 +93,41 @@ export function ensureLocked(
   tex.setFilter(1);
   return true;
 }
+
+/**
+ * The lit hut art leaves a 1 px warm slit down the arch door (light spilling through the gap). Next to a
+ * standing agent it reads as a stray pole, so own-house art drops it: warm pixels left of `warmMinX`
+ * take the colour of the pixel two to the left (the dark door).
+ */
+export function dropDoorSlit(data: Uint8ClampedArray, width: number, warmMinX: number): void {
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3]! === 0) continue;
+    const x = (i / 4) % width;
+    if (x >= warmMinX || x < 2) continue;
+    const r = data[i]!;
+    const g = data[i + 1]!;
+    const b = data[i + 2]!;
+    if (WARM.some((w) => Math.abs(w[0] - r) + Math.abs(w[1] - g) + Math.abs(w[2] - b) < 40)) {
+      const j = i - 8;
+      data[i] = data[j]!;
+      data[i + 1] = data[j + 1]!;
+      data[i + 2] = data[j + 2]!;
+    }
+  }
+}
+
+export function ensureOwnLit(scene: LockedScene, from: string, to: string): boolean {
+  if (scene.textures.exists(to)) return true;
+  if (!scene.textures.exists(from)) return false;
+  const img = scene.textures.get(from).getSourceImage();
+  const tex = scene.textures.createCanvas(to, img.width, img.height);
+  const cx = tex.getContext();
+  cx.imageSmoothingEnabled = false;
+  cx.drawImage(img, 0, 0);
+  const id = cx.getImageData(0, 0, img.width, img.height);
+  dropDoorSlit(id.data, img.width, Math.floor(img.width * 0.7));
+  cx.putImageData(id, 0, 0);
+  tex.refresh();
+  tex.setFilter(1);
+  return true;
+}

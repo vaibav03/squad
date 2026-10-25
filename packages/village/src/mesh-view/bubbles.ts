@@ -16,6 +16,8 @@ export interface BubbleSpec {
   lines?: readonly string[];
   minMs: number;
   tone?: 'alert';
+  /** Show the '!' glyph inside an alert bubble (off when a world marker already shows it). */
+  icon?: boolean;
   /** Prefix lines with a dash (shared-field lists). Off for single values. */
   bullets?: boolean;
   /** Where the tail points (world px); a function re-anchors every frame (follows a walking speaker). */
@@ -56,7 +58,8 @@ export function createBubbles(ctx: VillageContext): BubbleManager {
       ...(spec.lines ?? []).slice(0, MAX_LINES).map((l) => (spec.bullets === false ? l : `- ${l}`)),
     ].join('\n');
     const label = pixelText(ctx, body, { color: 'ink', wrap: WRAP_PX, size: 9.333 });
-    const iconW = spec.tone === 'alert' ? 10 : 0;
+    const withIcon = spec.tone === 'alert' && spec.icon !== false;
+    const iconW = withIcon ? 10 : 0;
     const w = Math.max(24, Math.ceil(label.width) + PAD_X * 2 + iconW);
     const h = Math.max(18, Math.ceil(label.height) + PAD_Y * 2);
     const slice = ctx.scene.add
@@ -65,7 +68,7 @@ export function createBubbles(ctx: VillageContext): BubbleManager {
     const tail = ctx.scene.add.image(0, 0, 'mv-tail-wall-l').setOrigin(0, 0);
     const kids: Phaser.GameObjects.GameObject[] = [slice, tail, label];
     let icon: Phaser.GameObjects.Image | undefined;
-    if (spec.tone === 'alert') {
+    if (withIcon) {
       icon = ctx.scene.add.image(0, 0, 'mv-alert').setOrigin(0, 0.5);
       kids.push(icon);
     }

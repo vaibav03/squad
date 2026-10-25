@@ -2,7 +2,7 @@ import type Phaser from 'phaser';
 import type { Glow, VillageContext } from '../world/api';
 import { agentName } from '../adapter';
 import { parseAgentId } from '@squad/core';
-import { ensureLocked } from './locked';
+import { ensureLocked, ensureOwnLit } from './locked';
 import type { LockedScene } from './locked';
 import { pixelText, tween } from './util';
 
@@ -54,6 +54,7 @@ export function createHomes(ctx: VillageContext): HomeManager {
   const scene = ctx.scene as unknown as LockedScene;
   ensureLocked(scene, 'mv-hut-dark', 'mv-hut-locked-dim', false);
   ensureLocked(scene, 'mv-hut-lit', 'mv-hut-locked-lit', true);
+  ensureOwnLit(scene, 'mv-hut-lit', 'mv-hut-own-lit');
 
   if (!ctx.scene.anims.exists('mv-smoke')) {
     ctx.scene.anims.create({
