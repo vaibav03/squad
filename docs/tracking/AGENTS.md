@@ -8,9 +8,9 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `e2e/` | 5 | 18 | 173 | Claude Haiku 5.5 (10), Claude Sonnet 5.5 (3) |
-| `feature/` | 3 | 21 | 205 | Claude Sonnet 5.5 (21) |
-| `fix/` | 1 | 21 | 43 | Claude Sonnet 5.5 (18) |
+| `e2e/` | 1 | 2 | 22 | Claude Sonnet 5.5 (1) |
+| `feature/` | 3 | 30 | 306 | Claude Sonnet 5.5 (28) |
+| `fix/` | 1 | 2 | 26 | Claude Sonnet 5.5 (2) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
@@ -18,29 +18,25 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
 | `e2e/acceptance` | 2 | 22 | 2026-10-25 00:54 | 2026-10-25 00:54 | Vaibav |
-| `e2e/accounts` | 3 | 36 | 2026-10-25 00:36 | 2026-10-25 00:36 | Vaibav |
-| `e2e/courses` | 2 | 33 | 2026-10-25 00:32 | 2026-10-25 00:32 | Vaibav |
-| `e2e/ops` | 6 | 31 | 2026-10-25 00:27 | 2026-10-25 00:40 | Vaibav |
-| `e2e/rooms` | 5 | 51 | 2026-10-25 00:27 | 2026-10-25 01:09 | Vaibav |
-| `feature/agent-inspector` | 8 | 75 | 2026-10-25 01:10 | 2026-10-25 01:28 | Vaibav |
-| `feature/council-cast-art` | 1 | 43 | 2026-10-25 01:30 | 2026-10-25 01:30 | Vaibav |
-| `feature/live-discussion` | 12 | 87 | 2026-10-25 01:16 | 2026-10-25 01:31 | Vaibav |
-| `fix/e2e-bugs` | 21 | 43 | 2026-10-25 01:11 | 2026-10-25 01:25 | Vaibav |
+| `feature/agent-inspector` | 12 | 106 | 2026-10-25 01:10 | 2026-10-25 01:39 | Vaibav |
+| `feature/council-cast-art` | 4 | 104 | 2026-10-25 01:30 | 2026-10-25 01:37 | Vaibav |
+| `feature/live-discussion` | 14 | 96 | 2026-10-25 01:16 | 2026-10-25 01:39 | Vaibav |
+| `fix/honest-status` | 2 | 26 | 2026-10-25 01:33 | 2026-10-25 01:40 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 132 |
+| (no trailer) | 144 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 427 |
+| Claude Sonnet 5.5 | 436 |
 
 ## Commits landed on main by area (subject prefix)
 
 | Area | Commits |
 |---|---:|
-| (other) | 60 |
+| (other) | 72 |
 | Initial commit | 1 |
 | Merge batch 1 | 1 |
 | Merge batch 2 | 1 |
@@ -48,6 +44,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Merge batch 4 | 1 |
 | Merge batch 5 | 1 |
 | Merge batch 6 | 1 |
+| Merge batch 7 | 1 |
 | a11y | 1 |
 | accounts | 5 |
 | bot | 1 |
@@ -62,7 +59,8 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | deploy | 5 |
 | design | 18 |
 | docs | 23 |
-| e2e | 7 |
+| e2e | 19 |
+| fix | 18 |
 | hub | 5 |
 | integration | 41 |
 | interior-engine | 9 |
@@ -75,6 +73,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | merge batch4 | 3 |
 | merge batch5 | 3 |
 | merge batch6 | 3 |
+| merge batch7 | 4 |
 | mesh-crypto | 13 |
 | mesh-flows | 8 |
 | motion | 10 |
@@ -104,5 +103,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Author | Commits |
 |---|---:|
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 277 |
+| Vaibav | 298 |
 | vaibav03 | 26 |
