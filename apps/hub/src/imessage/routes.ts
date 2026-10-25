@@ -84,7 +84,7 @@ export function createImessageRoutes(deps: HubDeps): HubApp {
 
   // The Connections card: exact missing env names, the webhook URL to paste, the allowlist instructions.
   r.get('/v1/imessage/setup', user, (c) => {
-    const cfg = sendblueConfigFromEnv(process.env, deps.config.baseUrl);
+    const cfg = sendblueConfigFromEnv(deps.imessageInfo?.env ?? process.env, deps.config.baseUrl);
     return c.json({
       provider: bridgeState(deps).provider,
       missingEnv: missingSendblueEnv(cfg),

@@ -46,6 +46,8 @@ export interface HealthReport {
 
 export interface BridgeInfo {
   provider: ImessageProvider;
+  /** The env the bridge was started with (names and values never leave this module). */
+  env: Env;
   dryRun: boolean;
   gateway: IMessageGateway;
 }
@@ -66,7 +68,8 @@ export function sendblueGroupNames(deps: HubDeps): string[] {
     .map((b) => deps.directory.squad(b.squadId)?.name ?? 'a squad');
 }
 
-export function bridgeState(deps: HubDeps, env: Env = process.env): BridgeState {
+export function bridgeState(deps: HubDeps, envIn?: Env): BridgeState {
+  const env = envIn ?? deps.imessageInfo?.env ?? process.env;
   const provider = deps.imessageInfo?.provider ?? providerFromEnv(env);
   const cfg = sendblueConfigFromEnv(env, deps.config.baseUrl);
   const missing = missingSendblueEnv(cfg);
@@ -123,7 +126,8 @@ export const resetProbeCache = () => {
   probeCache = undefined;
 };
 
-export async function healthReport(deps: HubDeps, env: Env = process.env): Promise<HealthReport> {
+export async function healthReport(deps: HubDeps, envIn?: Env): Promise<HealthReport> {
+  const env = envIn ?? deps.imessageInfo?.env ?? process.env;
   const provider = deps.imessageInfo?.provider ?? providerFromEnv(env);
   const cfg = sendblueConfigFromEnv(env, deps.config.baseUrl);
   const missing = missingSendblueEnv(cfg);

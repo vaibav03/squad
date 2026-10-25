@@ -145,7 +145,7 @@ export async function attachIMessage(
     // the identity map is the dedupe: a guid is done once stored or handled (hub restart safe)
     seen: (g) => deps.imessage.inboundDone(g),
   });
-  deps.imessageInfo = { provider, dryRun: config.dryRun, gateway };
+  deps.imessageInfo = { provider, env, dryRun: config.dryRun, gateway };
   if (sbParts) deps.sendblue = createSendblueRuntime({ deps, safety: config, gateway, ...sbParts });
   const bridge = createIMessageBridge({
     deps,
