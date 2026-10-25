@@ -264,3 +264,73 @@ describe('createResilientLlm cache portability', () => {
     expect(seen).toEqual([{ system: 'CHAPTER TEXT', cache: undefined }]);
   });
 });
+
+describe('startup probe (probeOnStart)', () => {
+  const err402 = () => Object.assign(new Error('prepayment credits are depleted'), { status: 402 });
+  const mk = (complete: () => Promise<unknown>, extra: Record<string, unknown> = {}) => {
+    let t = 1_000;
+    const real = { ...new FakeLlm(), complete, json: complete, createCache: complete } as never;
+    const llm = createResilientLlm({
+      real,
+      fake: new FakeLlm(),
+      probeOnStart: true,
+      now: () => t,
+      ...extra,
+    });
+    return { llm, tick: (ms: number) => (t += ms) };
+  };
+  const settle = () => new Promise((r) => setTimeout(r, 5));
+
+  it('claims nothing while the probe is in flight, and returns immediately', async () => {
+    let release!: () => void;
+    const { llm } = mk(() => new Promise((r) => (release = () => r({ text: 'ok' }))));
+    expect(llm.status()).toMatchObject({ llm: 'fake', reason: 'probing', probing: true });
+    release();
+    await settle();
+    expect(llm.status()).toEqual({ llm: 'real' });
+  });
+
+  it('402 at startup: fake with credits_depleted from the first status after the probe, then recovers', async () => {
+    let broke = true;
+    const { llm, tick } = mk(async () => {
+      if (broke) throw err402();
+      return { text: 'ok' };
+    });
+    expect(llm.status().probing).toBe(true);
+    await settle();
+    const s = llm.status();
+    expect(s).toMatchObject({ llm: 'fake', reason: 'credits_depleted' });
+    expect(s.probing).toBeUndefined();
+    broke = false;
+    tick(61_000);
+    llm.status(); // starts the re-probe in the background
+    await settle();
+    expect(llm.status()).toEqual({ llm: 'real' });
+  });
+
+  it('a bad key re-probes every 10 minutes, not every minute', async () => {
+    const calls = { n: 0 };
+    const { llm, tick } = mk(async () => {
+      calls.n++;
+      throw Object.assign(new Error('API_KEY_INVALID'), { status: 401 });
+    });
+    await settle();
+    expect(llm.status()).toMatchObject({ reason: 'invalid_key' });
+    const after = calls.n;
+    tick(120_000);
+    llm.status();
+    await settle();
+    expect(calls.n).toBe(after);
+    tick(600_000);
+    llm.status();
+    await settle();
+    expect(calls.n).toBe(after + 1);
+  });
+
+  it('a hung probe times out and does not block anything', async () => {
+    const { llm } = mk(() => new Promise(() => undefined), { probeTimeoutMs: 20 });
+    expect(llm.status().probing).toBe(true);
+    await new Promise((r) => setTimeout(r, 60));
+    expect(llm.status().probing).toBeUndefined();
+  });
+});

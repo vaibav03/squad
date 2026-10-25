@@ -38,6 +38,8 @@ export interface TtsHealthOptions {
   now?: () => number;
   /** Re-probe spacing (default 10 min). */
   everyMs?: number;
+  /** Voice design + save creates a voice in the account; `pnpm doctor` turns it off (read-only report). Default true. */
+  allowDesign?: boolean;
   /** Per-probe deadline (default 8 s). */
   timeoutMs?: number;
   log?: (msg: string, ctx?: Record<string, unknown>) => void;
@@ -202,7 +204,7 @@ export class TtsHealth {
     for (const id of own.slice(0, MAX_OWN)) if (await attempt(id)) return { ok: true, voiceId: id };
 
     // 2. voice design then save (needs the voices_write permission; without it the call fails fast and is skipped)
-    if (!stop && eng.designVoice && eng.saveVoice) {
+    if (!stop && this.o.allowDesign !== false && eng.designVoice && eng.saveVoice) {
       try {
         const previews = await eng.designVoice(DESIGN_DESCRIPTION);
         const first = previews[0];
