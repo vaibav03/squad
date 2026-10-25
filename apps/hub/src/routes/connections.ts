@@ -19,6 +19,7 @@ import { TokenKeyError } from '../context/tokens';
 import { mergeContextBusy, purgeContextBusy } from '../context/busy';
 import { contextServiceFor, type ContextService } from '../context/service';
 import type { HubApp, HubDeps, HubEnv } from '../types';
+import { pickWebOrigin } from '../web-origin';
 
 const Connect = z.strictObject({
   provider: z.enum(['canvas', 'google']),
@@ -556,6 +557,8 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
       .slice(0, 50);
     const out = svc.startGoogleAuth(c.get('user').id, {
       returnTo: c.req.query('return_to') ?? '/squad/connections',
+      // The web origin that is actually being served: the browser's Origin header, else `return_origin`.
+      webOrigin: pickWebOrigin(deps.config, c.req.header('origin'), c.req.query('return_origin')),
       pickedFileIds: picked,
       ...(c.req.query('login_hint') ? { loginHint: c.req.query('login_hint') as string } : {}),
     });
@@ -593,7 +596,12 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     if ('error' in out)
       return err(c, 400, 'oauth_state_invalid', 'OAuth state is invalid or expired');
     mergeContextBusy(deps, out.userId);
-    return c.redirect(out.redirect);
+    if (out.redirect) return c.redirect(out.redirect);
+    // No allowed web origin was recorded and none is configured: say so plainly instead of guessing a port.
+    c.header('Cache-Control', 'no-store');
+    return c.html(
+      `<!doctype html><meta charset="utf-8"><title>Squad: ${out.status === 'connected' ? 'Connected' : 'Not connected'}</title><body style="font-family:system-ui;max-width:32rem;margin:3rem auto;padding:0 1rem"><h1>${out.status === 'connected' ? 'Connected, return to the app' : 'Google was not connected'}</h1><p>Open the Squad web app in the browser tab you started from and open Connections. The hub does not know that app's address: set <code>PUBLIC_WEB_URL</code> on the hub to redirect there automatically.</p></body>`,
+    );
   });
 
   return r;

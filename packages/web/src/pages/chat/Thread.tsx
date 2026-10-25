@@ -8,6 +8,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
+import { SourceViewerHost, hasSourceHost, openSource } from '../../components/source-viewer';
 import type { ChatCitation, ChatCitationExcerpt, ChatSummary } from '@squad/core';
 import { EmptyState, ErrorState } from '../../primitives/EmptyState';
 import { Icon } from '../../primitives/Icon';
@@ -232,6 +233,8 @@ function MessageList({
   const [atBottom, setAtBottom] = useState(true);
   const [newCount, setNewCount] = useState(0);
   const [cite, setCite] = useState<ChatCitation | null>(null);
+  // the village mounts its own source viewer; a standalone chat page needs one
+  const [ownSourceHost] = useState(() => !hasSourceHost());
   const [citeCtx, setCiteCtx] = useState<string | undefined>();
   const [quiet, setQuiet] = useState(true);
   const first = useRef<{ chat: string; baseSeq: number } | null>(null);
@@ -420,6 +423,21 @@ function MessageList({
                       compact={compact}
                       paused={paused}
                       onCite={(c, t) => {
+                        // Canvas / Drive / Calendar / Classroom citations open the shared source viewer.
+                        if (c.source && c.source.kind !== 'pdf') {
+                          openSource({
+                            file: c.file,
+                            page: 1,
+                            source: {
+                              kind: c.source.kind,
+                              id: c.source.id,
+                              ...(c.source.anchor ? { anchor: c.source.anchor } : {}),
+                              title: c.file,
+                            },
+                            ...(c.quote ? { quote: c.quote } : {}),
+                          });
+                          return;
+                        }
                         setCite(c);
                         setCiteCtx(t);
                       }}
@@ -452,6 +470,7 @@ function MessageList({
           New messages
         </button>
       ) : null}
+      {ownSourceHost && <SourceViewerHost />}
       <CitationSheet
         cite={cite}
         context={citeCtx}

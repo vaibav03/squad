@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T10:33:22.559Z",
+  "at": "2026-10-25T14:18:16.612Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -457,6 +457,30 @@
     "status": "pass",
     "note": "",
     "ms": 71697
+   },
+   {
+    "title": "the stack is served on a non-5173 origin",
+    "status": "pass",
+    "note": "",
+    "ms": 30
+   },
+   {
+    "title": "Google fixture consent lands back on the origin the browser started on",
+    "status": "pass",
+    "note": "",
+    "ms": 12059
+   },
+   {
+    "title": "Google denial also returns to the served origin, with an honest error",
+    "status": "pass",
+    "note": "",
+    "ms": 13848
+   },
+   {
+    "title": "Canvas: the extension route is honest and the calendar feed (.ics) route connects",
+    "status": "pass",
+    "note": "",
+    "ms": 5390
    }
   ]
  }

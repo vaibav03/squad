@@ -35,6 +35,7 @@ import { createLibraryRoutes } from './routes/library';
 import { createMediaRoutes } from './routes/media';
 import { createPlanRoutes } from './plans/routes';
 import { refreshBusyForTrip } from './context/busy';
+import { contextDueFor } from './context/plan';
 import { createDefaultPlanContext } from './plans/context';
 import { createPlanService } from './plans/service';
 import { contextServiceFor } from './context/service';
@@ -157,6 +158,7 @@ export function createHub(opts: HubOptions = {}): Hub {
   deps.plans = createPlanService(
     deps,
     createDefaultPlanContext(deps.db, COURSE_ID, {
+      contextDue: (squadId, members, from, to) => contextDueFor(deps, squadId, members, from, to),
       store: () => contextServiceFor(deps).store,
       squadsOf: (id) => deps.directory.squadsOf(id),
     }),

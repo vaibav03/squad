@@ -241,7 +241,7 @@ export const hub = (ctx: Ctx) => ({
     return call(
       ctx,
       'GET',
-      `/v1/connections/google/authorize?return_to=${enc(returnTo)}`,
+      `/v1/connections/google/authorize?return_to=${enc(returnTo)}&return_origin=${enc(typeof window === 'undefined' ? '' : window.location.origin)}`,
       Authorize,
     );
   },

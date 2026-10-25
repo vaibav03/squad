@@ -35,6 +35,7 @@ import {
   type SyncReport,
 } from '@squad/brain';
 import type { HubDeps } from '../types';
+import { configuredWebOrigin, isAllowedWebOrigin } from '../web-origin';
 import { createExtensionAuth, type ExtensionAuth } from './extension-auth';
 import { createTokenStore, type TokenSecrets, type TokenStore } from './tokens';
 
@@ -78,6 +79,8 @@ export interface ContextService {
     userId: string,
     input: {
       returnTo: string;
+      /** The web origin that started the flow (already validated by the route); stored with the state. */
+      webOrigin?: string | null | undefined;
       pickedFileIds?: string[] | undefined;
       loginHint?: string | undefined;
     },
@@ -86,7 +89,15 @@ export interface ContextService {
     state: string;
     code?: string | undefined;
     error?: string | undefined;
-  }): Promise<{ redirect: string; userId: string } | { error: 'oauth_state_invalid' }>;
+  }): Promise<
+    | {
+        redirect: string | null;
+        origin: string | null;
+        status: 'connected' | 'error';
+        userId: string;
+      }
+    | { error: 'oauth_state_invalid' }
+  >;
   connect(userId: string, input: ConnectInput): Promise<ConnectResult>;
   sync(userId: string, connectionId: string): Promise<SyncReport | undefined>;
   /** Refreshes or expires credentials whose clock ran out; cheap, called before every listing. */
@@ -203,6 +214,11 @@ export function createContextService(
   deps.db.exec(`CREATE TABLE IF NOT EXISTS ctx_oauth_states(
     state TEXT PRIMARY KEY, user_id TEXT NOT NULL, return_to TEXT NOT NULL, picked_json TEXT NOT NULL,
     created_at INTEGER NOT NULL, consumed INTEGER NOT NULL DEFAULT 0)`);
+  try {
+    deps.db.exec('ALTER TABLE ctx_oauth_states ADD COLUMN web_origin TEXT');
+  } catch {
+    /* column exists */
+  }
   const newId = () => `conn_${randomBytes(9).toString('hex')}`;
   const OAUTH_TTL_MS = 30 * 60_000;
   /** PKCE verifier derived from the state with a server key: nothing secret to store, nothing to leak in the URL. */
@@ -253,21 +269,25 @@ export function createContextService(
   };
 
   const safeReturn = (v: string) => v.startsWith('/') && !v.startsWith('//') && !v.includes('\\');
+  /**
+   * Where the browser goes after the callback: the origin that started the flow (stored with the state and
+   * re-validated here), else the explicitly configured PUBLIC_WEB_URL, else null (the hub serves a plain page).
+   */
   const webRedirect = (
-    returnTo: string,
+    row: { return_to: string; web_origin: string | null },
     status: 'connected' | 'error',
     mode: 'live' | 'fixture',
     message?: string,
-  ) => {
-    const u = new URL(
-      safeReturn(returnTo) ? returnTo : '/settings/connections',
-      deps.config.webUrl,
-    );
+  ): { redirect: string | null; origin: string | null } => {
+    const origin =
+      isAllowedWebOrigin(deps.config, row.web_origin) ?? configuredWebOrigin(deps.config);
+    if (!origin) return { redirect: null, origin: null };
+    const u = new URL(safeReturn(row.return_to) ? row.return_to : '/squad/connections', origin);
     u.searchParams.set('provider', 'google');
     u.searchParams.set('status', status);
     u.searchParams.set('mode', mode);
     if (message) u.searchParams.set('message', Buffer.from(message).toString('base64url'));
-    return u.toString();
+    return { redirect: u.toString(), origin };
   };
 
   const svc: ContextService = {
@@ -533,9 +553,16 @@ export function createContextService(
         .run(deps.now() - OAUTH_TTL_MS);
       deps.db
         .prepare(
-          'INSERT INTO ctx_oauth_states(state, user_id, return_to, picked_json, created_at) VALUES(?,?,?,?,?)',
+          'INSERT INTO ctx_oauth_states(state, user_id, return_to, picked_json, created_at, web_origin) VALUES(?,?,?,?,?,?)',
         )
-        .run(state, userId, input.returnTo, JSON.stringify(input.pickedFileIds ?? []), deps.now());
+        .run(
+          state,
+          userId,
+          input.returnTo,
+          JSON.stringify(input.pickedFileIds ?? []),
+          deps.now(),
+          input.webOrigin ?? null,
+        );
       if (oauth)
         return {
           authorizationUrl: buildGoogleAuthorizationUrl(oauth, {
@@ -554,7 +581,7 @@ export function createContextService(
     async completeGoogleAuth({ state, code, error }) {
       const row = deps.db
         .prepare(
-          'SELECT user_id, return_to, picked_json, created_at, consumed FROM ctx_oauth_states WHERE state=?',
+          'SELECT user_id, return_to, picked_json, created_at, consumed, web_origin FROM ctx_oauth_states WHERE state=?',
         )
         .get(state) as
         | {
@@ -563,6 +590,7 @@ export function createContextService(
             picked_json: string;
             created_at: number;
             consumed: number;
+            web_origin: string | null;
           }
         | undefined;
       if (!row || row.consumed === 1 || deps.now() - row.created_at > OAUTH_TTL_MS)
@@ -570,7 +598,8 @@ export function createContextService(
       deps.db.prepare('UPDATE ctx_oauth_states SET consumed=1 WHERE state=?').run(state);
       const mode: 'live' | 'fixture' = oauth ? 'live' : 'fixture';
       const fail = (msg: string) => ({
-        redirect: webRedirect(row.return_to, 'error', mode, msg),
+        ...webRedirect(row, 'error', mode, msg),
+        status: 'error' as const,
         userId: row.user_id,
       });
       if (error || !code)
@@ -650,7 +679,11 @@ export function createContextService(
         store.patchSyncState(id, { retryAfter: null });
         await svc.sync(row.user_id, id);
         deps.log.info('context.google_connected', { connectionId: id, mode, scopes });
-        return { redirect: webRedirect(row.return_to, 'connected', mode), userId: row.user_id };
+        return {
+          ...webRedirect(row, 'connected', mode),
+          status: 'connected' as const,
+          userId: row.user_id,
+        };
       } catch (e) {
         // Google's error code only: never a token, code or response body.
         deps.log.warn('context.google_oauth_failed', {

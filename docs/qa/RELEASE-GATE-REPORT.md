@@ -61,8 +61,7 @@ Fixture steps: 24 PASS, 2 FAIL, 0 NOT_BUILT, 0 not run, of 26. A NOT_BUILT step 
 |---|---|---|---|
 | `no_google_client` | BLOCKED | GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET are not set: the Google OAuth client and consent screen are not registered. | [runbook](RELEASE-GATE.md#google-oauth-client-and-consent-screen) |
 | `no_own_google_account` | BLOCKED | GATE_OWN_GOOGLE_EMAIL is not set: real runs only ever use the user's own Google account. | [runbook](RELEASE-GATE.md#google-oauth-client-and-consent-screen) |
-| `no_canvas_feed` | BLOCKED | GATE_CANVAS_FEED_URL / GATE_OWN_CANVAS_HOST are not set: no Canvas calendar feed of the user's own to read. | [runbook](RELEASE-GATE.md#canvas-institution-token-or-feed) |
-| `token_disabled_or_missing` | BLOCKED | No Canvas personal access token (many institutions disable student tokens). | [runbook](RELEASE-GATE.md#canvas-institution-token-or-feed) |
+| `no_canvas_session_or_feed` | BLOCKED | No Canvas route of your own is set up: real Canvas needs your signed-in Canvas SESSION via the extension (install the unpacked extension from apps/extension, sign in to Canvas, GATE_CANVAS_SESSION_VERIFIED=1) OR an .ics calendar-feed URL (GATE_CANVAS_FEED_URL + GATE_OWN_CANVAS_HOST). A student API token is optional and never the blocker. | [runbook](RELEASE-GATE.md#canvas-session-or-feed) |
 | `apple_unverified` | BLOCKED | imessage-kit on this macOS has no recorded passing allowlisted run (Full Disk Access, Automation, Messages signed in). | [runbook](RELEASE-GATE.md#apple-behaviour-and-permissions) |
 | `needs_second_person` | BLOCKED | A real multi-participant group needs other consenting people; Apple has no API to create groups. | [runbook](RELEASE-GATE.md#real-multi-person-imessage-group) |
 | `llm_credits` | BLOCKED | GET /v1/status says the model is the demo stand-in (no key, rejected key, or depleted Gemini credits). | [runbook](RELEASE-GATE.md#gemini-credits-live-and-elevenlabs-plan) |
