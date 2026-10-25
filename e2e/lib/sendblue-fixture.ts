@@ -23,3 +23,21 @@ export const sendblueStackEnv = (): NodeJS.ProcessEnv => ({
   SENDBLUE_WEBHOOK_SECRET: SB_WEBHOOK_SECRET,
   SENDBLUE_API_BASE: `http://127.0.0.1:${SB_FAKE_PORT}`,
 });
+
+import type { Actor } from './helpers';
+import { openChat } from './chat';
+
+/** The first-run chat gate ("connect your learning context") is skipped, as a student who chose "Skip for now" would. */
+export async function openChatPastGate(a: Actor, chatId: string): Promise<void> {
+  await a.page.goto('/squad/chat');
+  const skip = a.page.getByRole('button', { name: 'Skip for now' });
+  await a.page
+    .locator('[data-testid="chat-list"],[data-testid="chat-thread"],[data-testid="context-gate"]')
+    .first()
+    .waitFor({ timeout: 25_000 });
+  if (await skip.isVisible().catch(() => false)) {
+    await skip.click();
+    await a.page.getByRole('button', { name: 'Skip anyway' }).click();
+  }
+  await openChat(a, chatId);
+}

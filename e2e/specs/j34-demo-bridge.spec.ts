@@ -1,5 +1,6 @@
 import { actor, api, apiLogin, blocked, expect, shot, test } from '../lib/helpers';
-import { GROUP, openChat } from '../lib/chat';
+import { GROUP } from '../lib/chat';
+import { openChatPastGate } from '../lib/sendblue-fixture';
 
 // J34b: the Demo/Fixture iMessage bridge on the DEFAULT e2e stack (no Sendblue credentials, nothing real is sent).
 // Whole loop: switch on from Connections -> a text from the demo phone -> same web group ("via iMessage (demo)") ->
@@ -32,7 +33,7 @@ test('J34b demo bridge: off by default, switch on from Connections, whole loop, 
   const inv = (await (await post('/v1/squads/sq_demo/invites', { maxUses: null }, tok)).json()) as { invite: { code: string } };
   expect((await post('/v1/invites/join', { code: inv.invite.code }, dee)).status).toBeLessThan(300);
   // the demo is bound to the squad of whoever switched it on (s_ana: sq_demo)
-  await openChat(ana, GROUP);
+  await openChatPastGate(ana, GROUP);
   const r = await post('/v1/imessage/demo/inbound', { text: 'hello from the demo phone e2e-demo-in' }, dee);
   expect(r.status).toBe(200);
   const m = ana.page.locator('[data-testid="chat-message"]', { hasText: 'e2e-demo-in' });

@@ -1,5 +1,6 @@
 import { actor, api, apiLogin, expect, shot, test, blocked } from '../lib/helpers';
-import { GROUP, openChat, say } from '../lib/chat';
+import { GROUP, say } from '../lib/chat';
+import { openChatPastGate } from '../lib/sendblue-fixture';
 import { HUB } from '../lib/env';
 import { startFakeSendblue, type FakeSendblue } from '../../apps/hub/src/imessage/sendblue/fake-sendblue';
 import {
@@ -47,7 +48,7 @@ test('J34 sendblue is wired in this stack (fixture): else blocked, never faked',
 
 test('J34 header: unconfigured, not-yet-bound, degraded, dry-run and fixture states', async ({ browser }) => {
   const ana = await actor(browser, 's_ana');
-  await openChat(ana, GROUP);
+  await openChatPastGate(ana, GROUP);
   const ind = ana.page.getByTestId('chat-imessage-indicator').first();
   // real hub: Sendblue is configured with fixtures and no group is bound yet
   await expect(ind).toContainText(/Sendblue: connected to no group yet, last inbound never, last status never, 0 queued/, { timeout: 20_000 });
@@ -125,7 +126,7 @@ test('J34 link the number, bind the Sendblue group, and an inbound @cubbie lands
     .toBe(true);
 
   const ana = await actor(browser, 's_ana');
-  await openChat(ana, GROUP);
+  await openChatPastGate(ana, GROUP);
   await fake.inbound({ from: SB_ANA, content: 'hello from my phone e2e-inbound', groupId: SB_GROUP });
   const m = bubble(ana.page, 'e2e-inbound');
   await expect(m).toBeVisible({ timeout: 25_000 });
@@ -148,7 +149,7 @@ test('J34 link the number, bind the Sendblue group, and an inbound @cubbie lands
 
 test('J34 delivery badge: queued -> sent -> delivered -> read, and failed + retry', async ({ browser }) => {
   const ana = await actor(browser, 's_ana');
-  await openChat(ana, GROUP);
+  await openChatPastGate(ana, GROUP);
   const sent = () => fake.sent.filter((s) => s.endpoint === 'send-group-message');
   // a web message that mentions an agent is mirrored to the bound Sendblue group
   const n0 = sent().length;
@@ -194,7 +195,7 @@ test('J34 delivery badge: queued -> sent -> delivered -> read, and failed + retr
 
 test('J34 a forged webhook is refused and nothing appears; secrets are not in anything the browser got', async ({ browser }) => {
   const ana = await actor(browser, 's_ana');
-  await openChat(ana, GROUP);
+  await openChatPastGate(ana, GROUP);
   const r = await fake.inbound({ from: SB_ANA, content: 'forged e2e-forged', groupId: SB_GROUP, secret: 'not-the-secret' });
   expect(r.status).toBe(401);
   await ana.page.waitForTimeout(1500);
