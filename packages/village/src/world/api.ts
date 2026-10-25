@@ -253,3 +253,10 @@ export interface VillageHandle {
   /** Test/screenshot hooks. */
   debug: { game(): Phaser.Game | undefined; ctx(): VillageContext | undefined; fps(): number };
 }
+
+/* ---------- module-owned asset specs ---------- */
+/** Repo-relative asset a world part needs. Boot queues every `ASSETS` list (parallax, character, hud, ...). */
+export type AssetSpec =
+  | { type: 'image'; key: string; path: string }
+  | { type: 'spritesheet'; key: string; path: string; frameWidth: number; frameHeight: number; endFrame?: number }
+  | { type: 'atlas'; key: string; path: string; atlasPath: string };
