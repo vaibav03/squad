@@ -197,3 +197,48 @@ export function parsePlanReply(text: string): PlanReply | null {
   if (/^(?:show\s+)?(?:the\s+)?plan\s*(?:status)?\s*[?.!]?$/.test(t)) return { kind: 'show' };
   return null;
 }
+
+// ---- dates (UTC calendar days) ----
+const DAY = 86_400_000;
+export const ymd = (ms: number): string => new Date(ms).toISOString().slice(0, 10);
+export const addDays = (date: string, n: number): string =>
+  ymd(Date.parse(`${date}T00:00:00Z`) + n * DAY);
+export const daysBetween = (a: string, b: string): number =>
+  Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / DAY);
+export const isRealDate = (s: string): boolean => {
+  const t = Date.parse(`${s}T00:00:00Z`);
+  return Number.isFinite(t) && ymd(t) === s;
+};
+
+
+/** Exam date from free text: ISO, `Nov 4`, `November 4 2026`, `11/4`, `tomorrow`. Returns a `YYYY-MM-DD` or undefined. */
+export function parseExamDate(text: string, now: number): string | undefined {
+  const t = text.toLowerCase();
+  const year = new Date(now).getUTCFullYear();
+  const mk = (y: number, m: number, d: number): string | undefined => {
+    const s = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    if (!isRealDate(s)) return undefined;
+    if (s < ymd(now) && y === year) return mk(year + 1, m, d); // a bare month/day means the next one
+    return s;
+  };
+  const iso = /\b(\d{4})-(\d{2})-(\d{2})\b/.exec(t);
+  if (iso) return isRealDate(iso[0]) ? iso[0] : undefined;
+  const months = [
+    'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
+  ];
+  const named = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(\d{4}))?\b/.exec(t);
+  if (named) return mk(named[3] ? Number(named[3]) : year, months.indexOf(named[1]!) + 1, Number(named[2]));
+  const rev = /\b(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b(?:,?\s+(\d{4}))?/.exec(t);
+  if (rev) return mk(rev[3] ? Number(rev[3]) : year, months.indexOf(rev[2]!) + 1, Number(rev[1]));
+  const slash = /\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/.exec(t);
+  if (slash) {
+    const y = slash[3] ? (slash[3].length === 2 ? 2000 + Number(slash[3]) : Number(slash[3])) : year;
+    return mk(y, Number(slash[1]), Number(slash[2]));
+  }
+  if (/\btomorrow\b/.test(t)) return ymd(now + DAY);
+  const inDays = /\bin\s+(\d{1,2})\s+days?\b/.exec(t);
+  if (inDays) return ymd(now + Number(inDays[1]) * DAY);
+  const inWeeks = /\bin\s+(\d{1,2})\s+weeks?\b/.exec(t);
+  if (inWeeks) return ymd(now + Number(inWeeks[1]) * 7 * DAY);
+  return undefined;
+}

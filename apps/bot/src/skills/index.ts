@@ -35,6 +35,8 @@ import type { Scheduler } from '../scheduler/scheduler';
 import { chatSkill } from './chat';
 import { createMediaSkills } from './media';
 import { createLiveSkill, type LiveStarter } from './live';
+import { createSharedPlanSkill } from '../plan/skill';
+import type { PlanPort } from '../plan/port';
 
 export interface MediaWiring {
   podcast: Omit<PodcastDeps, 'material' | 'outDir'>;
@@ -63,6 +65,8 @@ export interface SkillDeps {
   shared?: { brain?: Brain; mastery?: MasteryStore; council?: CouncilService };
   /** Starts a live agent discussion through the hub; omit and `discuss:` is not registered. */
   live?: LiveStarter;
+  /** The hub's shared study plan. When given, `study plan` in a group creates a shared plan instead of the private DM flow. */
+  plans?: PlanPort;
   /** Shared proactive scheduler (main starts it once the bot exists). A private one is created if omitted. */
   proactive?: Scheduler;
 }
@@ -113,6 +117,7 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
     createQuizSkill({ engine, courseIdFor }),
     createFeynmanSkill({ engine: feynman, courseIdFor }),
     createStepDiffSkill({ engine: stepDiff, courseIdFor }),
+    ...(d.plans ? [createSharedPlanSkill({ plans: d.plans, ...now })] : []),
     createStudyPlanSkill({
       mastery,
       scheduler: d.scheduler ?? createStubScheduler(now),

@@ -40,6 +40,8 @@ export interface OutboundMessage {
   text?: string;
   attachments?: Attachment[];
   personaId?: string;
+  /** Structured card for transports that render one (the web chat); others show `text` only. */
+  card?: import('./chat').ChatCard;
 }
 
 /** `'timeout'` is part of the contract (treated as "no" by callers). */
