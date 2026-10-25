@@ -363,7 +363,7 @@ export async function runCoursePlan(
     ...(out.dissent ? [`Dissent: ${out.dissent}`] : []),
     ...(repairedAll.length ? [`Fixed along the way: ${repairedAll.slice(0, 3).join('; ')}.`] : []),
     ...(usedFallback
-      ? ['(The model was unavailable, so the notes came from built-in rules.)']
+      ? ['(Fallback (demo): the model was unavailable, so the notes came from built-in rules.)']
       : []),
     SAMPLE_DISCLOSURE,
   ].join('\n');

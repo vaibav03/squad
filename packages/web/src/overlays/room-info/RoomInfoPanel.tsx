@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { RoomInfo } from '@squad/village/rooms';
 import { OverlayFrame, LvIcon } from '../kit';
 import { SpeakerDot } from './RoomTranscript';
@@ -12,7 +12,7 @@ export interface RoomInfoPanelProps {
   open: boolean;
   onClose: () => void;
   /** Runs the room's phrase. When absent there is no Run it button. */
-  onRun?: (phrase: string) => void;
+  onRun?: (phrase: string) => unknown;
   returnFocusTo?: HTMLElement | null;
   calm?: boolean;
   /** Who is speaking right now in the live room ('chill', 'Grind', 'chair'...); that member's avatar plays its talking loop. */
@@ -57,6 +57,28 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const phrase = info.how.phrase;
+  const [runState, setRunState] = useState<'idle' | 'pending' | 'sent'>('idle');
+  const runTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (runTimer.current) clearTimeout(runTimer.current);
+    },
+    [],
+  );
+  /** One press = one send: the button is disabled while it is pending, then shows Sent for a moment. */
+  const run = async (p: string) => {
+    if (!onRun || runState === 'pending') return;
+    setRunState('pending');
+    let ok = true;
+    try {
+      ok = (await onRun(p)) !== false;
+    } catch {
+      ok = false;
+    }
+    setRunState(ok ? 'sent' : 'idle');
+    if (runTimer.current) clearTimeout(runTimer.current);
+    runTimer.current = setTimeout(() => setRunState('idle'), 3000);
+  };
   const mastery = useChapterFor(info.slot.startsWith('chapter-') ? info.slot : undefined);
 
   const copy = async () => {
@@ -174,10 +196,13 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
                   <button
                     type="button"
                     className="lv-btn lv-btn--primary rr-run"
-                    onClick={() => onRun(phrase)}
+                    data-state={runState}
+                    disabled={runState === 'pending'}
+                    aria-disabled={runState === 'pending' ? 'true' : undefined}
+                    onClick={() => void run(phrase)}
                   >
                     <LvIcon name="chevron" size={18} />
-                    Run it
+                    {runState === 'pending' ? 'Sending' : runState === 'sent' ? 'Sent' : 'Run it'}
                   </button>
                 ) : null}
               </div>
