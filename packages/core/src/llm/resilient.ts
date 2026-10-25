@@ -2,10 +2,12 @@ import { classifyGeminiError } from './errors';
 import type { CacheHandle, Llm, LlmCacheRequest, LlmJsonRequest, LlmRequest } from './types';
 
 export type LlmFallbackReason =
-  'credits_depleted' | 'rate_limited' | 'invalid_key' | 'no_key' | 'forced_fake';
+  'credits_depleted' | 'rate_limited' | 'invalid_key' | 'no_key' | 'forced_fake' | 'probing';
 
 export interface LlmStatus {
   llm: 'real' | 'fake';
+  /** true only while the startup probe is in flight (llm is 'fake', reason 'probing': nothing is claimed yet) */
+  probing?: boolean;
   reason?: LlmFallbackReason;
   /** epoch ms of the (latest) switch to fake */
   since?: number;
@@ -30,6 +32,14 @@ export interface ResilientLlmOptions {
   probeEveryMs?: number;
   /** Probe spacing for an invalid key (default 10 min). */
   invalidKeyProbeEveryMs?: number;
+  /**
+   * Probe the real model once, in the background, as soon as the wrapper is built (never blocks). Until it
+   * answers the status is `{ llm: 'fake', reason: 'probing', probing: true }` and requests are served by the
+   * fake, so nothing claims a real model that has not proven it works. Off by default (unit tests).
+   */
+  probeOnStart?: boolean;
+  /** Give up on a probe after this long (default 8 s); a timeout or network error leaves the model as real. */
+  probeTimeoutMs?: number;
 }
 
 export type ResilientLlm = Llm & { status(): LlmStatus };
@@ -51,9 +61,18 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
   let state: LlmStatus = o.forceFake
     ? { llm: 'fake', reason: 'forced_fake', since: now() }
     : o.real
-      ? { llm: 'real' }
+      ? o.probeOnStart
+        ? { llm: 'fake', reason: 'probing', probing: true, since: now() }
+        : { llm: 'real' }
       : { llm: 'fake', reason: 'no_key', since: now() };
   let probing = false;
+  const timeoutMs = o.probeTimeoutMs ?? 8000;
+  const withTimeout = <T>(p: Promise<T>): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error('probe timed out')), timeoutMs);
+      t.unref?.();
+      p.then(resolve, reject).finally(() => clearTimeout(t));
+    });
   // A cache handle only works on the model that made it: when the other model answers, the handle is dropped
   // and the context it held is sent as the system prompt instead.
   const caches = new Map<string, { owner: 'real' | 'fake'; system?: string }>();
@@ -93,7 +112,7 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
     const real = o.real;
     void (async () => {
       try {
-        await real.complete({ messages: 'ok', maxTokens: 1, model: 'fast' });
+        await withTimeout(real.complete({ messages: 'ok', maxTokens: 1, model: 'fast' }));
         state = { llm: 'real' };
         o.onRecover?.({ ...state });
       } catch (e) {
@@ -101,6 +120,37 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
         const at = now();
         state = { ...state, reason };
         schedule(reason, at);
+      } finally {
+        probing = false;
+      }
+    })();
+  }
+
+  /** First probe: decides real or fake before any traffic can claim otherwise. */
+  function startupProbe(): void {
+    const real = o.real;
+    if (!real || state.reason !== 'probing') return;
+    probing = true;
+    void (async () => {
+      try {
+        await withTimeout(real.complete({ messages: 'ok', maxTokens: 1, model: 'fast' }));
+        state = { llm: 'real' };
+      } catch (e) {
+        const reason = reasonOf(e);
+        const at = now();
+        if (reason) {
+          state = {
+            llm: 'fake',
+            reason,
+            since: at,
+            lastProbeAt: at,
+            nextProbeAt: at + everyFor(reason),
+          };
+          o.onSwitch?.({ ...state });
+        } else {
+          // unknown failure (network, 5xx, timeout): no proof either way, so behave as before and let real traffic decide
+          state = { llm: 'real' };
+        }
       } finally {
         probing = false;
       }
@@ -131,6 +181,8 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
       return f(o.fake, true);
     }
   }
+
+  if (o.probeOnStart) startupProbe();
 
   return {
     status() {

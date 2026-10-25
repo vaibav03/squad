@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { VoicesUnavailableError } from '@squad/core';
 import { requireViewer } from '../auth';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 
@@ -47,7 +48,18 @@ export function createMediaRoutes(deps: HubDeps): HubApp {
       cache.delete(key);
       cache.set(key, hit);
     } else {
-      const fresh = await deps.ports.media.preview(p.data.voiceId, p.data.text);
+      let fresh;
+      try {
+        fresh = await deps.ports.media.preview(p.data.voiceId, p.data.text);
+      } catch (e) {
+        // speech is known to be off: say so plainly (the personas page shows `message`) instead of a 500
+        if (e instanceof VoicesUnavailableError)
+          return c.json(
+            { error: { code: 'voices_unavailable', reason: e.reason, message: e.message } },
+            503,
+          );
+        throw e;
+      }
       if (!fresh) return c.json({ error: { code: 'not_found' } }, 404);
       hit = fresh;
       cache.set(key, hit);
