@@ -276,3 +276,36 @@ Frames: `docs/design/shots/merge6/`. Not run: `pnpm e2e` (Playwright acceptance 
 
 - Landing merge commit: `8f5f49ec6629ade9f5397ce8dbd334edf33ef398` (parents `d9c8d349e8c9746c8aeb326e0cc19e6f29546f99` = tag `pre-merge-batch6`, `10198617d3112c08c986f218dd7253b34170f875` = origin/merge/batch6; only tracker docs differ).
 - Rollback: `git revert -m 1 8f5f49ec6629ade9f5397ce8dbd334edf33ef398`.
+
+## Batch 7: fix/e2e-bugs, e2e/accounts, e2e/courses, e2e/ops, e2e/rooms into main
+
+Branch `merge/batch7` (worktree `squad-wt/merge7`), landed as a true `--no-ff` merge. Not merged on purpose: e2e/acceptance, feature/agent-inspector, feature/live-discussion, feature/council-cast-art (still being built).
+
+### Manual resolutions
+
+1. e2e/accounts, e2e/courses, e2e/ops and e2e/rooms each added their own copy of the shared e2e harness (`e2e/lib/*`, `e2e/specs/j01..j05,j09,j15`, `stack-up.sh`, `stack-down.sh`), so every merge gave add/add conflicts in those files. Main's copy (newer, already formatted, with the agent ports and the secret patterns) was kept; each branch's own specs (`j06`, `j08`, `j10`..`j14`), screenshots and `docs/qa/E2E-BUGS-*.md` came in untouched. `docs/qa/E2E-REPORT.md` and `e2e-results.json` (conflict with e2e/rooms) kept main's.
+2. e2e/ops carried an older copy of the security and observability code; its `apps/hub/src/app.ts` conflict was resolved with main's (already merged in batch 5), so nothing of ops was lost: its unique commits are the harness reuse, screenshots and the defect log.
+3. `packages/web/src/pages/chat/Chat.test.tsx` ("Yesterday" separator depended on the time of day): the suite now runs on a fixed clock (`vi.useFakeTimers({ toFake: ['Date'] })`, local noon on 2026-10-15; timers stay real). Not skipped.
+4. Members page 404 for the dev-login demo user: cause was that the seeded `sq_demo` existed only in the in-memory directory, not in the accounts store, so `GET /v1/squads/sq_demo/invites` returned `not_found` and the page showed "Something went wrong" (it also showed s_ana as a plain member). Fix: new `SquadsStore.adopt(squadId)` turns the seeded demo squad into a real squad at boot (squads row, member rows, first member `s_ana` as owner; idempotent), called from `createHub` right after `seedDemo` when seeding. Test: `apps/hub/test/smoke/members-demo.smoke.test.ts` (s_ana is owner, members and roles load, an invite is created and listed with its link; a non-owner member sees the squad but gets 403 on invites).
+5. Lint: unused vars and `import()` types in the courses e2e spec; the new smoke test.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` (0 lint errors) | pass |
+| `pnpm demo:live` | `demo:live OK` |
+| `pnpm test:smoke hub` | 99 tests pass (97 before plus the 2 new ones) |
+| Browser (hub :18877, web :15277, `--no-agents`) | /squad/members as s_ana: 0 page errors, 0 HTTP >= 400, shows "Demo squad", Ana (you) Owner, Ben/Chi/Dev Member with Make owner / Remove, Invite people with "New invite link"; village 1280x800 and 390x844, courses, chat: 0 errors, chat answered |
+
+Frames: `docs/design/shots/merge7/`. The e2e suites themselves (`pnpm e2e`) were not run here.
+
+### Known gaps
+
+- With the demo squad adopted, "Leave squad" or removing members on the demo squad acts on real rows (it persists in the hub database file across restarts).
+- The merged e2e specs from the four branches were not executed in this merge.
+
+### Landing (batch 7)
+
+- Landing merge commit: `c853f56bcddc7e4a9b10a0b2e939206569574b19` (parents `c074a130806e19b87435d3ae2fdab924c0df76f0` = tag `pre-merge-batch7`, `5c636fe2545045b2c38e6acc11591d3b2891e9f2` = origin/merge/batch7; only tracker docs differ).
+- Rollback: `git revert -m 1 c853f56bcddc7e4a9b10a0b2e939206569574b19`.
