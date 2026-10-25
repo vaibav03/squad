@@ -23,13 +23,20 @@ vi.mock('@squad/village/sources', () => ({
 vi.mock('@squad/village/inspector', () => ({
   createInspectorStore: () => ({ attach: () => () => {} }),
 }));
+vi.mock('@squad/village/council', () => ({
+  createCouncilBoardStore: () => ({ attach: () => () => {} }),
+}));
 vi.mock('../../overlays/inspector/bridge', () => ({ setInspectorStore: () => {} }));
 vi.mock('../chat/ChatDock', () => ({ ChatDock: () => null }));
 vi.mock('../../overlays/room-info', () => ({ RoomLayer: () => null }));
 vi.mock('../../overlays/mastery', () => ({ MasteryLayer: () => null }));
 vi.mock('../../overlays/inspector', () => ({ InspectorPanel: () => null }));
 vi.mock('../../components/source-viewer', () => ({ SourceViewerHost: () => null }));
-vi.mock('../../council', () => ({ CouncilHall: () => null }));
+vi.mock('../../council', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../council')>()),
+  CouncilHall: () => null,
+  CouncilBoardHost: () => null,
+}));
 vi.mock('./OverlayHost', () => ({ OverlayHost: () => null }));
 vi.mock('../../primitives/Toast', () => ({ useToast: () => ({ toast: () => {} }) }));
 
