@@ -15,6 +15,7 @@ import { useHubReady } from './bootstrap';
 import { OfflineState } from '../../primitives/EmptyState';
 import { useSetupChecklist } from './setup-state';
 import { HomePlanCard } from './PlanCard';
+import { HealthBanner } from '../health/HealthBanner';
 import './home.css';
 
 export default function HomePage() {
@@ -42,6 +43,7 @@ export default function HomePage() {
 
   return (
     <Page title={`Good evening, ${name}`} eyebrow="Your squad">
+      {live && ready ? <HealthBanner /> : null}
       <section className="sq-home__hero sq-scene" aria-labelledby="hero-title">
         <NightScene className="sq-home__scene" />
         <div className="sq-home__heroinner">
