@@ -62,6 +62,7 @@ export type SceneCommand =
       readonly lines?: readonly string[]; // shared[] labels, one per line
       readonly minMs: number; // dwell: >= 1200 ms per 20 chars
       readonly dissent?: boolean; // red-lined dissenter bubble that stays
+      readonly tone?: 'alert'; // red accent (conflict, dropped option, denied request)
     }
   | { readonly type: 'dismissBubble'; readonly key: string }
   /** Red "!" alert. `at` is the commons for mediator vetoes, a door for gate blocks. */

@@ -62,6 +62,7 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
         text: kindText,
         lines: event.shared,
         minMs: dwellMs([kindText, ...event.shared].join(' ')),
+        ...(alert ? { tone: 'alert' as const } : {}),
       });
       if (alert) {
         out.push({
