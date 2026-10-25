@@ -4,7 +4,8 @@
 // Prints one JSON line per (who, cond, scenario) with counts. A run is OK when, within the deadline, the page shows
 // readable content that is not a loading state (a page, an empty state, or an error state with Retry), the document
 // title / main landmark / nav highlight match the route, and nothing flips back to blank.
-import { chromium } from '@playwright/test';
+// PW_MODULE: absolute path to a playwright entry (e.g. a scratch install); CHROME: Chrome for Testing binary.
+const { chromium } = await import(process.env.PW_MODULE ?? '@playwright/test');
 
 const arg = (k, d) => {
   const i = process.argv.indexOf(`--${k}`);
@@ -102,6 +103,7 @@ const probe = () => {
   };
 };
 
+const RATE429 = {};
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Waits until settled content (not loading) or the deadline. Returns {ok, ms, snap, why}. */
@@ -207,6 +209,9 @@ async function fresh(browser, token) {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  page.on('response', (r) => {
+    if (r.status() === 429) RATE429[new URL(r.url()).pathname] = (RATE429[new URL(r.url()).pathname] ?? 0) + 1;
+  });
   await applyCond(ctx, page);
   return { ctx, page, errors };
 }
@@ -292,7 +297,7 @@ async function pool(items, par, fn) {
   return out;
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 try {
   const token = WHO === 'anon' ? null : WHO === 'seed' ? await seededToken() : await newAccount();
   const jobs = [];
@@ -327,7 +332,7 @@ try {
   const ok = res.filter((r) => r.ok).length;
   console.log(
     JSON.stringify(
-      { who: WHO, cond: COND, scenario: SCEN, total, ok, bad: total - ok, by },
+      { who: WHO, cond: COND, scenario: SCEN, total, ok, bad: total - ok, r429: RATE429, by },
       null,
       0,
     ),

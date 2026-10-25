@@ -137,7 +137,8 @@ export function createHub(opts: HubOptions = {}): Hub {
   }
 
   const app: HubApp = new Hono<HubEnv>();
-  applySecurity(app, deps, opts.security);
+  // CORS goes BEFORE the security middleware: a 429 (rate limit), 413 or 403 answered by it must still carry the
+  // Access-Control-* headers, or the browser hides the status and the web shows a bare network failure ("offline").
   app.use(
     '*',
     cors({
@@ -151,10 +152,11 @@ export function createHub(opts: HubOptions = {}): Hub {
         'x-squad-id',
       ],
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      exposeHeaders: ['content-type', 'x-squad-token'],
+      exposeHeaders: ['content-type', 'x-squad-token', 'retry-after'],
       credentials: true,
     }),
   );
+  applySecurity(app, deps, opts.security);
   // ops: correlation ids, metrics, /health, /ready, /metrics, /v1/admin/*; registered before the legacy health below
   const obs = installObservability(app, deps, { version: VERSION, ...opts.obs });
   const health = (c: Context) =>
