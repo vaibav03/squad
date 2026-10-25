@@ -5,6 +5,9 @@ import { firstDivergence, llmEquiv, type Divergence, type EquivFn, type Step } f
 import { hashStep, privateDivergence } from './hash';
 import { extractSteps, stepsFromText } from './vision';
 
+/** Village agent id of the Panic Line booth (not the dean). */
+export const STEPDIFF_AGENT = 'expert:stepdiff';
+
 export type DiffMode = 'full' | 'private';
 
 export function ensureStepDiffSchema(db: Db): void {
@@ -159,7 +162,7 @@ export class StepDiffEngine {
     if (who.length < 2) return { status: 'waiting' };
 
     const [a, b] = who as [string, string];
-    await this.emit({ t: 'agent.state', agent: 'dean', state: 'studying' });
+    await this.emit({ t: 'agent.state', agent: STEPDIFF_AGENT, state: 'studying' });
     let divergence: Divergence;
     if (s.mode === 'private') {
       divergence = privateDivergence(work[a]!.hashes, work[b]!.hashes);
@@ -174,7 +177,7 @@ export class StepDiffEngine {
     // Labels only: no photos, no step text, no names of who wrote what.
     await this.emit({
       t: 'agent.message',
-      from: 'dean',
+      from: STEPDIFF_AGENT,
       to: 'commons',
       taskId: s.id,
       kind: divergence.split === null ? 'step_diff_match' : 'step_diff_split',
@@ -185,7 +188,7 @@ export class StepDiffEngine {
       await this.d.mastery.queueReview(a, s.courseId, s.chapter);
       await this.d.mastery.queueReview(b, s.courseId, s.chapter);
     }
-    await this.emit({ t: 'agent.state', agent: 'dean', state: 'idle' });
+    await this.emit({ t: 'agent.state', agent: STEPDIFF_AGENT, state: 'idle' });
     return { status: 'done', message, divergence };
   }
 
