@@ -8,33 +8,35 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `docs/` | 2 | 2 | 28 | Claude Sonnet 5.5 (2) |
-| `fix/` | 2 | 3 | 45 | Claude Sonnet 5.5 (2) |
+| `feature/` | 4 | 9 | 54 | Claude Sonnet 5.5 (9) |
+| `fix/` | 2 | 8 | 55 | Claude Sonnet 5.5 (7) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `docs/plan-e2e-product` | 1 | 27 | 2026-10-25 03:39 | 2026-10-25 03:39 | Vaibav |
-| `docs/plan-live-council` | 1 | 1 | 2026-10-25 03:35 | 2026-10-25 03:35 | Vaibav |
-| `fix/blank-shell` | 2 | 28 | 2026-10-25 03:24 | 2026-10-25 03:38 | Vaibav |
-| `fix/floating-chat` | 1 | 17 | 2026-10-25 03:37 | 2026-10-25 03:37 | Vaibav |
+| `feature/study-plan` | 1 | 3 | 2026-10-25 03:51 | 2026-10-25 03:51 | Vaibav |
+| `feature/typed-mentions` | 4 | 29 | 2026-10-25 03:43 | 2026-10-25 03:51 | Vaibav |
+| `feature/w1-council-runtime` | 1 | 3 | 2026-10-25 03:49 | 2026-10-25 03:49 | Vaibav |
+| `feature/w5-council-board` | 3 | 19 | 2026-10-25 03:53 | 2026-10-25 03:54 | Vaibav |
+| `fix/blank-shell` | 5 | 36 | 2026-10-25 03:24 | 2026-10-25 03:50 | Vaibav, Claude |
+| `fix/floating-chat` | 3 | 19 | 2026-10-25 03:37 | 2026-10-25 03:46 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 208 |
+| (no trailer) | 217 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 487 |
+| Claude Sonnet 5.5 | 501 |
 
 ## Commits landed on main by area (subject prefix)
 
 | Area | Commits |
 |---|---:|
-| (other) | 100 |
+| (other) | 102 |
 | Initial commit | 1 |
 | Merge batch 1 | 1 |
 | Merge batch 10 | 1 |
@@ -45,6 +47,8 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Merge batch 15 | 1 |
 | Merge batch 16 | 1 |
 | Merge batch 17 | 1 |
+| Merge batch 18 | 1 |
+| Merge batch 19 | 1 |
 | Merge batch 2 | 1 |
 | Merge batch 3 | 1 |
 | Merge batch 4 | 1 |
@@ -67,12 +71,12 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | demo | 7 |
 | deploy | 5 |
 | design | 18 |
-| docs | 23 |
+| docs | 25 |
 | e2e | 27 |
 | fix | 34 |
 | hub | 5 |
 | imessage | 3 |
-| inspector | 13 |
+| inspector | 14 |
 | integration | 41 |
 | interior-engine | 9 |
 | live | 36 |
@@ -88,6 +92,8 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | merge batch15 | 2 |
 | merge batch16 | 3 |
 | merge batch17 | 2 |
+| merge batch18 | 1 |
+| merge batch19 | 1 |
 | merge batch2 | 7 |
 | merge batch3 | 3 |
 | merge batch4 | 3 |
@@ -105,12 +111,14 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | proactive | 7 |
 | qa | 10 |
 | repo | 4 |
+| room-click tab | 1 |
 | rooms-a | 7 |
 | rooms-b | 4 |
 | security | 4 |
 | spine | 13 |
 | status | 3 |
 | ux | 7 |
+| village | 1 |
 | village-mesh | 22 |
 | village-scenes | 18 |
 | village-world | 29 |
@@ -125,6 +133,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Author | Commits |
 |---|---:|
+| Claude | 1 |
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 413 |
+| Vaibav | 435 |
 | vaibav03 | 26 |
