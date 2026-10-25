@@ -40,15 +40,17 @@ describe('due windows', () => {
     // 15:00 UTC is 08:00 in Los Angeles (UTC-7): the local day ends at 07:00 UTC next day
     expect(dueWindow('today', NOW, 'America/Los_Angeles').to).toBe(Date.UTC(2026, 9, 26, 7));
   });
-  it('this week lists only items in the next 7 days, with course and exact date; later items are neither listed nor cited', () => {
+  it('this week lists only items in the next 7 days, with course and exact date; later items appear only under "Next after this week"', () => {
     const { store, add } = fixture();
     const soon = add('a1', 'Reading response 2', NOW + 3 * DAY + 8 * 3_600_000);
     const later = add('a2', 'Midterm essay', NOW + 10 * DAY);
     const r = dueReply(store, [soon, later], NOW, new Map(), 'what is due from Canvas this week? Include course names and exact due dates.')!;
     expect(r.text).toContain('Reading response 2 (HIST 140: World History)');
     expect(r.text).toMatch(/due Wednesday, Oct 28, 11:00 PM UTC/);
-    expect(r.text).not.toContain('Midterm');
-    expect(r.citations).toHaveLength(1);
+    const [head, tail] = r.text.split('Next after this week:');
+    expect(head).not.toContain('Midterm');
+    expect(tail).toContain('Midterm essay');
+    expect(r.citations).toHaveLength(2);
     expect(r.citations[0]!.source).toMatchObject({ courseName: 'HIST 140: World History', provenance: 'fixture' });
     expect(r.citations[0]!.label).toMatch(/Oct 28, 11:00 PM/);
   });

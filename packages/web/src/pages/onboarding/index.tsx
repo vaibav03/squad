@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { phaseHasData, summarizeConnections } from '../../lib/connection-phase';
 import { Button } from '../../primitives/Button';
 import { Page } from '../../primitives/Page';
 import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
-import { recordSkip } from './api';
+import { fetchOnboarding, recordSkip } from './api';
 import {
+  anyConnected,
   isTourStep,
   nextStep,
   prevStep,
@@ -47,8 +47,34 @@ const NOTHING: Record<ShareCategory, boolean> = {
 };
 
 /** `/squad/welcome-tour/:step?` first-run flow: connect, verify, share, then the group chat. */
-export default function OnboardingTour() {
+export default function OnboardingEntry() {
   const { step } = useParams();
+  return isTourStep(step) ? <OnboardingTour step={step} /> : <TourEntry />;
+}
+
+/**
+ * Bare /squad/welcome-tour (and the old /squad/setup): a returning person who already has a live or demo
+ * connection goes straight to the app; everyone else starts at Connect.
+ */
+function TourEntry() {
+  const cfg = useSquadConfig();
+  const [to, setTo] = useState<string | null>(
+    cfg.mode === 'live' && cfg.hubUrl && cfg.token ? null : `${TOUR_ROOT}/connect`,
+  );
+  useEffect(() => {
+    if (to || !cfg.hubUrl || !cfg.token) return;
+    let off = false;
+    void fetchOnboarding({ hubUrl: cfg.hubUrl, token: cfg.token, userId: cfg.userId }).then((s) => {
+      if (!off) setTo(s.connected ? '/squad' : `${TOUR_ROOT}/connect`);
+    });
+    return () => {
+      off = true;
+    };
+  }, [to, cfg.hubUrl, cfg.token, cfg.userId]);
+  return to ? <Navigate to={to} replace /> : <p role="status">Loading</p>;
+}
+
+function OnboardingTour({ step }: { step: TourStep }) {
   const navigate = useNavigate();
   const cfg = useSquadConfig();
   const { setTitle } = useShell();
@@ -65,10 +91,8 @@ export default function OnboardingTour() {
     setSkipping(false);
   }, [step]);
 
-  if (!isTourStep(step)) return <Navigate to={`${TOUR_ROOT}/connect`} replace />;
   const c = COPY[step];
-  const sum = summarizeConnections(t.connections);
-  const hasData = phaseHasData(sum.canvas.phase) || phaseHasData(sum.calendar.phase);
+  const hasData = anyConnected(t.connections);
   const back = prevStep(step);
   const fwd = nextStep(step);
 

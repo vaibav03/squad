@@ -123,7 +123,7 @@ export default function SquadCreatePage() {
                 void refreshRef
                   .current()
                   .catch(() => {})
-                  .then(() => navigate('/squad'));
+                  .then(() => navigate('/squad/welcome-tour'));
               }}
             >
               Go to my squad
