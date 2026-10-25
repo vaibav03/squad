@@ -105,17 +105,17 @@ export function CouncilDock({
           <p className="cd-meta">
             {when ? <span data-testid="last-run-label">{when}</span> : <span>This council</span>}
             <ModeBadge mode={mode} />
+            {canBoard ? (
+              <button type="button" className="cd-link" onClick={() => openBoard()}>
+                Open deliberation board
+              </button>
+            ) : null}
           </p>
           {boardRun ? (
             <ResultCard run={boardRun} />
           ) : (
             <p className="cd-dim">{asked ? 'Last council is loading.' : 'Checking for a council.'}</p>
           )}
-          {canBoard ? (
-            <button type="button" className="cd-link" onClick={() => openBoard()}>
-              Open deliberation board
-            </button>
-          ) : null}
         </div>
       )}
       {empty ? (

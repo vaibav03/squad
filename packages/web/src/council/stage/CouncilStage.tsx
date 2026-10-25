@@ -92,7 +92,7 @@ function useDockOffset(): (el: HTMLElement | null) => void {
     const root = document.documentElement;
     if (!el) return void root.style.removeProperty('--room-strip-bottom');
     const set = () =>
-      root.style.setProperty('--room-strip-bottom', `${Math.ceil(el.offsetHeight) + 12}px`);
+      root.style.setProperty('--room-strip-bottom', `${Math.ceil(el.offsetHeight) + 12 + 40}px`);
     set();
     if (typeof ResizeObserver !== 'undefined') {
       ro.current = new ResizeObserver(set);

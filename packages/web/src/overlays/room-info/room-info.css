@@ -44,7 +44,7 @@
   position: absolute;
   left: max(var(--lv-s4), var(--safe-left));
   right: max(var(--lv-s4), var(--safe-right));
-  bottom: calc(var(--room-strip-bottom, 0px) + var(--lv-s4) + var(--safe-bottom));
+  bottom: calc(var(--room-strip-bottom, 40px) + var(--lv-s4) + var(--safe-bottom));
   max-width: 720px;
   margin-inline: auto;
   display: flex;

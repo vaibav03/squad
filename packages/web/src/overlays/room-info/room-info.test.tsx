@@ -276,13 +276,13 @@ describe('RoomLayer', () => {
     const s = createRoomSession();
     (globalThis as Record<string, unknown>)['__squadRoomSession'] = undefined;
     render(<RoomLayer infoFor={infoFor} />);
-    expect(screen.queryByRole('log')).toBeNull();
+    expect(screen.queryByTestId('council-dock')).toBeNull();
     await act(async () => {
       (globalThis as Record<string, unknown>)['__squadRoomSession'] = s;
       globalThis.dispatchEvent(new Event('squad:room-session'));
     });
     await act(async () => s.enter('round-table'));
-    expect(screen.getByRole('log')).toBeTruthy();
+    expect(screen.getByTestId('council-dock')).toBeTruthy();
     (globalThis as Record<string, unknown>)['__squadRoomSession'] = undefined;
   });
 
