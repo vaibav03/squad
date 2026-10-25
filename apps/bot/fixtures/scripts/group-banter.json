@@ -1,0 +1,14 @@
+{
+  "name": "group-banter",
+  "stubSkills": ["unprompted-quiz", "crasher"],
+  "steps": [
+    { "as": "s_ana", "chat": "group:test", "say": "ugh anyone free tonight lol" },
+    { "as": "s_ben", "chat": "group:test", "say": "pizza after the library?" },
+    { "as": "s_cam", "chat": "group:test", "say": "@cubbie hi" },
+    { "as": "s_dee", "chat": "group:test", "say": "chapter 3 is killing me", "advance": 5000 },
+    { "as": "s_ana", "chat": "group:test", "say": "same, that quiz is soon", "advance": 10000 },
+    { "as": "s_ben", "chat": "group:test", "say": "hey cubbie crash please", "advance": 1000 },
+    { "wait": 125000 },
+    { "as": "s_cam", "chat": "group:test", "say": "exam prep time" }
+  ]
+}

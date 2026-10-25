@@ -1,0 +1,10 @@
+{
+  "name": "confirm-dm",
+  "stubSkills": ["confirm-demo"],
+  "steps": [
+    { "as": "s_ana", "chat": "group:test", "say": "@cubbie book the study room" },
+    { "as": "s_ben", "chat": "group:test", "say": "I am in" },
+    { "as": "s_ana", "chat": "dm", "say": "what" },
+    { "as": "s_ana", "chat": "dm", "say": "1" }
+  ]
+}

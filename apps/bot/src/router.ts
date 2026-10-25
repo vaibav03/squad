@@ -76,12 +76,11 @@ export function createRouter(d: RouterDeps) {
     sent: [],
   });
 
-  async function emit(e: Parameters<EventPublisher['publish']>[0]) {
-    try {
-      await d.events.publish(e);
-    } catch (err) {
-      d.log.error({ err: (err as Error).message }, 'event publish failed');
-    }
+  /** Fire-and-forget: a slow or absent hub must never delay a chat reply. */
+  function emit(e: Parameters<EventPublisher['publish']>[0]): void {
+    d.events
+      .publish(e)
+      .catch((err: Error) => d.log.error({ err: err.message }, 'event publish failed'));
   }
 
   async function sendAll(out: OutboundMessage[]): Promise<OutboundMessage[]> {
@@ -130,7 +129,7 @@ export function createRouter(d: RouterDeps) {
   async function runSkill(m: InboundMessage, decision: Decision, messageId: number, prev?: number) {
     const skill = bySkill.get(decision.skill!)!;
     const agent = `student:${m.from}`;
-    await emit({ t: 'agent.state', agent, state: 'studying' });
+    emit({ t: 'agent.state', agent, state: 'studying' });
     let sent: OutboundMessage[] = [];
     let error: string | undefined;
     try {
@@ -141,7 +140,7 @@ export function createRouter(d: RouterDeps) {
       d.log.error({ skill: skill.name, chatId: m.chatId, err: error }, 'skill handler failed');
       if (!decision.unprompted) sent = await sendAll([{ chatId: m.chatId, text: APOLOGY }]);
     } finally {
-      await emit({ t: 'agent.state', agent, state: 'idle' });
+      emit({ t: 'agent.state', agent, state: 'idle' });
     }
     const spoke = sent.length > 0;
     if (decision.unprompted && !spoke) {

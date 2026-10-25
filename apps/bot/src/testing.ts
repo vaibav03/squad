@@ -2,12 +2,12 @@ import type { InboundMessage, Llm, OutboundMessage, Skill, VillageEvent } from '
 import { FakeLlm } from '@squad/core';
 import { openMemoryDb } from '@squad/core/node';
 import { createBot } from './bot';
-import { recordingPublisher } from './events';
+import { recordingPublisher, teePublisher } from './events';
 import { decisions as readDecisions } from './store';
 import { detectMention } from './mention';
 import { chatSkill } from './skills/chat';
 import type { Bot, BotOptions, Roster, Transport } from './types';
-import type { Logger } from './types';
+import type { EventPublisher, Logger } from './types';
 
 export const TEST_ROSTER: Roster = {
   students: ['ana', 'ben', 'cam', 'dee'].map((n, i) => ({
@@ -54,6 +54,8 @@ export interface TestBotOptions {
   startMs?: number;
   /** include the built-in chat skill (default true) */
   chat?: boolean;
+  /** extra publisher that also receives every event (the recorder) */
+  tap?: EventPublisher;
 }
 
 export function createTestBot(o: TestBotOptions = {}) {
@@ -68,7 +70,7 @@ export function createTestBot(o: TestBotOptions = {}) {
     transport,
     db,
     roster,
-    events,
+    events: o.tap ? teePublisher(events, o.tap) : events,
     log: o.log,
     now: () => clock,
     confirmTimeoutMs: o.confirmTimeoutMs,
