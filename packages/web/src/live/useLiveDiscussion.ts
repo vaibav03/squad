@@ -94,6 +94,8 @@ export function useLiveDiscussion(o: UseLiveOptions): LiveController {
     };
   }, [player]);
 
+  // StrictMode runs effects twice in dev: one start request per (transport, topic, attempt)
+  const started = useRef<{ key: string; t: LiveTransport; p: Promise<string> } | null>(null);
   const startKey = start ? `${start.topic}|${start.chatId ?? ''}` : '';
   useEffect(() => {
     if (!transport) {
@@ -132,7 +134,14 @@ export function useLiveDiscussion(o: UseLiveOptions): LiveController {
         if (!id) {
           const body = startRef.current;
           if (!body) return;
-          id = (await transport.start({ ...body, mode })).id;
+          const key = `${startKey}|${attempt}|${mode}`;
+          if (!started.current || started.current.key !== key || started.current.t !== transport)
+            started.current = {
+              key,
+              t: transport,
+              p: transport.start({ ...body, mode }).then((r) => r.id),
+            };
+          id = await started.current.p;
         }
         if (dead) return;
         idRef.current = id;

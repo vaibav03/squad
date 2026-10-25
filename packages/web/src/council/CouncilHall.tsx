@@ -4,6 +4,7 @@ import type { HubCtx } from '../pages/village/hub';
 import { LvIcon } from '../overlays/kit/icons';
 import { CouncilPanel } from './CouncilPanel';
 import { LivePanel } from '../live/LivePanel';
+import { MOCK_TOPIC } from '../live/fixtures';
 import { fixtureTransport, type FixtureState } from './fixtures';
 import './council.css';
 
@@ -67,7 +68,10 @@ export function CouncilHall({
   const inside = useInCouncilHall();
   const present = inside || forced || liveForced;
   const [open, setOpen] = useState(forced);
+  const livemock = q.get('livemock') === '1';
   const [liveOpen, setLiveOpen] = useState(liveForced);
+  // ?livemock=1 opens straight into the scripted room; ?live=1 opens the entry form
+  const [liveDirect, setLiveDirect] = useState(livemock);
 
   // Walking in shows the room-info panel first (the "Ask the council" button below or in that panel opens
   // this one); walking out closes it.
@@ -120,7 +124,11 @@ export function CouncilHall({
       <LivePanel
         hub={hub}
         open={liveOpen}
-        onClose={() => setLiveOpen(false)}
+        onClose={() => {
+          setLiveOpen(false);
+          setLiveDirect(false);
+        }}
+        {...(liveDirect ? { topic: MOCK_TOPIC } : {})}
         calm={calm}
         returnFocusTo={returnFocusTo}
       />

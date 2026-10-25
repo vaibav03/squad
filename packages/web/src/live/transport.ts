@@ -24,7 +24,9 @@ export function chooseTransport(hub: HubCtx | null): LiveTransport {
       try {
         return await real.start(b);
       } catch (e) {
-        if (liveErrorKind(e) !== 'not_found') throw e;
+        // only a missing route (404) or an unreachable hub falls back to the scripted discussion; 4xx like 429 stay honest
+        const k = liveErrorKind(e);
+        if (k !== 'not_found' && k !== 'offline') throw e;
         cur = mock;
         return mock.start(b);
       }

@@ -60,7 +60,7 @@ async function send(url: string, init: RequestInit): Promise<Response> {
   }
   if (res.status === 401 || res.status === 403) throw new LiveClientError('session');
   if (res.status === 400) throw new LiveClientError('invalid');
-  if (res.status === 404) throw new LiveClientError('not_found');
+  if (res.status === 404 || res.status === 501) throw new LiveClientError('not_found');
   if (res.status === 429) throw new LiveClientError(code === 'busy' ? 'busy' : 'rate_limited');
   throw new LiveClientError('failed');
 }
@@ -81,7 +81,7 @@ const post = (hub: HubCtx, path: string, body?: unknown) =>
   });
 
 export async function startLive(hub: HubCtx, body: LiveStartBody): Promise<LiveStartResponse> {
-  const p = LiveStartResponseSchema.safeParse(await json(await post(hub, '/v1/live', body)));
+  const p = LiveStartResponseSchema.safeParse(await json(await post(hub, '/v1/live/start', body)));
   if (!p.success) throw new LiveClientError('failed');
   return p.data;
 }

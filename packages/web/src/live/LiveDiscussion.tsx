@@ -6,6 +6,7 @@ import { CaptionsBar, Room } from './Room';
 import { TakeawaysPanel } from './TakeawaysPanel';
 import { Transcript } from './Transcript';
 import { EMPTY_TAKEAWAYS } from './fixtures';
+import { LIVE_ERROR_COPY } from './live-client';
 import type { LiveController } from './useLiveDiscussion';
 
 const SIZE_KEY = 'squad.live.caption-size';
@@ -183,6 +184,9 @@ export function LiveDiscussion({
               <span>
                 {ctl.error ?? 'The discussion could not be reached.'}{' '}
                 {unavailable &&
+                  (!ctl.error ||
+                    ctl.error === LIVE_ERROR_COPY.failed ||
+                    ctl.error === LIVE_ERROR_COPY.offline) &&
                   'The model may be busy or the hub may be offline. Fix: check the hub is running, then try again.'}
               </span>
               <button type="button" className="lv-btn" onClick={ctl.retry}>
