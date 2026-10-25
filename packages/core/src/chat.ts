@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { CitationSourceSchema } from './context';
 import { ChatSyncFieldsSchema } from './chat-sync';
 import { ProvenanceSchema } from './provenance';
+import { ChatContextRefSchema } from './chat-context';
 
 /** Chat ids: `group:<squadId>` for the squad group chat, `dm:<studentId>` for a private chat with Cubbie. */
 export const ChatIdSchema = z.string().regex(/^(group|dm):[A-Za-z0-9_-]{1,64}$/);
@@ -98,6 +99,8 @@ export const ChatMessageSchema = ChatSyncFieldsSchema.extend({
   provenance: ProvenanceSchema.optional(),
   /** Student messages: the client's stable send id (reused on retry); lets a client match its optimistic copy. */
   clientId: z.string().max(64).optional(),
+  /** Student messages: the verified context attached when sending (what the composer chip showed). */
+  context: z.array(ChatContextRefSchema).max(3).optional(),
   /** Bot replies: the id of the student message that triggered this answer (one answer per trigger). */
   replyTo: z.string().max(64).optional(),
   /** Read-time dedupe only: this prompt+answer pair was sent N times in a short window and is shown once (N >= 2). */
@@ -145,6 +148,8 @@ export const ChatSendBodySchema = z.strictObject({
   clientId: z.string().min(1).max(64).optional(),
   /** Set when this text answers a confirm card: rejected with 409 `stale_confirm` unless that card is still pending. */
   confirmTaskId: z.string().min(1).max(200).optional(),
+  /** Imported items attached with "Ask Cubbie" (the hub re-derives every field from the source; see chat-context.ts). */
+  context: z.array(ChatContextRefSchema).max(3).optional(),
 });
 export type ChatSendBody = z.infer<typeof ChatSendBodySchema>;
 
