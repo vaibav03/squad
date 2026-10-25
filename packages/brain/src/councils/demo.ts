@@ -15,7 +15,7 @@ import { normaliseText } from './pure';
  * and grounded answers are extractive (a verbatim sentence from the course page that best matches the question),
  * so every citation still passes the real verification gate. Every result built on it is stamped `demo: true`.
  */
-const OFF_TOPIC =
+export const OFF_TOPIC =
   /\b(weather|girlfriend|boyfriend|date me|recipe|lottery|movie|horoscope|bitcoin)\b/i;
 const STOP = new Set(
   'a an the is are was were of to in on for and or but with what why how does do did this that it be as at by from which who when where can i my me you your should would could about'.split(
@@ -70,7 +70,7 @@ interface Stance {
   position: string;
 }
 
-function stanceFor(member: 'Skeptic' | 'Teacher' | 'Practitioner', q: string): Stance {
+export function stanceFor(member: 'Skeptic' | 'Teacher' | 'Practitioner', q: string): Stance {
   const opts = /\b([A-E])\s+(?:or|vs\.?|versus)\s+([A-E])\b/i.exec(q);
   if (opts) {
     const a = opts[1]!.toUpperCase();

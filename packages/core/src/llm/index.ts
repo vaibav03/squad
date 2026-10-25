@@ -6,3 +6,4 @@ export { LlmError, classifyGeminiError } from './errors';
 export type { LlmErrorKind } from './errors';
 export { createResilientLlm } from './resilient';
 export type { LlmFallbackReason, LlmStatus, ResilientLlm, ResilientLlmOptions } from './resilient';
+export * from './thoughts';
