@@ -40,6 +40,8 @@ export function createOnboardingRoutes(deps: HubDeps): HubApp {
     const canvas = provider(uid, 'canvas');
     const google = provider(uid, 'google');
     const connected = [canvas, google].some((x) => x.state !== 'not_connected');
+    // `connected` for the flat field: at least one integration holds usable data (not only a never-synced shell)
+
     const sharingChosen = o.sharingChoice !== null;
     const nextStep = !identityDone
       ? 'identity'
@@ -56,6 +58,9 @@ export function createOnboardingRoutes(deps: HubDeps): HubApp {
         ? { squadId: o.sharingSquad, choice: o.sharingChoice }
         : { squadId: null, choice: 'private' as const },
       skipped: o.skippedAt === null ? null : { at: o.skippedAt },
+      /** Flat fields the web adapter reads: has data from at least one integration, and the skip time. */
+      connected,
+      skippedAt: o.skippedAt,
       nextStep,
     };
   };

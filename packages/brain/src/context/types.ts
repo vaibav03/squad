@@ -69,6 +69,9 @@ export interface ContextSource {
   url: string | null;
   title: string;
   courseId: string | null;
+  /** Resolved from the connection's course records (absent when unknown). */
+  courseName?: string;
+  courseCode?: string | null;
   /** Origin timestamps, epoch ms. */
   modifiedAt: number | null;
   dueAt: number | null;
@@ -110,3 +113,15 @@ export interface ChunkHit {
 }
 
 export const DEFAULT_RETENTION_MS = 180 * 24 * 3_600_000;
+
+/** "CODE: Name" for a source or course record ("HIST 140: Modern World History"); the best available words otherwise. */
+export function courseLabel(c: {
+  courseName?: string | null | undefined;
+  courseCode?: string | null | undefined;
+  courseId?: string | null | undefined;
+}): string | null {
+  const name = c.courseName?.trim();
+  const code = c.courseCode?.trim();
+  if (code && name && name.toLowerCase() !== code.toLowerCase()) return `${code}: ${name}`;
+  return name || code || c.courseId || null;
+}

@@ -51,3 +51,26 @@ export function createAccountStore(db: Db): AccountStore {
     },
   };
 }
+
+/** Course records per connection live in the context store (so retrieval and citations resolve them too). */
+export interface CourseNameStore {
+  replace(connectionId: string, courses: { id: string; name: string; code?: string | null }[]): void;
+  /** "CODE: Name" (or the best available words) for a source's course. */
+  name(connectionId: string | null, courseId: string | null): string | null;
+  info(connectionId: string | null, courseId: string | null): { name: string; code: string | null; label: string } | null;
+  delete(connectionId: string): void;
+}
+/** The demo / fixture account card: never "None". */
+export const DEMO_ACCOUNT = { label: 'Demo workspace (simulated)', name: 'Demo student' } as const;
+
+const SCOPE_WORDS: Record<string, string> = {
+  'calendar.readonly': 'Read your calendar events (cannot edit them)',
+  'classroom.courses.readonly': 'See your Classroom course list',
+  'classroom.coursework.me.readonly': 'Read your own Classroom assignments and due dates',
+  'drive.file': 'Open only the Drive files you pick',
+  'canvas.calendar_feed': 'Read your Canvas calendar feed (dates and titles)',
+  'canvas.api_token.read': 'Read your courses, assignments and files with your token',
+  'canvas.browser_session.read': 'Read Canvas through your own signed-in browser session',
+  'canvas.demo_workspace': 'Demo workspace only: simulated content, no account is read',
+};
+export const scopeLabel = (short: string): string => SCOPE_WORDS[short] ?? `Read-only access: ${short}`;

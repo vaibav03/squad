@@ -57,7 +57,7 @@ describe('provider state machine', () => {
   });
   it('reauth required: Reconnect, text keeps the last sync', () => {
     const v = d([c({ state: 'expired', needsReconnect: true })]);
-    expect([v.state, v.label, v.cta, v.showRepair, v.showConnectPanel]).toEqual(['reauth', 'Reauth required', 'reconnect', true, false]);
+    expect([v.state, v.label, v.cta, v.showRepair, v.showConnectPanel]).toEqual(['reauth', 'Reconnect needed', 'reconnect', true, false]);
     expect(v.text).toContain('last synced 42 s ago');
   });
   it('disconnected is a sub-state of not connected: panel returns, data gone', () => {
@@ -68,7 +68,7 @@ describe('provider state machine', () => {
     expect(d([c({ id: 'old', state: 'revoked' }), c({ id: 'new' })]).state).toBe('live');
   });
   it('label map has every state exactly once', () => {
-    expect(Object.values(STATE_WORDS)).toEqual(['Not connected', 'Connecting', 'Syncing', 'Live', 'Demo data', 'Degraded', 'Reauth required']);
+    expect(Object.values(STATE_WORDS)).toEqual(['Not connected', 'Connecting', 'Syncing', 'Live', 'Demo data', 'Degraded', 'Reconnect needed']);
   });
   it('Home checklist: real usable calendar only; demo and reauth do not count', () => {
     expect(calendarUsable([c()])).toBe(true);
@@ -76,5 +76,23 @@ describe('provider state machine', () => {
     expect(calendarUsable([c({ state: 'expired' })])).toBe(false);
     expect(calendarUsable([c({ provider: 'canvas', variant: 'feed' })])).toBe(true);
     expect(calendarUsable([c({ provider: 'canvas', variant: 'session' })])).toBe(false);
+  });
+});
+
+describe('hub integrationState is the source of truth', () => {
+  it('overrides the derivation; fallback only when absent', () => {
+    // fields say live, hub says reauth_required: the hub wins
+    const v = d([c({ integrationState: 'reauth_required' })]);
+    expect([v.state, v.label, v.cta, v.showRepair]).toEqual(['reauth', 'Reconnect needed', 'reconnect', true]);
+    // a demo record the hub says is demo even if mode were mis-sent
+    expect(d([c({ integrationState: 'demo', mode: 'fixture' })]).state).toBe('demo');
+    expect(d([c({ integrationState: 'syncing', lastSyncAt: null })]).firstSyncRunning).toBe(true);
+    expect(d([c({ integrationState: 'not_connected', integrationSub: 'disconnected', state: 'revoked' })]).label).toBe('Disconnected');
+    expect(d([c({ integrationState: 'not_connected', integrationSub: null, state: 'revoked' })]).sub).toBeNull();
+    expect(d([c({ integrationState: 'degraded' })]).state).toBe('degraded');
+  });
+  it('labels come from core INTEGRATION_STATE_LABELS', () => {
+    expect(STATE_WORDS.demo).toBe('Demo data');
+    expect(STATE_WORDS.live).toBe('Live');
   });
 });

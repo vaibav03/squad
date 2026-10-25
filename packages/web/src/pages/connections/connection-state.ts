@@ -1,3 +1,4 @@
+import { INTEGRATION_STATE_LABELS, INTEGRATION_SUB_LABELS, type IntegrationState } from '@squad/core';
 import type { Connection } from './api';
 import { plural } from '../../lib/plural';
 import { relTime } from './model';
@@ -21,21 +22,19 @@ export type Cta = 'connect' | 'reconnect' | 'review' | 'ask' | 'none';
 
 /** THE label map (onboarding, Home, Connections, health, chat chips). `demo` reads 'Demo data', never 'Live'. */
 export const STATE_WORDS: Record<ProviderState, string> = {
-  not_connected: 'Not connected',
-  connecting: 'Connecting',
-  syncing: 'Syncing',
-  live: 'Live',
-  demo: 'Demo data',
-  degraded: 'Degraded',
-  reauth: 'Reauth required',
+  not_connected: INTEGRATION_STATE_LABELS.not_connected,
+  connecting: INTEGRATION_STATE_LABELS.connecting,
+  syncing: INTEGRATION_STATE_LABELS.syncing,
+  live: INTEGRATION_STATE_LABELS.live,
+  demo: INTEGRATION_STATE_LABELS.demo,
+  degraded: INTEGRATION_STATE_LABELS.degraded,
+  reauth: INTEGRATION_STATE_LABELS.reauth_required,
 };
 /** Disconnected is a sub-state of Not connected (its data was deleted). */
-export const SUB_WORDS = { disconnected: 'Disconnected' } as const;
+export const SUB_WORDS = INTEGRATION_SUB_LABELS;
 export type ProviderSub = keyof typeof SUB_WORDS | null;
 
-/** Citation / source chip text: demo sources never read as real. */
-export const sourceChipLabel = (provider: Provider, fixture: boolean): string =>
-  fixture ? `Demo: ${NAME[provider]}` : NAME[provider];
+export { sourceChipLabel } from '@squad/core';
 const NAME: Record<Provider, string> = { canvas: 'Canvas', google: 'Google' };
 
 export interface DeriveOpts {
@@ -79,6 +78,38 @@ export function primaryConnection(conns: readonly Connection[]): Connection | nu
   return [...pool].sort((a, b) => (b.lastSyncAt ?? 0) - (a.lastSyncAt ?? 0))[0] ?? null;
 }
 
+/** Fallback only: the hub's `integrationState` is the source of truth; this mirrors its rules for older hubs. */
+function fallbackState(c: Connection | null, justReturned: boolean): { state: ProviderState; sub: ProviderSub } {
+  if (!c || c.state === 'revoked')
+    return justReturned
+      ? { state: 'connecting', sub: null }
+      : { state: 'not_connected', sub: c ? 'disconnected' : null };
+  if (c.state === 'expired' || c.needsReconnect) return { state: 'reauth', sub: null };
+  if (c.syncPhase === 'syncing') return { state: 'syncing', sub: null };
+  if (c.state === 'error' || c.state === 'rate_limited' || c.degraded) return { state: 'degraded', sub: null };
+  return { state: c.mode === 'fixture' ? 'demo' : 'live', sub: null };
+}
+
+const FROM_HUB: Record<IntegrationState, ProviderState> = {
+  not_connected: 'not_connected',
+  connecting: 'connecting',
+  syncing: 'syncing',
+  live: 'live',
+  demo: 'demo',
+  degraded: 'degraded',
+  reauth_required: 'reauth',
+};
+
+/** The state a connection is in: the hub's `integrationState` when sent, else the fallback derivation. */
+export function stateOfConnection(c: Connection | null, justReturned = false): { state: ProviderState; sub: ProviderSub } {
+  if (c?.integrationState) {
+    const state = FROM_HUB[c.integrationState];
+    if (state === 'not_connected' && justReturned) return { state: 'connecting', sub: null };
+    return { state, sub: state === 'not_connected' ? (c.integrationSub ?? null) : null };
+  }
+  return fallbackState(c, justReturned);
+}
+
 export function deriveProviderState(
   provider: Provider,
   conns: readonly Connection[],
@@ -86,85 +117,67 @@ export function deriveProviderState(
 ): ProviderView {
   const c = primaryConnection(conns);
   const name = NAME[provider];
-  const base = { provider, connection: c, fixture: c?.mode === 'fixture' && c.state !== 'revoked' };
-  const items = c && c.state !== 'revoked' ? c.sources.total : 0;
-  const mk = (
-    state: ProviderState,
-    text: string,
-    cta: Cta,
-    ctaLabel: string | null,
-    extra: Partial<ProviderView> = {},
-  ): ProviderView => ({
-    ...base,
+  const { state, sub } = stateOfConnection(c, o.justReturned === true);
+  const active = !!c && c.state !== 'revoked' && state !== 'not_connected' && state !== 'connecting';
+  const fixture = !!c && c.mode === 'fixture' && c.state !== 'revoked';
+  const items = active ? c!.sources.total : 0;
+  const last = active ? c!.lastSyncAt : null;
+  const ago = last ? relTime(last, o.now) : null;
+  const lastSyncText = last ? `Last synced ${ago}${c!.lastOutcome ? ` (${c!.lastOutcome})` : ''}` : null;
+  const askOrReview: [Cta, string | null] =
+    items > 0 ? (o.reviewed ? ['ask', 'Ask Cubbie with this'] : ['review', 'Review imported context']) : ['none', null];
+  const first = last === null;
+
+  let text: string;
+  let cta: Cta = 'none';
+  let ctaLabel: string | null = null;
+  switch (state) {
+    case 'not_connected':
+      text = sub === 'disconnected' ? (c?.note ?? `${name} was disconnected and the imported data was deleted.`) : `No ${name} account is connected.`;
+      cta = 'connect';
+      ctaLabel = `Connect ${name}`;
+      break;
+    case 'connecting':
+      text = `${name} is connecting. Waiting for the connection to be recorded.`;
+      break;
+    case 'reauth':
+      text = `${name} needs you to sign in again. Imported data is kept${ago ? ` (last synced ${ago})` : ''} but may be out of date.`;
+      cta = 'reconnect';
+      ctaLabel = 'Reconnect';
+      break;
+    case 'syncing':
+      text = first ? `${name} connected. The first sync is running.` : `${name} is syncing again. Last successful sync ${ago}.`;
+      [cta, ctaLabel] = askOrReview;
+      break;
+    case 'degraded':
+      text =
+        c?.state === 'rate_limited'
+          ? `${name} asked Squad to slow down. Retrying automatically; showing the last imported data${ago ? ` (${ago})` : ''}.`
+          : `The last ${name} sync failed. Showing the last imported data${ago ? ` (synced ${ago})` : ''}.`;
+      cta = 'reconnect';
+      ctaLabel = 'Reconnect';
+      break;
+    default:
+      text = ago ? `${name} connected. ${plural(items, 'item')} imported.` : `${name} connected. No sync has completed yet.`;
+      [cta, ctaLabel] = askOrReview;
+  }
+  return {
+    provider,
     state,
-    sub: null,
-    label: STATE_WORDS[state],
+    sub,
+    label: sub ? SUB_WORDS[sub] : STATE_WORDS[state],
+    connection: c,
+    fixture,
     text,
     cta,
     ctaLabel,
     showConnectPanel: state === 'not_connected',
     showRepair: state === 'degraded' || state === 'reauth',
     hasItems: items > 0,
-    firstSyncRunning: false,
-    lastSyncText: c && c.lastSyncAt ? `Last synced ${relTime(c.lastSyncAt, o.now)}${c.lastOutcome ? ` (${c.lastOutcome})` : ''}` : null,
+    firstSyncRunning: state === 'syncing' && first,
+    lastSyncText,
     usable: state === 'live' || state === 'syncing' || state === 'demo',
-    ...extra,
-  });
-  const connect = `Connect ${name}`;
-
-  if (!c)
-    return o.justReturned
-      ? mk('connecting', `${name} is connecting. Waiting for the connection to be recorded.`, 'none', null)
-      : mk('not_connected', `No ${name} account is connected.`, 'connect', connect);
-  if (c.state === 'revoked')
-    return o.justReturned
-      ? mk('connecting', `${name} is connecting. Waiting for the connection to be recorded.`, 'none', null)
-      : mk(
-          'not_connected',
-          c.note ?? `${name} was disconnected and the imported data was deleted.`,
-          'connect',
-          connect,
-          { sub: 'disconnected', label: SUB_WORDS.disconnected },
-        );
-  const last = c.lastSyncAt;
-  const ago = last ? relTime(last, o.now) : null;
-  if (c.state === 'expired' || c.needsReconnect)
-    return mk(
-      'reauth',
-      `${name} needs you to sign in again. Imported data is kept${ago ? ` (last synced ${ago})` : ''} but may be out of date.`,
-      'reconnect',
-      'Reconnect',
-    );
-  if (c.syncPhase === 'syncing') {
-    const first = last === null;
-    return mk(
-      'syncing',
-      first
-        ? `${name} connected. The first sync is running.`
-        : `${name} is syncing again. Last successful sync ${ago}.`,
-      items > 0 ? (o.reviewed ? 'ask' : 'review') : 'none',
-      items > 0 ? (o.reviewed ? 'Ask Cubbie with this' : 'Review imported context') : null,
-      { firstSyncRunning: first },
-    );
-  }
-  if (c.state === 'error' || c.state === 'rate_limited' || c.degraded)
-    return mk(
-      'degraded',
-      c.state === 'rate_limited'
-        ? `${name} asked Squad to slow down. Retrying automatically; showing the last imported data${ago ? ` (${ago})` : ''}.`
-        : `The last ${name} sync failed. Showing the last imported data${ago ? ` (synced ${ago})` : ''}.`,
-      'reconnect',
-      'Reconnect',
-    );
-  const text = ago
-    ? `${name} connected. ${plural(items, 'item')} imported.`
-    : `${name} connected. No sync has completed yet.`;
-  return mk(
-    base.fixture ? 'demo' : 'live',
-    text,
-    items > 0 ? (o.reviewed ? 'ask' : 'review') : 'none',
-    items > 0 ? (o.reviewed ? 'Ask Cubbie with this' : 'Review imported context') : null,
-  );
+  };
 }
 
 /** Home checklist: a real (not fixture) calendar source that is usable. */

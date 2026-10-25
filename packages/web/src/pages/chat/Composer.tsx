@@ -360,7 +360,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
                     : 'Imported from your own account'
                 }
               >
-                {provenanceBadge(c.provenance)}
+                {provenanceBadge(c.provenance, c.kind)}
               </span>
               <button
                 type="button"

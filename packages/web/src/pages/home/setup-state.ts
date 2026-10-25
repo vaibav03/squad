@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { timedFetch } from '../../lib/http';
 import { parseConnections } from '../connections/api';
+import { parseOnboarding } from '../onboarding/api';
 import { calendarUsable } from '../connections/connection-state';
 
 /**
@@ -54,19 +55,28 @@ export async function coursesDone(ctx: HubCtx): Promise<boolean> {
   }
 }
 
-/** A live (not fixture, not expired/revoked) Google calendar or Canvas calendar feed, or a real .ics ingested. */
+/**
+ * A real (not demo) usable calendar source, or a real .ics ingested. ONE source with onboarding: GET /v1/onboarding
+ * `integrations` (the hub's integrationState + counts); the connection list is only the fallback for an older hub.
+ */
 export async function calendarDone(ctx: HubCtx): Promise<boolean> {
-  const [conns, ics] = await Promise.allSettled([
+  const [onb, conns, ics] = await Promise.allSettled([
+    getJson(ctx, '/v1/onboarding'),
     getJson(ctx, '/v1/connections'),
     getJson(ctx, '/v1/squad/calendar'),
   ]);
   if (ics.status === 'fulfilled' && obj(ics.value).ics === true) return true;
-  if (conns.status === 'fulfilled') {
-    // the same state machine as the Connections page: a real, usable (connected or syncing) calendar source
+  const parsed = onb.status === 'fulfilled' ? parseOnboarding(onb.value) : null;
+  if (parsed?.integrations) {
+    const { google, canvas } = parsed.integrations;
+    const real = (p: typeof google) => !!p && !p.demo && (p.state === 'live' || p.state === 'syncing');
+    if (real(google) || (real(canvas) && (canvas?.counts.calendarEvents ?? 0) > 0)) return true;
+  } else if (conns.status === 'fulfilled') {
+    // older hub: the same selector as the Connections page over the connection list
     if (calendarUsable(parseConnections(conns.value))) return true;
   }
-  // Not provably done: only report "to do" when both reads answered, otherwise surface the failure.
-  if (conns.status === 'rejected') throw conns.reason as Error;
+  // Not provably done: only report "to do" when the reads answered, otherwise surface the failure.
+  if (!parsed?.integrations && conns.status === 'rejected') throw conns.reason as Error;
   if (ics.status === 'rejected') throw ics.reason as Error;
   return false;
 }

@@ -49,7 +49,7 @@ export function ItemList(p: ItemListProps) {
                 <strong className="sq-conn__itemtitle">{r.title}</strong>
                 <span className="sq-conn__meta">
                   {itemTypeLabel(r.kind)}
-                  {r.courseId ? ` · course ${r.courseId}` : ''}
+                  {r.courseName ? ` · ${r.courseName}` : ''}
                   {when(r, p.now) ? ` · ${when(r, p.now)}` : ''}
                 </span>
                 <span className="sq-conn__meta" data-testid="item-imported-at">

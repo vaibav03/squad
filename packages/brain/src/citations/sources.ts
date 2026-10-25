@@ -1,6 +1,6 @@
 import type { Citation, CitationSource, SourceKind } from '@squad/core';
 import { parseSourceUri, sourceUri } from '@squad/core';
-import type { ContextChunk, ContextSource } from '../context/types';
+import { courseLabel, type ContextChunk, type ContextSource } from '../context/types';
 import { NOT_IN_MATERIALS, type ExpertAnswer } from '../experts/types';
 import { quoteOnPage } from './check';
 
@@ -63,7 +63,8 @@ export function verifySourceClaims(
 }
 
 export function sourceCitation(
-  src: Pick<ContextSource, 'kind' | 'id' | 'title' | 'url' | 'courseId'>,
+  src: Pick<ContextSource, 'kind' | 'id' | 'title' | 'url' | 'courseId'> &
+    Partial<Pick<ContextSource, 'courseName' | 'courseCode'>>,
   anchor: string | undefined,
   quote: string,
   chapter = 'context',
@@ -74,6 +75,7 @@ export function sourceCitation(
     ...(anchor ? { anchor } : {}),
     title: src.title,
     ...(src.url ? { url: src.url } : {}),
+    ...(courseLabel(src) && (src.courseName || src.courseCode) ? { courseName: courseLabel(src)! } : {}),
   };
   return { courseId: src.courseId ?? '', chapter, file: src.title, quote, source };
 }

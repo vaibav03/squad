@@ -24,6 +24,45 @@ export interface OnboardingState {
   skipped: boolean;
   skippedAt: number | null;
   source: 'server' | 'fallback';
+  /** From GET /v1/onboarding (absent on the fallback). */
+  identityDone?: boolean;
+  sharingChosen?: boolean;
+  nextStep?: 'identity' | 'connect' | 'sharing' | 'done';
+  integrations?: Partial<Record<'canvas' | 'google', ProviderIntegration>>;
+}
+export interface ProviderIntegration {
+  state: string;
+  sub: string | null;
+  counts: Record<string, number>;
+  lastSyncAt: number | null;
+  demo: boolean;
+}
+
+const HAS_DATA = new Set(['syncing', 'live', 'demo', 'degraded']);
+
+/** Parses the hub's GET /v1/onboarding body (identityDone, integrations, sharingChosen, skipped, nextStep). */
+export function parseOnboarding(j: unknown): Omit<OnboardingState, 'source'> | null {
+  if (!j || typeof j !== 'object') return null;
+  const o = j as Record<string, unknown>;
+  const ints = (o.integrations ?? undefined) as OnboardingState['integrations'];
+  const skippedObj = o.skipped && typeof o.skipped === 'object' ? (o.skipped as { at?: unknown }) : null;
+  const skippedAt =
+    typeof skippedObj?.at === 'number' ? skippedObj.at : typeof o.skippedAt === 'number' ? o.skippedAt : null;
+  const connected =
+    typeof o.connected === 'boolean'
+      ? o.connected
+      : ints
+        ? Object.values(ints).some((p) => !!p && HAS_DATA.has(p.state))
+        : null;
+  return {
+    connected,
+    skipped: o.skipped === true || skippedObj !== null || skippedAt !== null,
+    skippedAt,
+    ...(typeof o.identityDone === 'boolean' ? { identityDone: o.identityDone } : {}),
+    ...(typeof o.sharingChosen === 'boolean' ? { sharingChosen: o.sharingChosen } : {}),
+    ...(typeof o.nextStep === 'string' ? { nextStep: o.nextStep as OnboardingState['nextStep'] } : {}),
+    ...(ints ? { integrations: ints } : {}),
+  };
 }
 
 export const skipKey = (userId: string | null): string =>
@@ -62,21 +101,10 @@ export async function fetchOnboarding(ctx: OnboardingCtx): Promise<OnboardingSta
   try {
     const res = await timedFetch(`${base(ctx)}/v1/onboarding`, { headers: auth(ctx) });
     if (res.ok) {
-      const j = (await res.json().catch(() => null)) as {
-        connected?: unknown;
-        skipped?: unknown;
-        skippedAt?: unknown;
-      } | null;
-      if (j && typeof j === 'object') {
-        const connected =
-          typeof j.connected === 'boolean' ? j.connected : await deriveConnected(ctx);
-        const skippedAt = typeof j.skippedAt === 'number' ? j.skippedAt : null;
-        return {
-          connected,
-          skipped: j.skipped === true || skippedAt !== null,
-          skippedAt,
-          source: 'server',
-        };
+      const parsed = parseOnboarding(await res.json().catch(() => null));
+      if (parsed) {
+        const connected = parsed.connected ?? (await deriveConnected(ctx));
+        return { ...parsed, connected, source: 'server' };
       }
     }
   } catch {
@@ -101,12 +129,12 @@ export async function recordSkip(ctx: OnboardingCtx): Promise<OnboardingState> {
       body: '{}',
     });
     if (res.ok) {
-      const j = (await res.json().catch(() => null)) as { skippedAt?: unknown } | null;
-      const at = typeof j?.skippedAt === 'number' ? j.skippedAt : now;
+      const parsed = parseOnboarding(await res.json().catch(() => null));
       return {
-        connected: await deriveConnected(ctx),
+        ...(parsed ?? {}),
+        connected: parsed?.connected ?? (await deriveConnected(ctx)),
         skipped: true,
-        skippedAt: at,
+        skippedAt: parsed?.skippedAt ?? now,
         source: 'server',
       };
     }
