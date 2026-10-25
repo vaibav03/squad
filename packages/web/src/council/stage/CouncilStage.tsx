@@ -82,7 +82,26 @@ function useRunInfo(hub: HubCtx | null, runId: string | undefined, version: numb
  * by the A2A events, the message arrows by kind word, live captions with the speaker chip and the mode badge, the board
  * one click away. Opens the room when a council starts (unless `?autohall=0`), and always offers 'Open the council hall'.
  */
+/** The room layer's dock rides above the stage: publish the stage height as `--room-strip-bottom` while it is mounted. */
+function useDockOffset(): (el: HTMLElement | null) => void {
+  const ro = useRef<ResizeObserver | null>(null);
+  return useCallback((el: HTMLElement | null) => {
+    ro.current?.disconnect();
+    ro.current = null;
+    const root = document.documentElement;
+    if (!el) return void root.style.removeProperty('--room-strip-bottom');
+    const set = () =>
+      root.style.setProperty('--room-strip-bottom', `${Math.ceil(el.offsetHeight) + 12}px`);
+    set();
+    if (typeof ResizeObserver !== 'undefined') {
+      ro.current = new ResizeObserver(set);
+      ro.current.observe(el);
+    }
+  }, []);
+}
+
 export function CouncilStage({ hub, calm }: { hub: HubCtx | null; calm?: boolean }) {
+  const dockRef = useDockOffset();
   const board = useBoardStoreRef();
   const version = useBoardVersion(board);
   const canBoard = useCanOpenBoard();
@@ -175,6 +194,7 @@ export function CouncilStage({ hub, calm }: { hub: HubCtx | null; calm?: boolean
   const speakerName = (id: string) => a2aPartyName(id);
   return (
     <section
+      ref={dockRef}
       className="cn-stage"
       aria-label={`${SLOT_TITLE[slot]} live stage`}
       data-testid="council-stage"

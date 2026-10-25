@@ -38,7 +38,9 @@
 .cn-captions__text {
   margin: 0;
   min-height: 2.8em;
-  font: 500 1rem/1.4 var(--font-sans, system-ui);
+  max-height: 4.2em;
+  overflow: hidden;
+  font: 500 0.9375rem/1.4 var(--font-sans, system-ui);
   text-wrap: pretty;
 }
 .cn-captions[data-state='streaming'] .cn-captions__text::after {
