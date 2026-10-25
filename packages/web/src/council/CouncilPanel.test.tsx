@@ -372,7 +372,7 @@ describe('CouncilPanel: error states', () => {
     act(() => m.box.h!.onError());
     await waitFor(() => expect(m.t.get).toHaveBeenCalledWith(f.done.id));
     fireEvent.click(await screen.findByRole('button', { name: 'Skip to verdict' }));
-    expect(await screen.findByTestId('council-summary')).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: /^Verdict:/ })).toBeTruthy();
   });
 });
 
