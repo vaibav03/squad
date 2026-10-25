@@ -7,7 +7,7 @@ import {
 } from '@squad/core';
 import WebSocket from 'ws';
 import type { RunningHub } from '../../src/server';
-import { boot, emit, get, login, openSse, post, auth } from '../helpers';
+import { boot, emit, get, login, openSse, post, auth, NOT_IN_PLAIN_RUN } from '../helpers';
 
 let hub: RunningHub;
 let url: string;
@@ -80,7 +80,9 @@ describe('ingest and stream', () => {
     const seen = new Set(s.frames.map((f) => f.event));
     // discussion.* events are scoped to a live run's squad (ingest drops them for an unknown run), so they never
     // reach a plain stream or the demo log; their delivery is covered by src/live/engine.test.ts and routes/live.test.ts
-    for (const t of VILLAGE_EVENT_TYPES.filter((x) => !x.startsWith('discussion.')))
+    for (const t of VILLAGE_EVENT_TYPES.filter(
+      (x) => !x.startsWith('discussion.') && !NOT_IN_PLAIN_RUN.has(x),
+    ))
       expect(seen.has(t), `missing ${t}`).toBe(true);
     s.stop();
   });

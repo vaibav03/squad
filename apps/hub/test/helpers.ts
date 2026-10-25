@@ -147,3 +147,10 @@ export async function openSse(
     stop: () => ac.abort(),
   };
 }
+
+/**
+ * Council-runtime kinds that only a live council run produces (docs/a2a.md): the plain demo run and the smoke emitter
+ * do not, so the "every VillageEvent type round-trips" smokes skip them. Their delivery and viewer filtering are
+ * covered by src/filter-a2a.test.ts and packages/core/src/a2a*.test.ts.
+ */
+export const NOT_IN_PLAIN_RUN: ReadonlySet<string> = new Set(['a2a.message', 'council.stage']);
