@@ -9,3 +9,7 @@ export { parseConfirmReply } from './confirm-parse';
 export { createConfirmManager } from './confirm';
 export { createEventPublisher, recordingPublisher, teePublisher } from './events';
 export { registerPersonas, getPersona, formatPersonaText } from './persona';
+export { createSkills, type SkillDeps, type MediaWiring } from './skills';
+export { buildMedia, registerMediaPersonas } from './wiring';
+export { WebTransport, type WebOutbound, type WebInbound } from './transports/web';
+export { extractCitations, parseQuizCard, stripPersonaPrefix } from './transports/web-format';

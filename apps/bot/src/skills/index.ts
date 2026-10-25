@@ -7,6 +7,8 @@ import {
   chapterIdsFromStore,
   chapterProviderFromStore,
   createBrain,
+  type Brain,
+  type MasteryStore,
   createFeynmanSkill,
   createMasteryStore,
   createQuizSkill,
@@ -40,6 +42,8 @@ export interface SkillDeps {
   /** Load the committed OpenStax sample course when the store is empty (offline, no LLM). Default true. */
   seedFixtureCourse?: boolean;
   now?: () => number;
+  /** Share the hub's brain and mastery store so chat, quiz and the village use one instance. */
+  shared?: { brain?: Brain; mastery?: MasteryStore };
 }
 
 // Static, dependency-free fallback (chat only). The full registry is built by `createSkills`.
@@ -54,12 +58,12 @@ export const skills: Skill[] = buildRegistry([chatSkill]);
 export async function createSkills(d: SkillDeps): Promise<Skill[]> {
   const emit = async (e: VillageEvent): Promise<void> => void (await d.emit(e));
   const now = d.now ? { now: d.now } : {};
-  const brain = createBrain({ llm: d.llm, db: d.db, emit, ...now });
+  const brain = d.shared?.brain ?? createBrain({ llm: d.llm, db: d.db, emit, ...now });
   const course = d.courseId ?? (() => 'demo');
   if ((d.seedFixtureCourse ?? true) && !brain.store.getCourse(course())) {
     await loadFixtureCourse({ store: brain.store }, course());
   }
-  const mastery = createMasteryStore({ db: d.db, emit, ...now });
+  const mastery = d.shared?.mastery ?? createMasteryStore({ db: d.db, emit, ...now });
   const chapters = chapterProviderFromStore(brain.store);
   const engine = new QuizEngine({ db: d.db, llm: d.llm, emit, mastery, chapters, ...now });
   const feynman = new FeynmanEngine({ db: d.db, llm: d.llm, emit, mastery, chapters, ...now });
