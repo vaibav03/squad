@@ -1,0 +1,7 @@
+.sq-skeleton { display: block; background: var(--muted); border-radius: var(--radius-sm); animation: sq-skeleton-pulse 1.6s var(--ease-out) infinite alternate; }
+.sq-skeleton--line { height: 14px; width: 100%; }
+.sq-skeleton--block { width: 100%; height: 96px; border-radius: var(--radius); }
+.sq-skeleton--circle { width: 40px; height: 40px; border-radius: 50%; }
+@keyframes sq-skeleton-pulse { from { opacity: 0.55; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sq-skeleton { animation: none; opacity: 0.8; } }
+:root[data-calm='true'] .sq-skeleton { animation: none; opacity: 0.8; }

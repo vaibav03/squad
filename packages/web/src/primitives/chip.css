@@ -1,0 +1,16 @@
+.sq-chip { --chip-c: var(--muted-foreground); display: inline-flex; align-items: center; min-height: 28px; border-radius: var(--radius-pill);
+  background: var(--secondary); color: var(--secondary-foreground); border: 1px solid var(--border); font: 500 var(--text-xs)/var(--lh-xs) var(--font-sans); max-width: 100%; position: relative; }
+.sq-chip__main { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; min-height: 26px; background: none; border: 0; color: inherit; font: inherit; border-radius: inherit; min-width: 0; }
+.sq-chip__main svg { color: var(--chip-c); flex: none; }
+.sq-chip__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sq-chip--ok { --chip-c: var(--success); } .sq-chip--alert { --chip-c: var(--destructive-text); } .sq-chip--ember { --chip-c: var(--warning); } .sq-chip--violet { --chip-c: var(--info); }
+.sq-chip--ok, .sq-chip--alert, .sq-chip--ember, .sq-chip--violet { border-color: color-mix(in oklab, var(--chip-c) 45%, var(--border)); background: color-mix(in oklab, var(--chip-c) 12%, var(--secondary)); }
+.sq-chip.is-interactive button.sq-chip__main { cursor: pointer; transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out); }
+.sq-chip.is-interactive::after { content: ''; position: absolute; inset: -8px 0; }
+.sq-chip.is-selected { background: var(--accent); border-color: var(--sq-sky-low); box-shadow: 0 0 0 1px var(--sq-sky-low) inset; }
+@media (hover: hover) and (pointer: fine) { .sq-chip.is-interactive:not(.is-selected):hover { background: var(--accent); } }
+.sq-chip.is-interactive:active .sq-chip__main { transform: scale(0.97); }
+.sq-chip__remove { display: grid; place-items: center; width: 24px; height: 24px; margin-right: 2px; border: 0; background: none; border-radius: 50%; color: var(--muted-foreground); padding: 0; }
+@media (hover: hover) and (pointer: fine) { .sq-chip__remove:hover { background: var(--accent); color: var(--foreground); } }
+.sq-chip__main:disabled, .sq-chip__remove:disabled { opacity: 0.5; cursor: not-allowed; }
+.sq-chip__main:focus-visible, .sq-chip__remove:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }

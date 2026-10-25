@@ -1,0 +1,17 @@
+.sq-tabs { display: flex; gap: var(--space-1); overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+.sq-tabs::-webkit-scrollbar { display: none; }
+.sq-tab { position: relative; display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--touch-min); padding: 0 var(--space-4); background: none; border: 0; color: var(--muted-foreground); font: 500 var(--text-sm)/var(--lh-sm) var(--font-sans); white-space: nowrap; scroll-snap-align: start; flex: none;
+  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out); }
+.sq-tab:disabled { opacity: 0.5; cursor: not-allowed; }
+.sq-tab:active:not(:disabled) { transform: scale(0.97); }
+.sq-tab[aria-selected='true'] { color: var(--foreground); }
+@media (hover: hover) and (pointer: fine) { .sq-tab:not([aria-selected='true']):not(:disabled):hover { color: var(--foreground); } }
+.sq-tabs--underline { border-bottom: 1px solid var(--border); }
+.sq-tabs--underline .sq-tab::after { content: ''; position: absolute; left: var(--space-3); right: var(--space-3); bottom: -1px; height: 2px; border-radius: 2px 2px 0 0; background: var(--primary); opacity: 0; transform: scaleX(0.6); transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-base) var(--ease-out); }
+:root[data-theme='light'] .sq-tabs--underline .sq-tab::after { background: var(--sq-sky-low); }
+.sq-tabs--underline .sq-tab[aria-selected='true']::after { opacity: 1; transform: none; }
+.sq-tabs--pill { gap: var(--space-2); }
+.sq-tabs--pill .sq-tab { border-radius: var(--radius-pill); background: var(--secondary); border: 1px solid var(--border); padding: 0 var(--space-4); min-height: var(--touch-min); }
+@media (hover: hover) and (pointer: fine) { .sq-tabs--pill .sq-tab:not([aria-selected='true']):not(:disabled):hover { background: var(--accent); } }
+.sq-tabs--pill .sq-tab[aria-selected='true'] { background: var(--accent); border-color: var(--sq-sky-low); box-shadow: 0 0 0 1px var(--sq-sky-low) inset; }
+.sq-tab:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; border-radius: var(--radius-md); }

@@ -1,0 +1,8 @@
+.sq-progress { --pc: var(--primary); position: relative; height: 6px; border-radius: var(--radius-pill); background: var(--muted); overflow: hidden; }
+.sq-progress--ok { --pc: var(--success); } .sq-progress--alert { --pc: var(--destructive); }
+:root[data-theme='light'] .sq-progress--primary, :root:not([data-theme='dark']) .sq-progress--primary { --pc: var(--sq-sky-low); }
+.sq-progress__fill { position: absolute; inset: 0; background: var(--pc); transform-origin: left center; transition: transform var(--dur-base) var(--ease-out); }
+.sq-progress.is-indeterminate .sq-progress__fill { width: 40%; animation: sq-progress-slide 1.4s var(--ease-in-out) infinite; }
+@keyframes sq-progress-slide { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+@media (prefers-reduced-motion: reduce) { .sq-progress.is-indeterminate .sq-progress__fill { animation: none; width: 100%; opacity: 0.5; } .sq-progress__fill { transition: none; } }
+:root[data-calm='true'] .sq-progress.is-indeterminate .sq-progress__fill { animation: none; width: 100%; opacity: 0.5; }

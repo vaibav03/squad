@@ -1,0 +1,19 @@
+.sq-iconbtn {
+  --ib-bg: transparent; --ib-fg: var(--foreground); --ib-border: transparent; --ib-hover: var(--accent);
+  position: relative; display: inline-grid; place-items: center; width: 40px; height: 40px; padding: 0;
+  border-radius: var(--radius-md); border: var(--border-w) solid var(--ib-border); background: var(--ib-bg); color: var(--ib-fg);
+  transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-press) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.sq-iconbtn--sm { width: 32px; height: 32px; }
+.sq-iconbtn--lg { width: 48px; height: 48px; border-radius: var(--radius-lg); }
+/* hit area is always >= 44px even when the visible button is smaller */
+.sq-iconbtn::after { content: ''; position: absolute; inset: 50% auto auto 50%; width: max(100%, var(--touch-min)); height: max(100%, var(--touch-min)); transform: translate(-50%, -50%); }
+.sq-iconbtn--secondary { --ib-bg: var(--secondary); --ib-border: var(--border); }
+.sq-iconbtn--primary { --ib-bg: var(--primary); --ib-fg: var(--primary-foreground); }
+.sq-iconbtn--danger { --ib-bg: var(--destructive); --ib-fg: #fff; }
+.sq-iconbtn[aria-pressed='true'] { --ib-bg: var(--accent); box-shadow: var(--shadow-glow); }
+@media (hover: hover) and (pointer: fine) { .sq-iconbtn:not(:disabled):hover { background: var(--ib-hover); } }
+.sq-iconbtn:not(:disabled):active { transform: scale(0.97); }
+.sq-iconbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.sq-iconbtn[data-force-state='hover'] { background: var(--ib-hover); }

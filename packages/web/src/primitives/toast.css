@@ -1,0 +1,18 @@
+.sq-toast-region { position: fixed; z-index: var(--z-toast); left: 50%; transform: translateX(-50%); bottom: calc(var(--space-6) + var(--safe-bottom)); width: min(26.25rem, calc(100vw - 2 * var(--gutter))); pointer-events: none; display: flex; flex-direction: column; align-items: stretch; }
+@media (max-width: 1023px) { .sq-toast-region { bottom: calc(var(--space-16) + var(--space-5) + var(--safe-bottom)); } }
+.sq-toast { --t: var(--info); pointer-events: auto; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); background: var(--popover); color: var(--popover-foreground);
+  border: 1px solid var(--border); box-shadow: var(--shadow-2); opacity: 0; transform: translateY(8px) scale(0.95);
+  transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out); }
+.sq-toast[data-state='open'] { opacity: 1; transform: none; }
+.sq-toast[data-state='leaving'] { opacity: 0; transform: translateY(4px); transition-duration: var(--dur-fast); }
+.sq-toast--ok { --t: var(--success); } .sq-toast--warn { --t: var(--warning); } .sq-toast--error { --t: var(--destructive); }
+.sq-toast__icon { color: var(--t); display: inline-flex; }
+.sq-toast--error .sq-toast__icon { color: var(--destructive-text); }
+.sq-toast__text { flex: 1; min-width: 0; }
+.sq-toast__title { font: 500 var(--text-sm)/var(--lh-sm) var(--font-sans); }
+.sq-toast__body { color: var(--muted-foreground); font-size: var(--text-xs); line-height: var(--lh-xs); }
+.sq-toast__action { min-height: var(--touch-min); padding: 0 var(--space-2); background: none; border: 0; border-radius: var(--radius-sm); font: 600 var(--text-sm)/1 var(--font-sans); color: var(--primary); }
+:root[data-theme='light'] .sq-toast__action { color: var(--sq-sky-low); }
+@media (hover: hover) and (pointer: fine) { .sq-toast__action:hover { text-decoration: underline; text-underline-offset: 3px; } }
+@media (prefers-reduced-motion: reduce) { .sq-toast, .sq-toast[data-state='leaving'] { transform: none; } }
+:root[data-calm='true'] .sq-toast { transform: none; }
