@@ -10,6 +10,7 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --dir src --passWithNoTests",
+    "capture": "tsx src/scenes/tools/capture-cli.ts",
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests"
   },
   "dependencies": {
