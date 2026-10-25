@@ -32,12 +32,13 @@ export default function ChatPage() {
   const me = fixtures ? ME : cfg.userId ? hubStudentId(cfg.userId) : '';
   const ctl = useChat(api, { me });
 
-  const active = params.get('c');
+  const active = params.get('c') ?? params.get('group');
   const setActive = useCallback(
     (id: string | null) =>
       setParams(
         (p) => {
           const n = new URLSearchParams(p);
+          n.delete('group');
           if (id) n.set('c', id);
           else n.delete('c');
           return n;

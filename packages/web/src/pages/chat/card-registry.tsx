@@ -4,6 +4,7 @@ import { CouncilChatCard } from '../../council';
 import { LiveChatCard } from '../../live/LiveChatCard';
 import { ConfirmMessageCard, QuizMessageCard } from './cards';
 import { PlanChatCard } from './PlanChatCard';
+import { TripChatCard } from '../../plans/TripChatCard';
 import type { BubbleProps } from './Bubble';
 
 export type CardOf<T extends ChatCard['type']> = Extract<ChatCard, { type: T }>;
@@ -52,6 +53,10 @@ export const CARD_REGISTRY: Registry = {
     render: (card, { hub }) => (
       <PlanChatCard hub={hub} planId={card.planId} status={card.status} rev={card.rev} />
     ),
+  },
+  trip: {
+    framed: true,
+    render: (card, { hub }) => <TripChatCard hub={hub} card={card} />,
   },
   live: {
     framed: true,

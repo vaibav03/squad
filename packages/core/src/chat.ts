@@ -70,6 +70,13 @@ export const ChatCardSchema = z.discriminatedUnion('type', [
     rev: z.number().int().nonnegative().optional(),
     status: z.string().max(20).optional(),
   }),
+  /** Shared trip plan card; one per trip, refreshed from `GET /v1/trips/:tripId` (docs/trip-planning.md). */
+  z.strictObject({
+    type: z.literal('trip'),
+    tripId: z.string().regex(/^trip_[a-z0-9]{4,16}$/),
+    rev: z.number().int().nonnegative().optional(),
+    status: z.string().max(20).optional(),
+  }),
   z.strictObject({
     type: z.literal('live'),
     liveId: z.string().regex(/^ld_[a-z0-9]{12}$/),

@@ -128,7 +128,7 @@ export function MessageBubble(p: BubbleProps) {
   // The structured card is the canonical answer; its text twin is for transports that cannot render cards (iMessage,
   // Discord) and for screen readers (the card carries it as accessible text).
   const text =
-    m.card?.type === 'council' || (m.card && textRepeatsCard(m.text, m.card)) ? '' : m.text.trim();
+    m.card?.type === 'council' || m.card?.type === 'trip' || (m.card && textRepeatsCard(m.text, m.card)) ? '' : m.text.trim();
   const attachments = m.attachments;
   const cls = [
     'sqc-msg',

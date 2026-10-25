@@ -42,6 +42,12 @@ import { ImessageIndicator } from './sync/ImessageIndicator';
 import { useImessageStatus } from './sync/useImessageStatus';
 import { LivePanel } from '../../live/LivePanel';
 import { useSquadConfig } from '../../shell/context';
+import { PlansDrawer } from '../../plans/PlansDrawer';
+import { WizardDrawer } from '../../plans/WizardDrawer';
+import { usePlans } from '../../plans/usePlans';
+import { collapsePlanCards } from '../../plans/dedupe';
+import { PlanActionsContext } from '../../plans/context';
+import type { PlanKind } from '../../plans/registry';
 
 // ------------------------------------------------------------------ banners
 
@@ -277,7 +283,7 @@ function MessageList({
     () => foldCouncilProse(dropRedelivered(ctl.thread(chat.id))),
     [ctl.thread, chat.id],
   );
-  const rows = useMemo(() => buildRows(items, ctl.me), [items, ctl.me]);
+  const rows = useMemo(() => buildRows(collapsePlanCards(items), ctl.me), [items, ctl.me]);
   const el = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const [atBottom, setAtBottom] = useState(true);
@@ -588,87 +594,140 @@ export function ThreadPane({
   const cfg = useSquadConfig();
   const liveHub = cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token ?? null } : null;
   const [liveTopic, setLiveTopic] = useState<string | null>(null);
+  const isGroup = chat.kind === 'group';
+  const planParam = useMemo(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('plan');
+    } catch {
+      return null;
+    }
+  }, []);
+  const [wizard, setWizard] = useState<PlanKind | null>(null);
+  const [plansOpen, setPlansOpen] = useState(isGroup && !!planParam);
+  const plansState = usePlans(liveHub, isGroup && plansOpen);
   const imsg = useImessageStatus(ctl.api);
+  const planActions = useMemo(
+    () => ({
+      askCubbie: (r: { id: string; label: string }) => composerRef.current?.attachContext(r),
+    }),
+    [composerRef],
+  );
   return (
-    <div className="sqc-thread" data-chat-kind={chat.kind}>
-      <header className="sqc-head">
-        {onBack ? (
-          <button
-            type="button"
-            className="sqc-iconbtn sqc-back"
-            onClick={onBack}
-            aria-label="Back to chats"
-            data-testid="chat-back"
-          >
-            <Icon name="chevron-left" size={22} />
-          </button>
-        ) : null}
-        {!compact ? <MemberStack chat={chat} /> : null}
-        <div className="sqc-head__text">
-          <h2 className="sqc-head__title">{chat.title}</h2>
-          {!compact ? <p className="sqc-head__sub">{subtitle}</p> : null}
-        </div>
-        <div className="sqc-head__end">
-          {chat.private ? (
-            <span className="sqc-privacy" data-testid="chat-privacy-badge">
-              <Icon name="lock" size={13} />
-              <span className="sqc-privacy__long">Only you can see this</span>
-              <span className="sqc-privacy__short" aria-hidden="true">
-                Private
+    <PlanActionsContext.Provider value={planActions}>
+      <div className="sqc-thread" data-chat-kind={chat.kind}>
+        <header className="sqc-head">
+          {onBack ? (
+            <button
+              type="button"
+              className="sqc-iconbtn sqc-back"
+              onClick={onBack}
+              aria-label="Back to chats"
+              data-testid="chat-back"
+            >
+              <Icon name="chevron-left" size={22} />
+            </button>
+          ) : null}
+          {!compact ? <MemberStack chat={chat} /> : null}
+          <div className="sqc-head__text">
+            <h2 className="sqc-head__title">{chat.title}</h2>
+            {!compact ? <p className="sqc-head__sub">{subtitle}</p> : null}
+          </div>
+          <div className="sqc-head__end">
+            {chat.private ? (
+              <span className="sqc-privacy" data-testid="chat-privacy-badge">
+                <Icon name="lock" size={13} />
+                <span className="sqc-privacy__long">Only you can see this</span>
+                <span className="sqc-privacy__short" aria-hidden="true">
+                  Private
+                </span>
+              </span>
+            ) : null}
+            {headerActions ? (
+              <span className="sqc-head__actions" data-slot="header-actions">
+                {headerActions}
+              </span>
+            ) : null}
+            <ImessageIndicator status={imsg} chatId={chat.id} compact={compact} />
+            <span className="sqc-head__conn">
+              <span data-testid="chat-header-badge" data-tone={st.tone} title={st.detail}>
+                <StatusDot status={st.status} label={st.label} hideLabel={compact} />
               </span>
             </span>
-          ) : null}
-          {headerActions ? (
-            <span className="sqc-head__actions" data-slot="header-actions">
-              {headerActions}
-            </span>
-          ) : null}
-          <ImessageIndicator status={imsg} chatId={chat.id} compact={compact} />
-          <span className="sqc-head__conn">
-            <span data-testid="chat-header-badge" data-tone={st.tone} title={st.detail}>
-              <StatusDot status={st.status} label={st.label} hideLabel={compact} />
-            </span>
-          </span>
-          {headerEnd}
-        </div>
-      </header>
-      <ChatBanners ctl={ctl} />
-      <MessageList
-        key={chat.id}
-        chat={chat}
-        ctl={ctl}
-        reduced={reduced}
-        scene={scene}
-        compact={compact}
-        onPrompt={(t) => composerRef.current?.fill(t)}
-        onOpenChat={onOpenChat}
-      />
-      {drawer ? (
-        <div className="sqc-drawer" data-slot="drawer" data-testid="chat-drawer">
-          {drawer}
-        </div>
-      ) : null}
-      <Composer
-        ref={composerRef}
-        leading={composerLeading}
-        key={`c-${chat.id}`}
-        api={ctl.api}
-        chatKind={chat.kind}
-        compact={compact}
-        paused={paused}
-        onSend={(input) => ctl.send(chat.id, input)}
-        onDiscuss={setLiveTopic}
-      />
-      {liveTopic ? (
-        <LivePanel
-          hub={liveHub}
-          open
-          topic={liveTopic}
-          chatId={chat.id}
-          calm={reduced}
-          onClose={() => setLiveTopic(null)}
+            {isGroup && !compact ? (
+              <button
+                type="button"
+                className="sqc-iconbtn"
+                aria-label="Plans"
+                aria-expanded={plansOpen}
+                data-testid="plans-toggle"
+                onClick={() => setPlansOpen((o) => !o)}
+              >
+                <Icon name="ledger" size={20} />
+              </button>
+            ) : null}
+            {headerEnd}
+          </div>
+        </header>
+        {isGroup && plansOpen ? (
+          <PlansDrawer
+            {...plansState}
+            focusId={planParam}
+            onRetry={plansState.reload}
+            onCreate={(k) => {
+              setPlansOpen(false);
+              setWizard(k);
+            }}
+            onClose={() => setPlansOpen(false)}
+          />
+        ) : null}
+        <ChatBanners ctl={ctl} />
+        <MessageList
+          key={chat.id}
+          chat={chat}
+          ctl={ctl}
+          reduced={reduced}
+          scene={scene}
+          compact={compact}
+          onPrompt={(t) => composerRef.current?.fill(t)}
+          onOpenChat={onOpenChat}
         />
-      ) : null}
-    </div>
+        {isGroup && wizard ? (
+          <WizardDrawer
+            kind={wizard}
+            groupTitle={chat.title}
+            hub={liveHub}
+            onClose={() => setWizard(null)}
+            onCreated={() => plansState.reload()}
+          />
+        ) : null}
+        {drawer ? (
+          <div className="sqc-drawer" data-slot="drawer" data-testid="chat-drawer">
+            {drawer}
+          </div>
+        ) : null}
+        <Composer
+          ref={composerRef}
+          leading={composerLeading}
+          key={`c-${chat.id}`}
+          api={ctl.api}
+          chatKind={chat.kind}
+          compact={compact}
+          paused={paused}
+          onSend={(input) => ctl.send(chat.id, input)}
+          onDiscuss={setLiveTopic}
+          onPlan={isGroup ? setWizard : undefined}
+        />
+        {liveTopic ? (
+          <LivePanel
+            hub={liveHub}
+            open
+            topic={liveTopic}
+            chatId={chat.id}
+            calm={reduced}
+            onClose={() => setLiveTopic(null)}
+          />
+        ) : null}
+      </div>
+    </PlanActionsContext.Provider>
   );
 }
