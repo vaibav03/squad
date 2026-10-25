@@ -1513,3 +1513,4 @@
 .sqc-ctxchip__prov.is-real, .sqc-cite__prov.is-real { color: #166534; background: #dcfce7; }
 .sqc-cite__prov { margin-left: 6px; }
 .sqc-cite__loc { margin-left: 6px; opacity: 0.75; font-size: 11px; }
+.sqc-cite__prov.is-related { color: #475569; background: #f1f5f9; }

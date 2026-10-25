@@ -4,6 +4,9 @@ import { createDean } from '../dean';
 import { claimToCitation } from '../citations';
 import { answerFromContext } from '../context/answer';
 import { isConnectableQuestion } from '../context/answers';
+import { relevanceOf } from '../context/relevance';
+import { bestQuote } from '../context/retrieve';
+import { sourceCitation } from '../citations/sources';
 import type { ContextViewer } from '../context/types';
 import type { CourseStore } from '../ingest/types';
 import { BrainUnavailableError } from './errors';
@@ -132,7 +135,19 @@ export function assembleBrain(deps: CreateBrainDeps): Brain {
         limit: 4,
       });
       if (hits.length === 0) return nothingConnected(pdf, question, opts.viewer as ContextViewer);
-      const ctx = await answerFromContext(llm, question, hits);
+      // only sources that are ABOUT the question are answered from or cited; the rest never gets a chip as evidence
+      const onTopic = hits.filter((h) => relevanceOf(question, h.source, h.chunk).onTopic);
+      if (onTopic.length === 0) {
+        if (pdf.grounded) return pdf;
+        const top = hits[0]!;
+        return {
+          ...pdf,
+          text: `Your connected sources don't cover that. The closest one, "${top.source.title}", is not about it.`,
+          reason: 'unrelated',
+          related: [sourceCitation(top.source, top.chunk.anchor, bestQuote(top.chunk.text, question).slice(0, 300))],
+        };
+      }
+      const ctx = await answerFromContext(llm, question, onTopic);
       if (!ctx.grounded) return pdf;
       if (!pdf.grounded) return { ...ctx, struck: ctx.struck + pdf.struck };
       return {
