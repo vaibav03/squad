@@ -15,12 +15,13 @@ export function renderAnswer(
   const struck = ctx.struck ?? 0;
   const chapters = ctx.chapters ?? [ctx.chapter];
   if (verified.length === 0)
-    return { text: NOT_IN_MATERIALS, citations: [], grounded: false, chapters, struck };
+    return { text: NOT_IN_MATERIALS, citations: [], grounded: false, claims: [], chapters, struck };
   const text = verified.map((c) => `${c.text.trim()} (${c.file} p.${c.page})`).join(' ');
   return {
     text,
     citations: verified.map((c) => claimToCitation(c, ctx.courseId, ctx.chapter)),
     grounded: true,
+    claims: verified,
     chapters,
     struck,
   };

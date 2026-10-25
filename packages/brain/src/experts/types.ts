@@ -17,6 +17,7 @@ export interface ExpertAnswer {
   text: string; // user-facing, with verified "(file p.N)" suffixes already rendered
   citations: Citation[]; // verified only; each has a `quote` that is on the cited page
   grounded: boolean;
+  claims: Claim[]; // the verified claims the text was assembled from (empty when ungrounded)
   chapters: string[]; // chapter ids consulted
   struck: number; // claims dropped by the checker (for logs/evals)
 }
