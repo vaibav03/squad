@@ -530,14 +530,13 @@
 }
 .cb-action {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-2);
   font: 400 var(--text-sm) / var(--lh-sm) var(--font-sans);
 }
 .cb-action__text {
-  flex: 1 1 200px;
+  flex: 0 0 auto;
 }
 .cb-action__btns {
   display: inline-flex;
