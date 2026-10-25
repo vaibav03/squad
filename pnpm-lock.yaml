@@ -305,9 +305,24 @@ importers:
 
   scripts/demo:
     dependencies:
+      '@squad/agent':
+        specifier: workspace:*
+        version: link:../../apps/agent
+      '@squad/bot':
+        specifier: workspace:*
+        version: link:../../apps/bot
+      '@squad/brain':
+        specifier: workspace:*
+        version: link:../../packages/brain
       '@squad/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@squad/hub':
+        specifier: workspace:*
+        version: link:../../apps/hub
+      '@squad/mesh':
+        specifier: workspace:*
+        version: link:../../packages/mesh
       zod:
         specifier: ^4.0.0
         version: 4.6.7

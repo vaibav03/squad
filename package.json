@@ -19,7 +19,8 @@
     "demo:seed": "tsx scripts/demo/seed.ts",
     "demo:reset": "tsx scripts/demo/reset.ts",
     "demo:replay": "tsx scripts/demo/replay.ts",
-    "demo:preflight": "tsx scripts/demo/preflight.ts"
+    "demo:preflight": "tsx scripts/demo/preflight.ts",
+    "demo:live": "tsx scripts/demo/live.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

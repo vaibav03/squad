@@ -122,7 +122,9 @@ function createRealQuizPort(deps: HubDeps, engine: QuizEngine, courseId: string)
   const { db } = deps;
   const round = (quizId: string) =>
     db
-      .prepare('SELECT quizId, chapter, target, students_json, phase, idx FROM quiz_rounds WHERE quizId=?')
+      .prepare(
+        'SELECT quizId, chapter, target, students_json, phase, idx FROM quiz_rounds WHERE quizId=?',
+      )
       .get(quizId) as Round | undefined;
   const answered = (quizId: string, idx: number, student: string) =>
     db
@@ -267,15 +269,13 @@ function createRealBrainPort(
       }[];
       const ready = rows
         .filter((r) => !progress.has(r.id))
-        .map(
-          (r): CourseStatus => ({
-            courseId: r.id,
-            title: r.title,
-            file: brain.store.listChapters(r.id)[0]?.file ?? r.title,
-            status: 'ready',
-            pct: 100,
-          }),
-        );
+        .map((r): CourseStatus => ({
+          courseId: r.id,
+          title: r.title,
+          file: brain.store.listChapters(r.id)[0]?.file ?? r.title,
+          status: 'ready',
+          pct: 100,
+        }));
       return [...ready, ...progress.values()];
     },
 
@@ -317,7 +317,10 @@ function createAudioPorts(
           question: text,
           student,
         });
-        return lines.map((l): AnswerSentence => ({ text: l.text, ...(l.cite ? { cite: l.cite } : {}) }));
+        return lines.map((l): AnswerSentence => ({
+          text: l.text,
+          ...(l.cite ? { cite: l.cite } : {}),
+        }));
       }
       const r = await brain.ask(defaultCourse, text);
       return [{ text: r.text, ...(r.citations[0] ? { cite: r.citations[0] } : {}) }];
@@ -327,7 +330,8 @@ function createAudioPorts(
       throw e;
     }
   };
-  const knownAgent = (agent: string) => ['expert', 'dean', 'council'].includes(parseAgentId(agent).kind);
+  const knownAgent = (agent: string) =>
+    ['expert', 'dean', 'council'].includes(parseAgentId(agent).kind);
 
   const audio = o.tts || process.env.ELEVENLABS_API_KEY ? tryAudio(o) : undefined;
   if (audio)
