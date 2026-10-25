@@ -45,6 +45,9 @@ export const e2eCheck: Check = {
         production: false,
         logLevel: 'silent',
         replayDir,
+        // a fresh in-memory db: the default file db keeps earlier sessions' chat history (a stale council verdict from a
+        // previous demo run was mistaken for the reply)
+        dbPath: ':memory:',
       },
     });
     let handle: { stop?: () => Promise<void> | void } | undefined;
@@ -64,7 +67,12 @@ export const e2eCheck: Check = {
         };
       };
       await t.step('status says real model, not demo', async () => {
-        const s = await j('/v1/status');
+        // the hub proves the key in the background at startup; "probing" reports the demo model until it answers
+        let s = await j('/v1/status');
+        for (let i = 0; i < 20 && s.body.probing === true; i++) {
+          await ctx.sleep(1000);
+          s = await j('/v1/status');
+        }
         if (s.body.demo !== false || s.body.llm !== 'gemini')
           throw new Error(`status ${JSON.stringify(s.body).slice(0, 200)}`);
         return 'llm=gemini demo=false';
@@ -89,6 +97,7 @@ export const e2eCheck: Check = {
           body: JSON.stringify({ chatId, text: '@cubbie what does a z-score measure?' }),
         });
         if (sent.status !== 202) throw new Error(`send HTTP ${sent.status}`);
+        const sentSeq = Number((sent.body.message as { seq?: number } | undefined)?.seq ?? 0);
         const deadline = ctx.now() + 90_000;
         let reply = '';
         while (ctx.now() < deadline) {
@@ -98,10 +107,12 @@ export const e2eCheck: Check = {
           });
           const all = JSON.stringify(h.body);
           const msgs = (Object.values(h.body).find(Array.isArray) ?? []) as {
+            seq?: number;
             sender?: { kind?: string };
             text?: string;
           }[];
-          const bot = msgs.filter((m) => m.sender?.kind === 'persona');
+          // only a reply that came after our question counts, never earlier history
+          const bot = msgs.filter((m) => m.sender?.kind === 'persona' && (m.seq ?? 0) > sentSeq);
           if (bot.length) {
             reply = bot[bot.length - 1]!.text ?? all;
             break;

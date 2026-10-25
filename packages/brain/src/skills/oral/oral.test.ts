@@ -122,6 +122,13 @@ describe('pure helpers', () => {
       'You would get a grade of B.',
       'A solid pass.',
       'Roughly 90 percent correct.',
+      'You got 9 right.',
+      'You got an A.',
+      'You scored well on that.',
+      'Your score of 7 is fine.',
+      'Score: 7.',
+      'That earns full marks.',
+      'Your GPA would rise.',
     ])
       expect(hasGrade(s)).toBe(true);
     expect(scrubGrades('Good start. You scored 80%. Review loops.')).toBe(
@@ -129,6 +136,17 @@ describe('pure helpers', () => {
     );
     expect(safeLine('Nice. The answer is 42. Keep going.')).not.toMatch(/answer is/);
     expect(hasGrade('You explained recursion well.')).toBe(false);
+    // disclaimers and ordinary prose that merely contain the word are not grades
+    for (const s of [
+      'Welcome to Oral Exam practice, feedback only: nothing here is graded.',
+      'This is not graded and there is no grading.',
+      'Good point about base cases.',
+      'You got the idea of the base case.',
+      'Mark the base case first.',
+    ])
+      expect(hasGrade(s), s).toBe(false);
+    expect(hasGrade(INTRO_LINE)).toBe(false);
+    expect(scrubGrades(INTRO_LINE)).toBe(INTRO_LINE);
   });
 
   it('clips to two sentences and 220 chars', () => {

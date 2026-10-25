@@ -60,7 +60,7 @@ export async function firstDivergence(
 }
 
 const EquivSchema = z.object({ equivalent: z.boolean(), concept: z.string().optional() });
-export const STEPDIFF_PROMPT_VERSION = 'stepdiff-v1';
+export const STEPDIFF_PROMPT_VERSION = 'stepdiff-v2';
 
 /** LLM equivalence oracle (sympy skipped). Memoised by canonical pair, order-insensitive. */
 export function llmEquiv(llm: Llm): EquivFn {
