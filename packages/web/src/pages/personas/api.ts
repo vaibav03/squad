@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { pixelPortrait } from '../../pixel/portraits';
 import type { PersonaDraft, VoiceOption } from './fixtures';
 
 const HubPersona = z.object({
@@ -10,14 +11,19 @@ const HubPersona = z.object({
   systemPrompt: z.string().optional(),
 });
 export const HubPersonas = z.array(HubPersona);
-export const HubVoices = z.array(
-  z.object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string().optional(),
-    tags: z.array(z.string()).optional(),
-  }),
-);
+const HubVoice = z.object({
+  id: z.string(),
+  name: z.string(),
+  /** hub-api.md: `{ voices: [{ id, name, label? }] }` */
+  label: z.string().optional(),
+  description: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+});
+/** The hub wraps the list (`{ voices }`); a bare array is accepted too. */
+export const HubVoices = z.union([z.array(HubVoice), z.object({ voices: z.array(HubVoice) }).transform((o) => o.voices)]);
+
+/** Hub persona `role` is a kind ('cubbie', 'expert', ...); the page fixtures carry the descriptive copy per kind. */
+const KIND_TO_FIXTURE: Record<string, string> = { cubbie: 'buddy', buddy: 'buddy', expert: 'expert', examiner: 'examiner', dean: 'dean', council: 'council', rival: 'rival' };
 
 interface Ctx {
   hubUrl: string;
@@ -31,8 +37,10 @@ export async function fetchPersonas(c: Ctx, fallback: PersonaDraft[]): Promise<P
   if (!res.ok) throw new Error(`personas ${res.status}`);
   const parsed = HubPersonas.parse(await res.json());
   return parsed.map((p) => {
-    const base = fallback.find((f) => f.id === p.id) ?? fallback[0]!;
-    return { ...base, id: p.id, name: p.name, role: p.role, voiceId: p.voiceId ?? base.voiceId };
+    const base =
+      fallback.find((f) => f.id === p.id) ?? fallback.find((f) => f.id === KIND_TO_FIXTURE[p.role]) ?? fallback[0]!;
+    const avatarId = [p.avatarUrl, p.role, base.avatarId].find((a) => a && pixelPortrait(a)) ?? base.avatarId;
+    return { ...base, id: p.id, name: p.name, avatarId, voiceId: p.voiceId ?? '' };
   });
 }
 export async function fetchVoices(c: Ctx, fallback: VoiceOption[]): Promise<VoiceOption[]> {
@@ -42,8 +50,8 @@ export async function fetchVoices(c: Ctx, fallback: VoiceOption[]): Promise<Voic
   return parsed.map((v, i) => ({
     id: v.id,
     name: v.name,
-    character: v.description ?? '',
-    tags: v.tags ?? [],
+    character: v.description ?? v.label ?? '',
+    tags: v.tags ?? (v.label ? [v.label] : []),
     seed: fallback[i % fallback.length]!.seed + i,
     pitch: fallback[i % fallback.length]!.pitch,
   }));

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { safeParseVillageEvent, type VillageEvent } from '@squad/core';
 import { useEventFeed, useLiveConfig, type Connection } from '../../overlays/kit';
-import { emptyLedger, ledgerFromSnapshot, ledgerReducer, SnapshotEntrySchema, type LedgerState } from './model';
+import { emptyLedger, ledgerFromSnapshot, ledgerReducer, LedgerResponseSchema, type LedgerState } from './model';
 import { recordedScript, snapshot, TASK_ID } from './fixtures';
 import type { LedgerStatus } from './LedgerView';
 
@@ -30,7 +30,7 @@ export function useLedger(taskId: string = TASK_ID) {
       });
       if (!res.ok) throw new Error(`ledger ${res.status}`);
       const body: unknown = await res.json();
-      const entries = SnapshotEntrySchema.array().parse(body);
+      const entries = LedgerResponseSchema.parse(body);
       setState(ledgerFromSnapshot(taskId, entries));
       setStatus('ready');
     } catch {

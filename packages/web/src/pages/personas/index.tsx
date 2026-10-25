@@ -52,7 +52,14 @@ export default function PersonasPage() {
     }
     const ctx = { hubUrl: cfg.hubUrl, token: cfg.token };
     Promise.all([fetchPersonas(ctx, PERSONAS), fetchVoices(ctx, VOICES)]).then(
-      ([personas, voices]) => !cancelled && setLoad({ status: 'ready', personas, voices }),
+      ([personas, voices]) =>
+        !cancelled &&
+        setLoad({
+          status: 'ready',
+          // Personas the hub has no voice for yet start on the first voice the hub offers.
+          personas: personas.map((p) => (voices.some((v) => v.id === p.voiceId) ? p : { ...p, voiceId: voices[0]?.id ?? p.voiceId })),
+          voices,
+        }),
       (e: unknown) => !cancelled && setLoad({ status: 'error', offline: e instanceof TypeError }),
     );
     return () => {

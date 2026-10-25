@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HubPersonas } from './api';
+import { HubPersonas, HubVoices } from './api';
 import { PERSONAS, VOICES } from './fixtures';
 import { initPersonas, isDirty, personasReducer } from './model';
 import { buildSynthPlan } from './preview-audio';
@@ -34,5 +34,13 @@ describe('hub payloads', () => {
   it('rejects bad persona lists', () => {
     expect(HubPersonas.safeParse([{ id: 1 }]).success).toBe(false);
     expect(HubPersonas.safeParse([{ id: 'a', name: 'A', role: 'x' }]).success).toBe(true);
+  });
+});
+
+describe('hub voices shape', () => {
+  it('accepts the documented { voices } wrapper with label and a bare array', () => {
+    const v = { id: 'voice_calm', name: 'Calm professor', label: 'calm' };
+    expect(HubVoices.parse({ voices: [v] })).toEqual([v]);
+    expect(HubVoices.parse([v])).toEqual([v]);
   });
 });
