@@ -35,7 +35,24 @@ export async function postEvent(
   event: VillageEvent,
   opts: PostEventOptions = {},
 ): Promise<PostEventResult> {
-  const valid = VillageEventSchema.parse(event);
+  return sendToHub(VillageEventSchema.parse(event), opts);
+}
+
+/**
+ * Hub-only domain envelopes (`x.*`), never part of the VillageEvent union and never streamed raw
+ * (for example `x.trip.upsert` with private limits, `x.ledger.private` with the raw withheld value).
+ * Same endpoint, secret, retries and fail-soft behavior as postEvent. The hub validates `data`.
+ */
+export async function postHubEnvelope(
+  type: `x.${string}`,
+  data: unknown,
+  opts: PostEventOptions = {},
+): Promise<PostEventResult> {
+  if (!/^x\.[a-z][a-z0-9_.]*$/.test(type)) throw new Error(`invalid hub envelope type: ${type}`);
+  return sendToHub({ type, data }, opts);
+}
+
+async function sendToHub(valid: unknown, opts: PostEventOptions): Promise<PostEventResult> {
   const baseUrl = (opts.baseUrl ?? env('HUB_BASE_URL') ?? DEFAULT_HUB_BASE_URL).replace(/\/+$/, '');
   const secret = opts.secret ?? env('INTERNAL_EVENTS_SECRET') ?? env('NOOK_INTERNAL_SECRET') ?? '';
   const doFetch = opts.fetch ?? globalThis.fetch;
