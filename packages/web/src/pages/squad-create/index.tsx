@@ -116,7 +116,15 @@ export default function SquadCreatePage() {
               size="lg"
               fullWidth
               iconEnd="arrow-right"
-              onClick={() => navigate('/squad')}
+              onClick={() => {
+                // load the new squad into the account BEFORE leaving: the shell sends an account with no squads to
+                // /welcome/choose, so navigating first bounced a brand-new squad owner back to the start
+                created.current = false;
+                void refreshRef
+                  .current()
+                  .catch(() => {})
+                  .then(() => navigate('/squad'));
+              }}
             >
               Go to my squad
             </Button>
