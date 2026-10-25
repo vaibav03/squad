@@ -1,0 +1,7 @@
+# licensed art is never uploaded (see docs: assets/vendor stays out of git and out of deploys)
+assets/vendor
+.env
+.env.*
+**/node_modules
+e2e
+docs/design/shots
