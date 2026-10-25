@@ -71,7 +71,7 @@ export function createAuthRoutes(deps: HubDeps): HubApp {
   const need = requireViewer(deps);
   const user = requireUser(deps);
   const limit = createLimiter(deps.now);
-  const devCodes = deps.config.devLogin && !deps.config.production;
+  const devCodes = (deps.config.devLogin && !deps.config.production) || !!deps.config.demoCode;
 
   const mintSession = (userId: string) => {
     const s = deps.accounts.createSession(userId);

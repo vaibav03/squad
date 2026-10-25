@@ -117,7 +117,7 @@ const toUser = (r: UserDb): UserRow => ({
 
 export function createAccountsStore(
   db: Db,
-  o: { secret: string; pepper: string; now: () => number; sessionDays?: number },
+  o: { secret: string; pepper: string; now: () => number; sessionDays?: number; demoCode?: string | undefined },
 ): AccountsStore {
   runMigrations(db, 'accounts', ACCOUNT_MIGRATIONS);
   const { now } = o;
@@ -137,7 +137,7 @@ export function createAccountsStore(
     base: { channel: ContactChannel; normalized: string; name?: string },
   ): Challenge {
     const t = now();
-    const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
+    const code = o.demoCode ?? String(randomInt(0, 1_000_000)).padStart(6, '0');
     const cid = id ?? `ch_${randomBytes(12).toString('hex')}`;
     const hint = maskContact(base.channel, base.normalized);
     const row = {

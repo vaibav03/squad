@@ -21,6 +21,8 @@ export interface HubConfig {
   contactPepper: string;
   /** Enables dev-login, the student picker list and `devCode` in /v1/auth/start (HUB_DEV_LOGIN). */
   devLogin: boolean;
+  /** Demo only: a fixed 6-digit verification code (HUB_DEMO_CODE), honoured only with HUB_ALLOW_DEMO=1. */
+  demoCode?: string | undefined;
   squadMax: number;
   sessionDays: number;
   /** Base of invite links (HUB_WEB_URL). */
@@ -93,6 +95,9 @@ export function loadHubConfig(env: Record<string, string | undefined> = process.
       env.PUBLIC_WEB_URL || env.WEB_URL || env.HUB_WEB_URL || undefined,
     ),
     codeSender: env.CODE_SENDER === 'imessage' ? 'imessage' : 'console',
+    ...(env.HUB_ALLOW_DEMO === '1' && /^\d{6}$/.test(env.HUB_DEMO_CODE ?? '')
+      ? { demoCode: env.HUB_DEMO_CODE }
+      : {}),
     imessageSendUrl: env.IMESSAGE_SEND_URL || null,
     imessageAllowedHandles: (env.IMESSAGE_ALLOWED_HANDLES ?? '')
       .split(',')

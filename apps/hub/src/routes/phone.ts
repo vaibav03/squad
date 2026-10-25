@@ -31,7 +31,7 @@ export function createPhoneRoutes(deps: HubDeps): HubApp {
   const r = new Hono<HubEnv>();
   const user = requireUser(deps);
   const limit = createLimiter(deps.now);
-  const devCodes = deps.config.devLogin && !deps.config.production;
+  const devCodes = (deps.config.devLogin && !deps.config.production) || !!deps.config.demoCode;
   const consoleSender = createConsoleCodeSender(deps.log);
   runMigrations(deps.db, 'phone', [
     {
@@ -129,7 +129,7 @@ CREATE INDEX IF NOT EXISTS acct_phone_challenges_user ON acct_phone_challenges(u
         to: hint,
       });
 
-    const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
+    const code = deps.config.demoCode ?? String(randomInt(0, 1_000_000)).padStart(6, '0');
     const id = `pc_${randomBytes(12).toString('hex')}`;
     let delivery: PhoneDelivery = 'dev';
     const msg = { channel: 'phone' as const, to: normalized, hint, code };
@@ -161,7 +161,12 @@ CREATE INDEX IF NOT EXISTS acct_phone_challenges_user ON acct_phone_challenges(u
       expiresAt: t + CODE_TTL_MS,
       resendAfter: t + RESEND_MS,
       delivery,
-      deliveryLabel: delivery === 'imessage' ? 'Code sent by iMessage' : 'Code shown here (dev)',
+      deliveryLabel:
+        delivery === 'imessage'
+          ? 'Code sent by iMessage'
+          : deps.config.demoCode
+            ? 'Demo code shown here (no SMS is sent)'
+            : 'Code shown here (dev)',
       ...(delivery === 'dev'
         ? { devCode: code, devCodeLabel: 'Dev code (HUB_DEV_LOGIN): not sent to your phone' }
         : {}),

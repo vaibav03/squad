@@ -109,6 +109,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     pepper: config.contactPepper,
     now,
     sessionDays: config.sessionDays,
+    demoCode: config.demoCode,
   });
   deps.squads = createSquadsStore(deps.db, deps.directory, deps.accounts, {
     now,
