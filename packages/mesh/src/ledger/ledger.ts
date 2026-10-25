@@ -50,7 +50,9 @@ class MemoryLedger extends BaseLedger {
     this.rows.push(row);
   }
   list(taskId?: string): LedgerRow[] {
-    return this.rows.filter((r) => taskId === undefined || r.taskId === taskId).map((r) => ({ ...r }));
+    return this.rows
+      .filter((r) => taskId === undefined || r.taskId === taskId)
+      .map((r) => ({ ...r }));
   }
 }
 
@@ -66,7 +68,9 @@ class SqliteLedger extends BaseLedger {
   }
   protected store(r: LedgerRow): void {
     this.db
-      .prepare('INSERT INTO mesh_ledger(task_id,student,field,shared,withheld,blocked,ts) VALUES (?,?,?,?,?,?,?)')
+      .prepare(
+        'INSERT INTO mesh_ledger(task_id,student,field,shared,withheld,blocked,ts) VALUES (?,?,?,?,?,?,?)',
+      )
       .run(r.taskId, r.student, r.field, r.shared, r.withheld, r.blocked ? 1 : 0, r.ts);
   }
   list(taskId?: string): LedgerRow[] {
@@ -74,7 +78,15 @@ class SqliteLedger extends BaseLedger {
       taskId === undefined
         ? this.db.prepare('SELECT * FROM mesh_ledger ORDER BY id').all()
         : this.db.prepare('SELECT * FROM mesh_ledger WHERE task_id=? ORDER BY id').all(taskId)
-    ) as { task_id: string; student: string; field: string; shared: string; withheld: string; blocked: number; ts: number }[];
+    ) as {
+      task_id: string;
+      student: string;
+      field: string;
+      shared: string;
+      withheld: string;
+      blocked: number;
+      ts: number;
+    }[];
     return rows.map((x) => ({
       taskId: x.task_id,
       student: x.student,
@@ -88,4 +100,5 @@ class SqliteLedger extends BaseLedger {
 }
 
 export const createMemoryLedger = (now: () => number = () => 0): Ledger => new MemoryLedger(now);
-export const createSqliteLedger = (db: Db, now: () => number = () => 0): Ledger => new SqliteLedger(db, now);
+export const createSqliteLedger = (db: Db, now: () => number = () => 0): Ledger =>
+  new SqliteLedger(db, now);

@@ -9,16 +9,17 @@ export type GateResult =
   | { ok: true; msg: AgentMessage; kind: MessageKind; labels: string[]; ledger: LedgerRow[] }
   | { ok: false; reason: SendFailReason; ledger: LedgerRow[] };
 
-export type ReceiveFailReason = 'schema' | 'replay' | 'closed_task' | 'not_member' | 'unknown_kind' | 'budget' | 'misrouted';
+export type ReceiveFailReason =
+  'schema' | 'replay' | 'closed_task' | 'not_member' | 'unknown_kind' | 'budget' | 'misrouted';
 export type ReceiveResult =
-  | { ok: true; msg: AgentMessage; kind: MessageKind }
-  | { ok: false; reason: ReceiveFailReason };
+  { ok: true; msg: AgentMessage; kind: MessageKind } | { ok: false; reason: ReceiveFailReason };
 
 export interface Gate {
   readonly self: string;
   readonly tasks: TaskTracker;
   send(msg: AgentMessage): GateResult;
   receive(raw: unknown): ReceiveResult;
+  /** Trusted flow code only (e.g. loading trips.json): values the scan must ignore for this task. Never derived from message content. */
   allowPublic(taskId: string, tokens: readonly (string | number)[]): void;
   closeTask(taskId: string, state?: 'completed' | 'failed' | 'canceled'): void;
 }
@@ -60,7 +61,14 @@ export function createGate(o: GateOptions): Gate {
   const seen = new Set<string>();
 
   const blocked = (taskId: string, field: string): LedgerRow =>
-    ledger.record({ taskId, student: self, field, shared: 'nothing', withheld: withheldFor(field), blocked: true });
+    ledger.record({
+      taskId,
+      student: self,
+      field,
+      shared: 'nothing',
+      withheld: withheldFor(field),
+      blocked: true,
+    });
 
   const publicSet = (taskId: string): Set<string> => {
     let s = publicByTask.get(taskId);
@@ -73,13 +81,6 @@ export function createGate(o: GateOptions): Gate {
     for (const t of tokens) s.add(String(t).toLowerCase());
   }
 
-  /** Public values carried by a valid task.open (option labels, prices, dates) are exempt from the scan. */
-  function learnPublic(taskId: string, payload: unknown): void {
-    const p = payload as { options?: { id: string; label: string; perPerson?: number }[]; topics?: string[] };
-    for (const op of p.options ?? []) allowPublic(taskId, [op.id, op.label, ...(op.perPerson !== undefined ? [op.perPerson] : [])]);
-    allowPublic(taskId, p.topics ?? []);
-  }
-
   function send(msg: AgentMessage): GateResult {
     const taskId = typeof msg?.taskId === 'string' ? msg.taskId : 'unknown';
     const fail = (reason: SendFailReason, field: string): GateResult => ({
@@ -88,13 +89,12 @@ export function createGate(o: GateOptions): Gate {
       ledger: [blocked(taskId.length <= 64 ? taskId : 'unknown', field)],
     });
     const parsed = parseMessage(msg);
-    if (!parsed.ok) return fail(parsed.error === 'unknown_kind' ? 'unknown_kind' : 'schema', 'message');
+    if (!parsed.ok)
+      return fail(parsed.error === 'unknown_kind' ? 'unknown_kind' : 'schema', 'message');
     const { kind } = parsed;
     const field = fieldFor(kind, parsed.msg.payload);
     if (parsed.msg.from !== self) return fail('schema', field);
 
-    // Public values of a task.open we initiate must not trip the scan.
-    if (kind === 'task.open') learnPublic(taskId, parsed.msg.payload);
     const leak = findPrivateLeak(parsed.msg, needles, publicByTask.get(taskId));
     if (leak) return fail('leak', field);
 
@@ -111,7 +111,8 @@ export function createGate(o: GateOptions): Gate {
     if (kind === 'result') {
       const counts = (parsed.msg.payload as { counts: unknown }).counts;
       const members = tasks.members(taskId);
-      if (counts !== null && !(members && meetsMinGroupSize(members.length))) return fail('min_group', field);
+      if (counts !== null && !(members && meetsMinGroupSize(members.length)))
+        return fail('min_group', field);
     }
 
     const labels = labelsFor(kind, parsed.msg.payload);
@@ -127,7 +128,8 @@ export function createGate(o: GateOptions): Gate {
 
   function receive(raw: unknown): ReceiveResult {
     const parsed = parseMessage(raw);
-    if (!parsed.ok) return { ok: false, reason: parsed.error === 'unknown_kind' ? 'unknown_kind' : 'schema' };
+    if (!parsed.ok)
+      return { ok: false, reason: parsed.error === 'unknown_kind' ? 'unknown_kind' : 'schema' };
     const { msg, kind } = parsed;
     if (msg.to !== self) return { ok: false, reason: 'misrouted' };
     const key = canonicalJson(msg);
@@ -136,15 +138,17 @@ export function createGate(o: GateOptions): Gate {
     if (kind === 'task.open') {
       if (tasks.state(msg.taskId)) return { ok: false, reason: 'replay' };
       const members = (msg.payload as { members: string[] }).members;
-      if (self !== 'mediator' && !members.includes(self)) return { ok: false, reason: 'not_member' };
-      if (self !== 'mediator' && !members.includes(msg.from)) return { ok: false, reason: 'not_member' };
+      if (self !== 'mediator' && !members.includes(self))
+        return { ok: false, reason: 'not_member' };
+      if (self !== 'mediator' && !members.includes(msg.from))
+        return { ok: false, reason: 'not_member' };
       tasks.open(msg.taskId, members);
-      learnPublic(msg.taskId, msg.payload);
     } else {
       const state = tasks.state(msg.taskId);
       if (!state || !tasks.isOpen(msg.taskId)) return { ok: false, reason: 'closed_task' };
       const members = tasks.members(msg.taskId) ?? [];
-      if (msg.from !== 'mediator' && !members.includes(msg.from)) return { ok: false, reason: 'not_member' };
+      if (msg.from !== 'mediator' && !members.includes(msg.from))
+        return { ok: false, reason: 'not_member' };
       if (kind === 'query') {
         const n = (recvBudget.get(`${msg.taskId}|${msg.from}`) ?? 0) + 1;
         recvBudget.set(`${msg.taskId}|${msg.from}`, n);
@@ -163,7 +167,8 @@ export function createGate(o: GateOptions): Gate {
     allowPublic,
     closeTask(taskId, state = 'completed') {
       if (!tasks.isOpen(taskId)) return;
-      if (state === 'completed' && tasks.state(taskId) === 'submitted') tasks.transition(taskId, 'working');
+      if (state === 'completed' && tasks.state(taskId) === 'submitted')
+        tasks.transition(taskId, 'working');
       tasks.transition(taskId, state);
     },
   };
@@ -176,7 +181,10 @@ export function createGate(o: GateOptions): Gate {
 export function answerQuery(gate: Gate, ledger: Ledger, msg: AgentMessage): AgentMessage | null {
   const parsed = parseMessage(msg);
   if (!parsed.ok || parsed.kind !== 'query') return null;
-  const q = parsed.msg.payload as { about: 'budget' | 'calendar' | 'hardNo' | 'weakTopic'; target: string };
+  const q = parsed.msg.payload as {
+    about: 'budget' | 'calendar' | 'hardNo' | 'weakTopic';
+    target: string;
+  };
   if (q.target !== gate.self) return null;
   ledger.record({
     taskId: msg.taskId,
@@ -186,5 +194,11 @@ export function answerQuery(gate: Gate, ledger: Ledger, msg: AgentMessage): Agen
     withheld: withheldFor(q.about === 'weakTopic' ? 'topics' : q.about),
     blocked: true,
   });
-  return { from: gate.self, to: msg.from, taskId: msg.taskId, kind: 'query.denied', payload: { about: q.about, reason: 'private' } };
+  return {
+    from: gate.self,
+    to: msg.from,
+    taskId: msg.taskId,
+    kind: 'query.denied',
+    payload: { about: q.about, reason: 'private' },
+  };
 }

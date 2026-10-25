@@ -11,8 +11,17 @@ export function fieldFor(kind: MessageKind, payload: unknown): string {
     case 'share.sum': {
       const purpose = (payload as { purpose?: string }).purpose;
       return (
-        { cantAfford: 'budget', veto: 'hardNo', borda: 'vote', weakTopic: 'topics', cost: 'softCost', simulate: 'budget' } as Record<string, string>
-      )[purpose ?? ''] ?? 'shares';
+        (
+          {
+            cantAfford: 'budget',
+            veto: 'hardNo',
+            borda: 'vote',
+            weakTopic: 'topics',
+            cost: 'softCost',
+            simulate: 'budget',
+          } as Record<string, string>
+        )[purpose ?? ''] ?? 'shares'
+      );
     }
     case 'query':
     case 'query.denied':
@@ -31,8 +40,7 @@ export function labelsFor(kind: MessageKind, payload: unknown): string[] {
       const p = payload as Payload<'task.open'>;
       return [`${p.flow} plan opened`, `${p.members.length} members`];
     }
-    case 'psi.blind':
-      {
+    case 'psi.blind': {
       const n = (payload as Payload<'psi.blind'>).points.length;
       return [n === 0 ? 'request: blinded set' : `${n} blinded tokens (padded)`];
     }
@@ -49,19 +57,32 @@ export function labelsFor(kind: MessageKind, payload: unknown): string[] {
     }
     case 'confirm.result':
       return ['confirm answered'];
-    case 'result':
-      {
+    case 'result': {
       const p = payload as Payload<'result'>;
       if (p.stage === 'none' || (p.stage === 'final' && !p.chosen)) return ['no plan'];
-      return [p.stage === 'candidates' ? 'top options ranked' : p.stage === 'proposal' ? 'plan proposed' : 'plan found'];
+      return [
+        p.stage === 'candidates'
+          ? 'top options ranked'
+          : p.stage === 'proposal'
+            ? 'plan proposed'
+            : 'plan found',
+      ];
     }
     case 'query':
       return [`asks: ${(payload as Payload<'query'>).about}`];
     case 'query.denied':
       return [`request denied: ${(payload as Payload<'query.denied'>).about}`];
     case 'conflict':
-      return [(payload as Payload<'conflict'>).reason === 'no_common_slot' ? 'no slot works for everyone' : 'no option works for everyone'];
+      return [
+        (payload as Payload<'conflict'>).reason === 'no_common_slot'
+          ? 'no slot works for everyone'
+          : 'no option works for everyone',
+      ];
     case 'option_dropped':
-      return [(payload as Payload<'option_dropped'>).reason === 'budget' ? 'option dropped: budget' : 'dropped: veto'];
+      return [
+        (payload as Payload<'option_dropped'>).reason === 'budget'
+          ? 'option dropped: budget'
+          : 'dropped: veto',
+      ];
   }
 }

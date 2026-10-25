@@ -99,7 +99,7 @@ interface Gate {
   receive(raw: unknown): ReceiveResult       // strict parse + to===self + task membership + replay (identical canonical message twice) + inbound query cap
   readonly self: string; readonly tasks: TaskTracker   // task.open (sent or received) opens the task; members drive the min-group rule
   closeTask(taskId, state?: 'completed'|'failed'|'canceled'): void
-  allowPublic(taskId: string, tokens: (string|number)[]): void   // public values (option prices) exempt from the scan
+  allowPublic(taskId: string, tokens: (string|number)[]): void   // TRUSTED flow code only (e.g. trips.json): values the scan ignores for this task. Never derived from message content, so a message cannot whitelist its own leak. Call it before sending a task.open whose option label/price collides with a private value.
 }
 type GateResult = { ok: true; msg: AgentMessage; kind: MessageKind; labels: string[]; ledger: LedgerRow[] }
                 | { ok: false; reason: 'schema'|'leak'|'budget'|'unknown_kind'|'min_group'; ledger: LedgerRow[] }   // blocked:true row written
@@ -136,3 +136,5 @@ splitEvenly(totalCents: number, payers: string[]): Record<string, number>     //
 venmoLink(o: { payee: string; amountCents: number; note: string }): string    // https://venmo.com/<payee>?txn=charge&amount=..&note=.. (format UNVERIFIED, one-line fix)
 ```
 `packages/mesh/src/index.ts` re-exports all of the above plus `PACKAGE_NAME`.
+
+`psi.blind`/`share.vec`/`share.sum` arrays may be empty (mediator REQUEST messages). Mediator-origin messages use a second gate with `self:'mediator'`; `task.open` is sent by the coordinator student.

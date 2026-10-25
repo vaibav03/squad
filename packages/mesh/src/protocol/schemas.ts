@@ -5,9 +5,18 @@ export const Label = z.string().regex(/^[A-Za-z0-9_.:-]{1,64}$/);
 export const HexPointSchema = z.string().regex(/^[0-9a-f]{64}$/);
 export const ShareLimb = z.string().regex(/^[0-9a-f]{32}$/);
 /** ISO-ish slot or day: 2026-11-03, 2026-11-03T14, 2026-11-03T14:00:00Z. */
-export const SlotString = z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?Z?)?$/);
+export const SlotString = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}(T\d{2}(:\d{2}(:\d{2}(\.\d+)?)?)?Z?)?$/);
 
-export const SHARE_PURPOSES = ['cost', 'cantAfford', 'veto', 'borda', 'weakTopic', 'simulate'] as const;
+export const SHARE_PURPOSES = [
+  'cost',
+  'cantAfford',
+  'veto',
+  'borda',
+  'weakTopic',
+  'simulate',
+] as const;
 export const SharePurposeSchema = z.enum(SHARE_PURPOSES);
 export type SharePurpose = z.infer<typeof SharePurposeSchema>;
 
@@ -59,7 +68,8 @@ export const ConfirmResultPayload = z.strictObject({ accept: z.boolean(), option
 
 const IsoDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 /** Venmo charge links only: fixed host, fixed shape, percent-encoded note. Not free text. */
-export const VENMO_LINK = /^https:\/\/venmo\.com\/[A-Za-z0-9_.-]{1,64}\?txn=charge&amount=\d{1,7}\.\d{2}&note=[A-Za-z0-9_.%~-]{0,200}$/;
+export const VENMO_LINK =
+  /^https:\/\/venmo\.com\/[A-Za-z0-9_.-]{1,64}\?txn=charge&amount=\d{1,7}\.\d{2}&note=[A-Za-z0-9_.%~-]{0,200}$/;
 
 export const RESULT_STAGES = ['candidates', 'proposal', 'final', 'none'] as const;
 export const ResultPayload = z.strictObject({
@@ -76,7 +86,10 @@ export const ResultPayload = z.strictObject({
 });
 
 export const QueryPayload = z.strictObject({ about: QueryAboutSchema, target: Label });
-export const QueryDeniedPayload = z.strictObject({ about: QueryAboutSchema, reason: z.literal('private') });
+export const QueryDeniedPayload = z.strictObject({
+  about: QueryAboutSchema,
+  reason: z.literal('private'),
+});
 
 export const CONFLICT_REASONS = ['no_common_slot', 'no_option', 'no_plan'] as const;
 export const ConflictPayload = z.strictObject({

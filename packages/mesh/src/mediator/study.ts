@@ -42,7 +42,9 @@ export function chooseStudySlot(i: StudyInput): StudyChoice {
   }
   let hybrid: string | null = null;
   let hc = Infinity;
-  for (const [s, c] of Object.entries(i.conflictCounts ?? {}).sort(([a], [b]) => (a < b ? -1 : 1))) {
+  for (const [s, c] of Object.entries(i.conflictCounts ?? {}).sort(([a], [b]) =>
+    a < b ? -1 : 1,
+  )) {
     if (!Number.isNaN(exam) && slotMs(s) + lead > exam) continue;
     if (c < hc) {
       hc = c;
@@ -67,5 +69,9 @@ export function topicCoverage(i: {
   return Object.entries(i.weakTotals)
     .filter(([, n]) => n > 0)
     .sort(([ta, a], [tb, b]) => b - a || (ta < tb ? -1 : 1))
-    .map(([topic, weak]) => ({ topic, weak, lead: [...(i.canTeach[topic] ?? [])].sort()[0] ?? null }));
+    .map(([topic, weak]) => ({
+      topic,
+      weak,
+      lead: [...(i.canTeach[topic] ?? [])].sort()[0] ?? null,
+    }));
 }
