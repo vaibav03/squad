@@ -1,0 +1,55 @@
+[
+  {
+    "t": "call.start",
+    "agent": "expert:oral",
+    "callId": "call_demo",
+    "student": "s_ana"
+  },
+  {
+    "t": "call.caption",
+    "agent": "expert:oral",
+    "callId": "call_demo",
+    "text": "Welcome to Oral Exam practice, feedback only: nothing here is graded."
+  },
+  {
+    "t": "call.caption",
+    "agent": "expert:oral",
+    "callId": "call_demo",
+    "text": "In your own words, when would you pick the median over the mean?"
+  },
+  {
+    "t": "call.caption",
+    "agent": "expert:oral",
+    "callId": "call_demo",
+    "text": "Explain, in your own words, one more idea from Probability Topics."
+  },
+  {
+    "t": "call.caption",
+    "agent": "expert:oral",
+    "callId": "call_demo",
+    "text": "That is fine, that is what practice is for."
+  },
+  {
+    "t": "call.caption",
+    "agent": "expert:oral",
+    "callId": "call_demo",
+    "text": "I cannot write detailed feedback right now, so please revisit Descriptive Statistics: center and spread and Probability Topics in your notes."
+  },
+  {
+    "t": "call.caption",
+    "agent": "expert:oral",
+    "callId": "call_demo",
+    "text": "You skipped or were unsure about Probability Topics, so start there."
+  },
+  {
+    "t": "call.caption",
+    "agent": "expert:oral",
+    "callId": "call_demo",
+    "text": "That is the end of this practice exam, so go and revisit those topics."
+  },
+  {
+    "t": "call.end",
+    "agent": "expert:oral",
+    "callId": "call_demo"
+  }
+]

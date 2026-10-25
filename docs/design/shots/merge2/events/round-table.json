@@ -1,0 +1,123 @@
+[
+  {
+    "t": "agent.state",
+    "agent": "council:planner",
+    "state": "studying"
+  },
+  {
+    "t": "council.opinion",
+    "councilId": "council:planner",
+    "member": "chill",
+    "text": "Chill says so, with feeling. Picks: CSL 240, CSL 310, CSL 331, CSL 383 (12 cr)."
+  },
+  {
+    "t": "council.opinion",
+    "councilId": "council:planner",
+    "member": "grind",
+    "text": "Grind says so, with feeling. Picks: CSL 240, CSL 310, CSL 320, CSL 331, CSL 370, CSL 381 (18 cr)."
+  },
+  {
+    "t": "council.opinion",
+    "councilId": "council:planner",
+    "member": "advisor",
+    "text": "Advisor says so, with feeling. Picks: CSL 240, CSL 310, CSL 320, CSL 331, CSL 383 (15 cr)."
+  },
+  {
+    "t": "council.rank",
+    "councilId": "council:planner",
+    "member": "chill",
+    "order": [
+      "grind",
+      "advisor"
+    ]
+  },
+  {
+    "t": "council.rank",
+    "councilId": "council:planner",
+    "member": "grind",
+    "order": [
+      "chill",
+      "advisor"
+    ]
+  },
+  {
+    "t": "council.rank",
+    "councilId": "council:planner",
+    "member": "advisor",
+    "order": [
+      "chill",
+      "grind"
+    ]
+  },
+  {
+    "t": "council.verdict",
+    "councilId": "council:planner",
+    "member": "chair",
+    "text": "Fall plan: CSL 240, CSL 310, CSL 331, CSL 383. 12 credits, steady workload.",
+    "dissent": true,
+    "dissenter": "grind",
+    "outcome": {
+      "title": "Fall plan: 12 credits",
+      "summary": "4 courses, steady workload. Every course is checked against prerequisites, offerings and credit limits.",
+      "items": [
+        {
+          "label": "CSL 240 Operating Systems",
+          "detail": "3 cr, heavy workload"
+        },
+        {
+          "label": "CSL 310 Databases",
+          "detail": "3 cr, steady workload"
+        },
+        {
+          "label": "CSL 331 Computer Networks",
+          "detail": "3 cr, steady workload"
+        },
+        {
+          "label": "CSL 383 Human-Computer Interaction",
+          "detail": "3 cr, light workload"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Credits",
+          "value": "12 (limit 12 to 18)"
+        },
+        {
+          "label": "Workload",
+          "value": "steady"
+        },
+        {
+          "label": "Term",
+          "value": "Fall"
+        },
+        {
+          "label": "Degree progress",
+          "value": "71 of 90 credits"
+        }
+      ],
+      "dissent": "grind wanted 18 credits (heavy workload), adding CSL 320, CSL 370 and CSL 381 and skipping CSL 383.",
+      "why": [
+        {
+          "who": "chill",
+          "text": "Chill says so, with feeling. Picks: CSL 240, CSL 310, CSL 331, CSL 383 (12 cr)."
+        },
+        {
+          "who": "grind",
+          "text": "Grind says so, with feeling. Picks: CSL 240, CSL 310, CSL 320, CSL 331, CSL 370, CSL 381 (18 cr)."
+        },
+        {
+          "who": "advisor",
+          "text": "Advisor says so, with feeling. Picks: CSL 240, CSL 310, CSL 320, CSL 331, CSL 383 (15 cr)."
+        }
+      ],
+      "notes": [
+        "Sample catalogue data, not a real university."
+      ]
+    }
+  },
+  {
+    "t": "agent.state",
+    "agent": "council:planner",
+    "state": "idle"
+  }
+]
