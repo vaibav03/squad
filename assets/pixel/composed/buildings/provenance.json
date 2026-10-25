@@ -1,0 +1,1521 @@
+{
+ "houses/house_tenement_dark.png": {
+  "anchor": [
+   80,
+   231
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (10, 10, 170, 231), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "dark",
+  "windows": [
+   [
+    23,
+    193,
+    56,
+    221
+   ],
+   [
+    36,
+    42,
+    45,
+    58
+   ],
+   [
+    36,
+    61,
+    45,
+    77
+   ],
+   [
+    36,
+    113,
+    45,
+    129
+   ],
+   [
+    36,
+    132,
+    45,
+    148
+   ],
+   [
+    48,
+    42,
+    57,
+    58
+   ],
+   [
+    48,
+    61,
+    57,
+    77
+   ],
+   [
+    48,
+    113,
+    57,
+    129
+   ],
+   [
+    48,
+    132,
+    57,
+    148
+   ],
+   [
+    102,
+    42,
+    111,
+    58
+   ],
+   [
+    102,
+    61,
+    111,
+    77
+   ],
+   [
+    103,
+    193,
+    136,
+    221
+   ],
+   [
+    105,
+    113,
+    110,
+    129
+   ],
+   [
+    105,
+    132,
+    110,
+    148
+   ],
+   [
+    114,
+    42,
+    123,
+    58
+   ],
+   [
+    114,
+    61,
+    123,
+    77
+   ],
+   [
+    114,
+    113,
+    118,
+    129
+   ],
+   [
+    114,
+    132,
+    118,
+    148
+   ],
+   [
+    120,
+    113,
+    123,
+    129
+   ],
+   [
+    120,
+    132,
+    123,
+    148
+   ]
+  ],
+  "sign_slot": [
+   66,
+   174,
+   94,
+   184
+  ],
+  "chimney_x": 118,
+  "role": "chapter house silhouette: tenement",
+  "pad_top": 16,
+  "file": "assets/pixel/composed/buildings/houses/house_tenement_dark.png",
+  "size": [
+   160,
+   232
+  ]
+ },
+ "houses/house_tenement_lit.png": {
+  "anchor": [
+   80,
+   231
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (10, 10, 170, 231), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "lit",
+  "windows": [
+   [
+    23,
+    193,
+    56,
+    221
+   ],
+   [
+    36,
+    42,
+    45,
+    58
+   ],
+   [
+    36,
+    61,
+    45,
+    77
+   ],
+   [
+    36,
+    113,
+    45,
+    129
+   ],
+   [
+    36,
+    132,
+    45,
+    148
+   ],
+   [
+    48,
+    42,
+    57,
+    58
+   ],
+   [
+    48,
+    61,
+    57,
+    77
+   ],
+   [
+    48,
+    113,
+    57,
+    129
+   ],
+   [
+    48,
+    132,
+    57,
+    148
+   ],
+   [
+    102,
+    42,
+    111,
+    58
+   ],
+   [
+    102,
+    61,
+    111,
+    77
+   ],
+   [
+    103,
+    193,
+    136,
+    221
+   ],
+   [
+    105,
+    113,
+    110,
+    129
+   ],
+   [
+    105,
+    132,
+    110,
+    148
+   ],
+   [
+    114,
+    42,
+    123,
+    58
+   ],
+   [
+    114,
+    61,
+    123,
+    77
+   ],
+   [
+    114,
+    113,
+    118,
+    129
+   ],
+   [
+    114,
+    132,
+    118,
+    148
+   ],
+   [
+    120,
+    113,
+    123,
+    129
+   ],
+   [
+    120,
+    132,
+    123,
+    148
+   ]
+  ],
+  "sign_slot": [
+   66,
+   174,
+   94,
+   184
+  ],
+  "chimney_x": 118,
+  "role": "chapter house silhouette: tenement",
+  "pad_top": 16,
+  "file": "assets/pixel/composed/buildings/houses/house_tenement_lit.png",
+  "size": [
+   160,
+   232
+  ]
+ },
+ "houses/house_shop_dark.png": {
+  "anchor": [
+   99,
+   182
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (184, 59, 382, 231), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "dark",
+  "windows": [
+   [
+    39,
+    141,
+    72,
+    172
+   ],
+   [
+    55,
+    53,
+    64,
+    69
+   ],
+   [
+    55,
+    72,
+    64,
+    75
+   ],
+   [
+    55,
+    77,
+    64,
+    88
+   ],
+   [
+    67,
+    53,
+    76,
+    69
+   ],
+   [
+    67,
+    72,
+    76,
+    76
+   ],
+   [
+    67,
+    78,
+    76,
+    88
+   ],
+   [
+    125,
+    141,
+    158,
+    172
+   ]
+  ],
+  "sign_slot": [
+   85,
+   128,
+   113,
+   137
+  ],
+  "chimney_x": 132,
+  "role": "chapter house silhouette: shop",
+  "pad_top": 16,
+  "file": "assets/pixel/composed/buildings/houses/house_shop_dark.png",
+  "size": [
+   198,
+   183
+  ]
+ },
+ "houses/house_shop_lit.png": {
+  "anchor": [
+   99,
+   182
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (184, 59, 382, 231), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "lit",
+  "windows": [
+   [
+    39,
+    141,
+    72,
+    172
+   ],
+   [
+    55,
+    53,
+    64,
+    69
+   ],
+   [
+    55,
+    72,
+    64,
+    75
+   ],
+   [
+    55,
+    77,
+    64,
+    88
+   ],
+   [
+    67,
+    53,
+    76,
+    69
+   ],
+   [
+    67,
+    72,
+    76,
+    76
+   ],
+   [
+    67,
+    78,
+    76,
+    88
+   ],
+   [
+    125,
+    141,
+    158,
+    172
+   ]
+  ],
+  "sign_slot": [
+   85,
+   128,
+   113,
+   137
+  ],
+  "chimney_x": 132,
+  "role": "chapter house silhouette: shop",
+  "pad_top": 16,
+  "file": "assets/pixel/composed/buildings/houses/house_shop_lit.png",
+  "size": [
+   198,
+   183
+  ]
+ },
+ "houses/house_hut_dark.png": {
+  "anchor": [
+   64,
+   132
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (397, 98, 525, 231), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "dark",
+  "windows": [],
+  "sign_slot": [
+   22,
+   40,
+   50,
+   49
+  ],
+  "chimney_x": 104,
+  "role": "chapter house silhouette: hut",
+  "pad_top": 16,
+  "file": "assets/pixel/composed/buildings/houses/house_hut_dark.png",
+  "size": [
+   128,
+   133
+  ]
+ },
+ "houses/house_hut_lit.png": {
+  "anchor": [
+   64,
+   132
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (397, 98, 525, 231), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "lit",
+  "windows": [],
+  "sign_slot": [
+   22,
+   40,
+   50,
+   49
+  ],
+  "chimney_x": 104,
+  "role": "chapter house silhouette: hut",
+  "pad_top": 16,
+  "file": "assets/pixel/composed/buildings/houses/house_hut_lit.png",
+  "size": [
+   128,
+   133
+  ]
+ },
+ "houses/house_cottage_dark.png": {
+  "anchor": [
+   118,
+   161
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (13, 347, 249, 508), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "dark",
+  "windows": [
+   [
+    34,
+    57,
+    43,
+    73
+   ],
+   [
+    34,
+    76,
+    43,
+    92
+   ],
+   [
+    46,
+    57,
+    55,
+    73
+   ],
+   [
+    46,
+    76,
+    55,
+    92
+   ],
+   [
+    112,
+    122,
+    121,
+    138
+   ],
+   [
+    112,
+    141,
+    121,
+    157
+   ],
+   [
+    124,
+    122,
+    133,
+    138
+   ],
+   [
+    124,
+    141,
+    133,
+    157
+   ],
+   [
+    157,
+    122,
+    166,
+    138
+   ],
+   [
+    157,
+    141,
+    166,
+    157
+   ],
+   [
+    169,
+    122,
+    178,
+    138
+   ],
+   [
+    169,
+    141,
+    178,
+    157
+   ]
+  ],
+  "sign_slot": [
+   31,
+   117,
+   60,
+   126
+  ],
+  "chimney_x": 96,
+  "role": "chapter house silhouette: cottage",
+  "pad_top": 16,
+  "file": "assets/pixel/composed/buildings/houses/house_cottage_dark.png",
+  "size": [
+   236,
+   162
+  ]
+ },
+ "houses/house_cottage_lit.png": {
+  "anchor": [
+   118,
+   161
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (13, 347, 249, 508), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "lit",
+  "windows": [
+   [
+    34,
+    57,
+    43,
+    73
+   ],
+   [
+    34,
+    76,
+    43,
+    92
+   ],
+   [
+    46,
+    57,
+    55,
+    73
+   ],
+   [
+    46,
+    76,
+    55,
+    92
+   ],
+   [
+    112,
+    122,
+    121,
+    138
+   ],
+   [
+    112,
+    141,
+    121,
+    157
+   ],
+   [
+    124,
+    122,
+    133,
+    138
+   ],
+   [
+    124,
+    141,
+    133,
+    157
+   ],
+   [
+    157,
+    122,
+    166,
+    138
+   ],
+   [
+    157,
+    141,
+    166,
+    157
+   ],
+   [
+    169,
+    122,
+    178,
+    138
+   ],
+   [
+    169,
+    141,
+    178,
+    157
+   ]
+  ],
+  "sign_slot": [
+   31,
+   117,
+   60,
+   126
+  ],
+  "chimney_x": 96,
+  "role": "chapter house silhouette: cottage",
+  "pad_top": 16,
+  "file": "assets/pixel/composed/buildings/houses/house_cottage_lit.png",
+  "size": [
+   236,
+   162
+  ]
+ },
+ "houses/house_brick_dark.png": {
+  "anchor": [
+   97,
+   171
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (268, 342, 462, 509), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "dark",
+  "windows": [
+   [
+    39,
+    64,
+    48,
+    80
+   ],
+   [
+    39,
+    83,
+    48,
+    99
+   ],
+   [
+    51,
+    64,
+    60,
+    80
+   ],
+   [
+    51,
+    83,
+    60,
+    99
+   ],
+   [
+    114,
+    138,
+    119,
+    154
+   ],
+   [
+    114,
+    157,
+    119,
+    173
+   ],
+   [
+    123,
+    138,
+    127,
+    154
+   ],
+   [
+    123,
+    157,
+    127,
+    173
+   ],
+   [
+    129,
+    138,
+    132,
+    154
+   ],
+   [
+    129,
+    157,
+    132,
+    173
+   ],
+   [
+    156,
+    138,
+    165,
+    154
+   ],
+   [
+    156,
+    157,
+    165,
+    173
+   ],
+   [
+    168,
+    138,
+    177,
+    154
+   ],
+   [
+    168,
+    157,
+    177,
+    173
+   ]
+  ],
+  "sign_slot": [
+   135,
+   143,
+   153,
+   152
+  ],
+  "chimney_x": 76,
+  "role": "chapter house silhouette: brick",
+  "pad_top": 16,
+  "file": "assets/pixel/composed/buildings/houses/house_brick_dark.png",
+  "size": [
+   194,
+   172
+  ]
+ },
+ "houses/house_brick_lit.png": {
+  "anchor": [
+   97,
+   171
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (268, 342, 462, 509), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "lit",
+  "windows": [
+   [
+    39,
+    64,
+    48,
+    80
+   ],
+   [
+    39,
+    83,
+    48,
+    99
+   ],
+   [
+    51,
+    64,
+    60,
+    80
+   ],
+   [
+    51,
+    83,
+    60,
+    99
+   ],
+   [
+    114,
+    138,
+    119,
+    154
+   ],
+   [
+    114,
+    157,
+    119,
+    173
+   ],
+   [
+    123,
+    138,
+    127,
+    154
+   ],
+   [
+    123,
+    157,
+    127,
+    173
+   ],
+   [
+    129,
+    138,
+    132,
+    154
+   ],
+   [
+    129,
+    157,
+    132,
+    173
+   ],
+   [
+    156,
+    138,
+    165,
+    154
+   ],
+   [
+    156,
+    157,
+    165,
+    173
+   ],
+   [
+    168,
+    138,
+    177,
+    154
+   ],
+   [
+    168,
+    157,
+    177,
+    173
+   ]
+  ],
+  "sign_slot": [
+   135,
+   143,
+   153,
+   152
+  ],
+  "chimney_x": 76,
+  "role": "chapter house silhouette: brick",
+  "pad_top": 16,
+  "file": "assets/pixel/composed/buildings/houses/house_brick_lit.png",
+  "size": [
+   194,
+   172
+  ]
+ },
+ "houses/signboard_empty.png": {
+  "anchor": [
+   16,
+   13
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled (this project)",
+  "license": "project-original CC0-equivalent",
+  "note": "hanging sign 32x14, flat plank region x2..29,y6..12 for text overlay",
+  "file": "assets/pixel/composed/buildings/houses/signboard_empty.png",
+  "size": [
+   32,
+   14
+  ]
+ },
+ "windmill/windmill_dark.png": {
+  "anchor": [
+   21,
+   83
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled (this project); 128px vector windmill rejected: isometric, does not match side-view scale",
+  "license": "project-original",
+  "hub": [
+   21,
+   25
+  ],
+  "note": "tower body without sails; hub = sail pivot in px from sprite top-left",
+  "file": "assets/pixel/composed/buildings/windmill/windmill_dark.png",
+  "size": [
+   42,
+   84
+  ]
+ },
+ "windmill/windmill_lit.png": {
+  "anchor": [
+   21,
+   83
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled (this project); 128px vector windmill rejected: isometric, does not match side-view scale",
+  "license": "project-original",
+  "hub": [
+   21,
+   25
+  ],
+  "note": "tower body without sails; hub = sail pivot in px from sprite top-left",
+  "file": "assets/pixel/composed/buildings/windmill/windmill_lit.png",
+  "size": [
+   42,
+   84
+  ]
+ },
+ "windmill/windmill_sails_strip.png": {
+  "source": "hand-pixeled (rasterised procedurally, palette only)",
+  "license": "project-original",
+  "frame_size": [
+   72,
+   72
+  ],
+  "frames": 8,
+  "angle_step_deg": 11.25,
+  "base_angle_deg": 22.5,
+  "cycle_deg": 90,
+  "pivot": [
+   36,
+   36
+  ],
+  "usage": "rotate frames 0..7 for a spin loop (4-fold symmetric: 8 frames cover the full 90deg cycle). Place sprite so pivot sits on windmill hub; hub offset in windmill_*.png is its hub field.",
+  "file": "assets/pixel/composed/buildings/windmill/windmill_sails_strip.png",
+  "size": [
+   576,
+   72
+  ]
+ },
+ "landmarks/council_hall.png": {
+  "anchor": [
+   69,
+   123
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "active",
+  "door": [
+   81,
+   70,
+   94,
+   99
+  ],
+  "note": "council magic = violet",
+  "file": "assets/pixel/composed/buildings/landmarks/council_hall.png",
+  "size": [
+   139,
+   124
+  ]
+ },
+ "landmarks/council_hall_locked.png": {
+  "anchor": [
+   69,
+   123
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style -> locked remap",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "locked",
+  "note": "remap to ink/sky-deep/hill-near/hill-mid/wall-shade only; windows dark; same pixel size/anchor as active",
+  "file": "assets/pixel/composed/buildings/landmarks/council_hall_locked.png",
+  "size": [
+   139,
+   124
+  ]
+ },
+ "landmarks/debate_stage.png": {
+  "anchor": [
+   98,
+   144
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (stage with curtains, night re-grade) + hand-pixeled lecterns/bunting/banner",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "active",
+  "file": "assets/pixel/composed/buildings/landmarks/debate_stage.png",
+  "size": [
+   197,
+   145
+  ]
+ },
+ "landmarks/debate_stage_locked.png": {
+  "anchor": [
+   98,
+   144
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (stage with curtains, night re-grade) + hand-pixeled lecterns/bunting/banner -> locked remap",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "locked",
+  "note": "remap to ink/sky-deep/hill-near/hill-mid/wall-shade only; windows dark; same pixel size/anchor as active",
+  "file": "assets/pixel/composed/buildings/landmarks/debate_stage_locked.png",
+  "size": [
+   197,
+   145
+  ]
+ },
+ "landmarks/round_table_pavilion.png": {
+  "anchor": [
+   62,
+   93
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "active",
+  "seats": [
+   [
+    27,
+    72
+   ],
+   [
+    99,
+    72
+   ],
+   [
+    62,
+    86
+   ]
+  ],
+  "file": "assets/pixel/composed/buildings/landmarks/round_table_pavilion.png",
+  "size": [
+   124,
+   94
+  ]
+ },
+ "landmarks/round_table_pavilion_locked.png": {
+  "anchor": [
+   62,
+   93
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style -> locked remap",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "locked",
+  "note": "remap to ink/sky-deep/hill-near/hill-mid/wall-shade only; windows dark; same pixel size/anchor as active",
+  "file": "assets/pixel/composed/buildings/landmarks/round_table_pavilion_locked.png",
+  "size": [
+   124,
+   94
+  ]
+ },
+ "landmarks/feynman_porch.png": {
+  "anchor": [
+   57,
+   90
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "active",
+  "sign_slot": [
+   76,
+   44,
+   100,
+   51
+  ],
+  "file": "assets/pixel/composed/buildings/landmarks/feynman_porch.png",
+  "size": [
+   114,
+   91
+  ]
+ },
+ "landmarks/feynman_porch_locked.png": {
+  "anchor": [
+   57,
+   90
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style -> locked remap",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "locked",
+  "note": "remap to ink/sky-deep/hill-near/hill-mid/wall-shade only; windows dark; same pixel size/anchor as active",
+  "file": "assets/pixel/composed/buildings/landmarks/feynman_porch_locked.png",
+  "size": [
+   114,
+   91
+  ]
+ },
+ "landmarks/oral_exam_hut.png": {
+  "anchor": [
+   36,
+   76
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "active",
+  "chair": [
+   46,
+   78
+  ],
+  "file": "assets/pixel/composed/buildings/landmarks/oral_exam_hut.png",
+  "size": [
+   73,
+   77
+  ]
+ },
+ "landmarks/oral_exam_hut_locked.png": {
+  "anchor": [
+   36,
+   76
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style -> locked remap",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "locked",
+  "note": "remap to ink/sky-deep/hill-near/hill-mid/wall-shade only; windows dark; same pixel size/anchor as active",
+  "file": "assets/pixel/composed/buildings/landmarks/oral_exam_hut_locked.png",
+  "size": [
+   73,
+   77
+  ]
+ },
+ "landmarks/rubric_courthouse.png": {
+  "anchor": [
+   61,
+   100
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "active",
+  "door": [
+   64,
+   66,
+   79,
+   98
+  ],
+  "file": "assets/pixel/composed/buildings/landmarks/rubric_courthouse.png",
+  "size": [
+   123,
+   101
+  ]
+ },
+ "landmarks/rubric_courthouse_locked.png": {
+  "anchor": [
+   61,
+   100
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style -> locked remap",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "locked",
+  "note": "remap to ink/sky-deep/hill-near/hill-mid/wall-shade only; windows dark; same pixel size/anchor as active",
+  "file": "assets/pixel/composed/buildings/landmarks/rubric_courthouse_locked.png",
+  "size": [
+   123,
+   101
+  ]
+ },
+ "landmarks/exam_oracle.png": {
+  "anchor": [
+   31,
+   130
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "active",
+  "door": [
+   36,
+   108,
+   47,
+   127
+  ],
+  "slit": [
+   44,
+   9,
+   47,
+   29
+  ],
+  "file": "assets/pixel/composed/buildings/landmarks/exam_oracle.png",
+  "size": [
+   63,
+   131
+  ]
+ },
+ "landmarks/exam_oracle_locked.png": {
+  "anchor": [
+   31,
+   130
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style -> locked remap",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "locked",
+  "note": "remap to ink/sky-deep/hill-near/hill-mid/wall-shade only; windows dark; same pixel size/anchor as active",
+  "file": "assets/pixel/composed/buildings/landmarks/exam_oracle_locked.png",
+  "size": [
+   63,
+   131
+  ]
+ },
+ "landmarks/devils_ta_cave.png": {
+  "anchor": [
+   67,
+   96
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_ForestDay.png (cave rock) + hand-pixeled mouth, chalkboard, glints",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "active",
+  "glints": [
+   90,
+   84
+  ],
+  "file": "assets/pixel/composed/buildings/landmarks/devils_ta_cave.png",
+  "size": [
+   134,
+   97
+  ]
+ },
+ "landmarks/devils_ta_cave_locked.png": {
+  "anchor": [
+   67,
+   96
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_ForestDay.png (cave rock) + hand-pixeled mouth, chalkboard, glints -> locked remap",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "locked",
+  "note": "remap to ink/sky-deep/hill-near/hill-mid/wall-shade only; windows dark; same pixel size/anchor as active",
+  "file": "assets/pixel/composed/buildings/landmarks/devils_ta_cave_locked.png",
+  "size": [
+   134,
+   97
+  ]
+ },
+ "landmarks/classroom_house.png": {
+  "anchor": [
+   56,
+   109
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "active",
+  "door": [
+   59,
+   82,
+   72,
+   107
+  ],
+  "chalkboard": [
+   46,
+   54,
+   85,
+   81
+  ],
+  "file": "assets/pixel/composed/buildings/landmarks/classroom_house.png",
+  "size": [
+   113,
+   110
+  ]
+ },
+ "landmarks/classroom_house_locked.png": {
+  "anchor": [
+   56,
+   109
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark composed in Autumn Town style -> locked remap",
+  "license": "project-original (Autumn Town palette-matched style)",
+  "variant": "locked",
+  "note": "remap to ink/sky-deep/hill-near/hill-mid/wall-shade only; windows dark; same pixel size/anchor as active",
+  "file": "assets/pixel/composed/buildings/landmarks/classroom_house_locked.png",
+  "size": [
+   113,
+   110
+  ]
+ },
+ "landmarks/panic_booth_off.png": {
+  "anchor": [
+   14,
+   59
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark",
+  "license": "project-original",
+  "variant": "off",
+  "file": "assets/pixel/composed/buildings/landmarks/panic_booth_off.png",
+  "size": [
+   28,
+   60
+  ]
+ },
+ "landmarks/panic_booth_glow.png": {
+  "anchor": [
+   16,
+   59
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark",
+  "license": "project-original",
+  "variant": "glow",
+  "note": "glowing at 2am; halo dither included in canvas",
+  "file": "assets/pixel/composed/buildings/landmarks/panic_booth_glow.png",
+  "size": [
+   33,
+   60
+  ]
+ },
+ "landmarks/panic_booth_locked.png": {
+  "anchor": [
+   14,
+   59
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled landmark -> locked remap",
+  "license": "project-original",
+  "variant": "locked",
+  "file": "assets/pixel/composed/buildings/landmarks/panic_booth_locked.png",
+  "size": [
+   28,
+   60
+  ]
+ },
+ "landmarks/padlock_8x8.png": {
+  "anchor": [
+   4,
+   7
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "hand-pixeled",
+  "license": "project-original",
+  "note": "overlay centred on a locked landmark door",
+  "file": "assets/pixel/composed/buildings/landmarks/padlock_8x8.png",
+  "size": [
+   8,
+   8
+  ]
+ },
+ "props/lamp_post_lit.png": {
+  "anchor": [
+   11,
+   94
+  ],
+  "anchor_note": "bottom-center ground anchor in px from sprite top-left",
+  "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (lamp post box 396,236,419,331) night re-graded",
+  "license": "Autumn Town (Nirva) - free to use/edit, no credit required (see assets/pixel/LICENSES.md)",
+  "variant": "lit",
+  "file": "assets/pixel/composed/buildings/props/lamp_post_lit.png",
+  "size": [
+   23,
+   95
+  ]
+ },
+ "interiors/interior_classroom.png": {
+  "source": "hand-pixeled (Autumn Town prop style, palette-only)",
+  "license": "project-original",
+  "floor_y": 112,
+  "anchors": {
+   "chalkboard_center": [
+    112,
+    41
+   ],
+   "expert_desk": [
+    170,
+    112
+   ],
+   "student_desk": [
+    48,
+    112
+   ],
+   "lamp": [
+    112,
+    40
+   ],
+   "floor_y": 112
+  },
+  "file": "assets/pixel/composed/buildings/interiors/interior_classroom.png",
+  "size": [
+   224,
+   128
+  ]
+ },
+ "interiors/interior_study.png": {
+  "source": "hand-pixeled (Autumn Town prop style, palette-only)",
+  "license": "project-original",
+  "floor_y": 112,
+  "anchors": {
+   "desk": [
+    164,
+    112
+   ],
+   "lamp": [
+    143,
+    72
+   ],
+   "chair": [
+    111,
+    112
+   ],
+   "window": [
+    167,
+    39
+   ],
+   "floor_y": 112
+  },
+  "file": "assets/pixel/composed/buildings/interiors/interior_study.png",
+  "size": [
+   224,
+   128
+  ]
+ },
+ "interiors/interior_council.png": {
+  "source": "hand-pixeled (Autumn Town prop style, palette-only)",
+  "license": "project-original",
+  "floor_y": 112,
+  "anchors": {
+   "seats": {
+    "chairman": [
+     112,
+     89
+    ],
+    "council_left": [
+     50,
+     103
+    ],
+    "council_right": [
+     174,
+     103
+    ],
+    "council_front": [
+     112,
+     121
+    ]
+   },
+   "lantern_slot": [
+    112,
+    13
+   ],
+   "table_center": [
+    112,
+    85
+   ],
+   "floor_y": 112
+  },
+  "file": "assets/pixel/composed/buildings/interiors/interior_council.png",
+  "size": [
+   224,
+   128
+  ]
+ },
+ "interiors/interior_oral_exam.png": {
+  "source": "hand-pixeled (Autumn Town prop style, palette-only)",
+  "license": "project-original",
+  "floor_y": 112,
+  "anchors": {
+   "chair": [
+    102,
+    100
+   ],
+   "lamp": [
+    104,
+    30
+   ],
+   "floor_y": 112
+  },
+  "file": "assets/pixel/composed/buildings/interiors/interior_oral_exam.png",
+  "size": [
+   224,
+   128
+  ]
+ }
+}
