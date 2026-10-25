@@ -86,3 +86,27 @@ describe('rubric courthouse quiz.result rows', () => {
     expect(def.describe(cross)).not.toMatch(/\d/);
   });
 });
+
+describe('rubric courthouse council:rubric', () => {
+  it('handles council:rubric opinion and verdict and passes the outcome card on', () => {
+    const s = def.init();
+    const outcome = { title: 'Rubric check: essay', items: [], facts: [], why: [] };
+    const v = {
+      t: 'council.verdict',
+      councilId: 'council:rubric',
+      member: 'judge',
+      text: 'Two of three met',
+      outcome,
+    } as VillageEvent;
+    expect(def.handles(v, s, ctx)).toBe(true);
+    expect(def.mapEvent(v, s, ctx)).toContainEqual({ c: 'outcome', outcome });
+    const o = {
+      t: 'council.opinion',
+      councilId: 'council:rubric',
+      member: 'clarity',
+      text: 'Clear order of steps.',
+    } as VillageEvent;
+    expect(def.handles(o, s, ctx)).toBe(true);
+    expect(def.handles({ ...o, councilId: 'council:oracle' } as VillageEvent, s, ctx)).toBe(false);
+  });
+});

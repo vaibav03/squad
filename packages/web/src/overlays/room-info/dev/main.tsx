@@ -1,5 +1,6 @@
 import { StrictMode, useEffect, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
+import type { VillageEvent } from '@squad/core';
 import { createRoomSession, ROOM_INFO } from '@squad/village/rooms';
 import '../../../styles/index.css';
 import { RoomLayer } from '../RoomLayer';
@@ -24,7 +25,30 @@ if (!panel) {
   }
 }
 
+// ?replay=1 plays events recorded from the real rooms-b skills (dev/rooms-b-replay.json, written by
+// `pnpm --filter @squad/brain exec tsx src/skills/rooms-b.record.script.ts`), keyed by room slot.
+// ?replay=<url> records a JSON array of real VillageEvents (rooms-a capture) in the room instead.
+// ?stop=talk plays only the spoken lines (no verdict), to shoot the transcript strip.
+const replay = q.get('replay');
+
+async function playReplay(s: ReturnType<typeof createRoomSession>) {
+  s.enter(room);
+  let evs: VillageEvent[];
+  if (replay === '1') {
+    const data = (await (await fetch('/rooms-b-replay.json')).json()) as Record<
+      string,
+      VillageEvent[]
+    >;
+    evs = data[room] ?? [];
+  } else {
+    evs = (await (await fetch(replay as string)).json()) as VillageEvent[];
+  }
+  const upto = q.get('stop') === 'talk' ? evs.filter((e) => e.t !== 'council.verdict') : evs;
+  for (const e of upto) s.record(room, e, Date.now());
+}
+
 function script(s: ReturnType<typeof createRoomSession>) {
+  if (replay) return void playReplay(s);
   const say = (member: string, text: string, extra: object = {}) =>
     s.record(room, { t: 'council.opinion', councilId: 'c1', member, text, ...extra }, Date.now());
   s.enter(room);

@@ -42,12 +42,17 @@ describe('full registry on banter', () => {
         'chat',
         'council',
         'coursePlan',
+        'debate',
+        'devilTa',
         'doubt',
         'explainer',
         'feynman',
         'hwpolicy',
+        'oracle',
+        'oral',
         'podcast',
         'quiz',
+        'rubric',
         'stepDiff',
         'studyPlan',
       ].sort(),
@@ -74,5 +79,45 @@ describe('full registry on banter', () => {
     expect(t.sent).toEqual([]);
     expect(t.decisions()).toHaveLength(BANTER.length);
     expect(t.decisions().filter((d) => d.decision.action !== 'quiet')).toEqual([]);
+  });
+});
+
+describe('room skills (oracle, rubric) are anchored', () => {
+  const near = [
+    'what should we study next week at the library',
+    'anyone know the rubric for the essay',
+    'who can predict the final',
+    'oracle',
+    'what is a rubric',
+    '@cubbie lol',
+  ];
+  // Contains the phrase but is not addressed to the bot: must stay quiet.
+  const phraseUnaddressed = ['rubric check later?', 'predict my exam score lol', 'exam oracle lol'];
+  it('score 0 for oracle and rubric on near-miss chatter, 0.95 on the real phrases', async () => {
+    const { skills, db } = await fullRegistry();
+    const ctx = { db } as unknown as Ctx;
+    const by = (n: string) => skills.find((s) => s.name === n)!;
+    for (const [i, line] of near.entries())
+      for (const n of ['oracle', 'rubric']) {
+        expect(await by(n).match(NOT_MENTIONED(line, i), ctx), `${n}: ${line}`).toBe(0);
+        expect(
+          await by(n).match({ ...NOT_MENTIONED(line, i), mentionsBot: true }, ctx),
+          `${n} addressed: ${line}`,
+        ).toBe(0);
+      }
+    for (const [i, line] of phraseUnaddressed.entries())
+      for (const n of ['oracle', 'rubric'])
+        expect(await by(n).match(NOT_MENTIONED(line, i), ctx), `${n}: ${line}`).toBe(0);
+    const addressed = (text: string): InboundMessage => ({
+      ...NOT_MENTIONED(text, 1),
+      mentionsBot: true,
+    });
+    for (const t of [
+      '@cubbie exam oracle',
+      '@cubbie what should I study next',
+      '@cubbie predict my exam',
+    ])
+      expect(await by('oracle').match(addressed(t), ctx), t).toBe(0.95);
+    expect(await by('rubric').match(addressed('@cubbie rubric check: my answer'), ctx)).toBe(0.95);
   });
 });

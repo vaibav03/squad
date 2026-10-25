@@ -7,6 +7,8 @@ import { verifyQuoteOnPage } from './quote';
 
 export const FEYNMAN_PROMPT_VERSION = 'feynman-v1';
 export const MAX_FOLLOWUPS = 2;
+/** Village agent id of the Feynman Porch room (not the chapter house). */
+export const FEYNMAN_AGENT = 'expert:feynman';
 
 export interface MissedPoint {
   text: string;
@@ -128,7 +130,7 @@ export class FeynmanEngine {
         'awaiting',
         (this.d.now ?? Date.now)(),
       );
-    void this.emit(`expert:${chapter}`, 'waiting_for_student');
+    void this.emit(FEYNMAN_AGENT, 'waiting_for_student');
     return id;
   }
 
@@ -149,7 +151,7 @@ export class FeynmanEngine {
     if (s.phase !== 'awaiting') throw new Error('this check is finished');
     const turns = JSON.parse(s.turns_json) as { role: 'student' | 'freshman'; text: string }[];
     turns.push({ role: 'student', text });
-    const agent = `expert:${s.chapter}`;
+    const agent = FEYNMAN_AGENT;
     await this.emit(agent, 'studying');
 
     if (s.followups < MAX_FOLLOWUPS) {
