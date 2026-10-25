@@ -6,6 +6,7 @@ import {
   useRef,
   useSyncExternalStore,
   type HTMLAttributes,
+  type RefObject,
   type ReactNode,
 } from 'react';
 import './panel-dock.css';
@@ -98,10 +99,13 @@ export function PanelDockRoot({
 }: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) {
   const store = useMemo(() => createPanelDockStore(), []);
   const large = useSyncExternalStore(store.subscribe, store.large, () => null);
+  const root = useRef<HTMLDivElement>(null);
+  useDockTop(root);
   return (
     <Ctx.Provider value={store}>
       <div
         {...rest}
+        ref={root}
         className={['sq-dock-root', className].filter(Boolean).join(' ')}
         data-dock-large={large ?? undefined}
       >
@@ -152,4 +156,54 @@ export function useDockBusy(): boolean {
     () => (store?.count() ?? 0) > 0,
     () => false,
   );
+}
+
+/** The dock starts this far under the HUD (px), never closer than the CSS default of 84px. */
+export function dockTopFor(rootTop: number, hudBottoms: number[], gap = 12, min = 84): number {
+  if (!hudBottoms.length) return min;
+  return Math.max(min, Math.ceil(Math.max(...hudBottoms) - rootTop + gap));
+}
+
+/**
+ * The village HUD is anchored to the letterboxed stage, so on a tall window it sits lower than the top of the world.
+ * Measure it and publish --sq-dock-top on the root so panels always start below it.
+ */
+function useDockTop(root: RefObject<HTMLDivElement | null>): void {
+  useEffect(() => {
+    const el = root.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    let raf = 0;
+    let last = -1;
+    const measure = () => {
+      raf = 0;
+      const top = el.getBoundingClientRect().top;
+      const bottoms = Array.from(
+        el.querySelectorAll<HTMLElement>('.sqv-hud .sqv-chips, .sqv-hud .sqv-seg, .sqv-hud .sqv-clock, .sqv-hud .sqv-menu'),
+      )
+        .map((n) => n.getBoundingClientRect())
+        .filter((r) => r.height > 0)
+        .map((r) => r.bottom);
+      const px = dockTopFor(top, bottoms);
+      if (px !== last) {
+        last = px;
+        el.style.setProperty('--sq-dock-top', `${px}px`);
+      }
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(measure);
+    };
+    const ro = new ResizeObserver(schedule);
+    ro.observe(el);
+    // the HUD is created after the world boots, and its stage is resized by the game
+    const mo = new MutationObserver(schedule);
+    mo.observe(el, { childList: true, subtree: true });
+    window.addEventListener('resize', schedule);
+    schedule();
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      ro.disconnect();
+      mo.disconnect();
+      window.removeEventListener('resize', schedule);
+    };
+  }, [root]);
 }
