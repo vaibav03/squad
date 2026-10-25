@@ -814,10 +814,13 @@
 }
 .sqc-cite__body .sqc-cite__loc {
   margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
   font-size: var(--text-xs);
+  line-height: 1.35;
   color: var(--muted-foreground);
   opacity: 1;
 }
