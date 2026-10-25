@@ -11,6 +11,7 @@ import {
   createAudioServices,
   type AudioServices,
 } from '@squad/media';
+import { createHttpCoordinator, createMeshScheduler, type MeshScheduler } from '@squad/mesh';
 import { listPersonas } from '@squad/media/personas';
 import { registerPersonas } from './persona';
 import type { MediaWiring } from './skills';
@@ -62,4 +63,23 @@ export function registerMediaPersonas(): number {
   const list = listPersonas();
   registerPersonas(list);
   return list.length;
+}
+
+/**
+ * The study plan's scheduler: the mesh (each student's agent keeps its calendar private, PSI finds
+ * the slot) when `MESH_COORDINATOR_URL` points at a running apps/agent, else `undefined` so the
+ * brain's deterministic stub is used. `MESH_SQUAD_ID` names the squad the study flow runs for.
+ */
+export function buildScheduler(
+  env: Record<string, string | undefined>,
+  secret: string,
+  fetchImpl?: typeof fetch,
+): MeshScheduler | undefined {
+  const url = env.MESH_COORDINATOR_URL;
+  if (!url) return undefined;
+  const http = createHttpCoordinator({ url, secret, ...(fetchImpl ? { fetch: fetchImpl } : {}) });
+  return createMeshScheduler({
+    coordinator: http,
+    ...(env.MESH_SQUAD_ID ? { squadId: env.MESH_SQUAD_ID } : {}),
+  });
 }

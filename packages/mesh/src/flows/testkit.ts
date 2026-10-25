@@ -19,7 +19,7 @@ export const SENTINELS = ['$187', '187', 'therapy', 'under 21', 'tuesday 2pm', '
 
 export type TimelineItem =
   | { ch: 'event'; event: VillageEvent }
-  | { ch: 'hub'; kind: 'ledger.private' | 'trip.upsert'; data: unknown };
+  | { ch: 'hub'; kind: 'ledger.private' | 'trip.upsert' | 'trip.limits'; data: unknown };
 
 export class RecordingEmitter implements Emitter {
   readonly events: VillageEvent[] = [];
@@ -41,10 +41,20 @@ export class RecordingHub implements HubPort {
     ts: number;
   }[] = [];
   readonly trips: TripRecordLike[] = [];
+  readonly tripLimitPosts: { tripId: string; student: string; limits: Record<string, string> }[] =
+    [];
   constructor(private readonly timeline: TimelineItem[]) {}
   async ledgerPrivate(e: RecordingHub['ledger'][number]): Promise<void> {
     this.ledger.push(structuredClone(e));
     this.timeline.push({ ch: 'hub', kind: 'ledger.private', data: structuredClone(e) });
+  }
+  async tripLimits(e: {
+    tripId: string;
+    student: string;
+    limits: Record<string, string>;
+  }): Promise<void> {
+    this.tripLimitPosts.push(structuredClone(e));
+    this.timeline.push({ ch: 'hub', kind: 'trip.limits', data: structuredClone(e) });
   }
   async tripUpsert(rec: TripRecordLike): Promise<void> {
     this.trips.push(structuredClone(rec));

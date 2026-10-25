@@ -66,6 +66,12 @@ export interface HubPort {
   }): Promise<void>;
   /** Trip state for the trip page. `limits` holds only what THIS process knows (its own student's). */
   tripUpsert(rec: TripRecordLike): Promise<void>;
+  /** This student's OWN limits for a trip (`x.trip.limits`); the hub merges them per student. Each agent posts only its own. */
+  tripLimits?(e: {
+    tripId: string;
+    student: string;
+    limits: Record<string, string>;
+  }): Promise<void>;
 }
 export interface TripRecordLike {
   tripId: string;

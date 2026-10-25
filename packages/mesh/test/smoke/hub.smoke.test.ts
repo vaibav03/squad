@@ -51,6 +51,22 @@ describe('hub private channel', () => {
     expect(JSON.stringify(rec)).not.toMatch(/under 21|therapy/);
   });
 
+  it('each student agent posts x.trip.limits for its own student only, and never raw peers', async () => {
+    const m = createTestMesh({ seed: 'hub' });
+    await run(m);
+    const posts = m.hub.tripLimitPosts;
+    const studentsPosted = new Set(posts.map((p) => p.student));
+    // every NON-coordinating member posts its own limits (the coordinator's go in the upsert)
+    for (const s of ['s_ben', 's_cam', 's_dev']) expect(studentsPosted.has(s)).toBe(true);
+    for (const p of posts) {
+      expect(p.tripId).toBe('hub_trip');
+      expect(members).toContain(p.student);
+      expect(Object.keys(p.limits).length).toBeGreaterThan(0);
+    }
+    // the values posted for a student come from that student's own profile (budget sentinel for s_ana is not in s_ben's post)
+    expect(JSON.stringify(posts.filter((p) => p.student === 's_ben'))).not.toContain('$187');
+  });
+
   it('no upsert ever marks confirmed on a no', async () => {
     const m = createTestMesh({ seed: 'hub', answers: { s_ben: 'no' } });
     await run(m);

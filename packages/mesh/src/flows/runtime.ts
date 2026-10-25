@@ -106,6 +106,19 @@ export function createAgent(deps: AgentDeps): FlowAgent {
     }
   };
 
+  /** Each student's agent posts its own limits (x.trip.limits); the hub merges them into the trip record. */
+  const postOwnLimits = async (taskId: string): Promise<void> => {
+    try {
+      await deps.hub?.tripLimits?.({
+        tripId: taskId,
+        student: id,
+        limits: ownLimits(profile),
+      });
+    } catch {
+      /* hub is best effort */
+    }
+  };
+
   const emit = async (e: VillageEvent): Promise<void> => {
     try {
       await emitter.emit(e);
@@ -229,6 +242,7 @@ export function createAgent(deps: AgentDeps): FlowAgent {
 
   async function onProposal(t: TaskCtx, p: Payload<'result'>): Promise<void> {
     const { taskId, open } = t.view;
+    if (open.flow === 'trip') await postOwnLimits(taskId); // the trip record exists by now
     const opt = (open.options ?? []).find((o) => o.id === p.chosen);
     const question =
       open.flow === 'trip'
@@ -257,8 +271,10 @@ export function createAgent(deps: AgentDeps): FlowAgent {
   async function dispatchMember(msg: AgentMessage, kind: MessageKind): Promise<WireReply> {
     const taskId = msg.taskId;
     if (kind === 'task.open') {
-      const t = openTask(taskId, msg.payload as Payload<'task.open'>, msg.from);
+      const open = msg.payload as Payload<'task.open'>;
+      const t = openTask(taskId, open, msg.from);
       void t;
+      if (open.flow === 'trip') void postOwnLimits(taskId);
       await state('studying');
       return ok(taskId, 'working');
     }

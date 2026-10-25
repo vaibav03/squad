@@ -10,7 +10,7 @@ import { teePublisher, createEventPublisher } from './events';
 import { createInternalServer, DEFAULT_BOT_PORT } from './internal-server';
 import { createLogger } from './log';
 import { createSkills } from './skills';
-import { buildMedia, registerMediaPersonas } from './wiring';
+import { buildMedia, buildScheduler, registerMediaPersonas } from './wiring';
 import { CliTransport } from './transports/cli';
 import type { EventPublisher, Roster, Transport } from './types';
 
@@ -75,7 +75,13 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
   const { media, reason } = buildMedia({ cfg, llm, fake });
   if (reason) console.log(`[bot] ${reason}`);
   const skills: Skill[] = [
-    ...(await createSkills({ llm, db, emit: (e) => events.publish(e), media })),
+    ...(await createSkills({
+      llm,
+      db,
+      emit: (e) => events.publish(e),
+      media,
+      scheduler: buildScheduler(env, cfg.internalEventsSecret),
+    })),
     ...(env.STUB_SKILLS === '1' ? Object.values(STUB_SKILLS) : []),
   ];
 
