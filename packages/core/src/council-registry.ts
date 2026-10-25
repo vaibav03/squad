@@ -40,3 +40,24 @@ export function recordCouncilAction(correlationId: string, a: RecordedCouncilAct
 export function councilRunActions(correlationId: string): RecordedCouncilAction[] {
   return [...(actionsByRun.get(correlationId) ?? [])];
 }
+
+// Run metadata for the hub's persisted council runs (question, council, honest transport, who sits where). Public words only:
+// the runtime records it at startRun; `private` runs keep the question out of other viewers' records (the hub filters).
+export interface CouncilRunMeta {
+  councilKey: string;
+  question: string;
+  transport: { kind: 'stream-text' | 'live-audio' | 'demo'; label: string; requested?: 'stream' | 'live'; why?: string };
+  roster: { id: string; role: string; parent?: string; displayName: string }[];
+  startedAt: number;
+}
+const metaByRun = new Map<string, CouncilRunMeta>();
+
+export function recordCouncilRunMeta(correlationId: string, m: CouncilRunMeta): void {
+  metaByRun.delete(correlationId);
+  metaByRun.set(correlationId, m);
+  if (metaByRun.size > MAX_RUNS) metaByRun.delete(metaByRun.keys().next().value as string);
+}
+
+export function councilRunMeta(correlationId: string): CouncilRunMeta | undefined {
+  return metaByRun.get(correlationId);
+}

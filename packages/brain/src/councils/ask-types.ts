@@ -1,6 +1,7 @@
 import type { CouncilResult, Db, Llm, VillageEvent } from '@squad/core';
 import type { Brain } from '../experts/types';
 import type { CouncilAgents } from '../agents/factory';
+import type { AgentSpec } from '../agents/types';
 import type { AskViewerData } from './ask-v2';
 
 export type CouncilEmit = (e: VillageEvent) => void | Promise<unknown>;
@@ -14,7 +15,29 @@ export interface CouncilAskInput {
   /** Overrides the chatId rule. Private runs emit village events WITHOUT any text. */
   visibility?: 'squad' | 'private';
   courseId?: string;
+  /** `live`: each participant is its own Gemini Live session (needs `CouncilServiceDeps.live`); default `stream`. */
+  transport?: 'stream' | 'live';
 }
+
+/**
+ * A per-run Gemini Live council: its own runtime/transport (sessions are per run), a pre-flight that opens every
+ * participant's session BEFORE the run starts (so a dead Live setup falls back honestly instead of half way), and `close`.
+ */
+export interface LiveCouncilHandle {
+  agents: CouncilAgents;
+  prepare(
+    roster: AgentSpec[],
+  ): Promise<
+    | { ok: true; models: { who: string; model: string }[] }
+    | { ok: false; why: string }
+  >;
+  close(): void;
+}
+export type LiveCouncilFactory = (run: {
+  id: string;
+  askedBy: string;
+  visibility: 'squad' | 'private';
+}) => LiveCouncilHandle | { unavailable: string };
 
 export interface CouncilRunHandle {
   id: string;
@@ -51,6 +74,8 @@ export interface CouncilServiceDeps {
    * run (v1), which is what unit tests of the old path use.
    */
   agents?: CouncilAgents;
+  /** Builds the per-run Gemini Live council (hub only). Without it a `live` request falls back to streaming, labelled. */
+  live?: LiveCouncilFactory;
   /** Viewer-scoped data for the asker through the privacy gate (calendar/mastery summaries). */
   viewer?: (askedBy: string, visibility: 'squad' | 'private') => AskViewerData | undefined;
   /** Specialist keys to seat in v2 runs (default all three). */

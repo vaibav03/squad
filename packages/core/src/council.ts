@@ -12,6 +12,8 @@ export const CouncilAskBodySchema = z.strictObject({
   question: z.string().trim().min(COUNCIL_QUESTION_MIN).max(COUNCIL_QUESTION_MAX),
   /** Where it was asked. `dm:<me>` makes the run private to the asker; a group chat or omitted means the squad may watch. */
   chatId: ChatIdSchema.optional(),
+  /** `live` = each participant is its own Gemini Live session (needs COUNCIL_TRANSPORT_LIVE on the hub); default is the hub's COUNCIL_TRANSPORT. */
+  transport: z.enum(['stream', 'live']).optional(),
 });
 export type CouncilAskBody = z.infer<typeof CouncilAskBodySchema>;
 
@@ -126,6 +128,21 @@ export const CouncilActionSchema = z.strictObject({
 export type CouncilAction = z.infer<typeof CouncilActionSchema>;
 export const COUNCIL_ACTIONS_MAX = 4;
 
+/**
+ * How a run reached its model, in words the UI can show as is. `kind`: what really ran. `requested` is what the caller asked
+ * for; when they differ `why` says why (e.g. `credits_depleted`), and `label` reads
+ * `Gemini streaming (Live unavailable: credits depleted)`.
+ */
+export const CouncilRunTransportSchema = z.strictObject({
+  kind: z.enum(['stream-text', 'live-audio', 'demo']),
+  label: z.string().max(120),
+  requested: z.enum(['stream', 'live']).optional(),
+  why: z.string().max(80).optional(),
+  /** Model ids actually used, per tier or participant (never keys). */
+  models: z.array(z.strictObject({ who: z.string().max(40), model: z.string().max(80) })).max(8).optional(),
+});
+export type CouncilRunTransport = z.infer<typeof CouncilRunTransportSchema>;
+
 /** The full state of a run; also the final result card (`GET /v1/council/:id`) and every stream step. */
 export const CouncilResultSchema = z.strictObject({
   id: CouncilRunIdSchema,
@@ -153,6 +170,8 @@ export const CouncilResultSchema = z.strictObject({
   mode: CouncilModeSchema.optional(),
   /** Decision-flow stage (agent runtime v2 only). */
   stage: z.enum(COUNCIL_STAGES).optional(),
+  /** How the run reached its model (agent runtime v2 only). */
+  transport: CouncilRunTransportSchema.optional(),
   /** Org chart of the run (agent runtime v2 only). */
   agents: z.array(CouncilAgentInfoSchema).max(8).optional(),
   /** Action items from the chair's `actions` stage (agent runtime v2 only), at most 4. */

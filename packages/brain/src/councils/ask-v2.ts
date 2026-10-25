@@ -27,7 +27,13 @@ import {
   outcomeOf,
   withTimeout,
 } from './ask-run';
-import type { CouncilAskInput, CouncilEmit, CouncilLimits } from './ask-types';
+import type {
+  CouncilAskInput,
+  CouncilEmit,
+  CouncilLimits,
+  LiveCouncilFactory,
+  LiveCouncilHandle,
+} from './ask-types';
 import { aggregateRankings, normaliseText } from './pure';
 
 /** What the hub can say about the asker, only through the privacy gate (aggregates, words). */
@@ -53,6 +59,8 @@ export interface AskV2Deps {
   members?: string[];
   /** The raw real model, only used for the one cheap live triage call. */
   triageLlm?: Llm;
+  /** Per-run Gemini Live council (hub). */
+  live?: LiveCouncilFactory;
 }
 
 const cut = (s: string, n: number): string =>
@@ -101,6 +109,7 @@ export async function runAskV2(
     });
 
   let run: AgentRun | undefined;
+  let liveHandle: LiveCouncilHandle | undefined;
   let studying = false;
   const idle = async (): Promise<void> => {
     if (studying) await safeEmit({ t: 'agent.state', agent: COUNCIL_AGENT, state: 'idle' });
@@ -173,13 +182,56 @@ export async function runAskV2(
         x.stage = run.currentStage();
         x.agents = run.agents();
         x.messages = run.messages();
+        if (resultTransport) x.transport = resultTransport;
       });
-    run = d.agents.runtime.startRun({
+    let resultTransport: CouncilResult['transport'];
+    // ---- transport: Gemini Live when asked for AND every participant's session opens; otherwise the streaming
+    // transport with a label that says why (never a silent swap, never scripted under a live label)
+    let agents = d.agents;
+    const requested = input.transport ?? 'stream';
+    let tlabel: { label: string; requested?: 'stream' | 'live'; why?: string } | undefined;
+    let models: { who: string; model: string }[] | undefined;
+    if (!demo && requested === 'live') {
+      let why = 'live_not_configured';
+      const h = d.live?.({ id: r.id, askedBy: input.askedBy, visibility: r.visibility });
+      if (h && !('unavailable' in h)) {
+        const pre = await h.prepare(roster);
+        if (pre.ok) {
+          liveHandle = h;
+          agents = h.agents;
+          models = pre.models;
+          tlabel = { label: 'Gemini Live (audio + transcript)', requested: 'live' };
+        } else {
+          why = pre.why;
+          h.close();
+        }
+      } else if (h) why = h.unavailable;
+      if (!liveHandle)
+        tlabel = {
+          label: `Gemini streaming (Live unavailable: ${why.replace(/_/g, ' ')})`,
+          requested: 'live',
+          why,
+        };
+    } else if (demo) {
+      tlabel = { label: 'Demo (scripted, not Gemini)', ...(requested === 'live' ? { requested } : {}) };
+    }
+    const liveSpeech = agents.kind === 'live-audio';
+    resultTransport = {
+      kind: demo ? 'demo' : liveSpeech ? 'live-audio' : 'stream-text',
+      label: tlabel?.label ?? 'Gemini streaming text',
+      ...(tlabel?.requested ? { requested: tlabel.requested } : {}),
+      ...(tlabel?.why ? { why: tlabel.why.slice(0, 80) } : {}),
+      ...(models?.length ? { models } : {}),
+    };
+    change((x) => void (x.transport = resultTransport));
+    run = agents.runtime.startRun({
       correlationId: r.id,
       councilKey: 'ask',
       mode,
       visibility: r.visibility,
       owner: { askedBy: input.askedBy },
+      question: q,
+      ...(tlabel ? { transportLabel: tlabel } : {}),
       ...(course ? { prefetchQuery: q } : {}),
       roster,
       ports,
@@ -301,7 +353,7 @@ export async function runAskV2(
     const names = answered.map((a) => a.name);
     const byName = new Map(answeredTurns.map((t) => [t.agent.displayName, t]));
     const ranked: { member: string; order: string[] }[] = [];
-    if (answered.length >= 3) {
+    if (answered.length >= 3 && !liveSpeech) {
       const rankTurns = await Promise.all(
         answered.map(async (a) => {
           const me = byName.get(a.name)!;
@@ -529,6 +581,7 @@ export async function runAskV2(
       });
       final.close();
     }
+    liveHandle?.close();
   }
 }
 

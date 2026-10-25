@@ -34,6 +34,8 @@ export interface CouncilAgents {
   /** Hub-wide hourly run cap. false = refuse this run. */
   tryStart(): boolean;
   budget: CouncilBudget;
+  /** Kind of the real transport behind this runtime (`stream-text`, `live-audio`), for transport-specific orchestration. */
+  kind: AgentTransport['kind'] | undefined;
 }
 
 /** Builds the council runtime: raw Gemini over streaming text + tool calling, scripted transport for demo runs only. */
@@ -56,6 +58,7 @@ export function createCouncilAgents(d: CouncilAgentsDeps): CouncilAgents {
   });
   return {
     runtime,
+    kind: real?.kind,
     flag: councilAgentsFlag(env),
     budget,
     tryStart: () => hourly.tryAcquire(),

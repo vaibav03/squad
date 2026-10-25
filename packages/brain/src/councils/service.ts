@@ -89,6 +89,7 @@ export function createCouncilService(deps: CouncilServiceDeps): CouncilService {
               ...(deps.viewer ? { viewer: deps.viewer } : {}),
               ...(deps.triageLlm ? { triageLlm: deps.triageLlm } : {}),
               ...(deps.members?.length ? { members: deps.members } : {}),
+              ...(deps.live ? { live: deps.live } : {}),
               publish: (x) => {
                 try {
                   save.run(x.id, JSON.stringify(x), now());
