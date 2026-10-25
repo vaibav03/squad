@@ -13,7 +13,8 @@
     "test:smoke": "vitest run --dir test --passWithNoTests",
     "dev": "vite --config vite.config.ts",
     "gen:assets": "node scripts/gen-tileset.mjs && node scripts/gen-demo-map.mjs",
-    "shots": "node scripts/shot.mjs"
+    "shots": "node scripts/shot.mjs",
+    "verify": "node scripts/verify.mjs"
   },
   "dependencies": {
     "@squad/core": "workspace:*",

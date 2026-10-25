@@ -66,10 +66,6 @@
         "image": "pixel/characters/ninja-adventure-npcs-16px/Boy/SpriteSheet.png"
       },
       {
-        "id": "child",
-        "image": "pixel/characters/ninja-adventure-npcs-16px/Child/SpriteSheet.png"
-      },
-      {
         "id": "villager",
         "image": "pixel/characters/ninja-adventure-npcs-16px/Villager/SpriteSheet.png"
       },
@@ -96,10 +92,6 @@
       {
         "id": "oldman",
         "image": "pixel/characters/ninja-adventure-npcs-16px/OldMan/SpriteSheet.png"
-      },
-      {
-        "id": "oldwoman",
-        "image": "pixel/characters/ninja-adventure-npcs-16px/OldWoman/SpriteSheet.png"
       },
       {
         "id": "monk",

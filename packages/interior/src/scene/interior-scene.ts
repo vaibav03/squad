@@ -429,7 +429,10 @@ export class InteriorScene extends Phaser.Scene {
     if (this.cameraMode === 'follow') return followScroll(focus, view, { w: map.pxW, h: map.pxH });
     const room = this.currentRoom ? this.rooms.room(this.currentRoom) : undefined;
     if (!room) return followScroll(focus, view, { w: map.pxW, h: map.pxH });
-    return roomScroll(focus, view, roomFrame(room.bounds, { w: map.pxW, h: map.pxH }));
+    return roomScroll(focus, view, roomFrame(room.bounds, { w: map.pxW, h: map.pxH }), {
+      w: map.pxW,
+      h: map.pxH,
+    });
   }
 
   private snapCameraNow(): void {

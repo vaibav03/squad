@@ -17,17 +17,28 @@ const server = await createServer({
 });
 await server.listen();
 const base = `http://localhost:${server.config.server.port}/`;
-const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] });
+const browser = await chromium.launch({
+  args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'],
+});
 const sizes = [
   { w: 1280, h: 720, dpr: 1 },
   { w: 390, h: 844, dpr: 3 },
 ];
 let failed = false;
 for (const { w, h, dpr } of sizes) {
-  const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: dpr });
+  const ctx = await browser.newContext({
+    viewport: { width: w, height: h },
+    deviceScaleFactor: dpr,
+  });
   const page = await ctx.newPage();
   const errors = [];
-  page.on('console', (m) => ['error', 'warning'].includes(m.type()) && errors.push(m.text()));
+  page.on(
+    'console',
+    (m) =>
+      ['error', 'warning'].includes(m.type()) &&
+      !m.text().includes('GL Driver') &&
+      errors.push(m.text()),
+  );
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(base + '?nostory&seed=3', { waitUntil: 'networkidle' });
   await page.evaluate(() => window.__interior.ready);
@@ -39,7 +50,13 @@ for (const { w, h, dpr } of sizes) {
   const rooms = await wd(() => window.__interior.debug.world().rooms);
   await shot('start');
   await wd(() => {
-    for (const [i, id] of ['student:ana', 'expert:ch1', 'student:ben', 'student:cy', 'student:dee'].entries())
+    for (const [i, id] of [
+      'student:ana',
+      'expert:ch1',
+      'student:ben',
+      'student:cy',
+      'student:dee',
+    ].entries())
       window.__source.emit({ t: 'agent.state', agent: id, state: i % 2 ? 'studying' : 'idle' });
   });
   await shot('cast-walking', 2500);
@@ -55,7 +72,11 @@ for (const { w, h, dpr } of sizes) {
     for (const x of d.doors) d.setDoorLocked(x.id, x.id.includes('council'));
   });
   await shot('doors-locked', 400);
-  await wd(() => window.__interior.debug.world().doors.forEach((x) => window.__interior.debug.world().setDoorLocked(x.id, false)));
+  await wd(() =>
+    window.__interior.debug
+      .world()
+      .doors.forEach((x) => window.__interior.debug.world().setDoorLocked(x.id, false)),
+  );
   await shot('doors-open', 400);
   // keyboard walk: hold ArrowRight for 1.2s
   await page.locator('.sqi-stage').focus();
@@ -66,9 +87,18 @@ for (const { w, h, dpr } of sizes) {
   const facts = await wd(() => {
     const c = document.querySelector('canvas');
     const r = c.getBoundingClientRect();
-    return { css: [r.width, r.height], backing: [c.width, c.height], dpr: devicePixelRatio, hScroll: document.documentElement.scrollWidth > innerWidth };
+    return {
+      css: [r.width, r.height],
+      backing: [c.width, c.height],
+      dpr: devicePixelRatio,
+      hScroll: document.documentElement.scrollWidth > innerWidth,
+    };
   });
-  console.log(w, JSON.stringify(facts), errors.length ? 'CONSOLE: ' + errors.join(' | ') : 'no console errors');
+  console.log(
+    w,
+    JSON.stringify(facts),
+    errors.length ? 'CONSOLE: ' + errors.join(' | ') : 'no console errors',
+  );
   if (errors.length) failed = true;
   await ctx.close();
 }

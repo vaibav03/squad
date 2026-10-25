@@ -35,10 +35,16 @@ export function roomFrame(bounds: Rect, mapPx: View): Rect {
 }
 
 /** Room-snap camera: stays inside the room frame, follows the target if the frame is larger than the view. */
-export function roomScroll(target: Vec2, view: View, frame: Rect): Vec2 {
-  return {
+export function roomScroll(target: Vec2, view: View, frame: Rect, mapPx?: View): Vec2 {
+  const s = {
     x: fitAxis(target.x, view.w, frame.x, frame.x + frame.w),
     y: fitAxis(target.y, view.h, frame.y, frame.y + frame.h),
+  };
+  if (!mapPx) return s;
+  // Never show void beyond the map edge when the map itself is larger than the view.
+  return {
+    x: mapPx.w > view.w ? Math.min(Math.max(s.x, 0), mapPx.w - view.w) : s.x,
+    y: mapPx.h > view.h ? Math.min(Math.max(s.y, 0), mapPx.h - view.h) : s.y,
   };
 }
 

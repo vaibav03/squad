@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 // Minimal dependency-free PNG encoder (RGBA8) plus a tiny RGBA canvas for procedural pixel art.
-import { deflateSync } from 'node:zlib';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { deflateSync, inflateSync } from 'node:zlib';
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 const crcTable = new Uint32Array(256).map((_, n) => {
@@ -105,4 +105,54 @@ export class Pix {
   save(path) {
     writePNG(path, this.w, this.h, this.data);
   }
+}
+
+/** Decode an 8-bit RGBA, non-interlaced PNG (what our own encoder and the CC0 packs produce) into a Pix. */
+export function decodePNG(path) {
+  const b = readFileSync(path);
+  let o = 8;
+  let w = 0,
+    h = 0;
+  const idat = [];
+  while (o < b.length) {
+    const len = b.readUInt32BE(o);
+    const type = b.toString('ascii', o + 4, o + 8);
+    const d = b.subarray(o + 8, o + 8 + len);
+    if (type === 'IHDR') {
+      w = d.readUInt32BE(0);
+      h = d.readUInt32BE(4);
+      if (d[8] !== 8 || d[9] !== 6 || d[12] !== 0)
+        throw new Error(`decodePNG: only 8-bit RGBA non-interlaced supported (${path})`);
+    }
+    if (type === 'IDAT') idat.push(d);
+    o += 12 + len;
+  }
+  const raw = inflateSync(Buffer.concat(idat));
+  const p = new Pix(w, h);
+  const st = w * 4;
+  let prev = Buffer.alloc(st);
+  for (let y = 0; y < h; y++) {
+    const f = raw[y * (st + 1)];
+    const line = Buffer.from(raw.subarray(y * (st + 1) + 1, (y + 1) * (st + 1)));
+    for (let i = 0; i < st; i++) {
+      const a = i >= 4 ? line[i - 4] : 0;
+      const up = prev[i];
+      const c = i >= 4 ? prev[i - 4] : 0;
+      let v = line[i];
+      if (f === 1) v += a;
+      else if (f === 2) v += up;
+      else if (f === 3) v += (a + up) >> 1;
+      else if (f === 4) {
+        const pp = a + up - c;
+        const pa = Math.abs(pp - a),
+          pb = Math.abs(pp - up),
+          pc = Math.abs(pp - c);
+        v += pa <= pb && pa <= pc ? a : pb <= pc ? up : c;
+      }
+      line[i] = v & 255;
+    }
+    line.copy(Buffer.from(p.data.buffer), y * st);
+    prev = line;
+  }
+  return p;
 }

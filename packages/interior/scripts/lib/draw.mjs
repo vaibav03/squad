@@ -57,7 +57,8 @@ export const art = (legend, rows, w = Math.max(...rows.map((r) => r.length)), h 
 
 export const flipH = (src) => {
   const o = new Pix(src.w, src.h);
-  for (let y = 0; y < src.h; y++) for (let x = 0; x < src.w; x++) o.set(src.w - 1 - x, y, src.get(x, y));
+  for (let y = 0; y < src.h; y++)
+    for (let x = 0; x < src.w; x++) o.set(src.w - 1 - x, y, src.get(x, y));
   return o;
 };
 

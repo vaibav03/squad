@@ -157,3 +157,12 @@ describe('rng', () => {
     expect(createRng(8)()).not.toBe(createRng(7)());
   });
 });
+
+describe('roomScroll map clamp', () => {
+  it('never scrolls past the map edge when the map is larger than the view', () => {
+    const view = { w: 200, h: 100 };
+    const frame = { x: 16, y: 16, w: 100, h: 80 };
+    expect(roomScroll({ x: 60, y: 50 }, view, frame)).toEqual({ x: -34, y: 6 });
+    expect(roomScroll({ x: 60, y: 50 }, view, frame, { w: 600, h: 400 })).toEqual({ x: 0, y: 6 });
+  });
+});

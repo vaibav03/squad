@@ -43,11 +43,17 @@ const put = (rel, dest) => {
 const local = { pack: 'modern-interiors' };
 if (recipe.tileset) {
   // tileset.def is an engine-format JSON ({name,tileSize:16,image,columns,tiles:{name:index}}) you author once.
-  local.tileset = { image: put(recipe.tileset.image, 'tileset.png'), def: put(recipe.tileset.def, 'tileset.json') };
+  local.tileset = {
+    image: put(recipe.tileset.image, 'tileset.png'),
+    def: put(recipe.tileset.def, 'tileset.json'),
+  };
 }
 if (recipe.props) {
   // props.def: {props:{name:{x,y,w,h,foot:{x,y,w,h},tall}}} for the packed atlas image.
-  local.props = { image: put(recipe.props.image, 'props.png'), def: put(recipe.props.def, 'props.json') };
+  local.props = {
+    image: put(recipe.props.image, 'props.png'),
+    def: put(recipe.props.def, 'props.json'),
+  };
 }
 if (recipe.characters) {
   const c = recipe.characters;
@@ -56,14 +62,21 @@ if (recipe.characters) {
     ...(c.anchor && { anchor: c.anchor }),
     ...(c.fps && { fps: c.fps }),
     ...(c.anims && { anims: c.anims }),
-    cast: c.cast.map((s) => ({ id: s.id, image: put(s.image, `characters/${basename(s.image)}`), ...(s.frame && { frame: s.frame }) })),
+    cast: c.cast.map((s) => ({
+      id: s.id,
+      image: put(s.image, `characters/${basename(s.image)}`),
+      ...(s.frame && { frame: s.frame }),
+    })),
     ...(c.player && { player: c.player }),
   };
 }
 if (recipe.maps) {
   local.maps = {};
-  for (const [id, rel] of Object.entries(recipe.maps)) local.maps[id] = put(rel, `maps/${basename(rel)}`);
+  for (const [id, rel] of Object.entries(recipe.maps))
+    local.maps[id] = put(rel, `maps/${basename(rel)}`);
 }
 const out = join(repo, 'assets/interior/manifest.local.json');
 writeFileSync(out, JSON.stringify(local, null, 2) + '\n');
-console.log(`wrote ${out}. Delete it to return to the placeholder pack. Credit: "World art: Modern Interiors by LimeZu".`);
+console.log(
+  `wrote ${out}. Delete it to return to the placeholder pack. Credit: "World art: Modern Interiors by LimeZu".`,
+);
