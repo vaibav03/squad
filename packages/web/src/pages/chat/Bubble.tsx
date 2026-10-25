@@ -148,6 +148,15 @@ export function MessageBubble(p: BubbleProps) {
                 Demo
               </span>
             ) : null}
+            {m.repeat ? (
+              <span
+                className="sqc-pixtag"
+                data-testid="chat-repeat"
+                title={`The same message was sent ${m.repeat} times; shown once`}
+              >
+                ×{m.repeat}
+              </span>
+            ) : null}
             <time className="sqc-msg__time" dateTime={new Date(m.ts).toISOString()}>
               {row.state === 'sent' ? timeLabel(m.ts) : ''}
             </time>

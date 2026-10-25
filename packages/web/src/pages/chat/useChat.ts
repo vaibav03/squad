@@ -134,13 +134,11 @@ function reducer(s: State, a: Action): State {
           ...b,
           items: mergeMessages(b.items, [m]),
           pending: b.pending.filter((p) => {
-            if (
-              dropped ||
-              p.state !== 'pending' ||
-              p.message.text !== m.text ||
-              p.message.attachments.length !== m.attachments.length
-            )
-              return true;
+            // the hub echoes the sender's clientId (our localId): that match is exact, text is the fallback
+            const same = m.clientId
+              ? m.clientId === p.localId
+              : p.message.text === m.text && p.message.attachments.length === m.attachments.length;
+            if (dropped || p.state !== 'pending' || !same) return true;
             dropped = true;
             return false;
           }),

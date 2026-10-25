@@ -91,6 +91,12 @@ export const ChatMessageSchema = ChatSyncFieldsSchema.extend({
   card: ChatCardSchema.optional(),
   /** true on bot replies produced without GEMINI_API_KEY (the demo model). */
   demo: z.boolean(),
+  /** Student messages: the client's stable send id (reused on retry); lets a client match its optimistic copy. */
+  clientId: z.string().max(64).optional(),
+  /** Bot replies: the id of the student message that triggered this answer (one answer per trigger). */
+  replyTo: z.string().max(64).optional(),
+  /** Read-time dedupe only: this prompt+answer pair was sent N times in a short window and is shown once (N >= 2). */
+  repeat: z.number().int().min(2).optional(),
 });
 export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 
