@@ -54,7 +54,7 @@ Architecture and diagrams: [docs/architecture/OVERVIEW.md](architecture/OVERVIEW
 
 Short answers live in [docs/demo/QA.md](demo/QA.md) (privacy, product, engineering). Additional questions this submission expects:
 
-**How do you know a council answer is not just three copies of one model?** The three solvers run independently without seeing each other or the key. Members also rank each other, the chair gives the verdict (in code for the key check and the planner) and can record dissent; the room shows each opinion, who disagreed and the outcome. We do not claim independence beyond that: they share a provider.
+**How do you know a council answer is not just three copies of one model?** The three solvers run independently without seeing each other or the key. Members also rank each other, the chair gives the verdict (decided in code for the quiz key check) and can record dissent; the room shows each opinion, who disagreed and the outcome. We do not claim independence beyond that: they share a provider.
 
 **What stops the bot from inventing a citation?** Each claim carries a file, page and quote. `verifyClaims` (`packages/brain/src/citations/check.ts`) keeps a claim only if that page exists in the indexed course and the quote appears verbatim on it (normalized text, minimum length); struck claims are dropped. With nothing grounded, the reply is the fixed "Not in the materials. Ask the TA."
 
