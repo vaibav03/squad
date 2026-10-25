@@ -56,6 +56,28 @@ describe('council voices in the inspector', () => {
     expect(screen.getByText('Regression needs a third pass.')).toBeTruthy();
   });
 
+  it('a seat click inside the room opens Chat even when the member has a thought; the name chip opens Thinking', async () => {
+    const store = createInspectorStore({ me: 's_ana' });
+    store.apply({
+      t: 'council.opinion',
+      councilId: 'council:planner',
+      member: 'chill',
+      text: 'Two short evenings are enough.',
+      thought: 'Light plan if the quiz went well',
+    });
+    setInspectorStore(store);
+    render(<InspectorPanel store={store} />);
+    act(() =>
+      store.select('council:planner', { slot: 'round-table', who: 'chill', initialTab: 'chat' }),
+    );
+    await settle();
+    expect(screen.getByRole('tab', { name: 'Chat', selected: true })).toBeTruthy();
+    act(() => store.select(null));
+    act(() => store.select('council:planner', { slot: 'round-table', who: 'chill' }));
+    await settle();
+    expect(screen.getByRole('tab', { name: 'Thinking', selected: true })).toBeTruthy();
+  });
+
   it('a voice with nothing yet opens on Chat; thinking dots show on the tag', async () => {
     const store = createInspectorStore({ me: 's_ana' });
     setInspectorStore(store);
