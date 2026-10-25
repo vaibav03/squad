@@ -94,7 +94,7 @@ export function requestMasteryPanel(): void {
 
 /** The chat phrase that practises one chapter. */
 export function practisePhrase(n: number | undefined, label: string): string {
-  return n !== undefined ? `@squad quiz me on chapter ${n}` : `@squad quiz me on ${label}`;
+  return n !== undefined ? `@nook quiz me on chapter ${n}` : `@nook quiz me on ${label}`;
 }
 
 /** Chapter number from an id or title ('ch6', 'Chapter 6'), else undefined. */

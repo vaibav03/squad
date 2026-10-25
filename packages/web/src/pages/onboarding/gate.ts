@@ -15,7 +15,7 @@ export function gateView(state: OnboardingState | null): GateView {
 }
 
 export const GATE_TITLE =
-  'Connect your learning context so Squad can answer from your real courses';
+  'Connect your learning context so Nook can answer from your real courses';
 export const SKIP_EXPLAIN =
   'Agents will have limited context: they can only use what you type or upload. You can connect any time from Connections.';
 export const BANNER_TEXT = 'Limited context: connect Canvas or Google';

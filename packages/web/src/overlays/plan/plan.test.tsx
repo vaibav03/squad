@@ -90,11 +90,11 @@ describe('PlanPanel', () => {
     expect(container.textContent).not.toMatch(/\b(points?|streak|rank|leaderboard|score|xp)\b/i);
   });
 
-  it('empty state offers to ask Squad; error state offers retry', () => {
+  it('empty state offers to ask Nook; error state offers retry', () => {
     const onAsk = vi.fn();
     const { rerender } = render(<PlanPanel {...props({ plan: null, onAsk })} />);
     fireEvent.click(screen.getByTestId('plan-ask'));
-    expect(onAsk).toHaveBeenCalledWith('@squad study plan');
+    expect(onAsk).toHaveBeenCalledWith('@nook study plan');
     const onRetry = vi.fn();
     rerender(<PlanPanel {...props({ plan: undefined, status: 'error', onRetry })} />);
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));

@@ -24,7 +24,7 @@ const priv: ChatContextRef = { ...ref, title: 'Private calendar event', courseNa
 const api = (): ChatApi =>
   ({ contextRef: vi.fn(async () => ({ ref, groupView: priv })) }) as unknown as ChatApi;
 
-describe('Ask Squad composer handoff', () => {
+describe('Ask Nook composer handoff', () => {
   it('shows a labelled removable chip, prefills the prompt and never auto-sends', async () => {
     queueAskCubbie({ chatId: 'dm:s_ana', sourceIds: [{ sourceId: 'src1' }] });
     const onSend = vi.fn();
@@ -34,7 +34,7 @@ describe('Ask Squad composer handoff', () => {
     expect(chip.textContent).toContain('Statistics 101');
     expect(screen.getByTestId('composer-context-provenance').textContent).toBe('Demo: Canvas');
     expect((screen.getByTestId('chat-composer-input') as HTMLTextAreaElement).value).toBe(
-      '@squad what should I focus on for Essay 2?',
+      '@nook what should I focus on for Essay 2?',
     );
     expect(onSend).not.toHaveBeenCalled();
     expect(takePendingAsk('dm:s_ana')).toBeNull(); // cleared: a reload does not re-attach it
@@ -44,7 +44,7 @@ describe('Ask Squad composer handoff', () => {
   });
 
   it('removing the chip sends the message without context', async () => {
-    queueAskCubbie({ chatId: 'dm:s_ana', sourceIds: [{ sourceId: 'src1' }], prefill: '@squad hi' });
+    queueAskCubbie({ chatId: 'dm:s_ana', sourceIds: [{ sourceId: 'src1' }], prefill: '@nook hi' });
     const onSend = vi.fn();
     render(<Composer api={api()} chatKind="dm" chatId="dm:s_ana" onSend={onSend} />);
     await screen.findByTestId('composer-context-chip');
@@ -53,7 +53,7 @@ describe('Ask Squad composer handoff', () => {
     fireEvent.click(screen.getByTestId('chat-send'));
     await waitFor(() => expect(onSend).toHaveBeenCalled());
     expect(onSend.mock.calls[0]![0].context).toBeUndefined();
-    expect(onSend.mock.calls[0]![0].text).toBe('@squad hi');
+    expect(onSend.mock.calls[0]![0].text).toBe('@nook hi');
   });
 
   it('a group composer shows only the group-safe view (no private event title)', async () => {

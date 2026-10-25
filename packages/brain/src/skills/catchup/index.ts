@@ -35,7 +35,7 @@ interface Line extends Row {
   name: string;
 }
 
-const strip = (t: string) => t.replace(/^\s*(?:hey\s+|hi\s+)?(?:@(?:cubbie|squad)|cubbie)[\s,:]*/i, '').trim();
+const strip = (t: string) => t.replace(/^\s*(?:hey\s+|hi\s+)?(?:@(?:nook|cubbie|squad)|cubbie)[\s,:]*/i, '').trim();
 
 function isMember(db: Db, chatId: string, student: string): boolean {
   return !!db
@@ -142,7 +142,7 @@ function gather(db: Db, chat: string, m: InboundMessage, now: number): Line[] {
   rows = rows.filter((r) => !isOwnReply(r));
   const names = new Map<string, string>();
   const nm = (id: string) => {
-    if (id === 'bot') return 'Squad';
+    if (id === 'bot') return 'Nook';
     if (!names.has(id)) {
       const r = db.prepare('SELECT name FROM students WHERE id=?').get(id) as
         { name: string | null } | undefined;
@@ -304,7 +304,7 @@ export function createCatchUpSkill(deps: CatchUpDeps = {}): Skill {
         const n = offerDue(ctx.db, m);
         if (n === undefined) return [];
         writeMemory(ctx.db, 'student', m.from, 'catchup.offered', now, now);
-        return say(`You have ${n} ${OFFER_MARK} "@squad catch me up" for a summary.`);
+        return say(`You have ${n} ${OFFER_MARK} "@nook catch me up" for a summary.`);
       }
       const chat = resolveChat(ctx.db, m);
       if (!chat)

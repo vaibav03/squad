@@ -95,7 +95,7 @@ describe('journey: connections', () => {
     fireEvent.click((await screen.findAllByTestId('item-share-toggle'))[0]!);
     await waitFor(() => expect(share).toHaveBeenCalledWith('conn_g', { squadId: 'sq_1', sourceIds: ['s1'], shared: true }));
   });
-  it('Ask Squad queues structured context for the group chat and opens it, prefilled, not sent', async () => {
+  it('Ask Nook queues structured context for the group chat and opens it, prefilled, not sent', async () => {
     const go = vi.fn();
     ui(props({ navigate: go }));
     await review();
@@ -103,7 +103,7 @@ describe('journey: connections', () => {
     const q = JSON.parse(sessionStorage.getItem(PENDING_CONTEXT_KEY)!);
     expect(q.chatId).toBe('group:sq_1');
     expect(q.sourceIds).toEqual([{ sourceId: 's1' }]);
-    expect(q.prefill).toContain('@squad');
+    expect(q.prefill).toContain('@nook');
     expect(go).toHaveBeenCalledWith('/squad/chat?c=group%3Asq_1');
   });
   it('Google authorize carries the served origin, never a hard-coded port', async () => {
@@ -144,7 +144,7 @@ describe('journey: panels follow the state machine', () => {
       unmount();
     }
   });
-  it('CTA: review first, then Ask Squad with this opens the group chat with chips', async () => {
+  it('CTA: review first, then Ask Nook with this opens the group chat with chips', async () => {
     const go = vi.fn();
     render(<MemoryRouter><ConnectionsView {...props({ navigate: go })} /></MemoryRouter>);
     expect(screen.queryByTestId('ask-cubbie-primary')).toBeNull();

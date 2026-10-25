@@ -151,7 +151,7 @@ function EmptyTrip({
           {error}
         </p>
       )}
-      <p className="lv-card__foot">Or ask in chat: @squad plan a trip to Cabo in March</p>
+      <p className="lv-card__foot">Or ask in chat: @nook plan a trip to Cabo in March</p>
     </section>
   );
 }

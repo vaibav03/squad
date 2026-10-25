@@ -62,7 +62,7 @@ export const planView = (over: Partial<PlanView> = {}): PlanView => ({
   ],
   availability: { mine: [{ itemId: 'it1', busy: true }], squad: null },
   myWeakTopics: ['ch7'],
-  replyHelp: 'Reply "@squad plan 1" to accept or "@squad plan 2" to decline.',
+  replyHelp: 'Reply "@nook plan 1" to accept or "@nook plan 2" to decline.',
   saved: { rev: 3, lastEditedBy: 's_ben', lastEditedAt: 1_000_000 - 4 * 60_000 },
   sync: {
     posted: { at: 1_000_000 - 5 * 60_000, text: 'Ana proposed a study plan' },

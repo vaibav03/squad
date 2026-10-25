@@ -202,7 +202,7 @@ export function createCouncilRoutes(deps: HubDeps): HubApp {
     const posted = deps.chat.postBot({
       chatId: `group:${viewer.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       emoji: '🐻',
       text: `Council action item (shared by ${who}): ${got.action.title}`,
       citations: [],

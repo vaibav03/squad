@@ -125,7 +125,7 @@ export function deriveProviderState(
   const ago = last ? relTime(last, o.now) : null;
   const lastSyncText = last ? `Last synced ${ago}${c!.lastOutcome ? ` (${c!.lastOutcome})` : ''}` : null;
   const askOrReview: [Cta, string | null] =
-    items > 0 ? (o.reviewed ? ['ask', 'Ask Squad with this'] : ['review', 'Review imported context']) : ['none', null];
+    items > 0 ? (o.reviewed ? ['ask', 'Ask Nook with this'] : ['review', 'Review imported context']) : ['none', null];
   const first = last === null;
 
   let text: string;

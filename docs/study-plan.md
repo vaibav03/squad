@@ -4,7 +4,7 @@ One squad-scoped, versioned plan object lives in the hub. Chat, the village pane
 
 Code: contract `packages/core/src/plan.ts`; hub `apps/hub/src/plans/{logic,service,store,routes,context,port}.ts`; chat skill `apps/bot/src/plan/{skill,port,nudges}.ts`; web `packages/web/src/overlays/plan/`; village landmark `packages/village/src/scenes/plan.ts`.
 
-Chat entry points: `@squad study plan for the exam on <date>`, and `@planner study plan ...` (the planner persona routes plan intents: `study plan` starts this flow, `trip` starts the trip flow in docs/trip-planning.md; other `@planner` messages stay a persona answer).
+Chat entry points: `@nook study plan for the exam on <date>`, and `@planner study plan ...` (the planner persona routes plan intents: `study plan` starts this flow, `trip` starts the trip flow in docs/trip-planning.md; other `@planner` messages stay a persona answer).
 
 ## Object model
 
@@ -44,9 +44,9 @@ The village panel shows a conflict banner with both versions and a pick-one acti
 
 ### Chat
 
-In a group: `@squad study plan for the exam on Nov 4` (also `@squad`; extra aliases come from the shared mention parser on `feature/typed-mentions`, through the bot's `mentionsBot` flag).
+In a group: `@nook study plan for the exam on Nov 4` (also `@squad`; extra aliases come from the shared mention parser on `feature/typed-mentions`, through the bot's `mentionsBot` flag).
 
-1. Squad posts a progress line at once ("On it. Building a shared study plan...").
+1. Nook posts a progress line at once ("On it. Building a shared study plan...").
 2. The skill calls the hub plan service with a 20 s guard. The hub builds the plan from course chapters, course-wide due items and each member's busy/free days. It posts ONE plan card for the group: summary per member, exam countdown, sources, reply help.
 3. Any failure (bad date, no materials, exam in the past, timeout, exception) is a plain sentence in the group. The group never stays on "thinking".
 4. The asker also gets a DM with their own detail (busy overlaps, own weakest chapters). Nobody else's mastery or calendar detail appears in the group, only aggregates.
@@ -54,7 +54,7 @@ In a group: `@squad study plan for the exam on Nov 4` (also `@squad`; extra alia
 6. The plan activates when every opted-in member accepted, or the organizer confirms.
 7. `done ch6 review` marks the sender's own item done (organizer may mark any). Progress is posted as words ("3 of 9 items done").
 
-In a DM Squad points to the squad chat; study plans are shared.
+In a DM Nook points to the squad chat; study plans are shared.
 
 ### Web
 
@@ -104,7 +104,7 @@ Every decision, update and failure becomes a plain-text bot message in the squad
 
 ## Planner agent, badge and surface (fix/provenance-plan-sync)
 
-**Who writes the plan.** When a real Gemini key works, `POST /v1/plans` and `@squad study plan ...` call the planner agent (`apps/hub/src/plans/planner.ts`): ONE grounded call on the RAW real model (never the resilient demo wrapper) with the viewer-scoped context the hub already gated: chapters with the text of each chapter's first page, course due items, the organizer's own Canvas/Google items from the context store (`deriveStudySeeds`), and PRIVATE per-member hints (weak/strong chapters, busy days, as ids only). The model proposes items with owners, dates, a one-line `why`, a verbatim `quote` and `page`, and a written `rationale`. Code disposes: unknown chapters dropped, owners must be members, dates clamped to tomorrow..exam-1 and moved off the owner's busy day, a quote that is not verbatim on the cited page loses its source (never shown as verified), private words (mastery, weak, busy, calendar...) are stripped from `why` and `rationale`, and a plan that covers fewer than two chapters throws so the fallback runs.
+**Who writes the plan.** When a real Gemini key works, `POST /v1/plans` and `@nook study plan ...` call the planner agent (`apps/hub/src/plans/planner.ts`): ONE grounded call on the RAW real model (never the resilient demo wrapper) with the viewer-scoped context the hub already gated: chapters with the text of each chapter's first page, course due items, the organizer's own Canvas/Google items from the context store (`deriveStudySeeds`), and PRIVATE per-member hints (weak/strong chapters, busy days, as ids only). The model proposes items with owners, dates, a one-line `why`, a verbatim `quote` and `page`, and a written `rationale`. Code disposes: unknown chapters dropped, owners must be members, dates clamped to tomorrow..exam-1 and moved off the owner's busy day, a quote that is not verbatim on the cited page loses its source (never shown as verified), private words (mastery, weak, busy, calendar...) are stripped from `why` and `rationale`, and a plan that covers fewer than two chapters throws so the fallback runs.
 
 **Badge.** `plan.generator = {kind: 'agent'|'fallback', mode: live|degraded|demo, reason?, model?, usage?}`; `planBadge()` in core gives the words: `Live`, `Degraded: <reason>`, `Demo: sample data, scripted`, plus `Planner agent` or `Fallback sample plan`. The chat card, the panel and the chat text all use it. The fallback is never presented as agent output; its chat message carries the provenance label `Fallback sample plan: scripted, not written by an agent (...)`; an agent plan's message carries chips for the verified pages.
 

@@ -245,7 +245,7 @@ export type PlanReply =
   | { kind: 'show' };
 export function parsePlanReply(text: string): PlanReply | null {
   const t = text
-    .replace(/@(?:cubbie|squad)\b[\s,:]*/gi, '')
+    .replace(/@(?:nook|cubbie|squad)\b[\s,:]*/gi, '')
     .trim()
     .toLowerCase();
   let m = /^plan\s+(?:1|accept|yes|ok)\b/.exec(t);

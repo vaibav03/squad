@@ -144,26 +144,27 @@ describe('mentions', () => {
     expect(activeMention('hey @cu', 7)).toEqual({ start: 4, query: 'cu' });
     expect(activeMention('@', 1)).toEqual({ start: 0, query: '' });
     expect(activeMention('mail me@cu', 10)).toBeNull();
-    expect(activeMention('hey @squad what', 16)).toBeNull();
+    expect(activeMention('hey @nook what', 16)).toBeNull();
   });
   it('matches by prefix and applies with a trailing space', () => {
     expect(matchMentions('').map((o) => o.id)).toEqual(['cubbie', 'squad']);
     expect(matchMentions('sq').map((o) => o.id)).toEqual(['squad']);
+    expect(matchMentions('no').map((o) => o.id)).toEqual(['cubbie']);
     expect(matchMentions('zz')).toEqual([]);
     const text = 'hey @cu now';
     const mq = activeMention(text, 7)!;
     const r = applyMention(text, 7, mq, matchMentions('cu')[0]!);
-    expect(r.text).toBe('hey @squad now');
-    expect(r.caret).toBe(11);
+    expect(r.text).toBe('hey @nook now');
+    expect(r.caret).toBe(10);
   });
   it('sends quiz answers with the mention in a group and bare in a DM', () => {
-    expect(quizAnswerText('group:sq_demo', 'B')).toBe('@squad B');
+    expect(quizAnswerText('group:sq_demo', 'B')).toBe('@nook B');
     expect(quizAnswerText('dm:s_ana', 'B')).toBe('B');
   });
   it('knows when the bot is addressed', () => {
     expect(mentionsBot('@Cubbie help')).toBe(true);
     expect(mentionsBot('hello @squad!')).toBe(true);
-    expect(mentionsBot('email@squad.org')).toBe(false);
+    expect(mentionsBot('email@nook.org')).toBe(false);
   });
 });
 
@@ -197,7 +198,7 @@ describe('small helpers', () => {
     expect(previewLine({ ...base, last: { text: 'hi', ts: 1, senderName: 'Ben', seq: 1 } })).toBe(
       'Ben: hi',
     );
-    expect(previewLine({ ...base, id: 'dm:s_ana', kind: 'dm' })).toBe('Only you and Squad');
+    expect(previewLine({ ...base, id: 'dm:s_ana', kind: 'dm' })).toBe('Only you and Nook');
     expect(
       previewLine({ ...base, last: { text: 'hi', ts: 1, senderName: 'Ana', seq: 1 } }, 'Ana'),
     ).toBe('You: hi');

@@ -124,7 +124,7 @@ export function imessageIndicator(
     return {
       state: 'connected',
       label: 'iMessage synced',
-      detail: 'This private chat is linked to your iMessage 1:1 with Squad. Group chats are not affected.',
+      detail: 'This private chat is linked to your iMessage 1:1 with Nook. Group chats are not affected.',
       setup: false,
     };
   }
@@ -132,7 +132,7 @@ export function imessageIndicator(
     return {
       state: 'web_only',
       label: 'Web only',
-      detail: 'Private chats with Squad stay on the web and are never sent to iMessage.',
+      detail: 'Private chats with Nook stay on the web and are never sent to iMessage.',
       setup: false,
     };
   if (!status)
@@ -206,7 +206,7 @@ export function imessageIndicator(
     label: `${fixture ? `${FIXTURE_LABEL}: ` : 'iMessage: '}connected to ${sq?.name ?? 'this squad'}, ${when}, ${queued} queued`,
     detail: fixture
       ? 'A scripted transport is connected. Nothing here reaches a real phone.'
-      : 'Bot replies and @squad messages are mirrored to the bound iMessage group.',
+      : 'Bot replies and @nook messages are mirrored to the bound iMessage group.',
     setup: false,
   };
 }

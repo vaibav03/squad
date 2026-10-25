@@ -17,7 +17,7 @@ const msg = (over: Partial<ChatMessage> = {}): ChatMessage => ({
   seq: 1,
   chatId: 'group:sq_demo',
   ts: 1000,
-  sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
+  sender: { kind: 'persona', id: 'cubbie', name: 'Nook' },
   text: 'The mean is the centre. [ch6.pdf p.4]',
   private: false,
   attachments: [],

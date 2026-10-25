@@ -75,7 +75,7 @@ describe('opt-in and chat controls', () => {
     await advance(DAY, 15 * MIN); // through Mon 21:00 EDT (Tue 01:00Z)
     const nudge = dmsTo('s_ana').filter((x) => /Due tomorrow/.test(x));
     expect(nudge).toHaveLength(1);
-    expect(nudge[0]).toMatch(/^\u{1F43B} Squad: /u);
+    expect(nudge[0]).toMatch(/^\u{1F43B} Nook: /u);
     expect(nudge[0]).toMatch(/Homework 3/);
     expect(dmsTo('s_ben')).toHaveLength(0); // never opted in
     expect(

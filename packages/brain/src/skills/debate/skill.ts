@@ -97,10 +97,10 @@ export function createDebateSkill(deps: DebateSkillDeps): Skill {
       const out = (text: string): OutboundMessage[] => [{ chatId: m.chatId, text }];
       const req = parseDebate(m.text);
       if (!req)
-        return out('What should we debate? Try "@squad debate should exams be open book?".');
+        return out('What should we debate? Try "@nook debate should exams be open book?".');
       const question = req.kind === 'question' ? req.question : recentTopic(ctx, m);
       if (!question)
-        return out('Debate what? Say "@squad debate <question>" and I will set up both sides.');
+        return out('Debate what? Say "@nook debate <question>" and I will set up both sides.');
 
       let material: DebateMaterial | undefined;
       try {

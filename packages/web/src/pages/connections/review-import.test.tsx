@@ -136,7 +136,7 @@ describe('review imported context', () => {
       expect(share).toHaveBeenCalledWith('cg', { squadId: 'sq_1', all: true, shared: true }),
     );
   });
-  it('Ask Squad with this queues context chips for the group chat', async () => {
+  it('Ask Nook with this queues context chips for the group chat', async () => {
     const go = vi.fn();
     ui(state([conn()]), { provider: 'google', navigate: go });
     fireEvent.click(await screen.findByTestId('review-ask-primary-google'));

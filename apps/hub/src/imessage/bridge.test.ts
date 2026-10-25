@@ -219,7 +219,7 @@ describe('handle linking and first contact', () => {
       sender: { kind: 'student', name: 'Ana' },
     });
     await waitFor(() => sentTo(ANA).length > 0);
-    expect(sentTo(ANA)[0]).toMatch(/^\u{1F43B} Squad: /u);
+    expect(sentTo(ANA)[0]).toMatch(/^\u{1F43B} Nook: /u);
     expect(sentTo(BEN)).toHaveLength(0);
     // the group chat never saw it
     expect(history(`group:${c.squadId}`)).toHaveLength(0);
@@ -365,7 +365,7 @@ describe('group chat goes through the hub chat', () => {
     expect(reply.chatId).toBe(gid); // visible in the web chat
     const mirrored = sentTo(G1).slice(before);
     expect(mirrored.length).toBeGreaterThan(0);
-    expect(mirrored[0]).toMatch(/^\u{1F43B} Squad: /u);
+    expect(mirrored[0]).toMatch(/^\u{1F43B} Nook: /u);
     for (const m of mirrored) {
       expect(m.length).toBeLessThanOrEqual(900 + 20);
       expect(m).not.toMatch(/\*\*|^#{1,6} |```/m);
@@ -388,14 +388,14 @@ describe('group chat goes through the hub chat', () => {
     await waitFor(() =>
       sentTo(G1)
         .slice(before)
-        .some((t) => /^\u{1F43B} Squad: /u.test(t)),
+        .some((t) => /^\u{1F43B} Nook: /u.test(t)),
     );
     expect(sentTo(G1)[before]).toBe('Ben (via Squad): @cubbie what is a standard deviation?');
   });
 
   it('a linked person who is not in the squad, and an unlinked number, are not routed to the bot', async () => {
     await bind();
-    const sentBefore = sentTo(G1).length; // the bind summary is itself a Squad message
+    const sentBefore = sentTo(G1).length; // the bind summary is itself a Nook message
     await c.sdk.group(G1, CY, 'I am not in the squad');
     await c.sdk.group(G1, ZED, 'neither am I');
     await settle();
@@ -409,7 +409,7 @@ describe('group chat goes through the hub chat', () => {
     expect(
       sentTo(G1)
         .slice(sentBefore)
-        .filter((t) => t.includes('Squad')),
+        .filter((t) => t.includes('Nook')),
     ).toHaveLength(0);
     await c.sdk.group(G1, ZED, '@cubbie hello?');
     await c.sdk.group(G1, ZED, '@cubbie hello??');
@@ -462,7 +462,7 @@ describe('privacy: DM sentinels never reach the group', () => {
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'Ana paid $180 for therapy',
       citations: [],
       attachments: [],
@@ -483,7 +483,7 @@ describe('privacy: DM sentinels never reach the group', () => {
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'Nothing is connected yet: connect Canvas or Google in [Connections](/squad/connections). See /squad?council=cn_abc123def456',
       citations: [],
       attachments: [],
@@ -502,7 +502,7 @@ describe('privacy: DM sentinels never reach the group', () => {
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'connect Canvas or Google in [Connections](/squad/connections). Board: /squad?council=cn_abc123def456',
       citations: [],
       attachments: [],
@@ -519,7 +519,7 @@ describe('privacy: DM sentinels never reach the group', () => {
     c.hub.deps.chat.postBot({
       chatId: `dm:${c.uid.Ana}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'Only for you: you are behind on ch6.',
       citations: [],
       attachments: [],
@@ -529,7 +529,7 @@ describe('privacy: DM sentinels never reach the group', () => {
     c.hub.deps.chat.postBot({
       chatId: `dm:${c.uid.Ana}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'Private: you are behind on ch6.',
       citations: [],
       attachments: [],
@@ -584,7 +584,7 @@ describe('card fallbacks over iMessage', () => {
     c.hub.deps.chat.postBot({
       chatId: gid,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'Question 1',
       citations: [],
       attachments: [],
@@ -617,7 +617,7 @@ describe('card fallbacks over iMessage', () => {
       c.hub.deps.chat.postBot({
         chatId: `group:${c.squadId}`,
         personaId: 'cubbie',
-        personaName: 'Squad',
+        personaName: 'Nook',
         text: '',
         citations: [],
         attachments: [],
@@ -743,7 +743,7 @@ describe('safety through the bridge', () => {
     await bind();
     const n = c.sdk.sent.length;
     await c.sdk.group(G1, ANA, 'x', { fromMe: true });
-    await c.sdk.group(G1, BEN, '\u{1F43B} Squad: @cubbie hello');
+    await c.sdk.group(G1, BEN, '\u{1F43B} Nook: @cubbie hello');
     await c.sdk.group(G1, ANA, '@cubbie what is a z-score?', { id: 'dup-1' });
     await c.sdk.group(G1, ANA, '@cubbie what is a z-score?', { id: 'dup-1' });
     await settle();
@@ -832,11 +832,11 @@ describe('typed mentions in a bound group', () => {
     const out = c.sdk.sent.filter((s) => s.to !== G1);
     expect(out).toEqual([]);
     expect(sentTo(G1).length).toBeGreaterThan(before);
-    for (const m of personaPosts(gid)) expect(m.sender.name).toBe('Squad');
+    for (const m of personaPosts(gid)) expect(m.sender.name).toBe('Nook');
   });
 
   it.each(['@cubbie', '@Cubbie', '@CUBBIE', '@cubbi', '@Cubbi'])(
-    '%s routes to Squad exactly once, in the group thread',
+    '%s routes to Nook exactly once, in the group thread',
     async (tag) => {
       await bind();
       const gid = `group:${c.squadId}`;
@@ -844,7 +844,7 @@ describe('typed mentions in a bound group', () => {
       await waitFor(() => personaPosts(gid).length >= 1);
       await settle();
       expect(personaPosts(gid)).toHaveLength(1);
-      expect(personaPosts(gid)[0]!.sender.name).toBe('Squad');
+      expect(personaPosts(gid)[0]!.sender.name).toBe('Nook');
       expect(c.sdk.sent.filter((x) => x.to !== G1)).toEqual([]);
     },
   );

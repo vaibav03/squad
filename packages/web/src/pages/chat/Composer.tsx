@@ -65,7 +65,7 @@ interface Draft {
 export interface ComposerProps {
   api: ChatApi | null;
   chatKind: 'group' | 'dm';
-  /** This composer's chat id: a queued "Ask Squad" for exactly this chat is attached on mount. */
+  /** This composer's chat id: a queued "Ask Nook" for exactly this chat is attached on mount. */
   chatId?: string;
   onSend: (input: {
     text: string;
@@ -141,7 +141,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     },
   }));
 
-  // "Ask Squad": take the queued item for this chat, verify it with the hub, show the chip, prefill (never send).
+  // "Ask Nook": take the queued item for this chat, verify it with the hub, show the chip, prefill (never send).
   useEffect(() => {
     if (!api?.contextRef || !chatId) return;
     // StrictMode (and a re-run when `api` arrives) runs this effect twice: the ask is taken once and kept in a ref
@@ -329,8 +329,8 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   const showCounter = text.length >= COUNTER_FROM;
   const hint =
     chatKind === 'dm'
-      ? 'Private chat. No @ needed, Squad reads every message.'
-      : 'Type @ to ask Squad. Shift+Enter for a new line.';
+      ? 'Private chat. No @ needed, Nook reads every message.'
+      : 'Type @ to ask Nook. Shift+Enter for a new line.';
   return (
     <div
       className={['sqc-composer', compact && 'is-compact', drag && 'is-drop']
@@ -500,7 +500,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             data-testid="chat-composer-input"
             rows={1}
             value={text}
-            placeholder={chatKind === 'dm' ? 'Message Squad' : 'Message the squad'}
+            placeholder={chatKind === 'dm' ? 'Message Nook' : 'Message the squad'}
             aria-label="Message"
             aria-describedby={`${hintId}${showCounter ? ` ${counterId}` : ''}`}
             role={chatKind === 'group' ? 'combobox' : undefined}
@@ -537,7 +537,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
       </div>
       {discussTopic && onDiscuss ? (
         <div className="sqc-composer__discuss" role="group" aria-label="Live discussion">
-          <span>Send it to Squad, or watch the table talk it through live.</span>
+          <span>Send it to Nook, or watch the table talk it through live.</span>
           <button
             type="button"
             className="sqc-link"

@@ -43,7 +43,7 @@ export interface ParsedDevilTa {
   topic: string;
 }
 
-/** "@squad devil's TA ch3 gradient descent" -> { chapter: 'ch3', topic: 'gradient descent' }. */
+/** "@nook devil's TA ch3 gradient descent" -> { chapter: 'ch3', topic: 'gradient descent' }. */
 export function parseDevilTa(text: string): ParsedDevilTa | undefined {
   if (!isDevilTaRequest(text)) return undefined;
   const ch = CHAPTER_RE.exec(text);

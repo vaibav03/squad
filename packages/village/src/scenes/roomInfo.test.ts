@@ -55,14 +55,14 @@ describe('roomInfo', () => {
       });
       it('phrase is a mention or a quoted spoken phrase', () => {
         if (r.how.phrase !== null) {
-          expect(/^@squad\b/.test(r.how.phrase) || /^["“].+["”]$/.test(r.how.phrase)).toBe(true);
+          expect(/^@nook\b/.test(r.how.phrase) || /^["“].+["”]$/.test(r.how.phrase)).toBe(true);
         }
       });
     });
   }
 
   it('round table matches the planner skill phrase', () => {
-    expect(roomInfo('round-table')!.how.phrase).toBe('@squad plan my next semester');
+    expect(roomInfo('round-table')!.how.phrase).toBe('@nook plan my next semester');
   });
   it('unknown slot is undefined', () => {
     expect(roomInfo('nope')).toBeUndefined();

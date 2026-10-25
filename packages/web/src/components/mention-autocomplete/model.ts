@@ -7,7 +7,7 @@ export interface MentionQuery {
   query: string;
 }
 
-/** The `@word` being typed at the caret (Squad suggestions for `@cub`, `@cubbi`), or null when not typing a mention. */
+/** The `@word` being typed at the caret (Nook suggestions for `@cub`, `@cubbi`), or null when not typing a mention. */
 export function activeMentionQuery(text: string, caret: number): MentionQuery | null {
   const before = text.slice(0, Math.max(0, Math.min(caret, text.length)));
   const m = /(^|[^\p{L}\p{N}_@/+%\\])@([\p{L}\p{N}_]*)$/u.exec(before);
@@ -20,7 +20,7 @@ export interface Suggestion {
   agent: AgentAlias;
 }
 
-/** Suggestions for the query at the caret: Squad first, then the rest of the alias table. */
+/** Suggestions for the query at the caret: Nook first, then the rest of the alias table. */
 export function mentionSuggestions(text: string, caret: number, limit = 8): Suggestion[] {
   const q = activeMentionQuery(text, caret);
   return q ? suggestAliases(q.query, limit) : [];

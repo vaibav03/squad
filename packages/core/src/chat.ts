@@ -5,7 +5,7 @@ import { ChatSyncFieldsSchema } from './chat-sync';
 import { ProvenanceSchema } from './provenance';
 import { ChatContextRefSchema } from './chat-context';
 
-/** Chat ids: `group:<squadId>` for the squad group chat, `dm:<studentId>` for a private chat with Squad. */
+/** Chat ids: `group:<squadId>` for the squad group chat, `dm:<studentId>` for a private chat with Nook. */
 export const ChatIdSchema = z.string().regex(/^(group|dm):[A-Za-z0-9_-]{1,64}$/);
 
 export const ChatSenderSchema = z.discriminatedUnion('kind', [
@@ -161,7 +161,7 @@ export const ChatSendBodySchema = z.strictObject({
   retryAnswer: z.boolean().optional(),
   /** Set when this text answers a confirm card: rejected with 409 `stale_confirm` unless that card is still pending. */
   confirmTaskId: z.string().min(1).max(200).optional(),
-  /** Imported items attached with "Ask Squad" (the hub re-derives every field from the source; see chat-context.ts). */
+  /** Imported items attached with "Ask Nook" (the hub re-derives every field from the source; see chat-context.ts). */
   context: z.array(ChatContextRefSchema).max(3).optional(),
 });
 export type ChatSendBody = z.infer<typeof ChatSendBodySchema>;

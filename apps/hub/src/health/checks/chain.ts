@@ -28,7 +28,7 @@ export function itemsVisible(ctx: HealthCtx): HealthResult {
 
 /** A live retrieval probe: search for words of an item you own through the same read gate chat and plans use. */
 export async function contextRetrievable(ctx: HealthCtx): Promise<HealthResult> {
-  const label = 'Context retrievable by Squad';
+  const label = 'Context retrievable by Nook';
   const svc = contextServiceFor(ctx.deps);
   const v = viewerOf(ctx);
   const items = ownSources(svc.store, v).filter((s) => svc.store.chunks(s.id).length > 0);

@@ -13,7 +13,7 @@ const group = (id: string, title: string) => ({
   private: false,
   members: [],
 });
-const dm = { id: 'dm:s_ana', kind: 'dm', title: 'Squad', private: true, members: [] };
+const dm = { id: 'dm:s_ana', kind: 'dm', title: 'Nook', private: true, members: [] };
 const json = (body: unknown, status = 200) =>
   Promise.resolve(new Response(JSON.stringify(body), { status }));
 

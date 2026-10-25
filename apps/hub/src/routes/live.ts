@@ -221,7 +221,7 @@ export function createLiveRoutes(deps: HubDeps): HubApp {
     const msg = deps.chat.postBot({
       chatId,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       emoji: '\u{1F43B}',
       text: chatSummary(snap),
       citations: [],

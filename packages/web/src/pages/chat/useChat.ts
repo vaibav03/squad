@@ -277,7 +277,7 @@ export interface UseChatOptions {
 export interface SendInput {
   text: string;
   files?: ChatAttachment[];
-  /** Imported items attached with "Ask Squad" (the hub re-verifies every one). */
+  /** Imported items attached with "Ask Nook" (the hub re-verifies every one). */
   context?: ChatContextRef[];
   /** set when the text is the option number of a confirm card */
   confirmTaskId?: string;

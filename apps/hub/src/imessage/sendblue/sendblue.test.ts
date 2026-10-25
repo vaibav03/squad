@@ -379,7 +379,7 @@ describe('unconfigured and degraded states', () => {
       c.hub.deps.chat.postBot({
         chatId: `group:${c.squadId}`,
         personaId: 'cubbie',
-        personaName: 'Squad',
+        personaName: 'Nook',
         text: `note ${i}`,
         citations: [],
         attachments: [],
@@ -463,7 +463,7 @@ describe('inbound: same thread, mapping, dedupe, replay', () => {
     });
   });
   it.each(['@cubbie', '@Cubbie', '@cubbi', '@Cubbi'])(
-    '%s dispatches to Squad once; the answer is in the same thread and mirrored out through Sendblue to the group',
+    '%s dispatches to Nook once; the answer is in the same thread and mirrored out through Sendblue to the group',
     async (tag) => {
       await bind();
       const gid = `group:${c.squadId}`;
@@ -477,10 +477,10 @@ describe('inbound: same thread, mapping, dedupe, replay', () => {
       await waitFor(() => personaPosts(gid).length >= 1);
       await settle();
       expect(personaPosts(gid)).toHaveLength(1);
-      expect(personaPosts(gid)[0]!.sender.name).toBe('Squad');
+      expect(personaPosts(gid)[0]!.sender.name).toBe('Nook');
       const out = groupSends().slice(before);
       expect(out.length).toBeGreaterThan(0);
-      expect(out[0]).toMatch(/^\u{1F43B} Squad: /u);
+      expect(out[0]).toMatch(/^\u{1F43B} Nook: /u);
       expect(c.fake.sent.every((s) => s.endpoint === 'send-group-message')).toBe(true);
     },
   );
@@ -565,7 +565,7 @@ describe('outbound: allowlist, dry run, kill switch BEFORE any network call', ()
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'study at 7',
       citations: [],
       attachments: [],
@@ -582,7 +582,7 @@ describe('outbound: allowlist, dry run, kill switch BEFORE any network call', ()
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'only for allowed',
       citations: [],
       attachments: [],
@@ -647,7 +647,7 @@ describe('outbound: allowlist, dry run, kill switch BEFORE any network call', ()
       c.hub.deps.chat.postBot({
         chatId: `group:${c.squadId}`,
         personaId: 'cubbie',
-        personaName: 'Squad',
+        personaName: 'Nook',
         text: `m${i}`,
         citations: [],
         attachments: [],
@@ -664,7 +664,7 @@ describe('delivery, read and failure status callbacks', () => {
     const m = c.hub.deps.chat.postBot({
       chatId: gid,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text,
       citations: [],
       attachments: [],
@@ -763,7 +763,7 @@ describe('delivery, read and failure status callbacks', () => {
     const m = c.hub.deps.chat.postBot({
       chatId: gid,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'doomed',
       citations: [],
       attachments: [],
@@ -784,7 +784,7 @@ describe('delivery, read and failure status callbacks', () => {
     const m = c.hub.deps.chat.postBot({
       chatId: gid,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'early bird',
       citations: [],
       attachments: [],
@@ -888,7 +888,7 @@ describe('attachments and links', () => {
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'see the **notes**',
       citations: [],
       attachments: [],
@@ -915,7 +915,7 @@ describe('isolation and privacy', () => {
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'for squad one only',
       citations: [],
       attachments: [],
@@ -942,7 +942,7 @@ describe('isolation and privacy', () => {
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'Ana paid $180 for therapy',
       citations: [],
       attachments: [],
@@ -968,7 +968,7 @@ describe('secrets never leak', () => {
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'trigger a failure',
       citations: [],
       attachments: [],
@@ -1121,6 +1121,6 @@ describe('status exposes dry run, allowlist and kill switch; @cubbie parity with
     expect(im.provenance?.kind).toBe(web.provenance?.kind);
     expect(im.provenance?.mode).toBe(web.provenance?.mode);
     expect(!!im.provenance).toBe(true);
-    expect(groupSends().some((t) => /Squad: /.test(t))).toBe(true); // and the answer reached iMessage
+    expect(groupSends().some((t) => /Nook: /.test(t))).toBe(true); // and the answer reached iMessage
   }, 30_000);
 });

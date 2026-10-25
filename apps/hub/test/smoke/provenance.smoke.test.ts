@@ -125,7 +125,7 @@ describe('the composer downgrades what it cannot verify', () => {
     const m = hub.deps.chat.postBot({
       chatId: 'group:sq_demo',
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'The answer is 42 [ghost-chapter.pdf p.9].',
       citations: [{ file: 'ghost-chapter.pdf', page: 9, label: 'ghost.pdf p.9' }],
       attachments: [],
@@ -142,7 +142,7 @@ describe('the composer downgrades what it cannot verify', () => {
     const m = hub.deps.chat.postBot({
       chatId: 'group:sq_demo',
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'Trip card',
       citations: [],
       attachments: [],

@@ -21,20 +21,20 @@ import { useTour } from './useTour';
 const COPY: Record<TourStep, { title: string; lede: string; next: string; cta: string }> = {
   connect: {
     title: 'Connect your learning context',
-    lede: 'Bring in Canvas and Google Workspace so Squad can answer from your real courses. Read-only, and private to you.',
+    lede: 'Bring in Canvas and Google Workspace so Nook can answer from your real courses. Read-only, and private to you.',
     next: 'You will check what was imported.',
     cta: 'Continue to review',
   },
   review: {
     title: 'Verify what was imported',
-    lede: 'These are the courses, assignments, calendar events and Drive files Squad can now see.',
+    lede: 'These are the courses, assignments, calendar events and Drive files Nook can now see.',
     next: 'You will choose what your squad can see.',
     cta: 'Looks right, continue',
   },
   share: {
     title: 'Choose what is shared with your squad',
     lede: 'Everything starts Private. Share only what helps your squad plan together.',
-    next: 'You open the group chat and ask Squad.',
+    next: 'You open the group chat and ask Nook.',
     cta: 'Open the group chat',
   },
 };
