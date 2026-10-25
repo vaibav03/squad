@@ -11,3 +11,9 @@ export const BLEND_MS = 400; // spec 08 row 14
 export function blend(elapsed: number, ease: (t: number) => number, ms = BLEND_MS): number {
   return ease(Math.min(1, Math.max(0, elapsed / ms)));
 }
+
+/** Bottom-anchored vertical scroll: keep world y = layerH at the bottom of the (zoomed) view. */
+export function scrollYBottom(viewH: number, zoom: number, layerH: number): number {
+  const halfVis = viewH / zoom / 2;
+  return Math.round(layerH - halfVis - viewH / 2);
+}

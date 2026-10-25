@@ -1,7 +1,7 @@
 import { fetchManifest } from './assets';
 import { computeScale } from './scaler';
 import { loadAdapter, loadModules } from '../scene-manager/modules';
-import { LOGICAL_H, type CameraMode, type MountOptions, type VillageHandle } from '../world/api';
+import { type CameraMode, type MountOptions, type VillageHandle } from '../world/api';
 
 const REDUCED = '(prefers-reduced-motion: reduce)';
 
@@ -27,7 +27,7 @@ export function mountVillage(a: HTMLElement | MountOptions, b?: Omit<MountOption
   if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
   const root = document.createElement('div');
   root.className = 'sqv-root';
-  root.style.cssText = 'position:absolute;inset:0;background:#070f1f;overflow:hidden;display:flex;align-items:center;justify-content:center';
+  root.style.cssText = 'position:absolute;inset:0;background:#0b1d38;overflow:hidden;display:flex;align-items:center;justify-content:center';
   const stage = document.createElement('div');
   stage.className = 'sqv-stage';
   stage.tabIndex = 0;
@@ -50,8 +50,8 @@ export function mountVillage(a: HTMLElement | MountOptions, b?: Omit<MountOption
     stage.style.width = `${s.cssW}px`;
     stage.style.height = `${s.cssH}px`;
     if (g) {
-      g.scale.setZoom(s.zoom);
-      g.scale.resize(s.logicalW, LOGICAL_H);
+      g.scale.setZoom(s.cssPerPx);
+      g.scale.resize(s.logicalW, s.logicalH);
       const c = g.canvas;
       c.style.imageRendering = 'pixelated';
     }
@@ -84,12 +84,12 @@ export function mountVillage(a: HTMLElement | MountOptions, b?: Omit<MountOption
         type: Phaser.AUTO,
         parent: canvasHost,
         width: s.logicalW,
-        height: LOGICAL_H,
-        backgroundColor: '#070f1f',
+        height: s.logicalH,
+        backgroundColor: '#0b1d38',
         banner: false,
         autoFocus: false,
         disableContextMenu: true,
-        scale: { mode: Phaser.Scale.NONE, zoom: s.zoom },
+        scale: { mode: Phaser.Scale.NONE, zoom: s.cssPerPx },
         render: { pixelArt: true, antialias: false, roundPixels: true, powerPreference: 'high-performance' },
         fps: { target: 60, smoothStep: false },
         input: { keyboard: false, gamepad: false, mouse: { preventDefaultWheel: false }, touch: { capture: true } },

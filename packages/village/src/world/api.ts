@@ -7,14 +7,19 @@ import type Phaser from 'phaser';
 import type { AgentId, StudentId, VillageEvent, VillageSource } from '@squad/core';
 
 /* ---------- coordinate system ---------- */
-/** Logical (pre-zoom) viewport height. Width varies with the container (portrait phones are narrow). */
-export const LOGICAL_H = 180;
+/**
+ * Art layer set height (docs/design/DESIGN.md section 2). World y runs 0 (sky) .. 270 (bottom). The camera is
+ * BOTTOM-anchored: the view is `viewH <= 270` px tall and shows y in [270 - viewH, 270], so short windows crop the
+ * top of the sky and tall phones show all of it. Width varies with the container (195 on a 390 px phone at 2x,
+ * 426 at 1280x720 at 3x).
+ */
+export const LOGICAL_H = 270;
 /** Tile and grid unit. Every sprite position is a whole logical pixel. */
 export const TILE = 16;
-/** World is one horizontal strip, logical px. Screens of 320 px: Left=0..800, Mid=800..1760, Right=1760..2560. */
-export const WORLD_W = 2560;
-/** y of the walkable ground line (sprite feet, origin (0.5,1)). */
-export const GROUND_Y = 148;
+/** World is one horizontal strip, logical px. Left=0..850, Mid=850..1760, Right=1760..2800. */
+export const WORLD_W = 2800;
+/** y where actors' feet and building bases sit (walkable path; the grass edge/fence line is y=240). */
+export const GROUND_Y = 250;
 
 /** Draw order. Use these, never raw numbers. Within a band, add (y) or small ints. */
 export const DEPTH = {
@@ -69,6 +74,8 @@ export interface WorldTime {
   readonly nightness: number;
   /** Hours 0..24 shown by the HUD clock. */
   readonly clockHours: number;
+  /** Which twilight sky applies while nightness is between 0 and 1. */
+  readonly twilight: 'dusk' | 'dawn';
   setMode(mode: TimeMode): void;
 }
 /** Warm window light: scenes call this for every lit window / lamp so glow reacts to nightness. */
@@ -145,6 +152,7 @@ export type OverlayEvent =
   | { type: 'openCall'; agent: AgentId; callId: string }
   | { type: 'openQuiz'; quizId: string; chapter: string }
   | { type: 'openLedger'; taskId: string }
+  | { type: 'openConfirm'; taskId: string; question: string }
   | { type: 'focusAgent'; agent: AgentId }
   | { type: 'closeOverlay' };
 
