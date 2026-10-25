@@ -24,7 +24,7 @@ import {
 import {
   errorCopy,
   FIXTURE_LABEL,
-  kindCounts,
+  countLines,
   oauthReturn,
   relTime,
   scopeWords,
@@ -154,7 +154,7 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
   const [confirm, setConfirm] = useState(false);
   const [purged, setPurged] = useState<{ sources: number; chunks: number } | null>(null);
   const live = c.state !== 'revoked';
-  const counts = kindCounts(c.sources.byKind);
+  const counts = countLines(c);
   const [open, setOpen] = useState(() => isReviewed(c.id));
   const [rows, setRows] = useState<SourceRow[] | null>(null);
   const v = deriveProviderState(c.provider, [c], { now: p.now, reviewed: open });
@@ -196,7 +196,7 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
         <dt>Account</dt>
         <dd data-testid="conn-account">
           {c.mode === 'fixture'
-            ? 'None'
+            ? 'Demo workspace (simulated)'
             : c.account
               ? [c.account.name, c.account.label, c.account.host].filter(Boolean).join(' · ')
               : 'Not reported by this connection'}
@@ -227,8 +227,8 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
         <dt>Granted access</dt>
         <dd>
           <ul className="sq-conn__scopes">
-            {c.grantedScopes.map((s) => (
-              <li key={s}>{scopeWords(s)}</li>
+            {c.grantedScopes.map((s, i) => (
+              <li key={s}>{c.grantedScopeLabels?.[i] ?? scopeWords(s)}</li>
             ))}
           </ul>
         </dd>

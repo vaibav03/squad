@@ -1,3 +1,4 @@
+import { INTEGRATION_STATE_LABELS } from '@squad/core';
 import type { Connection } from '../pages/connections/api';
 
 /**
@@ -13,14 +14,15 @@ export type ConnPhase =
   | 'degraded'
   | 'reauth';
 
+/** Same words as the Connections page: one label map (core INTEGRATION_STATE_LABELS). */
 export const PHASE_LABEL: Record<ConnPhase, string> = {
-  not_connected: 'Not connected',
-  connecting: 'Connecting...',
-  syncing: 'Syncing...',
-  live: 'Live',
-  demo: 'Demo data',
-  degraded: 'Needs attention',
-  reauth: 'Sign in again',
+  not_connected: INTEGRATION_STATE_LABELS.not_connected,
+  connecting: INTEGRATION_STATE_LABELS.connecting,
+  syncing: INTEGRATION_STATE_LABELS.syncing,
+  live: INTEGRATION_STATE_LABELS.live,
+  demo: INTEGRATION_STATE_LABELS.demo,
+  degraded: INTEGRATION_STATE_LABELS.degraded,
+  reauth: INTEGRATION_STATE_LABELS.reauth_required,
 };
 
 /** Customer sentence for each phase (tooltips, banners, setup rows). */
@@ -34,10 +36,15 @@ export const PHASE_SENTENCE: Record<ConnPhase, string> = {
   reauth: 'Sign in again to keep syncing.',
 };
 
-type PhaseInput = Pick<Connection, 'mode' | 'state' | 'syncPhase'> & { degraded?: boolean };
+type PhaseInput = Pick<Connection, 'mode' | 'state' | 'syncPhase'> & {
+  degraded?: boolean;
+  integrationState?: Connection['integrationState'];
+};
 
+/** The hub's `integrationState` is the source; the derivation below is only for a hub that does not send it. */
 export function phaseOf(c: PhaseInput | null | undefined): ConnPhase {
   if (!c) return 'not_connected';
+  if (c.integrationState) return c.integrationState === 'reauth_required' ? 'reauth' : c.integrationState;
   if (c.state === 'revoked') return 'not_connected';
   if (c.state === 'expired') return 'reauth';
   if (c.state === 'error' || c.state === 'rate_limited' || c.degraded) return 'degraded';
