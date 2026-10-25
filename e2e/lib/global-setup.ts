@@ -10,7 +10,7 @@ export default async function globalSetup() {
       throw new Error(`E2E_REUSE=1 but no hub on ${HUB}`);
     return;
   }
-  for (const p of [HUB_PORT, WEB_PORT, 4101, 4102, 4103, 4104]) {
+  for (const p of [HUB_PORT, WEB_PORT, ...(process.env.E2E_NO_AGENTS === '1' ? [] : [4101, 4102, 4103, 4104])]) {
     if (portBusy(p))
       throw new Error(
         `port ${p} is busy; free it or set E2E_HUB_PORT/E2E_WEB_PORT (agent ports 4101-4104 are fixed by dev:all) or E2E_REUSE=1`,

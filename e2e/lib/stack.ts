@@ -37,7 +37,7 @@ export function portBusy(port: number): boolean {
 export function startStack(): ChildProcess {
   fs.mkdirSync(TMP, { recursive: true });
   const log = fs.openSync(path.join(TMP, 'stack.log'), 'w');
-  const p = spawn('pnpm', ['dev:all'], {
+  const p = spawn('pnpm', ['dev:all', ...(process.env.E2E_NO_AGENTS === '1' ? ['--no-agents'] : [])], {
     cwd: REPO,
     env: stackEnv(),
     stdio: ['ignore', log, log],
