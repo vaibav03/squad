@@ -8,35 +8,33 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `e2e/` | 1 | 2 | 22 | Claude Sonnet 5.5 (1) |
-| `feature/` | 3 | 30 | 306 | Claude Sonnet 5.5 (28) |
-| `fix/` | 1 | 2 | 26 | Claude Sonnet 5.5 (2) |
+| `e2e/` | 1 | 4 | 101 | Claude Sonnet 5.5 (3) |
+| `feature/` | 1 | 18 | 112 | Claude Sonnet 5.5 (17) |
+| `fix/` | 1 | 3 | 29 | Claude Sonnet 5.5 (3) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `e2e/acceptance` | 2 | 22 | 2026-10-25 00:54 | 2026-10-25 00:54 | Vaibav |
-| `feature/agent-inspector` | 12 | 106 | 2026-10-25 01:10 | 2026-10-25 01:39 | Vaibav |
-| `feature/council-cast-art` | 4 | 104 | 2026-10-25 01:30 | 2026-10-25 01:37 | Vaibav |
-| `feature/live-discussion` | 14 | 96 | 2026-10-25 01:16 | 2026-10-25 01:39 | Vaibav |
-| `fix/honest-status` | 2 | 26 | 2026-10-25 01:33 | 2026-10-25 01:40 | Vaibav |
+| `e2e/acceptance` | 4 | 101 | 2026-10-25 00:54 | 2026-10-25 01:50 | Vaibav |
+| `feature/live-discussion` | 18 | 112 | 2026-10-25 01:16 | 2026-10-25 01:49 | Vaibav |
+| `fix/honest-status` | 3 | 29 | 2026-10-25 01:33 | 2026-10-25 01:42 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 144 |
+| (no trailer) | 150 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 436 |
+| Claude Sonnet 5.5 | 444 |
 
 ## Commits landed on main by area (subject prefix)
 
 | Area | Commits |
 |---|---:|
-| (other) | 72 |
+| (other) | 75 |
 | Initial commit | 1 |
 | Merge batch 1 | 1 |
 | Merge batch 2 | 1 |
@@ -45,11 +43,13 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Merge batch 5 | 1 |
 | Merge batch 6 | 1 |
 | Merge batch 7 | 1 |
+| Merge batch 8 | 1 |
 | a11y | 1 |
 | accounts | 5 |
 | bot | 1 |
 | brain-answers | 7 |
 | brain-quiz | 7 |
+| castart | 4 |
 | chat | 17 |
 | ci | 2 |
 | core | 4 |
@@ -62,6 +62,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | e2e | 19 |
 | fix | 18 |
 | hub | 5 |
+| inspector | 12 |
 | integration | 41 |
 | interior-engine | 9 |
 | live | 9 |
@@ -74,6 +75,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | merge batch5 | 3 |
 | merge batch6 | 3 |
 | merge batch7 | 4 |
+| merge batch8 | 3 |
 | mesh-crypto | 13 |
 | mesh-flows | 8 |
 | motion | 10 |
@@ -103,5 +105,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Author | Commits |
 |---|---:|
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 298 |
+| Vaibav | 312 |
 | vaibav03 | 26 |
