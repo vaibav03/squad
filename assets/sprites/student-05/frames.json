@@ -13,11 +13,11 @@
     },
     "head": {
       "x": 16,
-      "y": 5
+      "y": 3
     },
     "bubble": {
       "x": 16,
-      "y": 2
+      "y": 0
     }
   },
   "portrait": "portrait.png",

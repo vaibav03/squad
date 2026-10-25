@@ -63,7 +63,7 @@
    "name": "Mage Moda",
    "role": "expert",
    "spec": "expert-mage",
-   "headTop": 1
+   "headTop": 0
   },
   {
    "id": "rival",
@@ -119,7 +119,7 @@
    "name": "Student 2",
    "role": "student",
    "spec": "student-02",
-   "headTop": 5
+   "headTop": 1
   },
   {
    "id": "student-03",
@@ -133,21 +133,21 @@
    "name": "Student 4",
    "role": "student",
    "spec": "student-04",
-   "headTop": 3
+   "headTop": 1
   },
   {
    "id": "student-05",
    "name": "Student 5",
    "role": "student",
    "spec": "student-05",
-   "headTop": 5
+   "headTop": 3
   },
   {
    "id": "student-06",
    "name": "Student 6",
    "role": "student",
    "spec": "student-06",
-   "headTop": 3
+   "headTop": 2
   },
   {
    "id": "mediator",
