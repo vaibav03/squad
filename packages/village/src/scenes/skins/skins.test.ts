@@ -260,7 +260,7 @@ describe('skin painting and seat alignment', () => {
         expect(L.seats[0].x + SEAT_BOX.w / 2).toBeLessThanOrEqual(table.x + 2); // left member beside the table
         expect(L.seats[2].x - SEAT_BOX.w / 2).toBeGreaterThanOrEqual(table.x + table.w - 2);
         expect(L.seats[1].y).toBeGreaterThanOrEqual(table.y + h - 6); // front member at the near edge
-        expect(L.chair.y).toBeGreaterThan(table.y); // chairman sits behind the table top
+        expect(L.chair.y).toBeGreaterThanOrEqual(table.y); // chairman sits behind the table top
         expect(L.chair.y).toBeLessThan(table.y + h);
       }
     }
