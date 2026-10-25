@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./sprites": "./src/sprites/index.ts",
+    "./personas": "./src/personas/index.ts",
+    "./portraits": "./src/portraits/index.ts",
+    "./gif": "./src/gif/index.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
@@ -12,6 +16,7 @@
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests"
   },
   "dependencies": {
-    "@squad/core": "workspace:*"
+    "@squad/core": "workspace:*",
+    "zod": "^4.0.0"
   }
 }
