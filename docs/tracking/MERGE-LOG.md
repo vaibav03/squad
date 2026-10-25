@@ -132,3 +132,44 @@ Looked at two. `village-track2-desk.png`: populated night village (moon, stars, 
 - Parent 2 (batch tip, `origin/merge/batch2`): `3bbb819343843d513705d0721d7f047800dc787b`.
 - Rollback: `git revert -m 1 89eb85df65045b41c1d04070d79b91939f7885e1` (keeps history). Reset to `pre-merge-batch2` only with the owner's explicit approval.
 - Operational note: in fresh worktrees `git merge` fails with `fatal: stash failed` while the index has stat-dirty entries (`git diff-index HEAD` lists many files); loop `git update-index --really-refresh` until `git diff-index HEAD` is empty, then merge.
+
+## Batch 3: chat/web (+ council/ask) and qa/web into main
+
+Branch `merge/batch3` (worktree `squad-wt/merge3`), landed as a true `--no-ff` merge.
+
+### What merged
+
+| Source | Tip sha | Notes |
+| --- | --- | --- |
+| origin/chat/web (already contains council/ask and the council-card fix) | 66ea576 | chat page, ChatDock, cards, useChat |
+| origin/qa/web | merged second | RoomLayer mounted on the village, `chat-send.ts` wiring, e2e scripts, QA fixes |
+
+### Manual resolutions (both sides kept)
+
+1. `apps/hub/src/routes/status.ts`: kept main's version (`lastProbeAt`/`nextProbeAt`, `invalid_key` and `rate_limited` notices, exact credits-depleted banner). qa/web's older `auth:` notice dropped (main's `invalid_key` replaces it).
+2. `packages/core/src/llm/resilient.ts`: kept main's probing wrapper with `onRecover`; ported qa/web's cache portability (a cache handle made by one model is turned into a system prompt when the other model answers) on top of it. qa/web's `reprobeMs` and `probe()` were dropped because main's automatic probes cover them. `resilient.test.ts`: main's tests kept (the auto-merge had replaced them with qa's older ones), plus qa's portability test.
+3. `apps/hub/test/smoke/squad.smoke.test.ts`: main's version (asserts `lastProbeAt`/`nextProbeAt`).
+4. `packages/web/src/pages/village/index.tsx`: both `ChatDock` and `RoomLayer` mounted, qa/web's `chat-send.ts` wiring and `.sqv-stage` focus return kept.
+5. `palette.cpython-314.pyc` (tracked Python cache): kept ours, force-added. `.pyc` stays a tracked-but-ignored file.
+6. Prettier run over qa/web's `apps/web-host/e2e/*.mjs` (formatting only) so `pnpm check` passes.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` (typecheck, lint 0 errors, every package's tests) | pass |
+| `pnpm demo:live` | `demo:live OK` |
+| Browser happy path (haiku agent plus a hand check; dev:all hub :18833, web :15233) | village 1280x800 and 390x844: 0 page errors, 0 console errors, 0 failed requests, scene rendered. /squad/chat with a dev-login session: sent "@Cubbie what is a hash table?", Cubbie replied (demo model: "Not in the materials. Ask the TA."), 0 page errors |
+
+Frames: `docs/design/shots/merge3/{village-desk,village-phone,chat-desk}.png`. Looked at village-desk (night village, campfire, Home house, bubbles, populated) and chat-desk.
+
+### Known gaps
+
+- A chat session without `live` and a hub shows "Chat is offline" by design; the smoke needed a dev-login token.
+- Demo-mode answers are the scripted model's.
+- `main` moved with tracker commits while verifying; merged in with `--no-ff` (docs only, no re-run of tests).
+
+### Landing (batch 3)
+
+- Landing merge commit: `d4e974e357385151746bdef13865e45c4482b5c5` (parents `af2b4310d5da09c450442fbabff467962d951b45` = tag `pre-merge-batch3`, and `517e02f5142f18a5ebc4a02ce15608736aa9665a` = origin/merge/batch3; `git diff origin/merge/batch3` empty), then origin/main tracker commits merged in as `42450c7eea8c1ce3ee49de41ef8ad6dc5f38263c`.
+- Rollback: `git revert -m 1 d4e974e357385151746bdef13865e45c4482b5c5`.
