@@ -16,10 +16,14 @@
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
     "build:sprites": "python3 src/sprites/build/build_cast.py && python3 src/portraits/build_portraits.py",
     "build:gifs": "tsx src/gif/buildGif.ts",
-    "build:wall": "python3 src/sprites/wall/build_wall.py"
+    "build:wall": "python3 src/sprites/wall/build_wall.py",
+    "smoke:live": "tsx scripts/smoke-live.ts",
+    "design-voices": "tsx scripts/design-voices.ts"
   },
   "dependencies": {
     "@squad/core": "workspace:*",
-    "zod": "^4.0.0"
+    "zod": "^4.6.7",
+    "@google/genai": "^1.52.0",
+    "sharp": "^0.35.5"
   }
 }
