@@ -15,6 +15,8 @@ export interface CallSession {
   greeting(): AsyncIterable<CallTurn>;
   reply(userText: string): AsyncIterable<CallTurn>;
   audio?(chunk: Uint8Array): void;
+  /** True once a scripted agent has said its last line; the hub then hangs up after the captions are sent. */
+  finished?(): boolean;
   close(): Promise<void>;
 }
 
@@ -46,3 +48,14 @@ export interface AnswerSentence {
 export type AnswerFn = (
   req: AnswerRequest,
 ) => AsyncIterable<AnswerSentence> | Promise<AnswerSentence[] | AsyncIterable<AnswerSentence>>;
+
+/**
+ * A scripted (stateful) agent for one call, e.g. the Oral Exam examiner. When `agentFor` returns one,
+ * the call uses it instead of the static greeting and the stateless AnswerFn. Lines are spoken one
+ * CallTurn per sentence with TTS exactly like any other answer.
+ */
+export interface ScriptedAgent {
+  greeting(): Promise<AnswerSentence[]>;
+  reply(text: string, history: HistoryItem[]): Promise<AnswerSentence[]>;
+  done?(): boolean;
+}
