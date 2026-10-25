@@ -29,6 +29,8 @@ const obs = getObs(hub.deps)!;
 obs.installProcessHandlers();
 const agentUrls = agentUrlsFromEnv();
 hub.deps.confirms.setAgentUrls(agentUrls);
+// trip-collab adds a trip service that needs the agent urls; absent on trees where it has not landed
+(hub.deps as unknown as { tripSvc?: { setAgentUrls(u: unknown): void } }).tripSvc?.setAgentUrls(agentUrls);
 const chat = await attachChatEngine(hub, {
   realPorts: true,
   agentUrls,
@@ -144,7 +146,7 @@ const ctl = http.createServer(async (req, res) => {
     if (p === '/ctl/im/say') {
       await sdk.say(b.chat, b.from, b.text, b.guid ? { id: b.guid } : {});
       await im.bridge.flush();
-      return json(res, 200, { ok: true, last: sdk.log[sdk.log.length - 1]?.id });
+      return json(res, 200, { ok: true, last: sdk.lastGuid() });
     }
     if (p === '/ctl/im/dm') {
       await sdk.dm(b.from, b.text);
@@ -166,9 +168,13 @@ const ctl = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true });
     }
     if (p === '/ctl/im/backfill') {
-      const n = await sdk.backfill();
+      // the watcher is back: the hub asks chat.db for what its bound chats missed (the real backfill path)
+      const gap = sdk.gapSize();
+      sdk.restoreWatcher();
+      const r = await im.reconnect();
       await im.bridge.flush();
-      return json(res, 200, { delivered: n });
+      sdk.clearGap();
+      return json(res, 200, { delivered: r.messages, chats: r.chats, gap });
     }
     if (p === '/ctl/im/fail-next') {
       sdk.failNext(b.n ?? 1);
@@ -191,7 +197,14 @@ const ctl = http.createServer(async (req, res) => {
         dryRunOutbox: DRY,
       });
     }
-    if (p === '/ctl/im/log') return json(res, 200, { log: sdk.log });
+    if (p === '/ctl/im/log')
+      return json(res, 200, {
+        log: sdk.history.map((m) => ({ id: m.id, chatId: m.chatId, sender: m.participant, text: m.text })),
+      });
+    if (p === '/ctl/im/receipt') {
+      sdk.receipt(b.guid, b.state ?? 'delivered', b.reason);
+      return json(res, 200, { ok: true });
+    }
     if (p === '/ctl/db/dump') {
       // Hub DB vantage point for the sweep. Read-only; the harness scans it and never prints it.
       const tables = hub.deps.db
