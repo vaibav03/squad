@@ -9,6 +9,8 @@ export interface ConnectionsState {
   /** Squad names by id: the page shows these, never raw ids. */
   squadNames: Record<string, string>;
   error: string | null;
+  /** The hub has a real Google OAuth client. When false, only the labelled demo workspace exists for Google. */
+  googleLive?: boolean;
   client: HubClient | null;
   reload: () => Promise<void>;
   clearError: () => void;
@@ -31,11 +33,16 @@ export function useConnections(clientOverride?: HubClient): ConnectionsState {
   const [squadNames, setSquadNames] = useState<Record<string, string>>({});
   const [view, setView] = useState<ConnectionsState['view']>(client ? 'loading' : 'demo');
   const [error, setError] = useState<string | null>(null);
+  const [googleLive, setGoogleLive] = useState(true);
 
   const reload = useCallback(async () => {
     if (!client) return;
     try {
-      setConnections(await client.list());
+      if (client.overview) {
+        const o = await client.overview();
+        setConnections(o.connections);
+        setGoogleLive(o.googleLive);
+      } else setConnections(await client.list());
       setView('ready');
     } catch (e) {
       if (e instanceof ConnError && e.code === 'offline') setView('offline');
@@ -86,6 +93,7 @@ export function useConnections(clientOverride?: HubClient): ConnectionsState {
     squadId,
     squadNames,
     error,
+    googleLive,
     client,
     reload,
     clearError: () => setError(null),

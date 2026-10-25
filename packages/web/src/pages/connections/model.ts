@@ -1,3 +1,5 @@
+import { plural } from '../../lib/plural';
+
 /** Pure helpers for the connections page: honest state labels, plain-word scopes, error copy. */
 
 export const STATES = ['live', 'fixture', 'expired', 'revoked', 'rate_limited', 'error'] as const;
@@ -51,21 +53,31 @@ export const SCOPE_WORDS: Record<string, string> = {
 export const scopeWords = (s: string): string =>
   SCOPE_WORDS[s] ?? 'Read-only access to one data type.';
 
+/** Singular noun per kind; `plural()` makes the count line ('1 Classroom item', '2 Classroom items'). */
 export const KIND_LABEL: Record<string, string> = {
-  canvas_assignment: 'assignments',
-  canvas_file: 'files',
-  canvas_event: 'Canvas events',
-  gdoc: 'Docs',
-  gdrive_file: 'Drive files',
-  gcal_event: 'calendar events',
-  classroom_item: 'Classroom items',
-  pdf: 'PDFs',
+  canvas_course: 'course',
+  canvas_module: 'module',
+  canvas_assignment: 'assignment',
+  canvas_page: 'page',
+  canvas_file: 'file',
+  canvas_event: 'calendar event',
+  gdoc: 'Drive doc',
+  gdrive_file: 'Drive doc',
+  gcal_event: 'calendar event',
+  classroom_item: 'Classroom item',
+  classroom_coursework: 'Classroom item',
+  classroom_course: 'Classroom course',
+  pdf: 'PDF',
 };
-export const kindCounts = (byKind: Record<string, number>): string[] =>
-  Object.entries(byKind)
-    .filter(([, n]) => n > 0)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, n]) => `${n} ${KIND_LABEL[k] ?? k}`);
+export const kindCounts = (byKind: Record<string, number>): string[] => {
+  const byLabel = new Map<string, number>();
+  for (const [k, n] of Object.entries(byKind).sort(([a], [b]) => a.localeCompare(b)))
+    if (n > 0) {
+      const l = KIND_LABEL[k] ?? k.replace(/_/g, ' ');
+      byLabel.set(l, (byLabel.get(l) ?? 0) + n);
+    }
+  return [...byLabel].map(([l, n]) => plural(n, l));
+};
 
 const ITEM_TYPE: Record<string, string> = {
   canvas_assignment: 'Canvas assignment',
