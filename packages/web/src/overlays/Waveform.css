@@ -1,0 +1,27 @@
+.lv-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 28px;
+}
+.lv-wave__bar {
+  flex: none;
+  height: 100%;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--sq-hill-mid);
+  transform-origin: center;
+  transform: scaleY(0.12);
+  opacity: 0.7;
+  will-change: transform;
+  transition: background-color var(--dur-fast) var(--lv-ease-out), opacity var(--dur-fast) var(--lv-ease-out);
+}
+.lv-wave[data-tone='agent'] .lv-wave__bar {
+  background: var(--sq-cloud-hi);
+  opacity: 1;
+}
+.lv-wave[data-tone='you'] .lv-wave__bar {
+  background: var(--sq-cloud-hi);
+  opacity: 1;
+}

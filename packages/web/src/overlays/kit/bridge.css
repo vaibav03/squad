@@ -1,0 +1,67 @@
+/*
+ * web-live token bridge. Every web-live component styles itself ONLY with --lv-* variables, which
+ * alias the design-system tokens in docs/design/tokens.css (shadcn-style semantic names + --sq-*).
+ * Overlays and the notice board sit on the night village: wrap them in `.sq-scene` (the tokens
+ * file re-pins the dark set there) or rely on the dark default.
+ */
+:root,
+.sq-scene,
+.lv-scope {
+  --lv-bg: var(--background);
+  --lv-surface: var(--card);
+  --lv-surface-2: var(--secondary);
+  --lv-surface-3: var(--muted);
+  --lv-hover: var(--accent);
+  --lv-line: var(--border);
+  --lv-line-strong: var(--ring);
+  --lv-scrim: var(--scrim);
+  --lv-text: var(--foreground);
+  --lv-text-dim: var(--muted-foreground);
+  --lv-accent: var(--primary);
+  --lv-accent-ink: var(--primary-foreground);
+  --lv-ok: var(--success);
+  --lv-alert: var(--destructive);
+  --lv-alert-text: var(--destructive-text);
+  --lv-warn: var(--warning);
+  --lv-info: var(--info);
+  --lv-focus: var(--ring);
+  --lv-bar: #000; /* withheld bars are pure black in both themes */
+  --lv-shadow-1: var(--shadow-1);
+  --lv-shadow-2: var(--shadow-2);
+  --lv-shadow-3: var(--shadow-3);
+  --lv-glow: var(--shadow-glow);
+
+  --lv-s1: var(--space-1);
+  --lv-s2: var(--space-2);
+  --lv-s3: var(--space-3);
+  --lv-s4: var(--space-4);
+  --lv-s5: var(--space-6);
+  --lv-s6: var(--space-8);
+  --lv-s7: var(--space-12);
+  --lv-r1: var(--radius-sm);
+  --lv-r2: var(--radius-md);
+  --lv-r3: var(--radius-lg);
+  --lv-r4: var(--radius-xl);
+  --lv-tap: var(--touch-min);
+
+  --lv-font-ui: var(--font-sans);
+  --lv-font-pixel: var(--font-pixel);
+  --lv-font-caps: var(--font-pixel-caps);
+  --lv-font-mono: var(--font-mono);
+
+  --lv-ease-out: var(--ease-out);
+  --lv-ease-in-out: var(--ease-in-out);
+  --lv-ease-drawer: var(--ease-drawer);
+}
+
+.lv-vh {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

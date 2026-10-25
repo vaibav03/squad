@@ -1,0 +1,102 @@
+.lv-confirm__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lv-s4);
+  padding: var(--lv-s4) var(--lv-s5) var(--lv-s5);
+}
+.lv-confirm__q {
+  font: 600 var(--text-xl) / var(--lh-xl) var(--lv-font-ui);
+  letter-spacing: var(--tracking-ui);
+  color: var(--lv-text);
+  text-wrap: balance;
+  max-width: 34ch;
+}
+.lv-confirm__details {
+  margin: 0;
+  display: grid;
+  gap: 1px;
+  border: 1px solid var(--lv-line);
+  border-radius: var(--lv-r3);
+  background: var(--lv-line);
+  overflow: hidden;
+}
+.lv-confirm__row {
+  display: grid;
+  grid-template-columns: minmax(104px, 40%) 1fr;
+  gap: var(--lv-s3);
+  align-items: baseline;
+  padding: var(--lv-s3) var(--lv-s4);
+  background: var(--lv-surface);
+}
+.lv-confirm__row dt {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lv-s2);
+  font: 600 var(--text-xs) / var(--lh-xs) var(--lv-font-ui);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--lv-text-dim);
+}
+.lv-confirm__row dd {
+  margin: 0;
+  font: 500 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
+  overflow-wrap: anywhere;
+}
+.lv-confirm__row[data-tone='shared'] dt {
+  color: var(--lv-accent);
+}
+.lv-confirm__row[data-tone='private'] dd {
+  color: var(--lv-text-dim);
+}
+.lv-confirm__msg {
+  display: flex;
+  gap: var(--lv-s2);
+  align-items: center;
+  margin: 0;
+  color: var(--lv-alert-text);
+  font: 500 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
+}
+.lv-confirm__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lv-s2);
+}
+.lv-confirm__actions .lv-btn {
+  min-height: 48px;
+}
+@media (min-width: 640px) {
+  .lv-confirm__actions {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+  }
+  .lv-confirm__actions .lv-btn--primary {
+    min-width: 120px;
+  }
+}
+.lv-confirm__done {
+  display: flex;
+  align-items: center;
+  gap: var(--lv-s3);
+  color: var(--lv-ok);
+  font: 600 var(--text-base) / var(--lh-base) var(--lv-font-ui);
+}
+.lv-confirm__done .lv-btn {
+  margin-left: auto;
+  color: var(--lv-text);
+}
+.lv-confirm__tick {
+  animation: lv-draw var(--dur-base) var(--lv-ease-out) both;
+}
+@keyframes lv-draw {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-confirm__tick {
+    animation: none;
+  }
+}
