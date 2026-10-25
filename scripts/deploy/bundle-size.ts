@@ -10,7 +10,9 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const DIST = resolve(ROOT, process.env.WEB_DIST ?? 'apps/web-host/dist');
-const budgets = JSON.parse(readFileSync(join(ROOT, 'deploy/bundle-budgets.json'), 'utf8')) as Record<string, number>;
+const budgets = JSON.parse(
+  readFileSync(join(ROOT, 'deploy/bundle-budgets.json'), 'utf8'),
+) as Record<string, number>;
 const arg = (k: string) => {
   const i = process.argv.indexOf(k);
   return i > 0 ? process.argv[i + 1] : undefined;
@@ -25,7 +27,11 @@ function walk(d: string): string[] {
 const files = walk(DIST).map((p) => {
   const buf = readFileSync(p);
   const textual = /\.(js|css|html|json|svg|mjs)$/.test(p);
-  return { path: relative(DIST, p), bytes: buf.length, gzip: textual ? gzipSync(buf).length : buf.length };
+  return {
+    path: relative(DIST, p),
+    bytes: buf.length,
+    gzip: textual ? gzipSync(buf).length : buf.length,
+  };
 });
 const kib = (n: number) => Math.round((n / 1024) * 10) / 10;
 const js = files.filter((f) => f.path.endsWith('.js'));
@@ -48,20 +54,32 @@ const checks = [
 const maps = files.filter((f) => f.path.endsWith('.map'));
 const vendor = files.filter((f) => /vendor|modern.?interiors/i.test(f.path));
 
-const lines = ['# Web host bundle report', '', '| metric | value | budget | status |', '|---|---|---|---|'];
+const lines = [
+  '# Web host bundle report',
+  '',
+  '| metric | value | budget | status |',
+  '|---|---|---|---|',
+];
 let fail = false;
 for (const [name, val, max] of checks) {
   const ok = max === undefined || val <= max;
   if (!ok) fail = true;
   lines.push(`| ${name} | ${val} | ${max} | ${ok ? 'ok' : 'OVER'} |`);
 }
-if (maps.length) { fail = true; lines.push('', `FAIL: ${maps.length} source map(s) in dist`); }
-if (vendor.length) { fail = true; lines.push('', `FAIL: vendor/licensed art in dist: ${vendor.map((v) => v.path).join(', ')}`); }
+if (maps.length) {
+  fail = true;
+  lines.push('', `FAIL: ${maps.length} source map(s) in dist`);
+}
+if (vendor.length) {
+  fail = true;
+  lines.push('', `FAIL: vendor/licensed art in dist: ${vendor.map((v) => v.path).join(', ')}`);
+}
 lines.push('', '## Largest files', '', '| file | KiB | gzip KiB |', '|---|---|---|');
 for (const f of [...files].sort((a, b) => b.bytes - a.bytes).slice(0, 15))
   lines.push(`| ${f.path} | ${kib(f.bytes)} | ${kib(f.gzip)} |`);
 const md = lines.join('\n');
 console.log(md);
 if (arg('--md')) writeFileSync(arg('--md')!, md + '\n');
-if (arg('--json')) writeFileSync(arg('--json')!, JSON.stringify({ checks, files, pass: !fail }, null, 2));
+if (arg('--json'))
+  writeFileSync(arg('--json')!, JSON.stringify({ checks, files, pass: !fail }, null, 2));
 process.exit(fail ? 1 : 0);
