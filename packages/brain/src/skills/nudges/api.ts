@@ -88,6 +88,21 @@ export type DeliverOutcome =
   | { status: 'deferred'; until: number; reason: string }
   | { status: 'dropped'; reason: string };
 
+export interface AskRequest {
+  student: string;
+  question: string;
+  options: string[];
+  taskId: string;
+  dedupe?: string;
+  consented?: boolean;
+  urgent?: boolean;
+}
+
+export type AskOutcome =
+  | { status: 'answered'; answer: string }
+  | { status: 'deferred'; until: number; reason: string }
+  | { status: 'dropped'; reason: string };
+
 /** Return value of a job handler. Nothing means done. `defer` re-queues at that time without a retry. */
 export type JobResult = void | { defer: number; reason?: string };
 
@@ -99,6 +114,11 @@ export interface HandlerCtx {
   api: ProactiveApi;
   /** The ONLY way a handler may speak: applies opt-in, snooze, quiet hours, rate limits, cooldown. */
   deliver(r: DeliverRequest): Promise<DeliverOutcome>;
+  /**
+   * askConfirm behind the same gate as `deliver` (opt-in, snooze, quiet hours, rate limits), counted as
+   * one proactive send. Optional so test doubles may omit it; the real scheduler always provides it.
+   */
+  ask?(r: AskRequest): Promise<AskOutcome>;
   /** Record that an askConfirm nudge got no answer (3 in a row auto-snoozes the student for 3 days). */
   noteIgnored(student: string): void;
   noteEngaged(student: string): void;

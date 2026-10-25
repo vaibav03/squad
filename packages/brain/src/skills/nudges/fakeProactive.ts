@@ -73,7 +73,8 @@ export function createFakeProactive(startMs = 1_700_000_000_000): FakeProactive 
     },
     cancelWhere(f) {
       let n = 0;
-      for (const j of jobs) if (j.status === 'pending' && match(j, f)) (j.status = 'cancelled'), n++;
+      for (const j of jobs)
+        if (j.status === 'pending' && match(j, f)) ((j.status = 'cancelled'), n++);
       return n;
     },
     list: (f = {}) => jobs.filter((j) => match(j, f)),
