@@ -184,11 +184,18 @@ export function dueReply(
   }
   const top = inWin.slice(0, 8);
   const title = win.kind === 'all' ? `Next ${top.length} due` : `Due ${win.label} (${top.length})`;
-  const later = win.kind === 'week' ? dated.filter((a) => a.dueAt! >= win.to).length : 0;
-  const followUp = later
-    ? `\nNext after this week: ${later} more due later. Ask "@cubbie what is due after this week?" to list them.`
+  const laterAll = win.kind === 'week' ? dated.filter((a) => a.dueAt! >= win.to) : [];
+  const laterShown = laterAll.slice(0, 3);
+  const more = laterAll.length - laterShown.length;
+  const followUp = laterShown.length
+    ? `\n\nNext after this week:\n${laterShown.map(line).join('\n')}${
+        more > 0 ? `\n(${more} more. Ask "@cubbie what is due after this week?" to list them.)` : ''
+      }`
     : '';
-  return { text: `${title}:\n${top.map(line).join('\n')}${followUp}`, citations: top.map(cite) };
+  return {
+    text: `${title}:\n${top.map(line).join('\n')}${followUp}`,
+    citations: [...top, ...laterShown].map(cite),
+  };
 }
 
 const range = (q: string, now: number): { from: number; to: number; label: string } => {
