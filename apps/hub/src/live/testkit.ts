@@ -32,7 +32,7 @@ export function makeKit(
   const { limits, ...rest } = over;
   const deps: EngineDeps = {
     now: () => clock.t,
-    clients: ((kind) => new FakeLive({ speedMs: 0 }) as LiveAgentClient) as LiveClientFactory,
+    clients: ((_kind) => new FakeLive({ speedMs: 0 }) as LiveAgentClient) as LiveClientFactory,
     grounder: createFakeGrounder(),
     takeaways: () => heuristicBuilder,
     limits: { ...TEST_LIMITS, ...limits },

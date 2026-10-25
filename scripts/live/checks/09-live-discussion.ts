@@ -16,7 +16,9 @@ const kind = (reason: string): string =>
 async function main(): Promise<number> {
   const key = process.env.GEMINI_API_KEY;
   if (!key || process.env.LIVE_DISCUSSION_REAL !== '1') {
-    console.log('SKIP live discussion: set GEMINI_API_KEY and LIVE_DISCUSSION_REAL=1 to run the one real call');
+    console.log(
+      'SKIP live discussion: set GEMINI_API_KEY and LIVE_DISCUSSION_REAL=1 to run the one real call',
+    );
     return 2;
   }
   const model = process.env.GEMINI_LIVE_MODEL?.trim() || 'gemini-3.8-live';
@@ -25,32 +27,35 @@ async function main(): Promise<number> {
   let failure = '';
   let done: () => void = () => undefined;
   const finished = new Promise<void>((r) => (done = r));
-  const session = await ai.live.connect({
-    model,
-    config: {
-      responseModalities: [Modality.AUDIO],
-      systemInstruction: 'You are a study buddy. Reply with one short sentence.',
-      outputAudioTranscription: {},
-    },
-    callbacks: {
-      onmessage: (m) => {
-        const sc = m.serverContent;
-        if (sc?.outputTranscription?.text) transcript += sc.outputTranscription.text;
-        if (sc?.turnComplete) done();
+  const session = await ai.live
+    .connect({
+      model,
+      config: {
+        responseModalities: [Modality.AUDIO],
+        systemInstruction: 'You are a study buddy. Reply with one short sentence.',
+        outputAudioTranscription: {},
       },
-      onerror: (e) => {
-        failure = `error: ${(e as Error).message ?? 'unknown'}`;
-        done();
+      callbacks: {
+        onmessage: (m) => {
+          const sc = m.serverContent;
+          if (sc?.outputTranscription?.text) transcript += sc.outputTranscription.text;
+          if (sc?.turnComplete) done();
+        },
+        onerror: (e) => {
+          failure = `error: ${(e as Error).message ?? 'unknown'}`;
+          done();
+        },
+        onclose: (e) => {
+          if (!transcript)
+            failure = `closed ${e.code ?? ''} (${kind(e.reason ?? '')}): ${e.reason ?? ''}`;
+          done();
+        },
       },
-      onclose: (e) => {
-        if (!transcript) failure = `closed ${e.code ?? ''} (${kind(e.reason ?? '')}): ${e.reason ?? ''}`;
-        done();
-      },
-    },
-  }).catch((e: unknown) => {
-    failure = `connect failed (${kind(String(e))})`;
-    return undefined;
-  });
+    })
+    .catch((e: unknown) => {
+      failure = `connect failed (${kind(String(e))})`;
+      return undefined;
+    });
   if (session) {
     session.sendRealtimeInput({ text: 'Say hello and name one fact about averages.' });
     await Promise.race([finished, new Promise((r) => setTimeout(r, 20_000))]);

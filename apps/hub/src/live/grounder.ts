@@ -1,13 +1,11 @@
 // Grounding: pages for a query through the existing citation-checked retrieval (Brain.ask), or a fixture course.
+import type { Brain } from '@squad/brain';
 import type { Grounder, LivePage } from './types';
 
 const MAX_PAGES = 3;
 
 /** Backed by the brain the council uses (`brain.ask` finds the chapters, we pass their pages on). */
-export function createBrainGrounder(
-  brain: import('@squad/brain').Brain,
-  courseId: () => string,
-): Grounder {
+export function createBrainGrounder(brain: Brain, courseId: () => string): Grounder {
   return {
     async ground(query) {
       try {

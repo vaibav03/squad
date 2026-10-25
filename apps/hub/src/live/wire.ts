@@ -1,5 +1,6 @@
 // Builds the live service for a hub: real clients when a key exists, FakeLive otherwise, grounding through the
 // council's brain when the real ports are wired (fixture course otherwise), takeaways through the hub's model.
+import type { Brain } from '@squad/brain';
 import type { Llm } from '@squad/core';
 import { GeminiLive } from './gemini-client';
 import { FakeLive } from './fake-client';
@@ -12,7 +13,7 @@ import type { HubDeps } from '../types';
 
 /** Set by the real-ports wiring; absent on a stub hub. */
 export interface LiveWiring {
-  brain?: import('@squad/brain').Brain;
+  brain?: Brain;
   courseId: () => string;
   llm?: Llm;
 }

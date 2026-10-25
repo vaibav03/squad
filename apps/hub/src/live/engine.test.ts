@@ -156,7 +156,7 @@ describe('citations', () => {
     kit.deps.clients = (k, p) => {
       const c = base(k, p);
       if (p !== 'skeptic') return c;
-      let h: import('./types').LiveAgentHandlers;
+      let h: LiveAgentHandlers;
       const conn = c.connect.bind(c);
       c.connect = (o) => {
         h = o.handlers;
@@ -209,7 +209,12 @@ describe('village events', () => {
 
 import { createLiveService, LiveBusyError } from './service';
 import { FakeLive } from './fake-client';
-import { LiveClientError, type LiveAgentClient, type LiveConnectOptions } from './types';
+import {
+  LiveClientError,
+  type LiveAgentClient,
+  type LiveAgentHandlers,
+  type LiveConnectOptions,
+} from './types';
 
 /** A client that never answers (stalls) or fails in a chosen way. */
 class Scripted implements LiveAgentClient {
@@ -286,8 +291,7 @@ describe('budget guard', () => {
   it('a stalled turn times out instead of hanging (after turns exist)', async () => {
     const kit = makeKit({ limits: { maxTurns: 3 } });
     const base = kit.deps.clients;
-    let n = 0;
-    kit.deps.clients = (k, p) => (p === 'skeptic' ? (n++, new Scripted('stall')) : base(k, p));
+    kit.deps.clients = (k, p) => (p === 'skeptic' ? new Scripted('stall') : base(k, p));
     const run = new LiveRun(kit.deps, init());
     await new Promise((r) => setTimeout(r, 20));
     kit.timers.filter((t) => t.label === 'turn' && !t.cancelled).forEach((t) => t.fn());

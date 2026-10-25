@@ -3,7 +3,9 @@
 import type { LiveCitation } from '@squad/core';
 import type { LivePage } from './types';
 
-type Brain = typeof import('@squad/brain');
+import type * as BrainNs from '@squad/brain';
+
+type Brain = typeof BrainNs;
 let brainMod: Promise<Brain> | undefined;
 const brain = (): Promise<Brain> => (brainMod ??= import('@squad/brain'));
 
