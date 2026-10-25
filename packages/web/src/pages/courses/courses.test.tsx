@@ -69,3 +69,47 @@ describe('courses page (mock mode)', () => {
     );
   });
 });
+
+describe('planner catalogue panel', () => {
+  it('shows code, title, credits, days, time, prerequisites and term for every row; no blanks', async () => {
+    app('/squad/courses/c_bio201_9fK2pQ');
+    const panel = await screen.findByTestId('catalogue-panel');
+    const rows = panel.querySelectorAll('tbody tr');
+    expect(rows.length).toBe(4);
+    for (const tr of Array.from(rows)) {
+      const cells = Array.from(tr.querySelectorAll('th,td')).map((c) => c.textContent?.trim());
+      expect(cells.length).toBe(7);
+      expect(cells.every((c) => c && c.length > 0)).toBe(true);
+    }
+    expect(panel.textContent).toContain('BIO 201');
+    expect(panel.textContent).toContain('MWF');
+    expect(panel.textContent).toContain('09:00 to 09:50');
+  });
+});
+
+describe('planner catalogue panel gaps', () => {
+  it('renders "Missing days/time" instead of blank cells', async () => {
+    const { CataloguePanel } = await import('./PanelsMisc');
+    render(
+      <CataloguePanel
+        canImport={false}
+        onImport={async () => undefined}
+        catalogue={{
+          sample: false,
+          rows: [
+            {
+              code: 'CSL 101',
+              title: 'Intro',
+              credits: 3,
+              days: '',
+              start: '',
+              end: '',
+              location: '',
+            },
+          ],
+        }}
+      />,
+    );
+    expect(screen.getByTestId('catalogue-gap').textContent).toContain('Missing days/time');
+  });
+});

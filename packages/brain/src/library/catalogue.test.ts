@@ -3,7 +3,6 @@ import { parseCatalogueCsv, parseCatalogueJson, sampleCatalogue } from './catalo
 import { parseCsv } from './csv';
 
 const HEAD = 'id,title,credits,prereqs,coreqs,workload,offered,area,days,start,end';
-const T = 'MWF,09:00,09:50';
 
 describe('catalogue import', () => {
   it('parses CSV with ; and | separators and quoted fields', () => {

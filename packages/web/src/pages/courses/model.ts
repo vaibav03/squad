@@ -576,4 +576,45 @@ export function parseCatalogue(text: string, nameOrType: string): CatalogueParse
   return { rows, issues };
 }
 
+const DAY_LETTER: Record<string, string> = {
+  mon: 'M',
+  tue: 'T',
+  wed: 'W',
+  thu: 'R',
+  fri: 'F',
+  sat: 'S',
+  sun: 'U',
+};
+
+/** A hub catalogue course (`id`, `days: ['Mon','Wed']`, ...) or a web row (`code`, `days: 'MWF'`) -> one row shape. */
+export function catalogueRowFrom(raw: unknown): CatalogueRow {
+  const o = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const str = (v: unknown) =>
+    typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '';
+  const days = Array.isArray(o.days)
+    ? o.days.map((d) => DAY_LETTER[String(d).slice(0, 3).toLowerCase()] ?? '').join('')
+    : str(o.days).toUpperCase();
+  const credits = Number(o.credits);
+  return {
+    code: str(o.code) || str(o.id),
+    title: str(o.title),
+    credits: Number.isFinite(credits) ? credits : 0,
+    days,
+    start: str(o.start),
+    end: str(o.end),
+    location: str(o.location),
+    ...(Array.isArray(o.prereqs) ? { prereqs: o.prereqs.map(String) } : {}),
+    ...(Array.isArray(o.offered)
+      ? { term: o.offered.map(String).join(', ') }
+      : str(o.term)
+        ? { term: str(o.term) }
+        : {}),
+  };
+}
+
+/** 'Missing days/time' for a row that cannot be placed on a week; null when complete. Never render blanks. */
+export function catalogueRowGap(r: CatalogueRow): string | null {
+  return r.days && TIME.test(r.start) && TIME.test(r.end) ? null : 'Missing days/time';
+}
+
 export const CATALOGUE_SAMPLE_LABEL = 'Sample catalogue (SAMPLE DATA)';

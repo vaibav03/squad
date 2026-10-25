@@ -101,6 +101,10 @@ export interface CatalogueRow {
   start: string;
   end: string;
   location: string;
+  /** Prerequisite course codes (hub catalogues). */
+  prereqs?: string[];
+  /** Terms the course is offered, e.g. 'fall, spring' (hub catalogues). */
+  term?: string;
 }
 export interface RowIssue {
   /** 1-based, counting the first data row as row 1 */
