@@ -37,6 +37,26 @@ const dissent = [
   },
 ];
 
+const OUTCOME = {
+  title: 'Spring plan: 15 credits, light Friday',
+  summary: 'A steady load with one hard course.',
+  items: [
+    { label: 'CS 201 Data Structures', detail: 'Mon Wed' },
+    { label: 'MATH 220 Linear Algebra', detail: 'Tue Thu' },
+    { label: 'STAT 110 Intro Statistics' },
+    { label: 'ENG 150 Writing Seminar', detail: 'Fri late' },
+    { label: 'ART 101 Drawing' },
+    { label: 'PE 010 Climbing (sixth, not drawn)' },
+  ],
+  facts: [
+    { label: 'Workload', value: 'steady' },
+    { label: 'Credits', value: '15' },
+  ],
+  why: [{ who: 'advisor', text: 'Balances the hard course with two lighter ones.' }],
+} as const;
+const LONG =
+  'Take CS 201 and MATH 220 together, keep Friday light, and drop the elective if the first midterm goes badly.';
+
 export const shots: ShotDef[] = [
   { name: 'exterior-locked', view: 'exterior', instance: 'locked', script: [], sample: [0] },
   { name: 'exterior-dim', view: 'exterior', script: [], sample: [0] },
@@ -83,6 +103,38 @@ export const shots: ShotDef[] = [
       },
     ],
     sample: [500, 900, 2500],
+  },
+  {
+    name: 'interior-words',
+    view: 'interior',
+    script: [
+      { at: 0, event: op('chill', LONG) },
+      { at: 0, event: op('grind', 'Chapters 5 to 7 this week.') },
+    ],
+    sample: [400, 1500],
+  },
+  {
+    name: 'interior-outcome',
+    view: 'interior',
+    script: [
+      ...ranked,
+      {
+        at: 4000,
+        event: {
+          t: 'council.verdict',
+          councilId: PL,
+          member: 'chair',
+          text: 'Plan: 15 credits, light Friday.',
+          outcome: {
+            ...OUTCOME,
+            items: [...OUTCOME.items.map((i) => ({ ...i }))],
+            facts: [...OUTCOME.facts],
+            why: [...OUTCOME.why],
+          },
+        },
+      },
+    ],
+    sample: [4300, 8400, 14000],
   },
   { name: 'interior-calm', view: 'interior', calm: true, script: dissent, sample: [2500, 5000] },
 ];

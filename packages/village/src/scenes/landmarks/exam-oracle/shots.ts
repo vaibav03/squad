@@ -46,6 +46,21 @@ export const shots: ShotDef[] = [
     sample: [300, 1200, 2400],
   },
   {
+    name: 'interior-question-text',
+    view: 'interior',
+    script: [
+      { at: 0, event: state('studying') },
+      {
+        at: 100,
+        event: {
+          ...question('ch5'),
+          text: 'Which chapter-5 idea decides whether a limit exists at a point?',
+        } as VillageEvent,
+      },
+    ],
+    sample: [600, 2400],
+  },
+  {
     name: 'interior-calm',
     view: 'interior',
     calm: true,

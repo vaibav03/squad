@@ -60,7 +60,7 @@ describe('chapter house mapEvent', () => {
     );
     const b = cap.find((c) => c.c === 'bubble');
     expect(b).toMatchObject({ bubble: { who: 'expert', style: 'caption' } });
-    expect((b as { bubble: { text: string } }).bubble.text.length).toBeLessThanOrEqual(60);
+    expect((b as { bubble: { text: string } }).bubble.text.length).toBeLessThanOrEqual(90);
     expect(cap).toContainEqual({ c: 'portrait', on: true });
     expect(def.mapEvent({ t: 'call.end', agent: 'expert:ch5', callId: 'c' }, s0, ctx())).toEqual([
       OPEN,
@@ -82,7 +82,7 @@ describe('chapter house mapEvent', () => {
   it('quiz.*', () => {
     expect(def.mapEvent(q('quiz.question'), s0, ctx())).toEqual([
       OPEN,
-      { c: 'chalk', text: 'Chapter 5', mark: 'none' },
+      { c: 'chalk', text: 'Chapter 5', mark: 'none', question: '' },
       { c: 'setOccupant', state: 'studying' },
     ]);
     expect(def.mapEvent(q('quiz.answer'), s0, ctx())).toEqual([

@@ -1,4 +1,4 @@
-import type { VillageEvent } from '@squad/core';
+import type { RoomOutcome, VillageEvent } from '@squad/core';
 import type { AssetLib } from './assets';
 import type { Raster } from './pixel/raster';
 
@@ -56,7 +56,8 @@ export type SceneCommand =
   | { c: 'rank'; by: string; order: readonly string[] } // bubbles slide to rank slots
   | { c: 'verdict'; chair: string; text: string; dissenter?: string }
   | { c: 'lantern'; mode: 'off' | 'steady' | 'flicker' }
-  | { c: 'chalk'; text: string; mark: ChalkMark }
+  | { c: 'chalk'; text: string; mark: ChalkMark; question?: string } // question: public prompt text
+  | { c: 'outcome'; outcome: RoomOutcome } // council.verdict.outcome, public text only
   | { c: 'portrait'; on: boolean } // call portrait animating (speaking)
   | { c: 'night'; on: boolean }; // booth glow etc., derived from the clock
 

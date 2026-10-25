@@ -85,7 +85,7 @@ describe('panic-booth mapEvent', () => {
     const cap: VillageEvent = { t: 'call.caption', agent: AG, callId: 'c', text: 'y'.repeat(90) };
     const cmds = panicBooth.mapEvent(cap, s, at(14));
     const b = cmds.find((c) => c.c === 'bubble');
-    expect(b && b.c === 'bubble' ? b.bubble.text.length : 0).toBe(60);
+    expect(b && b.c === 'bubble' ? b.bubble.text.length : 0).toBe(90);
     expect(panicBooth.mapEvent({ t: 'call.end', agent: AG, callId: 'c' }, s, at(14))).toEqual([
       { c: 'night', on: false },
       { c: 'setOccupant', state: 'idle' },

@@ -64,6 +64,13 @@ const quizOpinions = [
 ];
 const quizRank = [{ at: 2000, event: rank(QK, 'solver-a', ['solver-b', 'solver-a', 'solver-c']) }];
 
+const OUTCOME = {
+  title: 'Key check: B is right',
+  items: [{ label: 'Step 2 sign holds', detail: 'two of three agree' }],
+  facts: [{ label: 'Credits', value: 'n/a' }],
+  why: [],
+};
+
 export const shots: ShotDef[] = [
   { name: 'exterior-states', view: 'exterior', script: [], sample: [0], calm: false },
   {
@@ -122,6 +129,25 @@ export const shots: ShotDef[] = [
       { at: 0, event: op(PL, 'advisor', 'Balance: ch5 then ch7.') },
     ].map((x) => ({ ...x, event: { ...x.event, councilId: 'council:other' } as VillageEvent })),
     sample: [400, 900],
+  },
+  {
+    name: 'verdict-outcome',
+    view: 'interior',
+    script: [
+      ...quizOpinions,
+      ...quizRank,
+      {
+        at: 4000,
+        event: {
+          t: 'council.verdict',
+          councilId: QK,
+          member: 'chair',
+          text: 'Key B stands.',
+          outcome: OUTCOME,
+        },
+      },
+    ],
+    sample: [4300, 14000],
   },
   {
     name: 'dissent-calm',
