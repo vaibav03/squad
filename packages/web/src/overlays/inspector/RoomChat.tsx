@@ -5,6 +5,7 @@ import type { TranscriptEntry, TranscriptKind } from '@squad/village/rooms';
 import { CitationChip } from '../../components/source-viewer';
 import { LvIcon } from '../kit';
 import { speakerName } from '../room-info/names';
+import { displayAssistantName, displayLegacyMentions } from '../../pages/chat/legacy-brand';
 import { useRoomSnapshot } from './useRoomSession';
 
 const KIND: Record<TranscriptKind, string> = {
@@ -67,10 +68,10 @@ export function RoomChat({
               data-focus={saidBy(who, e) || undefined}
             >
               <div className="ai-msg__head">
-                <b className="ai-party">{nameOf(e.who)}</b>
+                <b className="ai-party">{displayAssistantName(nameOf(e.who))}</b>
                 {e.ts ? <time>{relTime(e.ts, now)}</time> : null}
               </div>
-              <p className="ai-msg__text">{e.text}</p>
+              <p className="ai-msg__text">{displayLegacyMentions(e.text)}</p>
               <div className="ai-msg__meta">
                 <span className="ai-kind">{KIND[e.kind]}</span>
                 {e.dissent && (
@@ -147,11 +148,13 @@ export function VoiceChat({ voice, title, now }: { voice: VoiceView; title: stri
               data-focus={mineSeq.has(l.seq) || undefined}
             >
               <div className="ai-msg__head">
-                <b className="ai-party">{voiceName(l.who)}</b>
-                {l.to && <span className="ai-arrow">to {voiceName(l.to)}</span>}
+                <b className="ai-party">{displayAssistantName(voiceName(l.who))}</b>
+                {l.to && (
+                  <span className="ai-arrow">to {displayAssistantName(voiceName(l.to))}</span>
+                )}
                 <time>{relTime(l.at, now)}</time>
               </div>
-              <p className="ai-msg__text">{l.text}</p>
+              <p className="ai-msg__text">{displayLegacyMentions(l.text)}</p>
               <div className="ai-msg__meta">
                 <span className="ai-kind">{VOICE_KIND[l.kind]}</span>
                 {l.dissent && (

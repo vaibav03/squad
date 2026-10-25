@@ -103,7 +103,7 @@ export function MessageBubble(p: BubbleProps) {
         role="note"
       >
         <Icon name="info" size={14} />
-        <span>{m.text}</span>
+        <span>{displayLegacyMentions(m.text)}</span>
       </div>
     );
 
@@ -142,7 +142,11 @@ export function MessageBubble(p: BubbleProps) {
   // The structured card is the canonical answer; its text twin is for transports that cannot render cards (iMessage,
   // Discord) and for screen readers (the card carries it as accessible text).
   const text =
-    m.card?.type === 'council' || m.card?.type === 'trip' || (m.card && textRepeatsCard(m.text, m.card)) ? '' : m.text.trim();
+    m.card?.type === 'council' ||
+    m.card?.type === 'trip' ||
+    (m.card && textRepeatsCard(m.text, m.card))
+      ? ''
+      : m.text.trim();
   const attachments = m.attachments;
   const cls = [
     'sqc-msg',
@@ -173,7 +177,9 @@ export function MessageBubble(p: BubbleProps) {
           <div className="sqc-msg__head">
             {!row.own ? (
               <span className="sqc-msg__name" data-user-content aria-hidden="true">
-                {sender.kind === 'persona' ? displayAssistantName(sender.name, sender.id) : sender.name}
+                {sender.kind === 'persona'
+                  ? displayAssistantName(sender.name, sender.id)
+                  : sender.name}
               </span>
             ) : null}
             {tag ? (
@@ -338,7 +344,10 @@ export function MessageBubble(p: BubbleProps) {
                       ) : null}
                     </span>
                     {c.source?.relation === 'related' ? (
-                      <span className="sqc-cite__prov is-related" data-testid="chat-citation-related">
+                      <span
+                        className="sqc-cite__prov is-related"
+                        data-testid="chat-citation-related"
+                      >
                         Related, not about this
                       </span>
                     ) : null}
@@ -376,8 +385,10 @@ export function MessageBubble(p: BubbleProps) {
           {...(m.transport ? { transport: m.transport } : {})}
           {...(m.provider ? { provider: m.provider } : {})}
           {...(m.deliveryState ? { deliveryState: m.deliveryState } : {})}
-          {...(m.senderLabel && m.senderLabel !== sender.name
-            ? { senderLabel: m.senderLabel }
+          {...(m.senderLabel &&
+          displayAssistantName(m.senderLabel) !==
+            (sender.kind === 'persona' ? displayAssistantName(sender.name, sender.id) : sender.name)
+            ? { senderLabel: displayAssistantName(m.senderLabel) }
             : {})}
           {...(m.skippedAttachments ? { skippedAttachments: m.skippedAttachments } : {})}
           {...(m.receivedLate ? { receivedLate: true } : {})}

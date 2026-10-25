@@ -11,6 +11,11 @@ import { CitationChip } from '../../components/source-viewer';
 import { LvIcon } from '../kit';
 import { useDmHistory, type InspectorHub } from './useDmHistory';
 import { RoomChat, VoiceChat } from './RoomChat';
+import {
+  displayAssistantName,
+  displayAssistantText,
+  displayLegacyMentions,
+} from '../../pages/chat/legacy-brand';
 
 const ARROW = { out: 'arrow-right', in: 'arrow-left', seen: 'arrow-left-right' } as const;
 const KIND_WORDS: Record<string, string> = {
@@ -216,10 +221,20 @@ export function ChatTab({
                     data-who={m.sender.kind === 'student' ? 'you' : 'agent'}
                   >
                     <div className="ai-bub__head">
-                      <b>{m.sender.kind === 'student' ? 'You' : m.sender.name}</b>
+                      <b>
+                        {m.sender.kind === 'student'
+                          ? 'You'
+                          : m.sender.kind === 'persona'
+                            ? displayAssistantName(m.sender.name, m.sender.id)
+                            : m.sender.name}
+                      </b>
                       <time>{relTime(m.ts, now)}</time>
                     </div>
-                    <p>{m.text}</p>
+                    <p>
+                      {m.sender.kind === 'persona'
+                        ? displayAssistantText(m.text)
+                        : displayLegacyMentions(m.text)}
+                    </p>
                     {m.citations.length > 0 && (
                       <div className="ai-msg__meta">
                         {m.citations.map((c, i) => (

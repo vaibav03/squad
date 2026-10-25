@@ -1,4 +1,4 @@
-import { displayAssistantName } from './legacy-brand';
+import { displayAssistantName, displayLegacyMentions } from './legacy-brand';
 import type { ChatCitation, ChatMessage, ChatSender, ChatSummary } from '@squad/core';
 
 /** Pure chat logic: grouping, labels, citation markers, mentions, small formatters. No React, no DOM. */
@@ -459,9 +459,10 @@ export function uploadProblem(file: { type: string; size: number }): string | nu
 /** Chat list preview line: "Ana: text", attachments and cards read as words. */
 export function previewLine(c: ChatSummary, meName?: string): string {
   if (!c.last) return c.kind === 'dm' ? 'Only you and Nook' : 'No messages yet';
-  const text = c.last.text.replace(/\s+/g, ' ').trim() || 'Sent an attachment';
+  const text =
+    displayLegacyMentions(c.last.text).replace(/\s+/g, ' ').trim() || 'Sent an attachment';
   if (meName && c.last.senderName === meName) return `You: ${text}`;
-  return c.kind === 'group' ? `${c.last.senderName}: ${text}` : text;
+  return c.kind === 'group' ? `${displayAssistantName(c.last.senderName)}: ${text}` : text;
 }
 
 /** Unread count: stream messages from others newer than the last seen seq. */

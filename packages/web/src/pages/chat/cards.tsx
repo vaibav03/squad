@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ChatCard, ChatMessage } from '@squad/core';
 import { Icon } from '../../primitives/Icon';
 import type { ConfirmResult } from './useChat';
+import { displayLegacyMentions } from './legacy-brand';
 
 type Quiz = Extract<ChatCard, { type: 'quiz' }>;
 type Confirm = Extract<ChatCard, { type: 'confirm' }>;
@@ -210,7 +211,7 @@ export function ConfirmMessageCard({
               : 'Expired'}
         </span>
       </header>
-      <p className="sqc-card__q">{card.question}</p>
+      <p className="sqc-card__q">{displayLegacyMentions(card.question)}</p>
       <div className="sqc-choices" role="group" aria-label="Options">
         {card.options.map((opt, i) => {
           const n = i + 1;
