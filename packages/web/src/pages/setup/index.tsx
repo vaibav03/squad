@@ -46,6 +46,7 @@ import {
   type StepId,
 } from './model';
 import { WeekGrid } from './WeekGrid';
+import { ConnectionsStepCard } from '../connections/StepCard';
 import './setup.css';
 
 let uid = 0;
@@ -644,6 +645,7 @@ function DoneStep({ completed }: { completed: StepId[] }) {
           {missing.map((m) => m.label).join(', ')}. You can finish these later from Home.
         </Notice>
       ) : null}
+      <ConnectionsStepCard />
       <Button
         variant="primary"
         size="lg"
