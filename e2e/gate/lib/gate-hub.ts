@@ -92,11 +92,15 @@ const im = await attachIMessage(hub, {
 });
 if (!im) throw new Error('gate-hub: iMessage bridge did not start');
 
+let ipN = 1;
 const call = async (method: string, p: string, token?: string, body?: unknown) => {
+  ipN++;
   const r = await hub.app.request(p, {
     method,
     headers: {
       'content-type': 'application/json',
+      // each simulated person comes from their own address, so the hub's per-IP sign-up limit never trips
+      'x-forwarded-for': `10.${(ipN >> 16) & 255}.${(ipN >> 8) & 255}.${ipN & 255}`,
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),

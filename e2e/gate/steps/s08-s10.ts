@@ -1,5 +1,5 @@
 // S8 collaborative trip, S9 shared study plan, S10 cross-surface sync. Real routes live in conflicts.ts (`R`).
-// Both plans are started from the iMessage group (`@planner ...`) so the same message path is exercised that the web
+// Both plans are started from the iMessage group (`@cubbie plan a trip ...`, `@cubbie study plan ...`) so the same message path is exercised that the web
 // uses; every decision is then found again as one hub message id on the web DOM, in the hub DB and in the iMessage log.
 import { defaultSentinels, type Asserts } from '../lib/asserts';
 import { P } from '../lib/probes';
@@ -55,12 +55,12 @@ async function s8(c: GateCtx, a: Asserts) {
 
   // 1. created from the group chat. NB: the parser needs "to <destination>"; "Dec 12-15" alone has no destination.
   const seq0 = await lastSeqOf(rhea, sq.chatId);
-  await im.say(sq.chat, rhea.phone, '@planner plan a trip to Cabo in December');
+  await im.say(sq.chat, rhea.phone, '@cubbie plan a trip to Cabo in December');
   const trip = await waitFor(async () => {
     const t = await curTrip(rhea);
     return t && /Cabo/.test(t.title) ? t : undefined;
   });
-  if (!a.ok('@planner in the group created a trip', !!trip)) return;
+  if (!a.ok('@cubbie plan a trip in the group created a trip', !!trip)) return;
   const tripId = trip!.tripId;
   c.state.tripId = tripId;
   a.eq('organizer is the asker (Rhea)', trip!.organizer, rhea.id);
@@ -256,7 +256,7 @@ async function s9(c: GateCtx, a: Asserts) {
   const mark0 = (await imText(sq.chat)).length;
 
   // 1. from chat, using the Canvas due date of the midterm as the exam day
-  await im.say(sq.chat, rhea.phone, `@planner study plan for the midterm on ${MIDTERM_DAY}`);
+  await im.say(sq.chat, rhea.phone, `@cubbie study plan for the midterm on ${MIDTERM_DAY}`);
   const proposed = await waitFor(
     async () =>
       (await history(rhea.token, sq.chatId, 300)).find(
@@ -592,7 +592,7 @@ async function tripShows(c: GateCtx, a: Asserts, tripId: string): Promise<boolea
 export const S10: StepDef<GateCtx> = {
   id: 'S10',
   title: 'Decisions, updates, failures and agent activity stay synchronized in web and iMessage',
-  needs: [P.trip, P.study, P.imsync, P.board],
+  needs: [P.trip, P.study, P.imsync],
   label: 'fixture (demo labelled)',
   fixture: s10,
 };

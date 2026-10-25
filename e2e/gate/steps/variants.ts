@@ -2,6 +2,7 @@
 // iMessage and conversation variants (V6..V12) live in variants-im.ts. Each runs in its own world.
 import { P } from '../lib/probes';
 import { api, history } from '../lib/hub';
+import { google } from '../lib/fakes/client';
 import {
   asSet,
   canvasFeedBroken,
@@ -115,6 +116,9 @@ export const V3: StepDef<GateCtx> = {
     await syncAll(rhea);
     const g = await connectionStatus(rhea, 'google');
     a.ok('Google is no longer live', !!g && g.state !== 'live', `state ${g?.state}`);
+    a.note(
+      `after revoke: state=${g?.state} label=${g?.stateLabel} status=${g?.status} degraded=${g?.degraded} note=${g?.note}`,
+    );
     a.ok(
       'the label says to reconnect in words',
       /reconnect|expired|sign in/i.test(`${g?.stateLabel ?? ''} ${g?.note ?? ''}`),
@@ -140,23 +144,43 @@ export const V4: StepDef<GateCtx> = {
   fixture: async (c, a) => {
     const { rhea } = c.world.users;
     await resetUpstreams();
+    const tokenCalls = async () =>
+      (await google.requests()).filter((r) => r.path === '/token').length;
+    // A. the hub's own mechanism: it refreshes when the token is within 60 s of its expiry (GET /v1/connections ticks it)
     await connectGoogle(rhea, { shortLived: true });
-    await expireUpstream();
-    const list = await listConnections(rhea); // runs the hub's credential tick: refresh within 60 s of expiry
-    const g = list.connections.find((x) => x.provider === 'google');
-    a.eq('refresh succeeded: still live, no user-visible failure', g?.state, 'live');
-    a.eq('and a sync works', (await syncAll(rhea)).status, 200);
-    await resetUpstreams();
+    const t0 = await tokenCalls();
+    const g1 = (await listConnections(rhea)).connections.find((x) => x.provider === 'google');
+    a.ok(
+      'a token near expiry is refreshed by the hub (a refresh call reached the token endpoint)',
+      (await tokenCalls()) > t0,
+    );
+    a.eq('and the connection stays live with no user-visible failure', g1?.state, 'live');
+    a.eq('a sync then works', (await syncAll(rhea)).status, 200);
+    // B. a refresh Google refuses (invalid_grant) is what ends a connection (the V3 state)
     await disconnectAll(rhea);
+    await resetUpstreams();
     await connectGoogle(rhea, { shortLived: true });
-    await expireUpstream({ refreshFails: true });
-    const bad = (await listConnections(rhea)).connections.find(
+    await revokeUpstream('google');
+    const g2 = (await listConnections(rhea)).connections.find(
       (x) => x.provider === 'google' && x.status !== 'revoked',
     );
     a.ok(
-      'a refresh failure ends needing reconnect (the V3 state)',
-      !!bad && bad.state !== 'live',
-      `state ${bad?.state}`,
+      'a refused refresh ends needing reconnect',
+      !g2 || g2.state !== 'live',
+      `state ${g2?.state}`,
+    );
+    // C. the plan's case: the access token dies at Google before the hub expects it; one refresh and one retry, no failure
+    await disconnectAll(rhea);
+    await resetUpstreams();
+    await connectGoogle(rhea);
+    const t1 = await tokenCalls();
+    await expireUpstream();
+    const sync = await syncAll(rhea);
+    const g3 = await connectionStatus(rhea, 'google');
+    a.ok(
+      'a 401 on sync triggers one refresh and a retry (no user-visible failure)',
+      sync.status === 200 && g3?.state === 'live' && (await tokenCalls()) > t1,
+      `sync ${sync.status}, state ${g3?.state}, refresh calls ${(await tokenCalls()) - t1}`,
     );
     await resetUpstreams();
   },

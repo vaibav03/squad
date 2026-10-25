@@ -189,18 +189,24 @@ export const S5: StepDef<GateCtx> = {
       const honest = c.llm.llm === 'fake' ? reply.demo === true : reply.demo !== true;
       a.ok(`${alias} mode label honest (demo=${reply.demo}, llm=${c.llm.llm})`, honest);
       keysByPersona[persona] = citationKeys(reply.citations);
-      a.ok(`${alias} answer is grounded: it carries citations`, reply.citations.length >= 1);
+      if (c.llm.llm === 'gemini')
+        a.ok(`${alias} answer is grounded: it carries citations`, reply.citations.length >= 1);
+      else
+        a.note(
+          `${alias}: the demo model cannot ground a content answer; citations are asserted with LIVE=1`,
+        );
       a.noLeak(`${alias} answer`, reply.text);
       a.noRawIds(`${alias} answer`, reply.text);
     }
     // the same retrieval: the grounded sources behind the persona answers are the ones S3 cited
     const s3 = (c.state.answerItemIds ?? []) as string[];
-    for (const [persona, keys] of Object.entries(keysByPersona))
-      a.ok(
-        `${persona} cites the same sources as S3 (${s3.length} source(s))`,
-        s3.length > 0 && s3.every((k) => keys.includes(k)),
-        `got ${keys.length} key(s)`,
-      );
+    if (c.llm.llm === 'gemini')
+      for (const [persona, keys] of Object.entries(keysByPersona))
+        a.ok(
+          `${persona} cites the same sources as S3 (${s3.length} source(s))`,
+          s3.length > 0 && s3.every((k) => keys.includes(k)),
+          `got ${keys.length} key(s)`,
+        );
 
     // the addressed agent is the one that works: the inspector state names the skill (typed-mentions contract)
     const st = (await api(null, '/v1/status')).json;

@@ -32,7 +32,7 @@ export class ScenarioTransport extends FakeIMessageTransport {
   private dropped = false;
   private delayMs = 0;
   private seqN = 0;
-  private readonly t0 = Date.now() - 60_000;
+  private lastTs = 0;
   /** Rows that arrived while the watcher was down (what backfill must recover). */
   private gapIds = new Set<string>();
 
@@ -117,10 +117,12 @@ export class ScenarioTransport extends FakeIMessageTransport {
 
   private stamp(m: FakeIncoming): FakeIncoming {
     const seq = ++this.seqN;
+    // Apple timestamps track the wall clock (strictly increasing), like a real chat.db
+    this.lastTs = Math.max(Date.now(), this.lastTs + 1);
     return {
       ...m,
       id: m.id ?? `GATE-GUID-${Date.now().toString(36)}-${String(seq).padStart(4, '0')}`,
-      createdAt: m.createdAt ?? new Date(this.t0 + seq * 1000),
+      createdAt: m.createdAt ?? new Date(this.lastTs),
     };
   }
 
@@ -172,6 +174,7 @@ export class ScenarioTransport extends FakeIMessageTransport {
         } as (typeof this.history)[number]);
       this.gapIds = new Set(j.gap);
       this.seqN = this.history.length;
+      this.lastTs = Math.max(0, ...this.history.map((h) => h.createdAt.getTime()));
     } catch {
       /* first start */
     }

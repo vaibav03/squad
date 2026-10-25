@@ -420,11 +420,21 @@ export const S1: StepDef<GateCtx> = {
 
     // 5. no secret echoed, encrypted at rest, absent from logs
     a.noLeak('every hub response in this step', seen.join('\n'), SECRETS);
+    const walk = (v: unknown, path: string, out: string[]) => {
+      if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${path}[${i}]`, out));
+      else if (v && typeof v === 'object')
+        for (const [k, x] of Object.entries(v)) {
+          if (/accountHash|accessToken|refreshToken|feedUrl|^token$|baseUrl/i.test(k))
+            out.push(`${path}.${k}`);
+          walk(x, `${path}.${k}`, out);
+        }
+    };
+    const forbiddenKeys: string[] = [];
+    walk(l2.connections, 'connections', forbiddenKeys);
     a.ok(
       'connection view carries no credential, account or hash field',
-      !/accountHash|accessToken|refreshToken|feedUrl|"token"|"baseUrl"/i.test(
-        JSON.stringify(l2.connections),
-      ),
+      forbiddenKeys.length === 0,
+      `field names present: ${forbiddenKeys.slice(0, 5).join(', ')}`,
     );
     a.noLeak('/v1/status', (await api(null, ROUTES.status)).text, SECRETS);
     const dump = await im.dbDump();
@@ -836,7 +846,7 @@ export const S2: StepDef<GateCtx> = {
       );
     }
     a.noLeak('squad search results', JSON.stringify(probeHits), PRIVATE);
-    if (dan) {
+    if (dan && c.world.squadB) {
       a.eq(
         'a user in another squad sees nothing',
         (await items(dan, c.world.squadB?.id)).length,

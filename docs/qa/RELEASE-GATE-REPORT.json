@@ -1,0 +1,212 @@
+{
+  "generatedAt": "2026-10-25T12:42:31.744Z",
+  "tree": {
+    "branch": "feature/release-gate",
+    "head": "80b8674b",
+    "originMain": "d646013a"
+  },
+  "mode": {
+    "live": false,
+    "real": false
+  },
+  "verdict": "RED (a BUILT step failed)",
+  "summary": {
+    "fixtureFail": 2,
+    "realFail": 0,
+    "notBuilt": 1,
+    "blocked": 0,
+    "fixturePass": 0,
+    "total": 22
+  },
+  "fixture": [
+    {
+      "id": "S9",
+      "title": "... and a shared study plan",
+      "mode": "fixture",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "name": "a plan card reached the group",
+          "pass": false,
+          "detail": "bot said: nothing"
+        }
+      ],
+      "evidence": [],
+      "notes": [],
+      "label": "fixture (demo labelled)",
+      "ms": 60525,
+      "at": "2026-10-25T12:41:03.149Z",
+      "reason": "a plan card reached the group"
+    },
+    {
+      "id": "S10",
+      "title": "Decisions, updates, failures and agent activity stay synchronized in web and iMessage",
+      "mode": "fixture",
+      "status": "NOT_BUILT",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "fixture (demo labelled)",
+      "ms": 534,
+      "at": "2026-10-25T12:42:05.857Z",
+      "owner": [
+        "feature/trip-collab",
+        "feature/w5-council-board"
+      ],
+      "reason": "Trip object, per-member state, rev + 409 conflicts, confirm once; agent activity (typing, thinking, offline) surfaced on the board",
+      "preview": []
+    },
+    {
+      "id": "V4",
+      "title": "Expired access token: transparent refresh; refresh failure falls to V3",
+      "mode": "fixture",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "name": "a sync after the token expired succeeds (one transparent retry)",
+          "pass": true
+        },
+        {
+          "name": "the hub refreshed the token (a refresh call reached the token endpoint)",
+          "pass": false
+        },
+        {
+          "name": "and the connection is still live, no user-visible failure",
+          "pass": false,
+          "detail": "expected \"live\", got \"revoked\""
+        },
+        {
+          "name": "a refused refresh ends needing reconnect (the V3 state)",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [
+        "after refused refresh: state=revoked label=Disconnected: imported data deleted"
+      ],
+      "label": "fixture",
+      "ms": 288,
+      "at": "2026-10-25T12:42:06.717Z",
+      "reason": "the hub refreshed the token (a refresh call reached the token endpoint)"
+    }
+  ],
+  "real": [
+    {
+      "id": "S9",
+      "title": "... and a shared study plan",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 262,
+      "at": "2026-10-25T12:42:03.679Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "S10",
+      "title": "Decisions, updates, failures and agent activity stay synchronized in web and iMessage",
+      "mode": "real",
+      "status": "NOT_BUILT",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 270,
+      "at": "2026-10-25T12:42:06.394Z",
+      "owner": [
+        "feature/trip-collab",
+        "feature/w5-council-board"
+      ],
+      "reason": "Trip object, per-member state, rev + 409 conflicts, confirm once; agent activity (typing, thinking, offline) surfaced on the board",
+      "preview": []
+    },
+    {
+      "id": "V4",
+      "title": "Expired access token: transparent refresh; refresh failure falls to V3",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 111,
+      "at": "2026-10-25T12:42:07.007Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    }
+  ],
+  "blockers": [
+    {
+      "key": "google_client",
+      "blocked": true,
+      "code": "no_google_client",
+      "reason": "GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET are not set: the Google OAuth client and consent screen are not registered.",
+      "runbook": "#google-oauth-client-and-consent-screen"
+    },
+    {
+      "key": "google_account",
+      "blocked": true,
+      "code": "no_own_google_account",
+      "reason": "GATE_OWN_GOOGLE_EMAIL is not set: real runs only ever use the user's own Google account.",
+      "runbook": "#google-oauth-client-and-consent-screen"
+    },
+    {
+      "key": "canvas_feed",
+      "blocked": true,
+      "code": "no_canvas_feed",
+      "reason": "GATE_CANVAS_FEED_URL / GATE_OWN_CANVAS_HOST are not set: no Canvas calendar feed of the user's own to read.",
+      "runbook": "#canvas-institution-token-or-feed"
+    },
+    {
+      "key": "canvas_token",
+      "blocked": true,
+      "code": "token_disabled_or_missing",
+      "reason": "No Canvas personal access token (many institutions disable student tokens).",
+      "runbook": "#canvas-institution-token-or-feed"
+    },
+    {
+      "key": "apple",
+      "blocked": true,
+      "code": "apple_unverified",
+      "reason": "imessage-kit on this macOS has no recorded passing allowlisted run (Full Disk Access, Automation, Messages signed in).",
+      "runbook": "#apple-behaviour-and-permissions"
+    },
+    {
+      "key": "second_person",
+      "blocked": true,
+      "code": "needs_second_person",
+      "reason": "A real multi-participant group needs other consenting people; Apple has no API to create groups.",
+      "runbook": "#real-multi-person-imessage-group"
+    },
+    {
+      "key": "llm",
+      "blocked": true,
+      "code": "llm_credits",
+      "reason": "GET /v1/status says the model is the demo stand-in (no key, rejected key, or depleted Gemini credits).",
+      "runbook": "#gemini-credits-live-and-elevenlabs-plan"
+    },
+    {
+      "key": "elevenlabs",
+      "blocked": true,
+      "code": "elevenlabs_plan",
+      "reason": "ElevenLabs reports paid_plan_required (or no key): voice is unavailable on this plan.",
+      "runbook": "#gemini-credits-live-and-elevenlabs-plan"
+    }
+  ],
+  "branches": [
+    {
+      "branch": "feature/trip-collab",
+      "onOrigin": false,
+      "landed": false
+    },
+    {
+      "branch": "feature/w5-council-board",
+      "onOrigin": true,
+      "landed": false
+    }
+  ],
+  "keyScreenshots": []
+}
