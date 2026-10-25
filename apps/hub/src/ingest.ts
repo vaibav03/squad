@@ -24,7 +24,12 @@ const TripUpsert = z.strictObject({
   confirmations: z.array(
     z.strictObject({ student: Str, confirmed: z.boolean(), optionId: z.string().optional() }),
   ),
-  limits: z.record(z.string(), z.record(z.string(), z.string())),
+  limits: z.record(z.string(), z.record(z.string(), z.string())).optional(),
+});
+const TripLimits = z.strictObject({
+  tripId: Str,
+  student: Str,
+  limits: z.record(z.string(), z.string()),
 });
 const TripTouch = z.strictObject({ tripId: Str });
 const IngestProgress = z.strictObject({
@@ -134,8 +139,18 @@ export function createIngestor(deps: HubDeps): Ingestor {
         case 'x.trip.upsert': {
           const p = TripUpsert.safeParse(data);
           if (!p.success) return { ok: false, issues: issues(p.error) };
-          deps.trips.upsert(p.data as TripRecord);
+          deps.trips.upsert(
+            p.data as Omit<TripRecord, 'limits'> & { limits?: TripRecord['limits'] },
+          );
           return commit('x', 'x.trip.updated', { tripId: p.data.tripId }, p.data.squadId);
+        }
+        case 'x.trip.limits': {
+          const p = TripLimits.safeParse(data);
+          if (!p.success) return { ok: false, issues: issues(p.error) };
+          const t = deps.trips.get(p.data.tripId);
+          if (!t || !deps.trips.mergeLimits(p.data.tripId, p.data.student, p.data.limits))
+            return bad('tripId', 'unknown_trip');
+          return commit('x', 'x.trip.updated', { tripId: t.tripId }, t.squadId);
         }
         case 'x.trip.touch': {
           const p = TripTouch.safeParse(data);
