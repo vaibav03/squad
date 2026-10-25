@@ -15,6 +15,8 @@ export class StepTracker implements Tracker {
   constructor(
     private readonly redact: (s: string) => string,
     private readonly now: () => number,
+    /** LIVE_STEP: only run steps whose name contains this text (others SKIP); for cheap targeted reruns. */
+    private readonly only: string | undefined = process.env.LIVE_STEP?.toLowerCase() || undefined,
   ) {}
   private add(name: string, status: Status, evidence: string[], ms = 0) {
     this.steps.push({ name, status, evidence: evidence.map((e) => this.redact(e)), ms });
@@ -32,6 +34,10 @@ export class StepTracker implements Tracker {
     this.metrics[key] = value;
   }
   async step(name: string, fn: () => Promise<string[] | string | void>) {
+    if (this.only && !name.toLowerCase().includes(this.only)) {
+      this.add(name, 'SKIP', ['not selected (LIVE_STEP)']);
+      return;
+    }
     const t0 = this.now();
     try {
       const r = await fn();

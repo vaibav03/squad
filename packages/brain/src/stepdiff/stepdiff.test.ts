@@ -17,7 +17,7 @@ import { createStepDiffSkill } from '../skills/stepdiff/stepDiffSkill';
 import { firstDivergence, type EquivFn, type Step } from './align';
 import { canonicalStep, hashStep, privateDivergence } from './hash';
 import { renderDiff, StepDiffEngine } from './session';
-import { stepsFromText } from './vision';
+import { cleanSteps, stepsFromText } from './vision';
 import golden from './fixtures/golden.json';
 
 interface Golden {
@@ -133,6 +133,14 @@ describe('step diff properties', () => {
     expect(privateDivergence(['a', 'b'], ['a'])).toEqual({ matchedThrough: 1, split: 2 });
   });
   it('typed fallback parses numbered lines', () => {
+    expect(
+      cleanSteps([
+        { text: 'Solve: 2x + 6 = 14' },
+        { text: '1)  2x + 6 = 14' },
+        { text: '2) 2x = 14 - 6' },
+      ]).map((x) => x.text),
+    ).toEqual(['2x + 6 = 14', '2x = 14 - 6']);
+    expect(cleanSteps([{ text: '2x = 8' }]).map((x) => x.text)).toEqual(['2x = 8']);
     expect(stepsFromText('1. 2x=8\nStep 2: x=4\n\n')).toEqual([{ text: '2x=8' }, { text: 'x=4' }]);
   });
 });
