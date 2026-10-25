@@ -10,6 +10,7 @@ import { createCallRegistry } from './calls';
 import { loadHubConfig, type HubConfig } from './config';
 import { createConfirmRouter } from './confirms';
 import { createIngestor } from './ingest';
+import { applySecurity, type SecurityOptions } from './middleware';
 import { createLogger } from './log';
 import type { Ports } from './ports';
 import { createAuthRoutes } from './routes/auth';
@@ -38,6 +39,8 @@ export interface HubOptions {
   now?: () => number;
   /** Shared sqlite (core `openDb`). Default: open `config.dbPath` (`:memory:` under vitest). */
   db?: Db;
+  /** HTTP hardening knobs (rate limits, trust proxy); defaults are safe. */
+  security?: SecurityOptions;
 }
 export interface Hub {
   app: HubApp;
@@ -77,6 +80,7 @@ export function createHub(opts: HubOptions = {}): Hub {
   if (config.seed) seedDemo(deps);
 
   const app: HubApp = new Hono<HubEnv>();
+  applySecurity(app, deps, opts.security);
   app.use(
     '*',
     cors({
