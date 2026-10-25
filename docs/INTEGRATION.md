@@ -16,3 +16,10 @@ Merge order suggestion: spine, hub, brain-answers, brain-quiz, mesh-crypto, mesh
 - `SqliteLedger` exists but the agent does not use it yet. Replay guard is in memory per gate.
 - iMessage library unverified on macOS 27 (spine verification script).
 - Autumn Town license is a page statement only; screenshot the page.
+
+## Motion (from the motion handoff)
+- `apps/web-host/package.json` needs `"@squad/village": "workspace:*"`; then change `apps/web-host/src/lab/motion/prims.ts` to `export * from '@squad/village/motion'`.
+- village-world must call `rt.update(delta)` from `Scene.update`, use `pauseWhenHidden`, and call `rt.cancelAll()` on scene shutdown (ambient loops run until cancelled).
+- web-shell's `useCalmMode` should wrap motion's `calmModeStore` / `createUseCalmMode` so the DOM and canvas share one Calm value.
+- Post-merge pass (needs react and vite installed): typecheck and run the Motion Lab (`/__motion`), capture frame strips for every row into `docs/design/shots/motion/`, run the art-director critique and the second review round.
+- Owner feel-checks (judge on a real phone, play at 2-5x): walk speed 48 px/s and 80 ms stop; envelope pop/glide/stagger; council stagger and rank slide; bubble hold 1.2 s per 20 characters; conflict pop; waiting ring; 400 ms camera pan; trip cutscene pacing; day/night tween; dissent lantern; speaking bob and glow; Calm mode feel; drawer slide and button press.
