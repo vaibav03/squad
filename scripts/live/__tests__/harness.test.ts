@@ -134,7 +134,7 @@ describe('budget caps', () => {
 
   it('defaults are the documented ones', () => {
     const l = limitsFromEnv({});
-    expect([l.maxCalls, l.maxTokens, l.maxChars, l.maxUsd]).toEqual([60, 40000, 800, 0.5]);
+    expect([l.maxCalls, l.maxTokens, l.maxChars, l.maxUsd]).toEqual([150, 120000, 800, 0.5]);
   });
 });
 

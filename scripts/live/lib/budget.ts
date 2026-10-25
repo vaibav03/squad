@@ -13,8 +13,8 @@ export interface BudgetLimits {
 
 export function limitsFromEnv(env: Record<string, string | undefined>): BudgetLimits {
   return {
-    maxCalls: num(env, 'LIVE_MAX_CALLS', 60),
-    maxTokens: num(env, 'LIVE_MAX_TOKENS', 40_000),
+    maxCalls: num(env, 'LIVE_MAX_CALLS', 150),
+    maxTokens: num(env, 'LIVE_MAX_TOKENS', 120_000),
     maxChars: num(env, 'LIVE_MAX_EL_CHARS', 800),
     maxUsd: num(env, 'LIVE_MAX_USD', 0.5),
     maxOutPerCall: num(env, 'LIVE_MAX_OUT_PER_CALL', 3000),
