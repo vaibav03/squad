@@ -9,6 +9,7 @@ import {
   type RunState,
   type StampedEvent,
 } from './describe';
+import { createVoiceBook, voiceKey, voiceDraftsFromEvent, type VoiceLine, type VoiceView } from './voices';
 import {
   activeLinks,
   describeConversation,
@@ -51,6 +52,19 @@ export interface InspectorStore {
   view(id: string): ActivityView | undefined;
   /** The agent's thread with other agents, who it is talking to, and the viewer-only chat. */
   conversation(id: string): Conversation;
+  /**
+   * What one council voice (member, chair, advisor, live persona) said and is weighing. `who` may be a seat key,
+   * a speaker name or a council agent id; '' means the whole council (then `council` picks which one).
+   */
+  voice(who: string, council?: string): VoiceView;
+  /** Add public words a council result or the live reducer already showed (deduped by `key`). */
+  noteVoice(line: Omit<VoiceLine, 'seq' | 'at'> & { at?: number }): void;
+  /** Seat `seat` (e.g. 'solver-a') speaks as member `to` while it has no words of its own. */
+  aliasVoice(seat: string, to: string): void;
+  /** A model call for this voice is in flight (council panel placeholders, live floor `thinking`). */
+  setVoiceThinking(who: string, on: boolean): void;
+  /** True while the agent or voice is thinking or working now (drives the tiny dots on hover). */
+  isThinking(id: string, who?: string): boolean;
   /** Pairs of agents that exchanged something in the last few seconds. */
   links(): Array<{ a: string; b: string; at: number }>;
   readonly selected: string | null;
@@ -94,6 +108,7 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
   const callOwner = new Map<string, string | undefined>();
   const subs = new Set<() => void>();
   const exchanges: Exchange[] = [];
+  const voices = createVoiceBook();
   let xseq = 0;
   let version = 0;
   let selected: string | null = null;
@@ -158,6 +173,12 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
 
   const store: InspectorStore = {
     apply(raw) {
+      {
+        const at = now();
+        let added = false;
+        for (const d of voiceDraftsFromEvent(raw)) added = voices.add(d, at) || added;
+        if (added) notify();
+      }
       const p = VillageEventSchema.safeParse(raw);
       if (!p.success) {
         // A family outside the core union (e.g. `discussion.*`) plugs in through a registered exchange mapper.
@@ -229,6 +250,28 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
     conversation: (id) =>
       describeConversation(id, exchanges, { ...(me ? { me } : {}), now: now() }),
     links: () => activeLinks(exchanges, now()),
+    voice: (who, council) => voices.view(who ? voiceKey(who) : '', now(), council),
+    noteVoice(line) {
+      const { at, ...rest } = line;
+      if (voices.add({ ...rest, who: voiceKey(rest.who), group: voiceKey(rest.group) }, at ?? now()))
+        notify();
+    },
+    aliasVoice(seat, to) {
+      voices.alias(voiceKey(seat), voiceKey(to));
+      notify();
+    },
+    setVoiceThinking(who, on) {
+      if (voices.setThinking(voiceKey(who), on)) notify();
+    },
+    isThinking(id, who) {
+      const k = who ? voiceKey(who) : id.startsWith('council:live-') ? voiceKey(id) : '';
+      if (k && voices.thinking(k, now())) return true;
+      const r = recs.get(id);
+      if (!r) return false;
+      const v = store.view(id);
+      if (v?.thinking) return true;
+      return agentKind(id) === 'council' && !who && r.state === 'studying';
+    },
     entries() {
       return sorted().map((id) => {
         const v = store.view(id)!;

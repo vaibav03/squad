@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useState } from 'react';
 import type { CouncilResult } from '@squad/core';
 import type { HubCtx } from '../pages/village/hub';
+import { noteCouncilResult } from '../overlays/inspector/bridge';
 import { LvIcon } from '../overlays/kit/icons';
 import { usePrefersReducedMotion } from '../overlays/kit/hooks';
 import { councilErrorCopy, getCouncil } from './council-client';
@@ -26,6 +27,7 @@ export function CouncilCard({
   const reduced = usePrefersReducedMotion(calm);
   const stopped = result.status === 'refused' || result.status === 'failed';
   const hasMembers = result.members.length > 0;
+  useEffect(() => noteCouncilResult(result), [result]);
   return (
     <article
       className="cn-card"

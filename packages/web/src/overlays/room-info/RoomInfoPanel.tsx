@@ -2,6 +2,7 @@ import { useId, useRef, useState, type CSSProperties } from 'react';
 import type { RoomInfo } from '@squad/village/rooms';
 import { OverlayFrame, LvIcon } from '../kit';
 import { SpeakerDot } from './RoomTranscript';
+import { InspectableVoice } from '../inspector/InspectableVoice';
 import { CastAvatar, CAST_STATE_LABEL, castName } from '../../components/cast-avatar';
 import './room-info.css';
 
@@ -114,13 +115,15 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
                   style={{ '--i': i } as CSSProperties}
                 >
                   {id ? (
-                    <CastAvatar
-                      name={id}
-                      state={state}
-                      size={2}
-                      calm={calm}
-                      className="rr-who__avatar"
-                    />
+                    <InspectableVoice who={id} name={castName(w.name) ? w.name : id} slot={info.slot}>
+                      <CastAvatar
+                        name={id}
+                        state={state}
+                        size={2}
+                        calm={calm}
+                        className="rr-who__avatar"
+                      />
+                    </InspectableVoice>
                   ) : (
                     <SpeakerDot who={w.name} />
                   )}

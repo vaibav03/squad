@@ -8,3 +8,4 @@ export {
   setRoster,
   studentLabel,
 } from '../adapter/labels';
+export * from './voices';

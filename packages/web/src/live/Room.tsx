@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, type KeyboardEvent } from 'react';
 import type { LivePersona, LivePersonaId } from '@squad/core';
+import { openVoice } from '../overlays/inspector/bridge';
 import type { LivePlayer } from './audio';
 import { completedSentences, personaOf, portraitFor, seatSlots } from './personas';
 import type { LiveState } from './reducer';
@@ -146,7 +147,11 @@ export function Room({
             aria-pressed={selected === p.id}
             aria-label={`${p.name}. ${p.stance}${speaking ? ' Has the floor.' : ''}${next ? ' Is thinking.' : ''}`}
             style={{ left: `${x}%`, top: `${y}%` }}
-            onClick={() => onSelect(p.id)}
+            onClick={() => {
+              onSelect(p.id);
+              // the docked inspector opens on this agent (Thinking if it is thinking or has a thought, else Chat)
+              openVoice(p.id, { agent: `council:live-${p.id}`, slot: '' });
+            }}
           >
             <span className="ld-ring" aria-hidden="true" />
             {img ? (

@@ -158,12 +158,22 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
         );
         tag.setPosition(snap(x), snap(hover.sprite.getBounds().y - tag.height - 3));
         gfx.fillStyle(COLOR.ink, 0.88);
+        const think = store.isThinking(hover.id);
+        const extra = think ? 14 : 0;
         gfx.fillRect(
           snap(tag.x) - 3,
           snap(tag.y) - 2,
-          Math.ceil(tag.width) + 6,
+          Math.ceil(tag.width) + 6 + extra,
           Math.ceil(tag.height) + 4,
         );
+        if (think) {
+          // tiny 'thinking' dots beside the name: opacity only, steady in Calm mode
+          for (let i = 0; i < 3; i++) {
+            const a = calm ? 0.9 : 0.35 + 0.65 * Math.max(0, Math.sin(now / 260 - i * 0.9));
+            gfx.fillStyle(COLOR.cloudHi, a);
+            gfx.fillRect(snap(tag.x) + Math.ceil(tag.width) + 3 + i * 4, snap(tag.y) + 4, 2, 2);
+          }
+        }
       } else tag.setVisible(false);
       // follow: ease the camera toward the selected character (whole pixels, no zoom change)
       if (store.follow && selSprite && now - followAt > FOLLOW_EVERY_MS) {
