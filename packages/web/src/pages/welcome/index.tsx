@@ -3,7 +3,7 @@ import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAccount } from '../../auth/AuthProvider';
 import { AuthStage } from '../../auth/AuthStage';
 import { recallNext, rememberNext, safeNext } from '../../auth/storage';
-import { OfflineState } from '../../primitives/EmptyState';
+import { OfflineState, RateLimitedState } from '../../primitives/EmptyState';
 import { Skeleton } from '../../primitives/Skeleton';
 import { Choose } from './Choose';
 import { WelcomeFlow } from './WelcomeFlow';
@@ -40,9 +40,20 @@ export default function WelcomePage() {
   const home = next ?? (account.squads.length > 0 ? '/squad' : '/welcome/choose');
   let body: ReactNode;
   if (account.status === 'loading') body = <Pending />;
+  else if (account.status === 'rate-limited' && account.user === null)
+    body = (
+      <RateLimitedState
+        retryAt={account.retryAt}
+        onRetry={() => void account.refresh().catch(() => {})}
+      />
+    );
   else if (account.status === 'offline' && account.user === null)
     body = <OfflineState onRetry={() => void account.refresh().catch(() => {})} />;
-  else if (account.status === 'signed-in' || account.status === 'offline') {
+  else if (
+    account.status === 'signed-in' ||
+    account.status === 'offline' ||
+    account.status === 'rate-limited'
+  ) {
     if (step === 'choose') body = <Choose />;
     else return <Go to={home} />;
   } else if (step === 'choose') return <Navigate to="/welcome" replace />;

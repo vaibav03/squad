@@ -29,6 +29,14 @@ export function createLimiter(now: () => number): Limiter {
   };
 }
 
+/** The one 429 shape: JSON body with `retryAfterS` plus a `Retry-After` header so clients can back off. */
+export function rateLimited(c: Context, retryAfterS: number): Response {
+  const s = Math.max(1, Math.ceil(retryAfterS));
+  return c.json({ error: { code: 'rate_limited', retryAfterS: s } }, 429, {
+    'retry-after': String(s),
+  });
+}
+
 /** Best-effort client address: first x-forwarded-for hop, else the socket peer. Used for rate limits only, never stored. */
 export function clientIp(c: Context): string {
   const xff = c.req.header('x-forwarded-for')?.split(',')[0]?.trim();

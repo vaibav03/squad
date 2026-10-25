@@ -14,12 +14,12 @@ import {
   createAccountsClient,
   useAccount,
   EmptyState,
+  RateLimitedState,
   Button,
   Gallery,
   FailureState,
   LoadingTimeout,
   RouteTitle,
-  VisuallyHidden,
   RouterAppShell,
   SquadProvider,
   ToastProvider,
@@ -88,14 +88,24 @@ function LiveShellLayout() {
     return (
       <LoadingTimeout
         what="Signing you in"
+        slowWhat="your session"
         timeoutMs={12000}
         onRetry={() => window.location.reload()}
       >
         <div style={{ padding: 24 }} role="status" aria-live="polite">
-          <VisuallyHidden>Signing you in</VisuallyHidden>
+          <p style={{ margin: '0 0 16px' }}>Signing you in...</p>
           <Skeleton shape="block" height={240} />
         </div>
       </LoadingTimeout>
+    );
+  if (account.status === 'rate-limited' && !account.user)
+    return (
+      <div style={{ padding: 24 }}>
+        <RateLimitedState
+          retryAt={account.retryAt}
+          onRetry={() => void account.refresh().catch(() => undefined)}
+        />
+      </div>
     );
   if (account.status === 'signed-out' || !account.user)
     return (

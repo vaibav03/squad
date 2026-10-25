@@ -21,6 +21,7 @@ import {
   type SquadSummary,
 } from '@squad/core';
 import { AccountApiError, errorFromResponse } from './errors';
+import { retryAfterOf } from '../lib/rate-limit';
 
 const MeSchema = z.object({
   user: AccountUserSchema,
@@ -123,7 +124,7 @@ export function createAccountsClient(opts: ClientOptions): AccountsClient {
     }
     if (!res.ok) {
       const json: unknown = await res.json().catch(() => null);
-      throw errorFromResponse(res.status, json);
+      throw errorFromResponse(res.status, json, retryAfterOf(res));
     }
     return res;
   }

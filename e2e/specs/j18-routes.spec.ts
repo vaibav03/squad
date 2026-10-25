@@ -14,6 +14,7 @@ const ROUTES: [string, string][] = [
   ['/squad/courses', 'Courses'],
   ['/squad/members', 'Members'],
   ['/squad/status', 'Status'],
+  ['/squad/connections', 'Connections'],
 ];
 
 async function freshPage(browser: Browser, token: string | null) {

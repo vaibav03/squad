@@ -4,7 +4,8 @@
 // Prints one JSON line per (who, cond, scenario) with counts. A run is OK when, within the deadline, the page shows
 // readable content that is not a loading state (a page, an empty state, or an error state with Retry), the document
 // title / main landmark / nav highlight match the route, and nothing flips back to blank.
-import { chromium } from '@playwright/test';
+// PW_MODULE: absolute path to a playwright entry (e.g. a scratch install); CHROME: Chrome for Testing binary.
+const { chromium } = await import(process.env.PW_MODULE ?? '@playwright/test');
 
 const arg = (k, d) => {
   const i = process.argv.indexOf(`--${k}`);
@@ -17,7 +18,10 @@ const COND = arg('cond', 'normal');
 const WHO = arg('who', 'acct');
 const SCEN = arg('scenario', 'routes');
 const PAR = Number(arg('par', 4));
-const DEADLINE = Number(arg('deadline', COND === 'normal' || COND === 'cpu4' ? 14000 : 26000));
+// p-<mode>: faults injected by scripts/dev/fault-proxy.mjs (HUB must point at the proxy, and so must the web build)
+const PROXY = process.env.PROXY ?? HUB;
+const PCOND = COND.startsWith('p-') ? COND.slice(2) : null;
+const DEADLINE = Number(arg('deadline', COND === 'normal' || COND === 'cpu4' ? 14000 : PCOND ? 34000 : 26000));
 
 const ROUTES = [
   ['/squad', 'Home'],
@@ -30,6 +34,8 @@ const ROUTES = [
   ['/squad/members', 'Members'],
   ['/squad/status', 'Status'],
   ['/squad/personas', 'Personas'],
+  ['/squad/connections', 'Connections'],
+  ['/squad/new', 'Create a squad'],
   ['/welcome', null],
   ['/join/xyz', null],
   ['/no/such/path', null],
@@ -55,7 +61,7 @@ async function newAccount() {
   const sq = await j('/v1/squads', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-    body: JSON.stringify({ name: `Rate Squad ${stamp}`, course: 'CS 101' }),
+    body: JSON.stringify({ name: process.env.SQUAD_NAME ?? 'summa', course: 'CS 101' }),
   });
   if (!token || sq.status >= 300) throw new Error(`account setup failed ${v.status} ${sq.status}`);
   return token;
@@ -102,6 +108,7 @@ const probe = () => {
   };
 };
 
+const RATE429 = {};
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Waits until settled content (not loading) or the deadline. Returns {ok, ms, snap, why}. */
@@ -116,7 +123,9 @@ async function settle(page, expectTitle, deadline = DEADLINE) {
       if (again && (again.textLen > 0 || again.canvas) && !again.loading) {
         const why = [];
         // hub down or session gone: the sign-in / offline-with-Retry screen is the correct, non-blank outcome
-        const signIn = (COND === 'down' || COND === '401') && again.title.startsWith('Welcome');
+        const signIn =
+          (COND === 'down' || COND === '401' || ['down', '401', 'slow', 'flap', '429'].includes(PCOND ?? '')) &&
+          again.title.startsWith('Welcome');
         if (!signIn && expectTitle && !again.title.startsWith(expectTitle))
           why.push(`title=${again.title}`);
         if (
@@ -207,6 +216,10 @@ async function fresh(browser, token) {
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  page.on('response', (r) => {
+    if (r.status() === 429)
+      RATE429[new URL(r.url()).pathname] = (RATE429[new URL(r.url()).pathname] ?? 0) + 1;
+  });
   await applyCond(ctx, page);
   return { ctx, page, errors };
 }
@@ -292,15 +305,33 @@ async function pool(items, par, fn) {
   return out;
 }
 
-const browser = await chromium.launch();
+const ctl = (q) => fetch(`${PROXY}/__ctl?${q}`).then((r) => r.json());
+const PMODES = {
+  slow: 'mode=slow&ms=12000',
+  down: 'mode=down',
+  flap: 'mode=flap&up=9000&down=7000',
+  401: 'mode=401',
+  hang: 'mode=hang',
+  500: 'mode=500',
+  429: 'mode=429&n=8&retry=3',
+};
+const browser = await chromium.launch(
+  process.env.CHROME ? { executablePath: process.env.CHROME } : {},
+);
 try {
   const token = WHO === 'anon' ? null : WHO === 'seed' ? await seededToken() : await newAccount();
+  let rearm;
+  if (PCOND) {
+    await ctl(PMODES[PCOND]);
+    if (PCOND === '429') rearm = setInterval(() => void ctl(PMODES[429]), 12000);
+  }
   const jobs = [];
   if (SCEN === 'routes')
     for (let i = 0; i < N; i++)
       for (const r of ROUTES) jobs.push(() => runRoute(browser, token, r));
   else for (let i = 0; i < N; i++) jobs.push(() => runSeq(browser, token));
   const res = await pool(jobs, PAR, (f) => f());
+  if (rearm) clearInterval(rearm);
   const by = {};
   for (const r of res) {
     const b = (by[r.name] ??= { n: 0, ok: 0, blank: 0, stuck: 0, other: 0, maxMs: 0, sample: '' });
@@ -327,7 +358,7 @@ try {
   const ok = res.filter((r) => r.ok).length;
   console.log(
     JSON.stringify(
-      { who: WHO, cond: COND, scenario: SCEN, total, ok, bad: total - ok, by },
+      { who: WHO, cond: COND, scenario: SCEN, total, ok, bad: total - ok, r429: RATE429, by },
       null,
       0,
     ),
@@ -335,5 +366,6 @@ try {
   if (process.argv.includes('--verbose'))
     for (const [k, v] of Object.entries(by)) console.log(' ', k, JSON.stringify(v));
 } finally {
+  if (PCOND) await ctl('mode=pass').catch(() => undefined);
   await browser.close();
 }
