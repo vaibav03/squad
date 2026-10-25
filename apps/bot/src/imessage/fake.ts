@@ -80,7 +80,11 @@ export class FakeIMessageTransport implements IMessageSdkLike {
     for (let i = 0; i < times; i++) await this.events.onIncomingMessage?.({ ...m });
   }
   /** A delivery receipt for a send (`out-N`). */
-  receipt(guid: string, state: 'delivered' | 'failed' = 'delivered', reason?: string) {
+  receipt(
+    guid: string,
+    state: 'sent' | 'delivered' | 'read' | 'failed' = 'delivered',
+    reason?: string,
+  ) {
     this.receiptCb?.({ guid, state, ...(reason ? { reason } : {}) });
   }
   watchReceipts(cb: Parameters<NonNullable<IMessageSdkLike['watchReceipts']>>[0]) {

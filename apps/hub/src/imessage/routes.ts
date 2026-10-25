@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { requireUser } from '../auth';
 import { createLimiter, readBody } from '../http';
 import { MIRROR_MODES } from './store';
-import { bridgeState, healthReport } from './sendblue/health';
+import { bridgeState, healthReport, safetyView } from './sendblue/health';
+import { attachIMessage, FIXTURE_CHAT, type IMessageHandle } from './wire';
 import { sendblueConfigFromEnv, missingSendblueEnv } from './sendblue/config';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 
@@ -16,6 +17,8 @@ const SettingsBody = z
     showUnlinked: z.boolean().optional(),
   })
   .refine((b) => b.mirror !== undefined || b.showUnlinked !== undefined);
+
+const demoHandles = new WeakMap<object, IMessageHandle>();
 
 export function createImessageRoutes(deps: HubDeps): HubApp {
   const r = new Hono<HubEnv>();
@@ -136,7 +139,66 @@ export function createImessageRoutes(deps: HubDeps): HubApp {
       webhookUrl: `${cfg.publicUrl || deps.config.baseUrl}/v1/webhooks/sendblue`,
       statusUrl: `${cfg.publicUrl || deps.config.baseUrl}/v1/webhooks/sendblue/status`,
       secretHeader: cfg.secretHeader,
+      safety: safetyView(deps.imessageInfo?.env ?? process.env),
     });
+  });
+
+  // ---- Demo/Fixture bridge (docs/sendblue.md section 9): the whole loop locally, no credentials, nothing real sent ----
+  const demoAllowed = () => !deps.config.production && process.env.IMESSAGE_DEMO !== '0';
+  const demoOn = () => deps.imessageInfo?.provider === 'fake' && !!deps.imessageInfo.demo;
+  r.get('/v1/imessage/demo', user, (c) =>
+    c.json({
+      available: demoAllowed(),
+      on: demoOn(),
+      ...(deps.imessageInfo && !demoOn() ? { blockedBy: 'another_bridge_running' } : {}),
+      ...(!demoAllowed() ? { blockedBy: 'production' } : {}),
+      label: 'Demo bridge: fixture transport, nothing leaves this machine',
+    }),
+  );
+  r.post('/v1/imessage/demo', user, async (c) => {
+    const uid = c.get('user').id;
+    if (!demoAllowed()) return c.json({ error: { code: 'demo_disabled' } }, 403);
+    const b = (await c.req.json().catch(() => ({}))) as { enabled?: unknown };
+    if (b.enabled === false) {
+      if (demoOn()) await demoHandles.get(deps)?.stop();
+      demoHandles.delete(deps);
+      return c.json({ ok: true, on: false });
+    }
+    if (demoOn()) return c.json({ ok: true, on: true });
+    if (deps.imessageInfo) return c.json({ error: { code: 'another_bridge_running' } }, 409);
+    const squadId = deps.directory.squadOf(uid);
+    if (!squadId) return c.json({ error: { code: 'no_squad' } }, 409);
+    const h = await attachIMessage(
+      { deps },
+      {
+        provider: 'fake',
+        env: {
+          IMESSAGE_PROVIDER: 'fake',
+          IMESSAGE_ENABLED: '1',
+          IMESSAGE_ALLOWED_CHATS: FIXTURE_CHAT,
+        },
+        fixtureSquadId: squadId,
+        minGapMs: 0,
+      },
+    );
+    if (!h) return c.json({ error: { code: 'demo_failed' } }, 500);
+    demoHandles.set(deps, h);
+    return c.json({ ok: true, on: true });
+  });
+  r.post('/v1/imessage/demo/inbound', user, async (c) => {
+    const uid = c.get('user').id;
+    if (!demoOn()) return c.json({ error: { code: 'demo_off' } }, 409);
+    const rl = limit(`imsg-demo:${uid}`, 60, 60_000);
+    if (!rl.ok)
+      return c.json({ error: { code: 'rate_limited', retryAfterS: rl.retryAfterS } }, 429);
+    const b = (await c.req.json().catch(() => ({}))) as { text?: unknown };
+    const text = typeof b.text === 'string' ? b.text.trim().slice(0, 2000) : '';
+    if (!text) return c.json({ error: { code: 'invalid_request' } }, 400);
+    if (!deps.directory.squad(deps.directory.squadOf(uid) ?? '')?.members.includes(uid))
+      return c.json({ error: { code: 'not_found' } }, 404);
+    if (!(await deps.imessageInfo!.demo!.emit(uid, text)))
+      return c.json({ error: { code: 'no_account' } }, 409);
+    return c.json({ ok: true });
   });
 
   r.get('/v1/imessage/squads/:squadId/settings', user, (c) => {

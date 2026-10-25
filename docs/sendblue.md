@@ -188,6 +188,26 @@ Header states: `Sendblue: connected to <group>, last inbound <t>, last status <t
 5. Gate: `GATE_REAL=1 GATE_REAL_SEND=1 GATE_SENDBLUE_TEST_NUMBER=<your number>` sends **one** message to that number.
 6. Kill switch: unset `IMESSAGE_ENABLED` and restart; the webhook then answers 503 and nothing is sent.
 
+## 9b. Demo/Fixture bridge (test the whole loop with no credentials)
+
+Real Sendblue stays `blocked` until credentials exist. To exercise the loop locally anyway, there is an explicit **Demo
+bridge**: a scripted transport (`FakeIMessageTransport` with simulated delivery and read receipts) bound to your squad.
+
+* **Switch on**: Connections, iMessage card, "Start demo bridge" (or `POST /v1/imessage/demo {"enabled":true}`;
+  `IMESSAGE_PROVIDER=fake` / `IMESSAGE_FIXTURE=1` at boot does the same). Off by default; `POST {"enabled":false}` or "Stop demo bridge" turns it off.
+* **Never in production**: refused with 403 when the hub runs a production config, and with `IMESSAGE_DEMO=0`. It never overlays a
+  running real bridge (409). It uses no network at all (the tests make `fetch` throw) and cannot send a real message.
+* **Loop**: "Send as the demo phone" (`POST /v1/imessage/demo/inbound {text}`, signed-in members only) -> stored once in the same
+  web group thread as "via iMessage (demo)" -> `@cubbie` answers through the same `chat.send` path as the web (same retrieval,
+  provenance and Demo labels) -> the answer is mirrored to the fixture group -> delivery badge sent, delivered, read.
+  The demo phone is a fake `+1 555 01..` number linked to your account; roster students without a sign-up account get 409 `no_account`.
+* **Labels**: status route `bridge.demo=true` and `Fixture transport (no real iMessage)`; message footers `via iMessage (demo)`;
+  Connections "Demo bridge is ON ... never sent anywhere"; Integration Health `imessage_demo_bridge` is a **demo pass**
+  (`mode: demo`, "NOT the real Sendblue connection") next to the Sendblue checks, which stay `blocked`/`fail` until credentials exist.
+* **Safety flags** (all providers): `GET /v1/imessage/status` -> `bridge.safety` `{dryRun, killSwitch, allowlist:{chats,handles,allowAll}}`
+  (counts only) and the same on `GET /v1/imessage/setup`; both are shown in the Connections Sendblue section.
+* Tests: `apps/hub/src/imessage/demo.test.ts`, `e2e/specs/j34-demo-bridge.spec.ts` (default stack, no `E2E_SENDBLUE`), gate step `S4d`.
+
 ## 10. Limitations (honest)
 
 * The webhook secret header name is not stated on the public webhook page; `sb-signing-secret` is the default and configurable.

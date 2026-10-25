@@ -11,6 +11,7 @@ import { Button } from '../../primitives/Button';
 import { Card } from '../../primitives/Card';
 import { Notice } from '../../primitives/Notice';
 import { useSquadConfig } from '../../shell/context';
+import { DemoBridge } from './DemoBridge';
 import { SendblueSetup, type SendblueSetupInfo } from './SendblueSetup';
 
 export const RUNBOOK_URL =
@@ -32,6 +33,8 @@ export interface ImessageCardViewProps {
   onRetry?: () => void;
   /** Sendblue setup facts (names and URLs), when the hub has the provider. */
   sendblue?: SendblueSetupInfo | null;
+  /** The demo bridge switch (rendered by the fetching wrapper). */
+  demoSlot?: React.ReactNode;
 }
 
 export function ImessageCardView({
@@ -41,6 +44,7 @@ export function ImessageCardView({
   now,
   onRetry,
   sendblue,
+  demoSlot,
 }: ImessageCardViewProps) {
   const ind = status ? imessageIndicator(status, { kind: 'group' }, now) : null;
   const fixture = !!status && (status.fixture || status.mode === 'fixture');
@@ -97,6 +101,7 @@ export function ImessageCardView({
         </>
       )}
       {sendblue ? <SendblueSetup info={sendblue} /> : null}
+      {demoSlot}
       <h4 className="sq-conn__h3">Safe setup</h4>
       <ol className="sq-conn__scopes" data-testid="connections-imessage-steps">
         {SETUP_STEPS.map((s) => (
@@ -159,6 +164,7 @@ export function ImessageCard() {
       error={phase === 'error'}
       now={Date.now()}
       sendblue={sendblue}
+      demoSlot={<DemoBridge />}
       onRetry={() => {
         setPhase('loading');
         void load();

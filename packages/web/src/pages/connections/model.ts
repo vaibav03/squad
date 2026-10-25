@@ -49,7 +49,8 @@ export const SCOPE_WORDS: Record<string, string> = {
   'canvas.api_token.read': 'Your Canvas courses, assignments and files, read only. No grades.',
   'canvas.browser_session.read':
     'Your Canvas courses, assignments and files, read through your own browser session. No grades.',
-  'canvas.demo_workspace': 'A simulated Canvas workspace (demo data): courses, pages, assignments, events.',
+  'canvas.demo_workspace':
+    'A simulated Canvas workspace (demo data): courses, pages, assignments, events.',
 };
 /** The hub reports short scope names (`calendar.readonly`); the words are keyed by the full scope, so match either. */
 export const scopeWords = (s: string): string => {

@@ -23,6 +23,30 @@ export interface BridgeState {
   lastInboundAt?: number;
   lastStatusAt?: number;
   queued: number;
+  /** Safety flags (counts and booleans only; never the ids or numbers on the lists). */
+  safety: SafetyView;
+  /** The Demo/Fixture bridge is on: nothing real is read or sent. */
+  demo: boolean;
+}
+
+export interface SafetyView {
+  dryRun: boolean;
+  /** IMESSAGE_ENABLED is not 1: nothing is read or sent. */
+  killSwitch: boolean;
+  allowlist: { chats: number; handles: number; allowAll: boolean };
+}
+
+export function safetyView(env: Env): SafetyView {
+  const c = imessageConfigFromEnv(env);
+  return {
+    dryRun: c.dryRun,
+    killSwitch: !c.enabled,
+    allowlist: {
+      chats: c.allowedChats.length,
+      handles: c.allowedHandles.length,
+      allowAll: c.allowAll,
+    },
+  };
 }
 
 export type CheckStatus = 'pass' | 'warn' | 'fail' | 'blocked';
@@ -52,6 +76,8 @@ export interface BridgeInfo {
   env: Env;
   dryRun: boolean;
   gateway: IMessageGateway;
+  /** Present only for the Demo/Fixture bridge. */
+  demo?: import('../demo').DemoHandle;
 }
 
 const ago = (t: number | undefined, now: number): string => {
@@ -77,7 +103,13 @@ export function bridgeState(deps: HubDeps, envIn?: Env): BridgeState {
   const missing = missingSendblueEnv(cfg);
   const queued = deps.imessage.outCounts().queued;
   const now = deps.now();
-  const base = { provider, missingEnv: [] as string[], queued };
+  const base = {
+    provider,
+    missingEnv: [] as string[],
+    queued,
+    safety: safetyView(env),
+    demo: provider === 'fake',
+  };
   if (provider === 'fake')
     return { ...base, state: 'fixture', label: 'Fixture transport (no real iMessage)' };
   if (provider === 'local') return { ...base, state: 'local', label: 'iMessage: local Mac bridge' };

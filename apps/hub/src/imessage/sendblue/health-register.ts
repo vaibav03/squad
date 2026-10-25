@@ -19,7 +19,9 @@ const toResult = (c: HealthCheck): HealthResult => ({
   label: c.label,
   status: c.status,
   reason: c.reason.slice(0, 400),
-  ...(c.status === 'pass' ? {} : { fix: { label: c.fix.slice(0, 60), to: '/squad/connections#imessage' } }),
+  ...(c.status === 'pass'
+    ? {}
+    : { fix: { label: c.fix.slice(0, 60), to: '/squad/connections#imessage' } }),
   ...(c.missingEnv?.length ? { missingEnv: c.missingEnv } : {}),
   mode: 'sendblue',
 });
@@ -34,6 +36,29 @@ const ALT_KEY: Record<string, string> = {
 };
 
 export function registerSendblueProviderChecks(): void {
+  // The Demo/Fixture bridge is its own link: a demo pass, never a claim about the real Sendblue connection.
+  registerHealthCheck('imessage_demo_bridge', 'sendblue', 88, (ctx: HealthCtx): HealthResult => {
+    const on = ctx.deps.imessageInfo?.provider === 'fake' && !!ctx.deps.imessageInfo.demo;
+    if (on)
+      return {
+        label: 'iMessage Demo bridge',
+        status: 'pass',
+        mode: 'demo',
+        reason:
+          'Demo/Fixture bridge is on: a scripted transport, nothing leaves this machine. This is NOT the real Sendblue connection.',
+      };
+    return {
+      label: 'iMessage Demo bridge',
+      status: 'warn',
+      mode: 'demo',
+      reason: ctx.deps.config.production
+        ? 'The demo bridge is not available in a production config.'
+        : 'The demo bridge is off (optional). Start it on Connections to test the whole loop without Sendblue credentials.',
+      ...(ctx.deps.config.production
+        ? {}
+        : { fix: { label: 'Start the demo bridge', to: '/squad/connections#imessage' } }),
+    };
+  });
   for (const [sharedId, ownId, order] of MAP)
     registerHealthCheck(sharedId, 'sendblue', order, async (ctx: HealthCtx) => {
       // an alternative provider that exposes deps.sendblue.health() (the contract of health/checks/sendblue.ts) wins
