@@ -30,17 +30,15 @@ function body(): Raster {
   // drum wall x 14..106, y 46..90: round look by banded shading
   const wx0 = 14;
   const wx1 = 106;
-  const wy0 = 52;
+  const wy0 = 56;
   const wy1 = 90;
-  r.rect(wx0, wy0, wx1 - wx0, wy1 - wy0, 'wall-mid');
-  r.rect(wx0, wy0, 10, wy1 - wy0, 'wall-shade'); // far left falls into shadow
+  r.rect(wx0, wy0, wx1 - wx0, wy1 - wy0, 'wall-shade');
+  r.rect(wx0 + 10, wy0, wx1 - wx0 - 20, wy1 - wy0, 'wall-mid');
   r.rect(wx0 + 10, wy0, 6, wy1 - wy0, 'wall-mid');
   r.dither(wx0 + 8, wy0, 4, wy1 - wy0, 'wall-shade', 0);
   r.rect(wx1 - 12, wy0, 12, wy1 - wy0, 'wall-shade');
   r.dither(wx1 - 16, wy0, 4, wy1 - wy0, 'wall-shade', 1);
-  r.rect(cx - 12, wy0, 24, wy1 - wy0, 'wall-lit'); // moonlit centre face
-  r.dither(cx - 17, wy0, 5, wy1 - wy0, 'wall-lit', 0);
-  r.dither(cx + 12, wy0, 5, wy1 - wy0, 'wall-lit', 1);
+  r.dither(cx - 14, wy0, 28, wy1 - wy0, 'wall-lit', 0); // moonlit centre face, broken up
   // masonry courses, staggered
   for (let y = wy0 + 5; y < wy1 - 1; y += 6) {
     for (let x = wx0; x < wx1; x++) r.px(x, y, 'wall-shade');
@@ -59,7 +57,7 @@ function body(): Raster {
   const dcx = cx;
   const dcy = wy0 - 3;
   const rx = 50;
-  const ry = 28;
+  const ry = 30;
   for (let y = 0; y <= ry; y++) {
     const half = Math.round(rx * Math.sqrt(1 - (y * y) / (ry * ry + 0.25)));
     for (let x = -half; x <= half; x++) {
@@ -113,10 +111,10 @@ function body(): Raster {
 /** Columns between window bays (drawn over the wall, under the cornice). */
 function columns(r: Raster): void {
   for (const x of [20, 40, 78, 98]) {
-    r.rect(x - 2, 55, 5, 33, 'wall-lit');
-    r.vline(x + 2, 55, 33, 'wall-shade');
-    r.vline(x - 2, 55, 33, 'wall-mid');
-    r.rect(x - 3, 54, 7, 2, 'wall-lit');
+    r.rect(x - 2, 59, 5, 29, 'wall-mid');
+    r.vline(x + 2, 59, 29, 'wall-shade');
+    r.vline(x - 2, 59, 29, 'wall-lit');
+    r.rect(x - 3, 58, 7, 2, 'wall-lit');
     r.rect(x - 3, 87, 7, 2, 'wall-lit');
     r.hline(x - 3, 88, 7, 'wall-shade');
   }
@@ -158,7 +156,7 @@ function archWindow(
 
 function door(r: Raster, open: boolean, shut: boolean): void {
   const x = 52;
-  const y = 66;
+  const y = 69;
   r.rect(x, y + 4, 16, 22, 'wood-dark');
   r.rect(x + 2, y + 1, 12, 3, 'wood-dark');
   r.rect(x + 5, y, 6, 1, 'wood-dark');
@@ -212,10 +210,10 @@ function lantern(r: Raster, s: CouncilHallState, o: PaintOpts): void {
 function plaque(r: Raster, text: string): void {
   const w = textWidth(text) + 4;
   const x = Math.round(60 - w / 2);
-  r.rect(x, 58, w, 7, 'wood');
-  r.frame(x, 58, w, 7, 'wood-dark');
-  r.hline(x + 1, 59, w - 2, 'wood-lit');
-  drawText(r, x + 2, 59, text, 'glow-core');
+  r.rect(x, 61, w, 7, 'wood');
+  r.frame(x, 61, w, 7, 'wood-dark');
+  r.hline(x + 1, 62, w - 2, 'wood-lit');
+  drawText(r, x + 2, 62, text, 'glow-core');
 }
 
 /** Exterior sprite (120x96). `inSession`: a council ran recently, so the windows are lit. */
@@ -226,7 +224,7 @@ export function paintExterior(s: CouncilHallState, o: PaintOpts, inSession: bool
   const lit = awake && (inSession || s.windowLit);
   const flick = !o.calm && Math.floor(o.t / 2000) % 2 === 1 ? 1 : 0; // 4 s loop, steady in calm
   columns(r);
-  for (const cx of [30, 88]) archWindow(r, cx, 60, lit, shut, flick);
+  for (const cx of [30, 88]) archWindow(r, cx, 64, lit, shut, flick);
   door(r, awake, shut);
   plaque(r, 'COUNCIL');
   lantern(r, s, o);
@@ -234,7 +232,7 @@ export function paintExterior(s: CouncilHallState, o: PaintOpts, inSession: bool
   // night glow pass: warm halos from lit windows and the door seam (translucent light layer)
   if (lit) {
     const a = o.calm ? 1 : 0.85 + 0.15 * triangle(o.t, 4000);
-    for (const cx of [30, 88]) r.glow(cx, 70, 11, 'glow', 0.5 * a, 3);
+    for (const cx of [30, 88]) r.glow(cx, 74, 11, 'glow', 0.5 * a, 3);
     r.glow(60, 80, 12, 'glow', 0.4 * a, 3);
   }
   if (s.lantern !== 'off') {
