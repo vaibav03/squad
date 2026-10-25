@@ -63,13 +63,53 @@ export function createImessageRoutes(deps: HubDeps): HubApp {
     return c.json({ ok: true, retried });
   });
 
-  r.get('/v1/imessage/status', user, async (c) =>
-    c.json(
-      deps.imessageSync
-        ? { enabled: true, ...(await deps.imessageSync.status()) }
-        : { enabled: false },
-    ),
-  );
+  /**
+   * What the chat header, the Connections card and the plan panel show. Honest: `fixture` marks a scripted transport,
+   * `killSwitch` an off bridge. Per squad: how many iMessage groups are bound (never their ids) and the last sync.
+   */
+  r.get('/v1/imessage/status', user, async (c) => {
+    const uid = c.get('user').id;
+    const sync = deps.imessageSync;
+    const st = sync ? await sync.status() : undefined;
+    const squads = deps.directory.squadsOf(uid).map((squadId) => {
+      const bindings = deps.imessage.bindingsOf(squadId);
+      const cursors = bindings.map((b) => deps.imessage.cursor(b.chatGuid)?.lastTs ?? 0);
+      const last = Math.max(0, st?.lastOkAt ?? 0, ...cursors);
+      return {
+        squadId,
+        name: deps.directory.squad(squadId)?.name ?? squadId,
+        bound: bindings.length,
+        lastSyncAt: last > 0 ? last : null,
+        mirror: deps.imessage.syncSettings(squadId).mirror,
+      };
+    });
+    if (!st || !sync)
+      return c.json({ enabled: false, mode: 'off', killSwitch: true, squads, lastSyncAt: null });
+    const mode = st.fixture ? 'fixture' : st.dryRun ? 'dry_run' : 'live';
+    return c.json({
+      enabled: true,
+      mode,
+      killSwitch: false,
+      dryRun: st.dryRun,
+      fixture: st.fixture,
+      transport: st.transport,
+      ...(st.transport === 'degraded'
+        ? {
+            degradedReason: st.watcherDown
+              ? 'the Messages watcher stopped'
+              : 'sends to Messages are failing',
+          }
+        : {}),
+      queued: st.queued,
+      failed: st.failed,
+      watcherDown: st.watcherDown,
+      lastSyncAt: squads.reduce<number | null>(
+        (a, s) => (s.lastSyncAt && (!a || s.lastSyncAt > a) ? s.lastSyncAt : a),
+        null,
+      ),
+      squads,
+    });
+  });
 
   r.get('/v1/imessage/squads/:squadId/settings', user, (c) => {
     const sid = c.req.param('squadId');

@@ -1,6 +1,7 @@
 // The chat core inside the hub: persistence, per-viewer fan-out, typing, rate limit, and the leak guard for bot output.
 // The bot engine (router + skills over the web Transport) attaches through `setEngine`, see engine.ts.
-import { findLeak, SENTINELS } from '@squad/core';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { composeProvenance, findLeak, SENTINELS } from '@squad/core';
 import type {
   ChatAttachment,
   ChatCard,
@@ -10,6 +11,8 @@ import type {
   ChatSendBody,
   ChatSyncFields,
   ChatSummary,
+  ProvenanceHint,
+  ProvenanceMode,
   ChatTyping,
   ChatUpdate,
 } from '@squad/core';
@@ -27,6 +30,8 @@ export interface BotPost {
   citations: ChatCitation[];
   attachments: { path: string; mime: string }[];
   card?: ChatCard;
+  /** What the skill knows about where the reply came from when it has no citations (docs/provenance.md). */
+  provenance?: ProvenanceHint;
 }
 
 export interface ChatEngine {
@@ -67,7 +72,8 @@ export interface ChatSub {
 export type ChatOrigin = Partial<ChatSyncFields> & { ts?: number };
 
 export type SendResult =
-  | { ok: true; message: ChatMessage }
+  /** `duplicate` is set when nothing new was stored: a retry of a landed send, or the same text again within 3 s. */
+  | { ok: true; message: ChatMessage; duplicate?: true; hint?: string }
   | { ok: false; status: 400 | 403 | 404 | 409 | 429 | 503; code: string };
 
 export interface ChatHub {
@@ -113,6 +119,10 @@ const MAX_BACKLOG = 200; // a longer catch-up is a resync, not a replay
 const MAX_STREAMS_PER_STUDENT = 3;
 const MAX_INFLIGHT = 2; // bot runs per student at once
 const CLIENT_ID_TTL_MS = 5 * 60_000;
+/** The same text from the same sender in the same chat inside this window is a double-click, not a second ask. */
+export const DOUBLE_SEND_MS = 3_000;
+const DOUBLE_SEND_MIN_CHARS = 8; // "1", "yes", "A" are legitimate quick repeats (confirm and quiz answers)
+export const DUPLICATE_HINT = 'You already sent this';
 const PRIVATE_FALLBACK = 'I kept that private. Ask me in a DM.';
 
 const squash = (t: string) =>
@@ -178,7 +188,7 @@ class Sub implements ChatSub {
 
 export function createChatHub(
   deps: Pick<HubDeps, 'db' | 'directory' | 'ledger' | 'log' | 'now' | 'config' | 'runtime'> &
-    Partial<Pick<HubDeps, 'tripSvc'>>,
+    Partial<Pick<HubDeps, 'tripSvc' | 'context' | 'council'>>,
   filesDir: string,
 ): ChatHub {
   const store = createChatStore(deps.db);
@@ -190,6 +200,9 @@ export function createChatHub(
   const typingRuns = new Map<string, Set<number>>();
   const inflight = new Map<string, number>();
   const clientIds = new Map<string, { at: number; message: ChatMessage }>();
+  const lastSent = new Map<string, { at: number; text: string; message: ChatMessage }>();
+  /** The student message whose bot turn is running: every bot post made inside it is that message's answer. */
+  const trigger = new AsyncLocalStorage<{ id: string }>();
   let runSeq = 0;
   const botListeners = new Set<(m: ChatMessage) => void>();
   const studentListeners = new Set<(m: ChatMessage, via: string) => void>();
@@ -200,6 +213,28 @@ export function createChatHub(
       } catch (e) {
         deps.log.error('chat listener failed', { err: (e as Error).name });
       }
+  };
+  /** Channel of the latest student message per chat: a bot reply travels back the way the question came. */
+  const lastVia = new Map<string, 'web' | 'imessage'>();
+  /**
+   * Live: the real model answers and the ports are real. Degraded: the real model answers but part of the stack is
+   * stubbed or the model reported a problem. Demo: the scripted model is answering.
+   */
+  const provMode = (): ProvenanceMode => {
+    const rt = deps.runtime;
+    if (!rt) return 'demo';
+    const st = rt.llm();
+    if (st.llm !== 'real') return 'demo';
+    return st.reason || rt.ports() === 'stub' ? 'degraded' : 'live';
+  };
+  /** A citation is verified when the page exists in the course store or the synced source exists. */
+  const verifyCitation = (c: ChatCitation): boolean => {
+    try {
+      if (c.source) return !!deps.context?.store.source(c.source.id);
+      return !!hub.engine?.excerpt(c.file, c.page);
+    } catch {
+      return false;
+    }
   };
   /** Replies are labelled demo whenever the hub's runtime says the real model is not answering. */
   const isDemo = () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : true);
@@ -273,10 +308,29 @@ export function createChatHub(
       if (!text && !(body.attachments?.length ?? 0))
         return { ok: false, status: 400, code: 'invalid' };
       const t = deps.now();
-      if (body.clientId) {
+      const cidKey = body.clientId
+        ? `${body.chatId}|${viewer.studentId}|${body.clientId}`
+        : undefined;
+      if (body.clientId && cidKey) {
         for (const [k, v] of clientIds) if (t - v.at > CLIENT_ID_TTL_MS) clientIds.delete(k);
-        const seen = clientIds.get(`${viewer.studentId}|${body.clientId}`);
-        if (seen) return { ok: true, message: seen.message }; // a retry of a send that already landed
+        const seen =
+          clientIds.get(cidKey)?.message ??
+          // after a restart the in-memory map is empty: the stored message still carries its clientId
+          store.findByClientId(body.chatId, viewer.studentId, body.clientId);
+        if (seen) return { ok: true, message: seen, duplicate: true }; // a retry of a send that already landed
+      }
+      // Double-click guard: identical text from this sender in this chat within 3 s is the same ask.
+      const guardKey = `${body.chatId}|${viewer.studentId}`;
+      const guardText = text.replace(/\s+/g, ' ');
+      if (
+        !body.confirmTaskId &&
+        !body.attachments?.length &&
+        guardText.length >= DOUBLE_SEND_MIN_CHARS
+      ) {
+        for (const [k, v] of lastSent) if (t - v.at > DOUBLE_SEND_MS) lastSent.delete(k);
+        const prev = lastSent.get(guardKey);
+        if (prev && prev.text === guardText && t - prev.at <= DOUBLE_SEND_MS)
+          return { ok: true, message: prev.message, duplicate: true, hint: DUPLICATE_HINT };
       }
       if (body.confirmTaskId) {
         const card = store.findConfirm(dmChatId(viewer.studentId), body.confirmTaskId)?.card;
@@ -319,11 +373,15 @@ export function createChatHub(
         attachments,
         citations: [],
         demo: false,
+        ...(body.clientId ? { clientId: body.clientId } : {}),
         ...originFields,
       });
       publish(message);
+      lastVia.set(body.chatId, o?.via === 'imessage' ? 'imessage' : 'web');
       notify(studentListeners, message, o?.via ?? 'web');
-      if (body.clientId) clientIds.set(`${viewer.studentId}|${body.clientId}`, { at: t, message });
+      if (cidKey) clientIds.set(cidKey, { at: t, message });
+      if (!body.confirmTaskId && !attachments.length)
+        lastSent.set(guardKey, { at: t, text: guardText, message });
 
       // Trip intents ("plan a trip to Cabo", "I vote 2", "confirm") are applied by the trip service and never reach
       // the bot. It runs for web and iMessage-origin messages alike (the bridge sends through this method).
@@ -343,12 +401,15 @@ export function createChatHub(
         const run = async () => {
           const off = answers ? typingStart(body.chatId, 'cubbie', 'Cubbie') : () => {};
           try {
-            await engine.inject({
-              chatId: body.chatId,
-              from: viewer.studentId,
-              text,
-              attachments: paths,
-            });
+            // one bot turn per stored message: the answers posted inside it are keyed to this message id
+            await trigger.run({ id: message.id }, () =>
+              engine.inject({
+                chatId: body.chatId,
+                from: viewer.studentId,
+                text,
+                attachments: paths,
+              }),
+            );
           } catch (e) {
             deps.log.error('chat inject failed', { err: (e as Error).name });
           } finally {
@@ -402,8 +463,35 @@ export function createChatHub(
           paths = [];
         }
       }
+      const replyTo = trigger.getStore()?.id;
+      // a redelivered trigger can never produce a second identical answer (same trigger id + same text)
+      if (replyTo && !card) {
+        const prior = store.findReply(p.chatId, replyTo, text);
+        if (prior) return prior;
+      }
       const attachments = paths.flatMap((a) => files.adopt(a.path, a.mime, p.chatId) ?? []);
       if (!text && attachments.length === 0 && !card) return undefined;
+      let mode = provMode();
+      if (card?.type === 'council' && citations.length === 0) {
+        // the council card carries its members' verified citations: surface them as chips too
+        const r = deps.council?.get(card.runId);
+        if (r) {
+          if (r.demo) mode = 'demo';
+          citations = r.members.flatMap((m) =>
+            m.citations.map((c) => ({ file: c.file, page: c.page, label: c.label })),
+          );
+        }
+      }
+      // ONE rule for what a reply may claim: only verified citations survive; the rest is an explicit label.
+      const composed = composeProvenance({
+        text,
+        citations,
+        verify: verifyCitation,
+        mode,
+        hint: p.provenance,
+        via: lastVia.get(p.chatId) ?? 'web',
+      });
+      citations = composed.citations;
       const m = store.append({
         chatId: p.chatId,
         ts: deps.now(),
@@ -419,6 +507,8 @@ export function createChatHub(
         citations,
         ...(card ? { card } : {}),
         demo: isDemo(),
+        ...(replyTo ? { replyTo } : {}),
+        provenance: composed.provenance,
       });
       publish(m);
       notify(botListeners, m);

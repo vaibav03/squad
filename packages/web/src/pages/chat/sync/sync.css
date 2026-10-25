@@ -43,3 +43,53 @@
 .sqs__late {
   font-style: italic;
 }
+
+/* iMessage bridge indicator (chat header) */
+.sqs-ind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 2px 8px;
+  border: 1px solid var(--sq-border, currentColor);
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--sq-text-muted, inherit);
+}
+.sqs-ind__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sqs-ind__dot {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--sq-surface, #fff);
+  background: var(--sq-text-muted, #777);
+}
+.sqs-ind--connected .sqs-ind__dot {
+  background: var(--sq-ok, #1a7f4b);
+}
+.sqs-ind--fixture .sqs-ind__dot,
+.sqs-ind--dry_run .sqs-ind__dot,
+.sqs-ind--not_connected .sqs-ind__dot {
+  background: var(--sq-warn, #b26a00);
+}
+.sqs-ind--degraded .sqs-ind__dot {
+  background: var(--sq-error, #c0392b);
+}
+.sqs-ind__setup {
+  color: inherit;
+  text-decoration: underline;
+}
+.sqs__src {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--sq-text-muted, inherit);
+}

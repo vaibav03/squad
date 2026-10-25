@@ -8,7 +8,14 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import type { ChatCitation, ChatCitationExcerpt, ChatSummary } from '@squad/core';
+import {
+  headerTruth,
+  type ChatCitation,
+  type ChatCitationExcerpt,
+  type ChatSummary,
+  type CouncilTruth,
+} from '@squad/core';
+import { ChatCardActionsContext, councilTruthFor, useCouncilTruthVersion } from '../../council';
 import { EmptyState, ErrorState } from '../../primitives/EmptyState';
 import { Icon } from '../../primitives/Icon';
 import { Notice } from '../../primitives/Notice';
@@ -22,11 +29,15 @@ import { Composer, type ComposerHandle } from './Composer';
 import { MemberStack, TypingIndicator } from './parts';
 import { QUICK_PROMPTS_DM, QUICK_PROMPTS_GROUP, buildRows, dmIdFor, type ThreadRow } from './model';
 import type { ChatController } from './useChat';
+import { ImessageIndicator } from './sync/ImessageIndicator';
+import { useImessageStatus } from './sync/useImessageStatus';
 import { LivePanel } from '../../live/LivePanel';
 import { useSquadConfig } from '../../shell/context';
 import { PlansDrawer } from '../../plans/PlansDrawer';
 import { WizardDrawer } from '../../plans/WizardDrawer';
 import { usePlans } from '../../plans/usePlans';
+import { collapsePlanCards } from '../../plans/dedupe';
+import { PlanActionsContext } from '../../plans/context';
 import type { PlanKind } from '../../plans/registry';
 
 // ------------------------------------------------------------------ banners
@@ -94,12 +105,44 @@ export function pausedCopy(ctl: ChatController): string | null {
   return null;
 }
 
-function connStatus(ctl: ChatController): { status: Status; label: string } {
-  if (ctl.conn === 'expired') return { status: 'error', label: 'Signed out' };
-  if (!ctl.online) return { status: 'offline', label: 'Offline' };
-  if (ctl.conn === 'offline') return { status: 'busy', label: 'Reconnecting' };
-  if (ctl.conn === 'connecting') return { status: 'idle', label: 'Connecting' };
-  return { status: 'live', label: 'Live' };
+const TONE_STATUS: Record<string, Status> = {
+  ok: 'live',
+  info: 'live',
+  warn: 'busy',
+  error: 'error',
+  idle: 'idle',
+};
+
+/** Truth of every council card visible in this chat (loaded result wins; the message's own demo flag is the fallback). */
+function visibleCouncils(ctl: ChatController, chatId: string): CouncilTruth[] {
+  const out: CouncilTruth[] = [];
+  for (const it of ctl.thread(chatId)) {
+    const c = it.message.card;
+    if (c?.type !== 'council') continue;
+    out.push(councilTruthFor(c.runId) ?? (it.message.demo ? 'fixture' : 'live'));
+  }
+  return out;
+}
+
+/** The header badge: transport + provider, with any fixture/degraded council content named in the same badge. */
+export function useHeaderTruth(ctl: ChatController, chatId: string) {
+  const v = useCouncilTruthVersion();
+  const items = ctl.thread(chatId);
+  const councils = useMemo(() => visibleCouncils(ctl, chatId), [items, v, chatId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const t = headerTruth({
+    conn:
+      ctl.conn === 'expired'
+        ? 'expired'
+        : ctl.conn === 'offline'
+          ? 'offline'
+          : ctl.conn === 'connecting'
+            ? 'connecting'
+            : 'live',
+    online: ctl.online,
+    status: ctl.status,
+    councils,
+  });
+  return { ...t, status: TONE_STATUS[t.tone] ?? 'idle' };
 }
 
 // ------------------------------------------------------------------ citation sheet
@@ -228,7 +271,7 @@ function MessageList({
 }) {
   const bucket = ctl.bucket(chat.id);
   const items = useMemo(() => ctl.thread(chat.id), [ctl.thread, chat.id]);
-  const rows = useMemo(() => buildRows(items, ctl.me), [items, ctl.me]);
+  const rows = useMemo(() => buildRows(collapsePlanCards(items), ctl.me), [items, ctl.me]);
   const el = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   const [atBottom, setAtBottom] = useState(true);
@@ -333,135 +376,164 @@ function MessageList({
   const dmId = dmIdFor(ctl.me);
   const paused = pausedCopy(ctl) !== null;
 
+  const cardActions = useMemo(
+    () => ({
+      fill: onPrompt,
+      cite: (c: { file: string; page: number; label: string }) => {
+        setCite(c);
+        setCiteCtx(undefined);
+      },
+    }),
+    [onPrompt],
+  );
+
+  // cards never take more than ~40% of the thread viewport
+  const wrap = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const w = wrap.current;
+    if (!w) return;
+    const apply = () =>
+      w.style.setProperty('--sqc-card-max', `${Math.round(w.clientHeight * 0.4)}px`);
+    apply();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(apply);
+    ro.observe(w);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div className="sqc-log-wrap">
-      <div
-        ref={el}
-        className="sqc-log"
-        role="log"
-        tabIndex={0}
-        aria-label={`Messages in ${chat.title}`}
-        aria-live={quiet || quietOlder ? 'off' : 'polite'}
-        aria-relevant="additions text"
-        aria-busy={(!bucket.loaded && !bucket.error) || undefined}
-        data-testid="chat-thread"
-        data-chat-id={chat.id}
-        onScroll={onScroll}
-      >
-        {!bucket.loaded && !bucket.error ? (
-          <div className="sqc-skeletons" role="status" aria-label="Loading messages">
-            {[70, 45, 82, 38].map((w, i) => (
-              <div key={i} className={`sqc-skel${i % 3 === 1 ? ' is-own' : ''}`}>
-                <Skeleton shape="block" width={32} height={32} />
-                <Skeleton shape="block" width={`${w}%`} height={i % 2 ? 40 : 56} />
-              </div>
-            ))}
-          </div>
-        ) : bucket.error && !bucket.loaded ? (
-          <ErrorState
-            title="Messages did not load"
-            error={bucket.errorText}
-            retryLabel="Retry"
-            onRetry={() => void ctl.loadHistory(chat.id)}
-          />
-        ) : rows.length === 0 ? (
-          <EmptyState
-            icon="message"
-            title={chat.kind === 'dm' ? 'A private chat with Cubbie' : 'No messages yet, say hi'}
-            body={
-              chat.kind === 'dm'
-                ? 'Only you can see this. Ask about your progress, your notes, or a chapter.'
-                : 'Start the conversation, or ask Cubbie something.'
-            }
-            action={
-              <div className="sqc-prompts" role="group" aria-label="Suggestions">
-                {prompts.map((t) => (
+    <ChatCardActionsContext.Provider value={cardActions}>
+      <div className="sqc-log-wrap" ref={wrap}>
+        <div
+          ref={el}
+          className="sqc-log"
+          role="log"
+          tabIndex={0}
+          aria-label={`Messages in ${chat.title}`}
+          aria-live={quiet || quietOlder ? 'off' : 'polite'}
+          aria-relevant="additions text"
+          aria-busy={(!bucket.loaded && !bucket.error) || undefined}
+          data-testid="chat-thread"
+          data-chat-id={chat.id}
+          onScroll={onScroll}
+        >
+          {!bucket.loaded && !bucket.error ? (
+            <div className="sqc-skeletons" role="status" aria-label="Loading messages">
+              {[70, 45, 82, 38].map((w, i) => (
+                <div key={i} className={`sqc-skel${i % 3 === 1 ? ' is-own' : ''}`}>
+                  <Skeleton shape="block" width={32} height={32} />
+                  <Skeleton shape="block" width={`${w}%`} height={i % 2 ? 40 : 56} />
+                </div>
+              ))}
+            </div>
+          ) : bucket.error && !bucket.loaded ? (
+            <ErrorState
+              title="Messages did not load"
+              error={bucket.errorText}
+              retryLabel="Retry"
+              onRetry={() => void ctl.loadHistory(chat.id)}
+            />
+          ) : rows.length === 0 ? (
+            <EmptyState
+              icon="message"
+              title={chat.kind === 'dm' ? 'A private chat with Cubbie' : 'No messages yet, say hi'}
+              body={
+                chat.kind === 'dm'
+                  ? 'Only you can see this. Ask about your progress, your notes, or a chapter.'
+                  : 'Start the conversation, or ask Cubbie something.'
+              }
+              action={
+                <div className="sqc-prompts" role="group" aria-label="Suggestions">
+                  {prompts.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      className="sqc-prompt"
+                      data-testid="chat-prompt"
+                      onClick={() => onPrompt(t)}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              }
+            />
+          ) : (
+            <>
+              {bucket.hasMore ? (
+                <div className="sqc-older">
                   <button
-                    key={t}
                     type="button"
-                    className="sqc-prompt"
-                    data-testid="chat-prompt"
-                    onClick={() => onPrompt(t)}
+                    className="sqc-link"
+                    onClick={() => void ctl.loadOlder(chat.id)}
+                    disabled={bucket.loadingOlder}
                   >
-                    {t}
+                    {bucket.loadingOlder ? 'Loading earlier messages' : 'Show earlier messages'}
                   </button>
-                ))}
-              </div>
-            }
-          />
-        ) : (
-          <>
-            {bucket.hasMore ? (
-              <div className="sqc-older">
-                <button
-                  type="button"
-                  className="sqc-link"
-                  onClick={() => void ctl.loadOlder(chat.id)}
-                  disabled={bucket.loadingOlder}
-                >
-                  {bucket.loadingOlder ? 'Loading earlier messages' : 'Show earlier messages'}
-                </button>
-              </div>
-            ) : null}
-            <ol className="sqc-rows">
-              {rows.map((r) =>
-                r.kind === 'day' ? (
-                  <li key={r.key} className="sqc-day" aria-label={r.label}>
-                    <span>{r.label}</span>
-                  </li>
-                ) : (
-                  <li key={r.key} className="sqc-rowitem" data-head={r.head || undefined}>
-                    <MessageBubble
-                      row={r}
-                      api={ctl.api}
-                      status={ctl.status}
-                      me={ctl.me}
-                      isNew={fresh.has(r.message.id)}
-                      reduced={reduced}
-                      scene={scene}
-                      compact={compact}
-                      paused={paused}
-                      onCite={(c, t) => {
-                        setCite(c);
-                        setCiteCtx(t);
-                      }}
-                      onRetry={(id) => void ctl.retry(chat.id, id)}
-                      onDiscard={(id) => ctl.discard(chat.id, id)}
-                      onRetryDelivery={(id) => void ctl.retryDelivery(id)}
-                      quizAnswer={ctl.quizAnswer}
-                      onQuizAnswer={(m, choice) => ctl.answerQuiz(m.chatId, m.id, choice)}
-                      onConfirm={(m, n) =>
-                        m.card?.type === 'confirm'
-                          ? ctl.confirm(m.chatId, m.card.taskId, n)
-                          : Promise.resolve('failed' as const)
-                      }
-                      onOpenDm={onOpenChat && chat.id !== dmId ? () => onOpenChat(dmId) : undefined}
-                    />
-                  </li>
-                ),
-              )}
-            </ol>
+                </div>
+              ) : null}
+              <ol className="sqc-rows">
+                {rows.map((r) =>
+                  r.kind === 'day' ? (
+                    <li key={r.key} className="sqc-day" aria-label={r.label}>
+                      <span>{r.label}</span>
+                    </li>
+                  ) : (
+                    <li key={r.key} className="sqc-rowitem" data-head={r.head || undefined}>
+                      <MessageBubble
+                        row={r}
+                        api={ctl.api}
+                        status={ctl.status}
+                        me={ctl.me}
+                        isNew={fresh.has(r.message.id)}
+                        reduced={reduced}
+                        scene={scene}
+                        compact={compact}
+                        paused={paused}
+                        onCite={(c, t) => {
+                          setCite(c);
+                          setCiteCtx(t);
+                        }}
+                        onRetry={(id) => void ctl.retry(chat.id, id)}
+                        onDiscard={(id) => ctl.discard(chat.id, id)}
+                        onRetryDelivery={(id) => void ctl.retryDelivery(id)}
+                        quizAnswer={ctl.quizAnswer}
+                        onQuizAnswer={(m, choice) => ctl.answerQuiz(m.chatId, m.id, choice)}
+                        onConfirm={(m, n) =>
+                          m.card?.type === 'confirm'
+                            ? ctl.confirm(m.chatId, m.card.taskId, n)
+                            : Promise.resolve('failed' as const)
+                        }
+                        onOpenDm={
+                          onOpenChat && chat.id !== dmId ? () => onOpenChat(dmId) : undefined
+                        }
+                      />
+                    </li>
+                  ),
+                )}
+              </ol>
+              <TypingIndicator names={typing} reduced={reduced} />
+            </>
+          )}
+          {rows.length === 0 && typing.length ? (
             <TypingIndicator names={typing} reduced={reduced} />
-          </>
-        )}
-        {rows.length === 0 && typing.length ? (
-          <TypingIndicator names={typing} reduced={reduced} />
+          ) : null}
+        </div>
+        {!atBottom && newCount > 0 ? (
+          <button type="button" className="sqc-pill" data-testid="chat-new-pill" onClick={toBottom}>
+            <Icon name="arrow-down" size={14} />
+            New messages
+          </button>
         ) : null}
+        <CitationSheet
+          cite={cite}
+          context={citeCtx}
+          ctl={ctl}
+          scene={scene}
+          onClose={() => setCite(null)}
+        />
       </div>
-      {!atBottom && newCount > 0 ? (
-        <button type="button" className="sqc-pill" data-testid="chat-new-pill" onClick={toBottom}>
-          <Icon name="arrow-down" size={14} />
-          New messages
-        </button>
-      ) : null}
-      <CitationSheet
-        cite={cite}
-        context={citeCtx}
-        ctl={ctl}
-        scene={scene}
-        onClose={() => setCite(null)}
-      />
-    </div>
+    </ChatCardActionsContext.Provider>
   );
 }
 
@@ -478,6 +550,12 @@ export interface ThreadPaneProps {
   onOpenChat?: (id: string) => void;
   /** extra controls in the header (the dock's close button) */
   headerEnd?: ReactNode;
+  /** small header actions next to the truth badge (a 'Plans' button) */
+  headerActions?: ReactNode;
+  /** left of the textarea (the '+' action menu) */
+  composerLeading?: ReactNode;
+  /** inline wizard/drawer above the composer: capped height, scrolls inside, never pushes the composer out */
+  drawer?: ReactNode;
 }
 
 export function ThreadPane({
@@ -490,8 +568,11 @@ export function ThreadPane({
   onBack,
   onOpenChat,
   headerEnd,
+  headerActions,
+  composerLeading,
+  drawer,
 }: ThreadPaneProps) {
-  const st = connStatus(ctl);
+  const st = useHeaderTruth(ctl, chat.id);
   const names = chat.members.map((m) => m.name);
   const subtitle =
     chat.kind === 'dm'
@@ -512,106 +593,129 @@ export function ThreadPane({
   const [wizard, setWizard] = useState<PlanKind | null>(null);
   const [plansOpen, setPlansOpen] = useState(isGroup && !!planParam);
   const plansState = usePlans(liveHub, isGroup && plansOpen);
+  const imsg = useImessageStatus(ctl.api);
+  const planActions = useMemo(
+    () => ({
+      askCubbie: (r: { id: string; label: string }) => composerRef.current?.attachContext(r),
+    }),
+    [composerRef],
+  );
   return (
-    <div className="sqc-thread" data-chat-kind={chat.kind}>
-      <header className="sqc-head">
-        {onBack ? (
-          <button
-            type="button"
-            className="sqc-iconbtn sqc-back"
-            onClick={onBack}
-            aria-label="Back to chats"
-            data-testid="chat-back"
-          >
-            <Icon name="chevron-left" size={22} />
-          </button>
-        ) : null}
-        {!compact ? <MemberStack chat={chat} /> : null}
-        <div className="sqc-head__text">
-          <h2 className="sqc-head__title">{chat.title}</h2>
-          {!compact ? <p className="sqc-head__sub">{subtitle}</p> : null}
-        </div>
-        <div className="sqc-head__end">
-          {chat.private ? (
-            <span className="sqc-privacy" data-testid="chat-privacy-badge">
-              <Icon name="lock" size={13} />
-              <span className="sqc-privacy__long">Only you can see this</span>
-              <span className="sqc-privacy__short" aria-hidden="true">
-                Private
-              </span>
-            </span>
-          ) : null}
-          <span className="sqc-head__conn">
-            <StatusDot status={st.status} label={st.label} hideLabel={compact} />
-          </span>
-          {isGroup && !compact ? (
+    <PlanActionsContext.Provider value={planActions}>
+      <div className="sqc-thread" data-chat-kind={chat.kind}>
+        <header className="sqc-head">
+          {onBack ? (
             <button
               type="button"
-              className="sqc-iconbtn"
-              aria-label="Plans"
-              aria-expanded={plansOpen}
-              data-testid="plans-toggle"
-              onClick={() => setPlansOpen((o) => !o)}
+              className="sqc-iconbtn sqc-back"
+              onClick={onBack}
+              aria-label="Back to chats"
+              data-testid="chat-back"
             >
-              <Icon name="ledger" size={20} />
+              <Icon name="chevron-left" size={22} />
             </button>
           ) : null}
-          {headerEnd}
-        </div>
-      </header>
-      {isGroup && plansOpen ? (
-        <PlansDrawer
-          {...plansState}
-          focusId={planParam}
-          onRetry={plansState.reload}
-          onCreate={(k) => {
-            setPlansOpen(false);
-            setWizard(k);
-          }}
-          onClose={() => setPlansOpen(false)}
+          {!compact ? <MemberStack chat={chat} /> : null}
+          <div className="sqc-head__text">
+            <h2 className="sqc-head__title">{chat.title}</h2>
+            {!compact ? <p className="sqc-head__sub">{subtitle}</p> : null}
+          </div>
+          <div className="sqc-head__end">
+            {chat.private ? (
+              <span className="sqc-privacy" data-testid="chat-privacy-badge">
+                <Icon name="lock" size={13} />
+                <span className="sqc-privacy__long">Only you can see this</span>
+                <span className="sqc-privacy__short" aria-hidden="true">
+                  Private
+                </span>
+              </span>
+            ) : null}
+            {headerActions ? (
+              <span className="sqc-head__actions" data-slot="header-actions">
+                {headerActions}
+              </span>
+            ) : null}
+            <ImessageIndicator status={imsg} chatId={chat.id} compact={compact} />
+            <span className="sqc-head__conn">
+              <span data-testid="chat-header-badge" data-tone={st.tone} title={st.detail}>
+                <StatusDot status={st.status} label={st.label} hideLabel={compact} />
+              </span>
+            </span>
+            {isGroup && !compact ? (
+              <button
+                type="button"
+                className="sqc-iconbtn"
+                aria-label="Plans"
+                aria-expanded={plansOpen}
+                data-testid="plans-toggle"
+                onClick={() => setPlansOpen((o) => !o)}
+              >
+                <Icon name="ledger" size={20} />
+              </button>
+            ) : null}
+            {headerEnd}
+          </div>
+        </header>
+        {isGroup && plansOpen ? (
+          <PlansDrawer
+            {...plansState}
+            focusId={planParam}
+            onRetry={plansState.reload}
+            onCreate={(k) => {
+              setPlansOpen(false);
+              setWizard(k);
+            }}
+            onClose={() => setPlansOpen(false)}
+          />
+        ) : null}
+        <ChatBanners ctl={ctl} />
+        <MessageList
+          key={chat.id}
+          chat={chat}
+          ctl={ctl}
+          reduced={reduced}
+          scene={scene}
+          compact={compact}
+          onPrompt={(t) => composerRef.current?.fill(t)}
+          onOpenChat={onOpenChat}
         />
-      ) : null}
-      <ChatBanners ctl={ctl} />
-      <MessageList
-        key={chat.id}
-        chat={chat}
-        ctl={ctl}
-        reduced={reduced}
-        scene={scene}
-        compact={compact}
-        onPrompt={(t) => composerRef.current?.fill(t)}
-        onOpenChat={onOpenChat}
-      />
-      {isGroup && wizard ? (
-        <WizardDrawer
-          kind={wizard}
-          groupTitle={chat.title}
-          hub={liveHub}
-          onClose={() => setWizard(null)}
-          onCreated={() => plansState.reload()}
+        {isGroup && wizard ? (
+          <WizardDrawer
+            kind={wizard}
+            groupTitle={chat.title}
+            hub={liveHub}
+            onClose={() => setWizard(null)}
+            onCreated={() => plansState.reload()}
+          />
+        ) : null}
+        {drawer ? (
+          <div className="sqc-drawer" data-slot="drawer" data-testid="chat-drawer">
+            {drawer}
+          </div>
+        ) : null}
+        <Composer
+          ref={composerRef}
+          leading={composerLeading}
+          key={`c-${chat.id}`}
+          api={ctl.api}
+          chatKind={chat.kind}
+          compact={compact}
+          paused={paused}
+          onSend={(input) => ctl.send(chat.id, input)}
+          onDiscuss={setLiveTopic}
+          onPlan={isGroup ? setWizard : undefined}
         />
-      ) : null}
-      <Composer
-        ref={composerRef}
-        key={`c-${chat.id}`}
-        api={ctl.api}
-        chatKind={chat.kind}
-        compact={compact}
-        paused={paused}
-        onSend={(input) => ctl.send(chat.id, input)}
-        onDiscuss={setLiveTopic}
-        onPlan={isGroup ? setWizard : undefined}
-      />
-      {liveTopic ? (
-        <LivePanel
-          hub={liveHub}
-          open
-          topic={liveTopic}
-          chatId={chat.id}
-          calm={reduced}
-          onClose={() => setLiveTopic(null)}
-        />
-      ) : null}
-    </div>
+        {liveTopic ? (
+          <LivePanel
+            hub={liveHub}
+            open
+            topic={liveTopic}
+            chatId={chat.id}
+            calm={reduced}
+            onClose={() => setLiveTopic(null)}
+          />
+        ) : null}
+      </div>
+    </PlanActionsContext.Provider>
   );
 }

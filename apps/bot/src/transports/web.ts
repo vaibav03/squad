@@ -5,6 +5,7 @@ import type {
   ConfirmAnswer,
   InboundMessage,
   OutboundMessage,
+  ProvenanceHint,
   StudentId,
 } from '@squad/core';
 import type { ChatId } from '@squad/core';
@@ -19,6 +20,14 @@ import {
   stripPersonaPrefix,
 } from './web-format';
 
+/** Structured citations first (they carry non-PDF sources), then the ones parsed from the text, without duplicates. */
+function mergeCitations(structured: readonly ChatCitation[], parsed: readonly ChatCitation[]): ChatCitation[] {
+  const out = [...structured];
+  for (const c of parsed)
+    if (!out.some((x) => x.file === c.file && x.page === c.page)) out.push(c);
+  return out;
+}
+
 /** What the web host receives for every bot message (structured; the persona prefix is already removed). */
 export interface WebOutbound {
   chatId: ChatId;
@@ -30,6 +39,8 @@ export interface WebOutbound {
   /** Absolute local paths: the host copies them behind unguessable URLs. */
   attachments: Attachment[];
   card?: ChatCard;
+  /** What the skill said about its own provenance when it has no citations (the hub's composer decides the rest). */
+  provenance?: ProvenanceHint;
 }
 
 export interface WebTransportOptions {
@@ -84,7 +95,8 @@ export class WebTransport implements Transport {
       personaName: persona.name,
       ...(persona.emoji ? { emoji: persona.emoji } : {}),
       text,
-      citations: quiz ? [] : citations,
+      citations: quiz ? [] : mergeCitations(o.citations ?? [], citations),
+      ...(o.provenance ? { provenance: o.provenance } : {}),
       attachments: o.attachments ?? [],
       ...(council
         ? { card: council.card }
