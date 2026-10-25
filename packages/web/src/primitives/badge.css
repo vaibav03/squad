@@ -1,0 +1,36 @@
+.sq-badge {
+  --b: var(--muted-foreground);
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--b) 18%, var(--card));
+  color: var(--foreground);
+  border: 1px solid color-mix(in oklab, var(--b) 50%, transparent);
+  font: 400 var(--text-pixel-sm)/1 var(--font-pixel);
+  -webkit-font-smoothing: none;
+  font-size: 14px;
+}
+.sq-badge--ok {
+  --b: var(--success);
+}
+.sq-badge--alert {
+  --b: var(--destructive);
+}
+.sq-badge--ember {
+  --b: var(--warning);
+}
+.sq-badge--violet {
+  --b: var(--info);
+}
+.sq-badge--dot {
+  min-width: 10px;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  background: var(--b);
+  border-color: var(--card);
+  border-width: 2px;
+}

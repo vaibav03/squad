@@ -1,0 +1,79 @@
+.sq-card {
+  display: block;
+  text-align: left;
+  width: 100%;
+  color: var(--card-foreground);
+  background: var(--card);
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  position: relative;
+}
+.sq-card--pad-none {
+  padding: 0;
+}
+.sq-card--pad-sm {
+  padding: var(--space-3);
+}
+.sq-card--pad-md {
+  padding: var(--space-4);
+}
+.sq-card--pad-lg {
+  padding: var(--space-5);
+}
+@media (min-width: 768px) {
+  .sq-card--pad-md {
+    padding: var(--space-5);
+  }
+  .sq-card--pad-lg {
+    padding: var(--space-6);
+  }
+}
+.sq-card--raised {
+  background: var(--popover);
+  box-shadow: var(--shadow-2);
+}
+.sq-card--inset {
+  background: var(--muted);
+  border-color: transparent;
+}
+.sq-card--glass {
+  background: var(--hud-bg);
+  border-color: var(--hud-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-2);
+}
+.sq-card.is-interactive {
+  cursor: pointer;
+  font: inherit;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-press) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sq-card.is-interactive:hover {
+    background: var(--accent);
+    border-color: color-mix(in oklab, var(--border) 55%, var(--foreground));
+  }
+}
+.sq-card.is-interactive:active {
+  transform: scale(0.98);
+}
+.sq-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.sq-card__body {
+  display: block;
+}
+.sq-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}

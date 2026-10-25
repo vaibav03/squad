@@ -5,14 +5,25 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./sources": "./src/sources.ts"
+    "./sources": "./src/sources/index.ts",
+    "./motion": "./src/motion/index.ts",
+    "./a11y": "./src/a11y/index.ts",
+    "./rooms": "./src/scenes/rooms.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --dir src --passWithNoTests",
-    "test:smoke": "vitest run --dir test/smoke --passWithNoTests"
+    "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
+    "dev": "vite --config vite.config.ts",
+    "capture": "tsx src/scenes/tools/capture-cli.ts"
   },
   "dependencies": {
-    "@squad/core": "workspace:*"
+    "@squad/core": "workspace:*",
+    "phaser": "3.90.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1",
+    "vite": "^6.4.5"
   }
 }

@@ -1,0 +1,93 @@
+.sq-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sq-field__label {
+  font: 500 var(--text-sm)/var(--lh-sm) var(--font-sans);
+  color: var(--foreground);
+}
+.sq-field__req {
+  color: var(--destructive-text);
+}
+.sq-field__control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  border: 1px solid var(--input);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+:root:not([data-theme='dark']) .sq-field__control {
+}
+@media (hover: hover) and (pointer: fine) {
+  .sq-field:not(.is-disabled) .sq-field__control:hover {
+    border-color: color-mix(in oklab, var(--input) 55%, var(--foreground));
+  }
+}
+.sq-field__control:focus-within {
+  border-color: var(--ring);
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.sq-field__input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  background: none;
+  border: 0;
+  outline: 0;
+  padding: 10px 0;
+  font: 400 16px/var(--lh-base) var(--font-sans);
+  color: var(--foreground);
+  resize: vertical;
+}
+textarea.sq-field__input {
+  padding: 10px 0;
+  min-height: 4.5rem;
+}
+.sq-field__input::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.8;
+}
+.sq-field__affix {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  display: inline-flex;
+  align-items: center;
+}
+.sq-field.has-error .sq-field__control {
+  border-color: var(--destructive);
+  background: color-mix(in oklab, var(--destructive) 6%, var(--card));
+}
+.sq-field__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--destructive-text);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+  font-weight: 500;
+}
+.sq-field__hint {
+  color: var(--muted-foreground);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+}
+.sq-field.is-disabled .sq-field__control {
+  opacity: 0.5;
+  background: var(--muted);
+}
+.sq-field.is-disabled * {
+  cursor: not-allowed;
+}
+.sq-field__control[data-force-state='focus'] {
+  border-color: var(--ring);
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}

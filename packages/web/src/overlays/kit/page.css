@@ -1,0 +1,155 @@
+/* Shared page parts for web-live pages (ledger, trip, mastery). Paper in light, night in dark. */
+
+.lv-conn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lv-s2);
+  height: 28px;
+  padding: 0 var(--lv-s3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--lv-line);
+  background: var(--lv-surface);
+  font: 600 var(--text-xs) / 1 var(--lv-font-ui);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--lv-text);
+  transition: opacity var(--dur-fast) var(--lv-ease-out);
+}
+.lv-conn__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--state-idle);
+}
+.lv-conn[data-tone='ok'] .lv-conn__dot {
+  background: var(--lv-ok);
+}
+.lv-conn[data-tone='info'] .lv-conn__dot {
+  background: var(--lv-info);
+}
+.lv-conn[data-tone='warn'] .lv-conn__dot {
+  background: var(--lv-warn);
+}
+.lv-conn[data-tone='bad'] .lv-conn__dot {
+  background: var(--lv-alert);
+}
+
+.lv-seg {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  border-radius: var(--lv-r3);
+  background: var(--lv-surface-3);
+  border: 1px solid var(--lv-line);
+}
+.lv-seg__opt {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  min-width: var(--lv-tap);
+  padding: 0 var(--lv-s4);
+  border-radius: var(--lv-r2);
+  font: 500 var(--text-sm) / 1 var(--lv-font-ui);
+  color: var(--lv-text-dim);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--lv-ease-out),
+    color var(--dur-fast) var(--lv-ease-out),
+    transform var(--dur-press) var(--lv-ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.lv-seg__opt input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.lv-seg__opt:focus-within {
+  outline: 2px solid var(--lv-focus);
+  outline-offset: 2px;
+}
+.lv-seg__opt:active {
+  transform: scale(0.97);
+}
+.lv-seg__opt[data-on] {
+  background: var(--lv-accent);
+  color: var(--lv-accent-ink);
+  font-weight: 600;
+}
+@media (hover: hover) and (pointer: fine) {
+  .lv-seg__opt:not([data-on]):hover {
+    color: var(--lv-text);
+    background: var(--lv-hover);
+  }
+}
+
+.lv-state {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--card);
+}
+.lv-state__bang {
+  font: 400 var(--text-pixel-lg) / 1 var(--lv-font-pixel);
+  color: var(--destructive-text);
+}
+.lv-state__dots {
+  display: inline-flex;
+  gap: 6px;
+}
+.lv-state__dots i {
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  animation: lv-step 1.2s steps(1) infinite;
+}
+.lv-state__dots i:nth-child(2) {
+  animation-delay: 0.4s;
+}
+.lv-state__dots i:nth-child(3) {
+  animation-delay: 0.8s;
+}
+@keyframes lv-step {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  33% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-state__dots i {
+    animation: none;
+    opacity: 1;
+  }
+}
+.lv-av {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  background: var(--sq-sky-deep);
+  border: 2px solid var(--sq-ink);
+  color: var(--sq-moon);
+  font-family: var(--lv-font-pixel);
+  line-height: 1;
+}
+.lv-av[data-tone='you'] {
+  box-shadow: 0 0 0 2px var(--sq-glow);
+}
+
+/* Sentence under a page title (Page from the shell primitives); tucks up under the heading. */
+.lv-lede {
+  margin: calc(var(--space-3) * -1) 0 0;
+  max-width: 60ch;
+  color: var(--muted-foreground);
+  font: 400 var(--text-base) / var(--lh-base) var(--font-sans);
+  text-wrap: pretty;
+}
+@media (min-width: 768px) {
+  .lv-lede {
+    margin-top: calc(var(--space-6) * -1);
+  }
+}

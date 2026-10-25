@@ -1,0 +1,9 @@
+{
+  "squadId": "squad_1",
+  "window": {
+    "from": "2026-11-02T00",
+    "to": "2026-11-05T00"
+  },
+  "topics": ["dynamic-programming", "graphs"],
+  "examAt": "2026-11-05T00"
+}

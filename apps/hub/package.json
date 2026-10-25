@@ -4,15 +4,29 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./real": "./src/wire.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --dir src --passWithNoTests",
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
-    "dev": "echo \"@squad/hub: dev not implemented yet\""
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "load": "tsx scripts/load.ts"
   },
   "dependencies": {
-    "@squad/core": "workspace:*"
+    "@hono/node-server": "^2.1.5",
+    "@squad/brain": "workspace:*",
+    "@squad/core": "workspace:*",
+    "@squad/media": "workspace:*",
+    "@squad/mesh": "workspace:*",
+    "hono": "^4.13.13",
+    "ws": "^8.22.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "@types/ws": "^8.18.2"
   }
 }

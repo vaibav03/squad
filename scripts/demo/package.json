@@ -1,0 +1,22 @@
+{
+  "name": "@squad/demo-scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@squad/core": "workspace:*",
+    "zod": "^4.0.0",
+    "@squad/agent": "workspace:*",
+    "@squad/bot": "workspace:*",
+    "@squad/brain": "workspace:*",
+    "@squad/hub": "workspace:*",
+    "@squad/mesh": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0"
+  }
+}

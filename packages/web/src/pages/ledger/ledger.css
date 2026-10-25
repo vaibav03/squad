@@ -1,0 +1,249 @@
+@import '../../overlays/kit/bridge.css';
+
+.lv-ledger__sum {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lv-s2) var(--lv-s5);
+  margin: 0;
+  color: var(--lv-text-dim);
+  font: 500 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
+}
+.lv-ledger__sum span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lv-s2);
+}
+.lv-ledger__sum [data-bad] {
+  color: var(--lv-alert-text);
+}
+.lv-ledger__cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--lv-s4);
+  align-items: start;
+}
+.lv-ledger__skel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--lv-s4);
+}
+.lv-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lv-s3);
+  padding: var(--lv-s4);
+  border-radius: var(--lv-r4);
+  background: var(--lv-surface-3);
+  border: 1px solid var(--lv-line);
+  min-width: 0;
+}
+.lv-col[data-mine] {
+  border-color: var(--lv-line-strong);
+}
+.lv-col__head {
+  display: flex;
+  align-items: center;
+  gap: var(--lv-s3);
+  min-height: 40px;
+}
+.lv-col__name {
+  font: 600 var(--text-base) / var(--lh-base) var(--lv-font-ui);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.lv-col__empty {
+  margin: 0;
+  padding: var(--lv-s5) var(--lv-s2);
+  text-align: center;
+  color: var(--lv-text-dim);
+  font: 400 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
+  border: 1px dashed var(--lv-line);
+  border-radius: var(--lv-r3);
+}
+.lv-you {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 var(--lv-s2);
+  border-radius: var(--radius-pill);
+  background: var(--lv-accent);
+  color: var(--lv-accent-ink);
+  font: 600 var(--text-xs) / 1 var(--lv-font-ui);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+.lv-you--sm {
+  margin-left: var(--lv-s2);
+  height: 18px;
+  font-size: 10px;
+  vertical-align: middle;
+}
+.lv-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--lv-s2);
+}
+.lv-rows--feed {
+  gap: var(--lv-s3);
+}
+.lv-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: var(--lv-s3);
+  align-items: start;
+  min-height: 56px;
+  padding: var(--lv-s3) var(--lv-s4) var(--lv-s3) var(--lv-s3);
+  border-radius: var(--lv-r3);
+  background: var(--lv-surface);
+  border: 1px solid var(--lv-line);
+  transition: border-color var(--dur-fast) var(--lv-ease-out);
+  overflow: hidden;
+}
+.lv-row[data-mine] {
+  border-color: var(--lv-line-strong);
+}
+.lv-row[role='button'] {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.lv-row[role='button']:focus-visible {
+  outline: 2px solid var(--lv-focus);
+  outline-offset: 2px;
+}
+.lv-row[role='button']:active {
+  transform: scale(0.99);
+}
+.lv-row__icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 1px;
+  color: var(--lv-ok);
+}
+.lv-row[data-kind='withheld'] .lv-row__icon {
+  color: var(--lv-text-dim);
+}
+.lv-row[data-kind='blocked'] {
+  padding-left: calc(var(--lv-s3) + 3px);
+}
+.lv-row[data-kind='blocked']::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--lv-alert);
+}
+.lv-row[data-kind='blocked'] .lv-row__icon {
+  color: var(--lv-alert-text);
+}
+.lv-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lv-s1);
+  min-width: 0;
+}
+.lv-row__field {
+  margin: 0;
+  font: 500 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
+  overflow-wrap: anywhere;
+}
+.lv-row__agent {
+  margin-right: var(--lv-s2);
+  padding-right: var(--lv-s2);
+  border-right: 1px solid var(--lv-line);
+  color: var(--lv-text-dim);
+  font-weight: 600;
+}
+.lv-row__shared {
+  margin: 0;
+  color: var(--lv-text-dim);
+  font: 400 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
+  overflow-wrap: anywhere;
+  transition: filter var(--dur-fast) var(--lv-ease-out);
+}
+.lv-row[data-blurred] .lv-row__shared {
+  filter: blur(6px);
+  user-select: none;
+}
+.lv-row__blocked {
+  margin: 0;
+  color: var(--lv-alert-text);
+  font: 600 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
+}
+.lv-row__kept {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--lv-s3);
+}
+.lv-bar {
+  display: block;
+  height: 14px;
+  min-width: 48px;
+  border-radius: 2px;
+  background: var(--lv-bar);
+}
+:root[data-theme='dark'] .lv-bar,
+.sq-scene .lv-bar {
+  outline: 1px solid var(--lv-line);
+}
+.lv-row__keptlabel {
+  color: var(--lv-text-dim);
+  font: 400 var(--text-xs) / var(--lh-xs) var(--lv-font-ui);
+  white-space: nowrap;
+}
+/* Projector: larger type for the room (18/28). */
+.lv-row[data-big] .lv-row__field {
+  font-size: var(--text-lg);
+  line-height: var(--lh-lg);
+}
+.lv-row[data-big] .lv-row__shared {
+  font-size: var(--text-lg);
+  line-height: var(--lh-lg);
+}
+.lv-row[data-big] .lv-row__blocked {
+  font-size: var(--text-base);
+}
+.lv-row[data-big] .lv-bar {
+  height: 18px;
+}
+/* One gentle red wash when the gate blocked a leak (opacity only, once, never rapid). */
+.lv-row[data-kind='blocked'][data-fresh]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--lv-alert);
+  opacity: 0;
+  pointer-events: none;
+  animation: lv-wash 700ms var(--lv-ease-out) 1;
+}
+@keyframes lv-wash {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.22;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lv-row[data-kind='blocked'][data-fresh]::after {
+    animation: none;
+  }
+}
+.lv-row[data-fresh]:not([data-kind='blocked']) {
+  border-color: var(--lv-accent);
+}
+@media (min-width: 640px) {
+  .lv-rows--feed {
+    max-width: 720px;
+  }
+}

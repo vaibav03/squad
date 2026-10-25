@@ -1,0 +1,154 @@
+{
+  "version": 2,
+  "id": "feynman",
+  "cell": {
+    "w": 32,
+    "h": 32
+  },
+  "facing": "right",
+  "anchors": {
+    "feet": {
+      "x": 16,
+      "y": 31
+    },
+    "head": {
+      "x": 16,
+      "y": 9
+    },
+    "bubble": {
+      "x": 16,
+      "y": 6
+    }
+  },
+  "portrait": "portrait.png",
+  "frames": {
+    "idle/0": {
+      "strip": "idle.png",
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "idle/1": {
+      "strip": "idle.png",
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "walk/0": {
+      "strip": "walk.png",
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "walk/1": {
+      "strip": "walk.png",
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "walk/2": {
+      "strip": "walk.png",
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "walk/3": {
+      "strip": "walk.png",
+      "x": 96,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "talk/0": {
+      "strip": "talk.png",
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "talk/1": {
+      "strip": "talk.png",
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "sit/0": {
+      "strip": "sit.png",
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "sit/1": {
+      "strip": "sit.png",
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "wave/0": {
+      "strip": "wave.png",
+      "x": 0,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "wave/1": {
+      "strip": "wave.png",
+      "x": 32,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    }
+  },
+  "anims": {
+    "idle": {
+      "frames": [
+        "idle/0",
+        "idle/1"
+      ],
+      "frameRate": 2,
+      "repeat": -1
+    },
+    "walk": {
+      "frames": [
+        "walk/0",
+        "walk/1",
+        "walk/2",
+        "walk/3"
+      ],
+      "frameRate": 8,
+      "repeat": -1
+    },
+    "talk": {
+      "frames": [
+        "talk/0",
+        "talk/1"
+      ],
+      "frameRate": 8,
+      "repeat": -1
+    },
+    "sit": {
+      "frames": [
+        "sit/0",
+        "sit/1"
+      ],
+      "frameRate": 2,
+      "repeat": -1
+    },
+    "wave": {
+      "frames": [
+        "wave/0",
+        "wave/1"
+      ],
+      "frameRate": 4,
+      "repeat": -1
+    }
+  }
+}

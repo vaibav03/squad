@@ -1,0 +1,36 @@
+{
+  "tz": "UTC",
+  "workHours": {
+    "startHour": 9,
+    "endHour": 18
+  },
+  "topics": {
+    "canTeach": [],
+    "weak": ["dynamic-programming", "graphs"]
+  },
+  "hardNos": [],
+  "id": "s_ana",
+  "name": "Ana",
+  "venmo": "ana-s",
+  "calendar": [
+    {
+      "start": "2026-11-02T09:00:00Z",
+      "end": "2026-11-02T12:00:00Z",
+      "title": "therapy Tue 2pm"
+    },
+    {
+      "start": "2026-11-20T00:00:00Z",
+      "end": "2026-11-21T00:00:00Z",
+      "title": "therapy Tue 2pm"
+    }
+  ],
+  "hourCost": {
+    "9": 2,
+    "10": 1,
+    "14": 0,
+    "15": 0
+  },
+  "budget": 187,
+  "tripExtrasPerDay": 10,
+  "tripRanking": ["flagstaff", "lake", "cabo", "barcrawl"]
+}

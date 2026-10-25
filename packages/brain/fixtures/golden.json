@@ -1,0 +1,184 @@
+{
+  "course": "demo",
+  "note": "quotes verified against extracted PDF text; page = index inside the excerpt file",
+  "answerable": [
+    {
+      "id": "g01",
+      "question": "What does a z-score measure?",
+      "chapter": "ch6",
+      "file": "ch6-the-normal-distribution.pdf",
+      "page": 2,
+      "quote": "measured in units of the standard deviation",
+      "keywords": ["standard deviation"]
+    },
+    {
+      "id": "g02",
+      "question": "What does the Empirical Rule say about how much of a normal distribution lies within one standard deviation of the mean?",
+      "chapter": "ch6",
+      "file": "ch6-the-normal-distribution.pdf",
+      "page": 4,
+      "quote": "About 68% of the x values lie between",
+      "keywords": ["68"]
+    },
+    {
+      "id": "g03",
+      "question": "What are the mean and standard deviation of the standard normal distribution?",
+      "chapter": "ch6",
+      "file": "ch6-the-normal-distribution.pdf",
+      "page": 2,
+      "quote": "The mean for the standard normal distribution is zero, and the standard deviation is one",
+      "keywords": ["zero", "one"]
+    },
+    {
+      "id": "g04",
+      "question": "What is another name for the empirical rule?",
+      "chapter": "ch6",
+      "file": "ch6-the-normal-distribution.pdf",
+      "page": 4,
+      "quote": "The empirical rule is also known as the 68-95-99.7 rule.",
+      "keywords": ["68-95-99.7"]
+    },
+    {
+      "id": "g05",
+      "question": "What is a sample space?",
+      "chapter": "ch3",
+      "file": "ch3-probability-topics.pdf",
+      "page": 2,
+      "quote": "The sample space of an experiment is the set of all possible outcomes.",
+      "keywords": ["set of all possible outcomes"]
+    },
+    {
+      "id": "g06",
+      "question": "How does the book define an experiment in probability?",
+      "chapter": "ch3",
+      "file": "ch3-probability-topics.pdf",
+      "page": 2,
+      "quote": "An experiment is a planned operation carried out under controlled conditions.",
+      "keywords": ["planned operation"]
+    },
+    {
+      "id": "g07",
+      "question": "What does equally likely mean?",
+      "chapter": "ch3",
+      "file": "ch3-probability-topics.pdf",
+      "page": 2,
+      "quote": "Equally likely means that each outcome of an experiment occurs with equal probability.",
+      "keywords": ["equal probability"]
+    },
+    {
+      "id": "g08",
+      "question": "Are independent and mutually exclusive events the same thing?",
+      "chapter": "ch3",
+      "file": "ch3-probability-topics.pdf",
+      "page": 6,
+      "quote": "Independent and mutually exclusive do not mean the same thing.",
+      "keywords": ["not mean the same"]
+    },
+    {
+      "id": "g09",
+      "question": "Why would the median be preferred over the mean when there is an outlier?",
+      "chapter": "ch2",
+      "file": "ch2-descriptive-statistics.pdf",
+      "page": 7,
+      "quote": "The mean is affected by outliers that do not influence the median.",
+      "keywords": ["outlier", "median"]
+    },
+    {
+      "id": "g10",
+      "question": "Can the standard deviation be negative?",
+      "chapter": "ch2",
+      "file": "ch2-descriptive-statistics.pdf",
+      "page": 9,
+      "quote": "The standard deviation is always positive or zero.",
+      "keywords": ["positive or zero"]
+    },
+    {
+      "id": "g11",
+      "question": "What happens to the mean and median in a perfectly symmetrical distribution?",
+      "chapter": "ch2",
+      "file": "ch2-descriptive-statistics.pdf",
+      "page": 6,
+      "quote": "In a perfectly symmetrical distribution, the mean and the median are the same.",
+      "keywords": ["same"]
+    },
+    {
+      "id": "g12",
+      "question": "What is a statistic?",
+      "chapter": "ch2",
+      "file": "ch2-descriptive-statistics.pdf",
+      "page": 4,
+      "quote": "A statistic is a number calculated from a sample.",
+      "keywords": ["sample"]
+    },
+    {
+      "id": "g13",
+      "question": "What is the Sum of Squared Errors (SSE)?",
+      "chapter": "ch12",
+      "file": "ch12-linear-regression.pdf",
+      "page": 9,
+      "quote": "This is called the Sum of Squared Errors (SSE).",
+      "keywords": ["SSE"]
+    },
+    {
+      "id": "g14",
+      "question": "What criterion defines the line of best fit?",
+      "chapter": "ch12",
+      "file": "ch12-linear-regression.pdf",
+      "page": 11,
+      "quote": "the sum of the squared errors (SSE) is minimized, that is, made as small as possible.",
+      "keywords": ["minimized", "SSE"]
+    },
+    {
+      "id": "g15",
+      "question": "Does a residual mean the data point was a mistake?",
+      "chapter": "ch12",
+      "file": "ch12-linear-regression.pdf",
+      "page": 9,
+      "quote": "It is not an error in the sense of a mistake.",
+      "keywords": ["not an error", "mistake"]
+    },
+    {
+      "id": "g16",
+      "question": "What does the correlation coefficient measure?",
+      "chapter": "ch12",
+      "file": "ch12-linear-regression.pdf",
+      "page": 14,
+      "quote": "provides a measure of strength and direction of the linear association",
+      "keywords": ["strength", "direction"]
+    }
+  ],
+  "unanswerable": [
+    {
+      "id": "u01",
+      "question": "What's on the final exam?"
+    },
+    {
+      "id": "u02",
+      "question": "When is the midterm?"
+    },
+    {
+      "id": "u03",
+      "question": "What are the TA's office hours this week?"
+    },
+    {
+      "id": "u04",
+      "question": "How do I install PyTorch on Windows?"
+    },
+    {
+      "id": "u05",
+      "question": "What is the capital of Australia?"
+    },
+    {
+      "id": "u06",
+      "question": "Who won the 2022 World Cup?"
+    },
+    {
+      "id": "u07",
+      "question": "What is the late work penalty for the group project?"
+    },
+    {
+      "id": "u08",
+      "question": "How do I train a convolutional neural network?"
+    }
+  ]
+}

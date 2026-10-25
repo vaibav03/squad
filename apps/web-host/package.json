@@ -10,10 +10,26 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --dir src --passWithNoTests",
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
-    "dev": "echo \"@squad/web-host: dev not implemented yet\""
+    "dev": "vite --port 5180",
+    "build": "vite build",
+    "preview": "vite preview --port 5180",
+    "shots": "node scripts/shots.mjs"
   },
   "dependencies": {
     "@squad/web": "workspace:*",
-    "@squad/core": "workspace:*"
+    "@squad/core": "workspace:*",
+    "@squad/village": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "vite": "^6.0.0",
+    "playwright": "^1.49.0",
+    "jsdom": "^26.0.0",
+    "@testing-library/react": "^16.1.0"
   }
 }

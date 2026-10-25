@@ -1,0 +1,3 @@
+/* Single styling source: docs/design/tokens.css (shadcn-style semantic names + --sq-* palette).
+   Do not redefine token values here; add component-level custom properties in the component's own css. */
+@import '../../../../docs/design/tokens.css';

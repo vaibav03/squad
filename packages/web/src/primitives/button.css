@@ -1,0 +1,122 @@
+.sq-btn {
+  --btn-bg: var(--secondary);
+  --btn-fg: var(--secondary-foreground);
+  --btn-border: var(--border);
+  --btn-hover: var(--accent);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  border: var(--border-w) solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font: 500 var(--text-sm)/var(--lh-sm) var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-press) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+.sq-btn--sm {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-xs);
+}
+.sq-btn--lg {
+  min-height: 48px;
+  padding: 0 var(--space-5);
+  font-size: var(--text-base);
+  border-radius: var(--radius-lg);
+}
+@media (pointer: coarse), (max-width: 767px) {
+  .sq-btn {
+    min-height: var(--touch-min);
+  }
+  .sq-btn--lg {
+    min-height: 52px;
+  }
+}
+.sq-btn--full {
+  width: 100%;
+}
+.sq-btn--primary {
+  --btn-bg: var(--primary);
+  --btn-fg: var(--primary-foreground);
+  --btn-border: transparent;
+  --btn-hover: color-mix(in oklab, var(--primary) 88%, white);
+  font-weight: 600;
+}
+.sq-btn--ghost {
+  --btn-bg: transparent;
+  --btn-border: transparent;
+  --btn-fg: var(--foreground);
+}
+.sq-btn--danger {
+  --btn-bg: color-mix(in oklab, var(--destructive) 78%, black);
+  --btn-fg: #fff;
+  --btn-border: transparent;
+  --btn-hover: color-mix(in oklab, var(--destructive) 88%, white);
+  font-weight: 600;
+}
+:root[data-theme='light'] .sq-btn--danger {
+  --btn-fg: #fff;
+}
+.sq-btn__icon {
+  display: inline-flex;
+  align-items: center;
+}
+.sq-btn__icon:empty {
+  display: none;
+}
+.sq-btn__label {
+  display: inline-block;
+}
+.sq-btn__label:empty {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sq-btn:not(:disabled):not(.is-loading):hover {
+    background: var(--btn-hover);
+  }
+  .sq-btn--secondary:not(:disabled):not(.is-loading):hover {
+    border-color: color-mix(in oklab, var(--border) 60%, var(--foreground));
+  }
+  .sq-btn--primary:not(:disabled):not(.is-loading):hover {
+    box-shadow: var(--shadow-glow);
+  }
+}
+.sq-btn:not(:disabled):active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-press);
+}
+.sq-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.sq-btn:disabled,
+.sq-btn[aria-disabled='true']:not(.is-loading) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* Disabled primaries read as unavailable, not as a washed-out call to action. */
+.sq-btn--primary:disabled {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  border-color: var(--border);
+  opacity: 1;
+  box-shadow: none;
+}
+.sq-btn.is-loading {
+  cursor: progress;
+}
+.sq-btn[data-force-state='hover'] {
+  background: var(--btn-hover);
+}

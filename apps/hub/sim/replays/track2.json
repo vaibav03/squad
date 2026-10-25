@@ -1,0 +1,815 @@
+{
+  "name": "track2",
+  "version": 1,
+  "loop": false,
+  "cast": {
+    "me": "s_ana",
+    "ben": "s_ben",
+    "chi": "s_chi",
+    "mediator": "mediator"
+  },
+  "events": [
+    {
+      "at": 0,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 100,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_chi",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 300,
+      "event": {
+        "t": "agent.state",
+        "agent": "mediator",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 5000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ana",
+        "to": "commons",
+        "taskId": "task_study_ch6",
+        "kind": "task.open",
+        "shared": ["study plan opened", "3 members"]
+      }
+    },
+    {
+      "at": 5600,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 6000,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 6400,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_chi",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 8000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ana",
+        "to": "commons",
+        "taskId": "task_study_ch6",
+        "kind": "psi.blind",
+        "shared": ["168 blinded tokens (padded)"]
+      }
+    },
+    {
+      "at": 8300,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_study_ch6",
+        "student": "s_ana",
+        "field": "calendar",
+        "shared": "168 blinded tokens (padded)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 8600,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ben",
+        "to": "commons",
+        "taskId": "task_study_ch6",
+        "kind": "psi.blind",
+        "shared": ["168 blinded tokens (padded)"]
+      }
+    },
+    {
+      "at": 8900,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_study_ch6",
+        "student": "s_ben",
+        "field": "calendar",
+        "shared": "168 blinded tokens (padded)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 9200,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_chi",
+        "to": "commons",
+        "taskId": "task_study_ch6",
+        "kind": "psi.blind",
+        "shared": ["168 blinded tokens (padded)"]
+      }
+    },
+    {
+      "at": 9500,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_study_ch6",
+        "student": "s_chi",
+        "field": "calendar",
+        "shared": "168 blinded tokens (padded)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 10600,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ana",
+        "to": "mediator",
+        "taskId": "task_study_ch6",
+        "kind": "psi.tokens",
+        "shared": ["168 blinded tokens"]
+      }
+    },
+    {
+      "at": 11000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ben",
+        "to": "mediator",
+        "taskId": "task_study_ch6",
+        "kind": "psi.tokens",
+        "shared": ["168 blinded tokens"]
+      }
+    },
+    {
+      "at": 11400,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_chi",
+        "to": "mediator",
+        "taskId": "task_study_ch6",
+        "kind": "psi.tokens",
+        "shared": ["168 blinded tokens"]
+      }
+    },
+    {
+      "at": 12600,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "commons",
+        "taskId": "task_study_ch6",
+        "kind": "psi.common",
+        "shared": ["0 common slots"]
+      }
+    },
+    {
+      "at": 14200,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "commons",
+        "taskId": "task_study_ch6",
+        "kind": "conflict",
+        "shared": ["no slot works for everyone"]
+      }
+    },
+    {
+      "at": 17000,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "commons",
+        "taskId": "task_study_ch6",
+        "kind": "result",
+        "shared": ["plan proposed"]
+      }
+    },
+    {
+      "at": 19000,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "waiting_for_student"
+      }
+    },
+    {
+      "at": 19200,
+      "event": {
+        "t": "confirm.pending",
+        "student": "s_ben",
+        "taskId": "task_study_ch6",
+        "question": "Move gym to make Wed 7 PM work?"
+      }
+    },
+    {
+      "at": 25500,
+      "event": {
+        "t": "confirm.done",
+        "student": "s_ben",
+        "taskId": "task_study_ch6",
+        "question": "Move gym to make Wed 7 PM work?"
+      }
+    },
+    {
+      "at": 25700,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 27000,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "commons",
+        "taskId": "task_study_ch6",
+        "kind": "result",
+        "shared": ["plan found"]
+      }
+    },
+    {
+      "at": 28500,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 28650,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 28800,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_chi",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 33000,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_study_ch6",
+        "student": "s_ana",
+        "field": "calendar",
+        "shared": "busy 3",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 34500,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_study_ch6",
+        "student": "s_ben",
+        "field": "calendar",
+        "shared": "busy 4",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 36000,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_study_ch6",
+        "student": "s_chi",
+        "field": "calendar",
+        "shared": "busy 2",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 46000,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 47500,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ben",
+        "to": "student:s_ana",
+        "taskId": "task_attack_budget",
+        "kind": "query",
+        "shared": ["asks: budget"]
+      }
+    },
+    {
+      "at": 50000,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "student:s_ben",
+        "taskId": "task_attack_budget",
+        "kind": "query_denied",
+        "shared": ["request denied: budget"]
+      }
+    },
+    {
+      "at": 50400,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_attack_budget",
+        "student": "s_ana",
+        "field": "budget",
+        "shared": "nothing",
+        "withheld": "hidden",
+        "blocked": true
+      }
+    },
+    {
+      "at": 53000,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 58000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ana",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "task.open",
+        "shared": ["trip plan opened", "3 members"]
+      }
+    },
+    {
+      "at": 58400,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 58700,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 59000,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_chi",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 60000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ana",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "psi.blind",
+        "shared": ["64 blinded tokens (padded)"]
+      }
+    },
+    {
+      "at": 60250,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip_cabo",
+        "student": "s_ana",
+        "field": "calendar",
+        "shared": "64 blinded tokens (padded)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 60500,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ben",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "psi.blind",
+        "shared": ["64 blinded tokens (padded)"]
+      }
+    },
+    {
+      "at": 60750,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip_cabo",
+        "student": "s_ben",
+        "field": "calendar",
+        "shared": "64 blinded tokens (padded)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 61000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_chi",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "psi.blind",
+        "shared": ["64 blinded tokens (padded)"]
+      }
+    },
+    {
+      "at": 61250,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip_cabo",
+        "student": "s_chi",
+        "field": "calendar",
+        "shared": "64 blinded tokens (padded)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 62500,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "psi.common",
+        "shared": ["3 common slots"]
+      }
+    },
+    {
+      "at": 64000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ana",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "share.vec",
+        "shared": ["secret share of 3 values (cantAfford)"]
+      }
+    },
+    {
+      "at": 64250,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip_cabo",
+        "student": "s_ana",
+        "field": "budget",
+        "shared": "secret share of 3 values (cantAfford)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 64500,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ben",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "share.vec",
+        "shared": ["secret share of 3 values (cantAfford)"]
+      }
+    },
+    {
+      "at": 64750,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip_cabo",
+        "student": "s_ben",
+        "field": "budget",
+        "shared": "secret share of 3 values (cantAfford)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 65000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_chi",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "share.vec",
+        "shared": ["secret share of 3 values (cantAfford)"]
+      }
+    },
+    {
+      "at": 65250,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip_cabo",
+        "student": "s_chi",
+        "field": "budget",
+        "shared": "secret share of 3 values (cantAfford)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 66000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_chi",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "share.vec",
+        "shared": ["secret share of 3 values (veto)"]
+      }
+    },
+    {
+      "at": 66250,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip_cabo",
+        "student": "s_chi",
+        "field": "hardNo",
+        "shared": "secret share of 3 values (veto)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 66500,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ana",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "share.vec",
+        "shared": ["secret share of 3 values (veto)"]
+      }
+    },
+    {
+      "at": 66750,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip_cabo",
+        "student": "s_ana",
+        "field": "hardNo",
+        "shared": "secret share of 3 values (veto)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 67000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ben",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "share.vec",
+        "shared": ["secret share of 3 values (veto)"]
+      }
+    },
+    {
+      "at": 67250,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip_cabo",
+        "student": "s_ben",
+        "field": "hardNo",
+        "shared": "secret share of 3 values (veto)",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 68000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ana",
+        "to": "mediator",
+        "taskId": "task_trip_cabo",
+        "kind": "share.sum",
+        "shared": ["secret share of 3 values (cantAfford)"]
+      }
+    },
+    {
+      "at": 68300,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ben",
+        "to": "mediator",
+        "taskId": "task_trip_cabo",
+        "kind": "share.sum",
+        "shared": ["secret share of 3 values (cantAfford)"]
+      }
+    },
+    {
+      "at": 68600,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_chi",
+        "to": "mediator",
+        "taskId": "task_trip_cabo",
+        "kind": "share.sum",
+        "shared": ["secret share of 3 values (cantAfford)"]
+      }
+    },
+    {
+      "at": 70500,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "option_dropped",
+        "shared": ["option dropped: budget"]
+      }
+    },
+    {
+      "at": 72500,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "option_dropped",
+        "shared": ["dropped: veto"]
+      }
+    },
+    {
+      "at": 75000,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "result",
+        "shared": ["top options ranked"]
+      }
+    },
+    {
+      "at": 77000,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "result",
+        "shared": ["plan proposed"]
+      }
+    },
+    {
+      "at": 80000,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "waiting_for_student"
+      }
+    },
+    {
+      "at": 80100,
+      "event": {
+        "t": "confirm.pending",
+        "student": "s_ana",
+        "taskId": "task_trip_cabo",
+        "question": "Hold the Flagstaff cabin at $64/person?"
+      }
+    },
+    {
+      "at": 80200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "waiting_for_student"
+      }
+    },
+    {
+      "at": 80300,
+      "event": {
+        "t": "confirm.pending",
+        "student": "s_ben",
+        "taskId": "task_trip_cabo",
+        "question": "Hold the Flagstaff cabin at $64/person?"
+      }
+    },
+    {
+      "at": 80400,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_chi",
+        "state": "waiting_for_student"
+      }
+    },
+    {
+      "at": 80500,
+      "event": {
+        "t": "confirm.pending",
+        "student": "s_chi",
+        "taskId": "task_trip_cabo",
+        "question": "Hold the Flagstaff cabin at $64/person?"
+      }
+    },
+    {
+      "at": 86000,
+      "event": {
+        "t": "confirm.done",
+        "student": "s_ana",
+        "taskId": "task_trip_cabo",
+        "question": "Hold the Flagstaff cabin at $64/person?"
+      }
+    },
+    {
+      "at": 86200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 90000,
+      "event": {
+        "t": "confirm.done",
+        "student": "s_ben",
+        "taskId": "task_trip_cabo",
+        "question": "Hold the Flagstaff cabin at $64/person?"
+      }
+    },
+    {
+      "at": 90200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 106000,
+      "event": {
+        "t": "confirm.done",
+        "student": "s_chi",
+        "taskId": "task_trip_cabo",
+        "question": "Hold the Flagstaff cabin at $64/person?"
+      }
+    },
+    {
+      "at": 106200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_chi",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 107000,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "commons",
+        "taskId": "task_trip_cabo",
+        "kind": "result",
+        "shared": ["plan found"]
+      }
+    },
+    {
+      "at": 108500,
+      "event": {
+        "t": "trip.confirmed",
+        "taskId": "task_trip_cabo",
+        "squadId": "sq_demo"
+      }
+    }
+  ],
+  "checkpoints": {
+    "campfire": 5000,
+    "conflict": 12600,
+    "waiting-for-yes": 19000,
+    "notice-board": 33000,
+    "attack": 46000,
+    "trip": 58000,
+    "before-last-confirm": 100000
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "pack": "placeholder",
+  "tileset": {
+    "image": "interior/placeholder/tileset.png",
+    "def": "interior/placeholder/tileset.json"
+  },
+  "props": {
+    "image": "interior/placeholder/props.png",
+    "def": "interior/placeholder/props.json"
+  },
+  "maps": {
+    "demo": "interior/maps/demo.json"
+  },
+  "characters": {
+    "frame": {
+      "w": 16,
+      "h": 16
+    },
+    "anchor": {
+      "x": 8,
+      "y": 15
+    },
+    "fps": 8,
+    "anims": {
+      "walk-down": [
+        0,
+        4,
+        8,
+        12
+      ],
+      "idle-down": [
+        0
+      ],
+      "walk-up": [
+        1,
+        5,
+        9,
+        13
+      ],
+      "idle-up": [
+        1
+      ],
+      "walk-left": [
+        2,
+        6,
+        10,
+        14
+      ],
+      "idle-left": [
+        2
+      ],
+      "walk-right": [
+        3,
+        7,
+        11,
+        15
+      ],
+      "idle-right": [
+        3
+      ]
+    },
+    "cast": [
+      {
+        "id": "boy",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/Boy/SpriteSheet.png"
+      },
+      {
+        "id": "villager",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/Villager/SpriteSheet.png"
+      },
+      {
+        "id": "villager2",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/Villager2/SpriteSheet.png"
+      },
+      {
+        "id": "villager3",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/Villager3/SpriteSheet.png"
+      },
+      {
+        "id": "villager4",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/Villager4/SpriteSheet.png"
+      },
+      {
+        "id": "woman",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/Woman/SpriteSheet.png"
+      },
+      {
+        "id": "princess",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/Princess/SpriteSheet.png"
+      },
+      {
+        "id": "oldman",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/OldMan/SpriteSheet.png"
+      },
+      {
+        "id": "monk",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/Monk/SpriteSheet.png"
+      },
+      {
+        "id": "inspector",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/Inspector/SpriteSheet.png"
+      },
+      {
+        "id": "noble",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/Noble/SpriteSheet.png"
+      },
+      {
+        "id": "master",
+        "image": "pixel/characters/ninja-adventure-npcs-16px/Master/SpriteSheet.png"
+      }
+    ],
+    "player": "boy"
+  }
+}

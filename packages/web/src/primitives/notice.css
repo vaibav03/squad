@@ -1,0 +1,45 @@
+.sq-notice {
+  --n: var(--info);
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in oklab, var(--n) 40%, var(--border));
+  background: color-mix(in oklab, var(--n) 10%, var(--card));
+  color: var(--foreground);
+}
+.sq-notice--ok {
+  --n: var(--success);
+}
+.sq-notice--warn {
+  --n: var(--warning);
+}
+.sq-notice--error {
+  --n: var(--destructive);
+}
+.sq-notice__icon {
+  color: var(--n);
+  display: inline-flex;
+  padding-top: 1px;
+}
+.sq-notice--error .sq-notice__icon {
+  color: var(--destructive-text);
+}
+.sq-notice__body {
+  flex: 1;
+  min-width: 0;
+}
+.sq-notice__title {
+  font: 600 var(--text-sm)/var(--lh-sm) var(--font-sans);
+}
+.sq-notice__text {
+  font: 400 var(--text-sm)/var(--lh-sm) var(--font-sans);
+  color: var(--muted-foreground);
+}
+.sq-notice__title + .sq-notice__text {
+  margin-top: 2px;
+}
+.sq-notice__action {
+  margin-top: var(--space-2);
+}

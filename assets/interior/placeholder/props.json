@@ -1,0 +1,690 @@
+{
+ "name": "placeholder-interior-props",
+ "image": "props.png",
+ "imageWidth": 512,
+ "imageHeight": 148,
+ "props": {
+  "desk.single": {
+   "x": 0,
+   "y": 0,
+   "w": 16,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "desk.double": {
+   "x": 18,
+   "y": 0,
+   "w": 32,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 32,
+    "h": 16
+   },
+   "tall": false
+  },
+  "chair.down": {
+   "x": 52,
+   "y": 0,
+   "w": 16,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "chair.up": {
+   "x": 70,
+   "y": 0,
+   "w": 16,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "chair.l": {
+   "x": 88,
+   "y": 0,
+   "w": 16,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "chair.r": {
+   "x": 106,
+   "y": 0,
+   "w": 16,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "bookshelf.small": {
+   "x": 124,
+   "y": 0,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "bookshelf.wide": {
+   "x": 142,
+   "y": 0,
+   "w": 32,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 32,
+    "h": 16
+   },
+   "tall": true
+  },
+  "bookshelf.tall": {
+   "x": 176,
+   "y": 0,
+   "w": 32,
+   "h": 48,
+   "foot": {
+    "x": 0,
+    "y": 32,
+    "w": 32,
+    "h": 16
+   },
+   "tall": true
+  },
+  "round.table": {
+   "x": 210,
+   "y": 0,
+   "w": 32,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 0,
+    "w": 32,
+    "h": 32
+   },
+   "tall": false
+  },
+  "table.long": {
+   "x": 244,
+   "y": 0,
+   "w": 48,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 0,
+    "w": 48,
+    "h": 32
+   },
+   "tall": false
+  },
+  "stool": {
+   "x": 294,
+   "y": 0,
+   "w": 16,
+   "h": 16,
+   "foot": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "plant.small": {
+   "x": 312,
+   "y": 0,
+   "w": 16,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "plant.big": {
+   "x": 330,
+   "y": 0,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "chalkboard": {
+   "x": 348,
+   "y": 0,
+   "w": 48,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 32,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "wall.clock": {
+   "x": 398,
+   "y": 0,
+   "w": 16,
+   "h": 16,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "wall.frame": {
+   "x": 416,
+   "y": 0,
+   "w": 16,
+   "h": 16,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "wall.frame.wide": {
+   "x": 434,
+   "y": 0,
+   "w": 32,
+   "h": 16,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "wall.map": {
+   "x": 468,
+   "y": 0,
+   "w": 32,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 24,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "bulletin.board": {
+   "x": 0,
+   "y": 50,
+   "w": 48,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 32,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "council.banner": {
+   "x": 50,
+   "y": 50,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 32,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "hearth": {
+   "x": 68,
+   "y": 50,
+   "w": 48,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 32,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "lamp.floor": {
+   "x": 118,
+   "y": 50,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "lamp.floor.glow": {
+   "x": 136,
+   "y": 50,
+   "w": 48,
+   "h": 48,
+   "foot": {
+    "x": 16,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "lamp.floor.glow2": {
+   "x": 186,
+   "y": 50,
+   "w": 48,
+   "h": 48,
+   "foot": {
+    "x": 16,
+    "y": 32,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "couch": {
+   "x": 236,
+   "y": 50,
+   "w": 48,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 48,
+    "h": 16
+   },
+   "tall": true
+  },
+  "couch.blue": {
+   "x": 286,
+   "y": 50,
+   "w": 48,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 48,
+    "h": 16
+   },
+   "tall": true
+  },
+  "couch.back": {
+   "x": 336,
+   "y": 50,
+   "w": 48,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 48,
+    "h": 16
+   },
+   "tall": true
+  },
+  "bench": {
+   "x": 386,
+   "y": 50,
+   "w": 32,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 32,
+    "h": 16
+   },
+   "tall": false
+  },
+  "bean.bag.red": {
+   "x": 420,
+   "y": 50,
+   "w": 16,
+   "h": 16,
+   "foot": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "bean.bag.blue": {
+   "x": 438,
+   "y": 50,
+   "w": 16,
+   "h": 16,
+   "foot": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "bean.bag.yellow": {
+   "x": 456,
+   "y": 50,
+   "w": 16,
+   "h": 16,
+   "foot": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "toy.bin": {
+   "x": 474,
+   "y": 50,
+   "w": 16,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "globe": {
+   "x": 492,
+   "y": 50,
+   "w": 16,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 16,
+    "h": 16
+   },
+   "tall": false
+  },
+  "cabinet": {
+   "x": 0,
+   "y": 100,
+   "w": 32,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 32,
+    "h": 16
+   },
+   "tall": true
+  },
+  "water.cooler": {
+   "x": 34,
+   "y": 100,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "coat.rack": {
+   "x": 52,
+   "y": 100,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "council.table": {
+   "x": 70,
+   "y": 100,
+   "w": 80,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 0,
+    "w": 80,
+    "h": 32
+   },
+   "tall": false
+  },
+  "council.chair.down": {
+   "x": 152,
+   "y": 100,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "council.chair.up": {
+   "x": 170,
+   "y": 100,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "council.chair.l": {
+   "x": 188,
+   "y": 100,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "council.chair.r": {
+   "x": 206,
+   "y": 100,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "library.reading.desk": {
+   "x": 224,
+   "y": 100,
+   "w": 32,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 32,
+    "h": 16
+   },
+   "tall": false
+  },
+  "ladder": {
+   "x": 258,
+   "y": 100,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 16,
+    "h": 16
+   },
+   "tall": true
+  },
+  "bookcart": {
+   "x": 276,
+   "y": 100,
+   "w": 32,
+   "h": 24,
+   "foot": {
+    "x": 0,
+    "y": 8,
+    "w": 32,
+    "h": 16
+   },
+   "tall": false
+  },
+  "floor.books": {
+   "x": 310,
+   "y": 100,
+   "w": 16,
+   "h": 16,
+   "foot": {
+    "x": 0,
+    "y": 16,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "door.h.open": {
+   "x": 328,
+   "y": 100,
+   "w": 32,
+   "h": 48,
+   "foot": {
+    "x": 0,
+    "y": 48,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "door.h.closed": {
+   "x": 362,
+   "y": 100,
+   "w": 32,
+   "h": 48,
+   "foot": {
+    "x": 0,
+    "y": 48,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "door.h.locked": {
+   "x": 396,
+   "y": 100,
+   "w": 32,
+   "h": 48,
+   "foot": {
+    "x": 0,
+    "y": 48,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "door.v.open": {
+   "x": 430,
+   "y": 100,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 32,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "door.v.closed": {
+   "x": 448,
+   "y": 100,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 32,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  },
+  "door.v.locked": {
+   "x": 466,
+   "y": 100,
+   "w": 16,
+   "h": 32,
+   "foot": {
+    "x": 0,
+    "y": 32,
+    "w": 0,
+    "h": 0
+   },
+   "tall": false
+  }
+ },
+ "notes": {
+  "wall.faces": "Walls are 3 rows: cap, upper face (wall.face.hi.*), lower face (wall.face.*). A wall-hung sprite (32px tall) fits the two face rows exactly.",
+  "chalkboard": "Hang on the two face rows: object x = left px, y = wall base bottom edge (bottom-left of the sprite). The sprite already includes a 4px crown gap and 6px wainscot gap. 3 tiles wide; centre it on the room.",
+  "chalkboard.tile": "No tile version: use the chalkboard sprite. For a DOM quiz card, anchor it to the sprite rect (x, y-32, 48, 32).",
+  "foot": "foot.w = foot.h = 0 means non-blocking (wall-hung or floor decor)."
+ }
+}
