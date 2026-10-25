@@ -37,6 +37,7 @@ import { createSimRoutes } from './routes/sim';
 import { createStateRoutes } from './routes/state';
 import { createStatusRoutes } from './routes/status';
 import { createStreamRoutes } from './routes/stream';
+import { SQUAD_ID } from './cast';
 import { seedDemo } from './sim/seed';
 import { createAccountsStore } from './store/accounts';
 import { createDirectory } from './store/directory';
@@ -126,7 +127,11 @@ export function createHub(opts: HubOptions = {}): Hub {
       ? mkdtempSync(join(tmpdir(), 'squad-chat-files-'))
       : join(dirname(config.dbPath), 'chat-files'),
   );
-  if (config.seed) seedDemo(deps);
+  if (config.seed) {
+    seedDemo(deps);
+    // The seeded demo squad becomes a real one (owner = its first member) so Members, invites and roles work.
+    deps.squads.adopt(SQUAD_ID);
+  }
 
   const app: HubApp = new Hono<HubEnv>();
   applySecurity(app, deps, opts.security);

@@ -8,6 +8,8 @@ import { fixtureTransport, type FixtureState } from './fixtures';
 import './council.css';
 
 export const COUNCIL_SLOT = 'council-hall';
+/** Window event the room-info panel fires to open the Ask-the-council dialog. */
+export const COUNCIL_OPEN_EVENT = 'squad:council-open';
 
 const STATES: readonly FixtureState[] = [
   'ok',
@@ -44,7 +46,7 @@ export function useInCouncilHall(): boolean {
 }
 
 /**
- * Village mount: opens the panel when the viewer walks into the Council Hall and keeps a small "Ask the council"
+ * Village mount: shows the room info first when the viewer walks into the Council Hall and keeps a small "Ask the council"
  * button while they stand there (so closing the panel never strands them). `?council=1` opens it anywhere (tests);
  * `?council=fixture[&state=...]` plays a scripted run with no backend.
  */
@@ -67,12 +69,17 @@ export function CouncilHall({
   const [open, setOpen] = useState(forced);
   const [liveOpen, setLiveOpen] = useState(liveForced);
 
-  // Walking in opens the panel; walking out closes it.
+  // Walking in shows the room-info panel first (the "Ask the council" button below or in that panel opens
+  // this one); walking out closes it.
   useEffect(() => {
-    if (inside) setOpen(true);
-    else if (!forced) setOpen(false);
+    if (!inside && !forced) setOpen(false);
     if (!inside && !liveForced) setLiveOpen(false);
   }, [inside, forced, liveForced]);
+  useEffect(() => {
+    const onAsk = () => setOpen(true);
+    window.addEventListener(COUNCIL_OPEN_EVENT, onAsk);
+    return () => window.removeEventListener(COUNCIL_OPEN_EVENT, onAsk);
+  }, []);
 
   const transport = useMemo(() => {
     if (!fixture) return undefined;

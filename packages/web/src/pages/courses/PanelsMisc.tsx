@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { CitationChip } from '../../components/source-viewer';
 import { Button, Chip, EmptyState, Icon, Notice, TextField } from '../../primitives';
 import {
   CATALOGUE_SAMPLE_LABEL,
@@ -19,11 +20,13 @@ import type { CatalogueState, PolicyPanel as Policy, PolicyTopic } from './types
 
 export function PolicyPanel({
   policy,
+  courseId,
   canEdit,
   onPaste,
   onUpload,
 }: {
   policy: Policy | null;
+  courseId?: string;
   canEdit: boolean;
   onPaste: (text: string) => Promise<void>;
   onUpload: (file: File) => void;
@@ -71,6 +74,16 @@ export function PolicyPanel({
                   <p className="cr-quote__label">
                     <Chip>{TOPIC_LABEL[l.topic]}</Chip>
                     <span className="cr-quote__tag">verbatim from syllabus</span>
+                    {policy?.sourceFile && (
+                      <CitationChip
+                        citation={{
+                          file: policy.sourceFile,
+                          page: 1,
+                          quote: policyLineText(l),
+                          courseId,
+                        }}
+                      />
+                    )}
                   </p>
                   <p className="cr-muted cr-quote__note">Quoted by hwpolicy exactly as written.</p>
                 </div>

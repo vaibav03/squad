@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useShell } from '../../shell/shell-context';
 import { useParams } from 'react-router-dom';
 import { LedgerView } from './LedgerView';
 import { useLedger } from './useLedger';
@@ -7,6 +8,8 @@ import { useLiveConfig } from '../../overlays/kit';
 
 /** /squad/ledger/:taskId? (Glass Box). Live over SSE, recorded replay in mock mode. */
 export default function LedgerPage() {
+  const { setTitle } = useShell();
+  useEffect(() => setTitle('Ledger'), [setTitle]);
   const params = useParams();
   const taskId = params.taskId ?? TASK_ID;
   const cfg = useLiveConfig();
