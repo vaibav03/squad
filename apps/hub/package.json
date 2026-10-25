@@ -13,6 +13,13 @@
     "dev": "echo \"@squad/hub: dev not implemented yet\""
   },
   "dependencies": {
-    "@squad/core": "workspace:*"
+    "@hono/node-server": "^2.1.5",
+    "@squad/core": "workspace:*",
+    "hono": "^4.13.13",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "@types/ws": "^8.18.2"
   }
 }
