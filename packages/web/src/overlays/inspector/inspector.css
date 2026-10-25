@@ -42,9 +42,9 @@
     left: auto;
     right: var(--lv-s4, 16px);
     top: 76px;
-    bottom: var(--lv-s4, 16px);
+    bottom: auto;
     width: 380px;
-    max-height: none;
+    max-height: calc(100% - 92px);
     border: 1px solid var(--lv-line);
     border-radius: var(--lv-r4, 16px);
     padding-bottom: 0;
