@@ -1,6 +1,7 @@
 // Web chat wire contract (docs/chat-api.md). Browser-safe: the hub, the bot's web transport and the web app share it.
 import { z } from 'zod';
 import { CitationSourceSchema } from './context';
+import { ChatSyncFieldsSchema } from './chat-sync';
 
 /** Chat ids: `group:<squadId>` for the squad group chat, `dm:<studentId>` for a private chat with Cubbie. */
 export const ChatIdSchema = z.string().regex(/^(group|dm):[A-Za-z0-9_-]{1,64}$/);
@@ -69,7 +70,7 @@ export const ChatCardSchema = z.discriminatedUnion('type', [
 ]);
 export type ChatCard = z.infer<typeof ChatCardSchema>;
 
-export const ChatMessageSchema = z.strictObject({
+export const ChatMessageSchema = ChatSyncFieldsSchema.extend({
   id: z.string(), // `m_<seq>`
   seq: z.number().int().positive(), // chat sequence; the SSE id; strictly increasing across the hub
   chatId: ChatIdSchema,

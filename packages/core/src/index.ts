@@ -10,6 +10,7 @@ export * from './internal-events';
 export * from './sentinel';
 export * from './llm';
 export * from './chat';
+export * from './chat-sync';
 export * from './council';
 export * from './a2a';
 export { parseIcsBusy, stripBusyTitles, BUSY_TITLE } from './ics';

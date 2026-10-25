@@ -12,17 +12,25 @@ import {
   SENTINELS,
   type ChatMessage,
   type ContactChannel,
+  type SkippedAttachment,
 } from '@squad/core';
 import {
   detectMention,
   renderForIMessage,
+  splitMessage,
   type GatewayInbound,
   type IMessageGateway,
 } from '@squad/bot';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { HubDeps } from '../types';
 import { activateSquad, announceMember } from '../routes/squads';
 import { parseCommand } from './commands';
 import { maskHandle, type ImessageStore } from './store';
+import { createImessageSync, BACKFILL_ANSWER_MAX_MS, type ImessageSync } from './sync';
+import { DELIVERY_LABELS } from '@squad/core';
+import { isMirrorEcho, mirrorText, shouldMirrorStudent } from './sync-rules';
 
 export interface BridgeOptions {
   deps: HubDeps;
@@ -31,6 +39,8 @@ export interface BridgeOptions {
   /** Base of the web links in messages. Default: the hub's HUB_WEB_URL. */
   webUrl?: string;
   now?: () => number;
+  /** false: no retry/backfill timers (tests drive `sync.drain()` and `sync.backfillAll()` themselves). */
+  timers?: boolean;
 }
 
 export interface IMessageBridge {
@@ -42,6 +52,14 @@ export interface IMessageBridge {
   flush(): Promise<void>;
   /** The handle is mapped to a Squad user id, or undefined. */
   resolveUser(handle: string): string | undefined;
+  /** The sync engine: outbound queue, delivery state, backfill (docs/imessage.md section 8). */
+  readonly sync: ImessageSync;
+}
+
+/** Per-message bookkeeping while one inbound message is handled. */
+interface Handling {
+  late: boolean;
+  storedId?: string;
 }
 
 const PREFIX = '\u{1F43B} Cubbie: ';
@@ -75,6 +93,19 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
   const quiz = new Map<string, { ids: string[]; at: number }>();
   const hinted = new Map<string, number>();
   let chain: Promise<unknown> = Promise.resolve();
+  const sync = createImessageSync({
+    deps,
+    gateway,
+    store,
+    now,
+    timers: o.timers ?? true,
+    resolveTo: (target) => (target.startsWith('dm:') ? handles.get(target.slice(3)) : target),
+    dmChats: () =>
+      [...handles.values()].flatMap((h) => {
+        const i = ident(h);
+        return i ? [{ threadKey: `dm:${i.hash}`, chatGuid: `iMessage;-;${h}` }] : [];
+      }),
+  });
 
   const ident = (handle: string): Ident | undefined => {
     const h = handle.trim();
@@ -185,14 +216,70 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
     return { ok: false, message: res.message ?? 'That invite code does not work.' };
   }
 
-  async function relay(m: GatewayInbound, userId: string, chatId: string, squadId: string) {
+  async function relay(
+    m: GatewayInbound,
+    userId: string,
+    chatId: string,
+    squadId: string,
+    h: Handling,
+  ) {
     const text = translateQuizReply(chatId, m.text);
     lastInbound.set(userId, { via: 'imessage', ts: now() });
-    const res = await deps.chat.send(
-      { studentId: userId, squadId, projector: false },
-      { chatId: chatId as `group:${string}` | `dm:${string}`, text: text.slice(0, 4000) },
-      { via: 'imessage' },
+    const isGroup = chatId.startsWith('group:');
+    const stale = h.late && now() - m.ts > BACKFILL_ANSWER_MAX_MS;
+    const origin = (skipped: SkippedAttachment[]) => ({
+      ts: m.ts,
+      transport: 'imessage' as const,
+      externalId: m.guid,
+      senderLabel: nameOf(userId),
+      ...(h.late ? { receivedLate: true } : {}),
+      ...(skipped.length ? { skippedAttachments: skipped } : {}),
+    });
+    // an old message found by backfill is kept in the thread but not answered
+    if (isGroup && stale) {
+      const a = sync.intakeAttachments(m.attachments, (b, mime, name) =>
+        saveAdopted(b, mime, name, chatId),
+      );
+      const posted = deps.chat.postExternal({
+        chatId,
+        sender: { kind: 'student', id: userId, name: nameOf(userId) },
+        text: text.slice(0, 4000),
+        origin: origin(a.skipped),
+        attachments: a.attachments,
+      });
+      if (posted) h.storedId = posted.id;
+      return;
+    }
+    const a = sync.intakeAttachments(m.attachments, (b, mime, name) =>
+      deps.chat.files.saveUpload(userId, b, mime, name),
     );
+    if (!text.trim() && !a.attachments.length) {
+      // only files we cannot show: keep an honest placeholder in the group; a DM gets a plain answer
+      if (isGroup) {
+        const posted = deps.chat.postExternal({
+          chatId,
+          sender: { kind: 'student', id: userId, name: nameOf(userId) },
+          text: '',
+          origin: origin(a.skipped),
+        });
+        if (posted) h.storedId = posted.id;
+      } else if (a.skipped.length) say(m.sender, 'I cannot open that kind of file here.');
+      return;
+    }
+    const res = await deps.chat.send(
+      {
+        studentId: userId,
+        squadId,
+        projector: false,
+      },
+      {
+        chatId: chatId as `group:${string}` | `dm:${string}`,
+        text: text.slice(0, 4000),
+        ...(a.attachments.length ? { attachments: a.attachments.map((x) => ({ id: x.id })) } : {}),
+      },
+      { via: 'imessage', origin: origin(a.skipped) },
+    );
+    if (res.ok) h.storedId = res.message.id;
     if (!res.ok) {
       log.warn('imessage: relay refused', { code: res.code });
       if (res.status === 429)
@@ -200,8 +287,25 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
     }
   }
 
+  /** Files from people with no Squad account yet are adopted (not owned by a student). */
+  function saveAdopted(bytes: Uint8Array, mime: string, name: string | undefined, chatId: string) {
+    const dir = mkdtempSync(join(tmpdir(), 'imsg-'));
+    const p = join(dir, 'f');
+    try {
+      writeFileSync(p, bytes);
+      return deps.chat.files.adopt(p, mime, chatId);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
   // ---------- inbound ----------
-  async function dmInbound(m: GatewayInbound, id: Ident | undefined, userId: string | undefined) {
+  async function dmInbound(
+    m: GatewayInbound,
+    id: Ident | undefined,
+    userId: string | undefined,
+    h: Handling,
+  ) {
     if (!id) {
       say(
         m.sender,
@@ -228,13 +332,14 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       );
       return;
     }
-    await relay(m, userId, `dm:${userId}`, deps.directory.squadOf(userId) ?? '');
+    await relay(m, userId, `dm:${userId}`, deps.directory.squadOf(userId) ?? '', h);
   }
 
   async function groupInbound(
     m: GatewayInbound,
     id: Ident | undefined,
     userId: string | undefined,
+    h: Handling,
   ) {
     if (id) store.touchParticipant(m.chatGuid, id.hash, id.hint);
     const cmd = parseCommand(m.text);
@@ -301,6 +406,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
           m.chatGuid,
           `I cannot match that number to a Squad account yet. Text me directly for a code, or sign up at ${web}/welcome.`,
         );
+      if (!mention) postUnlinked(m, id, bound.squadId, h);
       return;
     }
     if (!isMember(bound.squadId, userId)) {
@@ -309,20 +415,67 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
           m.chatGuid,
           `${nameOf(userId)}, you are not in ${squadName(bound.squadId)} yet. Send: join <invite code>`,
         );
+      if (!mention) postUnlinked(m, id, bound.squadId, h);
       return;
     }
     handles.set(userId, m.sender); // lets a private reply (the unknown-tag help DM) reach this person's own 1:1
-    await relay(m, userId, `group:${bound.squadId}`, bound.squadId);
+    await relay(m, userId, `group:${bound.squadId}`, bound.squadId, h);
+  }
+
+  /**
+   * A group message from someone who is not a linked squad member and does not address the bot: shown in the web
+   * thread as read-only context under a masked handle label (never the raw number), not routed to the bot.
+   */
+  function postUnlinked(m: GatewayInbound, id: Ident | undefined, squadId: string, h: Handling) {
+    if (!store.syncSettings(squadId).showUnlinked) return;
+    const label = id?.hint ?? 'Someone';
+    const chatId = `group:${squadId}`;
+    const a = sync.intakeAttachments(m.attachments, (b, mime, name) =>
+      saveAdopted(b, mime, name, chatId),
+    );
+    if (!m.text.trim() && !a.attachments.length && !a.skipped.length) return;
+    const posted = deps.chat.postExternal({
+      chatId,
+      sender: { kind: 'system', name: label },
+      text: m.text.slice(0, 4000),
+      origin: {
+        ts: m.ts,
+        transport: 'imessage',
+        externalId: m.guid,
+        senderLabel: label,
+        ...(h.late ? { receivedLate: true } : {}),
+        ...(a.skipped.length ? { skippedAttachments: a.skipped } : {}),
+      },
+      attachments: a.attachments,
+    });
+    if (posted) h.storedId = posted.id;
   }
 
   async function handleInbound(m: GatewayInbound) {
+    const id = ident(m.sender);
+    const threadKey = m.isGroup ? m.chatGuid : `dm:${id?.hash ?? 'unknown'}`;
+    // identity map: one claim per Apple guid. Redeliveries, backfill overlap and races all stop here.
+    if (store.claimInbound(m.guid, threadKey, id?.hash ?? null, m.ts) === 'duplicate') {
+      sync.stats.duplicates++;
+      return;
+    }
     try {
-      // dedupe by message guid already happened in the gateway (persistent through `store.seen`)
-      const id = ident(m.sender);
+      if (isMirrorEcho(m.text)) {
+        // our own "(via Squad)" mirror coming back: never re-posted (web -> iMessage -> web loop protection)
+        sync.stats.echoes++;
+        store.finishInbound(m.guid, 'handled');
+        return;
+      }
+      const cur = store.cursor(threadKey);
+      const h: Handling = { late: !!m.late || (!!cur && m.ts < cur.lastTs) };
+      if (h.late) sync.stats.late++;
       const userId = id ? userByHash(id.hash) : undefined;
-      if (m.isGroup) await groupInbound(m, id, userId);
-      else await dmInbound(m, id, userId);
+      if (m.isGroup) await groupInbound(m, id, userId, h);
+      else await dmInbound(m, id, userId, h);
+      store.finishInbound(m.guid, h.storedId ? 'stored' : 'handled', h.storedId);
+      store.advanceCursor(threadKey, m.ts, m.guid);
     } catch (e) {
+      store.releaseInbound(m.guid); // a redelivery or the next backfill may try again
       log.error('imessage: inbound failed', { err: (e as Error).name });
     }
   }
@@ -358,15 +511,18 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
     else if (msg.card?.type !== 'confirm') quiz.delete(quizKey(msg.chatId));
   }
 
-  const send = (to: string, parts: string[], who: string) => {
+  /** Queue one hub message for one target. The queue sends it, retries it and reports its state. */
+  const send = (messageId: string, target: string, parts: string[], who: string) => {
     if (!parts.length) return;
-    chain = chain
-      .then(async () => {
-        for (let i = 0; i < parts.length; i++)
-          await gateway.send(to, i === 0 ? `${who}${parts[i]}` : parts[i]!);
-      })
-      .catch((e: Error) => log.error('imessage: mirror failed', { err: e.name }));
+    const texts = parts.flatMap((p, i) => splitMessage(i === 0 ? `${who}${p}` : p, 900));
+    sync.queue(
+      messageId,
+      target,
+      texts.map((text) => ({ text })),
+    );
+    kick();
   };
+  const kick = () => void (chain = chain.then(() => sync.drain()).catch(() => undefined));
 
   const offBot = deps.chat.onBotPost((msg) => {
     if (msg.sender.kind !== 'persona') return;
@@ -377,7 +533,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       if (!targets.length) return;
       rememberQuiz(msg);
       const parts = render(msg, true);
-      for (const b of targets) send(b.chatGuid, parts, who);
+      for (const b of targets) send(msg.id, b.chatGuid, parts, who);
       return;
     }
     if (msg.chatId.startsWith('dm:')) {
@@ -387,20 +543,78 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       const li = lastInbound.get(uid);
       if (li && li.via !== 'imessage' && now() - li.ts < WEB_DM_QUIET_MS) return; // a web conversation
       rememberQuiz(msg);
-      send(handle, render(msg, false), who);
+      send(msg.id, `dm:${uid}`, render(msg, false), who);
     }
   });
+
+  /**
+   * Web squad chat -> bound iMessage groups, for STUDENT messages (docs/imessage.md section 8.4). Default: only the
+   * messages that @mention an agent; per-squad `full` copies everything; `bot_only` copies nothing. A DM never
+   * crosses; an iMessage-origin message never goes back.
+   */
+  function mirrorStudent(msg: ChatMessage, via: string) {
+    if (msg.sender.kind !== 'student' || !msg.chatId.startsWith('group:')) return;
+    const sid = msg.chatId.slice(6);
+    const targets = store.bindingsOf(sid);
+    if (!targets.length || via === 'imessage') return;
+    const settings = store.syncSettings(sid);
+    const webOnly = (label: string) =>
+      void deps.chat.annotate(msg.id, {
+        transport: 'web',
+        deliveryState: { state: 'web_only', label, updatedAt: now() },
+      });
+    if (
+      !shouldMirrorStudent({
+        mode: settings.mirror,
+        chatId: msg.chatId,
+        via,
+        mentionsAgent: !!detectMention(msg.text, true),
+      })
+    )
+      return webOnly(DELIVERY_LABELS.web_only);
+    const secrets = [...SENTINELS, ...deps.ledger.privateValues()];
+    if (leaks(msg.text, secrets)) {
+      sync.stats.withheld++;
+      return webOnly('Kept on the web: it contains private info');
+    }
+    const senderId = msg.sender.id;
+    const files = msg.attachments.flatMap((a) => {
+      const f = deps.chat.files.open(a.id, { studentId: senderId, squadId: sid });
+      return f ? [f.path] : [];
+    });
+    const parts = [
+      ...(msg.text ? [{ text: mirrorText(msg.sender.name, msg.text) }] : []),
+      ...files.map((p, i) => ({
+        text: !msg.text && i === 0 ? mirrorText(msg.sender.name, '') : null,
+        attachments: [p],
+      })),
+    ];
+    if (!parts.length) return;
+    for (const b of targets) sync.queue(msg.id, b.chatGuid, parts);
+    kick();
+  }
   const offStudent = deps.chat.onStudentMessage((msg, via) => {
     if (msg.sender.kind === 'student') lastInbound.set(msg.sender.id, { via, ts: now() });
+    try {
+      mirrorStudent(msg, via);
+    } catch (e) {
+      log.error('imessage: student mirror failed', { err: (e as Error).name });
+    }
   });
+  sync.start();
 
   return {
     handleInbound,
     resolveUser,
+    sync,
     stop() {
       offBot();
       offStudent();
+      sync.stop();
     },
-    flush: () => chain.then(() => undefined),
+    flush: async () => {
+      await chain;
+      await sync.drain();
+    },
   };
 }
