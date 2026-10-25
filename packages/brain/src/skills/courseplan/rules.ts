@@ -1,3 +1,4 @@
+import { timesOverlap } from './schema';
 import type { Catalog, CatalogCourse, Degree, TermName } from './schema';
 
 /** Pure, grounded plan checks. No LLM anywhere in this file. */
@@ -30,6 +31,7 @@ export type ViolationCode =
   | 'missing-prereq'
   | 'same-term-prereq'
   | 'missing-coreq'
+  | 'time-conflict'
   | 'over-credits'
   | 'under-credits';
 
@@ -174,6 +176,7 @@ function canAddAny(
     (c) =>
       !planned.includes(c.id) &&
       have + c.credits <= maxCredits &&
+      !planned.some((id) => timesOverlap(c, byIdOf(ctx.catalog).get(id)!)) &&
       (c.coreqs ?? []).every((q) => done.has(q)),
   );
 }
@@ -256,6 +259,21 @@ export function validatePlan(plan: string[] | PlanTerm[], ctx: PlanContext): Vio
             message: `${id} needs ${q} at the same time or earlier`,
           });
     }
+    // Time check (code-level, like the prerequisite check): no two meetings of a term overlap.
+    kept.forEach((id, i) => {
+      for (const other of kept.slice(0, i)) {
+        const a = m.get(id)!;
+        const b = m.get(other)!;
+        if (timesOverlap(a, b))
+          out.push({
+            code: 'time-conflict',
+            term: t.term,
+            course: id,
+            needs: other,
+            message: `${id} meets at the same time as ${other}`,
+          });
+      }
+    });
     const credits = creditsOf(ctx.catalog, kept);
     if (credits > maxCredits)
       out.push({
@@ -343,9 +361,11 @@ export function repairPlan(
         ? `not offered in ${ctx.term}`
         : bad.code === 'same-term-prereq'
           ? `${bad.needs} must come in an earlier term`
-          : bad.code === 'missing-coreq'
-            ? `needs ${bad.needs} alongside`
-            : `needs ${bad.needs}, which is not done`;
+          : bad.code === 'time-conflict'
+            ? `meets at the same time as ${bad.needs}`
+            : bad.code === 'missing-coreq'
+              ? `needs ${bad.needs} alongside`
+              : `needs ${bad.needs}, which is not done`;
     repairs.push(`dropped ${bad.course} (${why})`);
     plan = plan.filter((id) => id !== bad.course);
   }
@@ -367,6 +387,7 @@ export function repairPlan(
           (c) =>
             !plan.includes(c.id) &&
             have + c.credits <= maxCredits &&
+            !plan.some((id) => timesOverlap(c, m.get(id)!)) &&
             (c.coreqs ?? []).every((q) => done.has(q)),
         )
         .filter((c) => {

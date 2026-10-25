@@ -32,9 +32,18 @@ Which squad a request acts in: the user's active squad (server side, changed by 
 ## 3. Me and privacy
 
 - `GET /v1/me` -> existing `{ student, squadId, projector }` plus `user` (AccountUser), `squads` (SquadSummary[]), `activeSquadId`. Squad-scoped routes (state, stream, ledger, trips, quiz, calls) answer 409 `no_squad` for an account with no squad yet. `squadId` here is `""` for such a user (the web app then shows Welcome -> Create or Join).
+- `GET /v1/me` also returns `phoneVerified` (true when the account signed up with a phone or has a phone verified through `/v1/me/phone/*`).
 - `PATCH /v1/me` `{ name }` -> `{ user }`.
 - `GET /v1/me/export` -> `application/json` attachment with only the caller's own data: profile (no hashes), memberships, audit rows about them, calendar busy blocks, their own ledger rows (their own raw withheld values), memory rows scoped to them.
 - `DELETE /v1/me` `{ confirm: "delete my account" }` -> `{ ok: true }`. Cascades: sessions, codes, memberships (ownership of a squad with other members passes to the longest member; a squad left empty is disbanded and its events, trips and settings purged), calendar, ledger rows, memory, directory entry. Audit rows keep the squad action but lose the user id. Cookie cleared.
+
+### Phone linking (attach a verified phone to the current account)
+
+Does not mint or swap a session. Needs auth. The number is normalised to E.164 (10 digit US numbers get `+1`; shorter than 10 digits is 400 `invalid_request`).
+
+- `POST /v1/me/phone/start` `{ phone }` -> `{ ok: true, challengeId, to (masked), expiresAt, resendAfter, delivery, deliveryLabel, devCode?, devCodeLabel? }`. `delivery` is the honest channel: `imessage` ("Code sent by iMessage": only when `CODE_SENDER=imessage`, `IMESSAGE_SEND_URL` is set and the number is on `IMESSAGE_ALLOWED_HANDLES` or `IMESSAGE_ALLOW_ALL=1`), `dev` ("Code shown here (dev)": `HUB_DEV_LOGIN=1`; `devCode` is returned with `devCodeLabel`, and nothing is sent to the phone) or `unavailable` (`{ ok: false, delivery: "unavailable", message: "code delivery unavailable: <reason>" }`, no challenge is created, nothing is sent). Limits: 5 starts per account per hour, 20 per IP per hour, 5 per number per hour, 30 s between starts (429 `rate_limited`, `retryAfterS`). 409 `phone_in_use` when another account owns the number (signup contact or verified link); the number is never reassigned. A number already linked to the caller answers `{ ok: true, alreadyLinked: true }`.
+- `POST /v1/me/phone/verify` `{ challengeId, code }` -> `{ ok: true, verified: true, hint }`. Code lives 10 minutes, 5 tries (400 `code_invalid` with `triesLeft`, 410 `code_expired`, 429 `too_many_attempts`, 404 `not_found` for an unknown, used or someone else's challenge). On success the handle hash (`hashContact('phone', e164)`, the same lookup the iMessage bridge uses) is linked to the caller in `imsg_links`, so `GET /v1/imessage/link` lists it, the bot recognises the sender, and the Home checklist marks "Link your phone" done.
+- Storage: only `HMAC(CONTACT_PEPPER, phone)`, the masked hint (last 4) and `HMAC(SESSION_SECRET, code)` are stored (`acct_phone_challenges`, `imsg_links`). The raw number is held in memory for the send only.
 
 Storage and logs: phone/email are never stored in clear. The hub keeps `HMAC(SESSION_SECRET, normalized contact)` plus `last4` / masked email for display. Logs carry user ids and masked hints only; the console code sender is the one place a code is printed, next to the masked contact.
 

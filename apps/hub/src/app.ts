@@ -22,6 +22,7 @@ import { createLogger } from './log';
 import { installObservability, type ObsOptions } from './observability';
 import type { Ports } from './ports';
 import { createAuthRoutes } from './routes/auth';
+import { createPhoneRoutes } from './routes/phone';
 import { createInviteRoutes } from './routes/invites';
 import { createMemberRoutes } from './routes/members';
 import { createSquadRoutes } from './routes/squads';
@@ -202,6 +203,7 @@ export function createHub(opts: HubOptions = {}): Hub {
 
   for (const routes of [
     createAuthRoutes(deps),
+    createPhoneRoutes(deps),
     createSquadRoutes(deps),
     createMemberRoutes(deps),
     createInviteRoutes(deps),
