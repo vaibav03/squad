@@ -9,6 +9,6 @@ import { createRouter } from './router';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RouterProvider router={createRouter()} />
-    {import.meta.env.DEV && <Agentation />}
+    {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
   </StrictMode>,
 );
