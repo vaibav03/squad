@@ -20,17 +20,17 @@ describe('no withheld value ever leaves an agent (property)', () => {
             hardNos: p.hardNos.map((h) => ({ ...h, reason: `${reason}` })),
             budget: p.id === 's_ana' ? budget + 0.0 : p.budget,
           }));
-          const m = createTestMesh({ seed: title, profiles, answers: { s_cam: ans } });
+          const m = createTestMesh({ seed: title, profiles, answers: { s_chi: ans } });
           await m.agents.s_ana!.startStudy({
             taskId: 'p_study',
-            members: ['s_ana', 's_ben', 's_cam', 's_dev'],
+            members: ['s_ana', 's_ben', 's_chi', 's_dev'],
             window: WINDOWS.study,
             topics: ['graphs'],
             squadId: 'sq',
           });
           await m.agents.s_ana!.startTrip({
             taskId: 'p_trip',
-            members: ['s_ana', 's_ben', 's_cam', 's_dev'],
+            members: ['s_ana', 's_ben', 's_chi', 's_dev'],
             window: WINDOWS.trip,
             options: TRIP_OPTIONS,
             squadId: 'sq',
@@ -68,14 +68,14 @@ describe('red team at the door', () => {
     const m = createTestMesh({ seed: 'rt' });
     await m.agents.s_ana!.startStudy({
       taskId: 'rt1',
-      members: ['s_ana', 's_ben', 's_cam', 's_dev'],
+      members: ['s_ana', 's_ben', 's_chi', 's_dev'],
       window: WINDOWS.study,
       squadId: 'sq',
     });
     const ben = m.agents.s_ben!;
     // task is closed now: nothing is accepted any more
     const late = await ben.handle({
-      from: 's_cam',
+      from: 's_chi',
       to: 's_ben',
       taskId: 'rt1',
       kind: 'share.vec',
@@ -83,7 +83,7 @@ describe('red team at the door', () => {
     });
     expect(late.state).toBe('failed');
     const unknown = await ben.handle({
-      from: 's_cam',
+      from: 's_chi',
       to: 's_ben',
       taskId: 'nope',
       kind: 'share.vec',
@@ -91,15 +91,15 @@ describe('red team at the door', () => {
     });
     expect(unknown.state).toBe('failed');
     const garbage = await ben.handle({
-      from: 's_cam',
+      from: 's_chi',
       to: 's_ben',
       taskId: 'rt1',
       kind: 'psi.blind',
-      payload: { round: 1, points: ['zz'], origin: 's_cam', hop: 1 },
+      payload: { round: 1, points: ['zz'], origin: 's_chi', hop: 1 },
     });
     expect(garbage.state).toBe('failed');
     const instr = await ben.handle({
-      from: 's_cam',
+      from: 's_chi',
       to: 's_ben',
       taskId: 'rt1',
       kind: 'result',

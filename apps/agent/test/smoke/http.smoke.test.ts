@@ -8,7 +8,7 @@ afterEach(async () => {
   await mesh?.close();
   mesh = undefined;
 });
-const members = ['s_ana', 's_ben', 's_cam', 's_dev'];
+const members = ['s_ana', 's_ben', 's_chi', 's_dev'];
 const start = async (
   answers?: Record<string, string>,
   extra: Partial<Parameters<typeof startMesh>[0]> = {},
@@ -75,8 +75,8 @@ describe('agents over real HTTP', () => {
 
   it('trip: an agent that went offline mid-mesh means no plan', async () => {
     const { emitter, mesh: m } = await start();
-    // take s_cam's server away: find it by closing everything after capturing urls is not per-agent, so point the peer elsewhere
-    m.urls.s_cam = 'http://127.0.0.1:1';
+    // take s_chi's server away: find it by closing everything after capturing urls is not per-agent, so point the peer elsewhere
+    m.urls.s_chi = 'http://127.0.0.1:1';
     const out = await kick(m, 'trip', {
       taskId: 'h_off',
       members,

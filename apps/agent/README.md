@@ -26,7 +26,7 @@ Start a flow on a running agent: `POST /internal/start/study|trip` with header `
 | `AGENT_ID`, `PORT`                       | which student, which port (default from `fixtures/peers.json`)                               |
 | `PEERS`                                  | `s_ben=http://localhost:4102,...` overrides `fixtures/peers.json`                            |
 | `HUB_BASE_URL`, `INTERNAL_EVENTS_SECRET` | where `postEvent` sends VillageEvents; also guards `/internal/*`                             |
-| `CONFIRM_ANSWERS`                        | scripted DM answers, e.g. `s_ben=no,s_cam=timeout` (default yes)                             |
+| `CONFIRM_ANSWERS`                        | scripted DM answers, e.g. `s_ben=no,s_chi=timeout` (default yes)                             |
 | `BOT_URL`                                | route DM confirms to the spine bot (see below); without it and without answers, a CLI prompt |
 | `FAKE_LLM=0`                             | use Gemini for student-facing wording (the mesh itself never needs an LLM)                   |
 | `AGENT_SEED`                             | fixed rng seed (tests/scripted); unset = secure randomness                                   |
