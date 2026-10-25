@@ -92,7 +92,8 @@ export function useEventFeed<E>(opts: FeedOptions<E>, onEvent: (e: E) => void) {
     let poll: ReturnType<typeof setInterval> | null = null;
     let errors = 0;
     const live = o.live;
-    const goOffline = () => setConnection(typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'error');
+    const goOffline = () =>
+      setConnection(typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'error');
     const startPolling = () => {
       es?.close();
       setConnection('polling');

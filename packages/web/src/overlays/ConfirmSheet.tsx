@@ -51,7 +51,11 @@ export function ConfirmSheet(props: ConfirmSheetProps) {
         {details && details.length > 0 && (
           <dl className="lv-confirm__details">
             {details.map((d, i) => (
-              <div key={`${d.label}-${i}`} className="lv-confirm__row" data-tone={d.tone ?? 'plain'}>
+              <div
+                key={`${d.label}-${i}`}
+                className="lv-confirm__row"
+                data-tone={d.tone ?? 'plain'}
+              >
                 <dt>
                   {d.tone === 'shared' && <LvIcon name="eye" size={16} />}
                   {d.tone === 'private' && <LvIcon name="lock" size={16} />}
@@ -72,8 +76,21 @@ export function ConfirmSheet(props: ConfirmSheetProps) {
 
         {done ? (
           <div className="lv-confirm__done" role="status">
-            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" className="lv-confirm__tick">
-              <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="lv-confirm__tick"
+            >
+              <path
+                d="M5 12.5l4.5 4.5L19 7.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
             <span>Got it. Your answer is in.</span>
             <button type="button" className="lv-btn lv-btn--ghost" onClick={onClose}>
@@ -81,7 +98,11 @@ export function ConfirmSheet(props: ConfirmSheetProps) {
             </button>
           </div>
         ) : (
-          <div className="lv-confirm__actions" data-count={options.length} aria-busy={busy || undefined}>
+          <div
+            className="lv-confirm__actions"
+            data-count={options.length}
+            aria-busy={busy || undefined}
+          >
             {options.map((opt, i) => {
               const primary = i === 0;
               const loading = busy && chosen.current === i;

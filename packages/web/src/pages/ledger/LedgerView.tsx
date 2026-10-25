@@ -1,6 +1,15 @@
 import { useMemo, useState, type KeyboardEvent } from 'react';
 import { meetsMinGroupSize } from '@squad/core';
-import { Avatar, ConnectionBadge, LvIcon, PageHeader, Segmented, StateBlock, useMedia, type Connection } from '../../overlays/kit';
+import {
+  Avatar,
+  ConnectionBadge,
+  LvIcon,
+  PageHeader,
+  Segmented,
+  StateBlock,
+  useMedia,
+  type Connection,
+} from '../../overlays/kit';
 import { barWidth, rowsByStudent, summarize, type LedgerRow, type RosterMember } from './model';
 import './ledger.css';
 
@@ -23,7 +32,18 @@ export interface LedgerViewProps {
 }
 
 export function LedgerView(props: LedgerViewProps) {
-  const { status, connection, title, rows, roster, me, projector, onProjectorChange, freshIds, onRetry } = props;
+  const {
+    status,
+    connection,
+    title,
+    rows,
+    roster,
+    me,
+    projector,
+    onProjectorChange,
+    freshIds,
+    onRetry,
+  } = props;
   const wide = useMedia('(min-width: 1024px)');
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(new Set());
   const columns = useMemo(() => rowsByStudent(rows, roster), [rows, roster]);
@@ -67,7 +87,11 @@ export function LedgerView(props: LedgerViewProps) {
             onChange={(v) => onProjectorChange(v === 'projector')}
             options={[
               { value: 'me', label: 'Me', hint: 'Your view' },
-              { value: 'projector', label: 'Demo projector', hint: 'Blurs other people until you click' },
+              {
+                value: 'projector',
+                label: 'Demo projector',
+                hint: 'Blurs other people until you click',
+              },
             ]}
           />
         }
@@ -82,14 +106,30 @@ export function LedgerView(props: LedgerViewProps) {
 
       {status === 'loading' && <LedgerSkeleton />}
       {status === 'error' && (
-        <StateBlock kind="error" title="The board did not load" body="The hub did not answer. Nothing here is lost; try again in a moment." onRetry={onRetry} />
+        <StateBlock
+          kind="error"
+          title="The board did not load"
+          body="The hub did not answer. Nothing here is lost; try again in a moment."
+          onRetry={onRetry}
+        />
       )}
       {status === 'offline' && (
-        <StateBlock kind="offline" title="You are offline" body="This board updates on its own as soon as your connection is back." onRetry={onRetry} retryLabel="Check again" />
+        <StateBlock
+          kind="offline"
+          title="You are offline"
+          body="This board updates on its own as soon as your connection is back."
+          onRetry={onRetry}
+          retryLabel="Check again"
+        />
       )}
 
       {status === 'ready' && rows.length === 0 && (
-        <StateBlock kind="empty" art="board" title="Nothing shared yet" body="Agents will post here when they start talking." />
+        <StateBlock
+          kind="empty"
+          art="board"
+          title="Nothing shared yet"
+          body="Agents will post here when they start talking."
+        />
       )}
 
       {status === 'ready' && rows.length > 0 && (
@@ -112,7 +152,13 @@ export function LedgerView(props: LedgerViewProps) {
           {wide ? (
             <div className="lv-ledger__cols" role="list" aria-label="Agents">
               {columns.map((c) => (
-                <section key={c.id} className="lv-col" role="listitem" aria-label={`${c.name}'s agent`} data-mine={c.id === me || undefined}>
+                <section
+                  key={c.id}
+                  className="lv-col"
+                  role="listitem"
+                  aria-label={`${c.name}'s agent`}
+                  data-mine={c.id === me || undefined}
+                >
                   <header className="lv-col__head">
                     <Avatar name={c.name} size={32} tone={c.id === me ? 'you' : 'other'} />
                     <h2 className="lv-col__name">{c.name}&rsquo;s agent</h2>
@@ -129,7 +175,12 @@ export function LedgerView(props: LedgerViewProps) {
               ))}
             </div>
           ) : (
-            <ol className="lv-rows lv-rows--feed" aria-live="polite" aria-relevant="additions" aria-label="Newest first">
+            <ol
+              className="lv-rows lv-rows--feed"
+              aria-live="polite"
+              aria-relevant="additions"
+              aria-label="Newest first"
+            >
               {rows.map((r) => renderRow(r, true))}
             </ol>
           )}
@@ -186,15 +237,16 @@ function Row({
           {row.field}
           {mine && agentName && <span className="lv-you lv-you--sm">You</span>}
         </p>
-        {row.blocked ? (
-          <p className="lv-row__blocked">
-            Blocked by privacy gate
-          </p>
-        ) : null}
+        {row.blocked ? <p className="lv-row__blocked">Blocked by privacy gate</p> : null}
         {!row.blocked && row.shared !== undefined && <p className="lv-row__shared">{row.shared}</p>}
         {row.withheld && !row.blocked && (
           <p className="lv-row__kept">
-            <span className="lv-bar" style={{ width: `${barWidth(row.field)}%` }} role="img" aria-label="Withheld" />
+            <span
+              className="lv-bar"
+              style={{ width: `${barWidth(row.field)}%` }}
+              role="img"
+              aria-label="Withheld"
+            />
             <span className="lv-row__keptlabel">{mine ? 'You kept this private' : 'Withheld'}</span>
           </p>
         )}

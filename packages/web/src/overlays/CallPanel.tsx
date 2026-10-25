@@ -58,7 +58,13 @@ export function CallPanel(props: CallPanelProps) {
     if (el && stick.current) el.scrollTop = el.scrollHeight;
   }, [captions.length, open]);
 
-  const tone = !live ? 'idle' : speaking === 'you' && !muted ? 'you' : speaking === 'agent' ? 'agent' : 'idle';
+  const tone = !live
+    ? 'idle'
+    : speaking === 'you' && !muted
+      ? 'you'
+      : speaking === 'agent'
+        ? 'agent'
+        : 'idle';
 
   return (
     <OverlayFrame
@@ -73,7 +79,12 @@ export function CallPanel(props: CallPanelProps) {
       initialFocus={() => (ended ? closeBtn.current : muteBtn.current)}
     >
       <span className="lv-grip" aria-hidden="true" />
-      <button type="button" className="lv-btn lv-close" onClick={onClose} aria-label="Close call panel">
+      <button
+        type="button"
+        className="lv-btn lv-close"
+        onClick={onClose}
+        aria-label="Close call panel"
+      >
         <LvIcon name="x" size={20} />
       </button>
 
@@ -86,7 +97,9 @@ export function CallPanel(props: CallPanelProps) {
           <p className="lv-call__status" data-status={status}>
             <span className="lv-call__dot" aria-hidden="true" />
             <span>{STATUS_LABEL[status]}</span>
-            {live && elapsedMs !== undefined && <span className="lv-call__time">{formatElapsed(elapsedMs)}</span>}
+            {live && elapsedMs !== undefined && (
+              <span className="lv-call__time">{formatElapsed(elapsedMs)}</span>
+            )}
           </p>
         </div>
       </header>
@@ -102,13 +115,23 @@ export function CallPanel(props: CallPanelProps) {
             </span>
           )}
         </div>
-        <Waveform level={live ? level : undefined} tone={muted && speaking !== 'agent' ? 'idle' : tone} reduced={reduced} />
+        <Waveform
+          level={live ? level : undefined}
+          tone={muted && speaking !== 'agent' ? 'idle' : tone}
+          reduced={reduced}
+        />
       </div>
 
       {(status === 'reconnecting' || status === 'error') && (
-        <div className="lv-call__notice" role={status === 'error' ? 'alert' : 'status'} data-status={status}>
+        <div
+          className="lv-call__notice"
+          role={status === 'error' ? 'alert' : 'status'}
+          data-status={status}
+        >
           <LvIcon name={status === 'error' ? 'wifi-off' : 'refresh'} size={18} />
-          <p>{message ?? (status === 'error' ? 'The call dropped.' : 'Trying to get the line back.')}</p>
+          <p>
+            {message ?? (status === 'error' ? 'The call dropped.' : 'Trying to get the line back.')}
+          </p>
           {status === 'error' && onRetry && (
             <button type="button" className="lv-btn" onClick={onRetry}>
               Retry
@@ -125,7 +148,9 @@ export function CallPanel(props: CallPanelProps) {
             <span className="lv-skel" style={{ width: '64%' }} />
           </div>
         ) : captions.length === 0 ? (
-          <p className="lv-call__empty">{ended ? 'No captions were recorded.' : 'Captions appear here as the call goes.'}</p>
+          <p className="lv-call__empty">
+            {ended ? 'No captions were recorded.' : 'Captions appear here as the call goes.'}
+          </p>
         ) : (
           <ol
             ref={log}
@@ -149,7 +174,12 @@ export function CallPanel(props: CallPanelProps) {
 
       <footer className="lv-call__controls">
         {ended ? (
-          <button ref={closeBtn} type="button" className="lv-btn lv-btn--primary lv-call__wide" onClick={onClose}>
+          <button
+            ref={closeBtn}
+            type="button"
+            className="lv-btn lv-btn--primary lv-call__wide"
+            onClick={onClose}
+          >
             Close
           </button>
         ) : (
@@ -175,7 +205,11 @@ export function CallPanel(props: CallPanelProps) {
               <LvIcon name="hand" size={20} />
               <span>{handRaised ? 'Hand up' : 'Raise hand'}</span>
             </button>
-            <button type="button" className="lv-btn lv-btn--danger lv-call__ctl lv-call__leave" onClick={onLeave}>
+            <button
+              type="button"
+              className="lv-btn lv-btn--danger lv-call__ctl lv-call__leave"
+              onClick={onLeave}
+            >
               <LvIcon name="phone-off" size={20} />
               <span>Leave</span>
             </button>
@@ -186,7 +220,15 @@ export function CallPanel(props: CallPanelProps) {
   );
 }
 
-function Caption({ c, agentName, onOpenCitation }: { c: CallCaption; agentName: string; onOpenCitation?: CallPanelProps['onOpenCitation'] }) {
+function Caption({
+  c,
+  agentName,
+  onOpenCitation,
+}: {
+  c: CallCaption;
+  agentName: string;
+  onOpenCitation?: CallPanelProps['onOpenCitation'];
+}) {
   const cite = c.cite;
   return (
     <li className="lv-cap" data-speaker={c.speaker}>
@@ -194,7 +236,12 @@ function Caption({ c, agentName, onOpenCitation }: { c: CallCaption; agentName: 
       <p className="lv-cap__text">{c.text}</p>
       {cite &&
         (onOpenCitation ? (
-          <button type="button" className="lv-cite" onClick={() => onOpenCitation(cite)} title={cite.file}>
+          <button
+            type="button"
+            className="lv-cite"
+            onClick={() => onOpenCitation(cite)}
+            title={cite.file}
+          >
             <LvIcon name="file" size={14} />
             {citationLabel(cite)}
           </button>

@@ -56,7 +56,11 @@ export function OverlayFrame(props: OverlayFrameProps) {
       data-reduced={reduced ? 'true' : undefined}
       data-placement={placement}
     >
-      <div className="lv-ovl__scrim" onClick={dismissOnScrim ? onClose : undefined} aria-hidden="true" />
+      <div
+        className="lv-ovl__scrim"
+        onClick={dismissOnScrim ? onClose : undefined}
+        aria-hidden="true"
+      />
       <div
         ref={ref}
         className={['lv-ovl__panel', className].filter(Boolean).join(' ')}

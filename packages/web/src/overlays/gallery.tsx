@@ -29,41 +29,43 @@ function Stage({ children }: { children: React.ReactNode }) {
 function LiveCall({ initial }: { initial: CallPanelProps }) {
   const [muted, setMuted] = useState(initial.muted);
   const [hand, setHand] = useState(initial.handRaised);
-  return <CallPanel {...initial} muted={muted} onMuteChange={setMuted} handRaised={hand} onHandRaiseChange={setHand} />;
+  return (
+    <CallPanel
+      {...initial}
+      muted={muted}
+      onMuteChange={setMuted}
+      handRaised={hand}
+      onHandRaiseChange={setHand}
+    />
+  );
 }
 
-const call = Object.entries(callPanelFixtures).map(
-  ([k, props]): GalleryStory => ({
-    id: `call-${k}`,
-    title: `Call panel: ${k}`,
-    render: () => (
-      <Stage>
-        <LiveCall initial={props as CallPanelProps} />
-      </Stage>
-    ),
-  }),
-);
-const quiz = Object.entries(quizCardFixtures).map(
-  ([k, props]): GalleryStory => ({
-    id: `quiz-${k}`,
-    title: `Quiz card: ${k}`,
-    render: () => (
-      <Stage>
-        <QuizCard {...props} />
-      </Stage>
-    ),
-  }),
-);
-const confirm = Object.entries(confirmSheetFixtures).map(
-  ([k, props]): GalleryStory => ({
-    id: `confirm-${k}`,
-    title: `Confirm sheet: ${k}`,
-    render: () => (
-      <Stage>
-        <ConfirmSheet {...props} />
-      </Stage>
-    ),
-  }),
-);
+const call = Object.entries(callPanelFixtures).map(([k, props]): GalleryStory => ({
+  id: `call-${k}`,
+  title: `Call panel: ${k}`,
+  render: () => (
+    <Stage>
+      <LiveCall initial={props as CallPanelProps} />
+    </Stage>
+  ),
+}));
+const quiz = Object.entries(quizCardFixtures).map(([k, props]): GalleryStory => ({
+  id: `quiz-${k}`,
+  title: `Quiz card: ${k}`,
+  render: () => (
+    <Stage>
+      <QuizCard {...props} />
+    </Stage>
+  ),
+}));
+const confirm = Object.entries(confirmSheetFixtures).map(([k, props]): GalleryStory => ({
+  id: `confirm-${k}`,
+  title: `Confirm sheet: ${k}`,
+  render: () => (
+    <Stage>
+      <ConfirmSheet {...props} />
+    </Stage>
+  ),
+}));
 
 export const stories: GalleryStory[] = [...call, ...quiz, ...confirm];
