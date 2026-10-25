@@ -10,6 +10,7 @@ import {
   dimmed,
   enterDrop,
   placeBubble,
+  planksH,
   portraitFrame,
 } from '../../art/landmark-a-kit';
 import { boothGlows, type PanicBoothState } from './state';
@@ -48,59 +49,70 @@ function background(A: AssetLib): Raster {
     }
   }
   r.rect(0, 100, INT_W, 12, 'hill-near');
-  // glass mullions in signal red, and the thick frame at both sides, header and kick panel
-  for (const x of [112]) r.rect(x - 1, 12, 3, 100, 'alert');
-  for (const y of [46, 84]) r.rect(0, y, INT_W, 3, 'alert');
-  r.rect(0, 0, 26, INT_H, 'alert');
-  r.rect(INT_W - 26, 0, 26, INT_H, 'alert');
-  r.vline(25, 0, INT_H, 'roof-wine');
-  r.vline(INT_W - 26, 0, INT_H, 'roof-wine');
-  r.vline(0, 0, INT_H, 'roof-shade');
-  r.vline(INT_W - 1, 0, INT_H, 'roof-shade');
-  for (let y = 20; y < 100; y += 26) {
-    r.rect(0, y, 26, 2, 'roof-wine');
-    r.rect(INT_W - 26, y, 26, 2, 'roof-wine');
+  // wooden booth frame in the wine ramp, ink-outlined, with one thin signal-red trim
+  for (const y of [46, 84]) {
+    r.rect(0, y, INT_W, 4, 'roof-wine');
+    r.hline(0, y, INT_W, 'wood-lit');
+    r.hline(0, y + 3, INT_W, 'ink');
   }
-  r.rect(0, 0, INT_W, 12, 'roof-wine');
-  r.hline(0, 0, INT_W, 'alert');
-  r.hline(0, 11, INT_W, 'roof-shade');
-  r.rect(0, 100, INT_W, 12, 'alert');
-  r.hline(0, 100, INT_W, 'roof-wine');
-  r.dither(0, 106, INT_W, 6, 'roof-wine', 0);
+  r.rect(111, 12, 4, 100, 'roof-wine');
+  r.vline(111, 12, 100, 'wood-lit');
+  r.vline(114, 12, 100, 'ink');
+  for (const x0 of [0, INT_W - 26]) {
+    r.rect(x0, 0, 26, INT_H, 'roof-shade');
+    r.rect(x0 + (x0 === 0 ? 3 : 5), 0, 18, INT_H, 'roof-wine');
+    r.vline(x0 + (x0 === 0 ? 3 : 5), 0, INT_H, 'wood-lit');
+    r.vline(x0 + (x0 === 0 ? 20 : 22), 0, INT_H, 'ink');
+    r.vline(x0 + (x0 === 0 ? 25 : 0), 0, INT_H, 'ink');
+    for (let y = 18; y < 100; y += 24) r.rect(x0 + (x0 === 0 ? 3 : 5), y, 18, 2, 'roof-shade');
+  }
+  r.rect(0, 0, INT_W, 12, 'roof-shade');
+  r.rect(0, 2, INT_W, 8, 'roof-wine');
+  r.hline(0, 2, INT_W, 'wood-lit');
+  r.hline(0, 10, INT_W, 'ink');
+  r.hline(0, 11, INT_W, 'alert');
+  r.rect(0, 100, INT_W, 12, 'roof-shade');
+  r.hline(0, 100, INT_W, 'wood');
+  r.dither(0, 104, INT_W, 8, 'wood-dark', 0);
   r.hline(0, 111, INT_W, 'ink');
-  // tiled floor
-  r.rect(0, 112, INT_W, 16, 'wall-shade');
-  for (let y = 112; y < 128; y += 8) {
-    for (let x = ((y - 112) / 8) % 2 === 0 ? 0 : 8; x < INT_W; x += 16)
-      r.rect(x, y, 8, 8, 'wall-mid');
-  }
+  // plank floor
+  planksH(r, 0, 112, INT_W, 16, 'wood', 'wood-dark', 'wood-lit', 4, 56);
   r.hline(0, 112, INT_W, 'ink');
-  // sticky notes on the glass
-  const tones = ['glow', 'ok', 'violet', 'alert', 'cloud-hi', 'ember'] as const;
-  const rn = rng(77);
-  for (let i = 0; i < 22; i++) {
-    const x = 32 + ((i * 29) % 150) + Math.floor(rn() * 6);
-    const y = 16 + ((i * 17) % 70) + Math.floor(rn() * 5);
-    if (y > 80 && x > 90 && x < 140) continue;
-    const c = tones[i % tones.length]!;
-    r.rect(x, y, 8, 8, c);
-    r.hline(x + 1, y + 2, 5, 'ink');
-    r.hline(x + 1, y + 4, 4, 'ink');
-    r.hline(x, y + 7, 8, 'wood-dark');
+  r.dither(0, 113, INT_W, 3, 'wood-dark', 0);
+  r.ellipse(112, 121, 34, 4, 'roof-shade');
+  r.ellipse(112, 121, 31, 3, 'roof-wine');
+  // a deliberate sticky-note cluster on the glass, left of the clock: 4x3 grid, a few crooked
+  const tones = ['glow', 'ok', 'violet', 'ember', 'cloud-hi', 'glow'] as const;
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 4; col++) {
+      const i = row * 4 + col;
+      const x = 60 + col * 10 + (i % 3 === 0 ? 1 : 0);
+      const y = 16 + row * 10 + (i % 4 === 1 ? 1 : 0);
+      r.rect(x, y, 8, 8, 'ink');
+      r.rect(x + 1, y + 1, 6, 6, tones[i % tones.length]!);
+      r.hline(x + 2, y + 3, 4, 'ink');
+      r.hline(x + 2, y + 5, 3, 'ink');
+    }
   }
-  // payphone on the left frame, cord and handset
+  r.line(62, 14, 100, 14, 'wood-dark'); // the string they hang from
+  // payphone on the left frame, ink-outlined
   r.rect(30, 44, 24, 40, 'wall-mid');
   r.frame(30, 44, 24, 40, 'ink');
   r.rect(34, 48, 16, 8, 'sky-deep');
-  for (let k = 0; k < 9; k++)
+  r.frame(34, 48, 16, 8, 'ink');
+  for (let k = 0; k < 9; k++) {
     r.rect(35 + (k % 3) * 5, 60 + Math.floor(k / 3) * 5, 4, 4, 'wall-lit');
+  }
   r.rect(28, 40, 28, 5, 'roof-shade');
+  r.frame(28, 40, 28, 5, 'ink');
   // shelf with a directory and coins, right
   r.rect(158, 80, 40, 4, 'wood');
   r.hline(158, 80, 40, 'wood-lit');
+  r.hline(158, 83, 40, 'ink');
   r.rect(162, 70, 12, 10, 'roof-wine');
-  r.hline(162, 70, 12, 'alert');
+  r.frame(162, 70, 12, 10, 'ink');
   r.rect(178, 74, 8, 6, 'wood-lit');
+  r.frame(178, 74, 8, 6, 'ink');
   r.px(190, 79, 'glow');
   r.px(192, 79, 'glow');
   bgCache.set(A, r);
@@ -115,16 +127,17 @@ export function paintInterior(s: PanicBoothState, o: PaintOpts): Raster {
   const r = (open ? background(A) : dimmed(background(A))).clone();
   const bubbles = visibleBubbles(s, o);
   const busy = s.occupant === 'studying' || s.occupant === 'in_call';
-  // 2 AM digital clock and an analog one
-  r.rect(88, 14, 38, 14, 'ink');
-  r.frame(88, 14, 38, 14, 'cloud-lo');
-  drawTextCentered(r, 107, 19, '2:00 AM', glow ? 'alert' : 'wall-shade');
-  clockFace(r, 152, 22, 8, 0.52);
+  // wall clock on a wood plaque, stopped at 2 AM, with its label
+  r.rect(130, 14, 30, 26, 'wood-dark');
+  r.frame(130, 14, 30, 26, 'ink');
+  r.hline(131, 15, 28, 'wood');
+  clockFace(r, 145, 25, 8, 0.52);
+  drawTextCentered(r, 145, 34, '2 AM', glow ? 'glow-core' : 'wall-mid');
   // occupant: the night-shift agent in a headset (cast 'ta')
   const talking = open && s.occupant === 'in_call' && bubbles.some((v) => v.b.who === EXPERT);
   const anim = talking ? 'talk' : 'idle';
   const n = talking ? frameAt(o.t, 8, o.calm) : frameAt(o.t, busy ? 8 : 2, o.calm);
-  put(r, A.frame(OCCUPANT, anim, n), FEET.x, FEET.y);
+  put(r, A.frame(OCCUPANT, anim, n), FEET.x, FEET.y - 2);
   if (s.occupant === 'in_call') {
     // coiled cord from the payphone to the handset
     for (let k = 0; k < 30; k++) {
@@ -142,8 +155,7 @@ export function paintInterior(s: PanicBoothState, o: PaintOpts): Raster {
   }
   if (glow) {
     const a = o.calm ? 1 : 0.85 + 0.15 * triangle(o.t, 4000);
-    r.glow(112, 12, 44, 'cloud-hi', 0.3 * a, 4);
-    r.glow(112, 100, 56, 'sky-low', 0.22 * a, 3);
+    r.glow(112, 70, 70, 'glow', 0.2 * a, 4);
   }
   for (const v of bubbles) {
     placeBubble(r, v.b.text, v.b.style, FEET.x, FEET.y - 30 + enterDrop(v, o.calm), v.alpha, {

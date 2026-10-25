@@ -76,6 +76,7 @@ describe('chapter house mapEvent', () => {
     t,
     quizId: 'q',
     chapter: 'ch5',
+    student: 's_ana',
     ...(correct === undefined ? {} : { correct }),
   });
   it('quiz.*', () => {
@@ -194,8 +195,12 @@ describe('chapter house paint', () => {
     expect(def.paint(withBubble, 'interior', po(600, false)).hash()).not.toBe(
       def.paint(noBubble, 'interior', po(600, false)).hash(),
     );
-    const tick = run([{ t: 'quiz.result', quizId: 'q', chapter: 'ch5', correct: true }]);
-    const cross = run([{ t: 'quiz.result', quizId: 'q', chapter: 'ch5', correct: false }]);
+    const tick = run([
+      { t: 'quiz.result', quizId: 'q', chapter: 'ch5', student: 's_ana', correct: true },
+    ]);
+    const cross = run([
+      { t: 'quiz.result', quizId: 'q', chapter: 'ch5', student: 's_ana', correct: false },
+    ]);
     expect(def.paint(tick, 'interior', o).hash()).not.toBe(def.paint(cross, 'interior', o).hash());
   });
   it('exterior window flickers only when awake; typing animates at 8 fps', () => {
@@ -221,7 +226,7 @@ describe('chapter house paint', () => {
       }
     }
     expect(offPalette(swapped(A.frame('expert', 'sit', 0).r, 'x', styleFor('ch2').shirt))).toBe(0);
-    expect(styleFor('ch2').propL).not.toBe(styleFor('ch2').propR);
+    expect(new Set(['ch1', 'ch2', 'ch3', 'ch4'].map((c) => styleFor(c).propL.id)).size).toBe(4);
   });
   it('sizes and distinct chapters', () => {
     expect(def.paint(init(), 'exterior', o).w).toBe(def.exterior.w);

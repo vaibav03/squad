@@ -26,7 +26,7 @@ export const debateStage = defineLandmark<DebateStageState>({
   mapSpecial: (e, s, ctx) => mapDebateCouncil(e, s, ctx),
   paintView: (s, view, o) => (view === 'interior' ? paintInterior(s, o) : paintExterior(s, o)),
   describe(s) {
-    if (s.access === 'locked') return 'Debate Stage, boarded up for now.';
+    if (s.access === 'locked') return 'Debate Stage, locked and boarded up for now.';
     if (s.access === 'dim') {
       return 'Debate Stage, quiet. Two lecterns face the audience and the lanterns are dark.';
     }

@@ -24,12 +24,13 @@ function background(A: AssetLib): Raster {
   if (hit) return hit;
   const r = new Raster(INT_W, INT_H);
   // cottage wall behind the porch
-  r.rect(0, 0, INT_W, 112, 'wall-shade');
-  for (let y = 18; y < 112; y += 8) r.hline(0, y, INT_W, 'hill-mid');
+  r.rect(0, 0, INT_W, 112, 'wall-mid');
+  for (let y = 18; y < 112; y += 8) r.hline(0, y, INT_W, 'wall-shade');
   for (let y = 18, row = 0; y < 112; y += 8, row++) {
-    for (let x = (row % 2) * 12; x < INT_W; x += 24) r.vline(x, y, 8, 'hill-mid');
+    for (let x = (row % 2) * 12; x < INT_W; x += 24) r.vline(x, y, 8, 'wall-shade');
   }
-  r.dither(0, 14, INT_W, 18, 'wall-mid', 0);
+  r.dither(0, 16, INT_W, 20, 'wall-lit', 0);
+  r.dither(0, 96, INT_W, 16, 'wall-shade', 1);
   // porch roof underside: a shingled fascia and a beam
   r.rect(0, 0, INT_W, 12, 'roof-wine');
   for (let x = 0; x < INT_W; x += 8) {
@@ -72,10 +73,24 @@ function background(A: AssetLib): Raster {
     r.rect(x - 1, 108, 14, 4, 'wood-lit');
     r.hline(x - 1, 111, 14, 'wood-dark');
   }
+  // a rug, a mug and a sheet of notes, a potted plant, chalk on the step
+  r.ellipse(112, 122, 44, 4, 'roof-shade');
+  r.ellipse(112, 122, 41, 3, 'roof-wine');
+  r.rect(34, 96, 5, 5, 'wall-lit');
+  r.rect(35, 97, 3, 1, 'wood-lit');
+  r.px(39, 98, 'wall-lit');
+  r.rect(130, 106, 12, 6, 'wall-lit');
+  r.hline(131, 108, 8, 'wall-shade');
+  r.hline(131, 110, 6, 'wall-shade');
+  r.rect(196, 96, 8, 14, 'wood-dark');
+  r.rect(194, 92, 12, 6, 'wood');
+  r.ellipse(200, 86, 8, 7, 'leaf-dark');
+  r.ellipse(197, 83, 5, 4, 'leaf-lit');
+  r.ellipse(204, 84, 3, 3, 'leaf-lit');
   // railing between the bench and the left post, a crate and books for the freshman's notes
   put(r, A.image('prop.bench'), 38, 112);
-  put(r, A.image('prop.crate-a'), 196, 112);
-  put(r, A.image('prop.books'), 196, 91);
+  put(r, A.image('prop.crate-a'), 148, 112);
+  put(r, A.image('prop.books'), 148, 91);
   bgCache.set(A, r);
   return r;
 }
@@ -135,7 +150,8 @@ export function paintInterior(s: FeynmanPorchState, o: PaintOpts): Raster {
   }
   if (open) {
     const a = o.calm ? 1 : 0.85 + 0.15 * triangle(o.t, 4000);
-    r.glow(112, 34, 32, 'glow', 0.4 * a, 4);
+    r.glow(112, 34, 36, 'glow', 0.5 * a, 4);
+    r.glow(112, 70, 60, 'glow', 0.14 * a, 3);
     r.glow(166, 70, 28, 'glow', 0.3 * a, 3);
     r.glow(112, 108, 70, 'glow', 0.1 * a, 3);
   }

@@ -192,7 +192,9 @@ function map(r: Raster, cx: number, cy: number): void {
   for (const [px_, py_] of route.slice(0, -1)) r.rect(cx + px_, cy + py_ - 1, 2, 2, 'ink');
   r.vline(cx + 32, cy - 7, 6, 'wood-dark');
   r.rect(cx + 33, cy - 7, 4, 3, 'glow');
-  drawText(r, cx - 30, cy - 6, 'NEXT TERM', 'wood-dark');
+  r.rect(cx - 25, cy - 4, 53, 7, 'wall-shade');
+  r.frame(cx - 25, cy - 4, 53, 7, 'wood-dark');
+  drawText(r, cx - 17, cy - 3, 'NEXT TERM', 'wall-lit');
 }
 
 function table(r: Raster, s: RoundTableState, plates: { member: string; x: number }[]): void {
@@ -204,14 +206,14 @@ function table(r: Raster, s: RoundTableState, plates: { member: string; x: numbe
   r.ellipse(cx, cy, rx, ry, 'wood');
   r.ellipse(cx, cy - 1, rx - 2, ry - 2, 'wood-lit');
   r.ellipse(cx, cy - 1, rx - 5, ry - 4, 'wood');
-  map(r, cx, cy - 1);
+  map(r, cx, cy - 5);
   for (const p of plates) {
     const label = plateOf(p.member);
     const w = textWidth(label) + 4;
     const dissent = s.verdict?.dissenter === p.member;
-    r.rect(p.x - Math.floor(w / 2), cy + 4, w, 7, 'ink');
-    r.frame(p.x - Math.floor(w / 2), cy + 4, w, 7, dissent ? 'alert' : 'wood-lit');
-    drawTextCentered(r, p.x, cy + 5, label, dissent ? 'alert' : 'glow-core');
+    r.rect(p.x - Math.floor(w / 2), cy, w, 7, 'ink');
+    r.frame(p.x - Math.floor(w / 2), cy, w, 7, dissent ? 'alert' : 'wood-lit');
+    drawTextCentered(r, p.x, cy + 1, label, dissent ? 'alert' : 'glow-core');
   }
 }
 
@@ -333,7 +335,9 @@ function paintBubbles(
     const style = ranked && v.b.style === 'thought' ? 'speech' : v.b.style;
     const art = bubble(v.b.text, style, 11, 4, ranked ? null : 0.5);
     const bx = Math.max(2, Math.min(INT_W - art.r.w - 2, x - art.tail.x));
-    const by = ranked ? HEAD_TIP - 2 - art.r.h : HEAD_TIP - art.tail.y;
+    const slotIdx = ranked && s.slots ? Math.max(0, s.slots.to.indexOf(w)) : seat;
+    const lift = slotIdx === 1 ? 6 : 0; // stagger the row so neighbours never touch
+    const by = (ranked ? HEAD_TIP - 2 - art.r.h : HEAD_TIP - art.tail.y) - lift;
     r.blit(art.r, bx, by, { alpha: v.alpha });
     if (ranked && s.slots && v.alpha > 0.9) {
       const place = s.slots.to.indexOf(w);

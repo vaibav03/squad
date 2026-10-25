@@ -5,7 +5,7 @@ import type { PaintOpts } from '../contract';
 import { put } from '../assets';
 import { easeOut } from '../curves';
 import { triangle, glowNow, type BaseState } from '../model/base';
-import { plankText, styleFor, type Remap } from './style';
+import { plankText, styleFor, type ChapterStyle, type Remap } from './style';
 
 /** House sprite is 128x133; 16 px margins carry props, 30 px of headroom carry the chimney smoke. */
 export const EXT_W = 160;
@@ -75,16 +75,20 @@ function distanceField(spr: Raster): Uint8Array {
 }
 
 function rimGlow(r: Raster, spr: Raster, g: number, o: PaintOpts): void {
-  const k = 0.08 + 0.45 * g;
-  const pulse = o.calm ? 1 : 0.95 + 0.05 * triangle(o.t, 3200);
+  // a stepped light pool: solid ring, 2 px checker, then a sparse 2 px checker. No smooth blur.
+  const steps = g < 0.34 ? 1 : g < 0.67 ? 2 : 3;
+  const a = o.calm ? 1 : 0.92 + 0.08 * triangle(o.t, 3200);
   const d = distanceField(spr);
-  const bands = [0.8, 0.5, 0.3, 0.14];
   for (let y = 0; y < EXT_H; y++) {
     for (let x = 0; x < EXT_W; x++) {
       const v = d[y * EXT_W + x]!;
       if (v === 0 || v > HALO_R) continue;
-      const band = Math.min(3, Math.floor((v - 1) / 2));
-      r.px(x, y, band < 2 ? 'glow' : 'ember', k * pulse * bands[band]!);
+      const checker = (((x >> 1) + (y >> 1)) & 1) === 0;
+      if (v <= 2) r.px(x, y, 'glow', 0.42 * a);
+      else if (steps >= 2 && v <= 5 && checker) r.px(x, y, 'glow', 0.34 * a);
+      else if (steps >= 3 && v <= 7 && checker && (((x >> 2) + (y >> 2)) & 1) === 0) {
+        r.px(x, y, 'ember', 0.3 * a);
+      }
     }
   }
 }
@@ -104,6 +108,27 @@ function pips(r: Raster, o: PaintOpts, lit: number): void {
     r.rect(x, y, 1, 2, 'glow');
     r.px(x, y, 'glow-core');
     r.px(x, y + 2, 'glow');
+  }
+}
+
+/** Window dressing per chapter: curtains over the dark pane, or a flower box under it. */
+function dressWindow(r: Raster, o: PaintOpts, st: ChapterStyle, open: boolean, lit: boolean): void {
+  if (st.curtain && !lit) {
+    const c = o.assets.image('prop.window-curtained');
+    r.blit(open ? c.r : dimmed(c.r), WINDOW.x - 3, WINDOW.y + 2);
+  }
+  if (st.flowerBox) {
+    const y = WINDOW.y + 13;
+    r.rect(WINDOW.x - 4, y, 12, 3, open ? 'wood' : 'wood-dark');
+    r.hline(WINDOW.x - 4, y + 2, 12, 'wood-dark');
+    for (const [dx, n] of [
+      [-2, 1],
+      [1, 2],
+      [4, 3],
+    ] as const) {
+      const f = o.assets.image(`prop.flower-${n}`);
+      put(r, open ? f : { ...f, r: dimmed(f.r) }, WINDOW.x + dx, y);
+    }
   }
 }
 
@@ -132,24 +157,31 @@ export function paintExterior(s: BaseState, o: PaintOpts): Raster {
   if (open) rimGlow(r, base, g, o);
 
   // props beside the house (behind it on the left, in front on the right)
-  const prop = (id: string, x: number): void => {
-    const a = id === 'prop.lamp-post' && lit ? A.image(id, 'lit') : A.image(id);
-    put(r, open ? a : { ...a, r: dimmed(a.r) }, x, EXT_H - 1);
+  const prop = (p: { id: string; x: number }): void => {
+    const a = p.id === 'prop.lamp-post' && lit ? A.image(p.id, 'lit') : A.image(p.id);
+    put(r, open ? a : { ...a, r: dimmed(a.r) }, p.x, EXT_H - 1);
   };
-  prop(st.propL, 14);
+  prop(st.propL);
   put(r, { ...darkI, r: base }, SX + darkI.ax, EXT_H - 1);
   if (lit) {
     const f = o.calm ? 1 : 0.85 + 0.15 * easeOut(triangle(o.t, 4000));
     put(r, { ...litI, r: bright }, SX + litI.ax, EXT_H - 1, { alpha: f });
   }
-  prop(st.propR, EXT_W - 14);
+  dressWindow(r, o, st, open, lit);
+  if (st.extra) prop(st.extra);
+  prop(st.propR);
 
   // the chapter on the plank
   const label = plankText(s.sign || s.title, textWidth);
-  drawText(r, SX + 36 - Math.floor(textWidth(label) / 2), SY + 27, label, 'ink');
+  drawText(r, SX + 26, SY + 27, label, 'ink');
 
   if (locked) {
-    put(r, A.image('ui.padlock'), DOOR.x, DOOR.y - 36);
+    put(r, A.image('ui.padlock'), DOOR.x, DOOR.y - 44);
+    // state in words, not only colour
+    const w = textWidth('LOCKED') + 4;
+    r.rect(DOOR.x - (w >> 1), DOOR.y - 38, w, 9, 'ink');
+    r.frame(DOOR.x - (w >> 1), DOOR.y - 38, w, 9, 'wall-shade');
+    drawText(r, DOOR.x - (w >> 1) + 2, DOOR.y - 36, 'LOCKED', 'cloud-hi');
     return r;
   }
   if (lit) {

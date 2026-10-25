@@ -88,8 +88,8 @@ export function paintInterior(s: LbState, o: PaintOpts): Raster {
   r.glow(104, 32, 8, 'cloud-hi', 0.4 * k, 3);
   if (look.busy) lightPool(r, DESK_X - 20, FLOOR_Y - 32, 10, 8, 'cloud-hi', 0.45 * k, 3);
   if (s.ring) doorRing(r, a, CHAIR_X, FLOOR_Y + 8, o);
-  if (s.portrait) callPortrait(r, a, 'examiner', 8, 8, o);
-  paintLbBubbles(r, s, o, EX_X + 4, FLOOR_Y - 32);
+  if (s.portrait) callPortrait(r, a, 'examiner', 8, 46, o);
+  paintLbBubbles(r, s, o, EX_X + 14, FLOOR_Y - 37, 22, 3);
   void drawText;
   return r;
 }

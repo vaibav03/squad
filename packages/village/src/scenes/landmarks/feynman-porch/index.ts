@@ -31,7 +31,7 @@ export const feynmanPorch = defineLandmark<FeynmanPorchState>({
   mapSpecial: (e, s, ctx) => mapFeynmanQuiz(e, s, ctx),
   paintView: (s, view, o) => (view === 'interior' ? paintInterior(s, o) : paintExterior(s, o)),
   describe(s) {
-    if (s.access === 'locked') return 'Feynman Porch, shuttered for now.';
+    if (s.access === 'locked') return 'Feynman Porch, locked and shuttered for now.';
     if (s.access === 'dim') {
       return 'Feynman Porch, quiet. A rocking chair and a lantern wait on the porch.';
     }

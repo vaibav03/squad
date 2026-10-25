@@ -167,6 +167,7 @@ interface Live {
   image: Img;
   glow: HostGlow | null;
   lastHash: string;
+  label: string;
   unregister: () => void;
 }
 
@@ -195,19 +196,22 @@ const mod = {
     let veil: Img | null = null;
     let interiorTex: CanvasTex | null = null;
     let fade = { from: 0, to: 0, since: 0, dur: 200 };
+    let fading = false;
+    let alphaNow = 0;
     let destroyed = false;
 
     const sceneCtx = (): SceneCtx => ({
       ...DEFAULT_CTX,
-      viewer: ctx.me ?? DEFAULT_CTX.viewer,
+      viewer: ctx.me ?? '', // unknown viewer owns nothing: no mastery, no per-student marks
       hour: Math.floor(ctx.time.clockHours) % 24,
-      squadSize: (ctx.registry.get('squadSize') as number | undefined) ?? DEFAULT_CTX.squadSize,
+      squadSize: (ctx.registry.get('squadSize') as number | undefined) ?? 0, // unknown: aggregates stay hidden
     });
 
     function place(p: Placement, instance: string): Live {
       const slot = layout.slot(p.slotId);
       const def = p.def as unknown as SceneDef<unknown>;
       const key = `scene-${p.slotId}`;
+      if (scene.textures.exists(key)) scene.textures.remove(key);
       const tex = scene.textures.createCanvas(key, def.exterior.w, def.exterior.h);
       const image = scene.add
         .image(slot.x, layout.groundY + 1, key)
@@ -224,6 +228,7 @@ const mod = {
         image,
         glow: null,
         lastHash: '',
+        label: def.describe(def.init({ instance, title: p.title })),
         unregister: () => {},
       };
       live.unregister = ctx.interactables.register({
@@ -250,6 +255,7 @@ const mod = {
 
     function ensureInterior(): void {
       if (interiorImg) return;
+      if (scene.textures.exists('scene-interior')) scene.textures.remove('scene-interior');
       interiorTex = scene.textures.createCanvas('scene-interior', INT_W, INT_H);
       const cx = Math.round(scene.scale.width / 2);
       const cy = Math.round(scene.scale.height / 2);
@@ -279,16 +285,24 @@ const mod = {
       ctx.registry.set('playerX', ctx.player.x);
       ctx.player.sprite.setVisible(false);
       ctx.bus.emit('enter', { slotId: live.p.slotId });
-      fade = { from: 0, to: 1, since: now, dur: ctx.calm ? 120 : 200 };
+      fade = { from: alphaNow, to: 1, since: now, dur: ctx.calm ? 120 : 200 };
+      fading = true;
+      if (assets)
+        blit(
+          interiorTex,
+          live.def.paint(live.state, 'interior', { t: now, calm: ctx.calm, assets }),
+        );
       veil?.setVisible(true);
       interiorImg?.setVisible(true);
+      ctx.bus.emit('announce', `Inside ${live.def.describe(live.state)}`);
     }
     function leave(): void {
       if (!inside) return;
       const live = inside;
       inside = null;
       live.state = live.def.onExit?.(live.state, now) ?? live.state;
-      fade = { from: 1, to: 0, since: now, dur: ctx.calm ? 120 : 200 };
+      fade = { from: alphaNow, to: 0, since: now, dur: ctx.calm ? 120 : 200 };
+      fading = true;
       ctx.player.sprite.setVisible(true);
       releaseInput?.();
       releaseInput = null;
@@ -310,9 +324,10 @@ const mod = {
       for (const live of lives) {
         const before = live.state;
         live.state = step(live.def, live.state, e, c, now);
-        if (live.state !== before && e.t === 'council.verdict' && live.def.id === 'council-hall') {
+        if (live.state !== before && e.t === 'council.verdict') {
           ctx.bus.emit('announce', `Council verdict: ${e.text ?? ''}`.trim());
         }
+        if (live.state !== before) live.label = live.def.describe(live.state);
       }
     });
 
@@ -358,19 +373,24 @@ const mod = {
             live.glow = null;
           }
         }
-        if (inside || (interiorImg && fade.to === 0 && t - fade.since < fade.dur)) {
+        if (fading) {
           const k = Math.min(1, (t - fade.since) / fade.dur);
-          const a = fade.from + (fade.to - fade.from) * k;
-          if (inside && dirty) blit(interiorTex, inside.def.paint(inside.state, 'interior', o));
-          interiorImg?.setAlpha(a);
-          veil?.setAlpha(a * 0.88);
-          if (!inside && k >= 1) {
-            interiorImg?.setVisible(false);
-            veil?.setVisible(false);
+          alphaNow = fade.from + (fade.to - fade.from) * k;
+          interiorImg?.setAlpha(alphaNow);
+          veil?.setAlpha(alphaNow * 0.88);
+          if (k >= 1) {
+            fading = false;
+            if (fade.to === 0) {
+              interiorImg?.setVisible(false);
+              veil?.setVisible(false); // an invisible veil must not eat pointer input
+            }
           }
         }
+        if (inside && dirty) blit(interiorTex, inside.def.paint(inside.state, 'interior', o));
       },
       destroy() {
+        if (destroyed) return;
+        if (inside) leave();
         destroyed = true;
         offEvent();
         scene.input.keyboard?.off('keydown-ESC', leave);

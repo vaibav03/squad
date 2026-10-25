@@ -5,6 +5,7 @@ import { put } from '../assets';
 import { bubble } from '../art/bubble';
 import { frameAt, glowNow, triangle, visibleBubbles, type BaseState } from '../model/base';
 import { dimmed, swapped } from './exterior';
+import { paletteNameOf, type PaletteName } from '../pixel/palette';
 import { splitLabel, styleFor } from './style';
 
 export const INT_W = 224;
@@ -15,6 +16,53 @@ const FLOOR = 112;
 const CHAIR = { x: 111, y: FLOOR } as const;
 const DESK = { x: 170, y: FLOOR } as const;
 const LAMP = { x: 143, y: 72 } as const;
+
+/**
+ * The composed rooms carry a heavy wall dither. Thin it by about half: where a wall-tone pixel sits
+ * in a checker of another wall tone, every other such pixel takes its neighbours' colour.
+ */
+const calmCache = new WeakMap<Raster, Raster>();
+function calmWalls(room: Raster): Raster {
+  let out = calmCache.get(room);
+  if (out) return out;
+  out = room.clone();
+  const names = new Map<number, PaletteName | null>();
+  const nameAt = (x: number, y: number): PaletteName | null => {
+    const k = y * room.w + x;
+    let n = names.get(k);
+    if (n === undefined) {
+      const p = room.get(x, y);
+      n = p[3] === 255 ? paletteNameOf(p[0], p[1], p[2]) : null;
+      names.set(k, n);
+    }
+    return n;
+  };
+  const hist = new Map<PaletteName, number>();
+  for (let y = 6; y < 104; y++)
+    for (let x = 6; x < room.w - 6; x++) {
+      const n = nameAt(x, y);
+      if (n) hist.set(n, (hist.get(n) ?? 0) + 1);
+    }
+  const wall = new Set(
+    [...hist.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map((e) => e[0]),
+  );
+  for (let y = 6; y < 104; y++) {
+    for (let x = 6; x < room.w - 6; x++) {
+      const c = nameAt(x, y);
+      const l = nameAt(x - 1, y);
+      if (!c || !l || !wall.has(c) || !wall.has(l) || c === l) continue;
+      const r2 = nameAt(x + 1, y);
+      const u = nameAt(x, y - 1);
+      const d = nameAt(x, y + 1);
+      if (r2 === l && u === l && d === l && ((x >> 1) + y) % 2 === 0) out.px(x, y, l);
+    }
+  }
+  calmCache.set(room, out);
+  return out;
+}
 
 /** Quiz states take the classroom: the chalkboard carries the chapter and a tick or a cross. */
 export function isQuiz(s: BaseState): boolean {
@@ -52,7 +100,7 @@ export function paintInterior(s: BaseState, o: PaintOpts): Raster {
   const quiz = isQuiz(s);
   const open = s.access === 'open';
   const awake = open && s.occupant !== 'idle';
-  const room = A.image(quiz ? 'interior.classroom' : 'interior.study').r;
+  const room = calmWalls(A.image(quiz ? 'interior.classroom' : 'interior.study').r);
   const r = new Raster(INT_W, INT_H);
   r.blit(room, 0, 0);
   if (quiz) slate(r, o, s);
@@ -72,7 +120,19 @@ export function paintInterior(s: BaseState, o: PaintOpts): Raster {
     n = frameAt(o.t, 2, o.calm);
   }
   const f = A.frame('expert', anim, n);
-  put(r, { ...f, r: swapped(f.r, `x${st.look}`, st.shirt, 0) }, at.x, at.y - bob, { flipX: quiz });
+  const studying = open && !quiz && s.occupant === 'studying';
+  // head-down: the figure dips a pixel on the odd frame while the pencil moves over the paper
+  const dip = studying && n === 1 ? 1 : 0;
+  put(r, { ...f, r: swapped(f.r, `x${st.look}`, st.shirt, 0) }, at.x, at.y - bob + dip, {
+    flipX: quiz,
+  });
+  if (studying) {
+    put(r, A.image('prop.scroll'), 128, 91);
+    const px = 124 + (n === 1 ? 4 : 0);
+    r.px(px, 86, 'glow');
+    r.px(px - 1, 87, 'wood-lit');
+    r.px(px - 2, 88, 'ink');
+  }
   if (!open) tint(r, s.access === 'locked' ? 0.55 : 0.4);
   else if (!awake) tint(r, 0.22);
 

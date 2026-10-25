@@ -23,6 +23,11 @@ export function paintExterior(s: PanicBoothState, o: PaintOpts): Raster {
   // all variants share the booth; the glow art is 5 px wider and brings its own anchor
   put(r, art, DOOR_X, EXT_H - 1);
   if (variant === 'locked') return r;
+  if (open && variant === 'glow') {
+    // a small stepped light pool on the pavement and a smaller ember lamp glow
+    r.glow(DOOR_X, EXT_H - 3, 13, 'ember', 0.35, 3);
+    r.glow(DOOR_X, 5, 6, 'glow', 0.35, 3);
+  }
   if (open && s.ring) doorRing(r, A, DOOR_X, EXT_H - 2, o.t, o.calm);
   return r;
 }

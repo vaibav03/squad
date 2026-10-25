@@ -8,13 +8,14 @@ import { devilsTa as def, devilsTaBundle } from './index';
 const ctx = DEFAULT_CTX;
 const result = (correct?: boolean, chapter = 'devil', quizId = 'devil:w1'): VillageEvent => ({
   t: 'quiz.result',
+  student: 's_ana',
   quizId,
   chapter,
   ...(correct === undefined ? {} : { correct }),
 });
 
 landmarkSuite("devil's ta", def, devilsTaBundle, 'expert:devil', 'Spot my mistake?', [
-  { t: 'quiz.result', quizId: 'q1', chapter: 'ch5', correct: false },
+  { t: 'quiz.result', student: 's_ana', quizId: 'q1', chapter: 'ch5', correct: false },
   { t: 'quiz.question', quizId: 'devil:1', chapter: 'devil' },
 ]);
 

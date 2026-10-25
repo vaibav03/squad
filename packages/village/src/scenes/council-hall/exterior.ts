@@ -63,7 +63,7 @@ export function paintExterior(s: CouncilHallState, o: PaintOpts, inSession: bool
     o,
     POST_L,
     'ui.lantern-council',
-    o.calm ? 1 : 1 + (Math.floor(o.t / 170) % 2),
+    o.calm ? 1 : 1 + (Math.floor(o.t / 500) % 2),
     awake && inSession,
   );
   const lf = s.lantern === 'off' ? 0 : lanternFrame(s, o);

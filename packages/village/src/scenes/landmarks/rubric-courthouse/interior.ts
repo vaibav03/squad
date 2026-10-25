@@ -159,7 +159,7 @@ export function paintInterior(s: LbState, o: PaintOpts): Raster {
   lightPool(r, 112, 30, 12, 12, 'glow', 0.3 * k, 3);
   lightPool(r, 68, FLOOR_Y - 6, 44, 8, 'glow', 0.28 * k, 3);
   if (s.ring) doorRing(r, a, 112, FLOOR_Y + 9, o);
-  if (s.portrait) callPortrait(r, a, 'mediator', 74, 8, o);
-  paintLbBubbles(r, s, o, JUDGE_X, FLOOR_Y - 52);
+  if (s.portrait) callPortrait(r, a, 'mediator', 180, 85, o);
+  paintLbBubbles(r, s, o, JUDGE_X + 10, FLOOR_Y - 52, 22, 3);
   return r;
 }

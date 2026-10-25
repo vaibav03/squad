@@ -26,7 +26,8 @@ export const shots: ShotDef[] = [
     script: [{ at: 0, event: state('studying') }],
     sample: [0, 600, 1200, 1800],
   },
-  { name: 'interior-idle', view: 'interior', script: [], sample: [0, 500] },
+  { name: 'interior-idle', view: 'interior', instance: 'open', script: [], sample: [0, 500] },
+  { name: 'interior-dim', view: 'interior', script: [], sample: [0] },
   {
     name: 'interior-asking',
     view: 'interior',

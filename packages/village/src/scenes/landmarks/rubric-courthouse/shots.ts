@@ -9,6 +9,7 @@ const state = (s: 'idle' | 'studying' | 'in_call' | 'waiting_for_student'): Vill
 });
 const result = (n: number, correct?: boolean): VillageEvent => ({
   t: 'quiz.result',
+  student: 's_ana',
   quizId: `rubric:fy-${n}`,
   chapter: 'rubric',
   ...(correct === undefined ? {} : { correct }),

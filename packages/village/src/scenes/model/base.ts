@@ -152,7 +152,7 @@ export function visibleBubbles(s: BaseState, o: Clock): BubbleView[] {
       b.style === 'dissent'
         ? Number.POSITIVE_INFINITY
         : b.style === 'announce'
-          ? 8000
+          ? Math.max(8000, minHoldMs(b.text))
           : minHoldMs(b.text) + 3000;
     if (age > hold + 120) continue;
     const enter = easeOut(Math.min(1, age / 160));

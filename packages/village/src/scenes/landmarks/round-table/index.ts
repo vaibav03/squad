@@ -34,7 +34,7 @@ export const roundTable = defineLandmark<RoundTableState>({
     );
   },
   describe(s) {
-    if (s.access === 'locked') return 'Round Table, shuttered for now.';
+    if (s.access === 'locked') return 'Round Table, locked and shuttered for now.';
     if (s.access === 'dim') {
       return 'Round Table, quiet. A map of next semester lies on the table and the lamp is out.';
     }

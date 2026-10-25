@@ -9,6 +9,7 @@ import {
   doorRing,
   lookOf,
   paintLbBubbles,
+  lightPool,
   unlit,
   type LbState,
 } from '../../art/landmark-b-kit';
@@ -85,12 +86,12 @@ function plinth(r: Raster, label: string, live: boolean): void {
   r.frame(102, 92, 20, 12, live ? 'violet' : 'wall-shade');
   r.px(112, 97, live ? 'violet' : 'wall-shade');
   if (label) {
-    // floor plate in front of the plinth carries the chalk label ("ch5 next?")
+    // plate across the plinth front carries the chalk label ("ch5 next?")
     const w = textWidth(label) + 6;
     const x = 112 - Math.floor(w / 2);
-    r.rect(x, 115, w, 9, 'ink');
-    r.frame(x, 115, w, 9, live ? 'violet' : 'wall-shade');
-    drawTextCentered(r, 112, 117, label, live ? 'glow-core' : 'wall-shade');
+    r.rect(x, 93, w, 9, 'ink');
+    r.frame(x, 93, w, 9, live ? 'violet' : 'wall-shade');
+    drawTextCentered(r, 112, 95, label, live ? 'glow-core' : 'wall-shade');
   }
 }
 
@@ -117,6 +118,12 @@ export function paintInterior(s: LbState, o: PaintOpts): Raster {
   put(r, a.image('prop.books'), 52, FLOOR_Y);
   put(r, a.image('prop.telescope'), 188, FLOOR_Y);
   put(r, a.image('prop.scroll'), 206, FLOOR_Y - 1);
+  put(
+    r,
+    a.sheet('ui.lantern-street', look.awake && !o.calm ? Math.floor((o.t / 1000) * 3) : 1),
+    168,
+    34,
+  );
   plinth(r, look.awake ? s.chalk.text.toUpperCase() : '', look.awake);
   if (!look.locked) put(r, castFrame(a, 'chairman', s.occupant, o), 72, FLOOR_Y - 1);
   // the orb: shell, iris, core
@@ -140,10 +147,13 @@ export function paintInterior(s: LbState, o: PaintOpts): Raster {
       i ? 'cloud-hi' : 'glow-core',
     );
   }
+  // the one warm anchor: a lantern pool on the right wall and floor
+  lightPool(r, 173, 44, 14, 14, 'glow', 0.45, 3);
+  lightPool(r, 176, FLOOR_Y - 2, 22, 5, 'glow', 0.3, 3);
   // starlight pooling on the floor beneath the opening
   r.ellipse(112, FLOOR_Y + 6, 40, 4, 'violet', 0.12 + 0.1 * p);
   if (s.ring) doorRing(r, a, 112, FLOOR_Y + 12, o);
   if (s.portrait) callPortrait(r, a, 'chairman', 8, 40, o);
-  paintLbBubbles(r, s, o, 76, FLOOR_Y - 32);
+  paintLbBubbles(r, s, o, 84, FLOOR_Y - 36, 20, 3);
   return r;
 }

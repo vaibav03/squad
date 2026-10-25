@@ -20,7 +20,7 @@ export const panicBooth = defineLandmark<PanicBoothState>({
   reduce: reducePanicBooth,
   paintView: (s, view, o) => (view === 'interior' ? paintInterior(s, o) : paintExterior(s, o)),
   describe(s) {
-    if (s.access === 'locked') return 'Panic Line phone booth, out of service for now.';
+    if (s.access === 'locked') return 'Panic Line phone booth, locked and out of service for now.';
     const lit = boothGlows(s);
     const parts = [
       lit ? 'Panic Line phone booth, glowing in the dark' : 'Panic Line phone booth, unlit',

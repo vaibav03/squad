@@ -11,7 +11,7 @@ import type {
 } from '../contract';
 import { Raster } from '../pixel/raster';
 import { DIM, type PaletteName } from '../pixel/palette';
-import { drawText } from '../pixel/font';
+import { drawText, textWidth } from '../pixel/font';
 import { put, type AssetInfo, type AssetLib } from '../assets';
 import { initBase, visibleBubbles, type BaseState, reduceBase } from '../model/base';
 import { clip, eventAgent } from '../model/events';
@@ -315,7 +315,15 @@ export function exteriorBase(s: BaseState, o: PaintOpts, c: ExtSpec): ExtCanvas 
   else if (s.access === 'dim') r.blit(dimmed(c.id, active.r), ox, oy);
   else r.blit(active.r, ox, oy);
   const door = { x: ox + c.doorX, y: h - 1 };
-  if (s.access === 'locked') put(r, a.image('ui.padlock'), door.x, door.y - 14);
+  moonRim(r, ox, oy, active.r, 'wall-lit');
+  if (s.access === 'locked') {
+    put(r, a.image('ui.padlock'), door.x, door.y - 16);
+    // state is told in words too, not by colour alone
+    const w = textWidth('LOCKED') + 4;
+    r.rect(door.x - Math.floor(w / 2), door.y - 11, w, 9, 'ink');
+    r.frame(door.x - Math.floor(w / 2), door.y - 11, w, 9, 'wall-shade');
+    drawText(r, door.x - Math.floor(w / 2) + 2, door.y - 9, 'LOCKED', 'wall-lit');
+  }
   return { r, ox, oy, door };
 }
 
@@ -386,12 +394,16 @@ export function callPortrait(
   o: PaintOpts,
 ): void {
   const p = a.image(`persona.${persona}`, 'portrait');
-  r.rect(x - 1, y - 1, p.r.w + 2, p.r.h + 2, 'ink');
+  const w = p.r.w + 2;
+  r.rect(x - 1, y - 1, w, p.r.h + 2, 'ink');
   r.blit(p.r, x, y);
-  r.frame(x - 1, y - 1, p.r.w + 2, p.r.h + 2, 'wood-lit');
+  r.frame(x - 1, y - 1, w, p.r.h + 2, 'wood-lit');
+  // its own plate under the chip, with the LIVE tag
   const on = o.calm || Math.floor(o.t / 1000) % 2 === 0;
-  r.rect(x - 1, y + p.r.h + 2, 17, 7, 'ink');
-  drawText(r, x + 1, y + p.r.h + 3, 'LIVE', on ? 'alert' : 'roof-wine');
+  const py = y + p.r.h + 2;
+  r.rect(x - 1, py, w, 9, 'ink');
+  r.frame(x - 1, py, w, 9, 'wall-shade');
+  drawText(r, x - 1 + Math.floor((w - 15) / 2), py + 2, 'LIVE', on ? 'alert' : 'roof-wine');
 }
 
 /**
@@ -404,11 +416,12 @@ export function paintLbBubbles(
   o: PaintOpts,
   tipX: number,
   tipY: number,
-  maxChars = 18,
+  maxChars = 24,
+  maxLines = 3,
 ): void {
   for (const v of visibleBubbles(s, o)) {
     const style = v.b.style === 'thought' ? 'speech' : v.b.style;
-    const art = bubble(v.b.text, style, maxChars, 4, 0.5);
+    const art = bubble(v.b.text, style, maxChars, maxLines, 0.5);
     let x = tipX - art.tail.x;
     x = Math.max(2, Math.min(r.w - art.r.w - 2, x));
     const drop = !o.calm && v.scale < 0.99 ? 1 : 0;
@@ -470,5 +483,36 @@ export function hornsOn(r: Raster, f: AssetInfo, x: number, feetY: number, flip:
     r.px(px, hy - 1, 'alert');
     r.px(px, hy - 2, 'alert');
     r.px(px + (px === lx ? -1 : 1), hy - 3, 'ember');
+  }
+}
+
+/**
+ * Moonlit upper-left edge: a 1 px pale rim just inside the silhouette's top edge over the left
+ * half, plus two brighter clusters. Painted on every state so locked/dim buildings keep a readable edge.
+ */
+export function moonRim(r: Raster, ox: number, oy: number, src: Raster, tone: PaletteName): void {
+  const half = Math.floor(src.w / 2);
+  const tops: number[] = [];
+  for (let x = 0; x < half; x++) {
+    let ty = -1;
+    for (let y = 0; y < src.h; y++) {
+      if (src.isOpaque(x, y)) {
+        ty = y;
+        break;
+      }
+    }
+    tops.push(ty);
+  }
+  tops.forEach((ty, x) => {
+    if (ty < 0 || !src.isOpaque(x, ty + 1)) return;
+    if (r.isOpaque(ox + x, oy + ty + 1)) r.px(ox + x, oy + ty + 1, tone);
+  });
+  for (const f of [0.3, 0.55, 0.8]) {
+    const x = Math.floor(half * f);
+    const ty = tops[x] ?? -1;
+    if (ty >= 0 && r.isOpaque(ox + x, oy + ty + 2)) {
+      r.px(ox + x, oy + ty + 2, 'cloud-hi');
+      r.px(ox + x + 1, oy + ty + 2, tone);
+    }
   }
 }

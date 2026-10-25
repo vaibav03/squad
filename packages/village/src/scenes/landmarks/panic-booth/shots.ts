@@ -34,7 +34,14 @@ export const shots: ShotDef[] = [
     script: [{ at: 0, event: state('studying') }],
     sample: [0, 1000],
   },
-  { name: 'interior-idle', view: 'interior', ctx: { hour: 14 }, script: [], sample: [0, 500] },
+  {
+    name: 'interior-idle',
+    view: 'interior',
+    ctx: { hour: 2 },
+    script: [{ at: 0, event: state('idle') }],
+    sample: [0, 500],
+  },
+  { name: 'interior-day', view: 'interior', ctx: { hour: 14 }, script: [], sample: [0] },
   {
     name: 'interior-night',
     view: 'interior',

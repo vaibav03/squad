@@ -32,10 +32,10 @@ const CANDLES = [
 function room(): Raster {
   const r = new Raster(INT_W, INT_H);
   const rand = rng(11);
-  r.rect(0, 0, INT_W, FLOOR_Y, 'sky-deep');
+  r.rect(0, 0, INT_W, FLOOR_Y, 'leaf-dark');
   // rock face: dither bands and cracks
-  r.dither(0, 20, INT_W, 40, 'leaf-dark', 0);
-  r.dither(0, 60, INT_W, 52, 'hill-near', 1);
+  r.dither(0, 20, INT_W, 40, 'sky-deep', 0);
+  r.dither(0, 60, INT_W, 52, 'hill-near', 0);
   for (let i = 0; i < 70; i++) {
     const x = Math.floor(rand() * INT_W);
     const y = 10 + Math.floor(rand() * 96);
@@ -92,9 +92,11 @@ function room(): Raster {
     r.px(x, h, 'leaf-lit');
   }
   // floor: packed earth with scattered pebbles
-  r.rect(0, FLOOR_Y, INT_W, INT_H - FLOOR_Y, 'ground');
-  r.hline(0, FLOOR_Y, INT_W, 'hill-near');
-  r.dither(0, FLOOR_Y + 1, INT_W, 6, 'hill-near', 0);
+  r.rect(0, FLOOR_Y, INT_W, INT_H - FLOOR_Y, 'hill-near');
+  r.hline(0, FLOOR_Y, INT_W, 'wood-lit');
+  r.hline(0, FLOOR_Y + 1, INT_W, 'wood');
+  r.hline(0, FLOOR_Y + 2, INT_W, 'wood-dark');
+  r.dither(0, FLOOR_Y + 3, INT_W, 6, 'ground', 0);
   for (let i = 0; i < 24; i++)
     r.px(Math.floor(rand() * INT_W), FLOOR_Y + 2 + Math.floor(rand() * 12), 'hill-mid');
   // glowing sigil on the floor in front of the board
@@ -181,6 +183,6 @@ export function paintInterior(s: LbState, o: PaintOpts): Raster {
   r.rect(0, 40, INT_W, FLOOR_Y - 40, 'ember', 0.05);
   if (s.ring) doorRing(r, a, 112, FLOOR_Y + 8, o);
   if (s.portrait) callPortrait(r, a, 'ta', 8, 8, o);
-  paintLbBubbles(r, s, o, 84, FLOOR_Y - 34);
+  paintLbBubbles(r, s, o, 52, FLOOR_Y - 36, 18, 4);
   return r;
 }

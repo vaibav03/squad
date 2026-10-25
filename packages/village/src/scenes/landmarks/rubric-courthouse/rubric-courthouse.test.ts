@@ -12,6 +12,7 @@ const result = (
   over: Partial<{ chapter: string }> = {},
 ): VillageEvent => ({
   t: 'quiz.result',
+  student: 's_ana',
   quizId: `rubric:${n}`,
   chapter: 'rubric',
   ...(correct === undefined ? {} : { correct }),
@@ -25,7 +26,7 @@ landmarkSuite(
   'expert:rubric',
   'Court is waiting.',
   [
-    { t: 'quiz.result', quizId: 'q1', chapter: 'ch5', correct: true },
+    { t: 'quiz.result', student: 's_ana', quizId: 'q1', chapter: 'ch5', correct: true },
     { t: 'quiz.question', quizId: 'rubric:1', chapter: 'rubric' },
   ],
 );
