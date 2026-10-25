@@ -9,6 +9,8 @@ import { hubStudentId } from '../../shell/dev-login';
 import { useSquadConfig, useAuth } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
 import { ContextGateFrame } from './ContextGate';
+import { LedgerDrawer, createGroupLedgerFetcher, useLedgerDrawer } from './ledger';
+import { fixtureLedger } from './ledger/fixtures';
 
 /** `/squad/chat`: the squad group chat and your private chat with Cubbie. Live over SSE; `?c=<chatId>` deep-links a chat. */
 export default function ChatPage() {
@@ -33,7 +35,7 @@ export default function ChatPage() {
   const me = fixtures ? ME : cfg.userId ? hubStudentId(cfg.userId) : '';
   const ctl = useChat(api, { me });
 
-  const active = params.get('c');
+  const active = params.get('c') ?? params.get('group');
   const setActive = useCallback(
     (id: string | null) =>
       setParams(
@@ -47,9 +49,33 @@ export default function ChatPage() {
       ),
     [setParams],
   );
+  const ledger = useLedgerDrawer();
+  const groupId = params.get('group') ?? ctl.chats.find((c) => c.kind === 'group')?.id ?? null;
+  const fetchLedger = useMemo(
+    () =>
+      fixtures
+        ? () => Promise.resolve(fixtureLedger)
+        : live
+          ? createGroupLedgerFetcher({ hubUrl: cfg.hubUrl!, token: cfg.token! })
+          : null,
+    [fixtures, live, cfg.hubUrl, cfg.token],
+  );
+  const moved = params.get('notice') === 'ledger-moved';
   return (
     <ContextGateFrame>
-      <ChatView ctl={ctl} activeId={active} onActiveChange={setActive} onSignInAgain={signOut} />
+      <div className="sqld-layout">
+        <div className="sqld-main">
+          <ChatView ctl={ctl} activeId={active} onActiveChange={setActive} onSignInAgain={signOut} />
+        </div>
+        {ledger.isOpen && groupId ? (
+          <LedgerDrawer
+            groupId={groupId}
+            fetchLedger={fetchLedger}
+            onClose={ledger.close}
+            notice={moved ? 'The ledger now lives inside each group chat.' : undefined}
+          />
+        ) : null}
+      </div>
       <SourceViewerHost />
     </ContextGateFrame>
   );

@@ -116,7 +116,7 @@ describe('Home cards resolve from real state', () => {
     mount();
     await screen.findByText('Plan a trip with your group');
     expect(hrefs()).toEqual([
-      '/squad/ledger',
+      '/squad/chat?view=ledger',
       '/squad/chat?wizard=trip',
       '/squad/mastery',
       '/squad/courses',

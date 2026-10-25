@@ -1,32 +1,9 @@
-import { useEffect, useState } from 'react';
-import { useShell } from '../../shell/shell-context';
-import { useParams } from 'react-router-dom';
-import { LedgerView } from './LedgerView';
-import { useLedger } from './useLedger';
-import { roster, TASK_TITLE, TASK_ID } from './fixtures';
-import { useLiveConfig } from '../../overlays/kit';
+import { Navigate } from 'react-router-dom';
 
-/** /squad/ledger/:taskId? (Glass Box). Live over SSE, recorded replay in mock mode. */
-export default function LedgerPage() {
-  const { setTitle } = useShell();
-  useEffect(() => setTitle('Privacy ledger'), [setTitle]);
-  const params = useParams();
-  const taskId = params.taskId ?? TASK_ID;
-  const cfg = useLiveConfig();
-  const { state, status, connection, fresh, retry } = useLedger(taskId);
-  const [projector, setProjector] = useState(false);
-  return (
-    <LedgerView
-      status={status}
-      connection={connection}
-      title={taskId === TASK_ID ? TASK_TITLE : 'Group task'}
-      rows={state.rows}
-      roster={roster}
-      me={cfg.userId}
-      projector={projector}
-      onProjectorChange={setProjector}
-      freshIds={fresh}
-      onRetry={retry}
-    />
-  );
+/**
+ * The ledger is no longer a standalone area: it is a drawer inside the group chat. This route stays only so old
+ * links and bookmarks keep working: it sends you to your group chat with the ledger open and a short notice.
+ */
+export default function LedgerRedirect() {
+  return <Navigate to="/squad/chat?view=ledger&notice=ledger-moved" replace />;
 }

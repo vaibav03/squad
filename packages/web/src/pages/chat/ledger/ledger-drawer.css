@@ -1,0 +1,136 @@
+/* Group ledger drawer. Tokens only. Desktop: a side panel that sits NEXT to the chat so the composer stays clear.
+   Phone: bottom sheet over the chat with a backdrop. */
+.sqld-layout {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+.sqld-main {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.sqld-backdrop {
+  display: none;
+}
+.sqld {
+  flex: 0 0 22rem;
+  width: 22rem;
+  max-height: calc(100dvh - 56px - var(--safe-top));
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  color: var(--card-foreground, inherit);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  margin-top: var(--space-5);
+  margin-right: var(--gutter);
+  overflow: hidden;
+}
+.sqld__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+.sqld__title {
+  margin: 0;
+  font-size: 1rem;
+}
+.sqld__notice {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in oklab, var(--info) 14%, var(--card));
+  font-size: 0.875rem;
+}
+.sqld__body {
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4);
+  min-height: 8rem;
+}
+.sqld__loading {
+  display: grid;
+  gap: var(--space-3);
+}
+.sqld__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+.sqld__row {
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+.sqld__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: 0.75rem;
+  align-items: baseline;
+}
+.sqld__kind {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.sqld__text {
+  margin: var(--space-1) 0;
+}
+.sqld__prov {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: 0.75rem;
+  align-items: center;
+}
+.sqld__chip {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.sqld__mode {
+  font-weight: 600;
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  background: var(--secondary);
+}
+.sqld__mode--live {
+  background: color-mix(in oklab, var(--success, var(--primary)) 25%, var(--card));
+}
+.sqld__mode--degraded {
+  background: color-mix(in oklab, var(--warning, var(--info)) 30%, var(--card));
+}
+@media (max-width: 767px) {
+  .sqld-layout {
+    display: block;
+  }
+  .sqld-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: color-mix(in oklab, var(--foreground, #000) 40%, transparent);
+    z-index: 60;
+  }
+  .sqld {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: auto;
+    margin: 0;
+    max-height: 80dvh;
+    border-radius: var(--radius-lg, 12px) var(--radius-lg, 12px) 0 0;
+    padding-bottom: var(--safe-bottom);
+    z-index: 61;
+  }
+}

@@ -170,7 +170,7 @@ const CONCRETE: Record<string, string> = {
 };
 // mastery has no page of its own: it redirects into the village overlay (covered by its own test below)
 const TOP = squadRouteMeta
-  .filter((m) => m.key !== 'mastery')
+  .filter((m) => m.key !== 'mastery' && m.key !== 'ledger')
   .map((m) => ({
     path: CONCRETE[m.path] ?? m.path,
     title: m.title,
@@ -225,7 +225,7 @@ async function expectRoute(path: string, title: string) {
 describe('router location drives title, landmark and content', () => {
   it('routeTitleFor resolves every route to its own title', () => {
     for (const t of TOP) expect(routeTitleFor(t.path)).toBe(t.title);
-    expect(routeTitleFor('/squad/ledger/task_1')).toBe('Privacy ledger');
+    expect(routeTitleFor('/squad/ledger/task_1')).toBe('Ledger');
     expect(routeTitleFor('/welcome')).toBe('Welcome');
   });
 
@@ -263,8 +263,8 @@ describe('router location drives title, landmark and content', () => {
     const cur = () =>
       Array.from(document.querySelectorAll('[aria-current="page"]')).map((e) => e.textContent);
     expect(cur().some((t) => /Chat/.test(t ?? ''))).toBe(true);
-    await go('/squad/ledger');
-    await expectRoute('/squad/ledger', 'Privacy ledger');
+    await go('/squad/personas');
+    await expectRoute('/squad/personas', 'Study buddies');
     // a secondary destination highlights its parent: the More button
     expect(document.querySelector('.sq-shell__morebtn.is-active')).toBeTruthy();
     expect(cur().some((t) => /Chat/.test(t ?? ''))).toBe(false);

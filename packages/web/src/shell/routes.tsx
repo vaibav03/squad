@@ -41,8 +41,8 @@ export const squadRouteMeta: SquadRouteMeta[] = [
   {
     key: 'ledger',
     path: '/squad/ledger/:taskId?',
-    title: 'Privacy ledger',
-    nav: { label: 'Privacy ledger', icon: 'ledger', order: 6 },
+    title: 'Ledger',
+    // No nav item: the ledger lives inside each group chat. This path only redirects to /squad/chat?view=ledger.
   },
   {
     key: 'personas',
