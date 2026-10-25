@@ -8,6 +8,7 @@ import type { InspectorStore } from './store';
 const MIN_TARGET_CSS = 44;
 const FOLLOW_EVERY_MS = 500;
 const FOLLOW_SLACK = 0.22;
+const LINK_MS = 4000;
 
 interface Spot {
   readonly id: string;
@@ -137,6 +138,21 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
         ring.fillEllipse(x, y, 30, 8);
         ring.lineStyle(1, COLOR.glow, pulse);
         ring.strokeEllipse(x, y, 30, 8);
+      }
+      // while two agents are communicating, a soft link between their sprites (fades; static in Calm mode)
+      const t = Date.now();
+      for (const l of store.links()) {
+        const sa = spriteOf(l.a);
+        const sb = spriteOf(l.b);
+        if (!sa || !sb || sa === sb || sa.alpha < 0.5 || sb.alpha < 0.5) continue;
+        const k = Math.max(0, 1 - (t - l.at) / LINK_MS);
+        const a = calm ? 0.4 : 0.55 * (1 - (1 - k) * (1 - k));
+        const y = snap(sa.y) - 26;
+        const mx = snap((sa.x + sb.x) / 2);
+        gfx.lineStyle(1, COLOR.violet, a);
+        gfx.lineBetween(snap(sa.x), y, snap(sb.x), snap(sb.y) - 26);
+        gfx.fillStyle(COLOR.violet, a);
+        gfx.fillRect(mx - 1, y - 1, 3, 3);
       }
       // hover outline and name tag
       if (hover && hover.sprite.active && hover.sprite.alpha > 0) {

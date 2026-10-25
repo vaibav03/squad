@@ -16,6 +16,7 @@ import { useShell } from '../../shell/shell-context';
 import { ChatDock } from '../chat/ChatDock';
 import { RoomLayer } from '../../overlays/room-info';
 import { InspectorPanel } from '../../overlays/inspector';
+import { SourceViewerHost } from '../../components/source-viewer';
 import { createInspectorStore, type InspectorStore } from '@squad/village/inspector';
 import { CouncilHall } from '../../council';
 import { useToast } from '../../primitives/Toast';
@@ -218,9 +219,12 @@ export default function VillagePage({ world }: { world?: string }) {
         <InspectorPanel
           store={inspector}
           calm={calm}
+          hub={replayName ? null : hub}
+          mode={mode}
           returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
         />
       )}
+      <SourceViewerHost />
       <ChatDock enabled={live && !replayName} />
       <CouncilHall
         hub={hub}

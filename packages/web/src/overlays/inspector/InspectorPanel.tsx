@@ -1,9 +1,19 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { relTime, type ActivityView, type InspectorStore } from '@squad/village/inspector';
 import { LvIcon, usePresence, usePrefersReducedMotion } from '../kit';
 import { pixelPortrait } from '../../pixel/portraits';
 import { useNow, useSelectedView, useStoreVersion } from './useInspector';
+import { AgentsTab, ChatTab } from './Conversation';
+import type { InspectorHub } from './useDmHistory';
 import './inspector.css';
+
+type Tab = 'doing' | 'thinking' | 'chat' | 'agents';
+const TABS: Array<[Tab, string]> = [
+  ['doing', 'Doing'],
+  ['thinking', 'Thinking'],
+  ['chat', 'Chat'],
+  ['agents', 'Agents'],
+];
 
 /** Pixel portrait for an agent: the viewer is the red hood, other students share the freshman look. */
 export function portraitFor(v: Pick<ActivityView, 'id' | 'kind' | 'isMe'>): string | undefined {
@@ -19,13 +29,17 @@ export interface InspectorPanelProps {
   calm?: boolean;
   /** Where focus goes when the panel closes (the village stage). */
   returnFocusTo?: () => HTMLElement | null | undefined;
+  /** Hub access for the viewer's own chat history. Omit in replays. */
+  hub?: InspectorHub | null;
+  mode?: 'live' | 'replay';
 }
 
 /**
  * Agent Inspector: what the selected agent is doing, thinking and waiting on, live from the event stream.
  * Not modal: the village keeps running and walking keeps working underneath. Esc closes.
  */
-export function InspectorPanel({ store, calm, returnFocusTo }: InspectorPanelProps) {
+export function InspectorPanel({ store, calm, returnFocusTo, hub, mode = 'live' }: InspectorPanelProps) {
+  const [tab, setTab] = useState<Tab>('doing');
   const view = useSelectedView(store);
   useStoreVersion(store);
   const now = useNow();
@@ -74,6 +88,15 @@ export function InspectorPanel({ store, calm, returnFocusTo }: InspectorPanelPro
   const go = (dir: 1 | -1) => {
     const next = store.cycle(v.id, dir);
     if (next) store.select(next);
+  };
+  const convo = store.conversation(v.id);
+  const onTabKey = (e: React.KeyboardEvent) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    const i = TABS.findIndex(([id]) => id === tab);
+    const n = TABS[(i + (e.key === 'ArrowRight' ? 1 : -1) + TABS.length) % TABS.length]![0];
+    setTab(n);
+    requestAnimationFrame(() => root.current?.querySelector<HTMLElement>(`#${CSS.escape(`${titleId}-t-${n}`)}`)?.focus());
   };
   const portrait = portraitFor(v);
   return (
@@ -128,86 +151,111 @@ export function InspectorPanel({ store, calm, returnFocusTo }: InspectorPanelPro
         </button>
       </div>
 
-      <div className="ai-body">
-        <section className="ai-now" aria-label="Right now">
-          <h3 className="ai-label">Right now</h3>
-          <p className="ai-headline" aria-live="polite" aria-atomic="true">
-            {v.headline}
-          </p>
-          <dl className="ai-facts">
-            <dt>Where</dt>
-            <dd>{cap(v.place)}</dd>
-            {v.heading && (
-              <>
-                <dt>Heading</dt>
-                <dd>{v.heading}</dd>
-              </>
-            )}
-            <dt>Waiting on</dt>
-            <dd>{v.waitingOn ?? 'Nothing'}</dd>
-            {v.skill && (
-              <>
-                <dt>Skill</dt>
-                <dd>{v.skill}</dd>
-              </>
-            )}
-            {(v.tierLabel || v.demo) && (
-              <>
-                <dt>Model</dt>
-                <dd>
-                  {v.tierLabel && <span className="ai-tag">{v.tierLabel}</span>}
-                  {v.demo && <span className="ai-tag ai-tag--demo">Demo mode</span>}
-                </dd>
-              </>
-            )}
-          </dl>
-        </section>
-
-        <section className="ai-think" aria-label="Thinking">
-          <h3 className="ai-label">
-            Thinking
-            {v.thinking && (
+      <div className="ai-tabs" role="tablist" aria-label="Inspector sections" onKeyDown={onTabKey}>
+        {TABS.map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            id={`${titleId}-t-${id}`}
+            aria-selected={tab === id}
+            aria-controls={`${titleId}-p`}
+            tabIndex={tab === id ? 0 : -1}
+            className="ai-tab"
+            onClick={() => setTab(id)}
+          >
+            {label}
+            {id === 'thinking' && v.thinking && (
               <span className="ai-dots" role="status" aria-label="Thinking now">
                 <i />
                 <i />
                 <i />
               </span>
             )}
-          </h3>
-          <div className="ai-bubble" data-source={v.thought.source}>
-            <p>{v.thought.text}</p>
-            {v.thought.source === 'stream' && (
-              <small>From what the agent shared, not extra reasoning.</small>
-            )}
-          </div>
-          {v.thoughtHistory.length > 0 && (
-            <details className="ai-history">
-              <summary>Earlier thoughts ({v.thoughtHistory.length})</summary>
-              <ul>
-                {v.thoughtHistory.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ul>
-            </details>
-          )}
-        </section>
+          </button>
+        ))}
+      </div>
 
-        <section className="ai-log" aria-label="Recent activity">
-          <h3 className="ai-label">Recent</h3>
-          {v.log.length === 0 ? (
-            <p className="ai-empty">Nothing yet. This updates live.</p>
-          ) : (
-            <ol>
-              {v.log.map((l, i) => (
-                <li key={`${l.at}-${i}`}>
-                  <span>{l.text}</span>
-                  <time>{relTime(l.at, now)}</time>
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
-        {!v.isMe && v.kind === 'student' && (
+      <div className="ai-body" role="tabpanel" id={`${titleId}-p`} aria-labelledby={`${titleId}-t-${tab}`}>
+        {tab === 'doing' && (
+          <div className="ai-tabpanel">
+            <section className="ai-now" aria-label="Right now">
+              <h3 className="ai-label">Right now</h3>
+              <p className="ai-headline" aria-live="polite" aria-atomic="true">
+                {v.headline}
+              </p>
+              <dl className="ai-facts">
+                <dt>Where</dt>
+                <dd>{cap(v.place)}</dd>
+                {v.heading && (
+                  <>
+                    <dt>Heading</dt>
+                    <dd>{v.heading}</dd>
+                  </>
+                )}
+                <dt>Waiting on</dt>
+                <dd>{v.waitingOn ?? 'Nothing'}</dd>
+                {v.skill && (
+                  <>
+                    <dt>Skill</dt>
+                    <dd>{v.skill}</dd>
+                  </>
+                )}
+                {(v.tierLabel || v.demo) && (
+                  <>
+                    <dt>Model</dt>
+                    <dd>
+                      {v.tierLabel && <span className="ai-tag">{v.tierLabel}</span>}
+                      {v.demo && <span className="ai-tag ai-tag--demo">Demo mode</span>}
+                    </dd>
+                  </>
+                )}
+              </dl>
+            </section>
+            <section className="ai-log" aria-label="Recent activity">
+              <h3 className="ai-label">Recent</h3>
+              {v.log.length === 0 ? (
+                <p className="ai-empty">Nothing yet. This updates live.</p>
+              ) : (
+                <ol>
+                  {v.log.map((l, i) => (
+                    <li key={`${l.at}-${i}`}>
+                      <span>{l.text}</span>
+                      <time>{relTime(l.at, now)}</time>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+          </div>
+        )}
+        {tab === 'thinking' && (
+          <div className="ai-tabpanel">
+            <section className="ai-think" aria-label="Thinking">
+              <h3 className="ai-label">
+                How it is thinking
+                {v.thinking && <span className="ai-live">live</span>}
+              </h3>
+              <div className="ai-bubble" data-source={v.thought.source}>
+                <p>{v.thought.text}</p>
+                {v.thought.source === 'stream' && <small>From what the agent shared, not extra reasoning.</small>}
+              </div>
+              {v.thoughtHistory.length > 0 && (
+                <details className="ai-history">
+                  <summary>Earlier thoughts ({v.thoughtHistory.length})</summary>
+                  <ul>
+                    {v.thoughtHistory.map((t, i) => (
+                      <li key={i}>{t}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </section>
+          </div>
+        )}
+        {tab === 'chat' && <ChatTab view={v} convo={convo} hub={hub} now={now} mode={mode} />}
+        {tab === 'agents' && <AgentsTab view={v} convo={convo} store={store} now={now} />}
+        {!v.isMe && v.kind === 'student' && tab !== 'chat' && (
           <p className="ai-privacy">
             <LvIcon name="lock" size={14} aria-hidden="true" /> Public activity only. Private details stay hidden.
           </p>

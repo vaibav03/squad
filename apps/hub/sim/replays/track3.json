@@ -451,7 +451,8 @@
           "demo": true,
           "thinking": true,
           "skill": "Council"
-        }
+        },
+        "message": "Two short evenings are enough if the quiz went well."
       }
     },
     {
@@ -467,7 +468,8 @@
           "demo": true,
           "thinking": true,
           "skill": "Council"
-        }
+        },
+        "message": "I disagree: regression needs a third pass before the exam."
       }
     },
     {
@@ -486,7 +488,8 @@
           "demo": true,
           "thinking": true,
           "skill": "Council"
-        }
+        },
+        "message": "I ranked the answers without names: the cautious one first, the short one second."
       }
     },
     {
@@ -503,7 +506,8 @@
           "demo": true,
           "thinking": false,
           "skill": "Council"
-        }
+        },
+        "message": "My verdict is a middle plan: two evenings plus a short third pass. The grind voice dissents and that is recorded."
       }
     },
     {

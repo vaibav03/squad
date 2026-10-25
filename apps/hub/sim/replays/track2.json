@@ -52,7 +52,8 @@
         "shared": [
           "study plan opened",
           "3 members"
-        ]
+        ],
+        "message": "I opened the study plan. Three of us are in; calendars stay with their owners."
       }
     },
     {
@@ -111,7 +112,8 @@
         "shared": [
           "168 blinded tokens (padded)"
         ],
-        "thought": "Hiding the real slots so nobody sees a raw calendar"
+        "thought": "Hiding the real slots so nobody sees a raw calendar",
+        "message": "Here are my blinded free evenings. The calendar itself never leaves me."
       }
     },
     {
@@ -135,7 +137,8 @@
         "kind": "psi.blind",
         "shared": [
           "168 blinded tokens (padded)"
-        ]
+        ],
+        "message": "My blinded evenings are on the way too."
       }
     },
     {
@@ -159,7 +162,8 @@
         "kind": "psi.blind",
         "shared": [
           "168 blinded tokens (padded)"
-        ]
+        ],
+        "message": "Mine as well, blinded."
       }
     },
     {
@@ -223,7 +227,8 @@
         "shared": [
           "0 common slots"
         ],
-        "thought": "Comparing blinded tokens from all three to find shared free time"
+        "thought": "Comparing blinded tokens from all three to find shared free time",
+        "message": "I compared everyone’s blinded evenings and found no slot that works for all three."
       }
     },
     {
@@ -237,7 +242,8 @@
         "shared": [
           "no slot works for everyone"
         ],
-        "thought": "No slot works for everyone, so I will propose a shorter plan"
+        "thought": "No slot works for everyone, so I will propose a shorter plan",
+        "message": "No single evening suits everyone, so I will look for the least bad plan."
       }
     },
     {
@@ -251,7 +257,8 @@
         "shared": [
           "plan proposed"
         ],
-        "thought": "Choosing the least bad option and asking each person to confirm"
+        "thought": "Choosing the least bad option and asking each person to confirm",
+        "message": "I have a plan to propose. Please confirm it."
       }
     },
     {
@@ -305,7 +312,8 @@
         "kind": "result",
         "shared": [
           "plan found"
-        ]
+        ],
+        "message": "Everyone agreed, so the plan is final."
       }
     },
     {
@@ -384,7 +392,8 @@
         "shared": [
           "asks: budget"
         ],
-        "thought": "Asking about budget so the plan fits, knowing it may be refused"
+        "thought": "Asking about budget so the plan fits, knowing it may be refused",
+        "message": "Can I see the budget the others set? I asked the mediator."
       }
     },
     {
@@ -398,7 +407,8 @@
         "shared": [
           "request denied: budget"
         ],
-        "thought": "This request would reveal a private value, so the gate says no"
+        "thought": "This request would reveal a private value, so the gate says no",
+        "message": "I cannot pass that on: it is a private value and the gate refuses."
       }
     },
     {
@@ -432,7 +442,8 @@
         "shared": [
           "trip plan opened",
           "3 members"
-        ]
+        ],
+        "message": "Opening the trip plan. I will weigh dates and cost without seeing amounts."
       }
     },
     {
@@ -549,7 +560,8 @@
         "shared": [
           "3 common slots"
         ],
-        "thought": "Three shared slots found, now checking cost without showing amounts"
+        "thought": "Three shared slots found, now checking cost without showing amounts",
+        "message": "Three evenings work for all of us."
       }
     },
     {
@@ -746,7 +758,8 @@
         "shared": [
           "option dropped: budget"
         ],
-        "thought": "Dropping the option that someone cannot afford"
+        "thought": "Dropping the option that someone cannot afford",
+        "message": "One option is too expensive for someone, so I removed it. Nobody sees whose budget it was."
       }
     },
     {
@@ -760,7 +773,8 @@
         "shared": [
           "dropped: veto"
         ],
-        "thought": "Dropping the option that someone ruled out"
+        "thought": "Dropping the option that someone ruled out",
+        "message": "Another option is ruled out by a hard no. I will not say whose."
       }
     },
     {
@@ -774,7 +788,8 @@
         "shared": [
           "top options ranked"
         ],
-        "thought": "Ranking what is left: two options remain"
+        "thought": "Ranking what is left: two options remain",
+        "message": "Two options remain. Ranking them now."
       }
     },
     {
@@ -794,7 +809,8 @@
           "demo": true,
           "thinking": true,
           "skill": "Squad planning"
-        }
+        },
+        "message": "Top option is ready. Asking everyone to confirm."
       }
     },
     {
@@ -917,7 +933,8 @@
           "demo": true,
           "thinking": false,
           "skill": "Squad planning"
-        }
+        },
+        "message": "All three said yes, so the trip is booked."
       }
     },
     {
