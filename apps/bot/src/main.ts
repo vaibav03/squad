@@ -7,6 +7,7 @@ import { createBot } from './bot';
 import { ChatRepl } from './cli/repl';
 import { STUB_SKILLS } from './cli/stub-skills';
 import { teePublisher, createEventPublisher } from './events';
+import { createInternalServer, DEFAULT_BOT_PORT } from './internal-server';
 import { createLogger } from './log';
 import { skills as registry } from './skills';
 import { CliTransport } from './transports/cli';
@@ -80,7 +81,18 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
 
   const bot = createBot({ skills, llm, transport, db, roster, events, log });
   await bot.start();
+  const port = Number(env.BOT_PORT ?? DEFAULT_BOT_PORT);
+  const internal = createInternalServer({
+    confirms: bot.confirms,
+    secret: cfg.internalEventsSecret,
+    log,
+  });
+  internal.on('error', (e) =>
+    console.error(`[bot] internal server on :${port} failed: ${e.message}`),
+  );
+  internal.listen(port, '127.0.0.1');
   const stop = async () => {
+    internal.close();
     await bot.stop();
     process.exit(0);
   };
@@ -97,6 +109,7 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
       students: roster.students.map((s) => s.id),
     });
     await repl.run(process.stdin, process.stdout);
+    internal.close();
     await bot.stop();
   } else {
     console.log(`[bot] ${kind} running. Ctrl+C to stop.`);

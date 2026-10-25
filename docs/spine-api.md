@@ -35,6 +35,9 @@ askConfirm(student: StudentId, question: string, options: string[], taskId: stri
 - Rows are persisted in `pending_confirms`; on restart, expired ones are dropped.
 - Nothing may be booked, sent or revealed on a student's behalf without an `askConfirm` that returned a non-`'timeout'` yes-like option.
 
+### 2b. `POST /internal/confirm` (standalone agents, e.g. apps/agent)
+The bot listens on `127.0.0.1:${BOT_PORT:-8790}`; callers use `${BOT_URL}/internal/confirm`. Header `X-Nook-Internal: <INTERNAL_EVENTS_SECRET>` (same secret as `/internal/events`; missing or wrong gives 401 and no DM). Body `{ student, question, options (1-9), taskId }`; the response is held open until the student answers or the 10 min timeout and is `200 { "answer": "<chosen option string>" | "timeout" }`. It runs the exact flow above (numbered DM, events, FIFO). Errors: 400 invalid body, 409 duplicate pending taskId or DM failure. Clients must use a request timeout above 10 minutes.
+
 ## 3. Transport interface (internal; only the spine and its adapters implement it)
 ```ts
 interface Transport {
