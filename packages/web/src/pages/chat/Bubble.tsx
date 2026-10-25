@@ -4,6 +4,7 @@ import { Icon } from '../../primitives/Icon';
 import { Markdown } from '../../primitives/Markdown';
 import { ConfirmMessageCard, QuizMessageCard } from './cards';
 import { CouncilChatCard } from '../../council';
+import { PLAN_OPEN_EVENT } from '@squad/village/rooms';
 import { LiveChatCard } from '../../live/LiveChatCard';
 import { useSquadConfig } from '../../shell/context';
 import { AudioPlayer, ImageAttachment } from './media';
@@ -202,6 +203,24 @@ export function MessageBubble(p: BubbleProps) {
         {m.card?.type === 'council' ? (
           <div data-testid="chat-council-card">
             <CouncilChatCard hub={hub} runId={m.card.runId} calm={p.reduced} />
+          </div>
+        ) : null}
+        {m.card?.type === 'plan' ? (
+          <div className="sqc-plancard" data-testid="chat-plan-card">
+            <strong>Study plan</strong>
+            <span className="rr-dim"> {m.card.status ? `(${m.card.status})` : ''}</span>
+            <a
+              className="lv-btn"
+              href="/squad/village?plan=1"
+              onClick={(e) => {
+                if (location.pathname.includes('/village')) {
+                  e.preventDefault();
+                  globalThis.dispatchEvent(new Event(PLAN_OPEN_EVENT));
+                }
+              }}
+            >
+              Open plan
+            </a>
           </div>
         ) : null}
         {m.card?.type === 'live' ? (

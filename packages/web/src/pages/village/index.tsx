@@ -16,6 +16,7 @@ import { useShell } from '../../shell/shell-context';
 import { ChatDock } from '../chat/ChatDock';
 import { RoomLayer } from '../../overlays/room-info';
 import { MasteryLayer } from '../../overlays/mastery';
+import { PlanLayer } from '../../overlays/plan';
 import { InspectorPanel } from '../../overlays/inspector';
 import { setInspectorStore } from '../../overlays/inspector/bridge';
 import { SourceViewerHost } from '../../components/source-viewer';
@@ -223,6 +224,13 @@ export default function VillagePage({ world }: { world?: string }) {
         calm={calm}
         onRun={runPhrase}
         initialOpen={q.get('mastery') === '1'}
+        returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
+      />
+      <PlanLayer
+        hub={hub}
+        calm={calm}
+        onRun={runPhrase}
+        initialOpen={q.get('plan') === '1'}
         returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
       />
       <OverlayHost

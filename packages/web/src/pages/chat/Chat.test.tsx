@@ -381,6 +381,23 @@ describe('citations', () => {
     expect(await screen.findByTestId('chat-council-card')).toBeTruthy();
   });
 
+  it('renders a study plan card with an Open plan link', async () => {
+    const { api } = setup();
+    api.pushMessage({
+      chatId: GROUP_ID,
+      ts: Date.now(),
+      sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+      text: 'Proposed a study plan.',
+      private: false,
+      attachments: [],
+      citations: [],
+      card: { type: 'plan', planId: 'pl_abcdefghij', rev: 1, status: 'proposed' },
+      demo: true,
+    });
+    const card = await screen.findByTestId('chat-plan-card');
+    expect(card.querySelector('a')?.getAttribute('href')).toBe('/squad/village?plan=1');
+  });
+
   it('shows an error with retry when the excerpt is missing', async () => {
     const { api } = setup();
     api.pushMessage({

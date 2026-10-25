@@ -18,6 +18,7 @@ const mod: SceneModule = {
           sl.kind === 'chapter-house' ||
           sl.kind === 'landmark' ||
           sl.kind === 'mastery-board' ||
+          sl.kind === 'plan-board' ||
           (sl.kind === 'student-home' && sl.id !== `home-${me}`),
       )
       .map((sl) => ({ id: sl.id, name: sl.label }));
