@@ -664,3 +664,33 @@ describe('secrets never leak', () => {
     expect(by.webhook_reachable_url.status).toBe('pass');
   });
 });
+
+describe('shared Integration Health (GET /v1/connections/health)', () => {
+  it('serves the Sendblue chain from real probes: configured pass/warn, never a fake pass', async () => {
+    const h = await api(c.hub, 'GET', '/v1/connections/health', c.tok.Ana);
+    const by = Object.fromEntries((h.body.checks as any[]).map((x) => [x.id, x]));
+    expect(by.sendblue_configured).toMatchObject({ group: 'sendblue', status: 'pass' });
+    expect(by.sendblue_outbound.status).toBe('pass');
+    expect(by.sendblue_inbound.status).toBe('warn'); // nothing received yet: honest
+    expect(by.sendblue_allowlist.status).toBe('pass');
+    expect(c.fake.sent).toHaveLength(0);
+    expect(JSON.stringify(h.body)).not.toContain(SECRET);
+  });
+  it('without credentials every live link is blocked with the exact env names', async () => {
+    await c.im.stop();
+    const saved = { ...process.env };
+    for (const k of ['SENDBLUE_API_KEY', 'SENDBLUE_API_SECRET', 'SENDBLUE_FROM_NUMBER', 'SENDBLUE_WEBHOOK_SECRET'])
+      delete process.env[k];
+    try {
+      const h = await api(c.hub, 'GET', '/v1/connections/health', c.tok.Ana);
+      const by = Object.fromEntries((h.body.checks as any[]).map((x) => [x.id, x]));
+      for (const id of ['sendblue_outbound', 'sendblue_delivery', 'sendblue_inbound']) {
+        expect(by[id].status).toBe('blocked');
+        expect(by[id].missingEnv).toEqual(['SENDBLUE_API_KEY', 'SENDBLUE_API_SECRET', 'SENDBLUE_FROM_NUMBER', 'SENDBLUE_WEBHOOK_SECRET']);
+        expect(by[id].reason).toMatch(/^BLOCKED\(missing env: SENDBLUE_API_KEY/);
+      }
+    } finally {
+      Object.assign(process.env, saved);
+    }
+  });
+});

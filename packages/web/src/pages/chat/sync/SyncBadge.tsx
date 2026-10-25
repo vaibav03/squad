@@ -3,6 +3,7 @@ import './sync.css';
 
 export interface SyncBadgeProps {
   transport?: Transport;
+  provider?: 'sendblue' | 'photon' | 'fixture';
   deliveryState?: DeliveryState;
   senderLabel?: string;
   skippedAttachments?: SkippedAttachment[];
@@ -29,7 +30,11 @@ export function SyncBadge(p: SyncBadgeProps) {
     return null;
   return (
     <div className="sqs" role="status" aria-label="iMessage sync">
-      {viaIm && !p.hideVia && <span className="sqs__chip">via iMessage</span>}
+      {viaIm && !p.hideVia && (
+        <span className="sqs__chip">
+          {p.provider === 'sendblue' ? 'via iMessage (Sendblue)' : 'via iMessage'}
+        </span>
+      )}
       {showSender && <span className="sqs__from">{p.senderLabel}</span>}
       {ds && (
         <span className={`sqs__state sqs__state--${ds.state}`} data-state={ds.state}>

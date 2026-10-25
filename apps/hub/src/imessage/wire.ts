@@ -86,6 +86,7 @@ export async function attachIMessage(
   }
   let config = o.config ?? imessageConfigFromEnv(env);
   let sdk = o.sdk;
+  let fixture = false;
   let sbParts:
     | {
         cfg: ReturnType<typeof sendblueConfigFromEnv>;
@@ -96,9 +97,14 @@ export async function attachIMessage(
       }
     | undefined;
   if (provider === 'fake') {
-    // fixture transport: nothing real is ever read or sent, so the allowlist is not needed
-    sdk ??= new FakeIMessageTransport();
-    config = o.config ?? { ...config, enabled: true, dryRun: false, allowAll: true };
+    // fixture transport (also IMESSAGE_FIXTURE=1): nothing real is ever read or sent. Without an allowlist
+    // the fixture needs none; with one (IMESSAGE_ALLOWED_CHATS naming FIXTURE_CHAT) it is honoured.
+    fixture = !o.sdk;
+    sdk ??= new FakeIMessageTransport([
+      { chatId: FIXTURE_CHAT, name: 'Fixture group', kind: 'group' },
+    ]);
+    if (!o.config && config.allowedChats.length + config.allowedHandles.length === 0)
+      config = { ...config, enabled: true, dryRun: false, allowAll: true };
   }
   if (provider === 'sendblue') {
     const cfg = sendblueConfigFromEnv(env, deps.config.baseUrl);
@@ -118,11 +124,6 @@ export async function attachIMessage(
     deps.log.info(`imessage: not started (${problem})`);
     return undefined;
   }
-  // IMESSAGE_FIXTURE=1 (with IMESSAGE_ENABLED=1 and an allowlist that names FIXTURE_CHAT) runs a scripted transport and
-  // binds it to a squad, for demos and e2e. The status and the web say "Fixture transport (no real iMessage)".
-  const fixture = !o.sdk && env.IMESSAGE_FIXTURE === '1';
-  if (fixture)
-    sdk ??= new FakeIMessageTransport([{ chatId: FIXTURE_CHAT, name: 'Fixture group', kind: 'group' }]);
   if (provider === 'sendblue') {
     const cfg = sendblueConfigFromEnv(env, deps.config.baseUrl);
     const client = createSendblueClient(cfg, o.fetch);

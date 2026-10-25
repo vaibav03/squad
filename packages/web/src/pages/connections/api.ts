@@ -286,7 +286,9 @@ export const hub = (ctx: Ctx) => ({
         dueAt: s.dueAt ?? null,
         startsAt: s.startsAt ?? null,
         fetchedAt: s.fetchedAt ?? null,
-        provenance: (s.provenance ?? '').endsWith(':fixture') ? ('fixture' as const) : ('real' as const),
+        provenance: (s.provenance ?? '').endsWith(':fixture')
+          ? ('fixture' as const)
+          : ('real' as const),
       }),
     );
   },

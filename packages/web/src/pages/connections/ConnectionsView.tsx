@@ -57,7 +57,9 @@ export function ConnectionsView(p: ViewProps) {
         default, and shared with a squad only when you choose. Disconnecting deletes what was
         imported.
       </p>
-      <HealthBanner reloadKey={p.connections.map((c) => `${c.id}${c.lastSyncAt}${c.state}`).join()} />
+      <HealthBanner
+        reloadKey={p.connections.map((c) => `${c.id}${c.lastSyncAt}${c.state}`).join()}
+      />
       <p className="sq-conn__meta">
         <Link to="/squad/connections/health" data-testid="health-link">
           Integration health

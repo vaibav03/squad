@@ -51,6 +51,18 @@ export const RUNBOOKS: Record<string, { code: string; reason: string; anchor: st
       'A real multi-participant group needs other consenting people; Apple has no API to create groups.',
     anchor: '#real-multi-person-imessage-group',
   },
+  sendblue: {
+    code: 'no_sendblue_env',
+    reason:
+      'Sendblue is not configured for a real run: SENDBLUE_API_KEY, SENDBLUE_API_SECRET, SENDBLUE_FROM_NUMBER, SENDBLUE_WEBHOOK_SECRET and an allowlisted own test number (GATE_SENDBLUE_TEST_NUMBER in IMESSAGE_ALLOWED_HANDLES) are all required.',
+    anchor: '#sendblue',
+  },
+  sendblue_real_send: {
+    code: 'real_send_not_confirmed',
+    reason:
+      'The single real Sendblue smoke message needs the explicit confirmation GATE_REAL_SEND=1 (one message, to your own allowlisted number).',
+    anchor: '#sendblue',
+  },
   llm: {
     code: 'llm_credits',
     reason:
@@ -104,6 +116,21 @@ export async function blockerFor(key: string): Promise<Blocker | undefined> {
         : b('apple');
     case 'second_person':
       return process.env.GATE_REAL_GROUP_HAS_OTHERS === '1' ? undefined : b('second_person');
+    case 'sendblue': {
+      const need = [
+        'SENDBLUE_API_KEY',
+        'SENDBLUE_API_SECRET',
+        'SENDBLUE_FROM_NUMBER',
+        'SENDBLUE_WEBHOOK_SECRET',
+        'GATE_SENDBLUE_TEST_NUMBER',
+        'IMESSAGE_ALLOWED_HANDLES',
+      ].filter((n) => !names.has(n));
+      if (!need.length) return undefined;
+      const r = b('sendblue');
+      return { ...r, code: `BLOCKED(missing env: ${need.join(', ')})` };
+    }
+    case 'sendblue_real_send':
+      return process.env.GATE_REAL_SEND === '1' ? undefined : b('sendblue_real_send');
     case 'llm': {
       const s = await hubStatus();
       return s?.llm === 'gemini' ? undefined : b('llm');

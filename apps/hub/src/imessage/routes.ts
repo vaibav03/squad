@@ -85,8 +85,17 @@ export function createImessageRoutes(deps: HubDeps): HubApp {
         mirror: deps.imessage.syncSettings(squadId).mirror,
       };
     });
+    const bridge = bridgeState(deps);
     if (!st || !sync)
-      return c.json({ enabled: false, mode: 'off', killSwitch: true, squads, lastSyncAt: null });
+      return c.json({
+        enabled: false,
+        mode: 'off',
+        killSwitch: true,
+        squads,
+        lastSyncAt: null,
+        provider: bridge.provider,
+        bridge,
+      });
     const mode = st.fixture ? 'fixture' : st.dryRun ? 'dry_run' : 'live';
     return c.json({
       enabled: true,
@@ -110,8 +119,8 @@ export function createImessageRoutes(deps: HubDeps): HubApp {
         null,
       ),
       squads,
-      provider: bridgeState(deps).provider,
-      bridge: bridgeState(deps),
+      provider: bridge.provider,
+      bridge,
     });
   });
 

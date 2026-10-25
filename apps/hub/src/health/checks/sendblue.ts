@@ -2,6 +2,7 @@
 // registers its own probes under these ids (registerHealthCheck replaces by id) or exposes `deps.sendblue.health()`.
 // Until it is installed each link is `blocked` (never a fake pass).
 import { registerHealthCheck, type HealthCtx, type HealthResult } from '../registry';
+import { registerSendblueProviderChecks } from '../../imessage/sendblue/health-register';
 
 export interface SendblueLink {
   status: 'pass' | 'warn' | 'fail' | 'blocked';
@@ -40,4 +41,6 @@ export function registerSendblueChecks(): void {
       };
     }),
   );
+  // the provider's own real probes replace the placeholders above (same ids) and add the rest of the chain
+  registerSendblueProviderChecks();
 }

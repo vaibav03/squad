@@ -184,7 +184,11 @@ export function MessageBubble(p: BubbleProps) {
                 data-testid="chat-source-label"
                 data-source={m.transport === 'imessage' ? 'imessage' : 'web'}
               >
-                {m.transport === 'imessage' ? 'via iMessage' : 'via web'}
+                {m.transport === 'imessage'
+                  ? m.provider === 'sendblue'
+                    ? 'via iMessage (Sendblue)'
+                    : 'via iMessage'
+                  : 'via web'}
               </span>
             ) : null}
             <time className="sqc-msg__time" dateTime={new Date(m.ts).toISOString()}>
@@ -331,6 +335,7 @@ export function MessageBubble(p: BubbleProps) {
         <SyncBadge
           {...(row.head && sender.kind === 'student' ? { hideVia: true } : {})}
           {...(m.transport ? { transport: m.transport } : {})}
+          {...(m.provider ? { provider: m.provider } : {})}
           {...(m.deliveryState ? { deliveryState: m.deliveryState } : {})}
           {...(m.senderLabel && m.senderLabel !== sender.name
             ? { senderLabel: m.senderLabel }
