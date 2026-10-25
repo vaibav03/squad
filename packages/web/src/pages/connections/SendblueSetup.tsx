@@ -7,6 +7,11 @@ export interface SendblueSetupInfo {
   webhookUrl: string;
   statusUrl: string;
   secretHeader: string;
+  safety?: {
+    dryRun: boolean;
+    killSwitch: boolean;
+    allowlist: { chats: number; handles: number; allowAll: boolean };
+  };
 }
 
 const isLocal = (u: string) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/.test(u);
@@ -34,6 +39,30 @@ export function SendblueSetup({ info }: { info: SendblueSetupInfo }) {
           {info.provider === 'sendblue' ? '.' : ' but IMESSAGE_PROVIDER is not sendblue.'}
         </p>
       )}
+      {info.safety ? (
+        <ul
+          className="sq-conn__scopes"
+          data-testid="connections-sendblue-safety"
+          aria-label="Sendblue safety flags"
+        >
+          <li data-testid="sb-kill-switch">
+            Kill switch:{' '}
+            {info.safety.killSwitch ? 'ON (nothing is read or sent)' : 'off (IMESSAGE_ENABLED=1)'}
+          </li>
+          <li data-testid="sb-dry-run">
+            Dry run: {info.safety.dryRun ? 'ON (nothing is sent)' : 'off'}
+          </li>
+          <li data-testid="sb-allowlist">
+            Allowlist: {info.safety.allowlist.chats} chat(s), {info.safety.allowlist.handles}{' '}
+            number(s)
+            {info.safety.allowlist.allowAll ? ', ALLOW-ALL IS ON' : ''}
+            {!info.safety.allowlist.allowAll &&
+            info.safety.allowlist.chats + info.safety.allowlist.handles === 0
+              ? ' (none: nothing is sent)'
+              : ''}
+          </li>
+        </ul>
+      ) : null}
       <ol className="sq-conn__scopes" data-testid="connections-sendblue-steps">
         <li>
           Set <code>IMESSAGE_PROVIDER=sendblue</code> and <code>IMESSAGE_ENABLED=1</code>.

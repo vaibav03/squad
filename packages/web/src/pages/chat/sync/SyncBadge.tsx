@@ -32,7 +32,11 @@ export function SyncBadge(p: SyncBadgeProps) {
     <div className="sqs" role="status" aria-label="iMessage sync">
       {viaIm && !p.hideVia && (
         <span className="sqs__chip">
-          {p.provider === 'sendblue' ? 'via iMessage (Sendblue)' : 'via iMessage'}
+          {p.provider === 'sendblue'
+            ? 'via iMessage (Sendblue)'
+            : p.provider === 'fixture'
+              ? 'via iMessage (demo)'
+              : 'via iMessage'}
         </span>
       )}
       {showSender && <span className="sqs__from">{p.senderLabel}</span>}

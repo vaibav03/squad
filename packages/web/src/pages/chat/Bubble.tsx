@@ -187,7 +187,9 @@ export function MessageBubble(p: BubbleProps) {
                 {m.transport === 'imessage'
                   ? m.provider === 'sendblue'
                     ? 'via iMessage (Sendblue)'
-                    : 'via iMessage'
+                    : m.provider === 'fixture'
+                      ? 'via iMessage (demo)'
+                      : 'via iMessage'
                   : 'via web'}
               </span>
             ) : null}

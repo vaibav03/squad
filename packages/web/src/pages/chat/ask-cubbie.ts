@@ -38,7 +38,8 @@ export function takePendingAsk(chatId: string): PendingAsk | null {
   }
 }
 
-export const defaultPrefill = (title: string): string => `@cubbie what should I focus on for ${title}?`;
+export const defaultPrefill = (title: string): string =>
+  `@cubbie what should I focus on for ${title}?`;
 
 export const provenanceBadge = (p: ChatContextRef['provenance']): string =>
   p === 'fixture' ? 'Fixture (simulated)' : 'Real';

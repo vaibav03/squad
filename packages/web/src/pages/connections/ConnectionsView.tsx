@@ -71,7 +71,9 @@ export function ConnectionsView(p: ViewProps) {
       </p>
       {ret ? (
         <Notice
-          tone={ret.ok ? (gv.state === 'reauth' || gv.state === 'degraded' ? 'warn' : 'ok') : 'error'}
+          tone={
+            ret.ok ? (gv.state === 'reauth' || gv.state === 'degraded' ? 'warn' : 'ok') : 'error'
+          }
           title={ret.ok ? `Google: ${gv.label}` : 'Google did not connect'}
         >
           <span data-testid="oauth-return-text">
@@ -101,7 +103,11 @@ export function ConnectionsView(p: ViewProps) {
       {p.view === 'loading' ? <p role="status">Loading connections</p> : null}
       {p.view === 'ready' || p.view === 'demo' ? (
         <>
-          <CanvasSection p={p} items={canvas} v={deriveProviderState('canvas', canvas, { now: p.now })} />
+          <CanvasSection
+            p={p}
+            items={canvas}
+            v={deriveProviderState('canvas', canvas, { now: p.now })}
+          />
           <GoogleSection p={p} items={google} v={gv} />
         </>
       ) : null}
@@ -176,7 +182,19 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
       <div className="sq-conn__row">
         <strong>{c.provider === 'canvas' ? 'Canvas' : 'Google'}</strong>
         <span data-testid="conn-state">
-          <Chip tone={v.state === 'degraded' || v.state === 'reauth' ? 'alert' : v.state === 'syncing' ? 'ember' : v.state === 'live' ? 'ok' : v.state === 'demo' ? 'violet' : STATE_TONE[c.state]}>
+          <Chip
+            tone={
+              v.state === 'degraded' || v.state === 'reauth'
+                ? 'alert'
+                : v.state === 'syncing'
+                  ? 'ember'
+                  : v.state === 'live'
+                    ? 'ok'
+                    : v.state === 'demo'
+                      ? 'violet'
+                      : STATE_TONE[c.state]
+            }
+          >
             {v.label}
           </Chip>
         </span>
@@ -187,7 +205,8 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
       </p>
       {v.fixture ? (
         <p className="sq-conn__meta" data-testid="conn-fixture-note">
-          {FIXTURE_LABEL}: sample data from the repo. Nothing was read from a real {c.provider === 'canvas' ? 'Canvas' : 'Google'} account.
+          {FIXTURE_LABEL}: sample data from the repo. Nothing was read from a real{' '}
+          {c.provider === 'canvas' ? 'Canvas' : 'Google'} account.
         </p>
       ) : null}
       {c.state === 'rate_limited' && c.retryAfter ? (
@@ -607,8 +626,8 @@ function GoogleConnect({ p }: { p: ViewProps }) {
       {p.googleLive === false ? (
         <p className="sq-conn__meta" data-testid="google-no-client">
           No Google OAuth client is configured on this server (GOOGLE_OAUTH_CLIENT_ID,
-          GOOGLE_OAUTH_CLIENT_SECRET, GOOGLE_OAUTH_REDIRECT_URI). Connect Google shows a labelled demo
-          consent screen; the demo workspace is simulated data, not your account.
+          GOOGLE_OAUTH_CLIENT_SECRET, GOOGLE_OAUTH_REDIRECT_URI). Connect Google shows a labelled
+          demo consent screen; the demo workspace is simulated data, not your account.
         </p>
       ) : null}
       <div className="sq-conn__actions">

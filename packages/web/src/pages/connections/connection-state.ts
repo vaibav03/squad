@@ -106,7 +106,10 @@ export function deriveProviderState(
     showRepair: state === 'degraded' || state === 'reauth',
     hasItems: items > 0,
     firstSyncRunning: false,
-    lastSyncText: c && c.lastSyncAt ? `Last synced ${relTime(c.lastSyncAt, o.now)}${c.lastOutcome ? ` (${c.lastOutcome})` : ''}` : null,
+    lastSyncText:
+      c && c.lastSyncAt
+        ? `Last synced ${relTime(c.lastSyncAt, o.now)}${c.lastOutcome ? ` (${c.lastOutcome})` : ''}`
+        : null,
     usable: state === 'live' || state === 'syncing' || state === 'demo',
     ...extra,
   });
@@ -114,11 +117,21 @@ export function deriveProviderState(
 
   if (!c)
     return o.justReturned
-      ? mk('connecting', `${name} is connecting. Waiting for the connection to be recorded.`, 'none', null)
+      ? mk(
+          'connecting',
+          `${name} is connecting. Waiting for the connection to be recorded.`,
+          'none',
+          null,
+        )
       : mk('not_connected', `No ${name} account is connected.`, 'connect', connect);
   if (c.state === 'revoked')
     return o.justReturned
-      ? mk('connecting', `${name} is connecting. Waiting for the connection to be recorded.`, 'none', null)
+      ? mk(
+          'connecting',
+          `${name} is connecting. Waiting for the connection to be recorded.`,
+          'none',
+          null,
+        )
       : mk(
           'not_connected',
           c.note ?? `${name} was disconnected and the imported data was deleted.`,

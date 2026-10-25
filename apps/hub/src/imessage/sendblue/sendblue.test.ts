@@ -30,7 +30,8 @@ const LINE = '+15550009999';
 const realFetch = globalThis.fetch;
 const fenced = vi.fn(async (url: any, init?: any) => {
   const host = new URL(String(url)).hostname;
-  if (host !== '127.0.0.1' && host !== 'localhost') throw new Error(`blocked non-loopback fetch ${host}`);
+  if (host !== '127.0.0.1' && host !== 'localhost')
+    throw new Error(`blocked non-loopback fetch ${host}`);
   return realFetch(url, init);
 });
 
@@ -49,17 +50,29 @@ interface Ctx {
 }
 let c: Ctx;
 
-async function api<T = any>(hub: Hub, method: string, path: string, token?: string, body?: unknown) {
+async function api<T = any>(
+  hub: Hub,
+  method: string,
+  path: string,
+  token?: string,
+  body?: unknown,
+) {
   const r = await hub.app.request(path, {
     method,
-    headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    headers: {
+      'content-type': 'application/json',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
   return { status: r.status, body: (await r.json()) as T };
 }
 async function signUp(hub: Hub, name: string, phone: string) {
   const s = await api(hub, 'POST', '/v1/auth/start', undefined, { name, phone });
-  const v = await api(hub, 'POST', '/v1/auth/verify', undefined, { challengeId: s.body.challengeId, code: s.body.devCode });
+  const v = await api(hub, 'POST', '/v1/auth/verify', undefined, {
+    challengeId: s.body.challengeId,
+    code: s.body.devCode,
+  });
   return { token: v.body.token as string, id: v.body.user.id as string };
 }
 
@@ -81,13 +94,24 @@ async function boot(envOver: Record<string, string> = {}, attach = true): Promis
   const clock = { t: Date.now() };
   const hub = createHub({
     now: () => clock.t,
-    config: { dbPath: ':memory:', seed: true, sim: false, logLevel: 'silent', production: false, webUrl: 'https://squad.test' },
+    config: {
+      dbPath: ':memory:',
+      seed: true,
+      sim: false,
+      logLevel: 'silent',
+      production: false,
+      webUrl: 'https://squad.test',
+    },
   });
   const logs: string[] = [];
   (hub.deps as { log: unknown }).log = createLogger('debug', (l) => logs.push(l));
   const tok: Record<string, string> = {};
   const uid: Record<string, string> = {};
-  for (const [name, phone] of [['Ana', ANA], ['Ben', BEN], ['Cy', CY]] as const) {
+  for (const [name, phone] of [
+    ['Ana', ANA],
+    ['Ben', BEN],
+    ['Cy', CY],
+  ] as const) {
     const u = await signUp(hub, name, phone);
     tok[name] = u.token;
     uid[name] = u.id;
@@ -97,7 +121,13 @@ async function boot(envOver: Record<string, string> = {}, attach = true): Promis
   const inv = await api(hub, 'POST', `/v1/squads/${squadId}/invites`, tok.Ana, { maxUses: null });
   const inviteCode = inv.body.invite.code as string;
   await api(hub, 'POST', '/v1/invites/join', tok.Ben, { code: inviteCode });
-  const engine = await attachChatEngine(hub, { real: null, env: { HUB_SCHEDULER: '1' }, envFile: false, noProbe: true, now: () => clock.t });
+  const engine = await attachChatEngine(hub, {
+    real: null,
+    env: { HUB_SCHEDULER: '1' },
+    envFile: false,
+    noProbe: true,
+    now: () => clock.t,
+  });
   const fake = await startFakeSendblue({
     apiKey: KEY,
     apiSecret: SECRET,
@@ -106,9 +136,27 @@ async function boot(envOver: Record<string, string> = {}, attach = true): Promis
   });
   const env = baseEnv({ SENDBLUE_API_BASE: fake.url, ...envOver });
   const im = attach
-    ? await attachIMessage(hub, { env, fetch: fenced as any, now: () => clock.t, minGapMs: 0, sleep: async () => {} })
+    ? await attachIMessage(hub, {
+        env,
+        fetch: fenced as any,
+        now: () => clock.t,
+        minGapMs: 0,
+        sleep: async () => {},
+      })
     : undefined;
-  return { hub, engine, im: im as IMessageHandle, fake, clock, tok, uid, squadId, inviteCode, logs, env };
+  return {
+    hub,
+    engine,
+    im: im as IMessageHandle,
+    fake,
+    clock,
+    tok,
+    uid,
+    squadId,
+    inviteCode,
+    logs,
+    env,
+  };
 }
 
 const waitFor = async (pred: () => boolean, ms = 6000) => {
@@ -122,12 +170,17 @@ const settle = async () => {
   await new Promise((r) => setTimeout(r, 120));
   await c.im.bridge.flush();
 };
-const history = (chatId: string): ChatMessage[] => c.hub.deps.chat.store.history(chatId, { limit: 100 }).messages;
+const history = (chatId: string): ChatMessage[] =>
+  c.hub.deps.chat.store.history(chatId, { limit: 100 }).messages;
 const personaPosts = (gid: string) => history(gid).filter((m) => m.sender.kind === 'persona');
 const groupSends = (gid = GID1) =>
-  c.fake.sent.filter((s) => s.endpoint === 'send-group-message' && s.body.group_id === gid).map((s) => String(s.body.content ?? ''));
+  c.fake.sent
+    .filter((s) => s.endpoint === 'send-group-message' && s.body.group_id === gid)
+    .map((s) => String(s.body.content ?? ''));
 const dmSends = (to: string) =>
-  c.fake.sent.filter((s) => s.endpoint === 'send-message' && s.body.number === to).map((s) => String(s.body.content ?? ''));
+  c.fake.sent
+    .filter((s) => s.endpoint === 'send-message' && s.body.number === to)
+    .map((s) => String(s.body.content ?? ''));
 const everything = () => JSON.stringify(c.fake.sent);
 
 beforeEach(async () => {
@@ -169,7 +222,13 @@ describe('webhook signature (shared secret in sb-signing-secret, constant time, 
     await bind();
     const before = history(`group:${c.squadId}`).length;
     const sentBefore = c.fake.sent.length;
-    await c.fake.inbound({ from: ANA, content: '@cubbie what is a z-score?', groupId: GID1, secret: 'wrong', handle: 'REJ-1' });
+    await c.fake.inbound({
+      from: ANA,
+      content: '@cubbie what is a z-score?',
+      groupId: GID1,
+      secret: 'wrong',
+      handle: 'REJ-1',
+    });
     await settle();
     expect(history(`group:${c.squadId}`)).toHaveLength(before);
     expect(c.fake.sent).toHaveLength(sentBefore);
@@ -177,29 +236,62 @@ describe('webhook signature (shared secret in sb-signing-secret, constant time, 
     expect(c.hub.deps.sendblue!.rejected.bad_signature).toBe(1);
   });
   it('the optional body HMAC: valid passes, a tampered body fails, a wrong key fails', async () => {
-    const body = JSON.stringify({ message_handle: 'H-1', content: 'x', is_outbound: false, from_number: ANA, group_id: GID1 });
+    const body = JSON.stringify({
+      message_handle: 'H-1',
+      content: 'x',
+      is_outbound: false,
+      from_number: ANA,
+      group_id: GID1,
+    });
     const sig = (b: string, k = WH) => `sha256=${createHmac('sha256', k).update(b).digest('hex')}`;
     const post = (b: string, s: string) =>
-      c.hub.app.request('/v1/webhooks/sendblue', { method: 'POST', headers: { 'sb-signing-secret': WH, 'sb-body-signature': s, 'content-type': 'application/json' }, body: b });
+      c.hub.app.request('/v1/webhooks/sendblue', {
+        method: 'POST',
+        headers: {
+          'sb-signing-secret': WH,
+          'sb-body-signature': s,
+          'content-type': 'application/json',
+        },
+        body: b,
+      });
     expect((await post(body, sig(body))).status).toBe(200);
     expect((await post(body.replace('"x"', '"y"'), sig(body))).status).toBe(401);
     expect((await post(body, sig(body, 'other'))).status).toBe(401);
   });
   it('a stale timestamp header is a replay (401); a fresh one passes', async () => {
-    const body = JSON.stringify({ message_handle: 'H-2', content: 'x', is_outbound: false, from_number: ANA, group_id: GID1 });
+    const body = JSON.stringify({
+      message_handle: 'H-2',
+      content: 'x',
+      is_outbound: false,
+      from_number: ANA,
+      group_id: GID1,
+    });
     const post = (ts: string) =>
-      c.hub.app.request('/v1/webhooks/sendblue', { method: 'POST', headers: { 'sb-signing-secret': WH, 'sb-timestamp': ts }, body });
+      c.hub.app.request('/v1/webhooks/sendblue', {
+        method: 'POST',
+        headers: { 'sb-signing-secret': WH, 'sb-timestamp': ts },
+        body,
+      });
     expect((await post(String(Math.floor((c.clock.t - 3 * 86400_000) / 1000)))).status).toBe(401);
     expect((await post(String(Math.floor(c.clock.t / 1000)))).status).toBe(200);
   });
   it('an inbound whose own date_sent is outside the window is a replay (401)', async () => {
-    const r = await c.fake.inbound({ from: ANA, content: 'old', groupId: GID1, dateSent: new Date(Date.now() - 3 * 86400_000) });
+    const r = await c.fake.inbound({
+      from: ANA,
+      content: 'old',
+      groupId: GID1,
+      dateSent: new Date(Date.now() - 3 * 86400_000),
+    });
     expect(r.status).toBe(401);
   });
   it('413 for an oversized body, 400 for invalid JSON and payloads (after verification only)', async () => {
     const big = 'x'.repeat(300_000);
     const post = (b: string, secret = WH) =>
-      c.hub.app.request('/v1/webhooks/sendblue', { method: 'POST', headers: { 'sb-signing-secret': secret }, body: b });
+      c.hub.app.request('/v1/webhooks/sendblue', {
+        method: 'POST',
+        headers: { 'sb-signing-secret': secret },
+        body: b,
+      });
     expect((await post(big)).status).toBe(413);
     expect((await post('{nope')).status).toBe(400);
     expect((await post('{"content":"no handle"}')).status).toBe(400);
@@ -208,7 +300,11 @@ describe('webhook signature (shared secret in sb-signing-secret, constant time, 
   it('is rate limited per client', async () => {
     let last = 0;
     for (let i = 0; i < 260; i++) {
-      const r = await c.hub.app.request('/v1/webhooks/sendblue', { method: 'POST', headers: { 'sb-signing-secret': 'bad', 'x-forwarded-for': '203.0.113.9' }, body: '{}' });
+      const r = await c.hub.app.request('/v1/webhooks/sendblue', {
+        method: 'POST',
+        headers: { 'sb-signing-secret': 'bad', 'x-forwarded-for': '203.0.113.9' },
+        body: '{}',
+      });
       last = r.status;
       if (last === 429) break;
     }
@@ -220,11 +316,28 @@ describe('unconfigured and degraded states', () => {
   it('no credentials: the webhook refuses (503), the header names every missing env, health reads BLOCKED', async () => {
     await c.im.stop();
     await c.fake.close();
-    const u = await boot({ SENDBLUE_API_KEY: '', SENDBLUE_API_SECRET: '', SENDBLUE_FROM_NUMBER: '', SENDBLUE_WEBHOOK_SECRET: '' }, false);
+    const u = await boot(
+      {
+        SENDBLUE_API_KEY: '',
+        SENDBLUE_API_SECRET: '',
+        SENDBLUE_FROM_NUMBER: '',
+        SENDBLUE_WEBHOOK_SECRET: '',
+      },
+      false,
+    );
     const saved = { ...process.env };
-    Object.assign(process.env, u.env, { SENDBLUE_API_KEY: '', SENDBLUE_API_SECRET: '', SENDBLUE_FROM_NUMBER: '', SENDBLUE_WEBHOOK_SECRET: '' });
+    Object.assign(process.env, u.env, {
+      SENDBLUE_API_KEY: '',
+      SENDBLUE_API_SECRET: '',
+      SENDBLUE_FROM_NUMBER: '',
+      SENDBLUE_WEBHOOK_SECRET: '',
+    });
     try {
-      const r = await u.hub.app.request('/v1/webhooks/sendblue', { method: 'POST', headers: { 'sb-signing-secret': 'x' }, body: '{}' });
+      const r = await u.hub.app.request('/v1/webhooks/sendblue', {
+        method: 'POST',
+        headers: { 'sb-signing-secret': 'x' },
+        body: '{}',
+      });
       expect(r.status).toBe(503);
       const st = await api(u.hub, 'GET', '/v1/imessage/status', u.tok.Ana);
       expect(st.body.bridge.label).toBe(
@@ -233,7 +346,9 @@ describe('unconfigured and degraded states', () => {
       const h = await api(u.hub, 'GET', '/v1/imessage/health', u.tok.Ana);
       const byId = Object.fromEntries(h.body.checks.map((x: any) => [x.id, x]));
       for (const id of ['outbound_probe', 'last_delivery_status', 'inbound_seen'])
-        expect(byId[id].reason).toBe('BLOCKED(missing env: SENDBLUE_API_KEY, SENDBLUE_API_SECRET, SENDBLUE_FROM_NUMBER, SENDBLUE_WEBHOOK_SECRET)');
+        expect(byId[id].reason).toBe(
+          'BLOCKED(missing env: SENDBLUE_API_KEY, SENDBLUE_API_SECRET, SENDBLUE_FROM_NUMBER, SENDBLUE_WEBHOOK_SECRET)',
+        );
       expect(byId.sendblue_configured.status).toBe('fail');
       expect(byId.webhook_secret_set.status).toBe('fail');
       expect(u.fake.requests).toHaveLength(0); // nothing was called
@@ -250,14 +365,25 @@ describe('unconfigured and degraded states', () => {
   });
   it('connected label, then degraded after repeated send failures', async () => {
     const s0 = await api(c.hub, 'GET', '/v1/imessage/status', c.tok.Ana);
-    expect(s0.body.bridge.label).toMatch(/^Sendblue: connected to no group yet, last inbound never, last status never, 0 queued$/);
+    expect(s0.body.bridge.label).toMatch(
+      /^Sendblue: connected to no group yet, last inbound never, last status never, 0 queued$/,
+    );
     await bind();
     await c.fake.inbound({ from: ANA, content: 'hi all', groupId: GID1 });
     const s1 = await api(c.hub, 'GET', '/v1/imessage/status', c.tok.Ana);
-    expect(s1.body.bridge.label).toMatch(/^Sendblue: connected to Stats Crew, last inbound \d+s ago, last status never, \d+ queued$/);
+    expect(s1.body.bridge.label).toMatch(
+      /^Sendblue: connected to Stats Crew, last inbound \d+s ago, last status never, \d+ queued$/,
+    );
     c.fake.failNext(50);
     for (let i = 0; i < 3; i++)
-      c.hub.deps.chat.postBot({ chatId: `group:${c.squadId}`, personaId: 'cubbie', personaName: 'Cubbie', text: `note ${i}`, citations: [], attachments: [] });
+      c.hub.deps.chat.postBot({
+        chatId: `group:${c.squadId}`,
+        personaId: 'cubbie',
+        personaName: 'Cubbie',
+        text: `note ${i}`,
+        citations: [],
+        attachments: [],
+      });
     for (let i = 0; i < 8 && c.im.gateway.health().state !== 'degraded'; i++) {
       c.clock.t += 5 * 60_000;
       await c.im.bridge.sync.drain();
@@ -268,11 +394,26 @@ describe('unconfigured and degraded states', () => {
   });
   it('fixture provider reads "Fixture transport (no real iMessage)"; dry run reads "Dry run, not sent"', async () => {
     const f = await boot({ IMESSAGE_PROVIDER: 'fake' }, false);
-    const fi = await attachIMessage(f.hub, { env: f.env, now: () => f.clock.t, minGapMs: 0, sleep: async () => {} });
-    expect((await api(f.hub, 'GET', '/v1/imessage/status', f.tok.Ana)).body.bridge.label).toBe('Fixture transport (no real iMessage)');
+    const fi = await attachIMessage(f.hub, {
+      env: f.env,
+      now: () => f.clock.t,
+      minGapMs: 0,
+      sleep: async () => {},
+    });
+    expect((await api(f.hub, 'GET', '/v1/imessage/status', f.tok.Ana)).body.bridge.label).toBe(
+      'Fixture transport (no real iMessage)',
+    );
     await fi!.stop();
-    const d = await attachIMessage(f.hub, { env: { ...f.env, IMESSAGE_PROVIDER: 'sendblue', IMESSAGE_DRY_RUN: '1' }, fetch: fenced as any, now: () => f.clock.t, minGapMs: 0, sleep: async () => {} });
-    expect((await api(f.hub, 'GET', '/v1/imessage/status', f.tok.Ana)).body.bridge.label).toBe('Dry run, not sent');
+    const d = await attachIMessage(f.hub, {
+      env: { ...f.env, IMESSAGE_PROVIDER: 'sendblue', IMESSAGE_DRY_RUN: '1' },
+      fetch: fenced as any,
+      now: () => f.clock.t,
+      minGapMs: 0,
+      sleep: async () => {},
+    });
+    expect((await api(f.hub, 'GET', '/v1/imessage/status', f.tok.Ana)).body.bridge.label).toBe(
+      'Dry run, not sent',
+    );
     await d!.stop();
     await f.engine.stop();
     await f.hub.close();
@@ -294,50 +435,78 @@ describe('inbound: same thread, mapping, dedupe, replay', () => {
   it('the same message handle twice is stored once and answered once; a status-less redelivery is a no-op', async () => {
     await bind();
     const gid = `group:${c.squadId}`;
-    const a = await c.fake.inbound({ from: ANA, content: '@cubbie what is a z-score?', groupId: GID1, handle: 'DUP-1' });
+    const a = await c.fake.inbound({
+      from: ANA,
+      content: '@cubbie what is a z-score?',
+      groupId: GID1,
+      handle: 'DUP-1',
+    });
     expect(a.status).toBe(200);
     await waitFor(() => personaPosts(gid).length >= 1);
     await settle();
     const n = personaPosts(gid).length;
     const sent = c.fake.sent.length;
-    const b = await c.fake.inbound({ from: ANA, content: '@cubbie what is a z-score?', groupId: GID1, handle: 'DUP-1' });
+    const b = await c.fake.inbound({
+      from: ANA,
+      content: '@cubbie what is a z-score?',
+      groupId: GID1,
+      handle: 'DUP-1',
+    });
     expect(await b.json()).toMatchObject({ duplicate: true });
     await settle();
     expect(personaPosts(gid)).toHaveLength(n);
     expect(history(gid).filter((m) => m.externalId === 'DUP-1')).toHaveLength(1);
     expect(c.fake.sent).toHaveLength(sent);
-    expect(c.hub.deps.imessage.xrefByExt('DUP-1')).toMatchObject({ direction: 'in', status: 'stored' });
+    expect(c.hub.deps.imessage.xrefByExt('DUP-1')).toMatchObject({
+      direction: 'in',
+      status: 'stored',
+    });
   });
-  it.each(['@cubbie', '@Cubbie', '@cubbi', '@Cubbi'])('%s dispatches to Cubbie once; the answer is in the same thread and mirrored out through Sendblue to the group', async (tag) => {
-    await bind();
-    const gid = `group:${c.squadId}`;
-    const before = groupSends().length;
-    await c.fake.inbound({ from: ANA, content: `${tag} what is a z-score?`, groupId: GID1, handle: `V-${tag}` });
-    await waitFor(() => personaPosts(gid).length >= 1);
-    await settle();
-    expect(personaPosts(gid)).toHaveLength(1);
-    expect(personaPosts(gid)[0]!.sender.name).toBe('Cubbie');
-    const out = groupSends().slice(before);
-    expect(out.length).toBeGreaterThan(0);
-    expect(out[0]).toMatch(/^\u{1F43B} Cubbie: /u);
-    expect(c.fake.sent.every((s) => s.endpoint === 'send-group-message')).toBe(true);
-  });
+  it.each(['@cubbie', '@Cubbie', '@cubbi', '@Cubbi'])(
+    '%s dispatches to Cubbie once; the answer is in the same thread and mirrored out through Sendblue to the group',
+    async (tag) => {
+      await bind();
+      const gid = `group:${c.squadId}`;
+      const before = groupSends().length;
+      await c.fake.inbound({
+        from: ANA,
+        content: `${tag} what is a z-score?`,
+        groupId: GID1,
+        handle: `V-${tag}`,
+      });
+      await waitFor(() => personaPosts(gid).length >= 1);
+      await settle();
+      expect(personaPosts(gid)).toHaveLength(1);
+      expect(personaPosts(gid)[0]!.sender.name).toBe('Cubbie');
+      const out = groupSends().slice(before);
+      expect(out.length).toBeGreaterThan(0);
+      expect(out[0]).toMatch(/^\u{1F43B} Cubbie: /u);
+      expect(c.fake.sent.every((s) => s.endpoint === 'send-group-message')).toBe(true);
+    },
+  );
   it('an alias (@tutor) is answered by that persona in the group', async () => {
     await bind();
     const gid = `group:${c.squadId}`;
-    await c.fake.inbound({ from: ANA, content: '@tutor explain the normal distribution', groupId: GID1 });
+    await c.fake.inbound({
+      from: ANA,
+      content: '@tutor explain the normal distribution',
+      groupId: GID1,
+    });
     await waitFor(() => personaPosts(gid).length >= 1);
     await settle();
     expect(personaPosts(gid)[0]!.sender.name).toBe('Tutor');
     expect(groupSends().some((t) => /Tutor: /.test(t))).toBe(true);
   });
-  it('a 1:1 from a known allowlisted number is that student\'s private DM thread, answered 1:1 (never in the group)', async () => {
+  it("a 1:1 from a known allowlisted number is that student's private DM thread, answered 1:1 (never in the group)", async () => {
     await bind();
     const groupBefore = groupSends().length;
     await c.fake.inbound({ from: ANA, content: 'what is a p-value?' });
     await waitFor(() => history(`dm:${c.uid.Ana}`).some((m) => m.sender.kind === 'persona'));
     await settle();
-    expect(history(`dm:${c.uid.Ana}`)[0]).toMatchObject({ transport: 'imessage', provider: 'sendblue' });
+    expect(history(`dm:${c.uid.Ana}`)[0]).toMatchObject({
+      transport: 'imessage',
+      provider: 'sendblue',
+    });
     expect(dmSends(ANA).length).toBeGreaterThan(0);
     expect(groupSends()).toHaveLength(groupBefore);
   });
@@ -370,7 +539,10 @@ describe('id mapping (hash + last4, unique, idempotent)', () => {
     const db = c.hub.deps.db;
     const rows = db.prepare('SELECT * FROM sb_id_map').all() as any[];
     const group = rows.find((r) => r.kind === 'group' && r.sb_id === GID1);
-    expect(group).toMatchObject({ chat_guid: `Sendblue;+;${GID1}`, conversation: `group:${c.squadId}` });
+    expect(group).toMatchObject({
+      chat_guid: `Sendblue;+;${GID1}`,
+      conversation: `group:${c.squadId}`,
+    });
     const msg = rows.find((r) => r.sb_id === 'MAP-1');
     expect(msg).toMatchObject({ kind: 'message', conversation: `group:${c.squadId}` });
     expect(msg.message_id).toBeTruthy();
@@ -379,14 +551,25 @@ describe('id mapping (hash + last4, unique, idempotent)', () => {
     expect(rows.find((r) => r.kind === 'thread')?.conversation).toBe(`dm:${c.uid.Ana}`);
     const dump = JSON.stringify(rows);
     for (const n of [ANA, BEN, CY, ZED, LINE]) expect(dump).not.toContain(n.slice(1));
-    expect(() => db.prepare("INSERT INTO sb_id_map(kind,sb_id,first_seen,last_seen) VALUES('group',?,1,1)").run(GID1)).toThrow();
+    expect(() =>
+      db
+        .prepare("INSERT INTO sb_id_map(kind,sb_id,first_seen,last_seen) VALUES('group',?,1,1)")
+        .run(GID1),
+    ).toThrow();
   });
 });
 
 describe('outbound: allowlist, dry run, kill switch BEFORE any network call', () => {
   it('web -> Sendblue group send carries group_id, from_number and credentials in headers, never the number', async () => {
     await bind();
-    c.hub.deps.chat.postBot({ chatId: `group:${c.squadId}`, personaId: 'cubbie', personaName: 'Cubbie', text: 'study at 7', citations: [], attachments: [] });
+    c.hub.deps.chat.postBot({
+      chatId: `group:${c.squadId}`,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      text: 'study at 7',
+      citations: [],
+      attachments: [],
+    });
     await waitFor(() => groupSends().some((t) => t.includes('study at 7')));
     const s = c.fake.sent.find((x) => String(x.body.content).includes('study at 7'))!;
     expect(s).toMatchObject({ endpoint: 'send-group-message', authOk: true });
@@ -396,7 +579,14 @@ describe('outbound: allowlist, dry run, kill switch BEFORE any network call', ()
     await bind();
     // bound but removed from the allowlist (simulates drift): the gateway refuses before the transport
     c.hub.deps.imessage.bind(`Sendblue;+;grp-not-allowed`, c.squadId, c.uid.Ana!);
-    c.hub.deps.chat.postBot({ chatId: `group:${c.squadId}`, personaId: 'cubbie', personaName: 'Cubbie', text: 'only for allowed', citations: [], attachments: [] });
+    c.hub.deps.chat.postBot({
+      chatId: `group:${c.squadId}`,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      text: 'only for allowed',
+      citations: [],
+      attachments: [],
+    });
     await waitFor(() => groupSends().some((t) => t.includes('only for allowed')));
     await settle();
     expect(groupSends('grp-not-allowed')).toEqual([]);
@@ -423,7 +613,13 @@ describe('outbound: allowlist, dry run, kill switch BEFORE any network call', ()
   });
   it('dry run: the whole flow runs, the fake is never called, the badge says "Dry run, not sent"', async () => {
     await c.im.stop();
-    c.im = (await attachIMessage(c.hub, { env: { ...c.env, IMESSAGE_DRY_RUN: '1' }, fetch: fenced as any, now: () => c.clock.t, minGapMs: 0, sleep: async () => {} }))!;
+    c.im = (await attachIMessage(c.hub, {
+      env: { ...c.env, IMESSAGE_DRY_RUN: '1' },
+      fetch: fenced as any,
+      now: () => c.clock.t,
+      minGapMs: 0,
+      sleep: async () => {},
+    }))!;
     await bind();
     const gid = `group:${c.squadId}`;
     await c.fake.inbound({ from: ANA, content: '@cubbie what is a z-score?', groupId: GID1 });
@@ -431,15 +627,31 @@ describe('outbound: allowlist, dry run, kill switch BEFORE any network call', ()
     await settle();
     expect(c.fake.sent).toHaveLength(0);
     expect(c.fake.requests.filter((r) => r.includes('/api/send'))).toHaveLength(0);
-    expect(personaPosts(gid)[0]!.deliveryState).toMatchObject({ state: 'dry_run', label: 'Dry run, not sent' });
+    expect(personaPosts(gid)[0]!.deliveryState).toMatchObject({
+      state: 'dry_run',
+      label: 'Dry run, not sent',
+    });
   });
   it('per-chat outbound rate limit holds messages back instead of flooding', async () => {
     await c.im.stop();
-    c.im = (await attachIMessage(c.hub, { env: { ...c.env, IMESSAGE_RATE_PER_MIN: '2' }, fetch: fenced as any, now: () => c.clock.t, minGapMs: 0, sleep: async () => {} }))!;
+    c.im = (await attachIMessage(c.hub, {
+      env: { ...c.env, IMESSAGE_RATE_PER_MIN: '2' },
+      fetch: fenced as any,
+      now: () => c.clock.t,
+      minGapMs: 0,
+      sleep: async () => {},
+    }))!;
     await bind();
     const start = c.fake.sent.length;
     for (let i = 0; i < 6; i++)
-      c.hub.deps.chat.postBot({ chatId: `group:${c.squadId}`, personaId: 'cubbie', personaName: 'Cubbie', text: `m${i}`, citations: [], attachments: [] });
+      c.hub.deps.chat.postBot({
+        chatId: `group:${c.squadId}`,
+        personaId: 'cubbie',
+        personaName: 'Cubbie',
+        text: `m${i}`,
+        citations: [],
+        attachments: [],
+      });
     await settle();
     expect(c.fake.sent.length - start).toBeLessThanOrEqual(2);
   });
@@ -449,7 +661,14 @@ describe('delivery, read and failure status callbacks', () => {
   const sendOne = async (text = 'status check') => {
     await bind();
     const gid = `group:${c.squadId}`;
-    const m = c.hub.deps.chat.postBot({ chatId: gid, personaId: 'cubbie', personaName: 'Cubbie', text, citations: [], attachments: [] })!;
+    const m = c.hub.deps.chat.postBot({
+      chatId: gid,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      text,
+      citations: [],
+      attachments: [],
+    })!;
     await waitFor(() => c.fake.sent.some((s) => String(s.body.content).includes(text)));
     await settle();
     const rec = c.fake.sent.find((s) => String(s.body.content).includes(text))!;
@@ -494,7 +713,14 @@ describe('delivery, read and failure status callbacks', () => {
     await bind();
     const gid = `group:${c.squadId}`;
     c.fake.failNext(100, 4001, 429);
-    const m = c.hub.deps.chat.postBot({ chatId: gid, personaId: 'cubbie', personaName: 'Cubbie', text: 'doomed', citations: [], attachments: [] })!;
+    const m = c.hub.deps.chat.postBot({
+      chatId: gid,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      text: 'doomed',
+      citations: [],
+      attachments: [],
+    })!;
     await waitFor(() => (c.hub.deps.chat.store.get(m.id)!.deliveryState?.attempts ?? 0) >= 1);
     expect(c.hub.deps.chat.store.get(m.id)!.deliveryState!.state).toBe('queued');
     for (let i = 0; i < 20; i++) {
@@ -508,7 +734,14 @@ describe('delivery, read and failure status callbacks', () => {
   it('a status callback before the send was recorded is applied once it is', async () => {
     await bind();
     const gid = `group:${c.squadId}`;
-    const m = c.hub.deps.chat.postBot({ chatId: gid, personaId: 'cubbie', personaName: 'Cubbie', text: 'early bird', citations: [], attachments: [] })!;
+    const m = c.hub.deps.chat.postBot({
+      chatId: gid,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      text: 'early bird',
+      citations: [],
+      attachments: [],
+    })!;
     await waitFor(() => c.fake.sent.some((s) => String(s.body.content).includes('early bird')));
     const rec = c.fake.sent.find((s) => String(s.body.content).includes('early bird'))!;
     await c.fake.status({ handle: rec.handle, status: 'DELIVERED' });
@@ -534,20 +767,40 @@ describe('attachments and links', () => {
     expect(m.attachments[0]!.mime).toBe('image/png');
   });
   it('media for a chat that is not allowlisted is never fetched', async () => {
-    await c.fake.inbound({ from: ANA, content: 'x', groupId: 'grp-other', mediaUrl: c.fake.media('x.png', PNG) });
+    await c.fake.inbound({
+      from: ANA,
+      content: 'x',
+      groupId: 'grp-other',
+      mediaUrl: c.fake.media('x.png', PNG),
+    });
     expect(c.fake.requests.some((r) => r.startsWith('GET /media/'))).toBe(false);
   });
   it('a private-host or non-https media URL is never fetched (outside fixture loopback)', async () => {
     const { mediaUrlOk } = await import('./sdk');
     const cfg = { mediaHosts: [], loopback: false };
-    for (const u of ['http://example.com/a.png', 'https://127.0.0.1/a.png', 'https://10.0.0.5/a.png', 'https://localhost/a.png', 'https://u:p@cdn.test/a.png', 'file:///etc/passwd', 'https://169.254.169.254/a.png'])
+    for (const u of [
+      'http://example.com/a.png',
+      'https://127.0.0.1/a.png',
+      'https://10.0.0.5/a.png',
+      'https://localhost/a.png',
+      'https://u:p@cdn.test/a.png',
+      'file:///etc/passwd',
+      'https://169.254.169.254/a.png',
+    ])
       expect(mediaUrlOk(u, cfg)).toBe(false);
     expect(mediaUrlOk('https://cdn.example.com/a.png', cfg)).toBe(true);
-    expect(mediaUrlOk('https://evil.test/a.png', { mediaHosts: ['sendblue.co'], loopback: false })).toBe(false);
+    expect(
+      mediaUrlOk('https://evil.test/a.png', { mediaHosts: ['sendblue.co'], loopback: false }),
+    ).toBe(false);
   });
   it('an unsupported inbound file becomes an honest placeholder, not a crash', async () => {
     await bind();
-    await c.fake.inbound({ from: BEN, content: '', groupId: GID1, mediaUrl: c.fake.media('x.zip', new Uint8Array([1, 2, 3])) });
+    await c.fake.inbound({
+      from: BEN,
+      content: '',
+      groupId: GID1,
+      mediaUrl: c.fake.media('x.zip', new Uint8Array([1, 2, 3])),
+    });
     await settle();
     expect(history(`group:${c.squadId}`).some((m) => m.skippedAttachments?.length)).toBe(true);
   });
@@ -558,14 +811,22 @@ describe('attachments and links', () => {
     writeFileSync(p, PNG);
     const rt = c.hub.deps.sendblue!;
     const url = rt.media.urlFor(p, 'https://squad.test')!;
-    expect(url).toMatch(/^https:\/\/squad\.test\/v1\/imessage\/media\/[0-9a-f]{24}\.\d+\.[0-9a-f]{32}\.png$/);
+    expect(url).toMatch(
+      /^https:\/\/squad\.test\/v1\/imessage\/media\/[0-9a-f]{24}\.\d+\.[0-9a-f]{32}\.png$/,
+    );
     const path = new URL(url).pathname;
     const ok = await c.hub.app.request(path);
     expect(ok.status).toBe(200);
     expect(ok.headers.get('content-type')).toBe('image/png');
     expect((await ok.arrayBuffer()).byteLength).toBe(PNG.length);
     expect((await c.hub.app.request(path.replace(/\.png$/, 'x.png'))).status).toBe(404); // tampered
-    expect((await c.hub.app.request(path.replace(/[0-9a-f]\.png$/, (m) => (m[0] === '0' ? '1' : '0') + '.png'))).status).toBe(404);
+    expect(
+      (
+        await c.hub.app.request(
+          path.replace(/[0-9a-f]\.png$/, (m) => (m[0] === '0' ? '1' : '0') + '.png'),
+        )
+      ).status,
+    ).toBe(404);
     expect(rt.media.urlFor(join(dir, 'a.exe'), 'https://squad.test')).toBeUndefined();
     c.clock.t += 16 * 60_000; // the signer uses the hub clock
     // through the transport itself
@@ -577,7 +838,14 @@ describe('attachments and links', () => {
   });
   it('mirrored links are absolute plain text with no markdown', async () => {
     await bind();
-    c.hub.deps.chat.postBot({ chatId: `group:${c.squadId}`, personaId: 'cubbie', personaName: 'Cubbie', text: 'see the **notes**', citations: [], attachments: [] });
+    c.hub.deps.chat.postBot({
+      chatId: `group:${c.squadId}`,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      text: 'see the **notes**',
+      citations: [],
+      attachments: [],
+    });
     await waitFor(() => groupSends().some((t) => t.includes('notes')));
     for (const t of groupSends()) expect(t).not.toMatch(/\*\*|\]\(/);
   });
@@ -588,14 +856,23 @@ describe('isolation and privacy', () => {
     await bind();
     const sq2 = await api(c.hub, 'POST', '/v1/squads', c.tok.Cy, { name: 'Other Crew' });
     const sid2 = sq2.body.squad.id as string;
-    const inv2 = await api(c.hub, 'POST', `/v1/squads/${sid2}/invites`, c.tok.Cy, { maxUses: null });
+    const inv2 = await api(c.hub, 'POST', `/v1/squads/${sid2}/invites`, c.tok.Cy, {
+      maxUses: null,
+    });
     await bind(GID2, CY, inv2.body.invite.code);
     await c.fake.inbound({ from: BEN, content: 'squad one secret-plan', groupId: GID1 });
     await c.fake.inbound({ from: CY, content: 'squad two chatter', groupId: GID2 });
     await settle();
     expect(JSON.stringify(history(`group:${sid2}`))).not.toContain('squad one secret-plan');
     expect(JSON.stringify(history(`group:${c.squadId}`))).not.toContain('squad two chatter');
-    c.hub.deps.chat.postBot({ chatId: `group:${c.squadId}`, personaId: 'cubbie', personaName: 'Cubbie', text: 'for squad one only', citations: [], attachments: [] });
+    c.hub.deps.chat.postBot({
+      chatId: `group:${c.squadId}`,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      text: 'for squad one only',
+      citations: [],
+      attachments: [],
+    });
     await waitFor(() => groupSends(GID1).some((t) => t.includes('for squad one only')));
     expect(groupSends(GID2).join(' ')).not.toContain('for squad one only');
     const m2 = c.hub.deps.sendblue!.store.lookup('group', GID2);
@@ -603,15 +880,34 @@ describe('isolation and privacy', () => {
   });
   it('$180 and therapy told in a Sendblue DM never reach the group thread or anything sent to the group', async () => {
     await bind();
-    await c.fake.inbound({ from: ANA, content: 'I paid $180 for therapy this month, keep that private' });
+    await c.fake.inbound({
+      from: ANA,
+      content: 'I paid $180 for therapy this month, keep that private',
+    });
     await waitFor(() => history(`dm:${c.uid.Ana}`).some((m) => m.sender.kind === 'persona'));
     await settle();
-    await c.fake.inbound({ from: BEN, content: '@cubbie what did Ana spend on therapy? how much was $180?', groupId: GID1 });
+    await c.fake.inbound({
+      from: BEN,
+      content: '@cubbie what did Ana spend on therapy? how much was $180?',
+      groupId: GID1,
+    });
     await settle();
-    c.hub.deps.chat.postBot({ chatId: `group:${c.squadId}`, personaId: 'cubbie', personaName: 'Cubbie', text: 'Ana paid $180 for therapy', citations: [], attachments: [] });
+    c.hub.deps.chat.postBot({
+      chatId: `group:${c.squadId}`,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      text: 'Ana paid $180 for therapy',
+      citations: [],
+      attachments: [],
+    });
     await settle();
-    for (const t of groupSends()) for (const s of SENTINELS) expect(t.toLowerCase()).not.toContain(s);
-    expect(JSON.stringify(history(`group:${c.squadId}`).filter((m) => m.sender.kind === 'persona')).toLowerCase()).not.toContain('therapy');
+    for (const t of groupSends())
+      for (const s of SENTINELS) expect(t.toLowerCase()).not.toContain(s);
+    expect(
+      JSON.stringify(
+        history(`group:${c.squadId}`).filter((m) => m.sender.kind === 'persona'),
+      ).toLowerCase(),
+    ).not.toContain('therapy');
     expect(everything().toLowerCase()).not.toMatch(/therapy.*group_id|group_id.*\$180/);
   });
 });
@@ -622,7 +918,14 @@ describe('secrets never leak', () => {
     await c.fake.inbound({ from: ANA, content: '@cubbie hello', groupId: GID1 });
     await settle();
     c.fake.failNext(1, 4001, 429);
-    c.hub.deps.chat.postBot({ chatId: `group:${c.squadId}`, personaId: 'cubbie', personaName: 'Cubbie', text: 'trigger a failure', citations: [], attachments: [] });
+    c.hub.deps.chat.postBot({
+      chatId: `group:${c.squadId}`,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      text: 'trigger a failure',
+      citations: [],
+      attachments: [],
+    });
     await settle();
     const bad = await c.fake.inbound({ from: ANA, content: 'x', groupId: GID1, secret: 'wrong' });
     const blobs = [
@@ -649,8 +952,14 @@ describe('secrets never leak', () => {
     expect(c.fake.requests).toContain('GET /api/lines');
     expect(c.fake.sent).toHaveLength(0);
     expect(h.body.checks.map((x: any) => x.id)).toEqual([
-      'sendblue_configured', 'webhook_secret_set', 'webhook_reachable_url', 'outbound_probe',
-      'last_delivery_status', 'inbound_seen', 'thread_mapped_to_web_thread', 'allowlist_configured',
+      'sendblue_configured',
+      'webhook_secret_set',
+      'webhook_reachable_url',
+      'outbound_probe',
+      'last_delivery_status',
+      'inbound_seen',
+      'thread_mapped_to_web_thread',
+      'allowlist_configured',
     ]);
   });
   it('inbound_seen and thread_mapped turn pass after a verified inbound in a bound group', async () => {
@@ -679,18 +988,82 @@ describe('shared Integration Health (GET /v1/connections/health)', () => {
   it('without credentials every live link is blocked with the exact env names', async () => {
     await c.im.stop();
     const saved = { ...process.env };
-    for (const k of ['SENDBLUE_API_KEY', 'SENDBLUE_API_SECRET', 'SENDBLUE_FROM_NUMBER', 'SENDBLUE_WEBHOOK_SECRET'])
+    for (const k of [
+      'SENDBLUE_API_KEY',
+      'SENDBLUE_API_SECRET',
+      'SENDBLUE_FROM_NUMBER',
+      'SENDBLUE_WEBHOOK_SECRET',
+    ])
       delete process.env[k];
     try {
       const h = await api(c.hub, 'GET', '/v1/connections/health', c.tok.Ana);
       const by = Object.fromEntries((h.body.checks as any[]).map((x) => [x.id, x]));
       for (const id of ['sendblue_outbound', 'sendblue_delivery', 'sendblue_inbound']) {
         expect(by[id].status).toBe('blocked');
-        expect(by[id].missingEnv).toEqual(['SENDBLUE_API_KEY', 'SENDBLUE_API_SECRET', 'SENDBLUE_FROM_NUMBER', 'SENDBLUE_WEBHOOK_SECRET']);
+        expect(by[id].missingEnv).toEqual([
+          'SENDBLUE_API_KEY',
+          'SENDBLUE_API_SECRET',
+          'SENDBLUE_FROM_NUMBER',
+          'SENDBLUE_WEBHOOK_SECRET',
+        ]);
         expect(by[id].reason).toMatch(/^BLOCKED\(missing env: SENDBLUE_API_KEY/);
       }
     } finally {
       Object.assign(process.env, saved);
     }
   });
+});
+
+describe('status exposes dry run, allowlist and kill switch; @cubbie parity with the web path', () => {
+  it('the status route and the setup route carry the safety flags (counts only)', async () => {
+    const st = await api(c.hub, 'GET', '/v1/imessage/status', c.tok.Ana);
+    expect(st.body.bridge.safety).toEqual({
+      dryRun: false,
+      killSwitch: false,
+      allowlist: { chats: 2, handles: 4, allowAll: false },
+    });
+    const setup = await api(c.hub, 'GET', '/v1/imessage/setup', c.tok.Ana);
+    expect(setup.body.safety.allowlist.chats).toBe(2);
+    expect(JSON.stringify(st.body)).not.toContain(GID1);
+    await c.im.stop();
+    c.im = (await attachIMessage(c.hub, {
+      env: { ...c.env, IMESSAGE_DRY_RUN: '1' },
+      fetch: fenced as any,
+      minGapMs: 0,
+      sleep: async () => {},
+    }))!;
+    expect(
+      (await api(c.hub, 'GET', '/v1/imessage/status', c.tok.Ana)).body.bridge.safety.dryRun,
+    ).toBe(true);
+  });
+  it('an iMessage @cubbie goes through the SAME chat send as the web (same retrieval, same provenance) and answers on both surfaces', async () => {
+    await bind();
+    const gid = `group:${c.squadId}`;
+    const calls: string[] = [];
+    const chat = c.hub.deps.chat;
+    const orig = chat.send.bind(chat);
+    chat.send = ((viewer: any, body: any, o: any) => {
+      calls.push(`${o?.via ?? 'web'}:${viewer.studentId}`);
+      return orig(viewer, body, o);
+    }) as typeof chat.send;
+    await chat.send(
+      { studentId: c.uid.Ben!, squadId: c.squadId, projector: false },
+      { chatId: gid as any, text: '@cubbie what is a z-score?' },
+    );
+    await waitFor(() => personaPosts(gid).length >= 1);
+    await settle();
+    await c.fake.inbound({
+      from: BEN,
+      content: '@cubbie what is a z-score?',
+      groupId: GID1,
+      handle: 'PAR-1',
+    });
+    await waitFor(() => personaPosts(gid).length >= 2, 15000);
+    await settle();
+    expect(calls).toEqual([`web:${c.uid.Ben}`, `imessage:${c.uid.Ben}`]);
+    const [web, im] = personaPosts(gid) as any[];
+    expect(im.provenance?.kind).toBe(web.provenance?.kind);
+    expect(im.citations.length).toBe(web.citations.length);
+    expect(groupSends().some((t) => /Cubbie: /.test(t))).toBe(true); // and the answer reached iMessage
+  }, 30_000);
 });

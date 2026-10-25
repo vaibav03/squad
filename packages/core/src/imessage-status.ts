@@ -25,6 +25,19 @@ export const ImessageBridgeSchema = z.object({
   lastInboundAt: z.number().optional(),
   lastStatusAt: z.number().optional(),
   queued: z.number().int().nonnegative().optional(),
+  /** The Demo/Fixture bridge: scripted transport, never a real message. */
+  demo: z.boolean().optional(),
+  safety: z
+    .object({
+      dryRun: z.boolean(),
+      killSwitch: z.boolean(),
+      allowlist: z.object({
+        chats: z.number().int().nonnegative(),
+        handles: z.number().int().nonnegative(),
+        allowAll: z.boolean(),
+      }),
+    })
+    .optional(),
 });
 export type ImessageBridge = z.infer<typeof ImessageBridgeSchema>;
 
