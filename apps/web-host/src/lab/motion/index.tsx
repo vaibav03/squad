@@ -223,7 +223,6 @@ export default function MotionLab() {
   const frameInfo = useMemo(
     () =>
       `frame ${runner.frame} / ${runner.lastFrame}   ${runner.sceneMs.toFixed(0)} ms / ${scene.loopMs} ms`,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [runner.frame, scene.loopMs, runner.sceneMs],
   );
 

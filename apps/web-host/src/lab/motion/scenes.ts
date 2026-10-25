@@ -16,7 +16,6 @@ import {
   lanternFlicker,
   litWindow,
   parallaxStep,
-  pinAtFire,
   ringToCheck,
   showBubble,
   speaking,
@@ -25,7 +24,8 @@ import {
   walkTo,
   type MotionRuntime,
 } from './prims';
-import { PAL, Stage, type StageNode } from './stage';
+import type { Stage} from './stage';
+import { PAL, type StageNode } from './stage';
 
 export type DomDemo = 'panel' | 'chip' | 'press' | 'badge' | 'fade';
 
