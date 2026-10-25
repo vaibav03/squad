@@ -207,8 +207,8 @@ export class MotionRuntime {
       started = true;
       const f = opts.from;
       if (f) {
-        if (f.x !== undefined) target.x = f.x;
-        if (f.y !== undefined) target.y = f.y;
+        if (f.x !== undefined) target.x = snap ? Math.round(f.x) : f.x;
+        if (f.y !== undefined) target.y = snap ? Math.round(f.y) : f.y;
         if (f.alpha !== undefined) target.alpha = f.alpha;
         const fx = f.scaleX ?? f.scale;
         const fy = f.scaleY ?? f.scale;

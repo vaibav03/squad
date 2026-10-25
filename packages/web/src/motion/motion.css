@@ -1,5 +1,6 @@
 /*
  * Squad DOM motion (spec 08, rows 15, 16, 18, 19, 21).
+ * Exception: rows 18 and 21 use plain CSS `ease` because the spec says so.
  * Only transform and opacity (clip-path for the check draw). Three curves, no ease-in,
  * no `transition: all`, no scale(0), hover only on real pointers. Reduced motion applies
  * under the OS media query AND under Calm mode (`data-calm`) or the Lab override.
@@ -92,6 +93,7 @@
 }
 .m-fade[data-state='closed'] {
   opacity: 0;
+  pointer-events: none;
 }
 
 /* Reduced motion: fewer and gentler, not zero. */
@@ -135,7 +137,7 @@
 :root[data-reduced-motion='true'] .m-check {
   clip-path: inset(0 0 0 0);
   opacity: 0;
-  transition: opacity var(--m-dur-chip) ease;
+  transition: none;
 }
 :root[data-calm='true'] .m-check[data-state='shown'],
 :root[data-reduced-motion='true'] .m-check[data-state='shown'] {

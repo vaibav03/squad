@@ -16,11 +16,14 @@ export function pauseWhenHiddenWith(opts: {
 }): () => void {
   const doc = opts.doc ?? (typeof document === 'undefined' ? undefined : document);
   if (!doc) return () => {};
+  let pausedByUs = false;
   const apply = (): void => {
     if (doc.hidden) {
+      pausedByUs = !opts.runtime.paused;
       opts.runtime.paused = true;
       opts.onHide();
-    } else if (opts.runtime.paused) {
+    } else if (pausedByUs && opts.runtime.paused) {
+      pausedByUs = false;
       opts.runtime.paused = false;
       opts.runtime.dropNextDelta();
       opts.onShow();

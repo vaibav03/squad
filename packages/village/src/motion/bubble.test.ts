@@ -42,7 +42,7 @@ describe('showBubble', () => {
     expect([b.alpha, h.done, gone]).toEqual([0, true, 1]);
   });
 
-  it('min hold 1200 ms for short text; explicit holdMs wins', () => {
+  it('min hold 1200 ms for short text; holdMs can only lengthen, never undercut', () => {
     const rt = createRuntime();
     const a = mk();
     showBubble(rt, a, { text: 'hi' });
@@ -52,6 +52,8 @@ describe('showBubble', () => {
     const b = mk();
     showBubble(rt2, b, { text: 'x'.repeat(100), holdMs: 100 });
     rt2.step(160 + 100 + 120);
+    expect(b.alpha).toBe(1); // 100 chars need 6 s regardless of holdMs
+    rt2.step(6000);
     expect(b.alpha).toBe(0);
   });
 
@@ -130,7 +132,7 @@ describe('showBubble', () => {
   it('finished resolves when the bubble is gone', async () => {
     const rt = createRuntime();
     const h = showBubble(rt, mk(), { holdMs: 10 });
-    rt.step(1000);
+    rt.step(1500);
     await expect(h.finished).resolves.toBeUndefined();
   });
 });

@@ -168,7 +168,9 @@ function play(
       if (!skippable) return () => {};
       const fn = (): void => handle.skip();
       target.addEventListener('keydown', fn);
-      return () => target.removeEventListener('keydown', fn);
+      const detach = (): void => target.removeEventListener('keydown', fn);
+      void finishedP.then(detach);
+      return detach;
     },
   };
   // run the first entry synchronously so frame 0 is already in its start pose

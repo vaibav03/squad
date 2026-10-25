@@ -21,7 +21,7 @@ export function showBubble(
   o: { text?: string; holdMs?: number; kind?: 'speech' | 'thought'; onGone?: () => void } = {},
 ): BubbleHandle {
   const reduced = rt.reduced;
-  const hold = o.holdMs ?? bubbleHoldMs(o.text ?? '');
+  const hold = Math.max(o.holdMs ?? 0, bubbleHoldMs(o.text ?? '')); // words never leave early
   const inMs = DURATION.bubbleIn;
   const outMs = DURATION.bubbleOut;
   type Phase = 'in' | 'hold' | 'out';

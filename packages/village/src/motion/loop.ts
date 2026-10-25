@@ -21,11 +21,17 @@ export function loopJob(
   },
 ): RingHandle {
   let elapsed = 0;
+  const startedReduced = rt.reduced;
   let stopping = false;
   let fadeLeft = 0;
   let fadeTotal = 0;
   const handle = rt.spawn({
     update: (dt) => {
+      if (!startedReduced && rt.reduced) {
+        // Calm mode turned on mid-session: settle to the reduced rest state.
+        o.rest();
+        return true;
+      }
       if (stopping) {
         fadeLeft -= dt;
         if (fadeLeft <= 0) {
