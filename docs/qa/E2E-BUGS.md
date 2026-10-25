@@ -6,7 +6,7 @@ Filed by the e2e acceptance suite (branch e2e/acceptance). Product code is not t
 |---|---|---|---|
 | E2E-001 | P1 | J1 | open: Setup courses step never completes in live mode |
 | E2E-002 | P2 | J1 | open: uploaded .ics never reaches hub/agent |
-| E2E-003 | P1 | J8 | open: agents are s_cam, hub squad is s_chi; a trip started with the hub's ids gets `no_plan`/`offline` (with s_cam it completes and all four incl. s_chi see trip.confirmed once on current main) |
+| E2E-003 | P1 | J8 | fixed in batch 16 (agents, fixtures, scripts and docker now use `s_chi`); was: agents are s_cam, hub squad is s_chi; a trip started with the hub's ids gets `no_plan`/`offline` (with s_cam it completes and all four incl. s_chi see trip.confirmed once on current main) |
 | E2E-004 | P1 | J10 | fixed on main by batch 3 (RoomLayer mounted); kept for the record |
 | E2E-005 | P2 | J10 | open, unstable: four landmarks LOCKED in focused runs; in the final full run on the merged main NO room offered an Enter prompt within 60 s each and the test hit its 10 min timeout (`docs/design/shots/e2e/j10-village/no-prompt-*.png`); needs owner triage |
 | E2E-006 | P2 | J10 | open: Esc does not leave a room; transcript panel covers the next Enter prompt |
