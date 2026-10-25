@@ -15,6 +15,7 @@ import {
   type ContextViewer,
 } from '@squad/brain';
 import { requireUser } from '../auth';
+import { FIXTURE_ACCOUNT_LABEL } from '../context/account';
 import { TokenKeyError } from '../context/tokens';
 import { mergeContextBusy, purgeContextBusy } from '../context/busy';
 import { contextServiceFor, type ContextService } from '../context/service';
@@ -177,8 +178,18 @@ function view(svc: ContextService, c: ContextConnection) {
       !viaExtension && (c.status === 'live' || c.status === 'error' || c.status === 'rate_limited'),
     sources: { total: sources.length, byKind },
     sharedWithSquads: squads,
+    /** Masked identity of the chosen account; null once disconnected. Never the raw e-mail. */
+    account: state === 'revoked' ? null : fixture ? { label: FIXTURE_ACCOUNT_LABEL } : svc.accounts.get(c.id),
+    /** Always true for fixture data: simulated, not the person's account. */
+    fixture,
+    /** Short names of the scopes this connection holds (the least-privilege set), e.g. `calendar.readonly`. */
+    grantedScopes: c.scopes.map(shortScope),
+    /** When this connection was first made (first import). */
+    importedAt: c.createdAt,
   };
 }
+
+const shortScope = (s: string) => s.replace('https://www.googleapis.com/auth/', '');
 
 function sourceView(s: ContextSource) {
   return {
@@ -271,6 +282,53 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
       allowedScopes: ALLOWED_SCOPES,
       connections: svc.store.connectionsOf(c.get('user').id).map((x) => view(svc, x)),
     });
+  });
+
+  /**
+   * The viewer's own imported items for the Connections list: what, from which account, when it was fetched, and who
+   * can see it. Own connections only (never another member's private items); revoked connections have none.
+   */
+  r.get('/v1/connections/items', need, (c) => {
+    const uid = c.get('user').id;
+    const svc = contextServiceFor(deps);
+    const squadName = new Map<string, string>();
+    const nameOf = (id: string) => {
+      if (!squadName.has(id)) squadName.set(id, deps.squads.detail(id, uid)?.name ?? 'your squad');
+      return squadName.get(id)!;
+    };
+    const rows = svc.store
+      .connectionsOf(uid)
+      .filter((x) => x.status !== 'revoked')
+      .flatMap((x) =>
+        svc.store.sourcesOfConnection(x.id).map((s) => {
+          const ch = svc.store.chunks(s.id)[0];
+          const fixture = s.provenance.endsWith(':fixture');
+          const shared = s.sharedWith.filter((q) => deps.squads.isMember(q, uid));
+          const when = s.dueAt ?? s.startsAt;
+          return {
+            id: s.id,
+            connectionId: x.id,
+            provider: x.provider,
+            kind: s.kind,
+            title: s.title,
+            courseId: s.courseId,
+            whenAt: when,
+            whenKind: s.dueAt !== null ? ('due' as const) : s.startsAt !== null ? ('starts' as const) : null,
+            fetchedAt: s.fetchedAt,
+            modifiedAt: s.modifiedAt,
+            provenance: fixture ? ('fixture' as const) : ('real' as const),
+            fixture,
+            sharing: shared.length ? ('shared' as const) : ('private' as const),
+            sharingLabel: shared.length ? `Shared with ${shared.map(nameOf).join(', ')}` : 'Private',
+            sharedWith: shared.map((q) => ({ id: q, name: nameOf(q) })),
+            location: ch ? { anchor: ch.anchor, ...(ch.section ? { label: ch.section } : {}) } : null,
+            url: s.url,
+          };
+        }),
+      )
+      .sort((a, b) => b.fetchedAt - a.fetchedAt || a.title.localeCompare(b.title));
+    c.header('Cache-Control', 'no-store');
+    return c.json({ generatedAt: deps.now(), total: rows.length, items: rows });
   });
 
   r.get('/v1/connections/:id/sources', need, (c) => {
@@ -442,6 +500,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     const res = svc.registerCanvasSession(c.get('user').id, {
       canvasUserId: p.data.canvas_user_id,
       origin: p.data.canvas_origin,
+      name: p.data.name,
     });
     if (!res.ok)
       return err(

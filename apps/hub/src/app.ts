@@ -15,6 +15,7 @@ import { loadHubConfig, type HubConfig } from './config';
 import { createChatHub } from './chat/hub-chat';
 import { createChatRoutes } from './chat/routes';
 import { createConnectionRoutes } from './routes/connections';
+import { createHealthRoutes } from './routes/health';
 import { createConfirmRouter } from './confirms';
 import { createIngestor } from './ingest';
 import { applySecurity, type SecurityOptions } from './middleware';
@@ -228,6 +229,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createCouncilRoutes(deps),
     createLiveRoutes(deps),
     createChatRoutes(deps),
+    createHealthRoutes(deps),
     createConnectionRoutes(deps),
     createPlanRoutes(deps),
     ...(config.sim ? [createSimRoutes(deps)] : []),
