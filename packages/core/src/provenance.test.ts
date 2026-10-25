@@ -170,3 +170,35 @@ describe('imessageIndicator', () => {
     expect(agoWords(now - 3 * 86_400_000, now)).toBe('3 d ago');
   });
 });
+
+describe('mode follows the sources: simulated data is never Live', () => {
+  const fx = (id: string): ChatCitation => ({
+    ...src,
+    source: { kind: 'canvas_assignment', id, title: id, provenance: 'fixture' },
+  });
+  const real = (id: string): ChatCitation => ({
+    ...src,
+    source: { kind: 'canvas_assignment', id, title: id, provenance: 'real' },
+  });
+  it('fixture-only: demo', () => {
+    const p = composeProvenance({ ...base, citations: [fx('a'), fx('b')] }).provenance;
+    expect(p).toMatchObject({ kind: 'grounded', mode: 'demo', sources: 2 });
+    expect(p.label).toMatch(/demo data/);
+  });
+  it('live-only with a live model: live', () => {
+    expect(composeProvenance({ ...base, citations: [real('a')] }).provenance).toMatchObject({ mode: 'live', label: '1 source' });
+  });
+  it('mixed: demo (one simulated source is enough)', () => {
+    expect(composeProvenance({ ...base, citations: [real('a'), fx('b')] }).provenance.mode).toBe('demo');
+  });
+  it('live sources but a degraded model stay degraded; a demo model stays demo', () => {
+    expect(composeProvenance({ ...base, mode: 'degraded', citations: [real('a')] }).provenance.mode).toBe('degraded');
+    expect(composeProvenance({ ...base, mode: 'demo', citations: [real('a')] }).provenance.mode).toBe('demo');
+  });
+  it('no citations: mode is whatever the model is, no demo-data claim', () => {
+    expect(composeProvenance({ ...base, citations: [] }).provenance).toMatchObject({ kind: 'no_sources', mode: 'live' });
+  });
+  it('the isFixture callback (hub store lookup) wins over the citation field', () => {
+    expect(composeProvenance({ ...base, citations: [real('a')], isFixture: () => true }).provenance.mode).toBe('demo');
+  });
+});

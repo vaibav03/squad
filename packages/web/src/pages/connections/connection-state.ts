@@ -33,9 +33,7 @@ export const STATE_WORDS: Record<ProviderState, string> = {
 export const SUB_WORDS = { disconnected: 'Disconnected' } as const;
 export type ProviderSub = keyof typeof SUB_WORDS | null;
 
-/** Citation / source chip text: demo sources never read as real. */
-export const sourceChipLabel = (provider: Provider, fixture: boolean): string =>
-  fixture ? `Demo: ${NAME[provider]}` : NAME[provider];
+export { sourceChipLabel } from '@squad/core';
 const NAME: Record<Provider, string> = { canvas: 'Canvas', google: 'Google' };
 
 export interface DeriveOpts {

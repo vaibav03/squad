@@ -10,6 +10,7 @@ import { AudioPlayer, ImageAttachment } from './media';
 import { ChatAvatar } from './parts';
 import { SyncBadge } from './sync/SyncBadge';
 import { ProvenanceRow } from './provenance/ProvenanceRow';
+import { provenanceBadge } from './ask-cubbie';
 import { PlanChatCard } from './PlanChatCard';
 import { openSource } from '../../components/source-viewer';
 import {
@@ -284,7 +285,7 @@ export function MessageBubble(p: BubbleProps) {
                   </span>
                 </span>
                 <span className={`sqc-ctxchip__prov is-${c.provenance}`}>
-                  {c.provenance === 'fixture' ? 'Fixture (simulated)' : 'Real'}
+                  {provenanceBadge(c.provenance, c.kind)}
                 </span>
               </li>
             ))}
@@ -313,7 +314,7 @@ export function MessageBubble(p: BubbleProps) {
                     data-testid="chat-citation-provenance"
                     data-provenance={c.source.provenance}
                   >
-                    {c.source.provenance === 'fixture' ? 'Fixture (simulated)' : 'Real'}
+                    {provenanceBadge(c.source.provenance, c.source.kind)}
                   </span>
                 ) : null}
                 {c.source && (c.source.courseName || c.source.locationLabel) ? (

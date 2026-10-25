@@ -156,7 +156,8 @@ describe('send with context', () => {
       provenance: 'fixture',
       courseName: 'Statistics 101',
     });
-    expect(reply.provenance).toMatchObject({ kind: 'grounded' });
+    expect(reply.provenance).toMatchObject({ kind: 'grounded', mode: 'demo' });
+    expect(reply.provenance!.label).toMatch(/demo data/);
     // the source viewer opens the verified snippet
     const q = new URLSearchParams({
       id: essay.id,
