@@ -27,6 +27,9 @@ The web app is deployed separately on Vercel (`vercel.json`). No secrets are com
 Not needed for the demo, and blocked without credentials: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI` (live Google), `SENDBLUE_*` and `IMESSAGE_*` (iMessage), `ELEVENLABS_API_KEY` (voices), Canvas (signed-in extension session or `.ics` feed).
 Student agents (`AGENT_PEERS`) are not part of this single-service deployment: the hub runs without them and the demo answers come from the hub itself.
 
+## Deployed
+Hub (Railway project `squad-hub`, service `hub`, volume `hub-volume` at `/data`): https://hub-production-6c01.up.railway.app (health: `/health`, status: `/v1/status`).
+
 ## Frontend
 Vercel project `squad` (this repo, root `vercel.json`): set `VITE_HUB_URL` to the Railway public URL and redeploy.
 
