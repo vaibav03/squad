@@ -3,10 +3,12 @@ import { useSearchParams } from 'react-router-dom';
 import { createChatApi, type ChatApi } from './api';
 import { ME, fixtureApiFor } from './fixtures';
 import { ChatView } from './ChatView';
+import { SourceViewerHost } from '../../components/source-viewer';
 import { useChat } from './useChat';
 import { hubStudentId } from '../../shell/dev-login';
 import { useSquadConfig, useAuth } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
+import { ContextGateFrame } from './ContextGate';
 
 /** `/squad/chat`: the squad group chat and your private chat with Cubbie. Live over SSE; `?c=<chatId>` deep-links a chat. */
 export default function ChatPage() {
@@ -46,6 +48,9 @@ export default function ChatPage() {
     [setParams],
   );
   return (
-    <ChatView ctl={ctl} activeId={active} onActiveChange={setActive} onSignInAgain={signOut} />
+    <ContextGateFrame>
+      <ChatView ctl={ctl} activeId={active} onActiveChange={setActive} onSignInAgain={signOut} />
+      <SourceViewerHost />
+    </ContextGateFrame>
   );
 }

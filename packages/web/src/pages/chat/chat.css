@@ -1500,3 +1500,16 @@
   color: var(--muted-foreground);
   font: 500 var(--text-sm) / var(--lh-sm) var(--font-sans);
 }
+
+/* "Ask Cubbie" context chips (composer + sent bubble) and the provenance tag on source chips */
+.sqc-ctxchips { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.sqc-ctxchips.is-sent { margin: 6px 0 0; }
+.sqc-ctxchip { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 4px 6px 4px 10px; border: 1px solid var(--sq-border, #cbd5e1); border-radius: 999px; background: var(--sq-surface, #fff); font-size: 12px; }
+.sqc-ctxchip__main { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.sqc-ctxchip__title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 28ch; }
+.sqc-ctxchip__meta { color: var(--sq-muted, #64748b); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 30ch; }
+.sqc-ctxchip__prov, .sqc-cite__prov { padding: 1px 6px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid currentColor; }
+.sqc-ctxchip__prov.is-fixture, .sqc-cite__prov.is-fixture { color: #92400e; background: #fef3c7; }
+.sqc-ctxchip__prov.is-real, .sqc-cite__prov.is-real { color: #166534; background: #dcfce7; }
+.sqc-cite__prov { margin-left: 6px; }
+.sqc-cite__loc { margin-left: 6px; opacity: 0.75; font-size: 11px; }

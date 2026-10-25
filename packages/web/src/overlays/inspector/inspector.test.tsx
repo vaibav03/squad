@@ -40,17 +40,18 @@ describe('InspectorPanel', () => {
   it('shows the headline, thinking, tier, demo and live log for the selected agent', async () => {
     const store = setup();
     render(<InspectorPanel store={store} />);
-    expect(screen.queryByRole('complementary')).toBeNull();
+    expect(screen.queryByRole('dialog')).toBeNull();
     act(() => store.select('expert:ch6'));
     await settle();
-    expect(screen.getByRole('complementary', { name: 'Chapter 6 expert' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: /^Chapter 6 expert/ })).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: /Activity/ }));
     expect(screen.getByText('Studying in the Chapter 6 house')).toBeTruthy();
     expect(screen.getByText('Fast model')).toBeTruthy();
     expect(screen.getByText('Fixture')).toBeTruthy();
     expect(screen.getByRole('status', { name: 'Thinking now' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('tab', { name: /Thinking/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Reasoning summary/ }));
     expect(screen.getByText('Comparing two examples of correlation')).toBeTruthy();
-    fireEvent.click(screen.getByRole('tab', { name: 'Doing' }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Activity/ }));
     // live update
     act(() =>
       store.apply({
@@ -62,7 +63,7 @@ describe('InspectorPanel', () => {
       }),
     );
     expect(screen.getByText('Asking Ana a question on Chapter 6')).toBeTruthy();
-    fireEvent.click(screen.getByRole('tab', { name: /Thinking/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Reasoning summary/ }));
     expect(screen.getByText('Working on: What is r squared?')).toBeTruthy();
   });
   it('is honest when no reasoning was shared', async () => {
@@ -71,7 +72,7 @@ describe('InspectorPanel', () => {
     render(<InspectorPanel store={store} />);
     act(() => store.select('dean'));
     await settle();
-    fireEvent.click(screen.getByRole('tab', { name: 'Thinking' }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Reasoning summary/ }));
     expect(screen.getByText('Working on it: no reasoning shared yet')).toBeTruthy();
   });
   it('Esc closes and returns focus to the stage; cycle buttons move between agents', async () => {
@@ -115,7 +116,7 @@ describe('InspectorPanel', () => {
     });
     render(<InspectorPanel store={store} />);
     await settle();
-    fireEvent.click(screen.getByRole('tab', { name: 'Agents' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Team' }));
     expect(screen.getByText('Here are my blinded evenings')).toBeTruthy();
     expect(screen.getAllByText(/Dissent recorded/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getAllByRole('button', { name: 'Ben' })[0]!);
@@ -136,9 +137,9 @@ describe('InspectorPanel', () => {
     });
     render(<InspectorPanel store={store} />);
     await settle();
-    fireEvent.click(screen.getByRole('tab', { name: 'Chat' }));
-    expect(screen.getByText('r tells direction')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Source: ch6.pdf, page 3/ })).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Conversation' }));
+    expect(screen.getAllByText('r tells direction').length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: /Source: ch6.pdf, page 3/ }).length).toBeGreaterThan(0);
     act(() => store.select('student:s_ben'));
     await settle();
     expect(screen.getByText(/chats are private to them/)).toBeTruthy();
@@ -149,6 +150,7 @@ describe('InspectorPanel', () => {
     render(<InspectorPanel store={store} />);
     act(() => store.select('student:s_ben'));
     await settle();
+    fireEvent.click(screen.getByRole('tab', { name: /^Activity/ }));
     const html = document.body.textContent ?? '';
     expect(findLeak(html)).toBeUndefined();
     expect(screen.getByText(/Public activity only/)).toBeTruthy();
@@ -188,8 +190,8 @@ describe('InspectorPanel opened from a room', () => {
     render(<InspectorPanel store={store} />);
     act(() => store.select('council:quizkey', { slot: 'council-hall', who: 'chair' }));
     await settle();
-    expect(screen.getByRole('tab', { name: 'Chat', selected: true })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Chair' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Conversation', selected: true })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /^Chair/ })).toBeTruthy();
     expect(screen.getByText('MSE averages squared errors, so choice 1.')).toBeTruthy();
     expect(screen.getByText('Verified: the solvers agree.')).toBeTruthy();
     // the chair's own line is marked, the members' are not
@@ -205,7 +207,7 @@ describe('InspectorPanel opened from a room', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Next agent' }));
     await settle();
     expect(store.room?.who).toBe('solver-a');
-    expect(screen.getByRole('heading', { name: 'Solver A' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /^Solver A/ })).toBeTruthy();
     // Esc closes the popup
     fireEvent.keyDown(document, { key: 'Escape' });
     await settle(400);

@@ -12,6 +12,7 @@ import {
   policyLineText,
   topicCounts,
   parseCatalogue,
+  catalogueRowGap,
   type CatalogueParse,
 } from './model';
 import type { CatalogueState, PolicyPanel as Policy, PolicyTopic } from './types';
@@ -212,8 +213,11 @@ export function CataloguePanel({
               <tr>
                 <th scope="col">Code</th>
                 <th scope="col">Title</th>
+                <th scope="col">Credits</th>
                 <th scope="col">Days</th>
                 <th scope="col">Time</th>
+                <th scope="col">Prerequisites</th>
+                <th scope="col">Term</th>
               </tr>
             </thead>
             <tbody>
@@ -221,10 +225,23 @@ export function CataloguePanel({
                 <tr key={r.code}>
                   <th scope="row">{r.code}</th>
                   <td>{r.title}</td>
-                  <td>{r.days}</td>
-                  <td>
-                    {r.start} to {r.end}
-                  </td>
+                  <td>{r.credits}</td>
+                  {catalogueRowGap(r) ? (
+                    <td colSpan={2} data-testid="catalogue-gap">
+                      <Chip tone="ember" icon="info">
+                        {catalogueRowGap(r)}
+                      </Chip>
+                    </td>
+                  ) : (
+                    <>
+                      <td data-testid="catalogue-days">{r.days}</td>
+                      <td data-testid="catalogue-time">
+                        {r.start} to {r.end}
+                      </td>
+                    </>
+                  )}
+                  <td>{r.prereqs?.length ? r.prereqs.join(', ') : 'None'}</td>
+                  <td>{r.term || 'Any term'}</td>
                 </tr>
               ))}
             </tbody>

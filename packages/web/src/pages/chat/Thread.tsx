@@ -8,6 +8,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
+import { SourceViewerHost, hasSourceHost, openSource } from '../../components/source-viewer';
 import type { ChatCitation, ChatCitationExcerpt, ChatSummary } from '@squad/core';
 import { EmptyState, ErrorState } from '../../primitives/EmptyState';
 import { Icon } from '../../primitives/Icon';
@@ -22,6 +23,8 @@ import { Composer, type ComposerHandle } from './Composer';
 import { MemberStack, TypingIndicator } from './parts';
 import { QUICK_PROMPTS_DM, QUICK_PROMPTS_GROUP, buildRows, dmIdFor, type ThreadRow } from './model';
 import type { ChatController } from './useChat';
+import { ImessageIndicator } from './sync/ImessageIndicator';
+import { useImessageStatus } from './sync/useImessageStatus';
 import { LivePanel } from '../../live/LivePanel';
 import { useSquadConfig } from '../../shell/context';
 
@@ -230,6 +233,8 @@ function MessageList({
   const [atBottom, setAtBottom] = useState(true);
   const [newCount, setNewCount] = useState(0);
   const [cite, setCite] = useState<ChatCitation | null>(null);
+  // the village mounts its own source viewer; a standalone chat page needs one
+  const [ownSourceHost] = useState(() => !hasSourceHost());
   const [citeCtx, setCiteCtx] = useState<string | undefined>();
   const [quiet, setQuiet] = useState(true);
   const first = useRef<{ chat: string; baseSeq: number } | null>(null);
@@ -418,6 +423,21 @@ function MessageList({
                       compact={compact}
                       paused={paused}
                       onCite={(c, t) => {
+                        // Canvas / Drive / Calendar / Classroom citations open the shared source viewer.
+                        if (c.source && c.source.kind !== 'pdf') {
+                          openSource({
+                            file: c.file,
+                            page: 1,
+                            source: {
+                              kind: c.source.kind,
+                              id: c.source.id,
+                              ...(c.source.anchor ? { anchor: c.source.anchor } : {}),
+                              title: c.file,
+                            },
+                            ...(c.quote ? { quote: c.quote } : {}),
+                          });
+                          return;
+                        }
                         setCite(c);
                         setCiteCtx(t);
                       }}
@@ -450,6 +470,7 @@ function MessageList({
           New messages
         </button>
       ) : null}
+      {ownSourceHost && <SourceViewerHost />}
       <CitationSheet
         cite={cite}
         context={citeCtx}
@@ -497,6 +518,7 @@ export function ThreadPane({
   const cfg = useSquadConfig();
   const liveHub = cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token ?? null } : null;
   const [liveTopic, setLiveTopic] = useState<string | null>(null);
+  const imsg = useImessageStatus(ctl.api);
   return (
     <div className="sqc-thread" data-chat-kind={chat.kind}>
       <header className="sqc-head">
@@ -526,6 +548,7 @@ export function ThreadPane({
               </span>
             </span>
           ) : null}
+          <ImessageIndicator status={imsg} chatId={chat.id} compact={compact} />
           <span className="sqc-head__conn">
             <StatusDot status={st.status} label={st.label} hideLabel={compact} />
           </span>
@@ -548,6 +571,7 @@ export function ThreadPane({
         key={`c-${chat.id}`}
         api={ctl.api}
         chatKind={chat.kind}
+        chatId={chat.id}
         compact={compact}
         paused={paused}
         onSend={(input) => ctl.send(chat.id, input)}

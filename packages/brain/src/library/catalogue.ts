@@ -1,4 +1,11 @@
-import { CatalogCourseSchema, CatalogSchema, loadCatalog } from '../skills/courseplan/schema';
+import {
+  CatalogCourseSchema,
+  CatalogSchema,
+  DAY_NAMES,
+  loadCatalog,
+  meetingOf,
+  type DayName,
+} from '../skills/courseplan/schema';
 import type { Catalog, CatalogCourse } from '../skills/courseplan/schema';
 import { parseCsv } from './csv';
 import { LIBRARY_LIMITS } from './types';
@@ -12,8 +19,74 @@ export interface CatalogueIssue {
 export type CatalogueResult =
   { ok: true; catalogue: Catalog } | { ok: false; errors: CatalogueIssue[] };
 
-const COLUMNS = ['id', 'title', 'credits', 'prereqs', 'coreqs', 'workload', 'offered', 'area'];
-const REQUIRED = ['id', 'title', 'credits', 'workload', 'offered', 'area'];
+const COLUMNS = [
+  'id',
+  'code',
+  'title',
+  'credits',
+  'prereqs',
+  'coreqs',
+  'workload',
+  'offered',
+  'term',
+  'area',
+  'days',
+  'start',
+  'end',
+  'location',
+];
+/** `code` is accepted for `id`. Rows without days and a start/end time are REJECTED ('missing_days_time'), never blank. */
+const REQUIRED = ['title', 'credits', 'days', 'start', 'end'];
+const ALL_TERMS = ['fall', 'spring', 'summer'];
+const LETTER_DAY: Record<string, DayName> = {
+  M: 'Mon',
+  T: 'Tue',
+  W: 'Wed',
+  R: 'Thu',
+  F: 'Fri',
+  S: 'Sat',
+  U: 'Sun',
+};
+
+/** 'MWF', 'TR', 'Mon/Wed', 'mon wed' or an array of those -> day names (week order), or null when unreadable. */
+export function parseDays(raw: unknown): DayName[] | null {
+  const parts = Array.isArray(raw) ? raw.map(String) : [String(raw ?? '')];
+  const found = new Set<DayName>();
+  for (const part of parts) {
+    const t = part.trim();
+    if (!t) continue;
+    if (/^[MTWRFSU]+$/i.test(t) && !/^(mon|tue|wed|thu|fri|sat|sun)$/i.test(t)) {
+      for (const ch of t.toUpperCase()) found.add(LETTER_DAY[ch]!);
+      continue;
+    }
+    for (const w of t.split(/[\s,/;|]+/).filter(Boolean)) {
+      const d = DAY_NAMES.find((n) => n.toLowerCase() === w.slice(0, 3).toLowerCase());
+      if (!d || w.length > 9) return null;
+      found.add(d);
+    }
+  }
+  return found.size ? DAY_NAMES.filter((d) => found.has(d)) : null;
+}
+
+const pad = (t: string): string => (/^\d:\d\d$/.test(t.trim()) ? `0${t.trim()}` : t.trim());
+
+/** Row-level schedule check: names the missing/invalid field by code only (never the value). */
+function scheduleIssues(
+  row: number | undefined,
+  c: { days?: unknown; start?: unknown; end?: unknown },
+): CatalogueIssue[] {
+  const at = row === undefined ? {} : { row };
+  const out: CatalogueIssue[] = [];
+  for (const f of ['days', 'start', 'end'] as const) {
+    const v = c[f];
+    const empty =
+      v === undefined ||
+      v === null ||
+      (Array.isArray(v) ? v.length === 0 : String(v).trim() === '');
+    if (empty) out.push({ ...at, field: f, code: 'missing_days_time' });
+  }
+  return out;
+}
 
 /** 'csl101', 'CSL-101' and 'csl 101' all become 'CSL 101'; anything else is returned trimmed. */
 export function normalizeCourseId(raw: string): string {
@@ -82,10 +155,25 @@ function finish(
   if (bad.length > 0) return { ok: false, errors: bad };
   const parsed = CatalogSchema.safeParse({ name, sample: false, courses });
   if (!parsed.success) return { ok: false, errors: [{ code: 'invalid_catalogue' }] };
+  const unscheduled: CatalogueIssue[] = [];
+  parsed.data.courses.forEach((c, i) => {
+    if (!meetingOf(c)) {
+      const row = rowOf(i);
+      unscheduled.push({
+        ...(row === undefined ? {} : { row }),
+        field: 'days',
+        code: 'missing_days_time',
+      });
+    }
+  });
+  if (unscheduled.length > 0) return { ok: false, errors: unscheduled.slice(0, 50) };
   return { ok: true, catalogue: parsed.data };
 }
 
-/** CSV with header `id,title,credits,prereqs,coreqs,workload,offered,area` (coreqs optional). */
+/**
+ * CSV with header `code|id,title,credits,days,start,end` plus optional `prereqs,coreqs,workload,offered|term,area,location`.
+ * Rows missing days/start/end are rejected with `missing_days_time`.
+ */
 export function parseCatalogueCsv(text: string, name = 'My catalogue'): CatalogueResult {
   if (text.length > LIBRARY_LIMITS.maxCatalogueBytes)
     return { ok: false, errors: [{ code: 'too_large' }] };
@@ -97,7 +185,10 @@ export function parseCatalogueCsv(text: string, name = 'My catalogue'): Catalogu
   header.forEach((h, i) => {
     if (COLUMNS.includes(h) && !col.has(h)) col.set(h, i);
   });
-  const missing = REQUIRED.filter((c) => !col.has(c));
+  const missing = [
+    ...(col.has('id') || col.has('code') ? [] : ['id']),
+    ...REQUIRED.filter((c) => !col.has(c)),
+  ];
   if (missing.length > 0)
     return {
       ok: false,
@@ -111,20 +202,36 @@ export function parseCatalogueCsv(text: string, name = 'My catalogue'): Catalogu
     const get = (c: string) => cells[col.get(c) ?? -1] ?? '';
     const before = errors.length;
     const credits = num(get('credits'));
-    const workload = num(get('workload'));
+    // workload is optional in an import: default 3 study hours per credit per week
+    const workload =
+      get('workload').trim() === '' ? (credits ?? 0) * 3 || undefined : num(get('workload'));
     if (credits === undefined) errors.push({ row, field: 'credits', code: 'invalid_number' });
     if (workload === undefined) errors.push({ row, field: 'workload', code: 'invalid_number' });
+    const missingTime = scheduleIssues(row, {
+      days: get('days'),
+      start: get('start'),
+      end: get('end'),
+    });
+    errors.push(...missingTime);
+    const days = parseDays(get('days'));
+    if (get('days').trim() !== '' && !days)
+      errors.push({ row, field: 'days', code: 'invalid_value' });
+    const termCol = list(get(col.has('offered') ? 'offered' : 'term')).map((s) => s.toLowerCase());
     const candidate = {
-      id: normalizeCourseId(get('id')),
+      id: normalizeCourseId(get(col.has('id') ? 'id' : 'code')),
       title: get('title').trim(),
       credits,
       prereqs: list(get('prereqs')).map(normalizeCourseId),
+      ...(days ? { days } : {}),
+      ...(get('start').trim() ? { start: pad(get('start')) } : {}),
+      ...(get('end').trim() ? { end: pad(get('end')) } : {}),
+      ...(get('location').trim() ? { location: get('location').trim() } : {}),
       ...(col.has('coreqs') && list(get('coreqs')).length > 0
         ? { coreqs: list(get('coreqs')).map(normalizeCourseId) }
         : {}),
       workload,
-      offered: list(get('offered')).map((s) => s.toLowerCase()),
-      area: get('area').trim(),
+      offered: termCol.length ? termCol : ALL_TERMS,
+      area: get('area').trim() || 'general',
     };
     const r = CatalogCourseSchema.safeParse(candidate);
     if (!r.success) {
@@ -146,6 +253,32 @@ export function parseCatalogueCsv(text: string, name = 'My catalogue'): Catalogu
   return finish(name, courses, (i) => lineOf[i]);
 }
 
+const asList = (v: unknown): unknown =>
+  Array.isArray(v) ? v : typeof v === 'string' ? list(v) : v;
+
+/** Accepts the planner schema and the web template shape (`code`, `days: 'MWF'`); fills the documented defaults. */
+function normalizeJsonCourse(c: unknown): unknown {
+  if (!c || typeof c !== 'object') return c;
+  const o = { ...(c as Record<string, unknown>) };
+  const rawId = o.id ?? o.code;
+  delete o.code;
+  if (typeof rawId === 'string') o.id = normalizeCourseId(rawId);
+  if (o.days !== undefined) o.days = parseDays(o.days) ?? o.days;
+  if (typeof o.start === 'string') o.start = pad(o.start);
+  if (typeof o.end === 'string') o.end = pad(o.end);
+  if (o.prereqs === undefined) o.prereqs = [];
+  if (Array.isArray(o.prereqs))
+    o.prereqs = o.prereqs.map((p) => (typeof p === 'string' ? normalizeCourseId(p) : p));
+  if (o.offered === undefined) o.offered = asList(o.term) ?? ALL_TERMS;
+  if (typeof o.offered === 'string') o.offered = list(o.offered);
+  if (o.offered === undefined || (Array.isArray(o.offered) && o.offered.length === 0))
+    o.offered = ALL_TERMS;
+  delete o.term;
+  if (o.area === undefined) o.area = 'general';
+  if (o.workload === undefined && typeof o.credits === 'number') o.workload = o.credits * 3;
+  return o;
+}
+
 /** JSON in the planner fixture schema (`{ name, sample, courses[] }`); a bare course array is accepted too. */
 export function parseCatalogueJson(text: string): CatalogueResult {
   if (text.length > LIBRARY_LIMITS.maxCatalogueBytes)
@@ -162,14 +295,7 @@ export function parseCatalogueJson(text: string): CatalogueResult {
       ? {
           ...(obj as Record<string, unknown>),
           sample: false,
-          courses: (obj as { courses: unknown[] }).courses.map((c) =>
-            c && typeof c === 'object' && typeof (c as { id?: unknown }).id === 'string'
-              ? {
-                  ...(c as Record<string, unknown>),
-                  id: normalizeCourseId((c as { id: string }).id),
-                }
-              : c,
-          ),
+          courses: (obj as { courses: unknown[] }).courses.map(normalizeJsonCourse),
         }
       : obj;
   const parsed = CatalogSchema.safeParse(norm);

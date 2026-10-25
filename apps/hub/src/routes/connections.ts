@@ -15,14 +15,24 @@ import {
   type ContextViewer,
 } from '@squad/brain';
 import { requireUser } from '../auth';
+import { DEMO_ACCOUNT, scopeLabel } from '../context/account';
+import { applySharingChoice } from '../context/onboarding';
+import { importCounts, integrationStateOf } from '../context/state';
 import { TokenKeyError } from '../context/tokens';
 import { mergeContextBusy, purgeContextBusy } from '../context/busy';
 import { contextServiceFor, type ContextService } from '../context/service';
 import type { HubApp, HubDeps, HubEnv } from '../types';
+import { pickWebOrigin } from '../web-origin';
+
+/** After any import: derive busy blocks (free/busy only) and apply the viewer's onboarding sharing choice. */
+function afterImport(deps: HubDeps, userId: string): void {
+  mergeContextBusy(deps, userId);
+  applySharingChoice(deps, userId);
+}
 
 const Connect = z.strictObject({
   provider: z.enum(['canvas', 'google']),
-  variant: z.enum(['feed', 'token']).optional(),
+  variant: z.enum(['feed', 'token', 'demo']).optional(),
   scopes: z.array(z.string().max(120)).min(1).max(6),
   feedUrl: z.string().max(2000).optional(),
   token: z.string().max(2000).optional(),
@@ -128,13 +138,14 @@ function view(svc: ContextService, c: ContextConnection) {
   const sync = svc.store.syncState(c.id);
   const state = connectionState(c);
   const viaExtension = c.variant === 'session';
+  const istate = integrationStateOf(c, sync);
   return {
     id: c.id,
     provider: c.provider,
     variant: c.variant,
     mode: c.mode,
     modeLabel: fixture
-      ? `Demo data from repo fixtures. No real ${providerName(c.provider)} account is connected.`
+      ? `Demo data: simulated, not your ${providerName(c.provider)} account. No real ${providerName(c.provider)} account is connected.`
       : viaExtension
         ? 'Synced from your own browser session by the Squad extension'
         : `Live ${providerName(c.provider)} connection`,
@@ -176,11 +187,32 @@ function view(svc: ContextService, c: ContextConnection) {
       !viaExtension && (c.status === 'live' || c.status === 'error' || c.status === 'rate_limited'),
     sources: { total: sources.length, byKind },
     sharedWithSquads: squads,
+    /** Masked identity of the chosen account; null once disconnected. Never the raw e-mail. */
+    account: state === 'revoked' ? null : fixture ? { ...DEMO_ACCOUNT } : svc.accounts.get(c.id),
+    /** Always true for fixture data: simulated, not the person's account. */
+    fixture,
+    /** Short names of the scopes this connection holds (the least-privilege set), e.g. `calendar.readonly`. */
+    grantedScopes: c.scopes.map(shortScope),
+    /** One-line human words per scope, parallel to grantedScopes. */
+    grantedScopeLabels: c.scopes.map((x) => scopeLabel(shortScope(x))),
+    /** When this connection was first made (first import). */
+    importedAt: c.createdAt,
+    /** The ONE shared state: not_connected | connecting | syncing | live | demo | degraded | reauth_required. */
+    integrationState: istate.state,
+    /** `disconnected` when not_connected because the person disconnected (imports deleted). */
+    integrationSub: istate.sub,
+    /** Stable per-type counts (courses, modules, assignments, pages, files, announcements, calendarEvents, driveDocs, classroomItems). */
+    counts: importCounts(sources),
   };
 }
 
-function sourceView(s: ContextSource) {
+const shortScope = (s: string) => s.replace('https://www.googleapis.com/auth/', '');
+
+function sourceView(s: ContextSource, course: { name: string; code: string | null; label: string } | null = null) {
   return {
+    courseName: course?.name ?? null,
+    courseCode: course?.code ?? null,
+    courseLabel: course?.label ?? null,
     id: s.id,
     kind: s.kind,
     title: s.title,
@@ -252,7 +284,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
         res.code,
         res.message,
       );
-    mergeContextBusy(deps, c.get('user').id);
+    afterImport(deps, c.get('user').id);
     deps.log.info('context.connected', {
       connectionId: res.connection.id,
       provider: res.connection.provider,
@@ -272,11 +304,61 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     });
   });
 
+  /**
+   * The viewer's own imported items for the Connections list: what, from which account, when it was fetched, and who
+   * can see it. Own connections only (never another member's private items); revoked connections have none.
+   */
+  r.get('/v1/connections/items', need, (c) => {
+    const uid = c.get('user').id;
+    const svc = contextServiceFor(deps);
+    const squadName = new Map<string, string>();
+    const nameOf = (id: string) => {
+      if (!squadName.has(id)) squadName.set(id, deps.squads.detail(id, uid)?.name ?? 'your squad');
+      return squadName.get(id)!;
+    };
+    const rows = svc.store
+      .connectionsOf(uid)
+      .filter((x) => x.status !== 'revoked')
+      .flatMap((x) =>
+        svc.store.sourcesOfConnection(x.id).map((s) => {
+          const ch = svc.store.chunks(s.id)[0];
+          const fixture = s.provenance.endsWith(':fixture');
+          const shared = s.sharedWith.filter((q) => deps.squads.isMember(q, uid));
+          const when = s.dueAt ?? s.startsAt;
+          return {
+            id: s.id,
+            connectionId: x.id,
+            provider: x.provider,
+            kind: s.kind,
+            title: s.title,
+            courseId: s.courseId,
+            courseName: svc.courses.info(x.id, s.courseId)?.name ?? null,
+            courseCode: svc.courses.info(x.id, s.courseId)?.code ?? null,
+            courseLabel: svc.courses.info(x.id, s.courseId)?.label ?? null,
+            whenAt: when,
+            whenKind: s.dueAt !== null ? ('due' as const) : s.startsAt !== null ? ('starts' as const) : null,
+            fetchedAt: s.fetchedAt,
+            modifiedAt: s.modifiedAt,
+            provenance: fixture ? ('fixture' as const) : ('real' as const),
+            fixture,
+            sharing: shared.length ? ('shared' as const) : ('private' as const),
+            sharingLabel: shared.length ? `Shared with ${shared.map(nameOf).join(', ')}` : 'Private',
+            sharedWith: shared.map((q) => ({ id: q, name: nameOf(q) })),
+            location: ch ? { anchor: ch.anchor, ...(ch.section ? { label: ch.section } : {}) } : null,
+            url: s.url,
+          };
+        }),
+      )
+      .sort((a, b) => b.fetchedAt - a.fetchedAt || a.title.localeCompare(b.title));
+    c.header('Cache-Control', 'no-store');
+    return c.json({ generatedAt: deps.now(), total: rows.length, items: rows });
+  });
+
   r.get('/v1/connections/:id/sources', need, (c) => {
     const svc = contextServiceFor(deps);
     const conn = svc.store.connection(c.req.param('id'));
     if (!conn || conn.ownerId !== c.get('user').id) return err(c, 404, 'not_found');
-    return c.json({ sources: svc.store.sourcesOfConnection(conn.id).map(sourceView) });
+    return c.json({ sources: svc.store.sourcesOfConnection(conn.id).map((s) => sourceView(s, svc.courses.info(conn.id, s.courseId))) });
   });
 
   r.post('/v1/connections/:id/sync', need, async (c) => {
@@ -287,7 +369,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     if (conn.status === 'expired')
       return err(c, 409, 'connection_expired', 'Credential expired. Reconnect to resume syncing.');
     const sync = await svc.sync(c.get('user').id, conn.id);
-    mergeContextBusy(deps, c.get('user').id);
+    afterImport(deps, c.get('user').id);
     return c.json({ connection: view(svc, svc.store.connection(conn.id)!), sync });
   });
 
@@ -441,6 +523,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     const res = svc.registerCanvasSession(c.get('user').id, {
       canvasUserId: p.data.canvas_user_id,
       origin: p.data.canvas_origin,
+      name: p.data.name,
     });
     if (!res.ok)
       return err(
@@ -467,7 +550,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
       return err(c, 404, 'not_found');
     if (!p.success) return err(c, 422, 'invalid_request');
     const out = await svc.syncCanvasPayload(c.get('user').id, conn.id, p.data);
-    mergeContextBusy(deps, c.get('user').id);
+    afterImport(deps, c.get('user').id);
     if ('error' in out) {
       if (out.error === 'canvas_session_mismatch')
         return err(c, 409, 'canvas_session_mismatch', 'Payload does not match this Canvas account');
@@ -556,6 +639,8 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
       .slice(0, 50);
     const out = svc.startGoogleAuth(c.get('user').id, {
       returnTo: c.req.query('return_to') ?? '/squad/connections',
+      // The web origin that is actually being served: the browser's Origin header, else `return_origin`.
+      webOrigin: pickWebOrigin(deps.config, c.req.header('origin'), c.req.query('return_origin')),
       pickedFileIds: picked,
       ...(c.req.query('login_hint') ? { loginHint: c.req.query('login_hint') as string } : {}),
     });
@@ -592,8 +677,13 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     });
     if ('error' in out)
       return err(c, 400, 'oauth_state_invalid', 'OAuth state is invalid or expired');
-    mergeContextBusy(deps, out.userId);
-    return c.redirect(out.redirect);
+    afterImport(deps, out.userId);
+    if (out.redirect) return c.redirect(out.redirect);
+    // No allowed web origin was recorded and none is configured: say so plainly instead of guessing a port.
+    c.header('Cache-Control', 'no-store');
+    return c.html(
+      `<!doctype html><meta charset="utf-8"><title>Squad: ${out.status === 'connected' ? 'Connected' : 'Not connected'}</title><body style="font-family:system-ui;max-width:32rem;margin:3rem auto;padding:0 1rem"><h1>${out.status === 'connected' ? 'Connected, return to the app' : 'Google was not connected'}</h1><p>Open the Squad web app in the browser tab you started from and open Connections. The hub does not know that app's address: set <code>PUBLIC_WEB_URL</code> on the hub to redirect there automatically.</p></body>`,
+    );
   });
 
   return r;

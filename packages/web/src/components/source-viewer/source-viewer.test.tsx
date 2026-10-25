@@ -221,7 +221,7 @@ describe('non-PDF sources (Canvas / Drive / Calendar)', () => {
     );
     expect(screen.getByText('Verified quote')).toBeTruthy();
     expect(screen.getByText('Canvas assignment')).toBeTruthy();
-    expect(screen.getByTestId('source-fixture').textContent).toMatch(/not a real account/);
+    expect(screen.getByTestId('source-fixture').textContent).toMatch(/not your account/);
     expect(container.querySelector('mark')!.textContent).toContain('Late work loses');
     const link = screen.getByRole('link', { name: /Open in Canvas/ }) as HTMLAnchorElement;
     expect(link.href).toContain('canvas.fixture.invalid');

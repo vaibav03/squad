@@ -99,7 +99,7 @@ describe('no raw ids on the council live-ux surfaces', () => {
     for (const id of rec.agents.map((a) => a.id)) {
       act(() => insp.select(id));
       await settle();
-      for (const tab of ['Doing', 'Thinking', 'Chat', 'Agents', 'Hierarchy']) {
+      for (const tab of ['Activity', 'Reasoning summary', 'Conversation', 'Team', 'Structure']) {
         fireEvent.click(screen.getByRole('tab', { name: new RegExp(`^${tab}`) }));
         clean(`${id} ${tab}`);
       }

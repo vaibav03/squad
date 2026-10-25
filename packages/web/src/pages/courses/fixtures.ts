@@ -370,6 +370,8 @@ export const SAMPLE_CATALOGUE: CatalogueRow[] = [
     start: '13:00',
     end: '14:15',
     location: 'Online',
+    prereqs: [],
+    term: 'fall, spring',
   },
   {
     code: 'BIO 201',
@@ -379,6 +381,8 @@ export const SAMPLE_CATALOGUE: CatalogueRow[] = [
     start: '09:00',
     end: '09:50',
     location: 'Science Hall 120',
+    prereqs: [],
+    term: 'fall, spring',
   },
   {
     code: 'HIST 120',
@@ -388,6 +392,8 @@ export const SAMPLE_CATALOGUE: CatalogueRow[] = [
     start: '11:00',
     end: '12:15',
     location: 'Arts 204',
+    prereqs: [],
+    term: 'fall, spring',
   },
   {
     code: 'CSE 310',
@@ -397,6 +403,8 @@ export const SAMPLE_CATALOGUE: CatalogueRow[] = [
     start: '10:30',
     end: '11:45',
     location: 'Engineering 3.1',
+    prereqs: [],
+    term: 'fall, spring',
   },
 ];
 

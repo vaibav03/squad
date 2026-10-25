@@ -33,10 +33,15 @@ const settle = () => act(async () => new Promise((r) => setTimeout(r, 30)));
 async function open(
   store: CouncilBoardStore,
   props: Partial<Parameters<typeof CouncilBoard>[0]> = {},
+  view: 'feed' | 'timeline' = 'feed',
 ) {
   const onClose = vi.fn();
   render(<CouncilBoard store={store} open onClose={onClose} {...props} />);
   await settle();
+  if (view === 'timeline') {
+    const b = screen.queryByRole('button', { name: 'Handoff timeline' });
+    if (b) fireEvent.click(b);
+  }
   return { dlg: screen.getByRole('dialog'), onClose };
 }
 
@@ -201,6 +206,50 @@ describe('Council board', () => {
     expect(b.textContent).toContain('Outlined: this voter ranked it differently');
     // rankings are not chat lines
     expect(dlg.querySelector('article.dl-turn[data-kind=rank]')).toBeNull();
+  });
+
+  it('roster: pressing a portrait opens one focused panel that swaps', async () => {
+    const { dlg } = await open(loaded());
+    const nodes = [
+      ...dlg.querySelectorAll<HTMLElement>('[data-testid=dl-member] [data-testid=dl-portrait-btn]'),
+    ];
+    expect(nodes.every((n) => n.tagName === 'BUTTON')).toBe(true);
+    const member = (name: string) =>
+      [...dlg.querySelectorAll<HTMLElement>('[data-testid=dl-member]')]
+        .find((n) => n.textContent?.includes(name))!
+        .querySelector<HTMLElement>('[data-testid=dl-portrait-btn]')!;
+    const skeptic = member('Skeptic');
+    const teacher = member('Teacher');
+    skeptic.focus();
+    fireEvent.click(skeptic);
+    let panel = screen.getByRole('dialog', { name: /^Skeptic/ });
+    expect(screen.getAllByTestId('agent-focus-panel')).toHaveLength(1);
+    expect(within(panel).getByRole('tab', { name: 'Conversation', selected: true })).toBeTruthy();
+    fireEvent.click(teacher);
+    panel = screen.getByRole('dialog', { name: /^Teacher/ });
+    expect(screen.getAllByTestId('agent-focus-panel')).toHaveLength(1);
+  });
+
+  it('the handoff timeline view shows ALL communication; Esc closes the focused panel first, then the board', async () => {
+    const store = loaded();
+    const { dlg, onClose } = await open(store, {}, 'timeline');
+    const tl = within(dlg).getByRole('region', { name: 'Handoff timeline' });
+    expect(tl.getAttribute('data-filter')).toBe('all');
+    expect(within(tl).getAllByTestId('af-row').length).toBe(store.run()!.messages.length);
+    const node = [...dlg.querySelectorAll<HTMLElement>('[data-testid=dl-member]')]
+      .find((n) => n.textContent?.includes('Skeptic'))!
+      .querySelector<HTMLElement>('[data-testid=dl-portrait-btn]')!;
+    node.focus();
+    fireEvent.click(node);
+    await settle();
+    const panel = screen.getByRole('dialog', { name: /^Skeptic/ });
+    const sel = within(panel).getByRole('button', { name: 'Selected agent' });
+    expect(sel.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.keyDown(panel.querySelector('h2')!, { key: 'Escape' });
+    await settle();
+    expect(screen.queryByTestId('agent-focus-panel')).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(node);
   });
 
   it('the decision card: outcome, consensus, confidence in words, provenance, missing evidence, dissent, CTAs', async () => {

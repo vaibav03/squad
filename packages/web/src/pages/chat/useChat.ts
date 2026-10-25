@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type {
   ChatAttachment,
   ChatCard,
+  ChatContextRef,
   ChatMessage,
   ChatSummary,
   ChatTyping,
@@ -33,6 +34,7 @@ interface Pending {
   state: 'pending' | 'failed';
   error?: string;
   files: ChatAttachment[];
+  context?: ChatContextRef[];
   /** the confirm card this numeric answer belongs to */
   confirmTaskId?: string;
 }
@@ -275,6 +277,8 @@ export interface UseChatOptions {
 export interface SendInput {
   text: string;
   files?: ChatAttachment[];
+  /** Imported items attached with "Ask Cubbie" (the hub re-verifies every one). */
+  context?: ChatContextRef[];
   /** set when the text is the option number of a confirm card */
   confirmTaskId?: string;
 }
@@ -597,6 +601,7 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
           clientId: p.localId,
           ...(p.files.length ? { attachments: p.files.map((f) => ({ id: f.id })) } : {}),
           ...(p.confirmTaskId ? { confirmTaskId: p.confirmTaskId } : {}),
+          ...(p.context?.length ? { context: p.context } : {}),
         });
         dispatch({ t: 'sentOk', chatId, localId: p.localId, message });
         return { ok: true, localId: p.localId };
@@ -629,6 +634,7 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
         localId,
         state: 'pending',
         files,
+        ...(input.context?.length ? { context: input.context } : {}),
         ...(input.confirmTaskId ? { confirmTaskId: input.confirmTaskId } : {}),
         message: {
           id: localId,
@@ -641,6 +647,7 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
           attachments: files,
           citations: [],
           demo: false,
+          ...(input.context?.length ? { context: input.context } : {}),
         },
       };
       dispatch({ t: 'pend', chatId, item });

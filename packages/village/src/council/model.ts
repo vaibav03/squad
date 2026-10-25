@@ -171,6 +171,14 @@ function ensureAgent(
 }
 const ORDER: Record<BoardRole, number> = { chair: 0, specialist: 1, code: 2 };
 
+/** The one ordering of a run's envelopes: seq, then timestamp, then id (a stable, arrival-independent tie-break). */
+export function compareEnvelopes(
+  a: Pick<A2aMessage, 'seq' | 'ts' | 'id'>,
+  b: Pick<A2aMessage, 'seq' | 'ts' | 'id'>,
+): number {
+  return a.seq - b.seq || a.ts - b.ts || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+}
+
 /** Fold one message into the run (mutates `run`). Idempotent per message id and tolerant of out-of-order arrival. */
 export function foldMessage(run: MutableRun, msg: A2aMessage): void {
   if (run.byId.has(msg.id)) {
@@ -179,7 +187,7 @@ export function foldMessage(run: MutableRun, msg: A2aMessage): void {
     if (i >= 0) run.messages[i] = msg;
   } else run.messages.push(msg);
   run.byId.set(msg.id, msg);
-  run.messages.sort((a, b) => a.seq - b.seq);
+  run.messages.sort(compareEnvelopes);
   if (stageIndex(msg.stage) > stageIndex(run.stage)) run.stage = msg.stage;
 
   const from = ensureAgent(run, msg.from, msg.seq, msg.mode);

@@ -27,6 +27,8 @@ test('J20 council board on the track4 replay: roster, turn cards and filters, de
   await page.goto('/squad/village?replay=track4&board=1');
   const dlg = board(page);
   await expect(dlg).toBeVisible({ timeout: 30_000 });
+  // the board opens on the handoff timeline; the feed is one click away
+  await dlg.getByRole('button', { name: 'Message feed' }).click();
 
   // honest mode on every council surface: the replay is scripted, so the header says Fixture
   await expect(dlg.locator('.cb-head .cb-mode')).toContainText('Fixture');
@@ -253,7 +255,7 @@ test('J20 Hierarchy tab in the Agent Inspector shows position, delegations and o
   // open the inspector on anyone, then walk the roster to the Chair
   await page.locator('.sqv-stage').focus();
   await page.keyboard.press('i');
-  const panel = page.getByRole('complementary');
+  const panel = page.getByTestId('agent-focus-panel');
   await expect(panel).toBeVisible();
   const next = panel.getByRole('button', { name: 'Next agent' });
   const heading = panel.getByRole('heading', { level: 2 });
@@ -262,7 +264,7 @@ test('J20 Hierarchy tab in the Agent Inspector shows position, delegations and o
       break;
     await next.click();
   }
-  await panel.getByRole('tab', { name: 'Hierarchy' }).click();
+  await panel.getByRole('tab', { name: /^Activity/ }).click();
   const h = panel.getByTestId('hierarchy');
   await expect(h.locator('.cb-mode')).toContainText('Fixture');
   await expect(h).toContainText('Chair');

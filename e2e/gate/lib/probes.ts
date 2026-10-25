@@ -106,6 +106,11 @@ export const P = {
     files: [{ path: 'apps/hub/src/imessage/sync.ts' }],
     why: 'GUID xref, ordering, delivery state, backfill, multi-thread bindings',
   },
+  sendblue: {
+    owner: 'feature/sendblue',
+    files: [{ path: 'apps/hub/src/imessage/sendblue/webhook.ts' }],
+    why: 'Sendblue provider: signed webhook, send API, id map, delivery states, health probes',
+  },
   a2a: {
     owner: 'feature/w0-a2a-contracts',
     files: [{ path: 'packages/core/src/a2a.ts' }],
@@ -115,6 +120,11 @@ export const P = {
     owner: 'feature/w5-council-board',
     files: [{ path: 'packages/village/src/council/module.ts' }],
     why: 'agent activity (typing, thinking, offline) surfaced on the board',
+  },
+  focusPanel: {
+    owner: 'feature/agent-focus-panel',
+    files: [{ path: 'packages/web/src/overlays/inspector/focus/FocusShell.tsx' }],
+    why: 'focused agent panel: Conversation, Activity, Decisions, handoff timeline, reasoning summaries',
   },
   trip: {
     owner: 'feature/trip-collab',

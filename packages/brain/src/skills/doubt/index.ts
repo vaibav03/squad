@@ -1,4 +1,4 @@
-import type { InboundMessage, OutboundMessage, Skill } from '@squad/core';
+import type { ChatCitation, InboundMessage, OutboundMessage, Skill } from '@squad/core';
 import {
   isBehindIntent,
   isGradedGrab,
@@ -6,6 +6,7 @@ import {
   stripMention,
 } from '../../experts/intent';
 import { NOT_IN_MATERIALS, type Brain } from '../../experts/types';
+import { chatCitationsFromAnswer } from '../../citations/chat';
 
 export const UNAVAILABLE_TEXT =
   "I couldn't reach the course brain just now. Try again in a minute.";
@@ -37,6 +38,7 @@ export function createDoubtSkill(brain: Brain, opts: DoubtOptions = {}): Skill {
     async handle(m): Promise<OutboundMessage[]> {
       const question = stripMention(m.text);
       let text: string;
+      let citations: ChatCitation[] = [];
       try {
         const viewer = opts.viewerFor?.(m);
         const a = await brain.ask(
@@ -45,11 +47,12 @@ export function createDoubtSkill(brain: Brain, opts: DoubtOptions = {}): Skill {
           viewer ? { viewer, contextCourseId: null } : undefined,
         );
         text = a.grounded || a.reason === 'nothing_connected' ? a.text : NOT_IN_MATERIALS;
+        if (a.grounded) citations = chatCitationsFromAnswer(a.citations);
       } catch {
         // Any failure is answered honestly; nothing is invented from model memory.
         text = UNAVAILABLE_TEXT;
       }
-      return [{ chatId: m.chatId, text }];
+      return [{ chatId: m.chatId, text, ...(citations.length ? { citations } : {}) }];
     },
   };
 }

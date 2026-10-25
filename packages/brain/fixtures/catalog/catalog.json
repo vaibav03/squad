@@ -9,7 +9,10 @@
       "prereqs": [],
       "workload": 6,
       "offered": ["fall", "spring", "summer"],
-      "area": "core"
+      "area": "core",
+      "days": ["Tue", "Thu"],
+      "start": "13:00",
+      "end": "14:15"
     },
     {
       "id": "CSL 102",
@@ -18,7 +21,10 @@
       "prereqs": ["CSL 101"],
       "workload": 7,
       "offered": ["fall", "spring"],
-      "area": "core"
+      "area": "core",
+      "days": ["Mon", "Wed", "Fri"],
+      "start": "08:00",
+      "end": "08:50"
     },
     {
       "id": "CSL 110",
@@ -27,7 +33,10 @@
       "prereqs": [],
       "workload": 7,
       "offered": ["fall", "spring"],
-      "area": "core"
+      "area": "core",
+      "days": ["Mon", "Wed"],
+      "start": "14:30",
+      "end": "15:45"
     },
     {
       "id": "CSL 201",
@@ -36,7 +45,10 @@
       "prereqs": ["CSL 102"],
       "workload": 8,
       "offered": ["fall"],
-      "area": "core"
+      "area": "core",
+      "days": ["Tue", "Thu"],
+      "start": "16:00",
+      "end": "17:15"
     },
     {
       "id": "CSL 210",
@@ -45,7 +57,10 @@
       "prereqs": ["CSL 102"],
       "workload": 9,
       "offered": ["fall", "spring"],
-      "area": "core"
+      "area": "core",
+      "days": ["Mon", "Wed"],
+      "start": "16:00",
+      "end": "17:15"
     },
     {
       "id": "CSL 220",
@@ -54,7 +69,10 @@
       "prereqs": ["CSL 210", "CSL 110"],
       "workload": 10,
       "offered": ["spring"],
-      "area": "core"
+      "area": "core",
+      "days": ["Tue", "Thu"],
+      "start": "08:00",
+      "end": "08:50"
     },
     {
       "id": "CSL 230",
@@ -63,7 +81,10 @@
       "prereqs": ["CSL 210"],
       "workload": 9,
       "offered": ["spring"],
-      "area": "core"
+      "area": "core",
+      "days": ["Tue", "Thu"],
+      "start": "12:00",
+      "end": "12:50"
     },
     {
       "id": "CSL 240",
@@ -72,7 +93,10 @@
       "prereqs": ["CSL 201", "CSL 210"],
       "workload": 10,
       "offered": ["fall"],
-      "area": "core"
+      "area": "core",
+      "days": ["Tue", "Thu"],
+      "start": "17:30",
+      "end": "18:45"
     },
     {
       "id": "CSL 310",
@@ -81,7 +105,10 @@
       "prereqs": ["CSL 210"],
       "workload": 8,
       "offered": ["fall", "spring"],
-      "area": "core"
+      "area": "core",
+      "days": ["Mon", "Wed"],
+      "start": "17:30",
+      "end": "18:45"
     },
     {
       "id": "CSL 320",
@@ -90,7 +117,10 @@
       "prereqs": ["CSL 220"],
       "workload": 10,
       "offered": ["fall"],
-      "area": "core"
+      "area": "core",
+      "days": ["Mon", "Wed"],
+      "start": "09:00",
+      "end": "10:15"
     },
     {
       "id": "CSL 490",
@@ -99,7 +129,10 @@
       "prereqs": ["CSL 230", "CSL 310"],
       "workload": 12,
       "offered": ["spring"],
-      "area": "core"
+      "area": "core",
+      "days": ["Mon", "Wed"],
+      "start": "13:00",
+      "end": "14:15"
     },
     {
       "id": "MAT 111",
@@ -108,7 +141,10 @@
       "prereqs": [],
       "workload": 9,
       "offered": ["fall", "spring"],
-      "area": "math"
+      "area": "math",
+      "days": ["Tue", "Thu"],
+      "start": "14:30",
+      "end": "15:45"
     },
     {
       "id": "MAT 112",
@@ -117,7 +153,10 @@
       "prereqs": ["MAT 111"],
       "workload": 10,
       "offered": ["fall", "spring"],
-      "area": "math"
+      "area": "math",
+      "days": ["Mon", "Wed", "Fri"],
+      "start": "12:00",
+      "end": "12:50"
     },
     {
       "id": "MAT 210",
@@ -126,7 +165,10 @@
       "prereqs": ["MAT 111"],
       "workload": 8,
       "offered": ["fall", "spring"],
-      "area": "math"
+      "area": "math",
+      "days": ["Mon", "Wed"],
+      "start": "17:30",
+      "end": "18:45"
     },
     {
       "id": "STA 201",
@@ -135,7 +177,10 @@
       "prereqs": [],
       "workload": 7,
       "offered": ["fall", "spring", "summer"],
-      "area": "math"
+      "area": "math",
+      "days": ["Mon", "Wed"],
+      "start": "09:00",
+      "end": "10:15"
     },
     {
       "id": "CSL 331",
@@ -144,7 +189,10 @@
       "prereqs": ["CSL 201"],
       "workload": 8,
       "offered": ["fall"],
-      "area": "sys"
+      "area": "sys",
+      "days": ["Tue", "Thu"],
+      "start": "09:00",
+      "end": "10:15"
     },
     {
       "id": "CSL 341",
@@ -153,7 +201,10 @@
       "prereqs": ["CSL 240"],
       "workload": 9,
       "offered": ["spring"],
-      "area": "sys"
+      "area": "sys",
+      "days": ["Mon", "Wed"],
+      "start": "10:30",
+      "end": "11:45"
     },
     {
       "id": "CSL 350",
@@ -162,7 +213,10 @@
       "prereqs": ["CSL 310"],
       "workload": 8,
       "offered": ["spring", "summer"],
-      "area": "sys"
+      "area": "sys",
+      "days": ["Tue", "Thu"],
+      "start": "10:30",
+      "end": "11:45"
     },
     {
       "id": "CSL 360",
@@ -171,7 +225,10 @@
       "prereqs": ["CSL 220", "CSL 201"],
       "workload": 11,
       "offered": ["spring"],
-      "area": "sys"
+      "area": "sys",
+      "days": ["Mon", "Wed"],
+      "start": "13:00",
+      "end": "14:15"
     },
     {
       "id": "CSL 370",
@@ -180,7 +237,10 @@
       "prereqs": ["CSL 220"],
       "workload": 9,
       "offered": ["fall", "spring"],
-      "area": "ai"
+      "area": "ai",
+      "days": ["Tue", "Thu"],
+      "start": "13:00",
+      "end": "14:15"
     },
     {
       "id": "CSL 371",
@@ -189,7 +249,10 @@
       "prereqs": ["CSL 370", "MAT 210", "STA 201"],
       "workload": 10,
       "offered": ["spring"],
-      "area": "ai"
+      "area": "ai",
+      "days": ["Mon", "Wed", "Fri"],
+      "start": "08:00",
+      "end": "08:50"
     },
     {
       "id": "CSL 372",
@@ -198,7 +261,10 @@
       "prereqs": ["CSL 370"],
       "workload": 9,
       "offered": ["fall"],
-      "area": "ai"
+      "area": "ai",
+      "days": ["Mon", "Wed"],
+      "start": "14:30",
+      "end": "15:45"
     },
     {
       "id": "CSL 380",
@@ -207,7 +273,10 @@
       "prereqs": ["CSL 102"],
       "workload": 7,
       "offered": ["fall", "spring", "summer"],
-      "area": "app"
+      "area": "app",
+      "days": ["Tue", "Thu"],
+      "start": "14:30",
+      "end": "15:45"
     },
     {
       "id": "CSL 381",
@@ -216,7 +285,10 @@
       "prereqs": ["CSL 210"],
       "workload": 8,
       "offered": ["fall"],
-      "area": "app"
+      "area": "app",
+      "days": ["Mon", "Wed", "Fri"],
+      "start": "12:00",
+      "end": "12:50"
     },
     {
       "id": "CSL 382",
@@ -225,7 +297,10 @@
       "prereqs": ["CSL 210"],
       "workload": 8,
       "offered": ["spring", "summer"],
-      "area": "app"
+      "area": "app",
+      "days": ["Tue", "Thu"],
+      "start": "16:00",
+      "end": "17:15"
     },
     {
       "id": "CSL 383",
@@ -234,7 +309,10 @@
       "prereqs": ["CSL 102"],
       "workload": 6,
       "offered": ["fall", "spring"],
-      "area": "app"
+      "area": "app",
+      "days": ["Mon", "Wed"],
+      "start": "16:00",
+      "end": "17:15"
     },
     {
       "id": "HUM 101",
@@ -243,7 +321,10 @@
       "prereqs": [],
       "workload": 6,
       "offered": ["fall", "spring", "summer"],
-      "area": "hum"
+      "area": "hum",
+      "days": ["Tue", "Thu"],
+      "start": "16:00",
+      "end": "17:15"
     },
     {
       "id": "HUM 120",
@@ -252,7 +333,10 @@
       "prereqs": [],
       "workload": 6,
       "offered": ["fall", "spring"],
-      "area": "hum"
+      "area": "hum",
+      "days": ["Mon", "Wed"],
+      "start": "16:00",
+      "end": "17:15"
     },
     {
       "id": "HUM 210",
@@ -261,7 +345,10 @@
       "prereqs": ["HUM 101"],
       "workload": 6,
       "offered": ["spring"],
-      "area": "hum"
+      "area": "hum",
+      "days": ["Tue", "Thu"],
+      "start": "09:00",
+      "end": "10:15"
     },
     {
       "id": "SOC 101",
@@ -270,7 +357,10 @@
       "prereqs": [],
       "workload": 5,
       "offered": ["fall", "spring", "summer"],
-      "area": "soc"
+      "area": "soc",
+      "days": ["Tue", "Thu"],
+      "start": "08:00",
+      "end": "08:50"
     },
     {
       "id": "SOC 110",
@@ -279,7 +369,10 @@
       "prereqs": [],
       "workload": 6,
       "offered": ["fall", "spring"],
-      "area": "soc"
+      "area": "soc",
+      "days": ["Tue", "Thu"],
+      "start": "12:00",
+      "end": "12:50"
     },
     {
       "id": "SOC 220",
@@ -288,7 +381,10 @@
       "prereqs": ["SOC 101"],
       "workload": 6,
       "offered": ["fall"],
-      "area": "soc"
+      "area": "soc",
+      "days": ["Mon", "Wed"],
+      "start": "10:30",
+      "end": "11:45"
     },
     {
       "id": "WRT 101",
@@ -297,7 +393,10 @@
       "prereqs": [],
       "workload": 7,
       "offered": ["fall", "spring", "summer"],
-      "area": "wrt"
+      "area": "wrt",
+      "days": ["Tue", "Thu"],
+      "start": "17:30",
+      "end": "18:45"
     },
     {
       "id": "WRT 201",
@@ -306,7 +405,10 @@
       "prereqs": ["WRT 101"],
       "workload": 6,
       "offered": ["fall", "spring"],
-      "area": "wrt"
+      "area": "wrt",
+      "days": ["Tue", "Thu"],
+      "start": "10:30",
+      "end": "11:45"
     },
     {
       "id": "ART 101",
@@ -315,7 +417,10 @@
       "prereqs": [],
       "workload": 5,
       "offered": ["fall", "spring"],
-      "area": "arts"
+      "area": "arts",
+      "days": ["Mon", "Wed"],
+      "start": "17:30",
+      "end": "18:45"
     },
     {
       "id": "ART 120",
@@ -324,7 +429,10 @@
       "prereqs": [],
       "workload": 6,
       "offered": ["spring", "summer"],
-      "area": "arts"
+      "area": "arts",
+      "days": ["Mon", "Wed"],
+      "start": "09:00",
+      "end": "10:15"
     },
     {
       "id": "SCI 101",
@@ -333,7 +441,10 @@
       "prereqs": [],
       "workload": 7,
       "offered": ["fall", "spring"],
-      "area": "sci"
+      "area": "sci",
+      "days": ["Tue", "Thu"],
+      "start": "09:00",
+      "end": "10:15"
     },
     {
       "id": "SCI 110",
@@ -342,7 +453,10 @@
       "prereqs": [],
       "workload": 6,
       "offered": ["fall", "spring"],
-      "area": "sci"
+      "area": "sci",
+      "days": ["Mon", "Wed"],
+      "start": "10:30",
+      "end": "11:45"
     },
     {
       "id": "SCI 120",
@@ -351,7 +465,10 @@
       "prereqs": [],
       "workload": 6,
       "offered": ["spring", "summer"],
-      "area": "sci"
+      "area": "sci",
+      "days": ["Tue", "Thu"],
+      "start": "10:30",
+      "end": "11:45"
     }
   ]
 }

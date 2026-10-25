@@ -11,6 +11,9 @@ import { postCouncilAction, type ActionKind } from './actions-api';
 import { OverlayFrame } from '../../overlays/kit/OverlayFrame';
 import { LvIcon } from '../../overlays/kit/icons';
 import { DelegationCards } from './DelegationCards';
+import { BoardFocusPanel } from './BoardFocusPanel';
+import { FilterToggle } from '../../overlays/inspector/focus/parts';
+import { HandoffTimeline } from '../../overlays/inspector/focus/HandoffTimeline';
 import { ModeBadge } from './ModeBadge';
 import { useBoardVersion } from './bridge';
 import { BallotMatrix } from '../deliberation/BallotMatrix';
@@ -81,6 +84,21 @@ export function CouncilBoard({
   const run = store.run();
   const runs = store.runs();
   const [filter, setFilter] = useState<FeedFilter>(NO_FILTER);
+  // The focused agent: one panel, swapped in place. Esc or Close returns focus to the control that opened it.
+  const [focus, setFocus] = useState<string | null>(null);
+  const [view, setView] = useState<'timeline' | 'feed'>('feed');
+  const origin = useRef<HTMLElement | null>(null);
+  const openFocus = useCallback((id: string) => {
+    const a = document.activeElement as HTMLElement | null;
+    if (a && a !== document.body && !a.closest('.cb-focus')) origin.current = a;
+    setFocus(id);
+  }, []);
+  const closeFocus = useCallback(() => {
+    setFocus(null);
+    const o = origin.current;
+    origin.current = null;
+    if (o?.isConnected) requestAnimationFrame(() => o.focus({ preventScroll: true }));
+  }, []);
   const [selectedMsg, setSelectedMsg] = useState<string | null>(null);
   const [jump, setJump] = useState<{ id: string; n: number } | undefined>();
   const announce = useAnnouncer(open ? run : undefined);
@@ -91,7 +109,9 @@ export function CouncilBoard({
 
   useEffect(() => {
     if (open) setFilter(NO_FILTER);
+    setFocus(null);
   }, [open, run?.runId]);
+  // An agent asked for by the opener (`openBoard({ agent })`) is only highlighted in the chart; a click focuses it.
 
   // Until the selected-agent panel (feature/agent-focus-panel) registers itself, a portrait narrows the feed to that seat.
   useEffect(
@@ -213,20 +233,42 @@ export function CouncilBoard({
                 run={run}
                 calm={calm}
                 councilStatus={hubStatus}
-                selected={filter.agent || focusAgent || ''}
+                selected={focus || focusAgent || ''}
               />
               <BallotMatrix run={run} />
               <DelegationCards delegations={run.delegations} onSeeAnswer={onJump} />
             </div>
             <div className="cb-col dl-col dl-col--feed">
-              <TurnFeed
-                run={run}
-                filter={filter}
-                onFilter={setFilter}
-                jumpTo={jump}
-                selectedId={selectedMsg}
-                onSelect={(id) => setSelectedMsg((cur) => (cur === id ? null : id))}
-              />
+              <div className="cb-views">
+                <FilterToggle<'timeline' | 'feed'>
+                  label="Communication view"
+                  value={view}
+                  onChange={setView}
+                  options={[
+                    { id: 'feed', label: 'Turns' },
+                    { id: 'timeline', label: 'Handoff timeline' },
+                  ]}
+                />
+              </div>
+              {view === 'timeline' ? (
+                <div className="cb-timeline-scroll">
+                  <HandoffTimeline
+                    run={run}
+                    defaultFilter="all"
+                    timeStyle="clock"
+                    onSelectAgent={openFocus}
+                  />
+                </div>
+              ) : (
+                <TurnFeed
+                  run={run}
+                  filter={filter}
+                  onFilter={setFilter}
+                  jumpTo={jump}
+                  selectedId={selectedMsg}
+                  onSelect={(id) => setSelectedMsg((cur) => (cur === id ? null : id))}
+                />
+              )}
             </div>
             <div className="cb-col dl-col dl-col--decision">
               <DecisionCard
@@ -245,6 +287,18 @@ export function CouncilBoard({
       ) : (
         <EmptyCouncilState hub={hub} store={store} hideStrip />
       )}
+      {run && focus ? (
+        <BoardFocusPanel
+          store={store}
+          run={run}
+          agentId={focus}
+          record={record}
+          replay={replay}
+          calm={calm}
+          onClose={closeFocus}
+          onSelectAgent={openFocus}
+        />
+      ) : null}
       <p className="cb-sr" role="status" aria-live="polite" aria-atomic="true">
         {announce}
       </p>

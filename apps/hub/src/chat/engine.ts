@@ -30,6 +30,7 @@ import {
 } from '@squad/bot';
 import { COURSE_ID } from '../cast';
 import { createPlanPort } from '../plans/port';
+import { createLlmPlanner } from '../plans/planner';
 import type { HubDeps } from '../types';
 import { wireRealPorts } from '../wire';
 import { dmChatId } from './access';
@@ -122,6 +123,15 @@ export async function attachChatEngine(
     ports: () => (wantRealPorts ? 'real' : 'stub'),
   };
   if (real && !o.noProbe) llm.status(); // starts a probe when a stale failure is on record
+  // The study-plan planner agent talks to the RAW real model: a plan is only "agent output" when Gemini wrote it, never
+  // when the resilient wrapper swapped in the demo model. Without a key the labelled fallback generator builds plans.
+  deps.plans.setPlanner(
+    real
+      ? createLlmPlanner(real, {
+          modelLabel: real instanceof GeminiLlm ? real.resolveModel('main') : 'main',
+        })
+      : undefined,
+  );
 
   registerMediaPersonas();
   const { media } = buildMedia({ cfg, llm, fake: !useEleven });
@@ -156,10 +166,14 @@ export async function attachChatEngine(
     emit: (e) => events.publish(e),
     ...(media ? { media } : {}),
     courseId: () => courseId,
+    // the library routes (created later) publish the store; until then every plan is the labelled sample fallback
+    catalogueFor: (student) =>
+      (deps as { catalogueFor?: (s: string) => unknown }).catalogueFor?.(student),
     context: {
       store: contextServiceFor(deps).store,
       // membership comes from the hub directory, never from message text
       viewerFor: (m) => ({ studentId: m.from, squadIds: deps.directory.squadsOf(m.from) }),
+      llmIsReal: () => (deps.runtime ? deps.runtime.llm().llm === 'real' : false),
     },
     live: {
       start: async ({ topic, askedBy, chatId }) => {
@@ -234,13 +248,34 @@ export async function attachChatEngine(
   };
   deps.confirms.register({
     kind: 'bot',
-    owns: (taskId, v) => pending(v.studentId, taskId)?.status === 'pending',
+    // Any card in the viewer's own DM (never another student's, so in a group thread only the asker may answer);
+    // answered/timed-out cards are still owned so a late tap says 409/404 instead of looking like an unknown task.
+    owns: (taskId, v) => {
+      const c = pending(v.studentId, taskId);
+      return c?.status === 'pending' || (c !== undefined && !deps.trips.byTask(taskId));
+    },
+    preview(v, taskId) {
+      const card = pending(v.studentId, taskId);
+      if (card?.status !== 'pending') return undefined;
+      const yn = card.options.length === 2 && /^yes$/i.test(card.options[0] ?? '');
+      return {
+        taskId,
+        question: card.question,
+        options: card.options,
+        kind: 'bot',
+        mode: yn ? 'yesno' : 'pick',
+      };
+    },
     async answer(v, taskId, a) {
-      await transport.inject({
-        chatId: dmChatId(v.studentId),
-        from: v.studentId,
-        text: a.yes ? 'yes' : 'no',
-      });
+      const card = pending(v.studentId, taskId);
+      if (!card) return { ok: false, code: 'unknown_task' };
+      if (card.status === 'answered') return { ok: false, code: 'already_answered' };
+      if (card.status !== 'pending') return { ok: false, code: 'unknown_task' };
+      // The option the student picked goes in as its number, so any option text resolves; a bare yes/no
+      // (no optionId) maps to the first option / the typed word.
+      const idx = a.optionId ? card.options.indexOf(a.optionId) : -1;
+      const text = idx >= 0 ? String(idx + 1) : a.yes ? (a.optionId ? '1' : 'yes') : 'no';
+      await transport.inject({ chatId: dmChatId(v.studentId), from: v.studentId, text });
       return pending(v.studentId, taskId)?.status === 'answered'
         ? { ok: true }
         : { ok: false, code: 'invalid_request', message: 'answer this one by number in the chat' };

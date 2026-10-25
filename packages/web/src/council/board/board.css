@@ -258,3 +258,44 @@
 .cb-strip-row {
   padding: 0 16px 8px;
 }
+
+/* focused agent panel docked on the right of the board: the dominant surface while an agent is selected */
+.cb-focus {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(520px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--lv-surface, var(--card));
+  border-left: 2px solid var(--sq-ink);
+  box-shadow: -12px 0 32px rgb(0 0 0 / 0.35);
+  overflow: hidden;
+}
+.cb-focus .ai-body {
+  flex: 1 1 auto;
+}
+.cb-focus .ai-head {
+  background: var(--lv-surface-2);
+  border-bottom: 1px solid var(--lv-line);
+}
+.cb-focus .ai-name {
+  font: 400 22px / 1.15 var(--font-pixel);
+  outline: none;
+}
+.cb-views {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px 0;
+}
+.cb-timeline-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 12px 12px;
+}
+.lv-ovl .lv-ovl__panel.cb-panel {
+  position: relative;
+}
