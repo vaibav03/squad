@@ -59,6 +59,7 @@ import {
   Star,
   MessageCirclePlus,
   FileX,
+  Gauge,
   Check,
   X,
   Plus,
@@ -200,6 +201,7 @@ const MAP: Record<IconName, LucideIcon> = {
   star: Star,
   'message-plus': MessageCirclePlus,
   'file-x': FileX,
+  gauge: Gauge,
 };
 
 export interface IconProps {

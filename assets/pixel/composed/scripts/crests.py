@@ -17,18 +17,38 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CHARS = os.path.join(HERE, "..", "characters")
 OUT = os.path.join(CHARS, "crests")
 
-# crest id -> village sprite folder. Participants without cast bust art (Chill/Grind/Advisor/Chairman have busts).
+# crest id -> (village sprite folder, accent palette colour for the hairline and nameplate strip).
+# Council participants first (Chill/Grind/Advisor/Chairman have animated busts), then every HUD agent in the village.
+DEFAULT_ACCENT = "cloud-lo"
 CRESTS = {
-    "skeptic": "council-hard",
-    "teacher": "ta",
-    "practitioner": "expert",
-    "solver-a": "student",
-    "solver-b": "freshman",
-    "solver-c": "council-balance",
-    "debate-pro": "council-chill",
-    "debate-con": "mediator",
-    "judge": "dean",
-    "examiner": "examiner",
+    "skeptic": ("council-hard", None),
+    "teacher": ("ta", None),
+    "practitioner": ("expert", None),
+    "solver-a": ("student", None),
+    "solver-b": ("freshman", None),
+    "solver-c": ("council-balance", None),
+    "debate-pro": ("council-chill", None),
+    "debate-con": ("mediator", None),
+    "judge": ("dean", None),
+    "examiner": ("examiner", None),
+    # village HUD: Council Hall, Debate Stage, Round Table and the expert buildings
+    "quizkey": ("council-balance", "sky-low"),
+    "debate": ("council-hard", "roof-wine"),
+    "planner": ("mediator", "leaf-lit"),
+    "feynman": ("freshman", "glow"),
+    "stepdiff": ("ta", "ember"),
+    "oracle": ("chairman", "violet"),
+    "oral": ("examiner", "cloud-hi"),
+    "rubric": ("dean", "wood-lit"),
+    "devil": ("student", "alert"),
+    # chapter experts: one sprite, five accents
+    "ch1": ("expert", "ok"),
+    "ch2": ("expert", "sky-low"),
+    "ch3": ("expert", "glow"),
+    "ch4": ("expert", "violet"),
+    "ch5": ("expert", "ember"),
+    "dean": ("dean", "wall-mid"),
+    "student": ("student", "cloud-hi"),
 }
 
 
@@ -41,7 +61,7 @@ def lerp(a, b, t):
     return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
-def crest(sprite):
+def crest(sprite, accent=None):
     frame = Image.open(os.path.join(CHARS, sprite, "idle.png")).convert("RGBA").crop((0, 0, 32, 32))
     x0, y0, x1, y1 = frame.getbbox()
     cx = (x0 + x1) // 2
@@ -58,23 +78,27 @@ def crest(sprite):
             px[x, y] = row + (255,)
     tile.alpha_composite(big)
     px = tile.load()
-    ink, hair = hex_rgb("ink") + (255,), hex_rgb("cloud-lo") + (255,)
+    ink, hair = hex_rgb("ink") + (255,), hex_rgb(accent or DEFAULT_ACCENT) + (255,)
     for i in range(32):
         for (x, y) in ((i, 0), (i, 31), (0, i), (31, i)):
             px[x, y] = ink
         for (x, y) in ((i, 1), (i, 30), (1, i), (30, i)):
             if 1 < i < 30:
                 px[x, y] = tuple(round(c * 0.55 + k * 0.45) for c, k in zip(px[x, y][:3], hair[:3])) + (255,)
+    if accent:  # nameplate strip: the accent colour along the bottom edge tells HUD agents apart at a glance
+        for x in range(2, 30):
+            for y in (28, 29):
+                px[x, y] = hair
     return tile
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    for cid, sprite in CRESTS.items():
-        crest(sprite).save(os.path.join(OUT, f"{cid}.png"), optimize=False)
+    for cid, (sprite, accent) in CRESTS.items():
+        crest(sprite, accent).save(os.path.join(OUT, f"{cid}.png"), optimize=False)
     with open(os.path.join(OUT, "crests.json"), "w") as f:
         json.dump(
-            {"cell": [32, 32], "derivedFrom": "assets/pixel/composed/characters/<sprite>/idle.png frame 0", "crests": CRESTS},
+            {"cell": [32, 32], "derivedFrom": "assets/pixel/composed/characters/<sprite>/idle.png frame 0", "crests": {k: v[0] for k, v in CRESTS.items()}, "accents": {k: v[1] for k, v in CRESTS.items() if v[1]}},
             f,
             indent=1,
             sort_keys=True,

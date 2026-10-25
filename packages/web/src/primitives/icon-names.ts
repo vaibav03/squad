@@ -97,5 +97,6 @@ export const ICON_NAMES = [
   'star',
   'message-plus',
   'file-x',
+  'gauge',
 ] as const;
 export type IconName = (typeof ICON_NAMES)[number];

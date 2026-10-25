@@ -17,7 +17,11 @@ export type ChipStatus =
   | 'done'
   | 'ok'
   | 'offline'
-  | 'error';
+  | 'error'
+  | 'resting'
+  | 'thinking'
+  | 'speaking'
+  | 'waiting';
 
 export const CHIP_STATUS: Record<ChipStatus, { icon: IconName; word: string }> = {
   live: { icon: 'radio', word: 'Live' },
@@ -31,6 +35,10 @@ export const CHIP_STATUS: Record<ChipStatus, { icon: IconName; word: string }> =
   ok: { icon: 'ok', word: 'Ready' },
   offline: { icon: 'offline', word: 'Offline' },
   error: { icon: 'error', word: 'Problem' },
+  resting: { icon: 'moon', word: 'Resting' },
+  thinking: { icon: 'brain', word: 'Thinking' },
+  speaking: { icon: 'volume', word: 'Speaking' },
+  waiting: { icon: 'hourglass', word: 'Waiting' },
 };
 
 export interface StatusChipProps {

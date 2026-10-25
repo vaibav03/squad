@@ -19,21 +19,25 @@
   flex: none;
 }
 .sq-schip[data-status='live'],
+.sq-schip[data-status='speaking'],
 .sq-schip[data-status='ok'],
 .sq-schip[data-status='done'] {
   --c: var(--cc-green, #7fe0a4);
 }
 .sq-schip[data-status='degraded'],
+.sq-schip[data-status='waiting'],
 .sq-schip[data-status='busy'],
 .sq-schip[data-status='working'] {
   --c: var(--cc-amber, #ffc857);
 }
-.sq-schip[data-status='fixture'] {
+.sq-schip[data-status='fixture'],
+.sq-schip[data-status='thinking'] {
   --c: var(--cc-violet, #b3a5ff);
 }
 .sq-schip[data-status='error'] {
   --c: var(--cc-rose, #ff8e9b);
 }
+.sq-schip[data-status='resting'],
 .sq-schip[data-status='offline'],
 .sq-schip[data-status='idle'],
 .sq-schip[data-status='pending'] {
