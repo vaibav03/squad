@@ -101,7 +101,7 @@ export const easeOut = bezier(curve.easeOut);
 export const easeInOut = bezier(curve.easeInOut);
 export const easeDrawer = bezier(curve.easeDrawer);
 /** Walking stop: 80 ms ease-out, walking itself is linear (never eased). */
-export const walk = { fps: 8, stopMs: 80, ease: easeOut, speedPxPerSec: 60 } as const;
+export const walk = { fps: 8, stopMs: 80, ease: easeOut, speedPxPerSec: 24 } as const;
 
 /** Damped spring for rare delight (trip door pop, '!' marker). Returns f(t in seconds) -> displacement from 0 to 1 with ~bounce overshoot. */
 export function springEase({ duration, bounce }: { duration: number; bounce: number } = spring): (t: number) => number {
