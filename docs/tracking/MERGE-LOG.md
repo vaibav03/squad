@@ -426,3 +426,24 @@ Frames: `docs/design/shots/merge11/`. The real Gemini Live path was verified by 
 
 - Landing merge commit: `a933aa516f0c885cf618d4f061cb9dcd922b1db1` (parents `9a26267eebd03cca03d8916c0cfbd5939fba94ce` = tag `pre-merge-batch11`, `2ce58f31acf0fe995fa939b4261674f6338de5d8` = origin/merge/batch11; only tracker docs differ).
 - Rollback: `git revert -m 1 a933aa516f0c885cf618d4f061cb9dcd922b1db1`.
+
+## Batch 12: fix/room-inspector into main
+
+Branch `merge/batch12` (worktree `squad-wt/merge12`), landed as a true `--no-ff` merge.
+
+- Merged cleanly, including the overlap with live-discussion's `describe.ts` and `conversation.ts` edits (no conflicts; both sides present). The branch lead had not re-run `pnpm check` after its last merge of main; it is green here.
+- Extra fix (asked for): in the Council Hall the "Ask the council" and "Start a discussion" pills (bottom-right) were partly covered by the village Chat dock pill and the dev Agentation button. At laptop widths (>= 1024px) they now sit 116px above the corner (`packages/web/src/council/council.css`, `packages/web/src/live/live.css`), fully visible at 1280x800 (before/after crops in `docs/design/shots/merge12/pills-*.png`, full frame `hall-chair.png`). Phone offsets unchanged.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` (exit status read: 0), `pnpm demo:live`, `pnpm test:smoke hub` (102) | pass |
+| Browser (hub :18912, web :15312), live village, enter the Council Hall through its door interactable, seed council events | clicking the floor opens nothing; clicking the chair opens the inspector on the Chat tab ("Chair", room conversation with the verdict text); clicking a member shows that member's opinion; 0 page errors; pills fully visible above the Chat dock and Agentation button |
+
+Note: events seeded before the hall was entered did not show in the room chat in my script (seeded while inside, they did); the branch's own spec `j17` seeds before entering and was not run here.
+
+### Landing (batch 12)
+
+- Landing merge commit: `eee67592fd7993b552dde4e29e48f243f0bc3272` (parents `09539f5770f363ad5c0521b5c47d97027536472d` = tag `pre-merge-batch12`, `3340a73f4796268a78fa2bac4d6b89865f2d6171` = origin/merge/batch12; diff empty).
+- Rollback: `git revert -m 1 eee67592fd7993b552dde4e29e48f243f0bc3272`.

@@ -3,6 +3,7 @@ import { relTime, type ActivityView, type InspectorStore } from '@squad/village/
 import { LvIcon, usePresence, usePrefersReducedMotion } from '../kit';
 import { pixelPortrait } from '../../pixel/portraits';
 import { useNow, useSelectedView, useStoreVersion } from './useInspector';
+import { useRoomSnapshot } from './useRoomSession';
 import { AgentsTab, ChatTab } from './Conversation';
 import type { InspectorHub } from './useDmHistory';
 import './inspector.css';
@@ -53,6 +54,16 @@ export function InspectorPanel({
   const [tab, setTab] = useState<Tab>('doing');
   const view = useSelectedView(store);
   useStoreVersion(store);
+  const room = store.room;
+  const roomSeats = useRoomSnapshot().seats ?? [];
+  // A click on a character inside a room opens on the chat, so the discussion is the first thing you read.
+  const seat = room
+    ? roomSeats.find((x) => x.agent === store.selected && x.who === room.who)
+    : undefined;
+  const roomKey = room ? `${store.selected}|${room.slot}|${room.who}` : null;
+  useEffect(() => {
+    if (roomKey) setTab('chat');
+  }, [roomKey]);
   const now = useNow();
   const reduced = usePrefersReducedMotion(calm);
   const open = !!view;
@@ -102,6 +113,12 @@ export function InspectorPanel({
 
   if (!mounted || !v) return null;
   const go = (dir: 1 | -1) => {
+    if (room && roomSeats.length > 1) {
+      const i = roomSeats.findIndex((s) => s.agent === v.id && s.who === room.who);
+      const n = roomSeats[(i < 0 ? 0 : i + dir + roomSeats.length) % roomSeats.length]!;
+      store.select(n.agent, { slot: room.slot, who: n.who });
+      return;
+    }
     const next = store.cycle(v.id, dir);
     if (next) store.select(next);
   };
@@ -125,6 +142,7 @@ export function InspectorPanel({
       data-reduced={reduced ? 'true' : undefined}
       data-kind={v.kind}
       data-side={store.side}
+      data-room={room ? room.slot : undefined}
       aria-labelledby={titleId}
       onTransitionEnd={(e) => {
         if (e.target === e.currentTarget) onExited();
@@ -137,7 +155,7 @@ export function InspectorPanel({
         </span>
         <div className="ai-id">
           <h2 id={titleId} className="ai-name" tabIndex={-1} data-autofocus>
-            {v.name}
+            {seat?.label ?? v.name}
           </h2>
           <p className="ai-role">{v.role}</p>
         </div>
@@ -278,7 +296,16 @@ export function InspectorPanel({
             </section>
           </div>
         )}
-        {tab === 'chat' && <ChatTab view={v} convo={convo} hub={hub} now={now} mode={mode} />}
+        {tab === 'chat' && (
+          <ChatTab
+            view={seat ? { ...v, name: seat.label } : v}
+            convo={convo}
+            hub={hub}
+            now={now}
+            mode={mode}
+            room={room}
+          />
+        )}
         {tab === 'agents' && <AgentsTab view={v} convo={convo} store={store} now={now} />}
         {!v.isMe && v.kind === 'student' && tab !== 'chat' && (
           <p className="ai-privacy">

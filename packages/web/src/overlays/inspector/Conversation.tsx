@@ -9,6 +9,7 @@ import {
 import { CitationChip } from '../../components/source-viewer';
 import { LvIcon } from '../kit';
 import { useDmHistory, type InspectorHub } from './useDmHistory';
+import { RoomChat } from './RoomChat';
 
 const ARROW = { out: '→', in: '←', seen: '↔' } as const;
 const KIND_WORDS: Record<string, string> = {
@@ -152,16 +153,25 @@ export function ChatTab({
   hub,
   now,
   mode,
+  room,
 }: {
   view: ActivityView;
   convo: Conversation;
   hub?: InspectorHub | null;
   now: number;
   mode: 'live' | 'replay';
+  /** Set when the inspector was opened from a character inside a room. */
+  room?: { slot: string; who: string } | null;
 }) {
   const own = view.isMe && mode === 'live';
   const dm = useDmHistory(hub, own ? storeStudent(view.id) : undefined, own);
   const private_ = view.kind === 'student' && !view.isMe;
+  if (room)
+    return (
+      <div className="ai-tabpanel">
+        <RoomChat slot={room.slot} who={room.who} agentName={view.name} now={now} />
+      </div>
+    );
   return (
     <div className="ai-tabpanel">
       {private_ ? (

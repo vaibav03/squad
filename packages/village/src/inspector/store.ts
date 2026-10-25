@@ -35,6 +35,11 @@ export interface InspectorEntry {
   readonly thinking: boolean;
 }
 
+export interface RoomFocus {
+  readonly slot: string;
+  readonly who: string;
+}
+
 export interface InspectorStore {
   apply(event: unknown): void;
   attach(source: VillageSource): () => void;
@@ -49,7 +54,13 @@ export interface InspectorStore {
   /** Pairs of agents that exchanged something in the last few seconds. */
   links(): Array<{ a: string; b: string; at: number }>;
   readonly selected: string | null;
-  select(id: string | null): void;
+  /**
+   * Select an agent. `room` says the click happened on a seat inside a room scene: `slot` is the room,
+   * `who` the speaker key of the clicked seat. The popup then opens on the Chat tab. `select(null)` clears both.
+   */
+  select(id: string | null, room?: RoomFocus): void;
+  /** Set while the selection came from a room interior seat. */
+  readonly room: RoomFocus | null;
   /** Next/previous agent id in list order, wrapping. */
   cycle(from: string | null, dir: 1 | -1): string | null;
   follow: boolean;
@@ -86,6 +97,7 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
   let xseq = 0;
   let version = 0;
   let selected: string | null = null;
+  let room: RoomFocus | null = null;
   let follow = false;
   let side: 'left' | 'right' = 'right';
 
@@ -233,11 +245,16 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
     get selected() {
       return selected;
     },
-    select(id) {
+    select(id, focus) {
       if (id !== null && !recs.has(id)) rec(id);
-      if (selected === id) return;
+      const nextRoom = id === null ? null : (focus ?? null);
+      if (selected === id && room?.slot === nextRoom?.slot && room?.who === nextRoom?.who) return;
       selected = id;
+      room = nextRoom;
       notify();
+    },
+    get room() {
+      return room;
     },
     cycle(from, dir) {
       const ids = sorted();

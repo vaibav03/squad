@@ -698,7 +698,8 @@
   box-shadow: var(--lv-shadow-2);
 }
 @media (min-width: 1024px) {
+  /* Clear the village chat dock pill (bottom-right, 72px up) and the dev Agentation button in the corner. */
   .cn-launch {
-    bottom: var(--lv-s4);
+    bottom: calc(var(--lv-s4) + 116px);
   }
 }

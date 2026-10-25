@@ -3,6 +3,8 @@ import type { RoomSession } from './roomTypes';
 export * from './roomTypes';
 export { createRoomSession, holdMsFor, wordsOf } from './roomSession';
 export { ROOM_INFO, roomInfo } from './roomInfo';
+export { roomSeats, saidBy, seatLabel } from './roomSeats';
+export type { RoomSeat } from './roomSeats';
 
 const KEY = '__squadRoomSession';
 /** The village scenes module publishes its session here; the host reads it (one per page). */

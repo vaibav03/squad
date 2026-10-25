@@ -916,7 +916,7 @@
 }
 @media (min-width: 1024px) {
   .cn-launch--live {
-    bottom: calc(var(--lv-s4) + 56px);
+    bottom: calc(var(--lv-s4) + 116px + 56px);
   }
 }
 .cn-discuss {

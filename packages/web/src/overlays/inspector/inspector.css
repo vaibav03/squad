@@ -570,3 +570,35 @@
   line-height: var(--lh-sm);
   overflow-wrap: anywhere;
 }
+
+/* Room chat (opened from a character inside a room) */
+.ai-seg {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.ai-seg button {
+  flex: 1;
+  min-height: 36px;
+  padding: 4px 10px;
+  border: 1px solid var(--lv-line);
+  border-radius: var(--lv-r2, 6px);
+  background: var(--lv-surface-2);
+  color: var(--lv-text);
+  font: inherit;
+  font-size: var(--text-sm, 14px);
+  cursor: pointer;
+}
+.ai-seg button[aria-pressed='true'] {
+  border-color: var(--lv-info);
+  background: var(--lv-hover);
+  font-weight: 600;
+}
+.ai-seg button:focus-visible {
+  outline: 2px solid var(--lv-focus, var(--lv-info));
+  outline-offset: 2px;
+}
+.ai-msg[data-focus] {
+  border-left-width: 5px;
+  background: var(--lv-hover);
+}
