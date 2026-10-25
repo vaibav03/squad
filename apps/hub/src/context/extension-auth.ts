@@ -21,6 +21,8 @@ export interface ExtensionAuth {
   verify(token: string): string | null;
   /** Revoke every extension session of a user (disconnect everywhere). */
   revokeAll(userId: string): number;
+  /** True when the user has a live (unrevoked, unexpired) extension session: the extension is paired. */
+  paired(userId: string): boolean;
 }
 
 export function createExtensionAuth(db: Db, now: () => number): ExtensionAuth {
@@ -84,6 +86,15 @@ export function createExtensionAuth(db: Db, now: () => number): ExtensionAuth {
       const a = Buffer.from(sha(m[2] ?? ''));
       const b = Buffer.from(row.secret_hash);
       return a.length === b.length && timingSafeEqual(a, b) ? row.user_id : null;
+    },
+    paired(userId) {
+      return (
+        db
+          .prepare(
+            'SELECT 1 AS x FROM ctx_ext_sessions WHERE user_id=? AND revoked_at IS NULL AND expires_at>? LIMIT 1',
+          )
+          .get(userId, now()) !== undefined
+      );
     },
     revokeAll(userId) {
       return Number(
