@@ -7,6 +7,8 @@ export interface MentionAutocompleteProps {
   index?: number;
   onSelect(next: { text: string; caret: number }): void;
   onIndexChange?(i: number): void;
+  /** Gives the list `id={idPrefix}` and each option `id={idPrefix}-{alias}` (for aria-activedescendant). */
+  idPrefix?: string;
 }
 
 /**
@@ -19,10 +21,18 @@ export function MentionAutocomplete(p: MentionAutocompleteProps) {
   if (items.length === 0) return null;
   const idx = Math.min(p.index ?? 0, items.length - 1);
   return (
-    <ul role="listbox" aria-label="Tag an agent" className="mention-ac">
+    <ul
+      role="listbox"
+      aria-label="Tag an agent"
+      className="mention-ac sqc-mentions"
+      {...(p.idPrefix ? { id: p.idPrefix } : {})}
+    >
       {items.map((s, i) => (
         <li
           key={s.alias}
+          {...(p.idPrefix ? { id: `${p.idPrefix}-${s.alias}` } : {})}
+          data-testid={`chat-mention-${s.alias}`}
+          className="sqc-mention"
           role="option"
           aria-selected={i === idx}
           data-alias={s.alias}
@@ -32,8 +42,8 @@ export function MentionAutocomplete(p: MentionAutocompleteProps) {
             p.onSelect(applySuggestion(p.text, p.caret, s.alias));
           }}
         >
-          <strong>@{s.alias}</strong> <span>{s.agent.name}</span>{' '}
-          <small>{s.agent.description}</small>
+          <span className="sqc-mention__name">@{s.alias}</span>
+          <span className="sqc-mention__hint">{s.agent.description}</span>
         </li>
       ))}
     </ul>

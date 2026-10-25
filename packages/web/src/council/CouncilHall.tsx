@@ -11,9 +11,9 @@ import { MOCK_TOPIC } from '../live/fixtures';
 import { fixtureTransport, type FixtureState } from './fixtures';
 import './council.css';
 
+import { COUNCIL_LIVE_EVENT, COUNCIL_OPEN_EVENT } from './hall-events';
+export { COUNCIL_OPEN_EVENT, COUNCIL_LIVE_EVENT };
 export const COUNCIL_SLOT = 'council-hall';
-/** Window event the room-info panel fires to open the Ask-the-council dialog. */
-export const COUNCIL_OPEN_EVENT = 'squad:council-open';
 
 const STATES: readonly FixtureState[] = [
   'ok',
@@ -86,8 +86,13 @@ export function CouncilHall({
   }, [inside, forced, liveForced]);
   useEffect(() => {
     const onAsk = () => setOpen(true);
+    const onLive = () => setLiveOpen(true);
     window.addEventListener(COUNCIL_OPEN_EVENT, onAsk);
-    return () => window.removeEventListener(COUNCIL_OPEN_EVENT, onAsk);
+    window.addEventListener(COUNCIL_LIVE_EVENT, onLive);
+    return () => {
+      window.removeEventListener(COUNCIL_OPEN_EVENT, onAsk);
+      window.removeEventListener(COUNCIL_LIVE_EVENT, onLive);
+    };
   }, []);
 
   const transport = useMemo(() => {
@@ -106,7 +111,7 @@ export function CouncilHall({
   return (
     <>
       {stage}
-      {!open && !liveOpen && !busy && (
+      {!open && !liveOpen && !busy && !inside && (
         <button
           type="button"
           className="lv-btn cn-launch cn-launch--live sq-scene"
@@ -117,7 +122,7 @@ export function CouncilHall({
           Start a discussion
         </button>
       )}
-      {!open && !liveOpen && !busy && canBoard && (
+      {!open && !liveOpen && !busy && !inside && canBoard && (
         <button
           type="button"
           className="lv-btn cn-launch cn-launch--board sq-scene"
@@ -128,7 +133,7 @@ export function CouncilHall({
           Council board
         </button>
       )}
-      {!open && !liveOpen && !busy && (
+      {!open && !liveOpen && !busy && !inside && (
         <button
           type="button"
           className="lv-btn cn-launch sq-scene"

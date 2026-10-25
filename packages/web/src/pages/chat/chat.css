@@ -1669,3 +1669,51 @@
 }
 .sqc-wait.is-slow { color: var(--foreground); }
 .sqc-wait.is-failed { color: var(--destructive, #b3261e); }
+
+/* mention list from the shared alias table (22 agents): scrolls, hints truncate */
+.sqc-mentions {
+  max-height: 280px;
+  overflow-y: auto;
+}
+.sqc-mention__name {
+  flex: none;
+}
+.sqc-mention__hint {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* suggestion chips above the composer field (Agent Hall quick prompts) */
+.sqc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3) 0;
+  list-style: none;
+}
+.sqc-chip {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--secondary, var(--card));
+  color: var(--foreground);
+  font: 500 var(--text-sm) / 1 var(--font-sans);
+  cursor: pointer;
+}
+.sqc-chip:hover {
+  background: var(--accent);
+}
+
+/* "to Feynman": who a hall message was addressed to */
+.sqc-msg__to {
+  font: 500 var(--text-xs, 12px) / 1.2 var(--font-sans);
+  color: var(--muted-foreground);
+}
+.sqc-msg__to-name {
+  color: var(--primary);
+  font-weight: 600;
+}

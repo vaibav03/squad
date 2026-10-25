@@ -186,3 +186,29 @@
   line-clamp: 2;
   overflow: hidden;
 }
+
+/* ---- Agent Hall: the dock is the hall's one conversation, docked on the right beside the seats ---- */
+.sqd--hall {
+  padding: calc(var(--room-help-top, 72px) + 56px + var(--safe-top)) var(--space-4) calc(var(--space-4) + 56px);
+  justify-content: flex-start;
+}
+.sqd--hall .sqd-panel {
+  width: min(392px, var(--sq-dock-w, 392px));
+  height: 100%;
+  animation: none;
+}
+.sqd--hall .sqd-pill {
+  display: none;
+}
+@media (max-width: 899px) {
+  .sqd--hall {
+    padding: 0;
+    justify-content: flex-end;
+  }
+  .sqd--hall .sqd-panel {
+    width: 100%;
+    height: 54%;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: 0;
+  }
+}

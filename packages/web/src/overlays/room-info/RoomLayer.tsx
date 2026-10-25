@@ -8,6 +8,7 @@ import { RoomTranscript } from './RoomTranscript';
 import { RoomExtras } from '../../council/board/Launchers';
 import { CouncilRoomStatus } from '../../council/last-run/components';
 import { HALL_KEYS, ROUND_TABLE_KEYS } from '../../council/last-run/store';
+import { HallLayer } from '../../hall/HallLayer';
 import './room-info.css';
 
 export interface RoomLayerProps {
@@ -114,6 +115,7 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
 
   return (
     <div className="rr-layer sq-scene" data-room={slot}>
+      {slot === 'council-hall' ? <HallLayer snap={snap} {...(calm ? { calm: true } : {})} /> : null}
       {skin ? (
         <p className="rr-skin" data-testid="skin-credit">
           Skin: Modern Interiors. {skin.credit}
@@ -170,7 +172,7 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
           </div>
         ) : null}
         {slot === 'council-hall' ? (
-          <CouncilRoomStatus keys={HALL_KEYS} councilIds={['council:ask']} />
+          <CouncilRoomStatus keys={HALL_KEYS} councilIds={['council:ask']} hideEmpty />
         ) : slot === 'round-table' ? (
           <CouncilRoomStatus
             keys={ROUND_TABLE_KEYS}
@@ -179,12 +181,11 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
             onConvene={conveneRoundTable}
           />
         ) : null}
-        {showsTranscript(slot) ? (
+        {showsTranscript(slot) && (entries.length > 0 || outcome) ? (
           <RoomTranscript
             entries={entries}
             outcome={outcome}
             info={info}
-            onRun={run}
             compact={!!outcome && planShown}
           />
         ) : null}

@@ -2,7 +2,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createRoomSession, publishRoomSession } from '@squad/village/rooms';
+import { RoomLayer } from '../overlays/room-info';
 import { CouncilHall } from './CouncilHall';
+
+// Inside the hall the council buttons live in the Agent Hall's own council row (one place), next to this panel mount.
+const Both = ({ hub }: { hub: { hubUrl: string; token: string } | null }) => (
+  <>
+    <CouncilHall hub={hub} />
+    <RoomLayer />
+  </>
+);
 
 afterEach(() => {
   cleanup();
@@ -10,6 +19,8 @@ afterEach(() => {
   window.history.replaceState(null, '', '/');
 });
 beforeEach(() => {
+  // the village marks the hall's room-info panel as seen (it has its own panel); keep it from stacking here
+  sessionStorage.setItem('squad:room-info-seen:council-hall', '1');
   vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => setTimeout(() => cb(0), 0));
 });
 
@@ -24,7 +35,7 @@ describe('CouncilHall', () => {
   });
 
   it('walking in shows only the launch button; the council event opens it; walking out closes it', async () => {
-    render(<CouncilHall hub={hub} />);
+    render(<Both hub={hub} />);
     const session = createRoomSession();
     act(() => publishRoomSession(session));
     act(() => session.enter('council-hall'));
@@ -50,7 +61,7 @@ describe('CouncilHall', () => {
     const session = createRoomSession();
     publishRoomSession(session);
     session.enter('council-hall');
-    render(<CouncilHall hub={hub} />);
+    render(<Both hub={hub} />);
     fireEvent.click(screen.getByRole('button', { name: 'Ask the council' }));
     await waitFor(() => expect(dialog()).toBeTruthy());
     fireEvent.keyDown(dialog()!, { key: 'Escape' });

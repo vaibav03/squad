@@ -27,6 +27,7 @@ import { createInspectorStore, type InspectorStore } from '@squad/village/inspec
 import { createCouncilBoardStore } from '@squad/village/council';
 import { CouncilHall, CouncilBoardHost, setBoardStore, setRoomOpener } from '../../council';
 import { useToast } from '../../primitives/Toast';
+import { resolveRoomParam } from '../../hall/roster';
 import { createPhraseRunner } from './chat-send';
 import { OverlayHost } from './OverlayHost';
 import { DEFAULT_WORLD, loadWorld, type WorldHandle } from './worlds';
@@ -171,6 +172,10 @@ export default function VillagePage({ world }: { world?: string }) {
         await h.ready;
         h.setCalm?.(calmRef.current);
         if (!dead) setState('ready');
+        // Deep links: `?room=feynman` (or any former room id, or any @alias) opens the Agent Hall aimed at that agent.
+        const roomParam = new URLSearchParams(location.search).get('room');
+        if (roomParam && resolveRoomParam(roomParam))
+          void h.openRoom?.(roomParam, { calm: true });
       } catch {
         feed?.close();
         if (!dead) setState({ error: 'The world could not start. Reload to try again.' });

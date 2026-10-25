@@ -86,7 +86,7 @@ export function createRoomSession(
   let focus: RoomSnapshot['focus'] = null;
   let focusN = 0;
   let used: readonly string[] = [];
-  let snap: RoomSnapshot = { entered, transcripts: {}, outcomes: {}, seats, focus };
+  let snap: RoomSnapshot = { entered, transcripts: {}, outcomes: {}, seats, focus, used };
 
   const publish = (): void => {
     snap = {

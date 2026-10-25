@@ -31,6 +31,7 @@ import {
   masteryWord,
   MASTERY_PIPS,
 } from '../scenes/mastery';
+import { getRoomSession } from '../scenes/rooms';
 
 export interface HudDeps {
   parent: HTMLElement;
@@ -371,7 +372,10 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
         clockText.textContent = txt;
       }
       moon.classList.toggle('sqv-sun', d.time.nightness < 0.5);
-      const near = nearestInteractable(d.interactables.list(), d.player.x);
+      // inside a room the door prompt is out of place (the player is not on the street)
+      const near = getRoomSession()?.snapshot().entered
+        ? undefined
+        : nearestInteractable(d.interactables.list(), d.player.x);
       if (near !== promptFor) {
         promptFor = near;
         if (near) promptText.textContent = near.label;

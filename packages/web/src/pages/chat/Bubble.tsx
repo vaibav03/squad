@@ -1,11 +1,20 @@
 import { useLayoutEffect, useRef } from 'react';
-import { messageTruth, TRUTH_LABELS, type ChatCitation, type ChatMessage, type HubStatus } from '@squad/core';
+import {
+  messageTruth,
+  parseMentions,
+  TRUTH_LABELS,
+  type ChatCitation,
+  type ChatMessage,
+  type HubStatus,
+} from '@squad/core';
 import { Icon } from '../../primitives/Icon';
 import { Markdown } from '../../primitives/Markdown';
 import { renderCard } from './card-registry';
 import { useSquadConfig } from '../../shell/context';
 import { AudioPlayer, ImageAttachment } from './media';
 import { ChatAvatar } from './parts';
+import { HallAvatar } from '../../hall/HallAvatar';
+import { hallAgent } from '../../hall/roster';
 import { SyncBadge } from './sync/SyncBadge';
 import { ProvenanceRow } from './provenance/ProvenanceRow';
 import { openSource } from '../../components/source-viewer';
@@ -47,6 +56,8 @@ export interface BubbleProps {
   onQuizAnswer: (m: ChatMessage, choice: string) => Promise<boolean>;
   onConfirm: (m: ChatMessage, n: number) => Promise<ConfirmResult>;
   onOpenDm?: () => void;
+  /** Agent Hall presentation: speaker portraits for every agent and a "to Feynman" line on messages that address someone. */
+  hall?: boolean;
 }
 
 /** Links whose text hides where they go get the host after them, in small muted text. */
@@ -91,6 +102,18 @@ export function MessageBubble(p: BubbleProps) {
 
   const senderId = sender.id;
   const tag = roleTag(sender);
+  // Agent Hall: a persona that is one of the hall's agents gets its seat portrait; a message that @mentions agents says so.
+  const hall = p.hall && sender.kind === 'persona' ? hallAgent(sender.id) : undefined;
+  const addressed =
+    p.hall && sender.kind === 'student'
+      ? [
+          ...new Map(
+            parseMentions(m.text).mentions.map(
+              (x) => [x.agent.id, hallAgent(x.agent.aliases[0])] as const,
+            ),
+          ).values(),
+        ].filter((a): a is NonNullable<typeof a> => !!a)
+      : [];
   const bot = sender.kind === 'persona';
   // each message carries its OWN truth badge, independent of the header
   const truth = messageTruth(m.demo);
@@ -124,6 +147,19 @@ export function MessageBubble(p: BubbleProps) {
   const text =
     m.card?.type === 'council' || (m.card && textRepeatsCard(m.text, m.card)) ? '' : m.text.trim();
   const attachments = m.attachments;
+
+  const toEl = addressed.length ? (
+    <span className="sqc-msg__to" data-testid="chat-addressed" data-user-content>
+      to{' '}
+      {addressed.map((a, i) => (
+        <span key={a.alias} className="sqc-msg__to-name" data-agent={a.alias}>
+          {i ? ', ' : ''}
+          {a.name}
+        </span>
+      ))}
+    </span>
+  ) : null;
+
   const cls = [
     'sqc-msg',
     row.own && 'is-own',
@@ -146,7 +182,15 @@ export function MessageBubble(p: BubbleProps) {
       data-state={row.state}
     >
       {!row.own ? (
-        <div className="sqc-msg__av">{row.head ? <ChatAvatar sender={sender} /> : null}</div>
+        <div className="sqc-msg__av">
+          {row.head ? (
+            p.hall && hall ? (
+              <HallAvatar who={hall.alias} />
+            ) : (
+              <ChatAvatar sender={sender} />
+            )
+          ) : null}
+        </div>
       ) : null}
       <div className="sqc-msg__col">
         {row.head ? (
@@ -156,6 +200,7 @@ export function MessageBubble(p: BubbleProps) {
                 {sender.name}
               </span>
             ) : null}
+            {toEl}
             {tag ? (
               <span className="sqc-pixtag" aria-hidden="true">
                 {tag}
@@ -194,6 +239,7 @@ export function MessageBubble(p: BubbleProps) {
           </div>
         ) : null}
 
+        {row.head ? null : toEl}
         <span className="sq-sr-only">{senderSpeech(sender, p.me)}: </span>
         {text || attachments.length ? (
           <div

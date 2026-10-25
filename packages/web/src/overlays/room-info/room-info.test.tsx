@@ -253,6 +253,15 @@ describe('RoomLayer', () => {
       expect(screen.queryByText('What they are saying')).toBeNull();
     }
     await act(async () => s.enter('council-hall'));
+    // in the hall, with something said, the strip appears (nothing said: no empty box)
+    expect(screen.queryByRole('log')).toBeNull();
+    await act(async () =>
+      s.record(
+        'council-hall',
+        { t: 'council.opinion', councilId: 'c', member: 'chill', text: 'Keep it light.' },
+        1,
+      ),
+    );
     expect(screen.getByRole('log', { name: 'What they are saying' })).toBeTruthy();
     await act(async () => s.leave());
     expect(screen.queryByRole('log')).toBeNull();
@@ -298,6 +307,13 @@ describe('RoomLayer', () => {
       globalThis.dispatchEvent(new Event('squad:room-session'));
     });
     await act(async () => s.enter('council-hall'));
+    await act(async () =>
+      s.record(
+        'council-hall',
+        { t: 'council.opinion', councilId: 'c', member: 'chill', text: 'Hello.' },
+        1,
+      ),
+    );
     expect(screen.getByRole('log')).toBeTruthy();
     (globalThis as Record<string, unknown>)['__squadRoomSession'] = undefined;
   });

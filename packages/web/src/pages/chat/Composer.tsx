@@ -20,15 +20,11 @@ import { parseDiscussTrigger } from '../../live/trigger';
 import { PlusMenu } from '../../plans/PlusMenu';
 import type { PlanKind } from '../../plans/registry';
 import {
-  ACCEPT_IMAGES,
-  COUNTER_FROM,
-  MAX_ATTACHMENTS,
-  MAX_TEXT,
-  activeMention,
-  applyMention,
-  matchMentions,
-  uploadProblem,
-} from './model';
+  MentionAutocomplete,
+  mentionKey,
+  mentionSuggestions,
+} from '../../components/mention-autocomplete';
+import { ACCEPT_IMAGES, COUNTER_FROM, MAX_ATTACHMENTS, MAX_TEXT, uploadProblem } from './model';
 
 export interface ComposerHandle {
   focus(): void;
@@ -71,12 +67,14 @@ export interface ComposerProps {
   leading?: React.ReactNode;
   /** Group chats: the '+' menu starts a plan wizard. */
   onPlan?: (kind: PlanKind) => void;
+  /** Starter messages shown as chips above the field (the Agent Hall's quick prompts). Pressing one fills the draft. */
+  chips?: readonly { label: string; text: string }[];
 }
 
 const MAX_H = 144;
 
 export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
-  { api, chatKind, onSend, paused, compact, onDiscuss, leading, onPlan },
+  { api, chatKind, onSend, paused, compact, onDiscuss, leading, onPlan, chips },
   ref,
 ) {
   const [text, setText] = useState('');
@@ -139,8 +137,8 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     [],
   );
 
-  const mention = chatKind === 'group' && !pickerOff ? activeMention(text, caret) : null;
-  const options = mention ? matchMentions(mention.query) : [];
+  // @mention suggestions come from the shared alias table: Cubbie first, then every agent you can address.
+  const options = chatKind === 'group' && !pickerOff ? mentionSuggestions(text, caret) : [];
   const open = options.length > 0;
   const act = Math.min(active, Math.max(0, options.length - 1));
 
@@ -208,10 +206,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     requestAnimationFrame(() => area.current?.focus());
   };
 
-  const pick = (i: number) => {
-    const opt = options[i];
-    if (!opt || !mention) return;
-    const r = applyMention(text, caret, mention, opt);
+  const applyPick = (r: { text: string; caret: number }) => {
     setText(r.text);
     setPickerOff(true);
     requestAnimationFrame(() => {
@@ -226,22 +221,18 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
 
   const onKeyDown = (e: KeyLike) => {
     if (open) {
-      if (e.key === 'ArrowDown') {
+      const k = mentionKey(e.key, text, caret, act);
+      if (k?.kind === 'move') {
         e.preventDefault();
-        setActive((act + 1) % options.length);
+        setActive(k.index);
         return;
       }
-      if (e.key === 'ArrowUp') {
+      if (k?.kind === 'select') {
         e.preventDefault();
-        setActive((act - 1 + options.length) % options.length);
+        applyPick(k.next);
         return;
       }
-      if (e.key === 'Enter' || e.key === 'Tab') {
-        e.preventDefault();
-        pick(act);
-        return;
-      }
-      if (e.key === 'Escape') {
+      if (k?.kind === 'close') {
         e.preventDefault();
         e.stopPropagation();
         setPickerOff(true);
@@ -327,8 +318,39 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           {problem}
         </p>
       ) : null}
+      {chips && chips.length ? (
+        <ul className="sqc-chips" aria-label="Suggestions" data-testid="chat-suggestions">
+          {chips.map((c) => (
+            <li key={c.label}>
+              <button
+                type="button"
+                className="sqc-chip"
+                data-testid="chat-suggestion"
+                onClick={() => {
+                  setText(c.text);
+                  setPickerOff(true);
+                  requestAnimationFrame(() => {
+                    const el = area.current;
+                    if (el) {
+                      el.focus();
+                      el.setSelectionRange(c.text.length, c.text.length);
+                      setCaret(c.text.length);
+                    }
+                  });
+                }}
+              >
+                {c.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <div className="sqc-composer__row">
-        {leading ? <div className="sqc-composer__lead" data-slot="composer-leading">{leading}</div> : null}
+        {leading ? (
+          <div className="sqc-composer__lead" data-slot="composer-leading">
+            {leading}
+          </div>
+        ) : null}
         <input
           ref={file}
           type="file"
@@ -353,26 +375,14 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
         </button>
         <div className="sqc-composer__field">
           {open ? (
-            <ul className="sqc-mentions" role="listbox" id={listId} aria-label="Mention">
-              {options.map((o, i) => (
-                <li
-                  key={o.id}
-                  id={`${listId}-${o.id}`}
-                  role="option"
-                  aria-selected={i === act}
-                  className="sqc-mention"
-                  data-testid={`chat-mention-${o.id}`}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    pick(i);
-                  }}
-                  onMouseMove={() => setActive(i)}
-                >
-                  <span className="sqc-mention__name">{o.insert}</span>
-                  <span className="sqc-mention__hint">{o.hint}</span>
-                </li>
-              ))}
-            </ul>
+            <MentionAutocomplete
+              text={text}
+              caret={caret}
+              index={act}
+              idPrefix={listId}
+              onIndexChange={setActive}
+              onSelect={applyPick}
+            />
           ) : null}
           <textarea
             ref={area}
@@ -388,7 +398,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             aria-haspopup={chatKind === 'group' ? 'listbox' : undefined}
             aria-expanded={chatKind === 'group' ? open : undefined}
             aria-controls={chatKind === 'group' && open ? listId : undefined}
-            aria-activedescendant={open ? `${listId}-${options[act]!.id}` : undefined}
+            aria-activedescendant={open ? `${listId}-${options[act]!.alias}` : undefined}
             enterKeyHint="send"
             autoComplete="off"
             onChange={(e) => {

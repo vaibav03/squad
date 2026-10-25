@@ -13,6 +13,9 @@ import { useChat } from './useChat';
 import './chat.css';
 import './dock.css';
 import { useChatPrefill } from './prefill';
+import { useInHall } from '../../hall/useInHall';
+import { hallAgent, HALL_AGENTS } from '../../hall/roster';
+import { leaveHall, useHallFocus } from '../../hall/store';
 
 export interface ChatDockProps {
   /** false in replay mode or without a hub token: nothing renders and no request is made */
@@ -47,13 +50,19 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
   // A large panel (inspector, room, board...) folds the dock to its pill; `open` is kept so it unfolds afterwards.
   const dockStore = usePanelDock();
   const folded = useLargePanelOpen();
-  const shown = open && !folded;
+  // Inside the Agent Hall this same dock IS the hall's conversation: always open, docked beside the seats.
+  const inHall = useInHall();
+  const hallFocus = useHallFocus();
+  const panelOpen = open || inHall;
+  const shown = panelOpen && !folded;
   useDockPanel('chat', 'small', shown, () => setOpen(false));
   const pill = useRef<HTMLButtonElement>(null);
   const composer = useRef<ComposerHandle>(null);
   const panelId = useId();
   const dock = useRef<HTMLDivElement>(null);
   const closeRef = useRef<() => void>(() => {});
+  const inHallRef = useRef(false);
+  inHallRef.current = inHall;
   const group = ctl.chats.find((c) => c.kind === 'group') ?? null;
 
   const { setActive } = ctl;
@@ -65,6 +74,31 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
   useEffect(() => {
     if (shown) requestAnimationFrame(() => composer.current?.focus());
   }, [shown, group?.id]);
+
+  // A seat, a HUD chip or a former room's door aimed the hall at an agent: put its starter in the draft.
+  const seeded = useRef(0);
+  useEffect(() => {
+    if (!inHall || !hallFocus.seed || hallFocus.seedN === seeded.current) return;
+    let tries = 0;
+    const apply = () => {
+      if (composer.current) {
+        seeded.current = hallFocus.seedN;
+        composer.current.fill(hallFocus.seed!);
+      } else if (tries++ < 40) requestAnimationFrame(apply);
+    };
+    apply();
+  }, [inHall, hallFocus.seedN, hallFocus.seed, ctl.phase, group?.id]);
+  const hallChips = useMemo(() => {
+    if (!inHall) return undefined;
+    const picked = hallAgent(hallFocus.alias);
+    const defaults = ['cubbie', 'feynman', 'debate']
+      .map((al) => HALL_AGENTS.find((a) => a.alias === al)!)
+      .filter((a) => a.alias !== picked?.alias);
+    return [...(picked ? [picked] : []), ...defaults].slice(0, 3).map((a) => ({
+      label: a.prompt,
+      text: a.prompt,
+    }));
+  }, [inHall, hallFocus.alias]);
 
   // Another surface (the council decision card) asks for a drafted message: open the dock and fill the composer.
   useChatPrefill((text) => {
@@ -106,7 +140,8 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
       const used = t === area && composer.current ? composer.current.keydown(e) : false;
       if (e.key === 'Escape' && !used) {
         e.preventDefault();
-        closeRef.current();
+        if (inHallRef.current) leaveHall();
+        else closeRef.current();
       }
     };
     window.addEventListener('keydown', onKey, true);
@@ -121,15 +156,20 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
   const unread = ctl.totalUnread;
 
   return (
-    <div ref={dock} className="sqd sq-scene" data-testid="chat-dock">
+    <div
+      ref={dock}
+      className={`sqd sq-scene${inHall ? ' sqd--hall' : ''}`}
+      data-testid="chat-dock"
+      {...(inHall ? { 'data-hall': 'true' } : {})}
+    >
       {shown ? <div className="sqd-scrim" aria-hidden="true" /> : null}
-      {open ? (
+      {panelOpen ? (
         <section
           id={panelId}
           hidden={folded}
-          className={`sqd-panel${reduced ? ' sqc--reduced' : ''}`}
+          className={`sqd-panel${reduced ? ' sqc--reduced' : ''}${inHall ? ' sqd-panel--hall' : ''}`}
           role="dialog"
-          aria-label="Squad chat"
+          aria-label={inHall ? 'Agent Hall chat' : 'Squad chat'}
         >
           <span className="sqd-handle" aria-hidden="true" />
           {ctl.phase === 'loading' ? (
@@ -184,48 +224,54 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
                 composerRef={composer}
                 compact
                 scene
+                agentAware={inHall}
+                composerChips={hallChips}
                 headerEnd={
-                  <button
-                    type="button"
-                    className="sqc-iconbtn"
-                    aria-label="Close chat"
-                    onClick={close}
-                    data-testid="chat-dock-close"
-                  >
-                    <Icon name="x" size={20} />
-                  </button>
+                  inHall ? undefined : (
+                    <button
+                      type="button"
+                      className="sqc-iconbtn"
+                      aria-label="Close chat"
+                      onClick={close}
+                      data-testid="chat-dock-close"
+                    >
+                      <Icon name="x" size={20} />
+                    </button>
+                  )
                 }
               />
             </>
           )}
         </section>
       ) : null}
-      <button
-        ref={pill}
-        type="button"
-        className="sqd-pill"
-        data-testid="chat-dock-open"
-        aria-haspopup="dialog"
-        aria-expanded={shown}
-        aria-controls={open ? panelId : undefined}
-        onClick={() => {
-          // pressed while folded: the large panel makes way for the chat
-          if (folded) {
-            dockStore?.yieldLarge();
-            setOpen(true);
-          } else if (open) close();
-          else setOpen(true);
-        }}
-      >
-        <Icon name="message" size={18} />
-        <span>Chat</span>
-        {unread > 0 && !shown ? (
-          <span className="sqc-unread" data-testid="chat-dock-unread">
-            <span aria-hidden="true">{unread > 9 ? '9+' : unread}</span>
-            <span className="sq-sr-only">{unread} unread messages</span>
-          </span>
-        ) : null}
-      </button>
+      {inHall && !folded ? null : (
+        <button
+          ref={pill}
+          type="button"
+          className="sqd-pill"
+          data-testid="chat-dock-open"
+          aria-haspopup="dialog"
+          aria-expanded={shown}
+          aria-controls={panelOpen ? panelId : undefined}
+          onClick={() => {
+            // pressed while folded: the large panel makes way for the chat
+            if (folded) {
+              dockStore?.yieldLarge();
+              setOpen(true);
+            } else if (open) close();
+            else setOpen(true);
+          }}
+        >
+          <Icon name="message" size={18} />
+          <span>Chat</span>
+          {unread > 0 && !shown ? (
+            <span className="sqc-unread" data-testid="chat-dock-unread">
+              <span aria-hidden="true">{unread > 9 ? '9+' : unread}</span>
+              <span className="sq-sr-only">{unread} unread messages</span>
+            </span>
+          ) : null}
+        </button>
+      )}
     </div>
   );
 }

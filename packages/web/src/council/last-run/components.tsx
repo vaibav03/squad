@@ -199,12 +199,15 @@ export function CouncilRoomStatus({
   noun = 'council',
   onConvene,
   compact = true,
+  hideEmpty,
 }: {
   keys: readonly string[];
   councilIds: readonly string[];
   noun?: string;
   onConvene?: (() => void) | undefined;
   compact?: boolean;
+  /** Render nothing until a council has run (the Agent Hall: its own buttons start one). */
+  hideEmpty?: boolean;
 }) {
   const hub = useCouncilHub();
   const { status } = useCouncilStatus(hub);
@@ -232,6 +235,7 @@ export function CouncilRoomStatus({
       : undefined;
   const none = !run;
   const asked = !hub || api.loaded;
+  if (none && hideEmpty) return null;
   return (
     <div className="lr-room" data-testid="council-room-status">
       {boardRun ? <LastRunLabel runId={boardRun.runId} noun={noun} /> : null}

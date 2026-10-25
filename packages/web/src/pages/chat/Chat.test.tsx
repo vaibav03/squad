@@ -276,14 +276,18 @@ describe('composer', () => {
     await userEvent.type(box, 'hi @');
     const list = await screen.findByRole('listbox');
     const opts = within(list).getAllByRole('option');
-    expect(opts.map((o) => o.textContent)).toEqual([
-      expect.stringContaining('@cubbie'),
-      expect.stringContaining('@squad'),
+    // the shared alias table: Cubbie first, then every agent you can address (@tutor, @skeptic, ...)
+    expect(opts.map((o) => o.getAttribute('data-alias')).slice(0, 4)).toEqual([
+      'cubbie',
+      'cubbi',
+      'squad',
+      'tutor',
     ]);
+    expect(opts.length).toBeGreaterThan(2);
     expect(box.getAttribute('aria-activedescendant')).toBe(opts[0]!.id);
     await userEvent.keyboard('{ArrowDown}');
     expect(box.getAttribute('aria-activedescendant')).toBe(opts[1]!.id);
-    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard('{ArrowDown}{Enter}');
     expect(box.value).toBe('hi @squad ');
     expect(screen.queryByRole('listbox')).toBeNull();
   });
@@ -292,7 +296,11 @@ describe('composer', () => {
     const { api } = setup();
     const box = await input();
     await userEvent.type(box, '@cu');
-    expect(within(await screen.findByRole('listbox')).getAllByRole('option')).toHaveLength(1);
+    expect(
+      within(await screen.findByRole('listbox'))
+        .getAllByRole('option')
+        .map((o) => o.getAttribute('data-alias')),
+    ).toEqual(['cubbie', 'cubbi']);
     await userEvent.keyboard('{Tab}');
     expect(box.value).toBe('@cubbie ');
     // the caret is restored on the next frame; a person cannot type faster than that
@@ -748,7 +756,7 @@ describe('review fixes', () => {
     const box = await input();
     expect(box.getAttribute('aria-haspopup')).toBe('listbox');
     await userEvent.type(box, '@');
-    await waitFor(() => expect(screen.getByText('2 suggestions')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('8 suggestions')).toBeTruthy());
   });
 
   it('only the newest three live arrivals get the entrance', async () => {
