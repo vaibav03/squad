@@ -55,3 +55,11 @@ Looked at two: `village-track2-desk.png` shows the night pixel village (moon, st
 - Tag `pre-merge-batch1` points at main before this batch (`git rev-parse pre-merge-batch1`).
 - Preferred: `git revert -m 1 <landing merge sha>` on main (keeps history).
 - Reset to the tag (`git reset --hard pre-merge-batch1` plus a push) only with the owner's explicit approval.
+
+### Landing
+
+- Landing merge commit on main: `c96045e6ec17e04d2072f615d43d1b18f8b00a13` (true `--no-ff` merge, tree identical to `origin/merge/batch1`, `git diff` empty).
+- Parent 1 (old main, = tag `pre-merge-batch1`): `004dc848d033ff7fa4549b1ff3ac054ce3023554`.
+- Parent 2 (batch tip, `origin/merge/batch1`): `40e923f20efc4830932d0176b1bceed464d0a878`.
+- Revert command: `git revert -m 1 c96045e6ec17e04d2072f615d43d1b18f8b00a13`.
+- Operational note: in fresh worktrees `git merge` can fail with `fatal: stash failed` until the index is stat-refreshed (a `git diff-index HEAD` or `git status` first fixes it); not a content problem.
