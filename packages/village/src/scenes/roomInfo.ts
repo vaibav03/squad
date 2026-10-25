@@ -70,25 +70,29 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
     title: 'Debate Stage',
     tagline: 'Two sides argue a tricky question',
     purpose:
-      'Meant to show both sides of a debatable idea in your course so you can pick a side and defend it.',
+      'See both sides of a debatable idea argued well, vote for the one that convinces you, and learn why one was stronger.',
     who: [
       {
         name: 'Two debaters',
-        does: 'Take opposite sides and answer each other from their lecterns.',
+        does: 'Take opposite sides and answer each other. On course topics they cite a checked page.',
       },
-      { name: 'Moderator', does: 'Sums up which argument held up better.' },
+      {
+        name: 'Chairman',
+        does: 'Says which argument was stronger and why, and notes if your vote went the other way.',
+      },
     ],
     how: {
-      phrase: null,
+      phrase: '@cubbie debate should exams be open book?',
       steps: [
-        'Nothing in chat starts a debate yet, so the stage stays quiet for now.',
-        'Walking in shows the empty stage and lecterns.',
+        'Type the phrase with any question worth arguing, or "@cubbie debate this" for the last message.',
+        'Watch the two sides speak, then vote in the confirm card Cubbie sends you.',
+        'Read the chairman verdict in the room or in chat.',
       ],
     },
     outcome:
-      'Once connected: both arguments side by side and a short closing summary. Today the room shows no live debate.',
+      'Both arguments, how the room voted, and the chairman verdict with the reason, plus any dissent. Course topics cite the page; others are labelled general reasoning.',
     privacy:
-      'A debate would use course topics only, nothing personal and nothing shared by default.',
+      'Only the question and the arguments are shared. Each vote is a private reply to Cubbie; the squad sees only the totals.',
   },
   'round-table': {
     slot: 'round-table',
@@ -136,7 +140,7 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       ],
     },
     outcome:
-      'Follow-up questions at the spots where your explanation was fuzzy, then feedback on what to tighten. The porch itself does not light up yet.',
+      'Follow-up questions at the spots where your explanation was fuzzy, then feedback on what to tighten. The porch lights up while you are working through it.',
     privacy: 'Your explanation is private to your chat with Cubbie; the squad is not shown it.',
   },
   'panic-booth': {
@@ -150,7 +154,10 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
         name: 'Cubbie',
         does: 'Reads the photos of your handwritten steps and lines them up against each other.',
       },
-      { name: 'Dean', does: 'Posts only the step number where you split, never who was wrong.' },
+      {
+        name: 'Booth keeper',
+        does: 'Posts only the step number where you split, never who was wrong.',
+      },
     ],
     how: {
       phrase: '@cubbie diff',
