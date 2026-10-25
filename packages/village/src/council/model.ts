@@ -151,7 +151,12 @@ export function newRun(msg: { correlationId: string; from: string; seq: number }
   };
 }
 
-function ensureAgent(run: MutableRun, id: string, seq: number): BoardAgent | undefined {
+function ensureAgent(
+  run: MutableRun,
+  id: string,
+  seq: number,
+  mode: string,
+): BoardAgent | undefined {
   if (!isAgent(id) && !id.startsWith('code:')) return undefined;
   let a = run.agents.find((x) => x.id === id);
   if (!a) {
@@ -161,7 +166,8 @@ function ensureAgent(run: MutableRun, id: string, seq: number): BoardAgent | und
       name: a2aPartyName(id),
       role: roleOf(id),
       ...(cast ? { cast } : {}),
-      mode: 'demo',
+      // an agent that has only been spoken to carries the mode of what reached it, never an invented Demo
+      mode,
       status: 'queued',
       lastSeq: seq,
     };
@@ -184,8 +190,8 @@ export function foldMessage(run: MutableRun, msg: A2aMessage): void {
   run.messages.sort((a, b) => a.seq - b.seq);
   if (stageIndex(msg.stage) > stageIndex(run.stage)) run.stage = msg.stage;
 
-  const from = ensureAgent(run, msg.from, msg.seq);
-  const to = ensureAgent(run, msg.to, msg.seq);
+  const from = ensureAgent(run, msg.from, msg.seq, msg.mode);
+  const to = ensureAgent(run, msg.to, msg.seq, msg.mode);
   if (from) {
     from.mode = msg.mode;
     from.lastSeq = Math.max(from.lastSeq, msg.seq);

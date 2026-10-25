@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T10:33:22.559Z",
+  "at": "2026-10-25T12:24:39.214Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -457,6 +457,30 @@
     "status": "pass",
     "note": "",
     "ms": 71697
+   },
+   {
+    "title": "J20 council board on the track4 replay: org chart, feed filters, verdict with dissent, Demo badge",
+    "status": "pass",
+    "note": "",
+    "ms": 16029
+   },
+   {
+    "title": "J20 degraded replay says Degraded with its reason, in a word and a glyph",
+    "status": "pass",
+    "note": "",
+    "ms": 13487
+   },
+   {
+    "title": "J20 Calm: the board is static and still complete",
+    "status": "pass",
+    "note": "",
+    "ms": 13908
+   },
+   {
+    "title": "J20 fixture session: action items go to the chat through the chat-send helper",
+    "status": "pass",
+    "note": "",
+    "ms": 1824
    }
   ]
  }

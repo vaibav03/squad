@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   KINDS,
   KIND_GLYPH,
@@ -160,11 +160,9 @@ export function Feed({ run, filter, onFilter, jumpTo, selectedId, onSelect }: Fe
   const [stick, setStick] = useState(true);
   const [seen, setSeen] = useState(0);
   const [focusIdx, setFocusIdx] = useState(0);
-  const visible = useMemo(() => filterMessages(run.messages, filter), [run.messages, filter]);
-  const path = useMemo(
-    () => new Set(selectedId ? threadPath(run, selectedId) : []),
-    [run, selectedId],
-  );
+  // The run object is mutated in place by the store, so these are recomputed on every render (a few dozen rows).
+  const visible = filterMessages(run.messages, filter);
+  const path = new Set(selectedId ? threadPath(run, selectedId) : []);
   const [flash, setFlash] = useState<string | null>(null);
 
   const toBottom = useCallback(() => {
@@ -187,24 +185,35 @@ export function Feed({ run, filter, onFilter, jumpTo, selectedId, onSelect }: Fe
     if (near) setSeen(visible.length);
   };
 
-  // A dissent link or "See answer" button: reveal the row even through a filter, scroll to it, flash it.
+  // A dissent link or "See answer" button: reveal the row even through a filter, scroll to it, flash it. The jump
+  // stays pending until its row is on screen, so a later filter change never replays it.
+  const pending = useRef<string | null>(null);
   useEffect(() => {
-    if (!jumpTo) return;
-    if (!visible.some((m) => m.id === jumpTo.id)) {
-      onFilter(NO_FILTER);
+    if (jumpTo) pending.current = jumpTo.id;
+  }, [jumpTo?.n]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const id = pending.current;
+    if (!id) return;
+    if (!visible.some((m) => m.id === id)) {
+      if (filter.agent || filter.kind) onFilter(NO_FILTER);
+      else pending.current = null;
       return;
     }
-    const el = rows.current.get(jumpTo.id);
+    const el = rows.current.get(id);
     if (!el) return;
+    pending.current = null;
     setStick(false);
     el.scrollIntoView({ block: 'center' });
     el.focus({ preventScroll: true });
-    setFlash(jumpTo.id);
+    setFlash(id);
+    setFocusIdx(visible.findIndex((m) => m.id === id));
+  }, [jumpTo?.n, visible.length, filter.agent, filter.kind]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!flash) return;
     const t = setTimeout(() => setFlash(null), 1600);
-    setFocusIdx(visible.findIndex((m) => m.id === jumpTo.id));
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jumpTo?.n, visible.length]);
+  }, [flash]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (!['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter', ' '].includes(e.key)) return;
@@ -282,7 +291,7 @@ export function Feed({ run, filter, onFilter, jumpTo, selectedId, onSelect }: Fe
         onScroll={onScroll}
         onKeyDown={onKeyDown}
         role="feed"
-        aria-label="Agent messages, oldest first"
+        aria-label="Messages, oldest first"
         aria-busy={run.stage !== 'done'}
       >
         {visible.length === 0 ? (
