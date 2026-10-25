@@ -157,7 +157,7 @@ describe('webhook signature (shared secret in sb-signing-secret, constant time, 
   it('401 when the header is missing', async () => {
     const r = await c.fake.inbound({ from: ANA, content: 'hi', groupId: GID1, secret: null });
     expect(r.status).toBe(401);
-    expect((await r.json()).error.code).toBe('missing_signature');
+    expect(((await r.json()) as any).error.code).toBe('missing_signature');
   });
   it('401 for a wrong secret (and a prefix or longer secret)', async () => {
     for (const s of ['nope', WH.slice(0, -1), `${WH}x`, '']) {
@@ -395,7 +395,7 @@ describe('outbound: allowlist, dry run, kill switch BEFORE any network call', ()
   it('a group that is not allowlisted is never sent to: the fake is not called', async () => {
     await bind();
     // bound but removed from the allowlist (simulates drift): the gateway refuses before the transport
-    c.hub.deps.imessage.bind(`Sendblue;+;grp-not-allowed`, c.squadId, c.uid.Ana);
+    c.hub.deps.imessage.bind(`Sendblue;+;grp-not-allowed`, c.squadId, c.uid.Ana!);
     c.hub.deps.chat.postBot({ chatId: `group:${c.squadId}`, personaId: 'cubbie', personaName: 'Cubbie', text: 'only for allowed', citations: [], attachments: [] });
     await waitFor(() => groupSends().some((t) => t.includes('only for allowed')));
     await settle();
