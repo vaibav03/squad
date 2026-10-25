@@ -168,64 +168,80 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
   'exam-oracle': {
     slot: 'exam-oracle',
     title: 'Exam Oracle',
-    tagline: 'Hints at which chapter to study next',
+    tagline: 'Tells you what to study next',
     purpose:
-      'Meant to suggest the chapter most worth studying next, so your revision time goes where it counts.',
+      'Ranks your chapters by what is due for review, what you find hard and what past exams stress, then names the three topics worth your time.',
     who: [
-      { name: 'Oracle', does: 'Holds the orb and names the chapter it expects to matter next.' },
+      {
+        name: 'Oracle',
+        does: 'Reads your review history and your course material, then phrases a short mock question for each top topic.',
+      },
     ],
     how: {
-      phrase: null,
+      phrase: '@cubbie exam oracle',
       steps: [
-        'Nothing in chat calls the oracle yet.',
-        'Walking in shows the orb; its label appears only when a question for it is asked.',
+        'Type the phrase in chat, or ask "what should I study next".',
+        'Read the ranked chapters and the three topics, each with a mock question.',
+        'Walk in to see the chalk note and the full outcome card.',
       ],
     },
     outcome:
-      'Once connected: a short chalk note such as "ch5 next?" on the board. Today the oracle makes no prediction.',
-    privacy: 'It would use only your own study history. Nothing is shared with your squad.',
+      'A ranked list of chapters, the three best topics with a mock question each, the workload in words and why each was picked. A suggestion only: it never marks your answers.',
+    privacy:
+      'It uses only your own review history. Your squad sees the topic names, never your boxes or answers.',
   },
+
   'oral-exam-hut': {
     slot: 'oral-exam-hut',
     title: 'Oral Exam Hut',
     tagline: 'Practise answering out loud',
     purpose:
-      'Meant for practising a spoken exam, answering an examiner out loud instead of typing.',
-    who: [{ name: 'Examiner', does: 'Asks you questions and speaks through live captions.' }],
-    how: {
-      phrase: null,
-      steps: [
-        'Nothing in chat starts an oral exam yet.',
-        'The hut stays locked until an examiner call begins.',
-      ],
-    },
-    outcome:
-      'Once connected: captions of the examiner questions as they are spoken. Today the hut is empty.',
-    privacy: 'A spoken practice would stay between you and the examiner, not your squad.',
-  },
-  'rubric-courthouse': {
-    slot: 'rubric-courthouse',
-    title: 'Rubric Courthouse',
-    tagline: 'Checks your answer against clear criteria',
-    purpose:
-      'Meant to check a written answer against three plain criteria so you see what is missing.',
+      'Practise a spoken exam: an examiner asks one question at a time from your chapters, listens, and follows up where you were vague.',
     who: [
       {
-        name: 'Judge',
-        does: 'Ticks or crosses Clarity, Accuracy and Gaps for each answer you submit.',
+        name: 'Examiner',
+        does: 'Asks the questions, asks one follow-up if you stay vague, then sums up what to revisit.',
       },
     ],
     how: {
-      phrase: null,
+      phrase: '@cubbie oral exam',
       steps: [
-        'Nothing in chat sends an answer here yet.',
-        'Walking in shows the three empty criteria rows.',
+        'Type the phrase in chat, then walk in and press Call.',
+        'Answer out loud or type if you have no microphone; captions always show the questions.',
+        'The examiner closes with written feedback.',
       ],
     },
     outcome:
-      'Once connected: a tick or cross per criterion, never a number. Today the rows stay empty.',
-    privacy: 'Your answers would stay private; only you see the ticks and crosses.',
+      'Three questions with one follow-up each at most, then a feedback summary in words: what was solid and what to revisit. No grades.',
+    privacy:
+      'Your spoken answers are used for this call and not kept. The squad sees that you practised, not what you said.',
   },
+
+  'rubric-courthouse': {
+    slot: 'rubric-courthouse',
+    title: 'Rubric Courthouse',
+    tagline: 'Checks your answer against the rubric',
+    purpose:
+      'Compare your own answer with the real rubric from your syllabus or assignment, and see where clarity, accuracy or gaps cost you.',
+    who: [
+      {
+        name: 'Judge',
+        does: 'Ticks or crosses Clarity, Accuracy and Gaps and quotes your own words as evidence.',
+      },
+    ],
+    how: {
+      phrase: '@cubbie rubric check',
+      steps: [
+        'Type the phrase with your answer, or attach a photo or PDF of it.',
+        'Paste the rubric, or let Cubbie find it in your syllabus or assignment.',
+        'Read the feedback in chat and in the courthouse.',
+      ],
+    },
+    outcome:
+      'A tick or cross for Clarity, Accuracy and Gaps with a comment and a quote from your answer. Feedback only: no grade, and your answer is never rewritten.',
+    privacy: 'Your answer stays between you and Cubbie. The squad sees only that you checked one.',
+  },
+
   'devils-ta': {
     slot: 'devils-ta',
     title: "Devil's TA",
