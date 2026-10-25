@@ -1,77 +1,61 @@
-import { z } from 'zod';
-import { meetsMinGroupSize } from '@squad/core';
-import { studentLabel } from '@squad/village/inspector';
+import {
+  TripConflictSchema,
+  TripViewV2Schema,
+  type AgentState,
+  type TripConflict,
+  type TripOptionV2,
+  type TripViewV2,
+} from '@squad/core';
 
-export const TripOptionSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  dates: z.string(),
-  total: z.number(),
-  /** Does it fit the VIEWER's private limits. Computed server-side; the limits themselves are not in options. */
-  fits: z.boolean(),
-  vetoed: z.boolean().default(false),
-});
-export type TripOption = z.infer<typeof TripOptionSchema>;
+export type { TripConflict, TripOptionV2, TripViewV2 };
 
-export const TripStateSchema = z.object({
-  tripId: z.string(),
-  title: z.string(),
-  options: z.array(TripOptionSchema),
-  members: z.array(z.object({ id: z.string(), name: z.string(), confirmed: z.boolean() })),
-  /** Secret vote: only how many have voted, never who or what. */
-  voted: z.number(),
-  iVoted: z.boolean(),
-  /** The option the squad is converging on (mediator result), if any. */
-  leadingOptionId: z.string().optional(),
-  /** Viewer's own limits only. Absent for everyone else by construction. */
-  myLimits: z.object({ budget: z.number(), notes: z.array(z.string()) }).optional(),
-  confirmed: z.boolean().default(false),
-});
-export type TripState = z.infer<typeof TripStateSchema>;
-
+/** Page-level events: the hub only ever says "something changed, refetch"; mock mode replays whole views. */
 export type TripEvent =
-  | { t: 'trip.updated'; trip: TripState }
-  | { t: 'trip.confirmed'; taskId: string; squadId: string }
-  | { t: 'x.other' };
+  | { t: 'refresh' }
+  | { t: 'trip.updated'; trip: TripViewV2 }
+  | { t: 'trip.confirmed'; taskId: string };
 
-export function tripReducer(state: TripState, ev: TripEvent): TripState {
-  if (ev.t === 'trip.updated')
-    return ev.trip.tripId === state.tripId ? withDerived(ev.trip) : state;
-  if (ev.t === 'trip.confirmed') {
-    return ev.taskId === state.tripId
-      ? {
-          ...state,
-          confirmed: true,
-          members: state.members.map((m) => ({ ...m, confirmed: true })),
-        }
-      : state;
-  }
-  return state;
+export function parseTripView(raw: unknown): TripViewV2 | undefined {
+  const p = TripViewV2Schema.safeParse(raw);
+  return p.success ? p.data : undefined;
 }
 
-export function withDerived(t: TripState): TripState {
-  const all = t.members.length > 0 && t.members.every((m) => m.confirmed);
-  return all && !t.confirmed ? { ...t, confirmed: true } : t;
+/** `GET /v1/trips/current` -> `{trip: view | null}`. `undefined` means the body is not that shape. */
+export function parseCurrent(raw: unknown): { trip: TripViewV2 | null } | undefined {
+  if (!raw || typeof raw !== 'object' || !('trip' in raw)) return undefined;
+  const t = (raw as { trip: unknown }).trip;
+  if (t === null) return { trip: null };
+  const v = parseTripView(t);
+  return v ? { trip: v } : undefined;
+}
+
+/** `{trip}` envelope returned by every mutation. */
+export function parseTripEnvelope(raw: unknown): TripViewV2 | undefined {
+  if (raw && typeof raw === 'object' && 'trip' in raw) return parseTripView((raw as { trip: unknown }).trip);
+  return parseTripView(raw);
+}
+
+export function parseConflict(raw: unknown): TripConflict | undefined {
+  const p = TripConflictSchema.safeParse(raw);
+  return p.success ? p.data : undefined;
 }
 
 export function parseTripEvent(raw: unknown): TripEvent | null {
   if (!raw || typeof raw !== 'object') return null;
-  const r = raw as { t?: string; trip?: unknown; taskId?: string; squadId?: string };
-  if (r.t === 'trip.updated') {
-    const p = TripStateSchema.safeParse(r.trip);
-    return p.success ? { t: 'trip.updated', trip: p.data } : null;
+  const r = raw as { t?: string; type?: string; trip?: unknown; taskId?: string };
+  const kind = r.t ?? r.type;
+  if (kind === 'trip.updated' || kind === 'x.trip.updated') {
+    const v = r.trip ? parseTripView(r.trip) : undefined;
+    return v ? { t: 'trip.updated', trip: v } : { t: 'refresh' };
   }
-  if (r.t === 'trip.confirmed' && typeof r.taskId === 'string' && typeof r.squadId === 'string')
-    return { t: 'trip.confirmed', taskId: r.taskId, squadId: r.squadId };
+  if (kind === 'trip.confirmed' && typeof r.taskId === 'string')
+    return { t: 'trip.confirmed', taskId: r.taskId };
   return null;
 }
 
-/** Even split in whole dollars; the remainder dollars go to the first members so the shares add up exactly. */
-export function splitTotal(total: number, people: number): number[] {
-  if (people <= 0) return [];
-  const base = Math.floor(total / people);
-  const extra = total - base * people;
-  return Array.from({ length: people }, (_, i) => base + (i < extra ? 1 : 0));
+export function tripReducer(state: TripViewV2 | null | undefined, ev: TripEvent) {
+  if (ev.t === 'trip.updated') return state && state.tripId !== ev.trip.tripId ? state : ev.trip;
+  return state;
 }
 
 export const money = (n: number) =>
@@ -81,15 +65,6 @@ export const money = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
-export function showVoteCounts(memberCount: number) {
-  return meetsMinGroupSize(memberCount);
-}
-
-/** Default ranking: open options in the order given. */
-export function initialRanking(options: readonly TripOption[]): string[] {
-  return options.filter((o) => !o.vetoed).map((o) => o.id);
-}
-
 export function move<T>(list: readonly T[], from: number, to: number): T[] {
   if (to < 0 || to >= list.length || from === to) return [...list];
   const next = [...list];
@@ -98,76 +73,79 @@ export function move<T>(list: readonly T[], from: number, to: number): T[] {
   return next;
 }
 
-const dollars = (v: unknown): number => {
-  const n = Number.parseFloat(String(v ?? '').replace(/[^0-9.]/g, ''));
-  return Number.isFinite(n) ? n : 0;
-};
-const nameOf = (id: string) => studentLabel(id);
-
-/**
- * `GET /v1/trips/:tripId` (hub-api.md) -> the page's TripState. `fits` is computed here from the viewer's OWN limits
- * (the hub only sends those to their owner); the secret vote exposes only how many have voted.
- */
-export function tripFromHub(raw: unknown, me: string): TripState | undefined {
-  const h = raw as {
-    tripId?: string;
-    status?: string;
-    dates?: string;
-    options?: { id: string; label: string; estCost?: string }[];
-    votes?: { student: string }[] | null;
-    tallies?: Record<string, number> | null;
-    vetoed?: { optionId: string }[];
-    confirmations?: { student: string; confirmed: boolean }[];
-    myLimits?: Record<string, string> | null;
-  } | null;
-  if (
-    !h ||
-    typeof h.tripId !== 'string' ||
-    !Array.isArray(h.options) ||
-    !Array.isArray(h.confirmations)
-  )
-    return undefined;
-  const vetoed = new Set((h.vetoed ?? []).map((v) => v.optionId));
-  const limits = h.myLimits ?? undefined;
-  const budget = limits ? dollars(limits.budget) : undefined;
-  const options = h.options.map((o) => {
-    const total = dollars(o.estCost);
-    return {
-      id: o.id,
-      name: o.label,
-      dates: h.dates ?? '',
-      total,
-      fits: !vetoed.has(o.id) && (budget === undefined || budget === 0 || total <= budget),
-      vetoed: vetoed.has(o.id),
-    };
-  });
-  const lead = h.tallies
-    ? Object.entries(h.tallies)
-        .filter(([id]) => !vetoed.has(id))
-        .sort((a, b) => b[1] - a[1])[0]?.[0]
-    : undefined;
-  return withDerived({
-    tripId: h.tripId,
-    title: 'Trip planner',
-    options,
-    members: h.confirmations.map((c) => ({
-      id: c.student,
-      name: nameOf(c.student),
-      confirmed: c.confirmed,
-    })),
-    voted: h.votes?.length ?? 0,
-    iVoted: !!h.votes?.some((v) => v.student === me),
-    ...(lead ? { leadingOptionId: lead } : {}),
-    ...(limits
-      ? {
-          myLimits: {
-            budget: budget ?? 0,
-            notes: Object.entries(limits)
-              .filter(([k]) => k !== 'budget')
-              .map(([k, v]) => `${nameOf(k)}: ${v}`),
-          },
-        }
-      : {}),
-    confirmed: h.status === 'confirmed',
-  });
+/** Default ranking: the options still in the running, in the order given (or the viewer's saved vote). */
+export function initialRanking(view: TripViewV2): string[] {
+  const open = view.options.filter((o) => !o.droppedReason).map((o) => o.id);
+  if (!view.myVote) return open;
+  const kept = view.myVote.filter((id) => open.includes(id));
+  return [...kept, ...open.filter((id) => !kept.includes(id))];
 }
+
+export const agentLabel: Record<AgentState, string> = {
+  online: 'Agent online',
+  offline: 'Agent offline',
+  no_agent: 'No agent',
+  unknown: 'Agent unknown',
+};
+
+export const MODE_TITLE = {
+  live: 'live: a real model wrote this wording',
+  degraded: 'degraded: the model fell back partway, so the wording may be simpler',
+  demo: 'demo: scripted rules, no model',
+} as const;
+
+export const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+export function optionMeta(o: TripOptionV2): string {
+  return [o.estCost, o.days ? `${o.days} days` : undefined, o.perPerson !== undefined && !o.estCost ? `${money(o.perPerson)} each` : undefined]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/** Build the create body from the form strings; undefined when the destination is too short. */
+export function createBodyFromForm(f: {
+  destination: string;
+  month: string;
+  days: string;
+  perPerson: string;
+}) {
+  const destination = f.destination.trim();
+  if (destination.length < 2) return undefined;
+  const num = (s: string) => (s.trim() === '' || !Number.isFinite(Number(s)) ? undefined : Math.round(Number(s)));
+  const month = num(f.month);
+  const days = num(f.days);
+  const perPerson = num(f.perPerson);
+  return {
+    destination,
+    ...(month ? { month } : {}),
+    ...(days ? { days } : {}),
+    ...(perPerson !== undefined ? { perPerson } : {}),
+  };
+}
+
+const CUTSCENE_KEY = 'squad.trip.cutscene.';
+/** True exactly once per tripId per browser (sessionStorage); false when storage is unavailable after the first claim. */
+export function claimCutscene(tripId: string): boolean {
+  try {
+    if (sessionStorage.getItem(CUTSCENE_KEY + tripId)) return false;
+    sessionStorage.setItem(CUTSCENE_KEY + tripId, '1');
+    return true;
+  } catch {
+    return false;
+  }
+}
+export const cutsceneHref = (taskId: string) =>
+  `/squad/village?cutscene=trip&task=${encodeURIComponent(taskId)}`;

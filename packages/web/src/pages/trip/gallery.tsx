@@ -1,67 +1,45 @@
-import { useState } from 'react';
 import type { GalleryStory } from '../../overlays/kit';
 import { TripView, type TripViewProps } from './TripView';
 import {
+  tripCancelled,
   tripConfirmed,
   tripConfirming,
-  tripNoLimits,
-  tripOpen,
-  tripSmall,
-  tripVoted,
+  tripExpired,
+  tripFailed,
+  tripPlanning,
+  tripVoting,
+  tripVotingCounts,
+  tripWaiting,
 } from './fixtures';
 
 const base: TripViewProps = {
   status: 'ready',
   connection: 'live',
-  trip: tripOpen,
+  trip: tripPlanning,
   me: 's_ana',
-  onSubmitVote: () => {},
-  onConfirm: () => {},
-  cutsceneDelaySec: 0,
 };
 const S = (p: Partial<TripViewProps>) => <TripView {...base} {...p} />;
 
-function Interactive() {
-  const [t, setT] = useState(tripOpen);
-  return (
-    <TripView {...base} trip={t} onSubmitVote={() => setT({ ...t, iVoted: true, voted: 3 })} />
-  );
-}
-
 export const stories: GalleryStory[] = [
-  { id: 'trip-open', title: 'Trip: voting open', render: () => <Interactive /> },
-  { id: 'trip-voted', title: 'Trip: voted, front runner', render: () => S({ trip: tripVoted }) },
+  { id: 'trip-empty', title: 'Trip: none yet', render: () => S({ trip: null }) },
+  { id: 'trip-planning', title: 'Trip: planning', render: () => S({}) },
+  { id: 'trip-waiting', title: 'Trip: agent offline, waiting', render: () => S({ trip: tripWaiting }) },
+  { id: 'trip-voting', title: 'Trip: voting, counts hidden', render: () => S({ trip: tripVoting }) },
   {
-    id: 'trip-confirming',
-    title: 'Trip: confirmations',
-    render: () => S({ trip: tripConfirming }),
+    id: 'trip-voting-counts',
+    title: 'Trip: voting, counts shown',
+    render: () => S({ trip: tripVotingCounts }),
   },
-  {
-    id: 'trip-confirm-sheet',
-    title: 'Trip: confirm sheet open',
-    render: () => S({ trip: tripConfirming, confirmOpen: true }),
-  },
-  {
-    id: 'trip-confirmed',
-    title: 'Trip: confirmed (cutscene trigger)',
-    render: () => S({ trip: tripConfirmed }),
-  },
-  {
-    id: 'trip-no-limits',
-    title: 'Trip: no private limits',
-    render: () => S({ trip: tripNoLimits }),
-  },
-  {
-    id: 'trip-small-squad',
-    title: 'Trip: squad of 2 (no counts)',
-    render: () => S({ trip: tripSmall }),
-  },
+  { id: 'trip-confirming', title: 'Trip: confirmations', render: () => S({ trip: tripConfirming }) },
+  { id: 'trip-confirmed', title: 'Trip: confirmed', render: () => S({ trip: tripConfirmed }) },
+  { id: 'trip-failed', title: 'Trip: failed', render: () => S({ trip: tripFailed }) },
+  { id: 'trip-expired', title: 'Trip: expired', render: () => S({ trip: tripExpired }) },
+  { id: 'trip-cancelled', title: 'Trip: cancelled', render: () => S({ trip: tripCancelled }) },
   {
     id: 'trip-loading',
     title: 'Trip: loading',
     render: () => S({ status: 'loading', trip: undefined, connection: 'connecting' }),
   },
-  { id: 'trip-empty', title: 'Trip: empty', render: () => S({ trip: undefined }) },
   {
     id: 'trip-error',
     title: 'Trip: error',

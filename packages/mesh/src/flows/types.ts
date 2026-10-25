@@ -125,6 +125,14 @@ export type FlowOutcome =
       status: 'no_plan';
       reason: 'no_option' | 'declined' | 'timeout' | 'offline' | 'no_dates';
     }
+  | {
+      flow: 'trip';
+      status: 'constraints';
+      /** Days free for EVERY member (the only calendar fact revealed). */
+      common: string[];
+      survivors: string[];
+      dropped: { optionId: string; reason: string }[];
+    }
   | { flow: 'study' | 'trip'; status: 'failed'; reason: 'offline' | 'timeout' | 'blocked' };
 
 export interface FlowAgent {
@@ -146,6 +154,8 @@ export interface FlowAgent {
     window: { from: string; to: string };
     options: TripOptionPublic[];
     squadId: string;
+    /** The hub owns the trip record: only budget/veto/overlap are computed, nothing is published to the hub. */
+    constraintsOnly?: boolean;
   }): Promise<FlowOutcome>;
   /** Ask a peer's agent for a private value (the query flow). Always ends in query.denied. */
   askPeer(

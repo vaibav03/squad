@@ -55,6 +55,7 @@ const TripStart = z.strictObject({
   members: z.array(Id).min(2).max(12),
   window: Win,
   squadId: Id,
+  constraintsOnly: z.boolean().optional(),
   options: z
     .array(
       z.strictObject({
