@@ -8,8 +8,8 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `feature/` | 10 | 49 | 330 | Claude Sonnet 5.5 (42) |
-| `fix/` | 2 | 17 | 84 | Claude Sonnet 5.5 (13) |
+| `feature/` | 10 | 65 | 398 | Claude Sonnet 5.5 (57) |
+| `fix/` | 2 | 21 | 100 | Claude Sonnet 5.5 (17) |
 | `nook-ext/` | 1 | 2 | 21 | Claude Sonnet 5.5 (2) |
 | `nook-ui/` | 1 | 1 | 11 | Claude Sonnet 5.5 (1) |
 | `nook-wire/` | 1 | 3 | 41 | Claude Sonnet 5.5 (3) |
@@ -20,16 +20,16 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
 | `feature/context-store` | 6 | 50 | 2026-10-25 03:47 | 2026-10-25 04:07 | Vaibav |
-| `feature/imessage-sync` | 3 | 23 | 2026-10-25 04:07 | 2026-10-25 04:34 | Vaibav |
+| `feature/imessage-sync` | 5 | 32 | 2026-10-25 04:07 | 2026-10-25 04:39 | Vaibav |
 | `feature/nook-parity` | 11 | 35 | 2026-10-25 04:22 | 2026-10-25 04:32 | Vaibav |
 | `feature/release-gate` | 1 | 25 | 2026-10-25 04:07 | 2026-10-25 04:07 | Vaibav |
-| `feature/study-plan` | 7 | 41 | 2026-10-25 03:51 | 2026-10-25 04:34 | Vaibav |
-| `feature/trip-collab` | 1 | 24 | 2026-10-25 04:07 | 2026-10-25 04:07 | Vaibav |
+| `feature/study-plan` | 15 | 71 | 2026-10-25 03:51 | 2026-10-25 04:41 | Vaibav |
+| `feature/trip-collab` | 7 | 53 | 2026-10-25 04:07 | 2026-10-25 04:42 | Vaibav |
 | `feature/typed-mentions` | 8 | 44 | 2026-10-25 03:43 | 2026-10-25 04:16 | Vaibav |
 | `feature/w0-a2a-contracts` | 6 | 28 | 2026-10-25 03:52 | 2026-10-25 04:14 | Vaibav |
 | `feature/w1-council-runtime` | 2 | 19 | 2026-10-25 03:49 | 2026-10-25 04:07 | Vaibav |
 | `feature/w5-council-board` | 4 | 41 | 2026-10-25 03:53 | 2026-10-25 04:07 | Vaibav |
-| `fix/blank-shell` | 8 | 48 | 2026-10-25 03:24 | 2026-10-25 04:17 | Vaibav, Claude |
+| `fix/blank-shell` | 12 | 64 | 2026-10-25 03:24 | 2026-10-25 04:45 | Vaibav, Claude |
 | `fix/floating-chat` | 9 | 36 | 2026-10-25 03:37 | 2026-10-25 04:27 | Vaibav |
 | `nook-ext` | 2 | 21 | 2026-10-25 04:18 | 2026-10-25 04:22 | Vaibav |
 | `nook-ui` | 1 | 11 | 2026-10-25 04:24 | 2026-10-25 04:24 | Vaibav |
@@ -40,9 +40,9 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 227 |
+| (no trailer) | 228 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 546 |
+| Claude Sonnet 5.5 | 565 |
 
 ## Commits landed on main by area (subject prefix)
 
@@ -147,5 +147,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 |---|---:|
 | Claude | 1 |
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 490 |
+| Vaibav | 510 |
 | vaibav03 | 26 |
