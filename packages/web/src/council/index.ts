@@ -18,4 +18,11 @@ export { createPacer, rankingText } from './pacer';
 export type { Pacer, PacerView } from './pacer';
 export { councilFixtures, fixtureTransport } from './fixtures';
 export * from './board';
-export { RunStrip, ResultBoardButton, useResultBoardStore, modeOfResult, stageWords, hasBoardData } from './RunStrip';
+export {
+  RunStrip,
+  ResultBoardButton,
+  useResultBoardStore,
+  modeOfResult,
+  stageWords,
+  hasBoardData,
+} from './RunStrip';

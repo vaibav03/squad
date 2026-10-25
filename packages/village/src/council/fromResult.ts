@@ -17,7 +17,10 @@ export interface BoardResultLike {
  * Messages go first (idempotent per id, so replaying them next to the village SSE does not double anything), then
  * one `council.stage` carrying the question and the current stage. Pure.
  */
-export function resultToBoardEvents(r: BoardResultLike, fallbackCouncil = 'council:ask'): unknown[] {
+export function resultToBoardEvents(
+  r: BoardResultLike,
+  fallbackCouncil = 'council:ask',
+): unknown[] {
   const ev: unknown[] = [];
   const first = (r.messages ?? []).find(
     (m): m is { from: string } => typeof (m as { from?: unknown })?.from === 'string',

@@ -42,8 +42,23 @@ const v2 = (over: Partial<CouncilResult> = {}): CouncilResult => ({
   mode: 'degraded:no_turn',
   stage: 'opinions',
   agents: [
-    { id: 'council:ask-chair', role: 'chair', displayName: 'Chair', mode: 'live', transport: 'stream-text', status: 'done' },
-    { id: 'council:ask-teacher', role: 'specialist', parent: 'council:ask-chair', displayName: 'Teacher', mode: 'degraded:no_turn', transport: 'stream-text', status: 'failed' },
+    {
+      id: 'council:ask-chair',
+      role: 'chair',
+      displayName: 'Chair',
+      mode: 'live',
+      transport: 'stream-text',
+      status: 'done',
+    },
+    {
+      id: 'council:ask-teacher',
+      role: 'specialist',
+      parent: 'council:ask-chair',
+      displayName: 'Teacher',
+      mode: 'degraded:no_turn',
+      transport: 'stream-text',
+      status: 'failed',
+    },
   ],
   messages: [
     msg('am_a', 0, 'question', 'council:ask-chair', 'room', 'status'),
@@ -58,7 +73,9 @@ describe('RunStrip', () => {
     expect(screen.getByText('Degraded: no turn')).toBeTruthy();
     expect(screen.getByText('Step 3 of 7: Opinions')).toBeTruthy();
     const list = screen.getByRole('list', { name: 'Who is on the council' });
-    expect(within(list).getByText('Teacher').parentElement!.textContent).toContain('did not answer');
+    expect(within(list).getByText('Teacher').parentElement!.textContent).toContain(
+      'did not answer',
+    );
     expect(within(list).getByText('Chair').parentElement!.textContent).toContain('answered');
   });
   it('legacy runs (no mode/stage/agents) fall back to the member-based badge and no list', () => {
