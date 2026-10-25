@@ -50,6 +50,15 @@ export const HUD_CSS = `
 .sqv-badge:empty{display:none}
 .sqv-prompt{pointer-events:auto;position:absolute;left:50%;bottom:0;display:flex;gap:10px;align-items:center;height:44px;padding:0 14px;font:inherit;color:var(--fg);cursor:pointer;opacity:0;transform:translate(-50%,8px);transition:opacity .2s var(--ease-out),transform .2s var(--ease-out);visibility:hidden;white-space:nowrap;max-width:100%}
 .sqv-prompt[data-show=true]{opacity:1;transform:translate(-50%,0);visibility:visible}
+.sqv-mchip{position:absolute;left:50%;bottom:52px;display:flex;gap:10px;align-items:center;height:36px;padding:0 12px;white-space:nowrap;opacity:0;transform:translate(-50%,6px);transition:opacity .16s var(--ease-out),transform .16s var(--ease-out);visibility:hidden;pointer-events:none}
+.sqv-mchip[data-show=true]{opacity:1;transform:translate(-50%,0);visibility:visible}
+.sqv-mchip__name{color:var(--muted)}
+.sqv-mchip__pips{display:inline-flex;gap:3px}
+.sqv-mchip__pips i{width:8px;height:12px;border:2px solid var(--muted);border-radius:2px;box-sizing:border-box}
+.sqv-mchip__pips i[data-on]{background:var(--glow);border-color:var(--glow);box-shadow:inset 0 0 0 1px var(--ink)}
+.sqv-mchip__word{color:var(--fg)}
+.sqv-calm .sqv-mchip{transition:none;transform:translate(-50%,0)}
+.sqv-hud[data-layout=narrow] .sqv-mchip{bottom:56px}
 .sqv-key{border:2px solid var(--moon);color:var(--moon);padding:3px 6px;border-radius:5px;font-size:14px}
 .sqv-trip{display:none;pointer-events:auto;position:absolute;right:0;bottom:0;height:44px;padding:0 16px;color:var(--ink);background:var(--glow);border:0;box-shadow:0 0 0 2px var(--ink);font:inherit;cursor:pointer;border-radius:10px}
 .sqv-trip[data-show=true]{display:block;animation:sqv-pop .2s var(--ease-out)}
@@ -77,5 +86,5 @@ export const HUD_CSS = `
 .sqv-hud[data-layout=narrow] .sqv-pop[data-open=true]{opacity:1;transform:none;visibility:visible;transition-delay:0s}
 .sqv-hud[data-layout=narrow] .sqv-pop .sqv-seg{padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none}
 .sqv-hud[data-layout=narrow] .sqv-prompt{bottom:8px}
-@media (prefers-reduced-motion:reduce){.sqv-chip[data-state=waiting_for_student]::before{animation:none;opacity:.55}.sqv-prompt,.sqv-help,.sqv-pop{transition-duration:.12s}}
+@media (prefers-reduced-motion:reduce){.sqv-chip[data-state=waiting_for_student]::before{animation:none;opacity:.55}.sqv-prompt,.sqv-help,.sqv-pop{transition-duration:.12s}.sqv-mchip{transition:none;transform:translate(-50%,0)}}
 `;
