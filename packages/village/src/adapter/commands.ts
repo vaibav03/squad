@@ -65,12 +65,36 @@ export type SceneCommand =
   /** Pulsing ring at a door while waiting for the student's yes. */
   | { readonly c: 'ring'; readonly agent: string; readonly on: boolean }
   | { readonly c: 'tick'; readonly at: Place } // small check mark after confirm.done
-  | { readonly c: 'ledgerCard'; readonly taskId: string; readonly student: string; readonly card: LedgerCard }
+  | {
+      readonly c: 'ledgerCard';
+      readonly taskId: string;
+      readonly student: string;
+      readonly card: LedgerCard;
+    }
   | { readonly c: 'setGlow'; readonly chapter: string; readonly box: number }
-  | { readonly c: 'chalkboard'; readonly chapter: string; readonly mark: 'question' | 'tick' | 'cross' | 'none' }
-  | { readonly c: 'callPortrait'; readonly agent: string; readonly on: boolean; readonly student?: string }
-  | { readonly c: 'councilOpinion'; readonly councilId: string; readonly member: string; readonly text: string }
-  | { readonly c: 'councilRank'; readonly councilId: string; readonly member: string; readonly order: readonly string[] }
+  | {
+      readonly c: 'chalkboard';
+      readonly chapter: string;
+      readonly mark: 'question' | 'tick' | 'cross' | 'none';
+    }
+  | {
+      readonly c: 'callPortrait';
+      readonly agent: string;
+      readonly on: boolean;
+      readonly student?: string;
+    }
+  | {
+      readonly c: 'councilOpinion';
+      readonly councilId: string;
+      readonly member: string;
+      readonly text: string;
+    }
+  | {
+      readonly c: 'councilRank';
+      readonly councilId: string;
+      readonly member: string;
+      readonly order: readonly string[];
+    }
   | {
       readonly c: 'councilVerdict';
       readonly councilId: string;
