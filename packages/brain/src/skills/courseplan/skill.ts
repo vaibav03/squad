@@ -115,7 +115,14 @@ export function createCoursePlanSkill(deps: CoursePlanSkillDeps): Skill {
         : seeded
           ? 'Using the course record I have for you.'
           : 'No record yet, so I used a sample end-of-year-2 record. Tell me what you finished ("I finished CSL 101, CSL 102") to change it.';
-      return [{ chatId: m.chatId, text: `${res.replyText}\n${source}` }];
+      // The catalogue is invented sample data, so the reply says so in its provenance row (never "grounded").
+      return [
+        {
+          chatId: m.chatId,
+          text: `${res.replyText}\n${source}`,
+          provenance: { kind: 'sample', label: 'Fallback: sample catalogue' },
+        },
+      ];
     },
   };
 }

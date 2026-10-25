@@ -16,11 +16,15 @@ export function createPlanPort(deps: Pick<HubDeps, 'plans' | 'log'>): PlanPort {
     const say = res.ok ? res.say : res.say;
     const text = say?.text || (res.ok ? '' : res.message);
     const card = say?.card;
+    const citations = say?.citations;
+    const provenance = say?.provenance;
     const priv = withPrivate && res.plan ? plans.privateNote(v, res.plan) : undefined;
     return {
       ok: res.ok,
       text,
       ...(card ? { card } : {}),
+      ...(citations?.length ? { citations } : {}),
+      ...(provenance ? { provenance } : {}),
       ...(priv ? { privateText: priv } : {}),
     };
   };
@@ -52,6 +56,7 @@ export function createPlanPort(deps: Pick<HubDeps, 'plans' | 'log'>): PlanPort {
                   ok: true,
                   text: plans.summary(cur),
                   card: { type: 'plan', planId: cur.id, rev: cur.rev, status: cur.status },
+                  ...plans.provenanceOf(cur),
                 }
               : {
                   ok: false,

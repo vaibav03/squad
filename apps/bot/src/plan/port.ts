@@ -1,11 +1,14 @@
 // What the chat skill needs from the shared study plan. The hub implements it (apps/hub/src/chat/engine.ts) over its
 // plan service, so the bot never touches plan storage and tests can use a fake.
-import type { ChatCard, PlanReply } from '@squad/core';
+import type { ChatCard, ChatCitation, PlanReply, ProvenanceHint } from '@squad/core';
 
 export interface PlanSayOut {
   /** Plain text for the chat. Group-safe: aggregate or public plan facts only. */
   text: string;
   card?: ChatCard;
+  /** Verified material the plan was built from (chips), or the label the fallback plan states about itself. */
+  citations?: ChatCitation[];
+  provenance?: ProvenanceHint;
   /** Extra lines only the asking student may see (sent as a DM). */
   privateText?: string;
   ok: boolean;

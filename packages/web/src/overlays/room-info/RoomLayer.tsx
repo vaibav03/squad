@@ -12,7 +12,7 @@ export interface RoomLayerProps {
   /** Defaults to the session the village publishes (getRoomSession), picked up late via 'squad:room-session'. */
   session?: RoomSession;
   /** Run a room's phrase. Defaults to session.run when the host wired one. */
-  onRun?: (phrase: string) => void;
+  onRun?: (phrase: string) => unknown;
   calm?: boolean;
   /** Override the info source (tests, harness). Defaults to the village's room copy. */
   infoFor?: (slot: string) => RoomInfo | undefined;

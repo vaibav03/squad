@@ -1,15 +1,14 @@
 import { useLayoutEffect, useRef } from 'react';
-import type { ChatCitation, ChatMessage, HubStatus } from '@squad/core';
+import { messageTruth, TRUTH_LABELS, type ChatCitation, type ChatMessage, type HubStatus } from '@squad/core';
 import { Icon } from '../../primitives/Icon';
 import { Markdown } from '../../primitives/Markdown';
-import { ConfirmMessageCard, QuizMessageCard } from './cards';
-import { CouncilChatCard } from '../../council';
-import { PLAN_OPEN_EVENT } from '@squad/village/rooms';
-import { LiveChatCard } from '../../live/LiveChatCard';
+import { renderCard } from './card-registry';
 import { useSquadConfig } from '../../shell/context';
 import { AudioPlayer, ImageAttachment } from './media';
 import { ChatAvatar } from './parts';
 import { SyncBadge } from './sync/SyncBadge';
+import { ProvenanceRow } from './provenance/ProvenanceRow';
+import { openSource } from '../../components/source-viewer';
 import {
   attachmentLabel,
   citationSpeech,
@@ -93,17 +92,37 @@ export function MessageBubble(p: BubbleProps) {
   const senderId = sender.id;
   const tag = roleTag(sender);
   const bot = sender.kind === 'persona';
-  const showDemo = bot && !!status?.demo;
+  // each message carries its OWN truth badge, independent of the header
+  const truth = messageTruth(m.demo);
+  const showDemo = bot && truth.state !== 'live';
   // Only the bot's replies carry verified sources: a student typing `[x.pdf p.3]` stays plain text.
-  const cites = bot ? resolveCitations(m.text, m.citations) : [];
+  const cites = bot && m.card?.type !== 'council' ? resolveCitations(m.text, m.citations) : [];
+  // Non-PDF sources (Canvas, Drive, Calendar) have no page: they open the source viewer instead of the page sheet.
+  const cite = (c: ChatCitation) => {
+    if (c.source) {
+      const { title, url, ...ref } = c.source;
+      openSource({
+        file: c.file,
+        page: 1,
+        source: {
+          ...ref,
+          ...(title ? { title } : {}),
+          ...(url ? { url } : {}),
+        } as NonNullable<Parameters<typeof openSource>[0]['source']>,
+      });
+    } else p.onCite(c, m.text);
+  };
   const onBubbleClick = (e: React.MouseEvent) => {
     const el = (e.target as HTMLElement).closest('.sq-md__cite');
     if (!el) return;
     const n = Number(el.textContent?.trim());
     const c = cites[n - 1];
-    if (c) p.onCite(c, m.text);
+    if (c) cite(c);
   };
-  const text = m.card && textRepeatsCard(m.text, m.card) ? '' : m.text.trim();
+  // The structured card is the canonical answer; its text twin is for transports that cannot render cards (iMessage,
+  // Discord) and for screen readers (the card carries it as accessible text).
+  const text =
+    m.card?.type === 'council' || (m.card && textRepeatsCard(m.text, m.card)) ? '' : m.text.trim();
   const attachments = m.attachments;
   const cls = [
     'sqc-msg',
@@ -146,9 +165,27 @@ export function MessageBubble(p: BubbleProps) {
               <span
                 className="sqc-pixtag sqc-pixtag--demo"
                 data-testid="chat-demo-label"
-                title="Demo mode answer"
+                title={TRUTH_LABELS[truth.state]}
               >
-                Demo
+                {truth.label}
+              </span>
+            ) : null}
+            {m.repeat ? (
+              <span
+                className="sqc-pixtag"
+                data-testid="chat-repeat"
+                title={`The same message was sent ${m.repeat} times; shown once`}
+              >
+                ×{m.repeat}
+              </span>
+            ) : null}
+            {sender.kind === 'student' ? (
+              <span
+                className="sqs__src"
+                data-testid="chat-source-label"
+                data-source={m.transport === 'imessage' ? 'imessage' : 'web'}
+              >
+                {m.transport === 'imessage' ? 'via iMessage' : 'via web'}
               </span>
             ) : null}
             <time className="sqc-msg__time" dateTime={new Date(m.ts).toISOString()}>
@@ -192,57 +229,7 @@ export function MessageBubble(p: BubbleProps) {
           </div>
         ) : null}
 
-        {m.card?.type === 'quiz' ? (
-          <QuizMessageCard
-            message={m}
-            card={m.card}
-            answered={p.quizAnswer(m.id)}
-            inDm={m.chatId.startsWith('dm:')}
-            onAnswer={(a) => p.onQuizAnswer(m, a)}
-            onOpenDm={p.onOpenDm}
-            disabled={p.paused}
-          />
-        ) : null}
-        {m.card?.type === 'council' ? (
-          <div data-testid="chat-council-card">
-            <CouncilChatCard hub={hub} runId={m.card.runId} calm={p.reduced} />
-          </div>
-        ) : null}
-        {m.card?.type === 'plan' ? (
-          <div className="sqc-plancard" data-testid="chat-plan-card">
-            <strong>Study plan</strong>
-            <span className="rr-dim"> {m.card.status ? `(${m.card.status})` : ''}</span>
-            <a
-              className="lv-btn"
-              href="/squad/village?plan=1"
-              onClick={(e) => {
-                if (location.pathname.includes('/village')) {
-                  e.preventDefault();
-                  globalThis.dispatchEvent(new Event(PLAN_OPEN_EVENT));
-                }
-              }}
-            >
-              Open plan
-            </a>
-          </div>
-        ) : null}
-        {m.card?.type === 'live' ? (
-          <div data-testid="chat-live-card">
-            <LiveChatCard
-              hub={hub}
-              liveId={m.card.liveId}
-              {...(m.card.topic ? { topic: m.card.topic } : {})}
-              calm={p.reduced}
-            />
-          </div>
-        ) : null}
-        {m.card?.type === 'confirm' ? (
-          <ConfirmMessageCard
-            card={m.card}
-            onChoose={(n) => p.onConfirm(m, n)}
-            disabled={p.paused}
-          />
-        ) : null}
+        {m.card ? renderCard(m, m.card, p, hub) : null}
 
         {cites.length ? (
           <div className="sqc-sources" role="group" aria-label="Sources">
@@ -254,7 +241,7 @@ export function MessageBubble(p: BubbleProps) {
                 data-testid="chat-citation-chip"
                 aria-haspopup="dialog"
                 aria-label={citationSpeech(c)}
-                onClick={() => p.onCite(c, m.text)}
+                onClick={() => cite(c)}
               >
                 <span className="sqc-cite__n" aria-hidden="true">
                   {i + 1}
@@ -265,7 +252,10 @@ export function MessageBubble(p: BubbleProps) {
           </div>
         ) : null}
 
+        {bot ? <ProvenanceRow message={m} /> : null}
+
         <SyncBadge
+          {...(row.head && sender.kind === 'student' ? { hideVia: true } : {})}
           {...(m.transport ? { transport: m.transport } : {})}
           {...(m.deliveryState ? { deliveryState: m.deliveryState } : {})}
           {...(m.senderLabel && m.senderLabel !== sender.name

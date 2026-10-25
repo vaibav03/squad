@@ -7,6 +7,7 @@ import type { MiddlewareHandler } from 'hono';
 import { requireViewer, signToken, verifyToken, viewerFor } from '../auth';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 import { canAccessChat } from './access';
+import { collapseRepeatedPairs } from './dedupe';
 import { excerptWindow } from './excerpt';
 import { MAX_UPLOAD_BYTES, UPLOAD_TYPES } from './files';
 
@@ -43,7 +44,8 @@ export function createChatRoutes(deps: HubDeps): HubApp {
       ...(q.data.before !== undefined ? { before: q.data.before } : {}),
       limit: q.data.limit,
     });
-    return c.json({ chatId: q.data.chatId, ...h });
+    // history already on the account from before the send guard: exact repeated prompt+answer pairs show once
+    return c.json({ chatId: q.data.chatId, ...h, messages: collapseRepeatedPairs(h.messages) });
   });
 
   r.post(
@@ -61,7 +63,14 @@ export function createChatRoutes(deps: HubDeps): HubApp {
       if (!body.success) return c.json(err('invalid'), 400);
       const res = await chat().send(c.get('viewer'), body.data);
       if (!res.ok) return c.json(err(res.code), res.status);
-      return c.json({ message: res.message }, 202);
+      return c.json(
+        {
+          message: res.message,
+          ...(res.duplicate ? { duplicate: true } : {}),
+          ...(res.hint ? { hint: res.hint } : {}),
+        },
+        202,
+      );
     },
   );
 

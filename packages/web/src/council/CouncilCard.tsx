@@ -6,6 +6,7 @@ import { LvIcon } from '../overlays/kit/icons';
 import { usePrefersReducedMotion } from '../overlays/kit/hooks';
 import { councilErrorCopy, getCouncil } from './council-client';
 import { ResultBoardButton, RunStrip } from './RunStrip';
+import { ChatCouncilCard } from './ChatCouncilCard';
 import { ErrorBlock, MemberCard, MessageBlock, RankingBlock, VerdictBlock } from './parts';
 
 /**
@@ -140,5 +141,5 @@ export function CouncilChatCard({
         <ErrorBlock message={load.msg} onRetry={retry} />
       </div>
     );
-  return <CouncilCard result={load.r} calm={calm} onRetry={retry} hub={hub} />;
+  return <ChatCouncilCard result={load.r} {...(calm ? { calm } : {})} onRetry={retry} hub={hub} />;
 }

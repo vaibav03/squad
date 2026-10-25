@@ -11,6 +11,7 @@ import { useAuth, useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
 import { HOME_CHECKLIST as CHECKLIST, HOME_LINKS } from './fixtures';
 import { useSetupChecklist } from './setup-state';
+import { HomePlanCard } from './PlanCard';
 import './home.css';
 
 export default function HomePage() {
@@ -91,6 +92,10 @@ export default function HomePage() {
               </div>
             ) : null}
           </Card>
+        </PageSection>
+
+        <PageSection title="Study plan">
+          <HomePlanCard />
         </PageSection>
 
         <PageSection title="Around the village">

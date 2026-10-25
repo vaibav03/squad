@@ -17,6 +17,7 @@ import { openBoard, useBoardStoreRef, useCanOpenBoard } from '../../council/boar
 import { ModeBadge } from '../../council/board/ModeBadge';
 import { openVoice } from './bridge';
 import type { InspectorHub } from './useDmHistory';
+import { useDockPanel } from '../../shell/panel-dock';
 import { MasterySummary, useChapterFor } from '../mastery/MasterySummary';
 import './inspector.css';
 
@@ -132,6 +133,12 @@ export function InspectorPanel({
     const st = returnFocusTo?.();
     if (st) st.focus({ preventScroll: true });
   };
+
+  // A large panel of the village dock: another large panel opening (or the Chat launcher) lets it go, no focus move.
+  useDockPanel('inspector', 'large', open, () => {
+    store.select(null);
+    store.setFollow(false);
+  });
 
   // Esc closes (capture, so it beats the world's "leave the building"), unless another dialog is open.
   useEffect(() => {
