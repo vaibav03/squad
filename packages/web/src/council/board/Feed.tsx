@@ -58,7 +58,8 @@ function Row({
   onSelect(id: string): void;
   rowRef(el: HTMLElement | null): void;
 }) {
-  const private_ = m.redaction === 'asker_only' || (!m.summary && !m.answer && !m.stance);
+  const private_ =
+    m.redaction === 'asker_only' || (!m.summary && !m.answer && !m.stance && !m.order?.length);
   const text = m.summary ?? m.answer ?? m.stance;
   const parent = m.parentMessageId
     ? run.messages.find((x) => x.id === m.parentMessageId)

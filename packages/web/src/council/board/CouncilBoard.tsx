@@ -159,8 +159,8 @@ export function CouncilBoard({
                 selected={filter.agent || focusAgent || ''}
                 onSelect={(id) => setFilter((f) => ({ ...f, agent: id }))}
               />
-              <DelegationCards delegations={run.delegations} onSeeAnswer={onJump} />
               <VerdictCard run={run} onJump={onJump} send={send} sendOffReason={sendOff} />
+              <DelegationCards delegations={run.delegations} onSeeAnswer={onJump} />
             </div>
             <div className="cb-col cb-col--right">
               <Feed

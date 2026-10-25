@@ -234,6 +234,7 @@ const mod = {
     let kbSeat = -1;
     let seatsDirty = false;
     let arrowsOn = false; // arrows on screen: keep repainting the room
+    let boardVersion = -1; // a new council message may start an arrow: repaint once to find out
     const store = (): SeatStore | undefined =>
       ctx.registry.get('inspector') as SeatStore | undefined;
 
@@ -602,6 +603,11 @@ const mod = {
           }
         }
         if (inside) syncSeats(inside);
+        const bv = (ctx.registry.get('councilBoard') as CouncilBoardStore | undefined)?.version ?? -1;
+        if (bv !== boardVersion) {
+          boardVersion = bv;
+          arrowsOn = true;
+        }
         if (inside && (dirty || seatsDirty || arrowsOn)) {
           seatsDirty = false;
           blit(interiorTex, paintRoom(inside, o));

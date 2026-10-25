@@ -195,7 +195,8 @@ export function foldMessage(run: MutableRun, msg: A2aMessage): void {
   if (from) {
     from.mode = msg.mode;
     from.lastSeq = Math.max(from.lastSeq, msg.seq);
-    if (msg.summary) from.summary = msg.summary;
+    // what a sender says while handing out or asking a question is not its own status; keep the last real statement
+    if (msg.summary && msg.kind !== 'delegate' && msg.kind !== 'ask') from.summary = msg.summary;
     if (msg.stance) from.stance = msg.stance;
     if (msg.answer) from.answer = msg.answer;
     if (msg.order) from.order = msg.order;

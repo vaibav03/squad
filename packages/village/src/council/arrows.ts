@@ -164,6 +164,17 @@ export interface SeatRef {
   y: number;
 }
 
+/**
+ * Councils a room seats. The Council Hall is the quiz-key room and also where the Ask council convenes (its
+ * Skeptic, Teacher and Practitioner take the three member seats); the Round Table seats the planner council.
+ */
+export function roomCouncils(roomAgent: string): Set<string> {
+  const room = roomAgent.replace(/^council:/, '').toLowerCase();
+  if (room === 'quizkey') return new Set(['quizkey', 'ask']);
+  if (room === 'planner') return new Set(['planner', 'roundtable']);
+  return new Set([room]);
+}
+
 /** Council prefix and role of an agent id (`council:ask-skeptic` gives ask and skeptic). */
 export function councilRole(id: string): { council: string; role: string } | undefined {
   const m = ROLE_REF.exec(id);
@@ -180,7 +191,7 @@ export function seatPositions(
   seats: readonly SeatRef[],
   roomAgent: string,
 ): { positions: Map<string, Pt>; links: ArrowLink[] } {
-  const room = roomAgent.replace(/^council:/, '').toLowerCase();
+  const room = roomCouncils(roomAgent);
   const members = seats.filter((s) => s.who !== 'chair');
   const taken = new Set<string>();
   const positions = new Map<string, Pt>();
@@ -198,7 +209,7 @@ export function seatPositions(
   const mine = links.filter((l) => {
     const a = councilRole(l.from);
     const b = councilRole(l.to);
-    return !!a && !!b && a.council === room && b.council === room;
+    return !!a && !!b && room.has(a.council) && room.has(b.council);
   });
   for (const l of mine) {
     assign(l.from);

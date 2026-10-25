@@ -47,7 +47,7 @@ export function paintRoomArrows(
         Math.round(q.y) - 1,
         ARROW_PACKET_SIZE,
         ARROW_PACKET_SIZE,
-        'cloudHi',
+        'cloud-hi',
       );
     }
     if (a.alpha > 0.25) {
@@ -57,7 +57,7 @@ export function paintRoomArrows(
         Math.round(mid.x - textWidth(a.label) / 2),
         Math.round(mid.y) - 8,
         a.label,
-        'cloudHi',
+        'cloud-hi',
       );
     }
   }

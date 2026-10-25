@@ -166,3 +166,63 @@ test('J20 fixture session: action items go to the chat through the chat-send hel
   await snap(page, '5-action-items');
   await a.ctx.close();
 });
+
+interface RoomWorld {
+  interactables: { list(): Array<{ id: string; onActivate(): void }> };
+  registry: {
+    get(k: string): { links(ms?: number): Array<{ from: string; to: string }> } | undefined;
+  };
+}
+type RW = { __world?: { debug: { ctx(): RoomWorld | undefined } } };
+
+test('J20 arrows: messages between council agents draw links in the Council Hall room (static in Calm)', async ({
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  for (const calm of [false, true]) {
+    const a = await actor(browser, 's_ana', { reducedMotion: calm ? 'reduce' : 'no-preference' });
+    const { page } = a;
+    await page.goto('/squad/village?board=ask&boardspeed=0.3');
+    await page.waitForFunction(() => (window as unknown as RW).__world?.debug?.ctx?.(), null, {
+      timeout: 40_000,
+    });
+    await page.waitForFunction(
+      () =>
+        (window as unknown as RW)
+          .__world!.debug.ctx()!
+          .interactables.list()
+          .some((i) => i.id === 'enter-council-hall'),
+      null,
+      { timeout: 30_000 },
+    );
+    await expect(page.locator('.sq-world__loading')).toHaveCount(0, { timeout: 60_000 });
+    // the fixture opened the board; close it to walk into the room
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    const hall = page.locator('.rr-layer[data-room="council-hall"]');
+    for (let i = 0; i < 4 && !(await hall.isVisible()); i++) {
+      await page.evaluate(() =>
+        (window as unknown as RW)
+          .__world!.debug.ctx()!
+          .interactables.list()
+          .find((x) => x.id === 'enter-council-hall')!
+          .onActivate(),
+      );
+      await page.waitForTimeout(1500);
+    }
+    await expect(hall).toBeVisible({ timeout: 15_000 });
+    const dialog = page.getByRole('dialog');
+    if (await dialog.isVisible().catch(() => false)) await page.keyboard.press('Escape');
+    // an exchange between two agents arrived in the last moments: that is what the room paints (an arrow lives ~1.7 s)
+    await page.waitForFunction(
+      () =>
+        ((window as unknown as RW).__world!.debug.ctx()!.registry.get('councilBoard')?.links(700)
+          .length ?? 0) > 0,
+      null,
+      { timeout: 30_000, polling: 100 },
+    );
+    await page.waitForTimeout(calm ? 100 : 250);
+    await snap(page, calm ? '7-room-arrows-calm' : '6-room-arrows');
+    await a.ctx.close();
+  }
+});
