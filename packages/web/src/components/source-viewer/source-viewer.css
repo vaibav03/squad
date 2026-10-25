@@ -4,8 +4,7 @@
   gap: var(--space-3);
 }
 .sq-source__tag {
-  font: var(--text-tag) / 1 var(--font-pixel);
-  letter-spacing: var(--tracking-pixel);
+  font: 500 var(--text-sm) / var(--lh-sm) var(--font-sans);
   color: var(--muted-foreground);
   overflow-wrap: anywhere;
 }

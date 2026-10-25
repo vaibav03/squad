@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { HubApp, HubDeps, HubEnv } from '../types';
+import { FIX_TEXT } from './admin';
 
 export const DEMO_NOTICE = 'Demo mode: add GEMINI_API_KEY to .env for real answers';
 
@@ -33,6 +34,7 @@ export function createStatusRoutes(deps: HubDeps): HubApp {
       ...(fake && llm.since ? { since: llm.since } : {}),
       ...(fake && llm.lastProbeAt ? { lastProbeAt: llm.lastProbeAt } : {}),
       ...(fake && llm.nextProbeAt ? { nextProbeAt: llm.nextProbeAt } : {}),
+      ...(fake ? { fix: FIX_TEXT[llm.reason ?? 'no_key'] } : {}),
       ...(fake ? { notice: NOTICES[llm.reason ?? 'no_key'] ?? DEMO_NOTICE } : {}),
     });
   });

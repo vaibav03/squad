@@ -47,11 +47,16 @@ const memStorage = (): Storage => {
   };
 };
 beforeEach(() => {
+  // Fixed clock (local noon) so "Today" and "Yesterday" separators never depend on the time of day the suite runs.
+  // Only Date is faked: timers stay real so Testing Library's polling keeps working.
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 9, 15, 12, 0, 0));
   vi.stubGlobal('localStorage', memStorage());
   vi.stubGlobal('sessionStorage', memStorage());
 });
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   delete document.documentElement.dataset.calm;
 });

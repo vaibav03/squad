@@ -104,7 +104,12 @@ function LiveShellLayout() {
   };
   const onSignOut = () => void account.logout().then(() => navigate('/welcome'));
   return (
-    <SquadProvider hubUrl={HUB_URL} session={session} onSignOut={onSignOut}>
+    <SquadProvider
+      key={account.activeSquadId ?? 'none'}
+      hubUrl={HUB_URL}
+      session={session}
+      onSignOut={onSignOut}
+    >
       <RouterAppShell
         user={{ id: session.userId, name: session.name, avatarUrl: session.avatarUrl }}
         status={{ connection: 'live', label: 'Live' }}
@@ -114,7 +119,9 @@ function LiveShellLayout() {
           <SquadSwitcher
             squads={account.squads}
             activeSquadId={account.activeSquadId}
-            onSwitch={(id) => account.switchSquad(id).then(() => navigate(0))}
+            onSwitch={(id) =>
+              account.switchSquad(id).then(() => navigate('/squad', { replace: true }))
+            }
           />
         }
       >

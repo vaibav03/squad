@@ -53,8 +53,12 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
     });
   });
 
+  // A trip is addressable by its trip id or by its task id (`trip_cabo` or `task_trip_cabo`).
+  const resolveTrip = (id: string) =>
+    deps.trips.get(id) ? id : (deps.trips.byTask(id)?.tripId ?? id);
+
   r.get('/v1/trips/:tripId', need, (c) => {
-    const view = deps.trips.view(c.req.param('tripId'), c.get('viewer'), {
+    const view = deps.trips.view(resolveTrip(c.req.param('tripId')), c.get('viewer'), {
       directory: deps.directory,
     });
     return view ? c.json(view) : c.json(err('not_found'), 404);
@@ -62,7 +66,7 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
 
   r.post('/v1/trips/:tripId/vote', need, async (c) => {
     const v = c.get('viewer');
-    const tripId = c.req.param('tripId');
+    const tripId = resolveTrip(c.req.param('tripId'));
     if (!deps.trips.view(tripId, v, { directory: deps.directory }))
       return c.json(err('not_found'), 404);
     const body = Vote.safeParse(await c.req.json().catch(() => null));
@@ -75,7 +79,7 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
 
   r.post('/v1/trips/:tripId/confirm', need, async (c) => {
     const v = c.get('viewer');
-    const tripId = c.req.param('tripId');
+    const tripId = resolveTrip(c.req.param('tripId'));
     const before = deps.trips.view(tripId, v, { directory: deps.directory });
     if (!before) return c.json(err('not_found'), 404);
     const body = Confirm.safeParse(await c.req.json().catch(() => null));

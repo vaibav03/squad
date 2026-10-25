@@ -439,6 +439,9 @@
   justify-content: space-between;
   gap: var(--lv-s3);
 }
+.cn-verdict__tag .cn-pixel {
+  color: var(--lv-text);
+}
 .cn-verdict__text {
   margin: 0;
   font: 600 var(--text-lg) / var(--lh-lg) var(--lv-font-ui);

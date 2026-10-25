@@ -23,11 +23,16 @@ describe('CouncilHall', () => {
     expect(screen.queryByRole('button', { name: 'Ask the council' })).toBeNull();
   });
 
-  it('opens when the viewer walks in (session published after mount) and closes when they walk out', async () => {
+  it('walking in shows only the launch button; the council event opens it; walking out closes it', async () => {
     render(<CouncilHall hub={hub} />);
     const session = createRoomSession();
     act(() => publishRoomSession(session));
     act(() => session.enter('council-hall'));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Ask the council' })).toBeTruthy(),
+    );
+    expect(dialog()).toBeNull();
+    act(() => void window.dispatchEvent(new Event('squad:council-open')));
     await waitFor(() => expect(dialog()).toBeTruthy());
     act(() => session.leave());
     await waitFor(() => expect(dialog()).toBeNull(), { timeout: 1500 });
@@ -46,6 +51,7 @@ describe('CouncilHall', () => {
     publishRoomSession(session);
     session.enter('council-hall');
     render(<CouncilHall hub={hub} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ask the council' }));
     await waitFor(() => expect(dialog()).toBeTruthy());
     fireEvent.keyDown(dialog()!, { key: 'Escape' });
     await waitFor(() => expect(dialog()).toBeNull(), { timeout: 1500 });

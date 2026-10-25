@@ -114,10 +114,14 @@ export function CouncilPanel(props: CouncilPanelProps) {
     if (!view.verdict || !h) return;
     h.focus({ preventScroll: true });
     // show the whole verdict card from its top edge, not the middle of it
-    h.closest('section')?.scrollIntoView?.({
-      block: 'start',
-      behavior: reduced ? 'auto' : 'smooth',
-    });
+    // scroll only the panel's own container: scrollIntoView would also scroll the page and leave a blank band
+    const card = h.closest('section');
+    const box = h.closest<HTMLElement>('.cn-scroll');
+    if (card && box?.scrollTo) {
+      const top =
+        card.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
+      box.scrollTo({ top, behavior: reduced ? 'auto' : 'smooth' });
+    }
   }, [view.verdict, reduced]);
 
   // Keep the newest step in view while a run plays out.
