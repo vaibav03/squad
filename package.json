@@ -23,7 +23,12 @@
     "demo:live": "tsx scripts/demo/live.ts",
     "dev:all": "tsx scripts/dev/all.ts",
     "doctor": "tsx scripts/doctor.ts",
-    "squad:doctor": "tsx scripts/doctor.ts"
+    "squad:doctor": "tsx scripts/doctor.ts",
+    "perf:check": "node scripts/perf/check.mjs",
+    "perf:bundle": "node scripts/perf/bundle.mjs",
+    "perf:runtime": "node scripts/perf/runtime.mjs",
+    "perf:hub": "tsx scripts/perf/hub-bench.ts",
+    "perf:psi": "tsx scripts/perf/psi-profile.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
