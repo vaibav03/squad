@@ -32,10 +32,15 @@ const settle = () => act(async () => new Promise((r) => setTimeout(r, 30)));
 async function open(
   store: CouncilBoardStore,
   props: Partial<Parameters<typeof CouncilBoard>[0]> = {},
+  view: 'feed' | 'timeline' = 'feed',
 ) {
   const onClose = vi.fn();
   render(<CouncilBoard store={store} open onClose={onClose} {...props} />);
   await settle();
+  if (view === 'feed') {
+    const b = screen.queryByRole('button', { name: 'Message feed' });
+    if (b) fireEvent.click(b);
+  }
   return { dlg: screen.getByRole('dialog'), onClose };
 }
 
@@ -151,14 +156,20 @@ describe('Council board', () => {
     expect(rows[0]!.classList.contains('is-hl')).toBe(true);
   });
 
-  it('org chart: selecting an agent filters the feed, with arrow-key movement between agents', async () => {
+  it('org chart: pressing an agent opens one focused panel that swaps, with arrow-key movement between agents', async () => {
     const { dlg } = await open(loaded());
     const nodes = [...dlg.querySelectorAll<HTMLElement>('.cb-node')];
+    expect(nodes.every((n) => n.tagName === 'BUTTON')).toBe(true);
     const skeptic = nodes.find((n) => n.textContent?.includes('Skeptic'))!;
+    const teacher = nodes.find((n) => n.textContent?.includes('Teacher'))!;
+    skeptic.focus();
     fireEvent.click(skeptic);
-    expect(skeptic.getAttribute('aria-pressed')).toBe('true');
-    for (const r of dlg.querySelectorAll('article.cb-row'))
-      expect(r.textContent).toContain('Skeptic');
+    let panel = screen.getByRole('dialog', { name: /^Skeptic/ });
+    expect(screen.getAllByTestId('agent-focus-panel')).toHaveLength(1);
+    expect(within(panel).getByRole('tab', { name: 'Conversation', selected: true })).toBeTruthy();
+    fireEvent.click(teacher);
+    panel = screen.getByRole('dialog', { name: /^Teacher/ });
+    expect(screen.getAllByTestId('agent-focus-panel')).toHaveLength(1);
     nodes[0]!.focus();
     fireEvent.keyDown(nodes[0]!, { key: 'ArrowRight' });
     expect(document.activeElement).toBe(nodes[1]);
