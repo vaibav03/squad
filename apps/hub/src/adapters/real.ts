@@ -9,6 +9,7 @@ import {
   CaptionUnavailableError,
   chapterProviderFromStore,
   createBrain,
+  createCouncilService,
   createMasteryStore,
   loadFixtureCourse,
   QuizEngine,
@@ -89,6 +90,15 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
   const brain = createBrain({ llm: o.llm, db, emit: brainEmit });
   if (o.loadFixture !== false && !brain.store.getCourse(courseId))
     await loadFixtureCourse({ store: brain.store }, courseId);
+
+  deps.council = createCouncilService({
+    llm: o.llm,
+    db,
+    emit,
+    brain,
+    courseId: () => courseId,
+    demo: false,
+  });
 
   const mastery = createMasteryStore({ db, emit: quizEmit });
   const engine = new QuizEngine({
