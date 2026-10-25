@@ -338,6 +338,39 @@ describe('calls', () => {
     b.stop();
   });
 
+  it('audio.end and mute:true end a mic turn and stream the reply back', async () => {
+    const start = await post<{ callId: string; ticket: string }>(
+      url,
+      '/v1/call/start',
+      { agentId: 'dean' },
+      ana,
+    );
+    const ws = new WebSocket(
+      `${url.replace('http', 'ws')}/v1/call/ws/${start.body.callId}?st=${start.body.ticket}`,
+    );
+    const msgs: { type: string; speaker?: string; code?: string }[] = [];
+    ws.on('message', (d) => msgs.push(JSON.parse(d.toString())));
+    await new Promise<void>((r) => ws.on('open', () => r()));
+    const agentCaptions = () =>
+      msgs.filter((m) => m.type === 'caption' && m.speaker === 'agent').length;
+    for (let i = 0; i < 60 && agentCaptions() < 1; i++) await new Promise((r) => setTimeout(r, 25));
+    const base = agentCaptions();
+    ws.send(new Uint8Array([1, 2, 3, 4]));
+    ws.send(JSON.stringify({ type: 'audio.end' }));
+    for (let i = 0; i < 60 && agentCaptions() < base + 1; i++)
+      await new Promise((r) => setTimeout(r, 25));
+    expect(agentCaptions()).toBe(base + 1);
+    ws.send(new Uint8Array([5, 6]));
+    ws.send(JSON.stringify({ type: 'mute', muted: true }));
+    for (let i = 0; i < 60 && agentCaptions() < base + 2; i++)
+      await new Promise((r) => setTimeout(r, 25));
+    expect(agentCaptions()).toBe(base + 2);
+    ws.send('not json');
+    await new Promise((r) => setTimeout(r, 50));
+    expect(msgs.some((m) => m.type === 'error' && m.code === 'invalid_message')).toBe(true);
+    ws.send(JSON.stringify({ type: 'end' }));
+  });
+
   it('unknown agent is 404', async () => {
     expect((await post(url, '/v1/call/start', { agentId: 'student:s_ben' }, ana)).status).toBe(404);
   });

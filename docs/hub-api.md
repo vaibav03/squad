@@ -2,7 +2,7 @@
 
 Standalone Hono server. This is the contract for web, village, spine, brain, mesh and media leads. It follows `docs/specs/06-web-dashboard.md` and `docs/specs/00-OVERVIEW.md`; where this file is more specific, this file wins until a spec is amended. Event shapes live only in `@squad/core` (`VillageEventSchema`, `ReplayScriptSchema`).
 
-Status: endpoints marked (live) are implemented on `ws/hub`; everything is stable in shape from this commit on. Additive changes only.
+Status: everything here is implemented on `ws/hub` and covered by `apps/hub/test/smoke`. Shapes are stable; changes are additive only. A repeat quiz answer returns `409 { error: { code: 'already_answered' }, recorded: true }`. `POST /v1/call/start` returns 409 `call_in_progress` when the student already has a call; a call whose websocket never connects within 60 s is hung up by the hub. `x.trip.updated` is the stream event name for a trip change (`data` is the viewer-filtered `TripView`).
 
 ## 1. Run and config
 
@@ -57,6 +57,7 @@ Extension envelopes (`x.*`):
 | `x.ingest.progress` | `{ student, courseId, file, status: 'queued'|'parsing'|'embedding'|'ready'|'failed', pct?: number }` | streamed to that student only |
 | `x.persona.speaking` | `{ agent: AgentId, speaking: boolean, callId?: string }` | streamed to the squad |
 | `x.squad.settings` | `{ squadId, revealQuizCorrectness?: boolean }` | store; streamed as `x.squad.settings` |
+| `x.trip.touch` | `{ tripId }` | re-publish the filtered trip as `x.trip.updated` after a change made through the hub |
 
 Event order on the stream is the order the hub accepted them (single writer, monotonic integer `seq` across the whole hub).
 
@@ -123,7 +124,7 @@ Same endpoints serve the village, the web pages and the bot path.
 ## 9. Calls (game-free, port-backed)
 
 - `POST /v1/call/start` `{ agentId }` -> `{ callId, wsUrl, ticket }`. `wsUrl` is `ws(s)://<hub>/v1/call/ws/<callId>`; connect with `?st=<ticket>` (a 5-minute call-scoped token). The hub emits `agent.state in_call` and `call.start { student }`. 404 for an unknown agent, 409 if this student already has an open call.
-- WebSocket `/v1/call/ws/:callId?st=`. Client to server (JSON text frames): `{ "type": "user.text", "text": string }`, `{ "type": "mute", "muted": boolean }`, `{ "type": "end" }`; binary frames are raw audio chunks (`audio/webm;codecs=opus`) passed to the session if it supports audio. Server to client: `{ "type": "ready", callId, agent }`, `{ "type": "caption", seq, speaker: "agent"|"you", text, cite?: Citation }`, `{ "type": "audio", seq, mime, base64 }` (or a binary frame preceded by `{ "type": "audio.meta", seq, mime }`), `{ "type": "ended", reason: "client"|"agent"|"timeout"|"server" }`, `{ "type": "error", code }`. Agent captions are mirrored onto the stream as `call.caption` (the hub, per 00). Idle timeout 5 minutes, hard cap 20 minutes, max 8 concurrent calls (429 beyond).
+- WebSocket `/v1/call/ws/:callId?st=`. Client to server (JSON text frames): `{ "type": "user.text", "text": string }`, `{ "type": "mute", "muted": boolean }`, `{ "type": "audio.end" }`, `{ "type": "end" }`; binary frames are raw audio chunks (`audio/webm;codecs=opus`) buffered by the session (never stored by the hub) if it supports audio. `audio.end` (or `mute: true`) marks the end of a mic turn: the hub calls `CallSession.replyToAudio()` (media transcribes and brain answers) and streams the returned turns as `caption` and `audio` frames; sessions without audio support answer `{ type: "error", code: "audio_unsupported" }` to `audio.end`. Server to client: `{ "type": "ready", callId, agent }`, `{ "type": "caption", seq, speaker: "agent"|"you", text, cite?: Citation }`, `{ "type": "audio", seq, mime, base64 }` (or a binary frame preceded by `{ "type": "audio.meta", seq, mime }`), `{ "type": "ended", reason: "client"|"agent"|"timeout"|"server" }`, `{ "type": "error", code }`. Agent captions are mirrored onto the stream as `call.caption` (the hub, per 00). Idle timeout 5 minutes, hard cap 20 minutes, max 8 concurrent calls (429 beyond).
 - On close (any reason) the hub emits `call.end` and `agent.state idle`.
 - Brain plugs in through `CallPort` and media through `MediaPort` (section 11). The stub agent answers from a canned script with citations.
 
@@ -164,7 +165,8 @@ interface CallPort {
 interface CallSession {
   greeting(): AsyncIterable<CallTurn>;
   reply(userText: string): AsyncIterable<CallTurn>;      // text (and optional audio) turns
-  audio?(chunk: Uint8Array): void;
+  audio?(chunk: Uint8Array): void;                       // mic chunks, buffered
+  replyToAudio?(): AsyncIterable<CallTurn>;               // on audio.end or mute:true
   close(): Promise<void>;
 }
 type CallTurn = { text: string; cite?: Citation; audio?: { mime: string; data: Uint8Array } };
