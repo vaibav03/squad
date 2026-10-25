@@ -57,6 +57,7 @@ export function MasteryPanel(props: MasteryPanelProps) {
   return (
     <OverlayFrame
       open={open}
+      dock="mastery"
       onClose={onClose}
       returnFocusTo={returnFocusTo}
       calm={calm}

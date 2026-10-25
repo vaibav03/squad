@@ -3,7 +3,7 @@
    Tokens from docs/design/tokens.css via --lv-*. Jersey 10 only on small labels. */
 .ai-panel {
   position: absolute;
-  z-index: var(--z-panel);
+  z-index: var(--sq-z-panel);
   left: 0;
   right: 0;
   bottom: 0;
@@ -40,13 +40,14 @@
 @media (min-width: 640px) {
   .ai-panel {
     left: auto;
-    right: var(--lv-s4, 16px);
-    top: 148px; /* below the top HUD chips (Left/Mid/Right/Zoom/Calm) */
+    /* the village dock region (shell/panel-dock.css): below the HUD chips, above the Chat launcher */
+    right: var(--sq-dock-right, var(--lv-s4, 16px));
+    top: var(--sq-dock-top, 148px);
     bottom: auto;
     box-sizing: border-box;
-    width: 380px;
+    width: var(--sq-dock-w, 380px);
     max-width: calc(100% - 32px);
-    max-height: calc(100% - 164px);
+    max-height: calc(100% - var(--sq-dock-top, 148px) - var(--sq-dock-bottom, 16px));
     overflow: hidden;
     border: 1px solid var(--lv-line);
     border-radius: var(--lv-r4, 16px);
@@ -642,7 +643,7 @@
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  z-index: 5;
+  z-index: var(--sq-z-hud);
 }
 .ai-voice:hover .ai-voice__tag,
 .ai-voice:focus-visible .ai-voice__tag {
@@ -680,4 +681,16 @@
   width: auto;
   padding: 0 12px;
   gap: 6px;
+}
+
+/* A short window (laptop at 200% zoom): the card is only a few rows tall, so the whole card scrolls rather than
+   squeezing the body to nothing. */
+@media (min-width: 640px) and (max-height: 639px) {
+  .ai-panel {
+    overflow-y: auto;
+  }
+  .ai-body {
+    flex: none;
+    overflow: visible;
+  }
 }

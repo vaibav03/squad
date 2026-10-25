@@ -517,7 +517,7 @@ export async function runCoursePlanAgents(
       ? ['(Demo, scripted, not Gemini.)']
       : finalMode.startsWith('degraded')
         ? [
-            `(Degraded: ${finalMode.slice(9).replace(/_/g, ' ')}. Parts of the round table were unavailable${have.length === 0 ? ', so the plan comes from built-in rules' : ''}.)`,
+            `(${have.length === 0 ? 'Fallback (demo): ' : ''}Degraded: ${finalMode.slice(9).replace(/_/g, ' ')}. Parts of the round table were unavailable${have.length === 0 ? ', so the plan comes from built-in rules' : ''}.)`,
           ]
         : [];
     const replyText = [
