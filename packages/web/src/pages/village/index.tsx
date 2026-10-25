@@ -34,6 +34,8 @@ export default function VillagePage({ world }: { world?: string }) {
   const cfg = useSquadConfig();
   const { setTitle } = useShell();
   const [calm] = useCalmMode();
+  const calmRef = useRef(calm);
+  calmRef.current = calm;
   const [state, setState] = useState<'loading' | 'ready' | { error: string }>('loading');
   const [event, setEvent] = useState<OverlayEvent | null>(null);
   const q = new URLSearchParams(location.search);
@@ -42,7 +44,10 @@ export default function VillagePage({ world }: { world?: string }) {
   const live = cfg.mode === 'live' && !!cfg.hubUrl && !!cfg.token;
   const runnable = !!cfg.hubUrl && (!!replayName || live);
   const mode = replayName || !live ? 'replay' : 'live';
-  const hub = useMemo(() => (cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token } : null), [cfg.hubUrl, cfg.token]);
+  const hub = useMemo(
+    () => (cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token } : null),
+    [cfg.hubUrl, cfg.token],
+  );
 
   useEffect(() => setTitle('Village'), [setTitle]);
   // Dev/test hook: lets screenshots and Playwright raise an overlay without a world. Not present in production builds.
@@ -69,7 +74,10 @@ export default function VillagePage({ world }: { world?: string }) {
         } else {
           const token = cfg.token ?? undefined;
           const l = createLiveSource({ baseUrl, getToken: () => token, ...(me ? { me } : {}) });
-          void l.start();
+          l.start().catch(
+            () =>
+              !dead && setState({ error: 'The live feed did not start. Check your connection.' }),
+          );
           feed = { source: l, me, close: () => l.close() };
         }
         const mount = await loadWorld(worldId);
@@ -79,11 +87,13 @@ export default function VillagePage({ world }: { world?: string }) {
         const source = trip ? withTripCutscene(feed.source, trip) : feed.source;
         const h = mount({ parent: stage.current, source, me: feed.me, calm, onOverlay: setEvent });
         handle.current = h;
-        (window as unknown as Record<string, unknown>).__world = h;
+        if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__world = h;
         await h.ready;
+        h.setCalm?.(calmRef.current);
         if (!dead) setState('ready');
-      } catch (e) {
-        if (!dead) setState({ error: (e as Error).message });
+      } catch {
+        feed?.close();
+        if (!dead) setState({ error: 'The world could not start. Reload to try again.' });
       }
     })();
     return () => {
@@ -94,7 +104,6 @@ export default function VillagePage({ world }: { world?: string }) {
       setEvent(null);
     };
     // calm is applied live through setCalm; the world is not remounted for it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable]);
 
   const onClosed = useCallback(() => handle.current?.overlayClosed(), []);
@@ -120,7 +129,12 @@ export default function VillagePage({ world }: { world?: string }) {
       )}
       {typeof state === 'object' && (
         <div className="sq-world__loading sq-world__loading--error" role="alert">
-          <EmptyState icon="alert" tone="error" title="The village did not load" body={state.error} />
+          <EmptyState
+            icon="alert"
+            tone="error"
+            title="The village did not load"
+            body={state.error}
+          />
         </div>
       )}
       {replayName && (

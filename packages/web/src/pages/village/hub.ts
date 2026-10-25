@@ -8,16 +8,33 @@ export interface HubCtx {
   token: string | null;
 }
 const base = (c: HubCtx) => c.hubUrl.replace(/\/+$/, '');
-const auth = (c: HubCtx): Record<string, string> => (c.token ? { Authorization: `Bearer ${c.token}` } : {});
+const auth = (c: HubCtx): Record<string, string> =>
+  c.token ? { Authorization: `Bearer ${c.token}` } : {};
 const json = { 'content-type': 'application/json' };
 
 export class HubError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /** Optional copy that is safe to show as is. */
+    readonly userText?: string,
   ) {
     super(message);
   }
+}
+/** Schema failures are the hub's fault, not something to show: they become a 502 with a fixed message. */
+function parseOrThrow<T>(schema: z.ZodType<T>, body: unknown): T {
+  const r = schema.safeParse(body);
+  if (!r.success) throw new HubError(502, 'unexpected hub response');
+  return r.data;
+}
+/** Fixed, user-safe copy for a failed hub call. Never echoes a status line, body or schema error. */
+export function userMessage(e: unknown, fallback: string): string {
+  if (e instanceof HubError) {
+    if (e.status === 401 || e.status === 403) return 'Your session ended. Sign in again.';
+    if (e.status === 409 || e.status === 429) return e.userText ?? fallback;
+  }
+  return fallback;
 }
 async function ok(res: Response, what: string): Promise<Response> {
   if (!res.ok) throw new HubError(res.status, `${what} ${res.status}`);
@@ -35,8 +52,11 @@ const HubQuiz = z.object({
 export const chapterLabel = (c: string) => (/^ch\d+$/i.test(c) ? `Ch${c.slice(2)}` : c);
 
 export async function fetchQuiz(c: HubCtx, quizId: string): Promise<QuizPayload> {
-  const res = await ok(await fetch(`${base(c)}/v1/quiz/${encodeURIComponent(quizId)}`, { headers: auth(c) }), 'quiz');
-  const q = HubQuiz.parse(await res.json());
+  const res = await ok(
+    await fetch(`${base(c)}/v1/quiz/${encodeURIComponent(quizId)}`, { headers: auth(c) }),
+    'quiz',
+  );
+  const q = parseOrThrow(HubQuiz, await res.json());
   return {
     quizId: q.quizId,
     chapter: chapterLabel(q.chapter),
@@ -63,36 +83,62 @@ export async function answerQuiz(
   // 409 already_answered still means the answer is on record.
   if (res.status === 409) return { recorded: true };
   await ok(res, 'answer');
-  return HubResult.parse(await res.json());
+  return parseOrThrow(HubResult, await res.json());
 }
 
 // ---------------------------------------------------------------- confirm
 
 const Trip = z.object({
   tripId: z.string(),
-  options: z.array(z.object({ id: z.string() })),
+  options: z.array(
+    z.object({ id: z.string(), label: z.string().optional(), estCost: z.string().optional() }),
+  ),
   vetoed: z.array(z.object({ optionId: z.string() })).optional(),
   tallies: z.record(z.string(), z.number()).nullable().optional(),
 });
+export interface ConfirmTarget {
+  tripId: string;
+  optionId: string;
+  label: string;
+  cost?: string;
+}
 /**
  * The hub has one confirm endpoint today: `POST /v1/trips/:tripId/confirm {optionId, yes}`. A `confirm.pending` task id
- * maps to its trip by the hub's naming (`task_trip_x` -> `trip_x`); the leading unvetoed option is the one confirmed.
- * Other task kinds have no endpoint yet, so they reject and the sheet shows its error state (contract request in the
- * handoff: a generic `POST /v1/confirms/:taskId`).
+ * maps to its trip by the hub's naming (`task_trip_x` -> `trip_x`); the leading unvetoed option is the one being
+ * confirmed. The sheet shows it BEFORE the student answers, and the answer reuses exactly that option. Other task kinds
+ * have no endpoint yet, so they reject and the sheet shows its error state (contract request: a generic
+ * `POST /v1/confirms/:taskId`).
  */
-export async function resolveConfirm(c: HubCtx, taskId: string, yes: boolean): Promise<void> {
+export async function previewConfirm(c: HubCtx, taskId: string): Promise<ConfirmTarget> {
   const tripId = taskId.replace(/^task_/, '');
-  const view = await ok(await fetch(`${base(c)}/v1/trips/${encodeURIComponent(tripId)}`, { headers: auth(c) }), 'trip');
-  const trip = Trip.parse(await view.json());
+  const res = await ok(
+    await fetch(`${base(c)}/v1/trips/${encodeURIComponent(tripId)}`, { headers: auth(c) }),
+    'trip',
+  );
+  const trip = parseOrThrow(Trip, await res.json());
   const vetoed = new Set((trip.vetoed ?? []).map((v) => v.optionId));
   const open = trip.options.filter((o) => !vetoed.has(o.id));
-  const leading = [...open].sort((a, b) => (trip.tallies?.[b.id] ?? 0) - (trip.tallies?.[a.id] ?? 0))[0] ?? trip.options[0];
+  const leading =
+    [...open].sort((a, b) => (trip.tallies?.[b.id] ?? 0) - (trip.tallies?.[a.id] ?? 0))[0] ??
+    trip.options[0];
   if (!leading) throw new HubError(409, 'trip has no options');
+  return {
+    tripId: trip.tripId,
+    optionId: leading.id,
+    label: leading.label ?? leading.id,
+    ...(leading.estCost ? { cost: leading.estCost } : {}),
+  };
+}
+export async function resolveConfirm(
+  c: HubCtx,
+  target: ConfirmTarget,
+  yes: boolean,
+): Promise<void> {
   await ok(
-    await fetch(`${base(c)}/v1/trips/${encodeURIComponent(trip.tripId)}/confirm`, {
+    await fetch(`${base(c)}/v1/trips/${encodeURIComponent(target.tripId)}/confirm`, {
       method: 'POST',
       headers: { ...json, ...auth(c) },
-      body: JSON.stringify({ optionId: leading.id, yes }),
+      body: JSON.stringify({ optionId: target.optionId, yes }),
     }),
     'confirm',
   );
@@ -107,10 +153,11 @@ export async function startCall(c: HubCtx, agentId: string) {
     headers: { ...json, ...auth(c) },
     body: JSON.stringify({ agentId }),
   });
-  if (res.status === 409) throw new HubError(409, 'You are already on a call.');
-  if (res.status === 429) throw new HubError(429, 'The village is busy. Try again in a moment.');
+  if (res.status === 409) throw new HubError(409, 'busy', 'You are already on a call.');
+  if (res.status === 429)
+    throw new HubError(429, 'busy', 'The village is busy. Try again in a moment.');
   await ok(res, 'call');
-  return CallStart.parse(await res.json());
+  return parseOrThrow(CallStart, await res.json());
 }
 
 export type { Citation };

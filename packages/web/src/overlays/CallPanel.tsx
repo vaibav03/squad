@@ -46,6 +46,7 @@ export function CallPanel(props: CallPanelProps) {
   const reduced = usePrefersReducedMotion(calm);
   const muteBtn = useRef<HTMLButtonElement | null>(null);
   const closeBtn = useRef<HTMLButtonElement | null>(null);
+  const xBtn = useRef<HTMLButtonElement | null>(null);
   const log = useRef<HTMLOListElement | null>(null);
   const stick = useRef(true);
   const ended = status === 'ended';
@@ -76,14 +77,24 @@ export function CallPanel(props: CallPanelProps) {
       placement="dock"
       size="sm"
       className="lv-call"
-      initialFocus={() => (ended ? closeBtn.current : muteBtn.current)}
+      // The mic button is disabled while connecting, so fall back to the close button: focus must land in the dialog.
+      initialFocus={() =>
+        ended
+          ? closeBtn.current
+          : muteBtn.current && !muteBtn.current.disabled
+            ? muteBtn.current
+            : xBtn.current
+      }
+      // One stray scrim click must not hang up a call.
+      dismissOnScrim={ended}
     >
       <span className="lv-grip" aria-hidden="true" />
       <button
+        ref={xBtn}
         type="button"
         className="lv-btn lv-close"
         onClick={onClose}
-        aria-label="Close call panel"
+        aria-label={ended ? 'Close call panel' : 'Hang up and close'}
       >
         <LvIcon name="x" size={20} />
       </button>
@@ -187,13 +198,12 @@ export function CallPanel(props: CallPanelProps) {
             <button
               ref={muteBtn}
               type="button"
-              className="lv-btn lv-call__ctl"
-              aria-pressed={muted}
+              className={`lv-btn lv-call__ctl${muted ? '' : ' lv-call__ctl--hot'}`}
               onClick={() => onMuteChange(!muted)}
               disabled={status === 'connecting'}
             >
               <LvIcon name={muted ? 'mic-off' : 'mic'} size={20} />
-              <span>{muted ? 'Muted' : 'Mute'}</span>
+              <span>{muted ? 'Unmute' : 'Mute'}</span>
             </button>
             <button
               type="button"
@@ -203,7 +213,7 @@ export function CallPanel(props: CallPanelProps) {
               disabled={status === 'connecting'}
             >
               <LvIcon name="hand" size={20} />
-              <span>{handRaised ? 'Hand up' : 'Raise hand'}</span>
+              <span>Raise hand</span>
             </button>
             <button
               type="button"

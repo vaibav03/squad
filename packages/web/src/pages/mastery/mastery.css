@@ -7,7 +7,7 @@
 @media (min-width: 1024px) {
   .lv-mastery__skel,
   .lv-chapters {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(28rem, 1fr));
     align-items: start;
   }
 }

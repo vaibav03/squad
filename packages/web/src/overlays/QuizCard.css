@@ -108,7 +108,7 @@
 .lv-quiz__choice[data-selected] .lv-quiz__key {
   background: var(--sq-sky-low);
   border-color: transparent;
-  color: #fff;
+  color: var(--sq-moon);
 }
 .lv-quiz__text {
   font: 500 var(--text-base) / var(--lh-base) var(--lv-font-ui);

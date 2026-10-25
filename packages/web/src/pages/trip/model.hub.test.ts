@@ -37,7 +37,12 @@ describe('hub adapters', () => {
     expect(tripFromHub({ nope: 1 }, 's_ana')).toBeUndefined();
   });
   it('maps mastery fractions to boxes and hides the squad column when the hub sends none', () => {
-    const raw = { courseId: 'cse310', concepts: ['Hashing', 'Load factor'], mine: [0.9, 0.2], squadAvg: null };
+    const raw = {
+      courseId: 'cse310',
+      concepts: ['Hashing', 'Load factor'],
+      mine: [0.9, 0.2],
+      squadAvg: null,
+    };
     const m = masteryFromHub(raw)!;
     expect(m.chapters[0]!.concepts.map((c) => c.box)).toEqual([5, 1]);
     expect(m.chapters[0]!.concepts[0]).not.toHaveProperty('squadAvg');

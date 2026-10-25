@@ -40,7 +40,14 @@ export function loadWorld(id: string): Promise<WorldMount> {
 
 registerWorld('village', async () => {
   const { mountVillage } = await import('@squad/village');
-  return (o) => mountVillage({ parent: o.parent, source: o.source, me: o.me, calm: o.calm, onOverlay: o.onOverlay });
+  return (o) =>
+    mountVillage({
+      parent: o.parent,
+      source: o.source,
+      me: o.me,
+      calm: o.calm,
+      onOverlay: o.onOverlay,
+    });
 });
 
 // The interior campus registers itself the same way once @squad/interior lands:

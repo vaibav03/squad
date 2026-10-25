@@ -57,7 +57,11 @@ export default function PersonasPage() {
         setLoad({
           status: 'ready',
           // Personas the hub has no voice for yet start on the first voice the hub offers.
-          personas: personas.map((p) => (voices.some((v) => v.id === p.voiceId) ? p : { ...p, voiceId: voices[0]?.id ?? p.voiceId })),
+          personas: personas.map((p) =>
+            voices.some((v) => v.id === p.voiceId)
+              ? p
+              : { ...p, voiceId: voices[0]?.id ?? p.voiceId },
+          ),
           voices,
         }),
       (e: unknown) => !cancelled && setLoad({ status: 'error', offline: e instanceof TypeError }),

@@ -41,7 +41,10 @@ export const SnapshotEntrySchema = z
     blocked: z.literal(true).optional(),
     ts: z.number().optional(),
   })
-  .transform(({ withheld, ...rest }): SnapshotEntryShape => ({ ...rest, ...(withheld ? { withheld: 'hidden' as const } : {}) }));
+  .transform(({ withheld, ...rest }): SnapshotEntryShape => ({
+    ...rest,
+    ...(withheld ? { withheld: 'hidden' as const } : {}),
+  }));
 interface SnapshotEntryShape {
   student: string;
   field: string;

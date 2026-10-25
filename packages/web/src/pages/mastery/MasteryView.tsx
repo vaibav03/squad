@@ -1,9 +1,4 @@
-import {
-  ConnectionBadge,
-  LvIcon,
-  StateBlock,
-  type Connection,
-} from '../../overlays/kit';
+import { ConnectionBadge, LvIcon, StateBlock, type Connection } from '../../overlays/kit';
 import { Page, Skeleton } from '../../primitives';
 import {
   chapterBox,

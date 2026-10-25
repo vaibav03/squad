@@ -217,7 +217,7 @@
   }
 }
 .lv-eyebrow {
-  font: 400 var(--text-tag-lg) / 1 var(--lv-font-caps);
+  font: 600 var(--text-xs) / var(--lh-xs) var(--lv-font-ui);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--lv-text-dim);

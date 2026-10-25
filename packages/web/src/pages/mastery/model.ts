@@ -91,9 +91,16 @@ export function masteryReducer(d: MasteryData, e: VillageEvent, me: string): Mas
  * `squadAvg` is null under 3 members, which hides the squad column.
  */
 export function masteryFromHub(raw: unknown): MasteryData | undefined {
-  const r = raw as { courseId?: unknown; concepts?: unknown; mine?: unknown; squadAvg?: unknown } | null;
-  if (!r || typeof r.courseId !== 'string' || !Array.isArray(r.concepts) || !Array.isArray(r.mine)) return undefined;
-  const box = (n: unknown) => Math.min(5, Math.max(0, Math.round((typeof n === 'number' ? n : 0) * 5)));
+  const r = raw as {
+    courseId?: unknown;
+    concepts?: unknown;
+    mine?: unknown;
+    squadAvg?: unknown;
+  } | null;
+  if (!r || typeof r.courseId !== 'string' || !Array.isArray(r.concepts) || !Array.isArray(r.mine))
+    return undefined;
+  const box = (n: unknown) =>
+    Math.min(5, Math.max(0, Math.round((typeof n === 'number' ? n : 0) * 5)));
   const avg = Array.isArray(r.squadAvg) ? (r.squadAvg as unknown[]) : null;
   const title = r.courseId.toUpperCase();
   return {

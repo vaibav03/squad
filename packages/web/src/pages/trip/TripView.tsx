@@ -173,7 +173,11 @@ function TripBody({
             </p>
           </div>
           <div className="lv-trip__donebtns">
-            <Button variant="primary" iconEnd="arrow-right" onClick={() => onTripConfirmed?.(trip.tripId)}>
+            <Button
+              variant="primary"
+              iconEnd="arrow-right"
+              onClick={() => onTripConfirmed?.(trip.tripId)}
+            >
               Watch in the village
             </Button>
             {delay > 0 && !stay && (

@@ -22,8 +22,16 @@ export async function devLogin(
   } catch {
     throw new Error('The hub is not reachable.');
   }
-  if (!res.ok) throw new Error(res.status === 404 ? 'The hub does not know that student.' : `Sign-in failed (${res.status}).`);
-  const body = (await res.json().catch(() => null)) as { token?: unknown; student?: { id?: unknown; name?: unknown } } | null;
+  if (!res.ok)
+    throw new Error(
+      res.status === 404
+        ? 'The hub does not know that student.'
+        : `Sign-in failed (${res.status}).`,
+    );
+  const body = (await res.json().catch(() => null)) as {
+    token?: unknown;
+    student?: { id?: unknown; name?: unknown };
+  } | null;
   if (typeof body?.token !== 'string' || !body.token) throw new Error('The hub sent no session.');
   return {
     userId: typeof body.student?.id === 'string' ? body.student.id : hubStudentId(student.id),

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, EmptyState } from '../../primitives';
 import { LvIcon } from './icons';
 import { propArt, type PropName } from './art';
@@ -17,33 +17,6 @@ export function useMedia(query: string): boolean {
     return () => mq.removeEventListener('change', on);
   }, [query]);
   return match;
-}
-
-export interface PageHeaderProps {
-  eyebrow?: string;
-  title: string;
-  subtitle?: ReactNode;
-  status?: ReactNode;
-  actions?: ReactNode;
-}
-
-/** Page heading used by the web-live pages: eyebrow caps, 28/34 title, subtitle, status and actions row. */
-export function PageHeader({ eyebrow, title, subtitle, status, actions }: PageHeaderProps) {
-  return (
-    <header className="lv-ph">
-      <div className="lv-ph__main">
-        {eyebrow && <p className="lv-ph__eyebrow">{eyebrow}</p>}
-        <h1 className="lv-ph__title">{title}</h1>
-        {subtitle && <p className="lv-ph__sub">{subtitle}</p>}
-      </div>
-      {(status || actions) && (
-        <div className="lv-ph__side">
-          {status}
-          {actions}
-        </div>
-      )}
-    </header>
-  );
 }
 
 export type Connection = 'live' | 'replaying' | 'connecting' | 'polling' | 'offline' | 'error';

@@ -75,7 +75,9 @@
   animation: none;
 }
 .sq-avatar.is-pixel.is-talking .sq-avatar__body {
-  transform: translateY(calc(var(--lvl) * -2px));
+  /* whole pixels only: 0, -1 or -2px, never a fractional shimmer or a scale */
+  transform: translateY(calc(round(var(--lvl) * 2, 1) * -1px));
+  transition: none;
 }
 .sq-avatar__body img {
   width: 100%;

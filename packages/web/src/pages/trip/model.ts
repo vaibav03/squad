@@ -122,7 +122,13 @@ export function tripFromHub(raw: unknown, me: string): TripState | undefined {
     confirmations?: { student: string; confirmed: boolean }[];
     myLimits?: Record<string, string> | null;
   } | null;
-  if (!h || typeof h.tripId !== 'string' || !Array.isArray(h.options) || !Array.isArray(h.confirmations)) return undefined;
+  if (
+    !h ||
+    typeof h.tripId !== 'string' ||
+    !Array.isArray(h.options) ||
+    !Array.isArray(h.confirmations)
+  )
+    return undefined;
   const vetoed = new Set((h.vetoed ?? []).map((v) => v.optionId));
   const limits = h.myLimits ?? undefined;
   const budget = limits ? dollars(limits.budget) : undefined;
@@ -146,7 +152,11 @@ export function tripFromHub(raw: unknown, me: string): TripState | undefined {
     tripId: h.tripId,
     title: 'Trip planner',
     options,
-    members: h.confirmations.map((c) => ({ id: c.student, name: nameOf(c.student), confirmed: c.confirmed })),
+    members: h.confirmations.map((c) => ({
+      id: c.student,
+      name: nameOf(c.student),
+      confirmed: c.confirmed,
+    })),
     voted: h.votes?.length ?? 0,
     iVoted: !!h.votes?.some((v) => v.student === me),
     ...(lead ? { leadingOptionId: lead } : {}),

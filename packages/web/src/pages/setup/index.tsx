@@ -604,7 +604,7 @@ function PersonaStep({ state, dispatch, onStudio }: StepProps & { onStudio: () =
           ),
         }))}
       />
-      <Button variant="ghost" iconEnd="arrow-right" onClick={onStudio}>
+      <Button variant="ghost" iconEnd="arrow-right" onClick={onStudio} className="sq-setup__studio">
         Open the personas studio
       </Button>
     </div>

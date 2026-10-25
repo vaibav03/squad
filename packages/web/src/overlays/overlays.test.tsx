@@ -156,7 +156,7 @@ describe('CallPanel', () => {
     expect(log.getAttribute('aria-live')).toBe('polite');
     fireEvent.click(screen.getByRole('button', { name: /mute/i }));
     expect(onMute).toHaveBeenCalledWith(true);
-    fireEvent.click(screen.getByRole('button', { name: /hand up/i }));
+    fireEvent.click(screen.getByRole('button', { name: /raise hand/i }));
     expect(onHand).toHaveBeenCalledWith(false);
     fireEvent.click(screen.getAllByRole('button', { name: /Ch5 p1[23]/ })[0]!);
     expect(onCite).toHaveBeenCalled();

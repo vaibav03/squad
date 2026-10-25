@@ -36,7 +36,7 @@
   font-size: var(--text-base);
   border-radius: var(--radius-lg);
 }
-@media (pointer: coarse) {
+@media (pointer: coarse), (max-width: 767px) {
   .sq-btn {
     min-height: var(--touch-min);
   }
@@ -105,6 +105,14 @@
 .sq-btn[aria-disabled='true']:not(.is-loading) {
   opacity: 0.5;
   cursor: not-allowed;
+}
+/* Disabled primaries read as unavailable, not as a washed-out call to action. */
+.sq-btn--primary:disabled {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  border-color: var(--border);
+  opacity: 1;
+  box-shadow: none;
 }
 .sq-btn.is-loading {
   cursor: progress;

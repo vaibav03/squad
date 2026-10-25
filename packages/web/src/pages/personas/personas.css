@@ -164,8 +164,7 @@
   position: fixed;
   inset: auto 0 calc(64px + var(--safe-bottom)) 0;
   z-index: calc(var(--z-dock) - 1);
-  background: color-mix(in oklab, var(--background) 92%, transparent);
-  backdrop-filter: blur(8px);
+  background: var(--background);
   border-top: 1px solid var(--border);
 }
 .sq-pz__barinner {

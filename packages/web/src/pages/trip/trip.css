@@ -129,13 +129,18 @@
 .lv-opt__move {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--lv-s2);
+}
+@media (max-width: 639px) {
+  .lv-opt__move {
+    flex-direction: row;
+  }
 }
 .lv-mv {
   display: grid;
   place-items: center;
   width: var(--lv-tap);
-  height: 36px;
+  height: var(--lv-tap);
   border-radius: var(--lv-r2);
   border: 1px solid var(--lv-line);
   background: var(--lv-surface-2);

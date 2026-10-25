@@ -28,21 +28,22 @@
 .lv-call__portrait {
   position: relative;
   flex: none;
-  width: 96px;
-  height: 96px;
+  width: 120px;
+  height: 120px;
 }
 .lv-call__portrait > img,
 .lv-call__tile {
   position: absolute;
-  /* 64px = exactly 2x the 32px pixel portrait: integer scale only */
-  inset: 16px;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  /* 96px = exactly 3x the 32px pixel portrait: integer scale only, square tile like every other portrait */
+  inset: 12px;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-sm, 4px);
   object-fit: cover;
   image-rendering: pixelated;
   background: var(--sq-sky-deep);
-  border: 2px solid var(--sq-ink);
+  box-sizing: content-box;
+  box-shadow: var(--pixel-outline);
 }
 .lv-call__tile {
   display: grid;
@@ -53,7 +54,7 @@
 .lv-call__ring {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
+  border-radius: var(--radius-md, 8px);
   border: 2px solid var(--sq-glow);
   box-shadow: 0 0 16px 2px var(--sq-glow);
   opacity: var(--lv-glow-o, 0);
@@ -65,7 +66,7 @@
 }
 @keyframes lv-bob {
   to {
-    transform: translateY(-2px);
+    transform: translateY(-3px); /* one art pixel at 3x */
   }
 }
 .lv-ovl[data-reduced='true'] .lv-call__portrait > img,
@@ -147,6 +148,8 @@
   flex-direction: column;
 }
 .lv-call__log {
+  /* the oldest visible line fades out instead of being cut mid-glyph */
+  mask-image: linear-gradient(to bottom, transparent 0, #000 14px);
   list-style: none;
   margin: 0;
   padding: var(--lv-s3);
@@ -273,4 +276,11 @@ button.lv-cite:focus-visible {
   .lv-call__leave {
     grid-column: auto;
   }
+}
+
+/* Amber means the mic is live (the one thing to notice); a muted mic stays neutral. */
+.lv-call__ctl--hot {
+  background: var(--lv-accent);
+  border-color: transparent;
+  color: var(--lv-accent-ink);
 }

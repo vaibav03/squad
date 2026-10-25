@@ -20,10 +20,21 @@ const HubVoice = z.object({
   tags: z.array(z.string()).optional(),
 });
 /** The hub wraps the list (`{ voices }`); a bare array is accepted too. */
-export const HubVoices = z.union([z.array(HubVoice), z.object({ voices: z.array(HubVoice) }).transform((o) => o.voices)]);
+export const HubVoices = z.union([
+  z.array(HubVoice),
+  z.object({ voices: z.array(HubVoice) }).transform((o) => o.voices),
+]);
 
 /** Hub persona `role` is a kind ('cubbie', 'expert', ...); the page fixtures carry the descriptive copy per kind. */
-const KIND_TO_FIXTURE: Record<string, string> = { cubbie: 'buddy', buddy: 'buddy', expert: 'expert', examiner: 'examiner', dean: 'dean', council: 'council', rival: 'rival' };
+const KIND_TO_FIXTURE: Record<string, string> = {
+  cubbie: 'buddy',
+  buddy: 'buddy',
+  expert: 'expert',
+  examiner: 'examiner',
+  dean: 'dean',
+  council: 'council',
+  rival: 'rival',
+};
 
 interface Ctx {
   hubUrl: string;
@@ -38,8 +49,11 @@ export async function fetchPersonas(c: Ctx, fallback: PersonaDraft[]): Promise<P
   const parsed = HubPersonas.parse(await res.json());
   return parsed.map((p) => {
     const base =
-      fallback.find((f) => f.id === p.id) ?? fallback.find((f) => f.id === KIND_TO_FIXTURE[p.role]) ?? fallback[0]!;
-    const avatarId = [p.avatarUrl, p.role, base.avatarId].find((a) => a && pixelPortrait(a)) ?? base.avatarId;
+      fallback.find((f) => f.id === p.id) ??
+      fallback.find((f) => f.id === KIND_TO_FIXTURE[p.role]) ??
+      fallback[0]!;
+    const avatarId =
+      [p.avatarUrl, p.role, base.avatarId].find((a) => a && pixelPortrait(a)) ?? base.avatarId;
     return { ...base, id: p.id, name: p.name, avatarId, voiceId: p.voiceId ?? '' };
   });
 }
