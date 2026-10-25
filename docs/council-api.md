@@ -79,7 +79,7 @@ The hub filter passes `council.*` to every squad member. Private runs emit the s
 
 ## 4. Chat integration
 
-- `ChatCard` has a `council` variant: `{ "type": "council", "runId": "cn_xxxxxxxxxxxx", "question": string }`. The client renders it by fetching `GET /v1/council/:id` (and may watch the stream while `running`).
+- `ChatCard` has a `council` variant: `{ "type": "council", "runId": "cn_xxxxxxxxxxxx", "question"?: string }`. The client renders it by fetching `GET /v1/council/:id` (and may watch the stream while `running`).
 - The web transport turns a bot text reply whose last line is the footer `(council run cn_xxxxxxxxxxxx)` into that card.
 - Bot skill triggers: `@cubbie council <question>` and `ask the council ...`. In a DM the run is private; in the squad chat it is a squad run. The bot replies with the verdict text (`councilVerdictText`) plus the footer line.
 - `councilVerdictText(result)` renders the public fields as plain text for iMessage, Discord and clipboard.

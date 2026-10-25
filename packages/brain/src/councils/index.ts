@@ -15,4 +15,4 @@ export {
   COUNCIL_AGENT,
 } from './ask-run';
 export * from './service';
-export { createDemoCouncilLlm } from './demo';
+export { createDemoCouncilLlm, councilLlmFor } from './demo';

@@ -54,6 +54,8 @@ export interface RunDeps {
 const cut = (s: string, n: number): string =>
   s.length <= n ? s : `${s.slice(0, n - 1).replace(/\s+\S*$/, '')}.`;
 const firstSentence = (s: string): string => /^.*?[.!?](?:\s|$)/s.exec(s.trim())?.[0].trim() ?? s;
+const list = (xs: string[]): string =>
+  xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
 const nameKey = (s: string): string => s.trim().toLowerCase();
 
 /** Runs `fn` with an AbortSignal that fires after `ms`; rejects on timeout. */
@@ -315,13 +317,13 @@ export async function runAskCouncil(
     if (failed.length > 0)
       change((x) =>
         x.notes.push(
-          `${failed.join(' and ')} did not answer in time, so ${answered.length} member${answered.length === 1 ? '' : 's'} voted.`,
+          `${list(failed)} did not answer in time, so ${answered.length} member${answered.length === 1 ? '' : 's'} voted.`,
         ),
       );
     if (g.mode === 'course') {
       const bare = answered.filter((a) => a.citations.length === 0).map((a) => a.name);
       if (bare.length > 0)
-        change((x) => void x.notes.push(`${bare.join(' and ')} gave no verified citation.`));
+        change((x) => void x.notes.push(`${list(bare)} gave no verified citation.`));
     }
     if (answered.length < 2) {
       await idle();
@@ -458,7 +460,7 @@ export async function runAskCouncil(
         note = `${agreeing.length} of ${answered.length} agreed; ${dis.name} saw it differently.`;
       } else if (answered.length < ASK_MEMBERS.length) {
         cap = 'fairly_sure';
-        note = `Both members who answered agreed (${failed.join(' and ')} did not answer).`;
+        note = `Both members who answered agreed (${list(failed)} did not answer).`;
       } else {
         note = 'All three members agreed.';
       }

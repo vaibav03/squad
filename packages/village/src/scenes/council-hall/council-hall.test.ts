@@ -322,8 +322,7 @@ describe('council hall: ask run', () => {
     const script = [...run(false)];
     script.push({
       at: 4500,
-      event: vd({
-      }),
+      event: vd({}),
     });
     script.push({ at: 4600, event: rk('Teacher', [`${a}`, `${b}`, 'Skeptic']) });
     const s = runScript(def, script);

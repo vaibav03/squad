@@ -7,6 +7,7 @@ import {
   chapterIdsFromStore,
   chapterProviderFromStore,
   createBrain,
+  councilLlmFor,
   createCouncilService,
   createCouncilSkill,
   type CouncilService,
@@ -80,7 +81,10 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
   const council =
     d.shared?.council ??
     createCouncilService({
-      llm: d.llm,
+      llm:
+        d.demo === undefined
+          ? d.llm
+          : councilLlmFor(d.llm, typeof d.demo === 'function' ? d.demo : () => d.demo === true),
       db: d.db,
       emit,
       brain,

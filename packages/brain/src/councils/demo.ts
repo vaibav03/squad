@@ -230,3 +230,17 @@ export function createDemoCouncilLlm(): Llm {
     },
   };
 }
+
+/**
+ * The model a council should use: `real` normally, the deterministic council demo model while `isDemo()` is true
+ * (no key, or the real model is out of quota). The generic demo model of the chat cannot produce council JSON.
+ */
+export function councilLlmFor(real: Llm, isDemo: () => boolean): Llm {
+  const demo = createDemoCouncilLlm();
+  const pick = (): Llm => (isDemo() ? demo : real);
+  return {
+    complete: (r) => pick().complete(r),
+    json: (r) => pick().json(r),
+    createCache: (r) => pick().createCache(r),
+  };
+}
