@@ -80,6 +80,9 @@ export function dueReply(
 const range = (q: string, now: number): { from: number; to: number; label: string } => {
   if (/\btoday\b/i.test(q)) return { from: now, to: now + DAY, label: 'today' };
   if (/\btomorrow\b/i.test(q)) return { from: now + DAY, to: now + 2 * DAY, label: 'tomorrow' };
+  if (/\bmonth\b/i.test(q)) return { from: now, to: now + 30 * DAY, label: 'the next 30 days' };
+  if (/\b(next week|two weeks|fortnight)\b/i.test(q))
+    return { from: now, to: now + 14 * DAY, label: 'the next 14 days' };
   return { from: now, to: now + 7 * DAY, label: 'the next 7 days' };
 };
 
