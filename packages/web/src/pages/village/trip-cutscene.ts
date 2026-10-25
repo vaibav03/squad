@@ -96,7 +96,7 @@ export function healFromTrips(viewer: string, body: unknown, now = Date.now()): 
 /** Visible modal UI that the cutscene must not start under. The chat dock is a side panel, not blocking. */
 export function isBlockingUi(root: ParentNode = document): boolean {
   for (const el of Array.from(root.querySelectorAll<HTMLElement>('[role="dialog"]'))) {
-    if (el.closest('[data-testid="chat-dock"]') || el.hidden) continue;
+    if (el.closest('[data-testid="chat-dock"]') || el.classList.contains('sqv-help') || el.hidden) continue;
     const r = el.getBoundingClientRect();
     if (r.width > 0 && r.height > 0) return true;
   }
