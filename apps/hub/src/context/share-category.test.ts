@@ -40,7 +40,7 @@ describe('sharing categories over the Canvas demo + Google demo', () => {
     const tally = async (id: string) => {
       const { sources } = await call('GET', `/v1/connections/${id}/sources`);
       const t: Record<string, number> = { courses: 0, assignments: 0, calendar: 0, drive: 0 };
-      for (const s of sources) t[s.category]++;
+      for (const s of sources) t[s.category] = (t[s.category] ?? 0) + 1;
       return t;
     };
     const canvas = await tally(by('canvas').id);
@@ -53,6 +53,6 @@ describe('sharing categories over the Canvas demo + Google demo', () => {
       drive: 0,
     });
     expect(google.drive).toBe(2);
-    expect(google.drive + canvas.drive).toBe(2);
+    expect((google.drive ?? 0) + (canvas.drive ?? 0)).toBe(2);
   });
 });
