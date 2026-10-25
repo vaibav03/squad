@@ -339,12 +339,12 @@ function MessageList({
         aria-label={`Messages in ${chat.title}`}
         aria-live={quiet || quietOlder ? 'off' : 'polite'}
         aria-relevant="additions text"
-        aria-busy={bucket.loading || undefined}
+        aria-busy={(!bucket.loaded && !bucket.error) || undefined}
         data-testid="chat-thread"
         data-chat-id={chat.id}
         onScroll={onScroll}
       >
-        {bucket.loading && !bucket.loaded ? (
+        {!bucket.loaded && !bucket.error ? (
           <div className="sqc-skeletons" role="status" aria-label="Loading messages">
             {[70, 45, 82, 38].map((w, i) => (
               <div key={i} className={`sqc-skel${i % 3 === 1 ? ' is-own' : ''}`}>

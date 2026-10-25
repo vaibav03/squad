@@ -167,6 +167,18 @@ describe('thread: history', () => {
     );
   });
 
+  it('never flashes the empty state before the history answer arrives', async () => {
+    let release: (r: Response) => void = () => {};
+    const gate = new Promise<Response>((r) => (release = r));
+    render(<Page api={hub({ history: () => gate }).api} />);
+    await screen.findByTestId('chat-thread');
+    expect(screen.queryByText('No messages yet, say hi')).toBeNull();
+    expect(screen.getByRole('status', { name: 'Loading messages' })).toBeTruthy();
+    release(json({ chatId: GID, messages: [msg(1, 'first one')], hasMore: false }));
+    expect(await screen.findByText('first one')).toBeTruthy();
+    expect(screen.queryByText('No messages yet, say hi')).toBeNull();
+  });
+
   it('history hang -> error with reason -> Retry -> messages', async () => {
     let hung = true;
     render(
