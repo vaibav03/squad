@@ -18,7 +18,16 @@ export const WorkSchema = z.strictObject({
   thinking: z.boolean().optional(),
 });
 export type Work = z.infer<typeof WorkSchema>;
-const Extras = { thought: ThoughtSchema.optional(), work: WorkSchema.optional() } as const;
+/**
+ * Optional, additive: what the agent said to the other party, in plain public words (e.g. 'Here are my blinded
+ * free evenings; the calendar itself stays with me'). Filtered like any event text; never a withheld value.
+ */
+export const MessageSchema = z.string().max(280);
+const Extras = {
+  thought: ThoughtSchema.optional(),
+  work: WorkSchema.optional(),
+  message: MessageSchema.optional(),
+} as const;
 
 /**
  * VillageEvent union, exactly per docs/specs/00-OVERVIEW.md. All members are strict: an unknown

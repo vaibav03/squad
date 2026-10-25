@@ -26,8 +26,10 @@ const filterVillageEventRaw: FilterVillageFn = (event, viewer, ctx) => {
     case 'quiz.answer':
     case 'quiz.result': {
       // `thought` could hint at correctness or the key: never forwarded on answers or results.
-      const { correct, thought: _thought, ...rest } = event;
+      const { correct, thought: _thought, message: _message, work: _work, ...rest } = event;
       void _thought;
+      void _message;
+      void _work;
       const own = event.student === viewer.studentId;
       const allowed =
         correct !== undefined &&

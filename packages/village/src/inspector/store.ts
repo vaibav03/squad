@@ -9,6 +9,14 @@ import {
   type RunState,
   type StampedEvent,
 } from './describe';
+import {
+  activeLinks,
+  describeConversation,
+  exchangesFromEvent,
+  mapperFor,
+  type Conversation,
+  type Exchange,
+} from './conversation';
 
 export interface InspectorStoreOptions {
   /** Viewing student id (replay cast.me or the signed-in student). */
@@ -36,6 +44,10 @@ export interface InspectorStore {
   ids(): string[];
   entries(): InspectorEntry[];
   view(id: string): ActivityView | undefined;
+  /** The agent's thread with other agents, who it is talking to, and the viewer-only chat. */
+  conversation(id: string): Conversation;
+  /** Pairs of agents that exchanged something in the last few seconds. */
+  links(): Array<{ a: string; b: string; at: number }>;
   readonly selected: string | null;
   select(id: string | null): void;
   /** Next/previous agent id in list order, wrapping. */
@@ -70,6 +82,8 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
   const recs = new Map<string, Rec>();
   const callOwner = new Map<string, string | undefined>();
   const subs = new Set<() => void>();
+  const exchanges: Exchange[] = [];
+  let xseq = 0;
   let version = 0;
   let selected: string | null = null;
   let follow = false;
@@ -132,7 +146,23 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
   const store: InspectorStore = {
     apply(raw) {
       const p = VillageEventSchema.safeParse(raw);
-      if (!p.success) return;
+      if (!p.success) {
+        // A family outside the core union (e.g. `discussion.*`) plugs in through a registered exchange mapper.
+        const t = (raw as { t?: unknown } | null)?.t;
+        const m = typeof t === 'string' ? mapperFor(t) : undefined;
+        if (m) {
+          const at = now();
+          let got = false;
+          for (const x of m(raw as Record<string, unknown>, { ...(me ? { me } : {}), mine: false })) {
+            exchanges.push({ ...x, at, seq: ++xseq });
+            for (const id of x.parts) rec(id);
+            got = true;
+          }
+          if (exchanges.length > 400) exchanges.splice(0, exchanges.length - 400);
+          if (got) notify();
+        }
+        return;
+      }
       const e = p.data;
       if (e.t === 'call.start') callOwner.set(e.callId, e.student);
       // Another student's call: nothing from it (captions, citations) reaches my inspector except the bare facts.
@@ -153,6 +183,11 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
         r.events.push(stamped);
         if (r.events.length > cap) r.events.shift();
       }
+      for (const x of exchangesFromEvent(e, { ...(me ? { me } : {}), mine })) {
+        exchanges.push({ ...x, at, seq: ++xseq });
+        for (const id of x.parts) rec(id);
+      }
+      if (exchanges.length > 400) exchanges.splice(0, exchanges.length - 400);
       if (e.t === 'call.end') callOwner.delete(e.callId);
       notify();
     },
@@ -175,6 +210,8 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
         now: now(),
       });
     },
+    conversation: (id) => describeConversation(id, exchanges, { ...(me ? { me } : {}), now: now() }),
+    links: () => activeLinks(exchanges, now()),
     entries() {
       return sorted().map((id) => {
         const v = store.view(id)!;
