@@ -31,7 +31,7 @@ export const WALK_FPS = 8;
 export const IDLE_FPS = 2;
 export const SPEAK_FPS = 8;
 export const SPEAK_BOB_PX = 2;
-export const DEFAULT_WALK_SPEED = 48; // px/s at 1x pixel scale
+export const DEFAULT_WALK_SPEED = 72; // px/s at 1x pixel scale (1.5x: agents cross the campus faster)
 export const BUBBLE_CAP = 12;
 export const CONFLICT_TINT = 0xc8442f;
 

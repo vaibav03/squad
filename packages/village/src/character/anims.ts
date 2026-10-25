@@ -2,7 +2,7 @@ import type Phaser from 'phaser';
 
 export const CHAR_ATLAS = 'atlas.characters';
 const RATES: Record<string, number> = { idle: 2, walk: 8, talk: 8, sit: 2, wave: 4 };
-export const WALK_FPS = 12; // 3 px planted-foot stride per frame x 12 fps = 36 px/s: no foot sliding (design handoff)
+export const WALK_FPS = 18; // 3 px planted-foot stride per frame x 18 fps = 54 px/s: no foot sliding (1.5x the handoff 12 fps)
 
 /** Creates `<cast>-<anim>` animations (e.g. 'student-walk') for every group in the composed character atlas. Idempotent. Shared with NPC code. */
 export function ensureCharacterAnims(scene: Phaser.Scene, atlasKey = CHAR_ATLAS): void {
