@@ -13,7 +13,8 @@
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
     "dev": "tsx watch src/main.ts",
     "start": "tsx src/main.ts",
-    "load": "tsx scripts/load.ts"
+    "load": "tsx scripts/load.ts",
+    "test:security": "vitest run --dir test/security --passWithNoTests"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.5",
