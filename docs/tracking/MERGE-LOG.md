@@ -63,3 +63,72 @@ Looked at two: `village-track2-desk.png` shows the night pixel village (moon, st
 - Parent 2 (batch tip, `origin/merge/batch1`): `40e923f20efc4830932d0176b1bceed464d0a878`.
 - Revert command: `git revert -m 1 c96045e6ec17e04d2072f615d43d1b18f8b00a13`.
 - Operational note: in fresh worktrees `git merge` can fail with `fatal: stash failed` until the index is stat-refreshed (a `git diff-index HEAD` or `git status` first fixes it); not a content problem.
+
+## Batch 2: rooms/a + rooms/b into main
+
+Branch: `merge/batch2` (worktree `squad-wt/merge2`), landed on main with a true three-way merge commit. No squash, no rebase, no fast-forward, no force.
+
+### What merged
+
+| Source | Tip sha | Notes |
+| --- | --- | --- |
+| origin/rooms/a | f811652 | Debate Stage, Devil's TA, Feynman and Panic Line emission fixes |
+| origin/rooms/b | 43f3421 | Exam Oracle, Rubric Courthouse, Oral Exam Hut |
+| origin/main (tracking docs) | 39aa87e | merged into the batch branch (`--no-ff`) so the landing merge equals the batch tree |
+
+Batch branch merge commits: rooms/a `b14730e` (parents `b0dfaee`, `f811652`; no conflicts), rooms/b `b3e01c0` (parents `b14730e`, `43f3421`; 4 conflicts), origin/main tracking merge `6886754` (parents `82296e5`, `39aa87e`). The landing merge sha and its parents are appended under "Landing".
+
+### Manual resolutions
+
+1. `apps/bot/src/skills/index.ts`: unioned both registrations (Devil's TA, Debate Stage from rooms/a; Oracle, Oral, Rubric from rooms/b), all after `coursePlan`. Scores untouched: every rooms skill returns 0.95 when addressed and 0 otherwise, the doubt skill stays at 0.9.
+2. `packages/brain/src/index.ts`: unioned the exports (`debate`, `devilta`, `oracle`, `rubric`, `oral`). This exposed a real semantic conflict git could not see: `skills/devilta` and `skills/oracle` both export a function named `clip`, so the barrel failed `tsc` (TS2308). Added one explicit `export { clip } from './skills/devilta'`; nothing imports `clip` from the barrel (checked with grep), both skills keep their own copy via their local index.
+3. `packages/web/src/overlays/room-info/dev/main.tsx`: both branches had added a different `?replay=` mode to the dev harness. Merged into one: `?replay=1` plays `rooms-b-replay.json` keyed by room, `?replay=<url>` plays a JSON array of events (rooms/a capture); `?stop=talk` still works. Both shoot scripts (`shoot-rooms-a.mjs`, `shoot-rooms-b.mjs`) keep working.
+4. `docs/qa/ROOMS-AUDIT.md`: unioned rows. Feynman and Panic rows from rooms/a (OK after the emission fix; rooms/b still said PARTIAL), Exam Oracle, Oral Exam Hut, Rubric Courthouse rows from rooms/b (OK; rooms/a still said MISSING), Debate Stage and Devil's TA from rooms/a.
+5. Clean merges, verified by tests rather than trusted: `apps/bot/src/adversarial/registry.adversarial.test.ts` (16 expected names), `packages/village/src/scenes/routing.ts`, `landmark-b-kit.ts`, `roomInfo.ts`. `pnpm install --frozen-lockfile` passes on the merged tree, so `pnpm-lock.yaml` needed no regeneration.
+6. Cleanup caused by running the suite: tests write TTS audio into `cache/audio/` at the repo root (a rooms/b path); an earlier commit of mine swept those 16 files in, then removed them again and added `cache/audio/` to `.gitignore`. Also fixed `.gitignore`, which on main still carried unresolved `<<<<<<<` conflict markers from batch 1 (it merged "cleanly" because both sides had edited the same lines). Both `docs/design/shots/integration/video/` and `assets/vendor/` stay ignored.
+7. `palette.cpython-314.pyc` (tracked build cache) is rewritten whenever the pixel scripts run; restored to the committed bytes each time and never included.
+
+No code from either branch was dropped.
+
+### Other changes in this batch
+
+- Flaky test fixed at the root: `apps/bot/src/internal-server.test.ts` no longer sleeps a fixed 20 ms; it polls `t.sent.length` (bounded 2 s) before asserting, in both tests that raced. 10 parallel runs of the file: 10/10 pass.
+- `scripts/dev/all.ts`: new `DEV_ALL_AGENT_PORT_BASE` (default 4101) so a second stack can run beside another lead's (their e2e stack held 4101-4104 during this merge).
+- Prettier applied to 10 rooms files that failed `prettier --check` on merge (formatting only).
+- New 13-room village check: `packages/village/src/scenes/roomsAll.test.ts` (66 tests plus a routing table) with recorded events in `docs/design/shots/merge2/events/` (13 files) and the recorder `packages/brain/src/skills/rooms-merge2.record.script.ts` (quiz engine for chapter houses 1-4 and council:quizkey, course-planning round table). The other rooms' events come from their own scripts (debate, devilta, rooms-b record; Feynman and step-diff dumps from rooms/a).
+
+### Verification (merged tree, no `.env`: hub and agents on stubs and FakeLlm)
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | pass |
+| `pnpm typecheck` | pass (after the `clip` fix; failed before it) |
+| `pnpm lint` | pass (0 errors, 2 warnings: unused eslint-disable in apps/web-host/scripts/wire-web-*.mjs, pre-existing) |
+| `pnpm check` | pass |
+| every package's tests, one at a time (`pnpm -r --workspace-concurrency=1 test`) | pass, 13 suites, 1587 tests, 0 failures |
+| 50-line banter suite with all 16 skills registered (`registry.adversarial.test.ts`, `rooms-a.adversarial.test.ts`, rooms/b banter tests) | pass: no skill fires on banter, bot sends nothing |
+| new rooms' tests (Devil's TA 81 tests per rooms/a, debate, oracle, rubric, oral, hub `oral.ws.test.ts`, feynman and stepdiff emission) | pass (inside the suites above) |
+| 13-room village check | pass: 13 rooms x (events valid, routed to the right scene, painted differently from idle in interior and exterior, non-blank), transcript present for the 11 speaking rooms, outcome card for debate, round table, oracle, rubric |
+| routing: council:debate, council:oracle, council:rubric, expert:devil, expert:feynman, expert:stepdiff | all route to their rooms (explicit table test) |
+| `pnpm test:smoke all` | pass |
+| `pnpm demo:live` | `demo:live OK` |
+| Playwright smoke (`apps/web-host/scripts/merge1-smoke.mjs`, chromium, `pnpm dev:all` hub :18988, web :15280, agents :14101-14104) | 12 loads (6 routes x 1280x800 and 390x844): 0 uncaught errors, 0 console errors, 0 failed requests, 0 HTTP >= 400, 936 to 3599 distinct sampled colours per frame, village canvases 426x250 and 195x270 |
+
+Frames and the raw report: `docs/design/shots/merge2/*.png`, `docs/design/shots/merge2/smoke-report.json`.
+Looked at two. `village-track2-desk.png`: populated night village (moon, stars, clouds, campfire, Home house with a lit window, Ana and Pan avatars, envelope sprites, bubbles "Psi blind - 168 blinded tokens (padded)" and "Ben kept calendar hidden", a board with three lock tiles, top nav and nine stage chips C D R F P E O R D). Not blank. `village-track3-phone.png`: phone width, a domed hall and a red phone booth (Panic Line) on the path, an avatar walking, moon and hills, bottom tab bar and chip row; renders cleanly, canvas fills the width with no horizontal scroll.
+
+### Known gaps
+
+- The smoke routes do not enter a room, so the 13-room check is done at the scene and session level (pure painter and `createRoomSession`), not in a browser; the room info panel `RoomLayer` is still not mounted on the village page (QA lead's pending work), so the transcript strip is not visible in the live village yet.
+- Feynman Porch and Panic Line booth emit animation only (`agent.state` and labels), so they have no transcript or outcome by design; the test asserts exactly that.
+- Council Hall, chapter houses and round table were recorded from the engines with FakeLlm, not a real model. The mic path and ElevenLabs for the Oral Exam Hut are not verified live (no keys here).
+- `cache/audio/` is written at the repo root by media or hub tests; now ignored, but the tests should use a temp dir (owner: media lead).
+- Still unmerged: chat/web, qa/web, council/ask.
+
+### Landing (batch 2)
+
+- Landing merge commit on main: `89eb85df65045b41c1d04070d79b91939f7885e1` (true `--no-ff` merge, tree identical to `origin/merge/batch2`, `git diff` empty).
+- Parent 1 (old main, = tag `pre-merge-batch2`): `39aa87e95725833f6846f2bace2db967b53d0598`.
+- Parent 2 (batch tip, `origin/merge/batch2`): `3bbb819343843d513705d0721d7f047800dc787b`.
+- Rollback: `git revert -m 1 89eb85df65045b41c1d04070d79b91939f7885e1` (keeps history). Reset to `pre-merge-batch2` only with the owner's explicit approval.
+- Operational note: in fresh worktrees `git merge` fails with `fatal: stash failed` while the index has stat-dirty entries (`git diff-index HEAD` lists many files); loop `git update-index --really-refresh` until `git diff-index HEAD` is empty, then merge.

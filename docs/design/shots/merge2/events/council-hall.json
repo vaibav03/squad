@@ -1,0 +1,54 @@
+[
+  {
+    "t": "council.opinion",
+    "councilId": "council:quizkey",
+    "member": "solver-a",
+    "text": "MSE averages squared errors, so choice 1."
+  },
+  {
+    "t": "council.opinion",
+    "councilId": "council:quizkey",
+    "member": "solver-b",
+    "text": "MSE averages squared errors, so choice 1."
+  },
+  {
+    "t": "council.opinion",
+    "councilId": "council:quizkey",
+    "member": "solver-c",
+    "text": "MSE averages squared errors, so choice 1."
+  },
+  {
+    "t": "council.rank",
+    "councilId": "council:quizkey",
+    "member": "solver-a",
+    "order": [
+      "solver-b",
+      "solver-c"
+    ]
+  },
+  {
+    "t": "council.rank",
+    "councilId": "council:quizkey",
+    "member": "solver-b",
+    "order": [
+      "solver-a",
+      "solver-c"
+    ]
+  },
+  {
+    "t": "council.rank",
+    "councilId": "council:quizkey",
+    "member": "solver-c",
+    "order": [
+      "solver-a",
+      "solver-b"
+    ]
+  },
+  {
+    "t": "council.verdict",
+    "councilId": "council:quizkey",
+    "member": "chair",
+    "text": "Verified: all solvers agree.",
+    "dissent": false
+  }
+]
