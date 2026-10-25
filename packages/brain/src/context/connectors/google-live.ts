@@ -111,7 +111,7 @@ export async function exchangeGoogleCode(
 export async function googleUserinfo(
   accessToken: string,
   f: typeof fetch = fetch,
-): Promise<{ sub: string; email: string | null }> {
+): Promise<{ sub: string; email: string | null; name: string | null }> {
   const res = await f('https://openidconnect.googleapis.com/v1/userinfo', {
     headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
     signal: AbortSignal.timeout(10_000),
@@ -119,9 +119,9 @@ export async function googleUserinfo(
   if (res.status === 429) throw new ConnectorRateLimitError(retryAfterMs(res));
   if (res.status === 401) throw new ConnectorAuthError(401);
   if (res.status === 403) throw new ConnectorAuthError(403);
-  const json = (await res.json().catch(() => ({}))) as { sub?: string; email?: string };
+  const json = (await res.json().catch(() => ({}))) as { sub?: string; email?: string; name?: string };
   if (!res.ok || !json.sub) throw new Error(`google_userinfo_failed:${res.status}`);
-  return { sub: json.sub, email: json.email?.toLowerCase() ?? null };
+  return { sub: json.sub, email: json.email?.toLowerCase() ?? null, name: json.name ?? null };
 }
 
 const apiHeaders = (a: GoogleAuth) => ({
@@ -205,8 +205,9 @@ const dueMs = (w: CourseWork): number | null =>
     : null;
 
 export function createLiveGoogleConnector(
-  opts: { fetch?: typeof fetch; oauth?: GoogleOAuthConfig } = {},
+  opts: { fetch?: typeof fetch; oauth?: GoogleOAuthConfig; now?: () => number } = {},
 ): GoogleConnector {
+  const clock = opts.now ?? Date.now;
   const f: typeof fetch = opts.fetch ?? ((...a) => fetch(...a));
   const has = (a: GoogleAuth, s: string) => a.scopes.includes(s);
   const getJson = async <T>(
@@ -247,7 +248,7 @@ export function createLiveGoogleConnector(
     async listItems(a, _courseId, o?: ListOpts) {
       content.clear();
       const out: ConnectorItem[] = [];
-      const now = Date.now();
+      const now = clock();
       const from = new Date(o?.windowFrom ?? now - 120 * 86_400_000).toISOString();
       const to = new Date(o?.windowTo ?? now + 180 * 86_400_000).toISOString();
 
@@ -399,7 +400,7 @@ export function createLiveGoogleConnector(
       }
       return {
         accessToken: json.access_token,
-        expiresAt: Date.now() + Math.max(30, json.expires_in ?? 3600) * 1000,
+        expiresAt: clock() + Math.max(30, json.expires_in ?? 3600) * 1000,
       };
     },
   };
