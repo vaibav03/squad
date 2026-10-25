@@ -43,7 +43,7 @@ h.ready.then(() => {
   ];
   for (const [id, name, kind, slotId, state] of demo)
     ctx.agents.register({ id, name, kind, slotId, state });
-  for (const s of ['chapter-1', 'chapter-2', 'council-hall', 'notice-board']) {
+  for (const s of ['notice-board']) {
     const slot = ctx.layout.slot(s);
     ctx.interactables.register({
       id: `demo-${s}`,

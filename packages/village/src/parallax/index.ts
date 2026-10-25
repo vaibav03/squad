@@ -382,7 +382,7 @@ export function createParallax(scene: Phaser.Scene, d: ParallaxDeps) {
       }
       const sailFrame = calm ? 0 : Math.floor(t / 220) % 8;
       for (const m of mills) {
-        const a = millAlpha(m.lx + 0.4 * cam.scrollX, d.layout.slots);
+        const a = millAlpha(parallaxWorldX(m.lx, cam.scrollX, 0.6), d.layout.slots);
         m.body.setAlpha(a);
         m.sails.setAlpha(a).setFrame(sailFrame);
         m.body.setTexture(

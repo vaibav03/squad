@@ -81,3 +81,7 @@ export function millAlpha(
 ): number {
   return clamp01((clearance(worldX, slots) - sailRadius) / 48);
 }
+
+/** World x a parallax prop appears to stand at: layerX + (1 - factor) * scrollX. */
+export const parallaxWorldX = (layerX: number, scrollX: number, factor: number) =>
+  layerX + (1 - factor) * scrollX;
