@@ -13,7 +13,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --dir src --passWithNoTests",
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
-    "dev": "vite --config vite.config.ts"
+    "dev": "vite --config vite.config.ts",
+    "capture": "tsx src/scenes/tools/capture-cli.ts"
   },
   "dependencies": {
     "@squad/core": "workspace:*",
