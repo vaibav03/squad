@@ -1,5 +1,5 @@
 import { timedFetch } from '../../lib/http';
-import { phaseHasData, phaseOf } from '../../lib/connection-phase';
+import { anyConnected } from './model';
 import { hub } from '../connections/api';
 
 /**
@@ -91,7 +91,7 @@ const auth = (ctx: OnboardingCtx) => ({ Authorization: `Bearer ${ctx.token}` });
 export async function deriveConnected(ctx: OnboardingCtx): Promise<boolean | null> {
   try {
     const list = await hub({ hubUrl: base(ctx), token: ctx.token }).list();
-    return list.some((c) => phaseHasData(phaseOf(c)));
+    return anyConnected(list);
   } catch {
     return null;
   }

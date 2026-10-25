@@ -7,7 +7,7 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Avatar } from '../../primitives/Avatar';
 import { Button } from '../../primitives/Button';
 import { Card } from '../../primitives/Card';
@@ -61,7 +61,13 @@ import './setup.css';
 let uid = 0;
 const newId = () => `f${++uid}`;
 
-export default function SetupPage() {
+/** `/squad/setup` with no step is the fresh-user flow (connect, review, share, chat); deep-linked old steps still work. */
+export default function SetupEntry() {
+  const { step } = useParams();
+  return step ? <SetupPage /> : <Navigate to="/squad/welcome-tour" replace />;
+}
+
+function SetupPage() {
   const params = useParams();
   const navigate = useNavigate();
   const { setTitle } = useShell();
