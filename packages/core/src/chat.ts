@@ -51,6 +51,12 @@ export const ChatCardSchema = z.discriminatedUnion('type', [
     input: z.enum(['choice', 'free']),
     choices: z.array(z.strictObject({ id: z.string(), text: z.string() })).optional(),
   }),
+  /** "Ask the council" result; fetch the full CouncilResult from `GET /v1/council/:runId` (docs/council-api.md). */
+  z.strictObject({
+    type: z.literal('council'),
+    runId: z.string().regex(/^cn_[a-z0-9]{12}$/),
+    question: z.string().max(600),
+  }),
 ]);
 export type ChatCard = z.infer<typeof ChatCardSchema>;
 
