@@ -67,7 +67,7 @@ export async function runStep<C>(def: StepDef<C>, mode: Mode, ctx: C): Promise<S
 
   const owners = missing(def.needs);
   if (owners.length) {
-    await guarded(def.preview);
+    if (mode === 'fixture') await guarded(def.preview);
     return done({
       status: 'NOT_BUILT',
       owner: owners,
@@ -81,6 +81,10 @@ export async function runStep<C>(def: StepDef<C>, mode: Mode, ctx: C): Promise<S
   }
 
   if (mode === 'real') {
+    // External prerequisites are reported honestly whether or not a real run was requested.
+    let b: Blocker | undefined;
+    for (const k of def.realNeeds ?? []) b ??= await blockerFor(k);
+    if (b) return done({ status: 'BLOCKED', reason: b.code, runbook: b.runbook, notes: [b.reason] });
     if (!GATE_REAL)
       return done({
         status: 'SKIPPED',
@@ -88,11 +92,9 @@ export async function runStep<C>(def: StepDef<C>, mode: Mode, ctx: C): Promise<S
         runbook: '#smoke-path',
         assertions: [],
       });
-    let b: Blocker | undefined;
-    for (const k of def.realNeeds ?? []) b ??= await blockerFor(k);
-    if (b) return done({ status: 'BLOCKED', reason: b.code, runbook: b.runbook, notes: [b.reason] });
+    // Real runs never use this (fixture-only) stack: `pnpm gate:smoke` drives the real hub and writes the real column.
     if (!def.real)
-      return done({ status: 'BLOCKED', reason: 'no_real_variant', runbook: '#smoke-path' });
+      return done({ status: 'BLOCKED', reason: 'real_via_smoke', runbook: '#smoke-path' });
     await guarded(def.real);
   } else {
     if (!def.fixture) return done({ status: 'BLOCKED', reason: 'no_fixture_variant' });

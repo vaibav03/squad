@@ -70,26 +70,23 @@ export function branchTable(
 /** The capabilities the journey depends on, one probe each. Paths are the review's file ownership table. */
 export const P = {
   context: {
-    owner: 'feature/context-store',
-    files: [{ path: 'packages/core/src/context.ts' }],
-    why: 'ContextItem store, normalizer, retrieval, citation generalisation',
+    owner: 'feature/nook-parity',
+    files: [{ path: 'packages/core/src/context.ts' }, { path: 'packages/brain/src/context/store.ts' }],
+    why: 'ContextItem store, normalizer, retrieval, citation generalisation (feature/context-store lands inside nook-parity)',
   },
   connectors: {
-    owner: 'feature/context-store',
-    files: [
-      { path: 'apps/hub/src/connectors/canvas' },
-      { path: 'apps/hub/src/connectors/google' },
-    ],
-    why: 'Canvas feed + Google OAuth connectors with hub_connections',
+    owner: 'feature/nook-parity',
+    files: [{ path: 'apps/hub/src/routes/connections.ts' }, { path: 'apps/hub/src/context/service.ts' }],
+    why: 'Canvas + Google connections routes with encrypted tokens, minimal scopes and the labelled simulator',
   },
   mentions: {
     owner: 'feature/typed-mentions',
-    files: [{ path: 'apps/bot/src/mention.ts', contains: 'parseMentions' }],
+    files: [{ path: 'packages/core/src/mentions.ts' }],
     why: '@tutor/@planner/@cubbi typed mentions and persona attribution',
   },
   imsync: {
     owner: 'feature/imessage-sync',
-    files: [{ path: 'apps/hub/src/imessage/store.ts', contains: 'chat_msg_xref' }],
+    files: [{ path: 'apps/hub/src/imessage/sync.ts' }],
     why: 'GUID xref, ordering, delivery state, backfill, multi-thread bindings',
   },
   a2a: {
@@ -97,13 +94,10 @@ export const P = {
     files: [{ path: 'packages/core/src/a2a.ts' }],
     why: 'A2A task contracts used by agent delegation and taskId on chat cards',
   },
-  council: {
-    owner: 'feature/w1-council-runtime',
-    why: 'live agent runtime: the addressed persona answers with the same grounded context',
-  },
   board: {
     owner: 'feature/w5-council-board',
-    why: 'agent activity (typing, thinking, offline) surfaced on the board and in chat',
+    files: [{ path: 'packages/village/src/council/module.ts' }],
+    why: 'agent activity (typing, thinking, offline) surfaced on the board',
   },
   trip: {
     owner: 'feature/trip-collab',

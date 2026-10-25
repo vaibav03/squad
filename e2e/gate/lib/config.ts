@@ -7,6 +7,8 @@ export const E2E_DIR = path.resolve(GATE_DIR, '..');
 export const REPO = path.resolve(E2E_DIR, '..');
 export const TMP = path.join(GATE_DIR, '.tmp');
 export const RESULTS_DIR = path.join(TMP, 'results');
+/** `pnpm gate:smoke` writes the real column here (kept apart so a fixture run never wipes it). */
+export const REAL_RESULTS_DIR = path.join(GATE_DIR, '.tmp-real/results');
 export const SHOTS = path.join(REPO, 'docs/design/shots/gate');
 export const REPORT_MD = path.join(REPO, 'docs/qa/RELEASE-GATE-REPORT.md');
 export const REPORT_JSON = path.join(REPO, 'docs/qa/RELEASE-GATE-REPORT.json');

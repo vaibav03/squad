@@ -1,0 +1,3 @@
+# Gate screenshots are run artifacts. Only the key-* shots that report.ts selects are committed.
+*.png
+!key-*.png
