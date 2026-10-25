@@ -1,4 +1,4 @@
-import { spawn, execSync, type ChildProcess } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { REPO, TMP } from '../lib/env';
@@ -8,8 +8,20 @@ const PORT = Number(process.env.E2E_J13_PORT ?? 8893);
 const BASE = `http://localhost:${PORT}`;
 const DB = path.join(TMP, 'j13.db');
 
+function dotenvKey(name: string): string | undefined {
+  try {
+    const m = new RegExp(`^${name}=["']?([^"'\\s#]+)`, 'm').exec(
+      fs.readFileSync(path.join(REPO, '.env'), 'utf8'),
+    );
+    return m?.[1];
+  } catch {
+    return undefined;
+  }
+}
 function hubEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv {
+  const gemini = process.env.GEMINI_API_KEY ?? dotenvKey('GEMINI_API_KEY');
   return {
+    ...(gemini ? { GEMINI_API_KEY: gemini } : {}),
     ...process.env,
     HUB_PORT: String(PORT),
     HUB_BASE_URL: BASE,
@@ -41,10 +53,13 @@ async function up(extra: Record<string, string> = {}) {
   throw new Error('j13 hub did not start');
 }
 function kill9() {
-  try {
-    execSync(`lsof -tiTCP:${PORT} -sTCP:LISTEN | xargs kill -9 || true`);
-  } catch {
-    /* gone */
+  // only the process group this spec spawned (the hub's own children included)
+  if (proc?.pid) {
+    try {
+      process.kill(-proc.pid, 'SIGKILL');
+    } catch {
+      /* gone */
+    }
   }
   proc = null;
 }
@@ -93,6 +108,14 @@ test.afterAll(() => kill9());
 
 test('J13 hub killed mid-session: state persists and the stream resumes with Last-Event-ID, no duplicates', async () => {
   test.setTimeout(180_000);
+  const stale = await fetch(`${BASE}/health`).then(
+    (r) => r.ok,
+    () => false,
+  );
+  expect(
+    stale,
+    `port ${PORT} already answers: a hub from an earlier run is still alive (stop it yourself, or set E2E_J13_PORT)`,
+  ).toBe(false);
   fs.rmSync(DB, { force: true });
   await up({ FORCE_FAKE_LLM: '1' });
   const tok = await login('s_ana');
@@ -102,7 +125,7 @@ test('J13 hub killed mid-session: state persists and the stream resumes with Las
     body: JSON.stringify({ speed: 50 }),
   });
   await new Promise((r) => setTimeout(r, 6000));
-  const before = await sse(tok, 2500);
+  const before = await sse(tok, 2500, '0'); // replay from the start of the log
   expect(before.length).toBeGreaterThan(3);
   const lastId = before[Math.floor(before.length / 2)]!.id!;
   const stateBefore = (await (
@@ -112,9 +135,21 @@ test('J13 hub killed mid-session: state persists and the stream resumes with Las
   await new Promise((r) => setTimeout(r, 1000));
   await up({ FORCE_FAKE_LLM: '1' });
   const tok2 = await login('s_ana'); // tokens are stateless HMAC: the old one also works
-  const stateAfter = (await (
-    await fetch(`${BASE}/v1/squad/state`, { headers: { authorization: `Bearer ${tok}` } })
-  ).json()) as { seq: number };
+  const oldTokenRes = await fetch(`${BASE}/v1/squad/state`, {
+    headers: { authorization: `Bearer ${tok}` },
+  });
+  note(`pre-restart token after restart -> ${oldTokenRes.status}`);
+  expect
+    .soft(
+      oldTokenRes.status,
+      'E2E-010: a bearer token issued before a hub restart is rejected (401) after it; students would be signed out by every restart',
+    )
+    .toBe(200);
+  const freshRes = await fetch(`${BASE}/v1/squad/state`, {
+    headers: { authorization: `Bearer ${tok2}` },
+  });
+  expect(freshRes.status).toBe(200);
+  const stateAfter = (await freshRes.json()) as { seq: number };
   note(`seq before ${stateBefore.seq} after restart ${stateAfter.seq}`);
   expect(stateAfter.seq, 'event log must persist across a hub restart').toBeGreaterThanOrEqual(
     stateBefore.seq,
@@ -155,12 +190,7 @@ test('J13 credits depleted (HTTP 402): banner status, then recovery path', async
   // Needs the real Gemini key. Without injection support (the Gemini endpoint is not configurable) this can only
   // be observed against the real API, which currently answers 402.
   kill9();
-  const hasKey =
-    /GEMINI_API_KEY\s*=\s*\S+/.test(
-      fs.existsSync(path.join(REPO, '.env'))
-        ? fs.readFileSync(path.join(REPO, '.env'), 'utf8')
-        : '',
-    ) || !!process.env.GEMINI_API_KEY;
+  const hasKey = !!(process.env.GEMINI_API_KEY ?? dotenvKey('GEMINI_API_KEY'));
   if (!hasKey)
     blocked(
       'no GEMINI_API_KEY available to provoke a real 402; the Gemini endpoint cannot be stubbed (no base-URL env)',

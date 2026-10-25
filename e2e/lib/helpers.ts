@@ -1,4 +1,10 @@
-import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
+import {
+  test as base,
+  expect,
+  type Browser,
+  type BrowserContext,
+  type Page,
+} from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { HUB, LIVE, SHOTS, WEB, type StudentId } from './env';
@@ -64,24 +70,6 @@ export async function actor(
     isMobile: !!opts.viewport && opts.viewport.width < 500,
     hasTouch: !!opts.viewport && opts.viewport.width < 500,
   });
-  const session = {
-    userId: id,
-    name: NAMES[id],
-    token,
-    avatarUrl: `/avatars/${WEB_ID(id)}.png`,
-    live: true,
-  };
-  await ctx.addInitScript((s) => {
-    try {
-      if (!localStorage.getItem('squad.token')) localStorage.setItem('squad.token', s.token);
-      if (!localStorage.getItem('squad.session'))
-        localStorage.setItem('squad.session', JSON.stringify(s));
-      // the accounts layer reads its bearer from squad.token
-      if (!localStorage.getItem('squad.token')) localStorage.setItem('squad.token', s.token);
-    } catch {
-      /* ignore */
-    }
-  }, session);
   const page = await ctx.newPage();
   const a: Actor = {
     id,
@@ -93,6 +81,11 @@ export async function actor(
     consoleErrors: [],
     pageErrors: [],
   };
+  // live hub: accounts layer; sign in through the real screen (dev-login -> adoptToken)
+  await page.goto('/signin');
+  await page.getByRole('radio', { name: new RegExp(`^${NAMES[id]}`) }).click();
+  await page.getByRole('button', { name: new RegExp(`as ${NAMES[id]}`) }).click();
+  await page.waitForURL(/\/squad/, { timeout: 20_000 });
   page.on('console', (m) => {
     if (m.type() === 'error') a.consoleErrors.push(m.text());
   });
@@ -218,4 +211,16 @@ export const FAIL_PATTERNS = {
     /INTERNAL_EVENTS_SECRET\s*[=:]\s*["']?[A-Za-z0-9_-]{8,}/,
   ],
 };
-export { test, expect };
+/** `test` with the LIVE=1 guard applied to every test: skip with a clear message when Gemini cannot answer. */
+export const test = base.extend<{ _liveGuard: void }>({
+  _liveGuard: [
+    // Playwright requires an object destructuring pattern as the first argument, even when empty
+    // eslint-disable-next-line no-empty-pattern
+    async ({}, use) => {
+      await liveGuard();
+      await use();
+    },
+    { auto: true },
+  ],
+});
+export { expect };

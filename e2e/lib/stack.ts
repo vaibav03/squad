@@ -21,8 +21,24 @@ import {
  */
 const peers = () => AGENT_IDS.map((id) => `${id}=${AGENT_URL(id)}`).join(',');
 
+/** Provider keys from .env for LIVE=1 (never printed, never logged). */
+function dotenvKeys(): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!LIVE) return out;
+  try {
+    for (const l of fs.readFileSync(path.join(REPO, '.env'), 'utf8').split(/\r?\n/)) {
+      const m = /^(?:export\s+)?(GEMINI_API_KEY|ELEVENLABS_API_KEY)\s*=\s*["']?([^"'\s#]+)/.exec(l);
+      if (m) out[m[1]!] = m[2]!;
+    }
+  } catch {
+    /* no .env */
+  }
+  return out;
+}
+
 export const baseEnv = (): NodeJS.ProcessEnv => ({
   ...process.env,
+  ...dotenvKeys(),
   HUB_PORT: String(HUB_PORT),
   HUB_BASE_URL: HUB,
   DB_PATH: path.join(TMP, 'hub.db'),
@@ -96,7 +112,7 @@ export async function stackUp(ms = 90_000): Promise<boolean> {
   return (await Promise.all(checks.map((u) => waitFor(u, ms)))).every(Boolean);
 }
 
-/** Kills the process groups this module started, then anything still listening on this stack's own ports. */
+/** Kills ONLY the process groups this module spawned (PIDs recorded in e2e/.tmp/stack.pids). Never port- or pattern-based. */
 export function stopStack(): void {
   try {
     const pids = JSON.parse(fs.readFileSync(path.join(TMP, 'stack.pids'), 'utf8')) as Record<
@@ -112,12 +128,5 @@ export function stopStack(): void {
     }
   } catch {
     /* never started */
-  }
-  for (const port of ownPorts()) {
-    try {
-      execSync(`lsof -tiTCP:${port} -sTCP:LISTEN | xargs kill 2>/dev/null || true`);
-    } catch {
-      /* ignore */
-    }
   }
 }

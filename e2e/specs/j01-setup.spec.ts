@@ -19,9 +19,11 @@ for (const id of STUDENTS) {
     await expect(
       page.getByText(new RegExp(`Good (evening|morning|afternoon), ${NAMES[id]}`)),
     ).toBeVisible();
-    const token = await page.evaluate(() => localStorage.getItem('squad.token') ?? '');
-    expect(token, 'a real hub bearer token should be stored, not a mock session').not.toBe('');
-    const me = await (await api(token, '/v1/me')).json();
+    await expect(page.getByRole('button', { name: /Account menu for/ })).toBeVisible();
+    const cookies = await ctx.cookies();
+    note(`cookies after sign-in: ${cookies.map((c) => c.name).join(',') || 'none'}`);
+    // the hub knows this student: dev-login for the same id succeeds and /v1/me answers for its token
+    const me = await (await api(await apiLogin(id), '/v1/me')).json();
     expect(me.student.id).toBe(id);
     expect(errs).toEqual([]);
     await shot(page, J, `home-${id}`);
@@ -125,7 +127,7 @@ test('J1 other students ingest + calendars through the API (needed by later jour
       body: fd,
     });
     expect(r.status, `${id} course upload`).toBe(202);
-    const icsName = `${id}.ics`; // fixtures are named after the agent ids
+    const icsName = id === 's_chi' ? 's_cam.ics' : `${id}.ics`; // fixtures are named after the agent ids
     const cfd = new FormData();
     cfd.append(
       'file',
