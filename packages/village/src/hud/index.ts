@@ -263,7 +263,10 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
       }
       c.dataset.state = a.state;
       const act = d.inspector?.view(a.id)?.headline;
-      c.setAttribute('aria-label', `${a.name}, ${STATE_LABEL[a.state]}${act ? `. ${act}` : ''}. Open inspector`);
+      c.setAttribute(
+        'aria-label',
+        `${a.name}, ${STATE_LABEL[a.state]}${act ? `. ${act}` : ''}. Open inspector`,
+      );
       c.title = act ? `${a.name}: ${act}` : `${a.name}: ${STATE_LABEL[a.state]}`;
       c.dataset.selected = String(d.inspector?.selected === a.id);
       c.setAttribute('aria-pressed', String(d.inspector?.selected === a.id));

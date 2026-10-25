@@ -49,10 +49,7 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "task.open",
-        "shared": [
-          "study plan opened",
-          "3 members"
-        ],
+        "shared": ["study plan opened", "3 members"],
         "message": "I opened the study plan. Three of us are in; calendars stay with their owners."
       }
     },
@@ -109,9 +106,7 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "psi.blind",
-        "shared": [
-          "168 blinded tokens (padded)"
-        ],
+        "shared": ["168 blinded tokens (padded)"],
         "thought": "Hiding the real slots so nobody sees a raw calendar",
         "message": "Here are my blinded free evenings. The calendar itself never leaves me."
       }
@@ -135,9 +130,7 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "psi.blind",
-        "shared": [
-          "168 blinded tokens (padded)"
-        ],
+        "shared": ["168 blinded tokens (padded)"],
         "message": "My blinded evenings are on the way too."
       }
     },
@@ -160,9 +153,7 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "psi.blind",
-        "shared": [
-          "168 blinded tokens (padded)"
-        ],
+        "shared": ["168 blinded tokens (padded)"],
         "message": "Mine as well, blinded."
       }
     },
@@ -185,9 +176,7 @@
         "to": "mediator",
         "taskId": "task_study_ch6",
         "kind": "psi.tokens",
-        "shared": [
-          "168 blinded tokens"
-        ]
+        "shared": ["168 blinded tokens"]
       }
     },
     {
@@ -198,9 +187,7 @@
         "to": "mediator",
         "taskId": "task_study_ch6",
         "kind": "psi.tokens",
-        "shared": [
-          "168 blinded tokens"
-        ]
+        "shared": ["168 blinded tokens"]
       }
     },
     {
@@ -211,9 +198,7 @@
         "to": "mediator",
         "taskId": "task_study_ch6",
         "kind": "psi.tokens",
-        "shared": [
-          "168 blinded tokens"
-        ]
+        "shared": ["168 blinded tokens"]
       }
     },
     {
@@ -224,9 +209,7 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "psi.common",
-        "shared": [
-          "0 common slots"
-        ],
+        "shared": ["0 common slots"],
         "thought": "Comparing blinded tokens from all three to find shared free time",
         "message": "I compared everyone’s blinded evenings and found no slot that works for all three."
       }
@@ -239,9 +222,7 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "conflict",
-        "shared": [
-          "no slot works for everyone"
-        ],
+        "shared": ["no slot works for everyone"],
         "thought": "No slot works for everyone, so I will propose a shorter plan",
         "message": "No single evening suits everyone, so I will look for the least bad plan."
       }
@@ -254,9 +235,7 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "result",
-        "shared": [
-          "plan proposed"
-        ],
+        "shared": ["plan proposed"],
         "thought": "Choosing the least bad option and asking each person to confirm",
         "message": "I have a plan to propose. Please confirm it."
       }
@@ -310,9 +289,7 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "result",
-        "shared": [
-          "plan found"
-        ],
+        "shared": ["plan found"],
         "message": "Everyone agreed, so the plan is final."
       }
     },
@@ -389,9 +366,7 @@
         "to": "student:s_ana",
         "taskId": "task_attack_budget",
         "kind": "query",
-        "shared": [
-          "asks: budget"
-        ],
+        "shared": ["asks: budget"],
         "thought": "Asking about budget so the plan fits, knowing it may be refused",
         "message": "Can I see the budget the others set? I asked the mediator."
       }
@@ -404,9 +379,7 @@
         "to": "student:s_ben",
         "taskId": "task_attack_budget",
         "kind": "query_denied",
-        "shared": [
-          "request denied: budget"
-        ],
+        "shared": ["request denied: budget"],
         "thought": "This request would reveal a private value, so the gate says no",
         "message": "I cannot pass that on: it is a private value and the gate refuses."
       }
@@ -439,10 +412,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "task.open",
-        "shared": [
-          "trip plan opened",
-          "3 members"
-        ],
+        "shared": ["trip plan opened", "3 members"],
         "message": "Opening the trip plan. I will weigh dates and cost without seeing amounts."
       }
     },
@@ -485,9 +455,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "psi.blind",
-        "shared": [
-          "64 blinded tokens (padded)"
-        ]
+        "shared": ["64 blinded tokens (padded)"]
       }
     },
     {
@@ -509,9 +477,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "psi.blind",
-        "shared": [
-          "64 blinded tokens (padded)"
-        ]
+        "shared": ["64 blinded tokens (padded)"]
       }
     },
     {
@@ -533,9 +499,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "psi.blind",
-        "shared": [
-          "64 blinded tokens (padded)"
-        ]
+        "shared": ["64 blinded tokens (padded)"]
       }
     },
     {
@@ -557,9 +521,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "psi.common",
-        "shared": [
-          "3 common slots"
-        ],
+        "shared": ["3 common slots"],
         "thought": "Three shared slots found, now checking cost without showing amounts",
         "message": "Three evenings work for all of us."
       }
@@ -572,9 +534,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -596,9 +556,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -620,9 +578,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -644,9 +600,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (veto)"
-        ]
+        "shared": ["secret share of 3 values (veto)"]
       }
     },
     {
@@ -668,9 +622,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (veto)"
-        ]
+        "shared": ["secret share of 3 values (veto)"]
       }
     },
     {
@@ -692,9 +644,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (veto)"
-        ]
+        "shared": ["secret share of 3 values (veto)"]
       }
     },
     {
@@ -716,9 +666,7 @@
         "to": "mediator",
         "taskId": "task_trip_cabo",
         "kind": "share.sum",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -729,9 +677,7 @@
         "to": "mediator",
         "taskId": "task_trip_cabo",
         "kind": "share.sum",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -742,9 +688,7 @@
         "to": "mediator",
         "taskId": "task_trip_cabo",
         "kind": "share.sum",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -755,9 +699,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "option_dropped",
-        "shared": [
-          "option dropped: budget"
-        ],
+        "shared": ["option dropped: budget"],
         "thought": "Dropping the option that someone cannot afford",
         "message": "One option is too expensive for someone, so I removed it. Nobody sees whose budget it was."
       }
@@ -770,9 +712,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "option_dropped",
-        "shared": [
-          "dropped: veto"
-        ],
+        "shared": ["dropped: veto"],
         "thought": "Dropping the option that someone ruled out",
         "message": "Another option is ruled out by a hard no. I will not say whose."
       }
@@ -785,9 +725,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "result",
-        "shared": [
-          "top options ranked"
-        ],
+        "shared": ["top options ranked"],
         "thought": "Ranking what is left: two options remain",
         "message": "Two options remain. Ranking them now."
       }
@@ -800,9 +738,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "result",
-        "shared": [
-          "plan proposed"
-        ],
+        "shared": ["plan proposed"],
         "thought": "Proposing the top option and asking everyone to confirm",
         "work": {
           "tier": "chair",
@@ -924,9 +860,7 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "result",
-        "shared": [
-          "plan found"
-        ],
+        "shared": ["plan found"],
         "thought": "Everyone said yes, so the plan is final",
         "work": {
           "tier": "chair",

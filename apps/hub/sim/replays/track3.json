@@ -478,10 +478,7 @@
         "t": "council.rank",
         "councilId": "council:planner",
         "member": "advisor",
-        "order": [
-          "grind",
-          "chill"
-        ],
+        "order": ["grind", "chill"],
         "thought": "Weighing both views against the exam date",
         "work": {
           "tier": "chair",

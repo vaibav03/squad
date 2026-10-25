@@ -103,7 +103,14 @@ export default function VillagePage({ world }: { world?: string }) {
         // `?cutscene=trip&task=<id>`: the world plays the cutscene once per task (any key skips it).
         const trip = tripCutsceneFromQuery(location.search);
         const source = trip ? withTripCutscene(feed.source, trip) : feed.source;
-        const h = mount({ parent: stage.current, source, me: feed.me, calm, onOverlay: setEvent, inspector: store });
+        const h = mount({
+          parent: stage.current,
+          source,
+          me: feed.me,
+          calm,
+          onOverlay: setEvent,
+          inspector: store,
+        });
         handle.current = h;
         if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__world = h;
         await h.ready;

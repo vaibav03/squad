@@ -22,7 +22,12 @@ export function portraitFor(v: Pick<ActivityView, 'id' | 'kind' | 'isMe'>): stri
   return pixelPortrait(v.kind);
 }
 
-const STATE_ICON = { idle: 'clock', studying: 'sparkle', in_call: 'mic', waiting_for_student: 'hand' } as const;
+const STATE_ICON = {
+  idle: 'clock',
+  studying: 'sparkle',
+  in_call: 'mic',
+  waiting_for_student: 'hand',
+} as const;
 
 export interface InspectorPanelProps {
   store: InspectorStore;
@@ -38,7 +43,13 @@ export interface InspectorPanelProps {
  * Agent Inspector: what the selected agent is doing, thinking and waiting on, live from the event stream.
  * Not modal: the village keeps running and walking keeps working underneath. Esc closes.
  */
-export function InspectorPanel({ store, calm, returnFocusTo, hub, mode = 'live' }: InspectorPanelProps) {
+export function InspectorPanel({
+  store,
+  calm,
+  returnFocusTo,
+  hub,
+  mode = 'live',
+}: InspectorPanelProps) {
   const [tab, setTab] = useState<Tab>('doing');
   const view = useSelectedView(store);
   useStoreVersion(store);
@@ -78,7 +89,13 @@ export function InspectorPanel({ store, calm, returnFocusTo, hub, mode = 'live' 
   useEffect(() => {
     if (!openedId) return;
     const a = document.activeElement as HTMLElement | null;
-    if (a && root.current && !root.current.contains(a) && a.matches(':focus-visible') && a.closest('.sqv-hud')) {
+    if (
+      a &&
+      root.current &&
+      !root.current.contains(a) &&
+      a.matches(':focus-visible') &&
+      a.closest('.sqv-hud')
+    ) {
       root.current.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true });
     }
   }, [openedId]);
@@ -95,7 +112,9 @@ export function InspectorPanel({ store, calm, returnFocusTo, hub, mode = 'live' 
     const i = TABS.findIndex(([id]) => id === tab);
     const n = TABS[(i + (e.key === 'ArrowRight' ? 1 : -1) + TABS.length) % TABS.length]![0];
     setTab(n);
-    requestAnimationFrame(() => root.current?.querySelector<HTMLElement>(`#${CSS.escape(`${titleId}-t-${n}`)}`)?.focus());
+    requestAnimationFrame(() =>
+      root.current?.querySelector<HTMLElement>(`#${CSS.escape(`${titleId}-t-${n}`)}`)?.focus(),
+    );
   };
   const portrait = portraitFor(v);
   return (
@@ -175,7 +194,12 @@ export function InspectorPanel({ store, calm, returnFocusTo, hub, mode = 'live' 
         ))}
       </div>
 
-      <div className="ai-body" role="tabpanel" id={`${titleId}-p`} aria-labelledby={`${titleId}-t-${tab}`}>
+      <div
+        className="ai-body"
+        role="tabpanel"
+        id={`${titleId}-p`}
+        aria-labelledby={`${titleId}-t-${tab}`}
+      >
         {tab === 'doing' && (
           <div className="ai-tabpanel">
             <section className="ai-now" aria-label="Right now">
@@ -237,7 +261,9 @@ export function InspectorPanel({ store, calm, returnFocusTo, hub, mode = 'live' 
               </h3>
               <div className="ai-bubble" data-source={v.thought.source}>
                 <p>{v.thought.text}</p>
-                {v.thought.source === 'stream' && <small>From what the agent shared, not extra reasoning.</small>}
+                {v.thought.source === 'stream' && (
+                  <small>From what the agent shared, not extra reasoning.</small>
+                )}
               </div>
               {v.thoughtHistory.length > 0 && (
                 <details className="ai-history">
@@ -256,7 +282,8 @@ export function InspectorPanel({ store, calm, returnFocusTo, hub, mode = 'live' 
         {tab === 'agents' && <AgentsTab view={v} convo={convo} store={store} now={now} />}
         {!v.isMe && v.kind === 'student' && tab !== 'chat' && (
           <p className="ai-privacy">
-            <LvIcon name="lock" size={14} aria-hidden="true" /> Public activity only. Private details stay hidden.
+            <LvIcon name="lock" size={14} aria-hidden="true" /> Public activity only. Private
+            details stay hidden.
           </p>
         )}
       </div>

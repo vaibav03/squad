@@ -110,7 +110,8 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
       return a.localeCompare(b);
     });
 
-  const waitingCount = () => [...recs.values()].filter((r) => r.state === 'waiting_for_student').length;
+  const waitingCount = () =>
+    [...recs.values()].filter((r) => r.state === 'waiting_for_student').length;
 
   const isMine = (e: VillageEvent): boolean => {
     const meId = me === undefined ? undefined : `student:${me}`;
@@ -153,7 +154,10 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
         if (m) {
           const at = now();
           let got = false;
-          for (const x of m(raw as Record<string, unknown>, { ...(me ? { me } : {}), mine: false })) {
+          for (const x of m(raw as Record<string, unknown>, {
+            ...(me ? { me } : {}),
+            mine: false,
+          })) {
             exchanges.push({ ...x, at, seq: ++xseq });
             for (const id of x.parts) rec(id);
             got = true;
@@ -210,12 +214,20 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
         now: now(),
       });
     },
-    conversation: (id) => describeConversation(id, exchanges, { ...(me ? { me } : {}), now: now() }),
+    conversation: (id) =>
+      describeConversation(id, exchanges, { ...(me ? { me } : {}), now: now() }),
     links: () => activeLinks(exchanges, now()),
     entries() {
       return sorted().map((id) => {
         const v = store.view(id)!;
-        return { id, name: displayName(id, me), kind: v.kind, state: v.state, headline: v.headline, thinking: v.thinking };
+        return {
+          id,
+          name: displayName(id, me),
+          kind: v.kind,
+          state: v.state,
+          headline: v.headline,
+          thinking: v.thinking,
+        };
       });
     },
     get selected() {

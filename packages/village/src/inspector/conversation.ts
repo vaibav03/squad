@@ -48,7 +48,10 @@ export interface ExchangeCtx {
   readonly mine: boolean;
 }
 /** A mapper for an event family (e.g. 'discussion.') that is not in the core union yet. Returns zero or more exchanges. */
-export type ExchangeMapper = (raw: Record<string, unknown>, ctx: ExchangeCtx) => Omit<Exchange, 'seq'>[];
+export type ExchangeMapper = (
+  raw: Record<string, unknown>,
+  ctx: ExchangeCtx,
+) => Omit<Exchange, 'seq'>[];
 
 const COMMONS: Party = { id: 'commons', label: 'the campfire' };
 const EVERYONE: Party = { id: 'everyone', label: 'everyone' };
@@ -76,7 +79,8 @@ export function mapperFor(t: string): ExchangeMapper | undefined {
  * Anything it cannot read becomes no exchange (never a guess).
  */
 registerExchangeMapper('discussion.', (raw, ctx) => {
-  const str = (k: string): string | undefined => (typeof raw[k] === 'string' && raw[k] ? (raw[k] as string) : undefined);
+  const str = (k: string): string | undefined =>
+    typeof raw[k] === 'string' && raw[k] ? (raw[k] as string) : undefined;
   const from = str('from') ?? str('speaker') ?? str('agent');
   const text = str('text') ?? str('message');
   if (!from || !text) return [];
@@ -112,7 +116,9 @@ export function exchangesFromEvent(e: VillageEvent, ctx: ExchangeCtx): Omit<Exch
   const mine = ctx.mine;
   const say = (e as { message?: string }).message;
   const clean = (t: string) => shortCaption(safeText(t, mine), 200);
-  const mk = (x: Omit<Exchange, 'seq' | 'at' | 'mine'> & { at?: number }): Omit<Exchange, 'seq'> => ({
+  const mk = (
+    x: Omit<Exchange, 'seq' | 'at' | 'mine'> & { at?: number },
+  ): Omit<Exchange, 'seq'> => ({
     at: 0,
     mine,
     ...x,
@@ -122,8 +128,10 @@ export function exchangesFromEvent(e: VillageEvent, ctx: ExchangeCtx): Omit<Exch
       const to: Party = e.to === 'commons' ? COMMONS : party(e.to, me);
       const words = eventWords(e, mine, me ? { me } : {}).now;
       const text = say ? clean(say) : clean(words);
-      const alert = e.kind === 'conflict' || e.kind === 'option_dropped' || e.kind === 'query_denied';
-      const kind: ExchangeKind = e.kind.startsWith('psi.') || e.kind.startsWith('share.') ? 'privacy' : 'mesh';
+      const alert =
+        e.kind === 'conflict' || e.kind === 'option_dropped' || e.kind === 'query_denied';
+      const kind: ExchangeKind =
+        e.kind.startsWith('psi.') || e.kind.startsWith('share.') ? 'privacy' : 'mesh';
       return [
         mk({
           kind,
@@ -195,7 +203,9 @@ export function exchangesFromEvent(e: VillageEvent, ctx: ExchangeCtx): Omit<Exch
           kind: 'quiz',
           from: party(`student:${e.student}`, me),
           to: party(`expert:${e.chapter}`, me),
-          text: mine ? 'Sent an answer' : `${studentName(e.student)} sent an answer (the answer itself stays private)`,
+          text: mine
+            ? 'Sent an answer'
+            : `${studentName(e.student)} sent an answer (the answer itself stays private)`,
           parts: [`student:${e.student}`, `expert:${e.chapter}`],
         }),
       ];
@@ -206,7 +216,12 @@ export function exchangesFromEvent(e: VillageEvent, ctx: ExchangeCtx): Omit<Exch
           kind: 'quiz',
           from: party(`expert:${e.chapter}`, me),
           to: party(`student:${e.student}`, me),
-          text: mine && e.correct !== undefined ? (e.correct ? 'Marked it correct' : 'Marked it not yet') : 'Finished marking',
+          text:
+            mine && e.correct !== undefined
+              ? e.correct
+                ? 'Marked it correct'
+                : 'Marked it not yet'
+              : 'Finished marking',
           parts: [`expert:${e.chapter}`, `student:${e.student}`],
         }),
       ];
@@ -345,7 +360,12 @@ export function describeConversation(
       seq: x.seq,
       at: x.at,
       kind: x.kind,
-      direction: x.from.id === agentId && x.to.id !== agentId ? 'out' : x.to.id === agentId && x.from.id !== agentId ? 'in' : 'seen',
+      direction:
+        x.from.id === agentId && x.to.id !== agentId
+          ? 'out'
+          : x.to.id === agentId && x.from.id !== agentId
+            ? 'in'
+            : 'seen',
       from: x.from,
       to: x.to,
       text: x.text,

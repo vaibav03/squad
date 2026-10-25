@@ -20,8 +20,19 @@ function setup() {
     thought: 'Comparing two examples of correlation',
     work: { tier: 'fast', demo: true, thinking: true },
   });
-  store.apply({ t: 'agent.state', agent: 'student:s_ben', state: 'studying', thought: 'Ben has $180 for therapy' });
-  store.apply({ t: 'ledger.entry', taskId: 't', student: 's_ben', field: 'budget', shared: '$180' });
+  store.apply({
+    t: 'agent.state',
+    agent: 'student:s_ben',
+    state: 'studying',
+    thought: 'Ben has $180 for therapy',
+  });
+  store.apply({
+    t: 'ledger.entry',
+    taskId: 't',
+    student: 's_ben',
+    field: 'budget',
+    shared: '$180',
+  });
   return store;
 }
 
@@ -41,7 +52,15 @@ describe('InspectorPanel', () => {
     expect(screen.getByText('Comparing two examples of correlation')).toBeTruthy();
     fireEvent.click(screen.getByRole('tab', { name: 'Doing' }));
     // live update
-    act(() => store.apply({ t: 'quiz.question', quizId: 'q', chapter: 'ch6', target: 's_ana', text: 'What is r squared?' }));
+    act(() =>
+      store.apply({
+        t: 'quiz.question',
+        quizId: 'q',
+        chapter: 'ch6',
+        target: 's_ana',
+        text: 'What is r squared?',
+      }),
+    );
     expect(screen.getByText('Asking Ana a question on Chapter 6')).toBeTruthy();
     fireEvent.click(screen.getByRole('tab', { name: /Thinking/ }));
     expect(screen.getByText('Working on: What is r squared?')).toBeTruthy();
@@ -76,8 +95,22 @@ describe('InspectorPanel', () => {
   it('Agents tab: thread with arrows, partner chips that select, dissent flagged', async () => {
     const store = setup();
     act(() => {
-      store.apply({ t: 'agent.message', from: 'student:s_ana', to: 'student:s_ben', taskId: 't', kind: 'psi.tokens', shared: ['168 blinded tokens'], message: 'Here are my blinded evenings' });
-      store.apply({ t: 'council.verdict', councilId: 'council:q1', member: 'advisor', text: 'Start with chapter 5', dissenter: 'grind' });
+      store.apply({
+        t: 'agent.message',
+        from: 'student:s_ana',
+        to: 'student:s_ben',
+        taskId: 't',
+        kind: 'psi.tokens',
+        shared: ['168 blinded tokens'],
+        message: 'Here are my blinded evenings',
+      });
+      store.apply({
+        t: 'council.verdict',
+        councilId: 'council:q1',
+        member: 'advisor',
+        text: 'Start with chapter 5',
+        dissenter: 'grind',
+      });
       store.select('student:s_ana');
     });
     render(<InspectorPanel store={store} />);
@@ -92,7 +125,13 @@ describe('InspectorPanel', () => {
     const store = setup();
     act(() => {
       store.apply({ t: 'call.start', agent: 'expert:ch6', callId: 'c', student: 's_ana' });
-      store.apply({ t: 'call.caption', agent: 'expert:ch6', callId: 'c', text: 'r tells direction', cite: { courseId: 'x', chapter: 'ch6', file: 'ch6.pdf', page: 3 } });
+      store.apply({
+        t: 'call.caption',
+        agent: 'expert:ch6',
+        callId: 'c',
+        text: 'r tells direction',
+        cite: { courseId: 'x', chapter: 'ch6', file: 'ch6.pdf', page: 3 },
+      });
       store.select('expert:ch6');
     });
     render(<InspectorPanel store={store} />);

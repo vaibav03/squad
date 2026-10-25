@@ -15,7 +15,7 @@ describe('inspector store', () => {
     s.apply({ t: 'agent.state', agent: 'dean', state: 'idle' });
     expect(s.ids()).toEqual(['student:s_ana', 'student:s_ben', 'dean']);
     expect(s.view('student:s_ben')!.state).toBe('studying');
-    expect(s.entries()[1]!.headline).toBe('Studying in Ben\'s house');
+    expect(s.entries()[1]!.headline).toBe("Studying in Ben's house");
   });
   it('ignores malformed events and notifies subscribers', () => {
     const s = store();
@@ -68,9 +68,20 @@ describe('inspector store', () => {
   });
   it('sentinel values never reach the views of other students', () => {
     const s = store();
-    s.apply({ t: 'agent.state', agent: 'student:s_ben', state: 'studying', thought: 'Ben has $180 for therapy' });
+    s.apply({
+      t: 'agent.state',
+      agent: 'student:s_ben',
+      state: 'studying',
+      thought: 'Ben has $180 for therapy',
+    });
     s.apply({ t: 'ledger.entry', taskId: 't', student: 's_ben', field: 'budget', shared: '$180' });
-    s.apply({ t: 'quiz.question', quizId: 'q', chapter: 'ch6', target: 's_ben', text: 'therapy $180?' });
+    s.apply({
+      t: 'quiz.question',
+      quizId: 'q',
+      chapter: 'ch6',
+      target: 's_ben',
+      text: 'therapy $180?',
+    });
     for (const id of s.ids()) assertNoLeak(s.view(id), undefined, id);
   });
 });

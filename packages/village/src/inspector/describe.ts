@@ -280,7 +280,9 @@ export function eventWords(
       const text = e.text ? safe(e.text, mine) : '';
       return {
         now: `Giving an opinion as ${e.member}`,
-        log: text ? `${cap(e.member)} says: ${shortCaption(text, 90)}` : `${cap(e.member)} gave an opinion`,
+        log: text
+          ? `${cap(e.member)} says: ${shortCaption(text, 90)}`
+          : `${cap(e.member)} gave an opinion`,
         context: text ? `${cap(e.member)}'s stance: ${shortCaption(text, 140)}` : undefined,
         skill: 'Council',
       };
@@ -308,7 +310,9 @@ export function eventWords(
       const target = e.target ? studentName(e.target) : undefined;
       const text = e.text ? safe(e.text, mine) : '';
       return {
-        now: target ? `Asking ${target} a question on ${chapter}` : `Asking a question on ${chapter}`,
+        now: target
+          ? `Asking ${target} a question on ${chapter}`
+          : `Asking a question on ${chapter}`,
         log: target ? `Asked ${target} a question on ${chapter}` : `Asked a question on ${chapter}`,
         context: text ? `Working on: ${shortCaption(text, 160)}` : undefined,
         skill: 'Quiz',
@@ -385,11 +389,7 @@ export function eventWords(
 }
 
 /** Fallback-proof wrapper: never throws, never blank, unknown shapes become a generic line. */
-export function wordsFor(
-  event: unknown,
-  mine: boolean,
-  opts: { me?: string } = {},
-): EventWords {
+export function wordsFor(event: unknown, mine: boolean, opts: { me?: string } = {}): EventWords {
   try {
     const w = eventWords(event as VillageEvent, mine, opts);
     if (w.now.trim() && w.log.trim()) return w;
@@ -473,7 +473,7 @@ export function describeActivity(
   opts: DescribeOptions = {},
 ): ActivityView {
   const me = opts.me;
-  const now = opts.now ?? (recent.at(-1)?.at ?? 0);
+  const now = opts.now ?? recent.at(-1)?.at ?? 0;
   const id = agent.id;
   const kind = agentKind(id);
   const isMe = me !== undefined && id === `student:${me}`;
@@ -501,7 +501,9 @@ export function describeActivity(
   // Council progress overrides: "Asking the council: 2 of 3 answered".
   const councilId = [...recent]
     .reverse()
-    .map((r) => (r.event.t.startsWith('council.') ? (r.event as { councilId: string }).councilId : ''))
+    .map((r) =>
+      r.event.t.startsWith('council.') ? (r.event as { councilId: string }).councilId : '',
+    )
     .find(Boolean);
   let waitingOn: string | undefined;
   if (councilId && latest && latest.event.t.startsWith('council.')) {
@@ -523,7 +525,10 @@ export function describeActivity(
     if (isMe) waitingOn = q ? `Your yes: ${q}` : 'Your yes';
     else {
       const n = agent.squadWaiting ?? 1;
-      waitingOn = n > 1 ? `${n} yeses in all (${agentName(id)} is one)` : `A yes from ${agentName(id).replace(/ \(.*/, '')}`;
+      waitingOn =
+        n > 1
+          ? `${n} yeses in all (${agentName(id)} is one)`
+          : `A yes from ${agentName(id).replace(/ \(.*/, '')}`;
     }
     if (isMe && headline.toLowerCase().startsWith('waiting')) {
       const t = q ? `Waiting for your yes: ${q}` : 'Waiting for your yes';
@@ -534,8 +539,14 @@ export function describeActivity(
   // Heading: an envelope carried to the commons or a door in the last few seconds.
   let heading: string | undefined;
   const msg = [...recent].reverse().find((r) => r.event.t === 'agent.message');
-  if (msg && msg.event.t === 'agent.message' && msg.event.from === id && now - msg.at <= HEADING_WINDOW_MS) {
-    const dest = msg.event.to === 'commons' ? 'the campfire commons' : `${agentName(msg.event.to)}'s door`;
+  if (
+    msg &&
+    msg.event.t === 'agent.message' &&
+    msg.event.from === id &&
+    now - msg.at <= HEADING_WINDOW_MS
+  ) {
+    const dest =
+      msg.event.to === 'commons' ? 'the campfire commons' : `${agentName(msg.event.to)}'s door`;
     heading = `Walking to ${dest} with a message`;
   }
 
@@ -546,14 +557,17 @@ export function describeActivity(
   let thinking = false;
   for (let i = recent.length - 1; i >= 0; i--) {
     const r = recent[i]!;
-    const w = (r.event as { work?: { tier?: Tier; demo?: boolean; skill?: string; thinking?: boolean } }).work;
+    const w = (
+      r.event as { work?: { tier?: Tier; demo?: boolean; skill?: string; thinking?: boolean } }
+    ).work;
     if (i === recent.length - 1) thinking = w?.thinking === true;
     if (!skill && w?.skill) skill = w.skill;
     if (!tier && w?.tier) tier = w.tier;
     if (w?.demo === true) demo = true;
     if (skill && tier) break;
   }
-  if (!skill) for (let i = recent.length - 1; i >= 0 && !skill; i--) skill = words(recent[i]!).skill;
+  if (!skill)
+    for (let i = recent.length - 1; i >= 0 && !skill; i--) skill = words(recent[i]!).skill;
 
   // Thinking.
   const shared: { at: number; text: string }[] = [];
@@ -572,7 +586,8 @@ export function describeActivity(
   }
   // The newer of what the agent said and what the stream shows wins (a tie goes to the agent's own words).
   // A thought only counts as current while it belongs to the latest burst of activity; older ones become history.
-  const fresh = lastShared !== undefined && (!latest || latest.at - lastShared.at <= FRESH_THOUGHT_MS);
+  const fresh =
+    lastShared !== undefined && (!latest || latest.at - lastShared.at <= FRESH_THOUGHT_MS);
   if (lastShared && fresh && (!ctxLine || lastShared.at >= ctxLine.at))
     thought = { text: lastShared.text, source: 'shared' };
   else if (ctxLine) thought = { text: ctxLine.text, source: 'stream' };

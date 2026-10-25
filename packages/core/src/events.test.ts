@@ -157,8 +157,17 @@ describe('optional thought and work (agent inspector)', () => {
     }
   });
   it('accepts a short message and rejects an over-long one', () => {
-    const base = { t: 'agent.message', from: 'dean', to: 'commons', taskId: 't', kind: 'k', shared: [] };
-    expect(safeParseVillageEvent({ ...base, message: 'Here are my blinded evenings' }).success).toBe(true);
+    const base = {
+      t: 'agent.message',
+      from: 'dean',
+      to: 'commons',
+      taskId: 't',
+      kind: 'k',
+      shared: [],
+    };
+    expect(
+      safeParseVillageEvent({ ...base, message: 'Here are my blinded evenings' }).success,
+    ).toBe(true);
     expect(safeParseVillageEvent({ ...base, message: 'x'.repeat(281) }).success).toBe(false);
   });
   it('rejects an over-long thought, an unknown tier and stray work keys', () => {
