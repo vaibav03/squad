@@ -24,6 +24,10 @@ import { QUICK_PROMPTS_DM, QUICK_PROMPTS_GROUP, buildRows, dmIdFor, type ThreadR
 import type { ChatController } from './useChat';
 import { LivePanel } from '../../live/LivePanel';
 import { useSquadConfig } from '../../shell/context';
+import { PlansDrawer } from '../../plans/PlansDrawer';
+import { WizardDrawer } from '../../plans/WizardDrawer';
+import { usePlans } from '../../plans/usePlans';
+import type { PlanKind } from '../../plans/registry';
 
 // ------------------------------------------------------------------ banners
 
@@ -497,6 +501,17 @@ export function ThreadPane({
   const cfg = useSquadConfig();
   const liveHub = cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token ?? null } : null;
   const [liveTopic, setLiveTopic] = useState<string | null>(null);
+  const isGroup = chat.kind === 'group';
+  const planParam = useMemo(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('plan');
+    } catch {
+      return null;
+    }
+  }, []);
+  const [wizard, setWizard] = useState<PlanKind | null>(null);
+  const [plansOpen, setPlansOpen] = useState(isGroup && !!planParam);
+  const plansState = usePlans(liveHub, isGroup && plansOpen);
   return (
     <div className="sqc-thread" data-chat-kind={chat.kind}>
       <header className="sqc-head">
@@ -529,9 +544,33 @@ export function ThreadPane({
           <span className="sqc-head__conn">
             <StatusDot status={st.status} label={st.label} hideLabel={compact} />
           </span>
+          {isGroup && !compact ? (
+            <button
+              type="button"
+              className="sqc-iconbtn"
+              aria-label="Plans"
+              aria-expanded={plansOpen}
+              data-testid="plans-toggle"
+              onClick={() => setPlansOpen((o) => !o)}
+            >
+              <Icon name="ledger" size={20} />
+            </button>
+          ) : null}
           {headerEnd}
         </div>
       </header>
+      {isGroup && plansOpen ? (
+        <PlansDrawer
+          {...plansState}
+          focusId={planParam}
+          onRetry={plansState.reload}
+          onCreate={(k) => {
+            setPlansOpen(false);
+            setWizard(k);
+          }}
+          onClose={() => setPlansOpen(false)}
+        />
+      ) : null}
       <ChatBanners ctl={ctl} />
       <MessageList
         key={chat.id}
@@ -543,6 +582,15 @@ export function ThreadPane({
         onPrompt={(t) => composerRef.current?.fill(t)}
         onOpenChat={onOpenChat}
       />
+      {isGroup && wizard ? (
+        <WizardDrawer
+          kind={wizard}
+          groupTitle={chat.title}
+          hub={liveHub}
+          onClose={() => setWizard(null)}
+          onCreated={() => plansState.reload()}
+        />
+      ) : null}
       <Composer
         ref={composerRef}
         key={`c-${chat.id}`}
@@ -552,6 +600,7 @@ export function ThreadPane({
         paused={paused}
         onSend={(input) => ctl.send(chat.id, input)}
         onDiscuss={setLiveTopic}
+        onPlan={isGroup ? setWizard : undefined}
       />
       {liveTopic ? (
         <LivePanel

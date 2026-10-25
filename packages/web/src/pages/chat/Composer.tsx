@@ -17,6 +17,8 @@ import { Spinner } from '../../primitives/Spinner';
 import type { ChatApi } from './api';
 import { chatErrorText } from './api';
 import { parseDiscussTrigger } from '../../live/trigger';
+import { PlusMenu } from '../../plans/PlusMenu';
+import type { PlanKind } from '../../plans/registry';
 import {
   ACCEPT_IMAGES,
   COUNTER_FROM,
@@ -65,12 +67,14 @@ export interface ComposerProps {
   compact?: boolean;
   /** `discuss: <topic>` was typed: offer to watch it live in the Live panel instead of sending. */
   onDiscuss?: (topic: string) => void;
+  /** Group chats: the '+' menu starts a plan wizard. */
+  onPlan?: (kind: PlanKind) => void;
 }
 
 const MAX_H = 144;
 
 export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
-  { api, chatKind, onSend, paused, compact, onDiscuss },
+  { api, chatKind, onSend, paused, compact, onDiscuss, onPlan },
   ref,
 ) {
   const [text, setText] = useState('');
@@ -334,6 +338,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             e.target.value = '';
           }}
         />
+        {onPlan && chatKind === 'group' ? <PlusMenu onPick={onPlan} /> : null}
         <button
           type="button"
           className="sqc-iconbtn"
