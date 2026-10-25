@@ -50,7 +50,7 @@ export function mountVillage(
   const stage = document.createElement('div');
   stage.className = 'sqv-stage';
   stage.tabIndex = 0;
-  stage.setAttribute('role', 'img');
+  stage.setAttribute('role', 'group');
   stage.setAttribute(
     'aria-label',
     'Squad Village: a walkable night village where your study agents live. Use the agent list and the controls for text access.',

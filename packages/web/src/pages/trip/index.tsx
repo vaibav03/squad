@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useShell } from '../../shell/shell-context';
 import { useNavigate, useParams } from 'react-router-dom';
 import { TripView } from './TripView';
 import { useTrip } from './useTrip';
@@ -6,6 +8,8 @@ import { useLiveConfig } from '../../overlays/kit';
 
 /** /squad/trips/:tripId. On trip.confirmed it hands off to the village trip cutscene. */
 export default function TripPage() {
+  const { setTitle } = useShell();
+  useEffect(() => setTitle('Trip'), [setTitle]);
   const { tripId = TRIP_ID } = useParams();
   const cfg = useLiveConfig();
   const navigate = useNavigate();
