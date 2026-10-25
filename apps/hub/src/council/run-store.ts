@@ -59,7 +59,13 @@ export interface CouncilRunStore {
     },
   ): CouncilRunRecord[];
   /** Counters for the status endpoint. */
-  stats(): { runs: number; messages: number; delegations: number; active: number; lastStage?: string };
+  stats(squadId?: string): {
+    runs: number;
+    messages: number;
+    delegations: number;
+    active: number;
+    lastStage?: string;
+  };
   clear(): void;
 }
 
@@ -73,7 +79,9 @@ export function createCouncilRunStore(
     `CREATE TABLE IF NOT EXISTS hub_council_runs(
       id TEXT PRIMARY KEY, squad_id TEXT NOT NULL, council_key TEXT NOT NULL, updated_at INTEGER NOT NULL, json TEXT NOT NULL)`,
   );
-  db.exec('CREATE INDEX IF NOT EXISTS hub_council_runs_squad ON hub_council_runs(squad_id, updated_at)');
+  db.exec(
+    'CREATE INDEX IF NOT EXISTS hub_council_runs_squad ON hub_council_runs(squad_id, updated_at)',
+  );
   const runs = new Map<string, Stored>();
   const upsert = db.prepare(
     'INSERT INTO hub_council_runs(id, squad_id, council_key, updated_at, json) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET updated_at=excluded.updated_at, json=excluded.json',
@@ -93,8 +101,7 @@ export function createCouncilRunStore(
     const hit = runs.get(id);
     if (hit) return hit;
     const row = db.prepare('SELECT json FROM hub_council_runs WHERE id=?').get(id) as
-      | { json: string }
-      | undefined;
+      { json: string } | undefined;
     if (!row) return undefined;
     try {
       const r = JSON.parse(row.json) as Stored;
@@ -105,7 +112,8 @@ export function createCouncilRunStore(
     }
   };
 
-  const keyOf = (councilId: string): string => councilId.replace(/^council:/, '').split('-')[0] ?? 'ask';
+  const keyOf = (councilId: string): string =>
+    councilId.replace(/^council:/, '').split('-')[0] ?? 'ask';
 
   const begin = (id: string, fallbackKey: string): Stored | undefined => {
     const existing = load(id);
@@ -191,11 +199,7 @@ export function createCouncilRunStore(
         // viewer-filtered envelopes: the exact rules of the live stream
         const messages: A2aMessage[] = [];
         for (const m of r.messages) {
-          const f = filterVillageEvent(
-            { t: 'a2a.message', msg: m, mode: m.mode },
-            viewer,
-            ctx(),
-          );
+          const f = filterVillageEvent({ t: 'a2a.message', msg: m, mode: m.mode }, viewer, ctx());
           if (f && f.t === 'a2a.message') {
             const p = A2aMessageSchema.safeParse(f.msg);
             if (p.success) messages.push(p.data);
@@ -231,7 +235,14 @@ export function createCouncilRunStore(
               displayName: s.displayName,
               mode: mine.length ? worstMode(mine.map((m) => m.mode)) : r.mode,
               transport: r.transport.kind,
-              status: failed && !spoke ? 'failed' : spoke ? 'done' : status === 'running' ? 'queued' : 'skipped',
+              status:
+                failed && !spoke
+                  ? 'failed'
+                  : spoke
+                    ? 'done'
+                    : status === 'running'
+                      ? 'queued'
+                      : 'skipped',
             };
           });
         out.push({
@@ -260,8 +271,12 @@ export function createCouncilRunStore(
       return out;
     },
 
-    stats() {
-      const rows = db.prepare('SELECT json FROM hub_council_runs').all() as { json: string }[];
+    stats(squadId) {
+      const rows = (
+        squadId
+          ? db.prepare('SELECT json FROM hub_council_runs WHERE squad_id=?').all(squadId)
+          : db.prepare('SELECT json FROM hub_council_runs').all()
+      ) as { json: string }[];
       let messages = 0;
       let delegations = 0;
       let active = 0;

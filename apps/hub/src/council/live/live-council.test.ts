@@ -21,8 +21,7 @@ import type { LiveCouncilTransport } from './transport';
 const PCM = Buffer.alloc(4800).toString('base64'); // 100 ms of 24 kHz 16-bit mono
 
 const SAYS: Record<string, string> = {
-  chair:
-    'We will ask the Skeptic and the Teacher to weigh in.',
+  chair: 'We will ask the Skeptic and the Teacher to weigh in.',
   skeptic: 'It holds only for fixed coupons. Callable bonds break the rule.',
   tutor: 'Yes, a higher yield means a lower price. Price and yield move in opposite directions.',
   planner: 'Yes for fixed coupons. Check the callable case.',
@@ -117,7 +116,12 @@ function streamStandIn(): AgentTransport {
                 args: { to: k, question: 'q?', why: 'w' },
               })),
             };
-          return sub({ summary: 'Go with yes.', answer: 'yes', confidence: 'fairly_sure', stance: 'Try it.' });
+          return sub({
+            summary: 'Go with yes.',
+            answer: 'yes',
+            confidence: 'fairly_sure',
+            stance: 'Try it.',
+          });
         }
         return sub({ summary: `${o.spec.key} says yes.`, answer: 'yes', stance: 'committed' });
       },
@@ -132,7 +136,11 @@ interface Setup {
   clients: Map<string, ScriptedLive>;
   transports: Map<string, LiveCouncilTransport>;
   hub: ReturnType<typeof createCouncilLiveHub>;
-  ask(o?: { transport?: 'stream' | 'live'; members?: string[]; q?: string }): Promise<ReturnType<CouncilService['get']>>;
+  ask(o?: {
+    transport?: 'stream' | 'live';
+    members?: string[];
+    q?: string;
+  }): Promise<ReturnType<CouncilService['get']>>;
   runId(): string;
   factoryCalls: number;
 }
@@ -221,10 +229,16 @@ describe('Gemini Live council transport', () => {
     // one Live session per participant (chair, skeptic, tutor)
     expect([...t.clients.keys()].sort()).toEqual(['chair', 'skeptic', 'tutor']);
     // same stages and envelope kinds as the streaming runtime
-    const stages = dedupe(
-      t.events.flatMap((e) => (e.t === 'council.stage' ? [e.stage] : [])),
-    );
-    expect(stages).toEqual(['question', 'delegation', 'opinions', 'dissent', 'verdict', 'actions', 'done']);
+    const stages = dedupe(t.events.flatMap((e) => (e.t === 'council.stage' ? [e.stage] : [])));
+    expect(stages).toEqual([
+      'question',
+      'delegation',
+      'opinions',
+      'dissent',
+      'verdict',
+      'actions',
+      'done',
+    ]);
     const all = msgs(t.events);
     expect(all.filter((m) => m.kind === 'delegate')).toHaveLength(2);
     expect(all.filter((m) => m.kind === 'answer')).toHaveLength(2);
@@ -232,13 +246,17 @@ describe('Gemini Live council transport', () => {
     expect(all.every((m) => m.mode === 'live' && m.source !== 'script')).toBe(true);
     // events carry the transport
     const stageEvents = t.events.filter((e) => e.t === 'council.stage');
-    expect(stageEvents.every((e) => e.t === 'council.stage' && e.transport === 'live-audio')).toBe(true);
+    expect(stageEvents.every((e) => e.t === 'council.stage' && e.transport === 'live-audio')).toBe(
+      true,
+    );
     // what was said is what is public: the transcript text
     const skeptic = all.find((m) => m.kind === 'answer' && m.from.endsWith('skeptic'))!;
     expect(skeptic.summary).toBe(SAYS.skeptic);
     expect(skeptic.answer).toBe('It holds only for fixed coupons.');
     const verdict = all.find((m) => m.kind === 'verdict')!;
-    expect(verdict.summary).toBe('Yes, for fixed-coupon bonds. The Teacher and the Skeptic both support that.');
+    expect(verdict.summary).toBe(
+      'Yes, for fixed-coupon bonds. The Teacher and the Skeptic both support that.',
+    );
     expect(res.verdict?.next).toMatch(/callable-bond example/);
     expect(res.verdict).toMatchObject({
       confidence: 'fairly_sure',
@@ -296,12 +314,42 @@ describe('Gemini Live council transport', () => {
 
   describe('setup failures fall back to streaming, labelled (never silently scripted)', () => {
     const cases: [string, Behaviour, string, string][] = [
-      ['402 credits', { connectFail: new LiveClientError('credits', 'credits depleted') }, 'credits_depleted', 'credits depleted'],
-      ['key rejected', { connectFail: new LiveClientError('auth', 'bad key') }, 'invalid_key', 'invalid key'],
-      ['429', { connectFail: new LiveClientError('rate_limited', 'quota') }, 'rate_limited', 'rate limited'],
-      ['1011 at connect', { connectFail: new LiveClientError('unavailable', 'Internal error') }, 'live_unavailable', 'live unavailable'],
-      ['1011 right after open', { setupError: { kind: 'unavailable', after: 3 } }, 'live_unavailable', 'live unavailable'],
-      ['402 right after open', { setupError: { kind: 'credits', after: 3 } }, 'credits_depleted', 'credits depleted'],
+      [
+        '402 credits',
+        { connectFail: new LiveClientError('credits', 'credits depleted') },
+        'credits_depleted',
+        'credits depleted',
+      ],
+      [
+        'key rejected',
+        { connectFail: new LiveClientError('auth', 'bad key') },
+        'invalid_key',
+        'invalid key',
+      ],
+      [
+        '429',
+        { connectFail: new LiveClientError('rate_limited', 'quota') },
+        'rate_limited',
+        'rate limited',
+      ],
+      [
+        '1011 at connect',
+        { connectFail: new LiveClientError('unavailable', 'Internal error') },
+        'live_unavailable',
+        'live unavailable',
+      ],
+      [
+        '1011 right after open',
+        { setupError: { kind: 'unavailable', after: 3 } },
+        'live_unavailable',
+        'live unavailable',
+      ],
+      [
+        '402 right after open',
+        { setupError: { kind: 'credits', after: 3 } },
+        'credits_depleted',
+        'credits depleted',
+      ],
       ['connect timeout', { connectHang: true }, 'timeout', 'timeout'],
     ];
     for (const [name, b, why, words] of cases) {
@@ -394,9 +442,17 @@ describe('Gemini Live council transport', () => {
     const t = setup({ demo: true });
     const res = (await t.ask())!;
     expect(res.demo).toBe(true);
-    expect(res.transport).toMatchObject({ kind: 'demo', label: 'Demo (scripted, not Gemini)', requested: 'live' });
+    expect(res.transport).toMatchObject({
+      kind: 'demo',
+      label: 'Demo (scripted, not Gemini)',
+      requested: 'live',
+    });
     expect(t.factoryCalls).toBe(0);
-    expect(msgs(t.events).every((m) => m.mode.startsWith('demo') && m.source === 'script' || m.source === 'code')).toBe(true);
+    expect(
+      msgs(t.events).every(
+        (m) => (m.mode.startsWith('demo') && m.source === 'script') || m.source === 'code',
+      ),
+    ).toBe(true);
   });
 
   it('streaming stays the default', async () => {

@@ -61,7 +61,9 @@ export function createCouncilRoutes(deps: HubDeps): HubApp {
   r.get('/v1/council/status', need, (c) => {
     c.header('cache-control', 'no-store');
     liveHub();
-    const out = CouncilStatusSchema.safeParse(buildCouncilStatus(deps));
+    const out = CouncilStatusSchema.safeParse(
+      buildCouncilStatus(deps, process.env, c.get('viewer').squadId),
+    );
     if (!out.success) return c.json(err('internal'), 500);
     return c.json(out.data);
   });
@@ -73,14 +75,15 @@ export function createCouncilRoutes(deps: HubDeps): HubApp {
     const key = c.req.query('council');
     const limit = Number(c.req.query('limit') ?? '20');
     const svc = deps.council;
-    const runs = (deps.councilRuns?.list(viewer, {
-      ...(key && /^[a-z][a-z-]{1,23}$/.test(key) ? { councilKey: key } : {}),
-      ...(Number.isFinite(limit) ? { limit } : {}),
-      result: (id) => {
-        const res = svc?.get(id);
-        return res && canSee(res, viewer) ? res : undefined;
-      },
-    }) ?? []);
+    const runs =
+      deps.councilRuns?.list(viewer, {
+        ...(key && /^[a-z][a-z-]{1,23}$/.test(key) ? { councilKey: key } : {}),
+        ...(Number.isFinite(limit) ? { limit } : {}),
+        result: (id) => {
+          const res = svc?.get(id);
+          return res && canSee(res, viewer) ? res : undefined;
+        },
+      }) ?? [];
     const out = CouncilRunsResponseSchema.safeParse({ runs });
     if (!out.success) return c.json(err('internal'), 500);
     return c.json(out.data);
@@ -288,9 +291,9 @@ export function createCouncilRoutes(deps: HubDeps): HubApp {
     if (!run || !canSee(run, viewer)) return c.json(err('not_found'), 404);
     if (run.askedBy !== viewer.studentId) return c.json(err('forbidden'), 403);
     if (run.status !== 'running') return c.json(err('ended'), 409);
-    const body = z.strictObject({ text: z.string().trim().min(1).max(300) }).safeParse(
-      await c.req.json().catch(() => null),
-    );
+    const body = z
+      .strictObject({ text: z.string().trim().min(1).max(300) })
+      .safeParse(await c.req.json().catch(() => null));
     if (!body.success) return c.json(err('invalid_request'), 400);
     if (!liveHub().channel(id).live) return c.json(err('not_live'), 409);
     liveHub().channel(id).interject(body.data.text);

@@ -1,5 +1,4 @@
 import {
-  COUNCIL_ACTIONS_MAX,
   type AgentId,
   type AgentMode,
   type CouncilAction,
@@ -182,9 +181,8 @@ export async function runAskV2(
         x.stage = run.currentStage();
         x.agents = run.agents();
         x.messages = run.messages();
-        if (resultTransport) x.transport = resultTransport;
+        x.transport = resultTransport;
       });
-    let resultTransport: CouncilResult['transport'];
     // ---- transport: Gemini Live when asked for AND every participant's session opens; otherwise the streaming
     // transport with a label that says why (never a silent swap, never scripted under a live label)
     let agents = d.agents;
@@ -213,10 +211,13 @@ export async function runAskV2(
           why,
         };
     } else if (demo) {
-      tlabel = { label: 'Demo (scripted, not Gemini)', ...(requested === 'live' ? { requested } : {}) };
+      tlabel = {
+        label: 'Demo (scripted, not Gemini)',
+        ...(requested === 'live' ? { requested } : {}),
+      };
     }
     const liveSpeech = agents.kind === 'live-audio';
-    resultTransport = {
+    const resultTransport: CouncilResult['transport'] = {
       kind: demo ? 'demo' : liveSpeech ? 'live-audio' : 'stream-text',
       label: tlabel?.label ?? 'Gemini streaming text',
       ...(tlabel?.requested ? { requested: tlabel.requested } : {}),

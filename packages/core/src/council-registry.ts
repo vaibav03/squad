@@ -46,7 +46,12 @@ export function councilRunActions(correlationId: string): RecordedCouncilAction[
 export interface CouncilRunMeta {
   councilKey: string;
   question: string;
-  transport: { kind: 'stream-text' | 'live-audio' | 'demo'; label: string; requested?: 'stream' | 'live'; why?: string };
+  transport: {
+    kind: 'stream-text' | 'live-audio' | 'demo';
+    label: string;
+    requested?: 'stream' | 'live';
+    why?: string;
+  };
   roster: { id: string; role: string; parent?: string; displayName: string }[];
   startedAt: number;
 }

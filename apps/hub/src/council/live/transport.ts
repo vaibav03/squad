@@ -63,7 +63,10 @@ export function liveCouncilLimitsFromEnv(
   return {
     maxTurns: Math.floor(num(env.COUNCIL_LIVE_MAX_TURNS, DEFAULT_LIVE_LIMITS.maxTurns)),
     turnTimeoutMs: num(env.COUNCIL_LIVE_TURN_TIMEOUT_MS, DEFAULT_LIVE_LIMITS.turnTimeoutMs),
-    connectTimeoutMs: num(env.COUNCIL_LIVE_CONNECT_TIMEOUT_MS, DEFAULT_LIVE_LIMITS.connectTimeoutMs),
+    connectTimeoutMs: num(
+      env.COUNCIL_LIVE_CONNECT_TIMEOUT_MS,
+      DEFAULT_LIVE_LIMITS.connectTimeoutMs,
+    ),
     graceMs: num(env.COUNCIL_LIVE_GRACE_MS, DEFAULT_LIVE_LIMITS.graceMs),
     maxTurnChars: num(env.COUNCIL_LIVE_MAX_TURN_CHARS, DEFAULT_LIVE_LIMITS.maxTurnChars),
     maxUsd: num(env.COUNCIL_LIVE_MAX_USD, DEFAULT_LIVE_LIMITS.maxUsd),
@@ -85,7 +88,8 @@ export const personaFor = (spec: Pick<AgentSpec, 'key' | 'role'>): LivePersonaId
           ? 'examiner'
           : 'tutor';
 
-const voiceOf = (p: LivePersonaId): string => LIVE_PERSONAS.find((x) => x.id === p)?.voice ?? 'Kore';
+const voiceOf = (p: LivePersonaId): string =>
+  LIVE_PERSONAS.find((x) => x.id === p)?.voice ?? 'Kore';
 
 const SPEECH_CONTRACT = [
   'You are speaking ALOUD in a live study council with a student and colleagues. There are no tools and no text output: just speak.',
@@ -198,10 +202,13 @@ export function parseVerdictSpeech(
   for (const raw of sentences) {
     const sent = raw.trim();
     if (!sent) continue;
-    const c = /^confidence\s*(?:is|:)?\s*(confident|fairly sure|fairly_sure|uncertain)\b/i.exec(sent);
+    const c = /^confidence\s*(?:is|:)?\s*(confident|fairly sure|fairly_sure|uncertain)\b/i.exec(
+      sent,
+    );
     if (c) {
       const w = c[1]!.toLowerCase().replace(' ', '_');
-      confidence = w === 'confident' ? 'confident' : w === 'uncertain' ? 'uncertain' : 'fairly_sure';
+      confidence =
+        w === 'confident' ? 'confident' : w === 'uncertain' ? 'uncertain' : 'fairly_sure';
       continue;
     }
     const n = /^next step\s*:?\s*(.+?)[.!?]*$/i.exec(sent);
@@ -216,7 +223,10 @@ export function parseVerdictSpeech(
       if (who)
         dissent = {
           member: who,
-          why: rest.replace(new RegExp(`^.*?\\b${who}\\b[\\s,:-]*(?:because|since)?\\s*`, 'i'), '').trim() || 'saw it differently',
+          why:
+            rest
+              .replace(new RegExp(`^.*?\\b${who}\\b[\\s,:-]*(?:because|since)?\\s*`, 'i'), '')
+              .trim() || 'saw it differently',
         };
       continue;
     }
@@ -489,7 +499,9 @@ export function createLiveCouncilTransport(d: LiveCouncilTransportDeps): LiveCou
           );
           const v = parseVerdictSpeech(
             said.text,
-            [...people.values()].filter((x) => x.spec.role !== 'chair').map((x) => x.spec.displayName),
+            [...people.values()]
+              .filter((x) => x.spec.role !== 'chair')
+              .map((x) => x.spec.displayName),
           );
           return submit(`live-${o.spec.key}-verdict`, {
             summary: v.summary || said.text,
@@ -528,7 +540,10 @@ export function createLiveCouncilTransport(d: LiveCouncilTransportDeps): LiveCou
             relay(
               `${input
                 .replace(/\bsubmit_turn\b/gi, 'speaking')
-                .replace(/\bretrieve_course\b/gi, 'the course pages')}\n\nSpeak your answer now. Your first sentence is your committed answer (under 25 words), then one sentence of why. At most 45 words.`,
+                .replace(
+                  /\bretrieve_course\b/gi,
+                  'the course pages',
+                )}\n\nSpeak your answer now. Your first sentence is your committed answer (under 25 words), then one sentence of why. At most 45 words.`,
             ),
           );
           return submit(`live-${o.spec.key}-answer`, {
@@ -586,7 +601,10 @@ export function createLiveCouncilTransport(d: LiveCouncilTransportDeps): LiveCou
         }
         failTurn(p, reasonError('session_closed'));
       }
-      d.channel.emit({ t: 'transcript', state: turnCounter > 0 ? 'complete' : 'none' } satisfies CouncilLiveEvent);
+      d.channel.emit({
+        t: 'transcript',
+        state: turnCounter > 0 ? 'complete' : 'none',
+      } satisfies CouncilLiveEvent);
       d.channel.end();
     },
   };

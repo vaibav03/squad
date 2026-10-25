@@ -75,7 +75,14 @@ describe('council runtime through the hub filter', () => {
     expect(stages.length).toBeGreaterThan(5);
     for (const s of stages) {
       const out = wire(hub, s, v('s_ben', 'sq')) as Record<string, unknown>;
-      expect(Object.keys(out).sort()).toEqual(['correlationId', 'councilId', 'mode', 'stage', 't', 'transport']);
+      expect(Object.keys(out).sort()).toEqual([
+        'correlationId',
+        'councilId',
+        'mode',
+        'stage',
+        't',
+        'transport',
+      ]);
       expect(wire(hub, s, v('s_zed', 'sq2'))).toBeNull();
     }
   });

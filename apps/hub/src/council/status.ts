@@ -35,13 +35,19 @@ function keyState(deps: HubDeps, env: Record<string, string | undefined>): Counc
 export function buildCouncilStatus(
   deps: HubDeps,
   env: Record<string, string | undefined> = process.env,
+  squadId?: string,
 ): CouncilStatus {
   const live = deps.councilLive;
   const avail = live?.availability() ?? { state: 'untested' as const };
   const state = keyState(deps, env);
   const forced =
     env.FORCE_FAKE_LLM === '1' || env.CHAT_FORCE_DEMO === '1' || env.FORCE_FAKE_LIVE === '1';
-  const stats = deps.councilRuns?.stats() ?? { runs: 0, messages: 0, delegations: 0, active: 0 };
+  const stats = deps.councilRuns?.stats(squadId) ?? {
+    runs: 0,
+    messages: 0,
+    delegations: 0,
+    active: 0,
+  };
   const noKey = state === 'no_key';
   const out: CouncilStatus = {
     provider: COUNCIL_PROVIDER_NAME,
