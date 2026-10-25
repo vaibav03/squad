@@ -39,7 +39,7 @@ async function upload(
   kind?: string,
 ) {
   const form = new FormData();
-  form.set('file', new File([bytes as unknown as ArrayBuffer], name));
+  form.set('file', new File([typeof bytes === 'string' ? bytes : Buffer.from(bytes)], name));
   if (kind) form.set('kind', kind);
   const r = await fetch(`${url}/v1/library/courses/${courseId}/files`, {
     method: 'POST',
