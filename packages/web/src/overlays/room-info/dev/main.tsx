@@ -1,5 +1,6 @@
 import { StrictMode, useEffect, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
+import type { VillageEvent } from '@squad/core';
 import { createRoomSession, ROOM_INFO } from '@squad/village/rooms';
 import '../../../styles/index.css';
 import { RoomLayer } from '../RoomLayer';
@@ -24,7 +25,18 @@ if (!panel) {
   }
 }
 
+// ?replay=1 plays events recorded from the real skills (dev/rooms-b-replay.json, written by
+// `pnpm --filter @squad/brain exec tsx src/skills/rooms-b.record.script.ts`), keyed by room slot.
+const replay = q.get('replay') === '1';
+
+async function playReplay(s: ReturnType<typeof createRoomSession>) {
+  const data = (await (await fetch('/rooms-b-replay.json')).json()) as Record<string, VillageEvent[]>;
+  s.enter(room);
+  for (const e of data[room] ?? []) s.record(room, e, Date.now());
+}
+
 function script(s: ReturnType<typeof createRoomSession>) {
+  if (replay) return void playReplay(s);
   const say = (member: string, text: string, extra: object = {}) =>
     s.record(room, { t: 'council.opinion', councilId: 'c1', member, text, ...extra }, Date.now());
   s.enter(room);

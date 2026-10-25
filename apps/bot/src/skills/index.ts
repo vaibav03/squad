@@ -10,6 +10,8 @@ import {
   createCoursePlanSkill,
   createFeynmanSkill,
   createMasteryStore,
+  createOracleSkill,
+  createRubricSkill,
   createQuizSkill,
   createStepDiffSkill,
   createStubScheduler,
@@ -81,6 +83,9 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
     }),
     // After studyPlan so its phrases win ties; scores 0 unless addressed and asking for course planning.
     createCoursePlanSkill({ emit, llm: d.llm, ...now }),
+    // Anchored phrases only ('exam oracle', 'rubric check'); both score 0 unless addressed.
+    createOracleSkill({ store: brain.store, mastery, emit, llm: d.llm, courseIdFor, ...now }),
+    createRubricSkill({ store: brain.store, emit, llm: d.llm, courseIdFor, ...now }),
   ];
   const mediaSkills = d.media
     ? createMediaSkills({
