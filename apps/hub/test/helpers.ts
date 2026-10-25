@@ -90,11 +90,11 @@ export interface SseFrame {
 /** Minimal SSE reader. `stop()` aborts the request. */
 export async function openSse(
   url: string,
-  opts: { st: string; lastEventId?: number; query?: string },
+  opts: { st: string; lastEventId?: number; query?: string; path?: string },
 ) {
   const ac = new AbortController();
   const q = `?st=${encodeURIComponent(opts.st)}${opts.query ?? ''}`;
-  const res = await fetch(`${url}/v1/squad/stream${q}`, {
+  const res = await fetch(`${url}${opts.path ?? '/v1/squad/stream'}${q}`, {
     headers: opts.lastEventId !== undefined ? { 'last-event-id': String(opts.lastEventId) } : {},
     signal: ac.signal,
   });

@@ -123,10 +123,15 @@ export const HubStatusSchema = z.strictObject({
   demo: z.boolean(),
   /** Copy to show when demo is true. */
   notice: z.string().optional(),
+  /** Why the demo model is answering: no key configured, Gemini credits depleted (402/429), or a transient error. */
+  reason: z.enum(['no_key', 'credits_depleted', 'error']).optional(),
 });
 export type HubStatus = z.infer<typeof HubStatusSchema>;
 
 export const DEMO_NOTICE = 'Demo mode: add GEMINI_API_KEY to .env for real answers';
+export const DEMO_NOTICE_CREDITS =
+  'Demo mode: Gemini credits depleted, add credits in AI Studio for real answers';
+export const DEMO_NOTICE_ERROR = 'Demo mode: the Gemini API is unavailable, answers are from the course sample';
 
 /** Mentions the bot answers to in a group (case-insensitive, word bounded). */
 export const CHAT_MENTIONS = ['cubbie', 'squad'] as const;

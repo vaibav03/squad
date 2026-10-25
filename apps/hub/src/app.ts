@@ -4,10 +4,15 @@ import { openDb } from '@squad/core/node';
 import type { Db } from '@squad/core';
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createStubPorts } from './adapters';
 import { createBroker } from './broker';
 import { createCallRegistry } from './calls';
 import { loadHubConfig, type HubConfig } from './config';
+import { createChatHub } from './chat/hub-chat';
+import { createChatRoutes } from './chat/routes';
 import { createIngestor } from './ingest';
 import { createLogger } from './log';
 import type { Ports } from './ports';
@@ -71,6 +76,12 @@ export function createHub(opts: HubOptions = {}): Hub {
   deps.state.rebuild(); // agent states and pending confirms come back from the persisted log
   deps.ingest = createIngestor(deps);
   deps.ports = { ...createStubPorts(deps), ...opts.ports };
+  deps.chat = createChatHub(
+    deps,
+    config.dbPath === ':memory:'
+      ? mkdtempSync(join(tmpdir(), 'squad-chat-files-'))
+      : join(dirname(config.dbPath), 'chat-files'),
+  );
   if (config.seed) seedDemo(deps);
 
   const app: HubApp = new Hono<HubEnv>();
@@ -106,6 +117,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createCallRoutes(deps),
     createMediaRoutes(deps),
     createDomainRoutes(deps),
+    createChatRoutes(deps),
     ...(config.sim ? [createSimRoutes(deps)] : []),
   ])
     app.route('/', routes);
@@ -121,6 +133,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     deps,
     async close() {
       deps.broker.closeAll();
+      deps.chat.close();
       if (ownDb) deps.db.close();
     },
   };
