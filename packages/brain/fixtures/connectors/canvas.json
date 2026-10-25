@@ -1,0 +1,69 @@
+{
+  "_note": "Synthetic fixture data for the fake Canvas connector. No real course, student or institution.",
+  "account": { "id": "fixture-canvas-user-1", "name": "Fixture Student" },
+  "baseUrl": "https://canvas.fixture.invalid",
+  "courses": [
+    { "id": "stat101", "name": "Introduction to Statistics", "code": "STAT 101" },
+    { "id": "bio110", "name": "Foundations of Cell Biology", "code": "BIO 110" }
+  ],
+  "assignments": [
+    {
+      "id": "a301",
+      "courseId": "stat101",
+      "name": "Assignment 3: Sampling Distributions",
+      "dueAt": "2026-11-02T23:59:00Z",
+      "points": 40,
+      "updatedAt": "2026-10-20T14:00:00Z",
+      "description": "Simulate drawing 500 samples of size 30 from the provided skewed population and plot the distribution of the sample means.\n\nExplain in two or three sentences why the distribution of sample means looks more bell shaped than the population itself. Cite the Central Limit Theorem by name.\n\nSubmit one PDF. Late work loses 10 percent per day."
+    },
+    {
+      "id": "a302",
+      "courseId": "stat101",
+      "name": "Assignment 4: Confidence Intervals",
+      "dueAt": "2026-11-16T23:59:00Z",
+      "points": 50,
+      "updatedAt": "2026-10-22T09:30:00Z",
+      "description": "Build a 95 percent confidence interval for the mean commute time using the class survey data.\n\nState the interpretation of the interval in one sentence without claiming that the probability the true mean lies inside is 95 percent for this particular interval."
+    },
+    {
+      "id": "a111",
+      "courseId": "bio110",
+      "name": "Lab Report 2: Osmosis in Potato Cores",
+      "dueAt": "2026-11-05T17:00:00Z",
+      "points": 30,
+      "updatedAt": "2026-10-18T11:00:00Z",
+      "description": "Measure the mass change of potato cores left in sucrose solutions of five different concentrations.\n\nIdentify the concentration at which the mass change is closest to zero and explain what this tells you about the solute concentration inside the potato cells."
+    }
+  ],
+  "announcements": [
+    {
+      "id": "n901",
+      "courseId": "stat101",
+      "title": "Midterm review session moved",
+      "postedAt": "2026-10-21T08:00:00Z",
+      "message": "The midterm review session is moved to Thursday at 4 pm in room 214. Bring a calculator and one page of handwritten notes."
+    }
+  ],
+  "files": [
+    {
+      "id": "f501",
+      "courseId": "stat101",
+      "name": "week5-sampling-lecture.pdf",
+      "updatedAt": "2026-10-12T10:00:00Z",
+      "pages": [
+        {
+          "page": 1,
+          "text": "Week 5: Sampling distributions. A sampling distribution is the distribution of a statistic computed over many repeated samples from the same population."
+        },
+        {
+          "page": 2,
+          "text": "The Central Limit Theorem states that the distribution of sample means approaches a normal distribution as the sample size grows, whatever the shape of the population, provided the variance is finite."
+        },
+        {
+          "page": 3,
+          "text": "The standard error of the mean equals the population standard deviation divided by the square root of the sample size."
+        }
+      ]
+    }
+  ]
+}

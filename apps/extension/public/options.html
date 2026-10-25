@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Squad extension</title>
+    <style>
+      body {
+        font:
+          14px system-ui,
+          sans-serif;
+        max-width: 560px;
+        margin: 32px auto;
+        padding: 0 16px;
+      }
+      .err {
+        color: #b00020;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Squad extension</h1>
+    <p id="account-status"></p>
+    <section id="signed-out">
+      <p>Open Squad, go to Settings, Connect Canvas, and copy the one-time pairing code.</p>
+      <input id="code" placeholder="Pairing code" autocomplete="off" />
+      <button id="pair">Pair</button>
+    </section>
+    <section id="signed-in">
+      <button id="sign-out">Unpair</button>
+    </section>
+    <p class="err" id="account-error"></p>
+    <h2>Canvas sessions seen in this browser</h2>
+    <ul id="accounts"></ul>
+    <h2>Allowed Canvas origins (optional, exact https)</h2>
+    <input id="allowed" placeholder="https://canvas.school.edu" />
+    <button id="save-allowed">Save</button>
+    <p class="err" id="acc-error"></p>
+    <p id="bound"></p>
+    <p id="sync"></p>
+    <button id="reset">Reset extension state</button>
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "_note": "Synthetic fixture data for the fake Google connector. No real account or document.",
+  "account": { "id": "fixture.student@example.invalid" },
+  "calendar": [
+    {
+      "id": "gcal-1",
+      "summary": "Study group: sampling distributions",
+      "start": "2026-10-30T18:00:00Z",
+      "end": "2026-10-30T19:30:00Z",
+      "description": "Meet in the library annex to work through the simulation for Assignment 3.",
+      "htmlLink": "https://calendar.google.invalid/event?eid=gcal-1"
+    },
+    {
+      "id": "gcal-2",
+      "summary": "Office hours with the teaching assistant",
+      "start": "2026-11-01T15:00:00Z",
+      "end": "2026-11-01T16:00:00Z",
+      "description": "Bring questions about confidence intervals.",
+      "htmlLink": "https://calendar.google.invalid/event?eid=gcal-2"
+    }
+  ],
+  "drive": [
+    {
+      "id": "doc-notes-1",
+      "kind": "gdoc",
+      "name": "Sampling distributions: my notes",
+      "modifiedAt": "2026-10-23T20:00:00Z",
+      "webViewLink": "https://docs.google.invalid/document/d/doc-notes-1/edit",
+      "text": "# Key ideas\n\nA sampling distribution describes how a statistic varies from sample to sample.\n\n# Standard error\n\nThe standard error shrinks as the sample size grows, so larger samples give tighter estimates of the population mean.\n\n# Open question\n\nI am not sure why skewed populations still give bell shaped sample means."
+    },
+    {
+      "id": "file-sheet-2",
+      "kind": "gdrive_file",
+      "name": "survey-results-summary.txt",
+      "modifiedAt": "2026-10-19T12:00:00Z",
+      "webViewLink": "https://drive.google.invalid/file/d/file-sheet-2/view",
+      "text": "Class survey summary. Median commute time was 22 minutes. The sample mean was 25.4 minutes with a standard deviation of 11.2 minutes across 48 respondents."
+    }
+  ],
+  "classroom": {
+    "courses": [{ "id": "cr-9", "name": "Statistics Workshop" }],
+    "coursework": [
+      {
+        "id": "cw-1",
+        "courseId": "cr-9",
+        "title": "Reflection: when does the mean mislead?",
+        "dueAt": "2026-11-09T22:00:00Z",
+        "updatedAt": "2026-10-24T08:00:00Z",
+        "description": "Write half a page on a situation where the mean is a poor summary of the data, and name a better summary statistic.",
+        "alternateLink": "https://classroom.google.invalid/c/cr-9/a/cw-1"
+      }
+    ]
+  }
+}

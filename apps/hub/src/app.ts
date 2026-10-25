@@ -14,6 +14,7 @@ import { createCallRegistry } from './calls';
 import { loadHubConfig, type HubConfig } from './config';
 import { createChatHub } from './chat/hub-chat';
 import { createChatRoutes } from './chat/routes';
+import { createConnectionRoutes } from './routes/connections';
 import { createConfirmRouter } from './confirms';
 import { createIngestor } from './ingest';
 import { applySecurity, type SecurityOptions } from './middleware';
@@ -188,6 +189,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createCouncilRoutes(deps),
     createLiveRoutes(deps),
     createChatRoutes(deps),
+    createConnectionRoutes(deps),
     ...(config.sim ? [createSimRoutes(deps)] : []),
   ])
     app.route('/', routes);

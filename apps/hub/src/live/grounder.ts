@@ -1,5 +1,5 @@
 // Grounding: pages for a query through the existing citation-checked retrieval (Brain.ask), or a fixture course.
-import type { Brain } from '@squad/brain';
+import { createRetrieveContext, type Brain, type ContextStore } from '@squad/brain';
 import type { Grounder, LivePage } from './types';
 
 const MAX_PAGES = 3;
@@ -86,6 +86,28 @@ export function withDemoFallback(
     async ground(q, o) {
       const r = await primary.ground(q, o);
       return r.pages.length > 0 || !o?.demo ? r : fixture.ground(q, o);
+    },
+  };
+}
+
+/**
+ * Adds the viewer's connected sources (Canvas, Drive, Calendar) to the agents' SOURCES through the viewer-bound
+ * `retrieve` tool (docs/context-store.md). The viewer is fixed per call from the run's asker; without a viewer
+ * nothing from the context store is read. A chunk becomes a page `file = title, page = chunk ordinal`, so the
+ * existing `[file p.N]` marker verification applies to it unchanged.
+ */
+export function withContext(primary: Grounder, store: ContextStore, limit = 3): Grounder {
+  return {
+    async ground(q, o) {
+      const base = await primary.ground(q, o);
+      if (!o?.viewer) return base;
+      const hits = await createRetrieveContext(store, o.viewer, { limit })(q);
+      const extra: LivePage[] = hits.map((h, i) => ({
+        file: h.title,
+        page: h.page ?? i + 1,
+        text: h.text,
+      }));
+      return { pages: [...base.pages, ...extra] };
     },
   };
 }
