@@ -1,4 +1,4 @@
-/* global process, window, URLSearchParams, location */
+/* global process, window, URLSearchParams, location, console */
 // Usage: node capture.mjs <port> <outDir> <w> <h> <query> <t1,t2,...ms> [prefix]
 // Plays the mesh story and screenshots at the given story times (wall clock = story clock at 1x).
 import { chromium } from 'playwright';
