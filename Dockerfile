@@ -50,6 +50,8 @@ COPY packages/mesh packages/mesh
 COPY packages/brain packages/brain
 COPY packages/media packages/media
 COPY apps/hub apps/hub
+# the hub's chat engine imports @squad/bot (workspace dependency): its sources must be in the image
+COPY apps/bot apps/bot
 COPY assets/sprites assets/sprites
 COPY assets/fluent-characters assets/fluent-characters
 
