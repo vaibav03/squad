@@ -168,3 +168,24 @@
   left: auto;
   right: calc(24px * var(--k));
 }
+.sq-home__checking {
+  display: inline-flex;
+  align-items: center;
+}
+.sq-home__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.sq-home__retry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border, currentColor);
+  font: 400 var(--text-sm)/1.3 var(--font-sans);
+}
