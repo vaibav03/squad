@@ -4,3 +4,5 @@ export * from './voices';
 export * from './call';
 export * from './delivery';
 export * from './podcast';
+export * from './explainer';
+export * from './factory';

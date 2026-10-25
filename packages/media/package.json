@@ -9,7 +9,9 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --dir src --passWithNoTests",
-    "test:smoke": "vitest run --dir test/smoke --passWithNoTests"
+    "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
+    "smoke:live": "tsx scripts/smoke-live.ts",
+    "design-voices": "tsx scripts/design-voices.ts"
   },
   "dependencies": {
     "@google/genai": "^1.52.0",
