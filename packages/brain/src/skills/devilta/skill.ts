@@ -1,9 +1,20 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import type { Ctx, Db, InboundMessage, Llm, OutboundMessage, Skill } from '@squad/core';
+import {
+  scripted,
+  modeKind,
+  type AgentMode,
+  type Ctx,
+  type Db,
+  type InboundMessage,
+  type Llm,
+  type OutboundMessage,
+  type Skill,
+} from '@squad/core';
 import type { EmitEvent, MasteryStore } from '../../mastery/types';
 import type { ChapterProvider } from '../../quiz/types';
-import { pickDemo } from './demo';
+import { pickDemoScripted } from './demo';
+import { fallbackMode, modeLabel, startMode, type ModeDeps } from '../mode-util';
 import {
   clip,
   DEVIL_AGENT,
@@ -33,7 +44,7 @@ import {
   type DevilSession,
 } from './session';
 
-export interface DevilTaSkillDeps {
+export interface DevilTaSkillDeps extends ModeDeps {
   emit: EmitEvent;
   chapters: ChapterProvider;
   /** Falls back to `ctx.db` / `ctx.llm`. */
@@ -152,6 +163,11 @@ export function createDevilTaSkill(deps: DevilTaSkillDeps): Skill {
     safeEmit(deps.emit, { t: 'agent.state', agent: DEVIL_AGENT, state: s });
   const addressed = (m: InboundMessage) => m.mentionsBot || !m.isGroup;
   const dbOf = (ctx: Ctx) => deps.db ?? ctx.db;
+  /** Mode of an existing session's turns: a scripted-sample session never says live. */
+  const sessionMode = (s: DevilSession): AgentMode => {
+    const st = startMode(deps);
+    return s.demo && modeKind(st) === 'live' ? 'degraded:model_unavailable' : st;
+  };
 
   async function start(m: InboundMessage, ctx: Ctx): Promise<OutboundMessage[]> {
     const out = (text: string): OutboundMessage[] => [{ chatId: m.chatId, text }];
@@ -161,6 +177,7 @@ export function createDevilTaSkill(deps: DevilTaSkillDeps): Skill {
     const db = dbOf(ctx);
     const llm = deps.llm ?? ctx.llm;
 
+    const runMode: AgentMode = startMode(deps); // decided ONCE per round
     await state('studying');
     let context = '';
     try {
@@ -177,17 +194,23 @@ export function createDevilTaSkill(deps: DevilTaSkillDeps): Skill {
 
     let gen: Generation | undefined;
     let demo = false;
+    let genErr: unknown;
     try {
       gen = await generatePlan(llm, chapter, parsed.topic, context);
     } catch (e) {
+      genErr = e;
       console.warn(
         `[devilTa] generation unavailable${isDevilCreditsError(e) ? ' (credits)' : ''}: ${(e as Error).message}`,
       );
     }
     if (!gen) {
       demo = true;
-      gen = { plan: pickDemo(countSessions(db, m.from)), grounded: false };
+      gen = {
+        plan: pickDemoScripted(countSessions(db, m.from), fallbackMode(runMode, genErr)),
+        grounded: false,
+      };
     }
+    const roundMode: AgentMode = demo ? fallbackMode(runMode, genErr) : runMode;
 
     const id = (deps.newId ?? (() => `dv_${randomUUID().slice(0, 8)}`))();
     createSession(db, {
@@ -207,12 +230,13 @@ export function createDevilTaSkill(deps: DevilTaSkillDeps): Skill {
       chapter: chapterEventId(chapter),
       target: m.from,
       text: clip(body, EVENT_TEXT_MAX),
+      mode: roundMode,
     });
     await state('waiting_for_student');
     const label = demo
-      ? "Demo mode: I can't reach the model right now, so this is a built-in sample, not from your course.\n\n"
+      ? `${modeLabel(roundMode)}I can't reach the model right now, so this is a built-in sample, not from your course.\n\n`
       : gen.grounded
-        ? ''
+        ? modeLabel(roundMode)
         : "This one isn't tied to a page in your materials, so treat it as a general explanation.\n\n";
     return out(
       `${label}Devil's TA here. One line below is wrong. Can you find it?\n\n${body}\n\n${REPLY_INSTRUCTION}`,
@@ -229,6 +253,7 @@ export function createDevilTaSkill(deps: DevilTaSkillDeps): Skill {
       verdict === 'miss'
         ? 'That line holds up. Look again, then give me a line number or quote the part you think is wrong. One more try.'
         : "I can't tell which line you mean. Give me a line number or quote the part you think is wrong. One more try.";
+    let nerr: unknown;
     try {
       // The request carries no part of the registered location, keywords or correction.
       const r = await llm.json({
@@ -245,9 +270,12 @@ export function createDevilTaSkill(deps: DevilTaSkillDeps): Skill {
       if (text.length > 0 && text.length <= 240 && !feedbackLeaks(text, { ...s.plan }))
         return `${text} One more try.`;
     } catch (e) {
+      nerr = e;
       console.warn('[devilTa] feedback unavailable', (e as Error).message);
     }
-    return template;
+    const fm = fallbackMode(sessionMode(s), nerr);
+    // scripted nudge: branded and labelled, unless the whole round is already a labelled sample
+    return s.demo ? template : `${modeLabel(fm)}${scripted(template, fm).text}`;
   }
 
   async function why(llm: Llm, s: DevilSession): Promise<string> {
@@ -291,7 +319,12 @@ export function createDevilTaSkill(deps: DevilTaSkillDeps): Skill {
       const p = s.plan;
       const explanation = await why(llm, s);
       finish(db, s.id, tries);
-      const base = { quizId: s.id, chapter: chapterEventId(s.chapter), target: s.student };
+      const base = {
+        quizId: s.id,
+        chapter: chapterEventId(s.chapter),
+        target: s.student,
+        mode: sessionMode(s),
+      };
       if (deps.squadSettings?.().revealCorrectness === true) {
         await safeEmit(deps.emit, { t: 'quiz.result', ...base, student: s.student, correct: hit });
       } else await safeEmit(deps.emit, { t: 'quiz.result', ...base });

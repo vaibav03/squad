@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { Llm, StudentId } from '@squad/core';
+import { scripted, type AgentMode, type Llm, type StudentId } from '@squad/core';
+import { fallbackMode, modeLabel, startMode, type ModeDeps } from '../mode-util';
 import type { CourseStore } from '../../ingest/types';
 import type { MasteryStore } from '../../mastery/types';
 import { loadPrompt } from '../../experts/prompts';
@@ -14,7 +15,7 @@ import {
   UNSURE_LINE,
   classifyReply,
   fallbackQuestion,
-  fallbackSummary,
+  fallbackSummaryScripted,
   feedbackLine,
   pickChapters,
   safeLine,
@@ -23,7 +24,7 @@ import {
 } from './state';
 import type { Chapter } from '../../ingest/types';
 
-export interface OralDeps {
+export interface OralDeps extends ModeDeps {
   store: CourseStore;
   llm: Llm;
   courseId: string;
@@ -70,11 +71,12 @@ export function createOralExaminer(deps: OralDeps): OralExaminerFactory {
       return '';
     }
   };
-  const line = (text: string, c?: Chapter): ExaminerLine => {
-    if (!c) return { text };
+  const line = (text: string, c?: Chapter, mode?: AgentMode): ExaminerLine => {
+    if (!c) return { text, ...(mode ? { mode } : {}) };
     const page = deps.store.getPages(deps.courseId, c.id)[0];
     return {
       text,
+      ...(mode ? { mode } : {}),
       ...(page
         ? { cite: { courseId: deps.courseId, chapter: c.id, file: page.file, page: page.page } }
         : {}),
@@ -83,6 +85,7 @@ export function createOralExaminer(deps: OralDeps): OralExaminerFactory {
 
   return {
     begin({ chapter }) {
+      const start: AgentMode = startMode(deps); // decided ONCE per exam
       let chapters: Chapter[] = [];
       try {
         chapters = pickChapters(
@@ -109,6 +112,7 @@ export function createOralExaminer(deps: OralDeps): OralExaminerFactory {
         firstAnswer = undefined;
         const c = chapters[idx]!;
         let q = '';
+        let qErr: unknown;
         try {
           const r = await deps.llm.json({
             model: 'fast',
@@ -119,18 +123,26 @@ export function createOralExaminer(deps: OralDeps): OralExaminerFactory {
             temperature: 0.3,
           });
           q = safeLine(r.question);
-        } catch {
+        } catch (e) {
+          qErr = e;
           q = ''; // any LLM error (including "HTTP 402 credits depleted"): deterministic fallback, no retry
         }
-        if (!q || asked.includes(q)) q = fallbackQuestion(c, asked.length ? idx : 0);
+        if (q && !asked.includes(q)) {
+          asked.push(q);
+          current = q;
+          return [line(q, c, start)];
+        }
+        const fm = fallbackMode(start, qErr);
+        q = scripted(fallbackQuestion(c, asked.length ? idx : 0), fm).text;
         asked.push(q);
         current = q;
-        return [line(q, c)];
+        return [line(`${modeLabel(fm)}${q}`, c, fm)];
       }
 
       async function summary(): Promise<ExaminerLine[]> {
         finished = true;
         const lines: string[] = [];
+        let sumMode: AgentMode = start;
         try {
           const r = await deps.llm.json({
             model: 'fast',
@@ -149,11 +161,14 @@ export function createOralExaminer(deps: OralDeps): OralExaminerFactory {
             const it = r.items.find((x) => x.index === i);
             lines.push(feedbackLine(n, it?.solid || n.solid || '', it?.revisit || n.revisit || ''));
           }
-        } catch {
+        } catch (e) {
           lines.length = 0;
-          lines.push(...fallbackSummary(notes));
+          const fm = fallbackMode(start, e);
+          sumMode = fm;
+          lines.push(...fallbackSummaryScripted(notes, fm));
+          if (lines[0]) lines[0] = `${modeLabel(sumMode)}${lines[0]}`;
         }
-        return [...lines.filter(Boolean), CLOSING_LINE].map((text) => ({ text }));
+        return [...lines.filter(Boolean), CLOSING_LINE].map((text) => ({ text, mode: sumMode }));
       }
 
       async function advance(prefix: string[] = []): Promise<ExaminerLine[]> {

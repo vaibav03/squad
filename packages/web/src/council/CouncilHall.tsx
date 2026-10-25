@@ -3,6 +3,7 @@ import { getRoomSession } from '@squad/village/rooms';
 import type { HubCtx } from '../pages/village/hub';
 import { LvIcon } from '../overlays/kit/icons';
 import { CouncilPanel } from './CouncilPanel';
+import { openBoard, useCanOpenBoard } from './board/bridge';
 import { LivePanel } from '../live/LivePanel';
 import { MOCK_TOPIC } from '../live/fixtures';
 import { fixtureTransport, type FixtureState } from './fixtures';
@@ -66,6 +67,7 @@ export function CouncilHall({
   const forced = mode === '1' || fixture;
   const liveForced = q.get('live') === '1' || q.get('livemock') === '1';
   const inside = useInCouncilHall();
+  const canBoard = useCanOpenBoard();
   const present = inside || forced || liveForced;
   const [open, setOpen] = useState(forced);
   const livemock = q.get('livemock') === '1';
@@ -108,6 +110,17 @@ export function CouncilHall({
         >
           <LvIcon name="sparkle" size={16} />
           Start a discussion
+        </button>
+      )}
+      {!open && !liveOpen && canBoard && (
+        <button
+          type="button"
+          className="lv-btn cn-launch cn-launch--board sq-scene"
+          onClick={() => openBoard({})}
+          aria-haspopup="dialog"
+        >
+          <LvIcon name="split" size={16} />
+          Council board
         </button>
       )}
       {!open && !liveOpen && (

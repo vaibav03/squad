@@ -24,6 +24,12 @@ const KIND_WORDS: Record<string, string> = {
   confirm: 'Confirm',
   trip: 'Trip',
   discussion: 'Discussion',
+  delegate: 'Delegates',
+  ask: 'Asks',
+  answer: 'Answers',
+  critique: 'Critique',
+  vote: 'Vote',
+  status: 'Status',
   other: 'Message',
 };
 

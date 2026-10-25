@@ -12,6 +12,7 @@ import {
   type StudentId,
   VoicesUnavailableError,
   type VillageEvent,
+  type AgentMode,
 } from '@squad/core';
 import {
   BrainUnavailableError,
@@ -19,7 +20,9 @@ import {
   chapterProviderFromStore,
   createBrain,
   councilLlmFor,
+  createCouncilAgents,
   createCouncilService,
+  createQuizKeyVerifier,
   createMasteryStore,
   createOralExaminer,
   loadFixtureCourse,
@@ -59,6 +62,10 @@ export interface RealPortsOptions {
   /** Speech engine. ElevenLabs is built from env by `createAudioServices` when omitted and a key exists; otherwise calls are captions only. */
   tts?: TtsEngine;
   courseId?: string;
+  /** The RAW Gemini model for live council agents (never the resilient wrapper). Omit without a key. */
+  rawLlm?: Llm;
+  /** Env for the council runtime knobs (COUNCIL_AGENTS, COUNCIL_MAX_*). Default `process.env`. */
+  env?: Record<string, string | undefined>;
   /** council:quizkey verifier for generated questions (omit with FakeLlm). */
   verifier?: KeyVerifier;
   /** Mesh agent base URLs by student id; calendar imports are pushed to the owner's agent (X-Nook-Internal). */
@@ -114,6 +121,12 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
   if (o.loadFixture !== false && !brain.store.getCourse(courseId))
     await loadFixtureCourse({ store: brain.store }, courseId);
 
+  const councilAgents = createCouncilAgents({
+    ...(o.rawLlm ? { real: o.rawLlm } : {}),
+    env: o.env ?? process.env,
+    health: () => (deps.runtime ? deps.runtime.llm() : undefined),
+    emit,
+  });
   const councilDemo = () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : false);
   deps.council = createCouncilService({
     llm: councilLlmFor(o.llm, councilDemo),
@@ -122,6 +135,8 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     brain,
     courseId: () => courseId,
     demo: councilDemo,
+    agents: councilAgents,
+    ...(o.rawLlm ? { triageLlm: o.rawLlm } : {}),
   });
 
   deps.liveWiring = { brain, courseId: () => courseId, llm: o.llm };
@@ -133,12 +148,23 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     emit: quizEmit,
     mastery,
     chapters: chapterProviderFromStore(brain.store),
-    ...(o.verifier ? { verifier: o.verifier } : {}),
+    // blind quiz-key council on real agents when a real model exists (never added to demo/stub runs)
+    ...(o.verifier
+      ? { verifier: o.verifier }
+      : o.rawLlm
+        ? { verifier: createQuizKeyVerifier({ llm: o.llm, emit: quizEmit, agents: councilAgents }) }
+        : {}),
   });
 
   const quiz = createRealQuizPort(deps, engine, courseId);
   const brainPort = createRealBrainPort(deps, brain, mastery, o);
-  const { media, call } = createAudioPorts(brain, courseId, o, (s) => deps.directory.squadsOf(s));
+  const { media, call } = createAudioPorts(
+    brain,
+    courseId,
+    o,
+    (s) => deps.directory.squadsOf(s),
+    () => councilAgents.decideMode(),
+  );
 
   return {
     ports: { quiz, call, brain: brainPort, media },
@@ -396,6 +422,7 @@ function createAudioPorts(
   defaultCourse: string,
   o: RealPortsOptions,
   squadsOf: (student: StudentId) => string[],
+  mode: () => AgentMode,
 ): { media: MediaPort; call: Ports['call'] } {
   let n = 0;
   const answer: AnswerFn = async ({ agent, student, text }) => {
@@ -430,7 +457,12 @@ function createAudioPorts(
 
   // Oral Exam Hut: `expert:oral` and `expert:examiner` run the scripted examiner through the same call
   // machinery (call.start / call.caption / call.end). Works with typed `user.text`, no mic and no TTS needed.
-  const examiner = createOralExaminer({ store: brain.store, llm: o.llm, courseId: defaultCourse });
+  const examiner = createOralExaminer({
+    store: brain.store,
+    llm: o.llm,
+    courseId: defaultCourse,
+    mode,
+  });
   const isOral = (agent: string) => {
     const a = parseAgentId(agent);
     return a.kind === 'expert' && (a.ref === 'oral' || a.ref === 'examiner');

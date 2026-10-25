@@ -1,3 +1,4 @@
+import { scripted, type NonLiveMode } from '@squad/core';
 import type { DevilPlan } from './rules';
 
 /** Built-in demo explanations (course-neutral, no citations). Used only when the model is unavailable. */
@@ -45,3 +46,15 @@ export const DEMO_PLANS: readonly DevilPlan[] = [
 ];
 
 export const pickDemo = (n: number): DevilPlan => DEMO_PLANS[Math.abs(n) % DEMO_PLANS.length]!;
+
+/** The built-in sample with every visible string branded as scripted (the only way the skill uses the demo plans). */
+export function pickDemoScripted(n: number, mode: NonLiveMode): DevilPlan {
+  const p = DEMO_PLANS[Math.abs(n) % DEMO_PLANS.length]!;
+  const b = (t: string): string => scripted(t, mode).text;
+  return {
+    ...p,
+    lines: p.lines.map(b),
+    whatIsWrong: b(p.whatIsWrong),
+    correct: b(p.correct),
+  };
+}

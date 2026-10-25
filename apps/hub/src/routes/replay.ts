@@ -4,7 +4,7 @@ import { ReplayScriptSchema, validateReplay, type ReplayScript } from '@squad/co
 import { Hono } from 'hono';
 import { createCallRegistry } from '../calls';
 import { filterVillageEvent } from '../filter';
-import type { FilterCtx, HubApp, HubDeps, HubEnv, Viewer } from '../types';
+import type { CouncilRunRegistry, FilterCtx, HubApp, HubDeps, HubEnv, Viewer } from '../types';
 
 const NAME = /^[a-z0-9_-]{1,64}$/;
 
@@ -15,7 +15,20 @@ export function filterReplay(script: ReplayScript, deps: HubDeps): ReplayScript 
   const viewer: Viewer = { studentId: me, squadId, projector: false };
   // call ownership comes from the replay itself, not from live calls
   const calls = createCallRegistry();
-  const ctx: FilterCtx = { ...deps.filterCtx, calls };
+  // A recorded council run belongs to the replay's own viewer (`cast.me` asked it, squad-visible), so its
+  // `a2a.message` / `council.stage` events are not default-denied for lack of a live run registry.
+  const runs = new Set<string>();
+  for (const { event } of script.events) {
+    if (event.t === 'a2a.message') runs.add(event.msg.correlationId);
+    else if (event.t === 'council.stage') runs.add(event.correlationId);
+  }
+  const councils: CouncilRunRegistry = {
+    ownerOf: (id) =>
+      runs.has(id)
+        ? { askedBy: me, squadId, private: false }
+        : deps.filterCtx.councils?.ownerOf(id),
+  };
+  const ctx: FilterCtx = { ...deps.filterCtx, calls, councils };
   const events: ReplayScript['events'] = [];
   for (const { at, event } of script.events) {
     if (event.t === 'call.start') calls.noteOwner(event.callId, event.student ?? null);

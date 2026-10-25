@@ -13,6 +13,7 @@ export * from './chat';
 export * from './chat-sync';
 export * from './council';
 export * from './a2a';
+export * from './council-registry';
 export { parseIcsBusy, stripBusyTitles, BUSY_TITLE } from './ics';
 export type { BusyBlock } from './ics';
 export * from './accounts';

@@ -306,7 +306,7 @@ describe('graceful degradation', () => {
       },
     });
     const out = await t.say("@cubbie devil's TA ch1");
-    expect(out[0]!.text).toMatch(/Demo mode/);
+    expect(out[0]!.text).toMatch(/scripted/);
     const demo = DEMO_PLANS[0]!;
     expect(out[0]!.text).toContain(`1. ${demo.lines[0]}`);
     await t.say('idk'); // nudge falls back to the built-in template
@@ -330,7 +330,7 @@ describe('graceful degradation', () => {
       },
     });
     const out = await t.say("@cubbie devil's TA ch1");
-    expect(out[0]!.text).toMatch(/Demo mode/);
+    expect(out[0]!.text).toMatch(/scripted/);
     const done = await t.say('line 1');
     expect(done[0]!.text).toMatch(/nudge|one more try/i);
     const end = await t.say('line 2');

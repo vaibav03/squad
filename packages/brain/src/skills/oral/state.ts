@@ -1,4 +1,4 @@
-import type { Citation } from '@squad/core';
+import { scripted, type AgentMode, type Citation, type NonLiveMode } from '@squad/core';
 import { splitSentences } from '../../captions/sentences';
 import type { Chapter } from '../../ingest/types';
 import { scrubAnswerLeaks } from '../hwpolicy';
@@ -12,6 +12,8 @@ export const CONTEXT_CHARS = 6000;
 
 export interface ExaminerLine {
   text: string;
+  /** `live` unless this line is a scripted fallback (then `demo:*` / `degraded:*`, and the text says so). */
+  mode?: AgentMode;
   cite?: Citation;
 }
 
@@ -158,7 +160,7 @@ export interface QuestionNote {
 }
 
 /** Template summary used when the LLM is unavailable: tells the student which chapters to revisit. */
-export function fallbackSummary(notes: readonly QuestionNote[]): string[] {
+function summaryTemplateLines(notes: readonly QuestionNote[]): string[] {
   if (!notes.length) return [];
   const titles = [...new Set(notes.map((n) => n.title))];
   const list =
@@ -180,4 +182,14 @@ export function feedbackLine(n: QuestionNote, solid: string, revisit: string): s
     r || (n.outcome === 'answered' ? `revisit ${n.title}.` : `start by revisiting ${n.title}.`);
   const text = s ? `${lead} ${s} ${r || ''}`.trim() : `${lead} ${revisitText}`;
   return clipLine(text);
+}
+
+export const fallbackSummary = summaryTemplateLines;
+
+/** The template summary, branded as scripted (the only way the examiner uses it). */
+export function fallbackSummaryScripted(
+  notes: readonly QuestionNote[],
+  mode: NonLiveMode,
+): string[] {
+  return summaryTemplateLines(notes).map((t) => scripted(t, mode).text);
 }

@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { openDb } from '@squad/core/node';
-import type { Db } from '@squad/core';
+import { councilRunOwner, type Db, type StudentId } from '@squad/core';
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { mkdtempSync } from 'node:fs';
@@ -126,7 +126,20 @@ export function createHub(opts: HubOptions = {}): Hub {
   deps.ledger = createLedgerStore(deps.db);
   deps.trips = createTripStore(deps.db);
   deps.calls = createCallRegistry(now);
-  deps.filterCtx = { directory: deps.directory, calls: deps.calls, trips: deps.trips };
+  deps.filterCtx = {
+    directory: deps.directory,
+    calls: deps.calls,
+    trips: deps.trips,
+    // per-viewer A2A filtering: who owns a council run (the service is attached later, read lazily)
+    councils: {
+      ownerOf: (correlationId) => {
+        const o = deps.council?.ownerOf?.(correlationId) ?? councilRunOwner(correlationId);
+        if (!o) return undefined;
+        const squadId = deps.directory.squadOf(o.askedBy as StudentId);
+        return squadId ? { askedBy: o.askedBy, squadId, private: o.private } : undefined;
+      },
+    },
+  };
   deps.broker = createBroker(deps);
   deps.state = createSquadState(deps);
   deps.state.rebuild(); // agent states and pending confirms come back from the persisted log

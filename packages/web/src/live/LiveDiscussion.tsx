@@ -8,6 +8,7 @@ import { CaptionsBar, Room } from './Room';
 import { TakeawaysPanel } from './TakeawaysPanel';
 import { Transcript } from './Transcript';
 import { EMPTY_TAKEAWAYS } from './fixtures';
+import { ModeBadge } from '../council/board/ModeBadge';
 import { LIVE_ERROR_COPY } from './live-client';
 import type { LiveController } from './useLiveDiscussion';
 
@@ -169,6 +170,7 @@ export function LiveDiscussion({
             {statusWord[status] ?? status}
           </span>
           <span className="ld-tag">AI-generated discussion</span>
+          <ModeBadge mode={demo ? 'demo' : 'live'} />
           {demo && (
             <span className="ld-tag ld-tag--demo" title={state.note}>
               Demo mode: scripted discussion

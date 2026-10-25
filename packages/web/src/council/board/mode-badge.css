@@ -1,0 +1,29 @@
+/* Mode badge: glyph + word on a tinted chip. Colour is a hint only; AA text colours on --card in both themes. */
+.cb-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px 1px 6px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font: 600 0.6875rem/1.4 var(--font-sans);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.cb-mode__glyph {
+  font-size: 0.625rem;
+}
+.cb-mode[data-mode='live'] {
+  color: var(--success-text, var(--success));
+}
+.cb-mode[data-mode='degraded'] {
+  color: var(--warning-text, var(--warning));
+}
+.cb-mode[data-mode='demo'] {
+  color: var(--info-text, var(--info));
+}
+:root[data-theme='dark'] .cb-mode[data-mode='demo'],
+:root:not([data-theme='light']) .cb-mode[data-mode='demo'] {
+  color: #b9adff;
+}

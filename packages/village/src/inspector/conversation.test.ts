@@ -286,3 +286,44 @@ describe('privacy', () => {
     }
   });
 });
+
+describe('a2a.message mapper', () => {
+  const msg = (over: Record<string, unknown> = {}) => ({
+    t: 'a2a.message',
+    msg: {
+      id: 'am_abc12345',
+      from: 'council:ask-chair',
+      to: 'council:ask-skeptic',
+      kind: 'delegate',
+      summary: 'Check the sample size.',
+      status: 'done',
+      redaction: 'public',
+      ...over,
+    },
+  });
+  it('turns delegate/ask/answer into labelled exchanges with named parties', () => {
+    const store = createInspectorStore({ me: 's_ana' });
+    store.apply(msg());
+    store.apply(msg({ from: 'council:ask-skeptic', to: 'council:ask-chair', kind: 'answer' }));
+    const c = store.conversation('council:ask-chair');
+    const kinds = c.thread.map((l) => l.kind);
+    expect(kinds).toEqual(expect.arrayContaining(['delegate', 'answer']));
+    const first = c.thread[0]!;
+    expect(first.text).toBe('Check the sample size.');
+    for (const l of c.thread) {
+      expect(l.from.label).not.toMatch(/council:/);
+      expect(l.to.label).not.toMatch(/council:/);
+    }
+  });
+  it('reads malformed records defensively and hides asker-only text', () => {
+    const store = createInspectorStore({ me: 's_ana' });
+    store.apply({ t: 'a2a.message' });
+    store.apply({ t: 'a2a.message', msg: { from: 'x' } });
+    store.apply(msg({ kind: 'nonsense' }));
+    expect(store.conversation('council:ask-chair').thread).toHaveLength(0);
+    store.apply(msg({ redaction: 'asker_only', summary: 'secret words' }));
+    const t = store.conversation('council:ask-chair').thread;
+    expect(t).toHaveLength(1);
+    expect(t[0]!.text).not.toMatch(/secret/);
+  });
+});

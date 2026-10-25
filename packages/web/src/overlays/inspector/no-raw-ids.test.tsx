@@ -2,9 +2,11 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clearRoster, createInspectorStore, setRoster } from '@squad/village/inspector';
+import { ASK_FIXTURE, createCouncilBoardStore, playCouncilFixture } from '@squad/village/council';
+import { setBoardStore } from '../../council/board/bridge';
 import { InspectorPanel } from './InspectorPanel';
 
-const RAW = /\b[us]_[0-9a-f]{6,}\b|\bU [a-z0-9]{8,}\b/i;
+const RAW = /\b[us]_[0-9a-f]{6,}\b|\bU [a-z0-9]{8,}\b|council:[a-z]+-[a-z-]+|\bam_[a-z0-9]{6,}\b/i;
 const ME = 'u_a193aba6d4e4';
 const OTHER = 'u_9f3c0a7be211';
 
@@ -23,6 +25,7 @@ const settle = () => act(async () => new Promise((r) => setTimeout(r, 20)));
 
 afterEach(() => {
   cleanup();
+  setBoardStore(null);
   clearRoster();
 });
 
@@ -56,12 +59,19 @@ describe('no raw ids while cycling the inspector', () => {
           member: 'chill',
           text: 'x',
         });
+        if (roster) {
+          const board = createCouncilBoardStore();
+          playCouncilFixture(ASK_FIXTURE, (e) => board.apply(e), { instant: true });
+          setBoardStore(board);
+          for (const r of ['chair', 'skeptic', 'planner', 'chill']) store.seed(`council:ask-${r}`);
+          store.seed('council:ask');
+        }
         render(<InspectorPanel store={store} />);
         act(() => store.select(`student:${me}`));
         await settle();
         const ids = store.ids();
         for (let i = 0; i < ids.length * 2 + 2; i++) {
-          for (const tab of ['Doing', 'Thinking', 'Chat', 'Agents']) {
+          for (const tab of ['Doing', 'Thinking', 'Chat', 'Agents', 'Hierarchy']) {
             fireEvent.click(screen.getByRole('tab', { name: new RegExp(`^${tab}`) }));
             for (const t of scan()) expect(t, `step ${i} ${tab}`).not.toMatch(RAW);
           }

@@ -2,7 +2,9 @@ import { z } from 'zod';
 import type { Llm } from '@squad/core';
 import type { EmitEvent } from '../mastery/types';
 import type { KeyVerdict, KeyVerifier, QuestionDraft } from '../quiz/types';
+import type { CouncilAgents } from '../agents/factory';
 import { createCouncilRun, type CouncilMember } from './council';
+import { verifyWithAgents } from './quizkey-agents';
 import { normaliseText, pickDissenter } from './pure';
 
 export const QUIZKEY_PROMPT_VERSION = 'quizkey-v1';
@@ -16,6 +18,8 @@ const EquivSchema = z.object({ equivalent: z.array(z.boolean()) });
 export interface QuizKeyOptions {
   llm: Llm;
   emit: EmitEvent;
+  /** Real agent runtime: three distinct blind solver agents + a Checker. Without it the legacy single-model council runs. */
+  agents?: CouncilAgents;
 }
 
 /** The blind part of the task: question, choices and chapter. NEVER the key. */
@@ -31,6 +35,10 @@ function taskFor(draft: QuestionDraft, chapterContext: string): string {
 export function createQuizKeyVerifier(opts: QuizKeyOptions): KeyVerifier {
   return {
     async verify(draft, ctx): Promise<KeyVerdict> {
+      if (opts.agents && opts.agents.flag === 'v2') {
+        const r = await verifyWithAgents({ agents: opts.agents, emit: opts.emit }, draft, ctx);
+        return { ok: r.ok, dissent: r.dissent, ...(r.dissenter ? { dissenter: r.dissenter } : {}) };
+      }
       const members: CouncilMember[] = SOLVERS.map((name) => ({
         name,
         system: SOLVER_SYSTEM(name),

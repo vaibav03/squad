@@ -1,6 +1,7 @@
 import type { Citation, VillageEvent } from '@squad/core';
-import { agentName, chapterName, shortCaption, studentName } from '../adapter/labels';
+import { a2aPartyName, agentName, chapterName, shortCaption, studentName } from '../adapter/labels';
 import { agentKind, eventWords, redact } from './describe';
+import { KIND_LABEL } from '../council/model';
 
 /**
  * How agents talk, in plain words. Agents do not hold free-form chats with each other: they coordinate
@@ -20,6 +21,12 @@ export type ExchangeKind =
   | 'confirm'
   | 'trip'
   | 'discussion'
+  | 'delegate'
+  | 'ask'
+  | 'answer'
+  | 'critique'
+  | 'vote'
+  | 'status'
   | 'other';
 
 export interface Party {
@@ -96,6 +103,55 @@ registerExchangeMapper('discussion.', (raw, ctx) => {
       text: shortCaption(safeText(text, ctx.mine), 200),
       parts: [from, ...(to ? [to] : [])],
       mine: ctx.mine,
+    },
+  ];
+});
+/** Message kinds of the council A2A protocol that have a plain label (KIND_LABEL). */
+const A2A_KINDS: Record<string, ExchangeKind> = {
+  delegate: 'delegate',
+  ask: 'ask',
+  answer: 'answer',
+  critique: 'critique',
+  rank: 'rank',
+  vote: 'vote',
+  verdict: 'verdict',
+  status: 'status',
+};
+/** Plain word for an exchange kind that comes from an A2A message ('Delegates', 'Asks', ...). */
+export const a2aKindWord = (kind: string): string | undefined =>
+  (KIND_LABEL as Record<string, string>)[kind];
+
+/**
+ * `a2a.message` (council agent-to-agent protocol). The core event union does not carry it yet, so the raw record is
+ * read defensively: only the public fields (from, to, kind, summary, status). Never thinking, never the asker-only answer.
+ */
+registerExchangeMapper('a2a.', (raw, ctx) => {
+  if (raw.t !== 'a2a.message') return [];
+  const msg = raw.msg;
+  if (!msg || typeof msg !== 'object') return [];
+  const m = msg as Record<string, unknown>;
+  const from = typeof m.from === 'string' && m.from ? m.from : undefined;
+  const to = typeof m.to === 'string' && m.to ? m.to : undefined;
+  const kind = typeof m.kind === 'string' ? A2A_KINDS[m.kind] : undefined;
+  if (!from || !to || !kind) return [];
+  const summary = typeof m.summary === 'string' && m.summary ? m.summary : undefined;
+  const priv = m.redaction === 'asker_only' && !ctx.mine;
+  const text = priv
+    ? 'Sent a private note to the asker'
+    : shortCaption(summary ?? `${KIND_LABEL[kind as keyof typeof KIND_LABEL] ?? 'Message'}`, 200);
+  const selectable = (id: string) => /^(council|student|expert|code):|^(dean|mediator)$/.test(id);
+  const dissent = Array.isArray(m.dissentRefs) && m.dissentRefs.length > 0;
+  return [
+    {
+      at: 0,
+      kind,
+      from: { id: from, label: a2aPartyName(from) },
+      to: { id: to, label: a2aPartyName(to) },
+      text,
+      parts: [from, ...(to !== from && selectable(to) ? [to] : [])].filter(selectable),
+      mine: ctx.mine,
+      ...(dissent ? { dissent: true } : {}),
+      ...(m.status === 'failed' ? { alert: true } : {}),
     },
   ];
 });

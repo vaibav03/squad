@@ -46,7 +46,7 @@ describe('InspectorPanel', () => {
     expect(screen.getByRole('complementary', { name: 'Chapter 6 expert' })).toBeTruthy();
     expect(screen.getByText('Studying in the Chapter 6 house')).toBeTruthy();
     expect(screen.getByText('Fast model')).toBeTruthy();
-    expect(screen.getByText('Demo mode')).toBeTruthy();
+    expect(screen.getByText('Demo')).toBeTruthy();
     expect(screen.getByRole('status', { name: 'Thinking now' })).toBeTruthy();
     fireEvent.click(screen.getByRole('tab', { name: /Thinking/ }));
     expect(screen.getByText('Comparing two examples of correlation')).toBeTruthy();

@@ -170,8 +170,13 @@ export function createCouncilRoutes(deps: HubDeps): HubApp {
 
 /** Demo hub (stub ports, no GEMINI_API_KEY): deterministic model, fixture course for grounding when it loads. */
 async function buildDemoService(deps: HubDeps): Promise<CouncilService> {
-  const { createBrain, createCouncilService, createDemoCouncilLlm, loadFixtureCourse } =
-    await import('@squad/brain');
+  const {
+    createBrain,
+    createCouncilAgents,
+    createCouncilService,
+    createDemoCouncilLlm,
+    loadFixtureCourse,
+  } = await import('@squad/brain');
   const llm = createDemoCouncilLlm();
   const emit = (e: VillageEvent) => {
     deps.ingest.village(e);
@@ -196,5 +201,7 @@ async function buildDemoService(deps: HubDeps): Promise<CouncilService> {
     emit,
     ...(brain ? { brain, courseId: () => COURSE_ID } : {}),
     demo: true,
+    // no real model here: every run is an honestly labelled scripted demo run
+    agents: createCouncilAgents({ env: process.env, emit }),
   });
 }

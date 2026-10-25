@@ -1,12 +1,16 @@
 import type { Ctx, InboundMessage, Llm, OutboundMessage, Skill, StudentId } from '@squad/core';
 import type { EmitEvent } from '../../mastery/types';
 import { stripMention } from '../../experts/intent';
-import { parseVoteAnswer, runDebate, type DebateMaterial } from './debate';
+import type { CouncilAgents } from '../../agents/factory';
+import { parseVoteAnswer, runDebate, type DebateInput, type DebateMaterial } from './debate';
+import { runDebateV2 } from './debate-agents';
 
 export interface DebateSkillDeps {
   emit: EmitEvent;
   /** Falls back to `ctx.llm`. */
   llm?: Llm;
+  /** Real agent runtime (Judge, Pro, Con as distinct agents). Without it the legacy single-model debate runs. */
+  agents?: CouncilAgents;
   /**
    * Course material relevant to the question (a `[file p.N]` joined context), or undefined when the
    * question is not about the course. Failures must be swallowed by the caller or throw: both mean
@@ -123,21 +127,22 @@ export function createDebateSkill(deps: DebateSkillDeps): Skill {
       };
 
       try {
-        const res = await runDebate(
-          { llm: deps.llm ?? ctx.llm, emit: deps.emit },
-          {
-            question,
-            ...(material ? { material } : {}),
-            students: students(m, ctx),
-            askVote,
-            onArguments: async ({ pro, con, positions }) => {
-              await ctx.send({
-                chatId: m.chatId,
-                text: `Debate on the stage: ${question}\nFor (${positions.pro}): ${pro}\nAgainst (${positions.con}): ${con}\nI am DMing each of you a vote.`,
-              });
-            },
+        const input: DebateInput = {
+          question,
+          ...(material ? { material } : {}),
+          students: students(m, ctx),
+          askVote,
+          onArguments: async ({ pro, con, positions }) => {
+            await ctx.send({
+              chatId: m.chatId,
+              text: `Debate on the stage: ${question}\nFor (${positions.pro}): ${pro}\nAgainst (${positions.con}): ${con}\nI am DMing each of you a vote.`,
+            });
           },
-        );
+        };
+        const res =
+          deps.agents && deps.agents.flag === 'v2'
+            ? await runDebateV2({ agents: deps.agents, emit: deps.emit, askedBy: m.from }, input)
+            : await runDebate({ llm: deps.llm ?? ctx.llm, emit: deps.emit }, input);
         // The arguments already went to chat; the final message is the vote, verdict and dissent.
         return out(res.closingText);
       } catch (e) {
