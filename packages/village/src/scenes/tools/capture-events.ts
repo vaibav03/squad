@@ -12,7 +12,8 @@ import { captureBundle } from './capture';
  * painted after the previous bubbles' dwell.
  */
 const [sceneId, file, outDir, name = 'live'] = process.argv.slice(2);
-if (!sceneId || !file || !outDir) throw new Error('usage: capture-events <sceneId> <events.json> <outDir> [name]');
+if (!sceneId || !file || !outDir)
+  throw new Error('usage: capture-events <sceneId> <events.json> <outDir> [name]');
 const events = JSON.parse(readFileSync(resolve(file), 'utf8')) as VillageEvent[];
 const bundle = BUNDLES.find((b) => b.def.id === sceneId);
 if (!bundle) throw new Error(`unknown scene ${sceneId}`);

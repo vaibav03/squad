@@ -35,7 +35,10 @@ async function playReplay(s: ReturnType<typeof createRoomSession>) {
   s.enter(room);
   let evs: VillageEvent[];
   if (replay === '1') {
-    const data = (await (await fetch('/rooms-b-replay.json')).json()) as Record<string, VillageEvent[]>;
+    const data = (await (await fetch('/rooms-b-replay.json')).json()) as Record<
+      string,
+      VillageEvent[]
+    >;
     evs = data[room] ?? [];
   } else {
     evs = (await (await fetch(replay as string)).json()) as VillageEvent[];

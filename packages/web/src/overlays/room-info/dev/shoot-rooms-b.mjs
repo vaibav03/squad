@@ -21,7 +21,11 @@ const browser = await chromium.launch();
 for (const room of rooms)
   for (const [name, qs] of shots)
     for (const [sn, width, height, dsf] of sizes) {
-      const ctx = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: dsf, reducedMotion: 'reduce' });
+      const ctx = await browser.newContext({
+        viewport: { width, height },
+        deviceScaleFactor: dsf,
+        reducedMotion: 'reduce',
+      });
       const page = await ctx.newPage();
       page.on('pageerror', (e) => console.error('pageerror', e.message));
       await page.goto(`${base}?room=${room}&${qs}`);

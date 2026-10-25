@@ -27,7 +27,11 @@ export interface CallPortOptions {
   log?: (msg: string, ctx?: Record<string, unknown>) => void;
   knownAgent?: (agent: AgentId) => boolean;
   /** Per-call scripted agent (e.g. the oral examiner). undefined = the normal greeting/answer path. */
-  agentFor?: (args: { callId: string; agent: AgentId; student: StudentId }) => ScriptedAgent | undefined;
+  agentFor?: (args: {
+    callId: string;
+    agent: AgentId;
+    student: StudentId;
+  }) => ScriptedAgent | undefined;
 }
 
 export function defaultPersonaFor(agent: AgentId): string {
@@ -119,9 +123,7 @@ class Session implements CallSession {
     }
   }
 
-  private async *scriptedTurns(
-    get: () => Promise<AnswerSentence[]>,
-  ): AsyncIterable<CallTurn> {
+  private async *scriptedTurns(get: () => Promise<AnswerSentence[]>): AsyncIterable<CallTurn> {
     const lines = await get();
     const out: string[] = [];
     for await (const t of this.speak(toIter(lines))) {

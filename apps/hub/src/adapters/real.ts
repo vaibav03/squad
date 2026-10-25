@@ -401,7 +401,13 @@ function createAudioPorts(
     const a = parseAgentId(agent);
     return a.kind === 'expert' && (a.ref === 'oral' || a.ref === 'examiner');
   };
-  const agentFor = ({ agent, student }: { agent: string; student: StudentId }): ScriptedAgent | undefined => {
+  const agentFor = ({
+    agent,
+    student,
+  }: {
+    agent: string;
+    student: StudentId;
+  }): ScriptedAgent | undefined => {
     if (!isOral(agent)) return undefined;
     const ex = examiner.begin({ student });
     return {

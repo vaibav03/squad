@@ -31,7 +31,8 @@ async function examinerPort(files: string[]) {
             revisit: 'Review the edge cases.',
           })),
         };
-      if (j.includes('Judge the')) return { complete: true, followUp: '', solid: 'Good.', revisit: '' };
+      if (j.includes('Judge the'))
+        return { complete: true, followUp: '', solid: 'Good.', revisit: '' };
       return { question: 'Why does this idea matter?' };
     },
   });
@@ -80,7 +81,12 @@ async function runCall(h: RunningHub, token: string, agentId: string, turns: str
     const { body } = await post<{ st: string }>(h.url, '/v1/squad/stream-token', {}, token);
     return openSse(h.url, { st: body.st });
   })();
-  const start = await post<{ callId: string; ticket: string }>(h.url, '/v1/call/start', { agentId }, token);
+  const start = await post<{ callId: string; ticket: string }>(
+    h.url,
+    '/v1/call/start',
+    { agentId },
+    token,
+  );
   expect(start.status).toBe(200);
   const ws = new WebSocket(
     `${h.url.replace('http', 'ws')}/v1/call/ws/${start.body.callId}?st=${start.body.ticket}`,
@@ -88,9 +94,11 @@ async function runCall(h: RunningHub, token: string, agentId: string, turns: str
   const msgs: { type: string; text?: string; speaker?: string; reason?: string }[] = [];
   ws.on('message', (d) => msgs.push(JSON.parse(d.toString())));
   await new Promise<void>((r) => ws.on('open', () => r()));
-  const agentCaptions = () => msgs.filter((m) => m.type === 'caption' && m.speaker === 'agent').length;
+  const agentCaptions = () =>
+    msgs.filter((m) => m.type === 'caption' && m.speaker === 'agent').length;
   const settle = async (n: number) => {
-    for (let i = 0; i < 100 && agentCaptions() < n; i++) await new Promise((r) => setTimeout(r, 20));
+    for (let i = 0; i < 100 && agentCaptions() < n; i++)
+      await new Promise((r) => setTimeout(r, 20));
   };
   await settle(2); // intro + first question
   for (const t of turns) {
@@ -123,9 +131,9 @@ describe('oral exam over the call websocket (typed text, no mic, no TTS)', () =>
     expect(JSON.stringify(caps)).toContain('Oral Exam practice, feedback only');
     expect(JSON.stringify(caps)).not.toMatch(/\d\s*%/);
     // hangUp also returns the agent to idle
-    expect(
-      sse.frames.some((f) => f.event === 'agent.state' && f.data?.includes('"idle"')),
-    ).toBe(true);
+    expect(sse.frames.some((f) => f.event === 'agent.state' && f.data?.includes('"idle"'))).toBe(
+      true,
+    );
     for (let i = 0; i < 50 && !msgs.some((m) => m.type === 'ended'); i++)
       await new Promise((r) => setTimeout(r, 20));
     expect(msgs.find((m) => m.type === 'ended')?.reason).toBe('server');
@@ -144,7 +152,12 @@ describe('oral exam over the call websocket (typed text, no mic, no TTS)', () =>
   });
 
   it('a normal chapter expert call is untouched (no server-side hang up after the greeting)', async () => {
-    const start = await post<{ callId: string; ticket: string }>(hub.url, '/v1/call/start', { agentId: 'expert:ch1' }, ana);
+    const start = await post<{ callId: string; ticket: string }>(
+      hub.url,
+      '/v1/call/start',
+      { agentId: 'expert:ch1' },
+      ana,
+    );
     expect(start.status).toBe(200);
     const ws = new WebSocket(
       `${hub.url.replace('http', 'ws')}/v1/call/ws/${start.body.callId}?st=${start.body.ticket}`,
@@ -167,7 +180,10 @@ describe('oral exam with no chapters', () => {
       const token = await login(h.url, 's_ana');
       const { sse, msgs } = await runCall(h, token, 'expert:oral', []);
       await sse.waitFor((f) => f.some((x) => x.event === 'call.end'));
-      const texts = msgs.filter((m) => m.type === 'caption').map((m) => m.text).join(' ');
+      const texts = msgs
+        .filter((m) => m.type === 'caption')
+        .map((m) => m.text)
+        .join(' ');
       expect(texts).toMatch(/cannot find any course chapters/);
       sse.stop();
     } finally {
@@ -184,7 +200,8 @@ describe('oral exam through createRealPorts (FakeLlm, FakeTts, fixture course)',
         fallback: (req) => {
           const j = JSON.stringify(req);
           if (j.includes('closing a spoken')) return { items: [] };
-          if (j.includes('Judge the')) return { complete: true, followUp: '', solid: '', revisit: '' };
+          if (j.includes('Judge the'))
+            return { complete: true, followUp: '', solid: '', revisit: '' };
           return { question: 'Why does this idea matter?' };
         },
       });
@@ -195,7 +212,9 @@ describe('oral exam through createRealPorts (FakeLlm, FakeTts, fixture course)',
       const { sse, msgs } = await runCall(h, token, 'expert:oral', [ANSWER, ANSWER, ANSWER]);
       await sse.waitFor((f) => f.some((x) => x.event === 'call.end'));
       expect(msgs.some((m) => m.type === 'audio')).toBe(true);
-      expect(msgs.filter((m) => m.type === 'caption' && m.speaker === 'agent').length).toBeGreaterThanOrEqual(6);
+      expect(
+        msgs.filter((m) => m.type === 'caption' && m.speaker === 'agent').length,
+      ).toBeGreaterThanOrEqual(6);
       sse.stop();
     } finally {
       await h.stop();

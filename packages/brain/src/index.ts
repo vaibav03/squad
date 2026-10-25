@@ -22,3 +22,5 @@ export * from './skills/devilta';
 export * from './skills/oracle';
 export * from './skills/rubric';
 export * from './skills/oral';
+// devilta and oracle each export a `clip`; the barrel needs one explicit winner (nothing imports it from here).
+export { clip } from './skills/devilta';

@@ -26,7 +26,11 @@ const llm = new FakeLlm({
         errorKeywords: ['square'],
         whatIsWrong: 'It is the square root of the variance, not the square.',
         correct: 'The standard deviation is the square root of the variance.',
-        cite: { file: 'stats.pdf', page: 1, quote: 'standard deviation is the square root of the variance' },
+        cite: {
+          file: 'stats.pdf',
+          page: 1,
+          quote: 'standard deviation is the square root of the variance',
+        },
       };
     if (sys.includes('teaching assistant')) return { nudge: 'That line holds up. Look again.' };
     return { explanation: 'Taking the square root brings the units back to the data units.' };

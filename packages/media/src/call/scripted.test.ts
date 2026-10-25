@@ -35,7 +35,10 @@ function script(): ScriptedAgent & { seen: HistoryItem[][]; finish: boolean } {
       o.seen.push(h);
       o.finish = true;
       return [
-        { text: 'Solid on the basics. Revisit the edge cases.', cite: { courseId: 'c', chapter: 'ch1', file: 'f.pdf', page: 1 } },
+        {
+          text: 'Solid on the basics. Revisit the edge cases.',
+          cite: { courseId: 'c', chapter: 'ch1', file: 'f.pdf', page: 1 },
+        },
         { text: 'That is the end.' },
       ];
     },

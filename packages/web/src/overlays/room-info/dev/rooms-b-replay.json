@@ -1,265 +1,263 @@
 {
- "exam-oracle": [
-  {
-   "t": "agent.state",
-   "agent": "expert:oracle",
-   "state": "studying"
-  },
-  {
-   "t": "quiz.question",
-   "quizId": "oracle:1-ch2",
-   "chapter": "oracle:ch2",
-   "student": "s_ana",
-   "target": "s_ana",
-   "text": "In your own words, when would you pick the median over the mean?"
-  },
-  {
-   "t": "quiz.question",
-   "quizId": "oracle:2-ch3",
-   "chapter": "oracle:ch3",
-   "student": "s_ana",
-   "target": "s_ana",
-   "text": "In your own words, when would you pick the median over the mean?"
-  },
-  {
-   "t": "quiz.question",
-   "quizId": "oracle:3-ch6",
-   "chapter": "oracle:ch6",
-   "student": "s_ana",
-   "target": "s_ana",
-   "text": "In your own words, when would you pick the median over the mean?"
-  },
-  {
-   "t": "council.opinion",
-   "councilId": "council:oracle",
-   "member": "oracle",
-   "text": "It is due for review and past exams lean on it."
-  },
-  {
-   "t": "council.opinion",
-   "councilId": "council:oracle",
-   "member": "oracle",
-   "text": "It is due for review and past exams lean on it."
-  },
-  {
-   "t": "council.opinion",
-   "councilId": "council:oracle",
-   "member": "oracle",
-   "text": "It is due for review and past exams lean on it."
-  },
-  {
-   "t": "council.verdict",
-   "councilId": "council:oracle",
-   "member": "oracle",
-   "text": "Start with Descriptive Statistics: center and spread, then Probability Topics and The Normal Distribution.",
-   "outcome": {
-    "title": "Study next: Descriptive Statistics: center and spread",
-    "summary": "Chapters ranked by what is due for review, what is least practised and what past exams lean on. This is a suggestion, never a grade.",
-    "items": [
-     {
-      "label": "ch2 Descriptive Statistics: center and spread",
-      "detail": "due now, needs review"
-     },
-     {
-      "label": "ch3 Probability Topics",
-      "detail": "not practised yet"
-     },
-     {
-      "label": "ch6 The Normal Distribution",
-      "detail": "not practised yet"
-     },
-     {
-      "label": "ch12 Linear Regression and Correlation",
-      "detail": "not practised yet"
-     }
-    ],
-    "facts": [
-     {
-      "label": "Workload",
-      "value": "about 5 hours"
-     },
-     {
-      "label": "Chapters ranked",
-      "value": "4"
-     }
-    ],
-    "why": [
-     {
-      "who": "oracle",
+  "exam-oracle": [
+    {
+      "t": "agent.state",
+      "agent": "expert:oracle",
+      "state": "studying"
+    },
+    {
+      "t": "quiz.question",
+      "quizId": "oracle:1-ch2",
+      "chapter": "oracle:ch2",
+      "student": "s_ana",
+      "target": "s_ana",
+      "text": "In your own words, when would you pick the median over the mean?"
+    },
+    {
+      "t": "quiz.question",
+      "quizId": "oracle:2-ch3",
+      "chapter": "oracle:ch3",
+      "student": "s_ana",
+      "target": "s_ana",
+      "text": "In your own words, when would you pick the median over the mean?"
+    },
+    {
+      "t": "quiz.question",
+      "quizId": "oracle:3-ch6",
+      "chapter": "oracle:ch6",
+      "student": "s_ana",
+      "target": "s_ana",
+      "text": "In your own words, when would you pick the median over the mean?"
+    },
+    {
+      "t": "council.opinion",
+      "councilId": "council:oracle",
+      "member": "oracle",
       "text": "It is due for review and past exams lean on it."
-     },
-     {
-      "who": "oracle",
+    },
+    {
+      "t": "council.opinion",
+      "councilId": "council:oracle",
+      "member": "oracle",
       "text": "It is due for review and past exams lean on it."
-     },
-     {
-      "who": "oracle",
+    },
+    {
+      "t": "council.opinion",
+      "councilId": "council:oracle",
+      "member": "oracle",
       "text": "It is due for review and past exams lean on it."
-     }
-    ]
-   }
-  },
-  {
-   "t": "agent.state",
-   "agent": "expert:oracle",
-   "state": "idle"
-  }
- ],
- "rubric-courthouse": [
-  {
-   "t": "agent.state",
-   "agent": "expert:rubric",
-   "state": "studying"
-  },
-  {
-   "t": "council.opinion",
-   "councilId": "council:rubric",
-   "member": "clarity",
-   "text": "Met. The order of ideas is easy to follow."
-  },
-  {
-   "t": "quiz.result",
-   "quizId": "rubric:hw1-1",
-   "chapter": "rubric:hw1",
-   "student": "s_ana",
-   "correct": true
-  },
-  {
-   "t": "council.opinion",
-   "councilId": "council:rubric",
-   "member": "accuracy",
-   "text": "Met. You picked the median for skewed data and said why."
-  },
-  {
-   "t": "quiz.result",
-   "quizId": "rubric:hw1-2",
-   "chapter": "rubric:hw1",
-   "student": "s_ana",
-   "correct": true
-  },
-  {
-   "t": "council.opinion",
-   "councilId": "council:rubric",
-   "member": "gaps",
-   "text": "Not yet. Spread is not mentioned at all. (no quote found)"
-  },
-  {
-   "t": "quiz.result",
-   "quizId": "rubric:hw1-3",
-   "chapter": "rubric:hw1",
-   "student": "s_ana",
-   "correct": false
-  },
-  {
-   "t": "council.verdict",
-   "councilId": "council:rubric",
-   "member": "judge",
-   "text": "Rubric check: two of three criteria met. Feedback only, no grade.",
-   "outcome": {
-    "title": "Rubric check: hw1",
-    "summary": "Two of three criteria met. Feedback only, so there is no grade; the answer stays yours.",
-    "items": [
-     {
-      "label": "Clarity",
-      "detail": "Clear: The order of ideas is easy to follow."
-     },
-     {
-      "label": "Accuracy",
-      "detail": "Accurate: You picked the median for skewed data and said why."
-     },
-     {
-      "label": "Gaps",
-      "detail": "Gaps remain: Spread is not mentioned at all. (no quote found)"
-     }
-    ],
-    "facts": [
-     {
-      "label": "Criteria met",
-      "value": "two of three"
-     },
-     {
-      "label": "Mode",
-      "value": "Feedback only"
-     }
-    ],
-    "why": [
-     {
-      "who": "clarity",
-      "text": "Met: \"The mean adds all the values and divides by how many there are\" The order of ideas is easy to follow."
-     },
-     {
-      "who": "accuracy",
-      "text": "Met: \"I used the median for the skewed data\" You picked the median for skewed data and said why."
-     },
-     {
-      "who": "gaps",
-      "text": "Not yet: Spread is not mentioned at all. (no quote found)"
-     }
-    ],
-    "notes": [
-     "Feedback only: no grade, and the answer stays yours."
-    ]
-   }
-  },
-  {
-   "t": "agent.state",
-   "agent": "expert:rubric",
-   "state": "idle"
-  }
- ],
- "oral-exam-hut": [
-  {
-   "t": "call.start",
-   "agent": "expert:oral",
-   "callId": "call_demo",
-   "student": "s_ana"
-  },
-  {
-   "t": "call.caption",
-   "agent": "expert:oral",
-   "callId": "call_demo",
-   "text": "Welcome to Oral Exam practice, feedback only: nothing here is graded."
-  },
-  {
-   "t": "call.caption",
-   "agent": "expert:oral",
-   "callId": "call_demo",
-   "text": "In your own words, when would you pick the median over the mean?"
-  },
-  {
-   "t": "call.caption",
-   "agent": "expert:oral",
-   "callId": "call_demo",
-   "text": "Explain, in your own words, one more idea from Probability Topics."
-  },
-  {
-   "t": "call.caption",
-   "agent": "expert:oral",
-   "callId": "call_demo",
-   "text": "That is fine, that is what practice is for."
-  },
-  {
-   "t": "call.caption",
-   "agent": "expert:oral",
-   "callId": "call_demo",
-   "text": "I cannot write detailed feedback right now, so please revisit Descriptive Statistics: center and spread and Probability Topics in your notes."
-  },
-  {
-   "t": "call.caption",
-   "agent": "expert:oral",
-   "callId": "call_demo",
-   "text": "You skipped or were unsure about Probability Topics, so start there."
-  },
-  {
-   "t": "call.caption",
-   "agent": "expert:oral",
-   "callId": "call_demo",
-   "text": "That is the end of this practice exam, so go and revisit those topics."
-  },
-  {
-   "t": "call.end",
-   "agent": "expert:oral",
-   "callId": "call_demo"
-  }
- ]
+    },
+    {
+      "t": "council.verdict",
+      "councilId": "council:oracle",
+      "member": "oracle",
+      "text": "Start with Descriptive Statistics: center and spread, then Probability Topics and The Normal Distribution.",
+      "outcome": {
+        "title": "Study next: Descriptive Statistics: center and spread",
+        "summary": "Chapters ranked by what is due for review, what is least practised and what past exams lean on. This is a suggestion, never a grade.",
+        "items": [
+          {
+            "label": "ch2 Descriptive Statistics: center and spread",
+            "detail": "due now, needs review"
+          },
+          {
+            "label": "ch3 Probability Topics",
+            "detail": "not practised yet"
+          },
+          {
+            "label": "ch6 The Normal Distribution",
+            "detail": "not practised yet"
+          },
+          {
+            "label": "ch12 Linear Regression and Correlation",
+            "detail": "not practised yet"
+          }
+        ],
+        "facts": [
+          {
+            "label": "Workload",
+            "value": "about 5 hours"
+          },
+          {
+            "label": "Chapters ranked",
+            "value": "4"
+          }
+        ],
+        "why": [
+          {
+            "who": "oracle",
+            "text": "It is due for review and past exams lean on it."
+          },
+          {
+            "who": "oracle",
+            "text": "It is due for review and past exams lean on it."
+          },
+          {
+            "who": "oracle",
+            "text": "It is due for review and past exams lean on it."
+          }
+        ]
+      }
+    },
+    {
+      "t": "agent.state",
+      "agent": "expert:oracle",
+      "state": "idle"
+    }
+  ],
+  "rubric-courthouse": [
+    {
+      "t": "agent.state",
+      "agent": "expert:rubric",
+      "state": "studying"
+    },
+    {
+      "t": "council.opinion",
+      "councilId": "council:rubric",
+      "member": "clarity",
+      "text": "Met. The order of ideas is easy to follow."
+    },
+    {
+      "t": "quiz.result",
+      "quizId": "rubric:hw1-1",
+      "chapter": "rubric:hw1",
+      "student": "s_ana",
+      "correct": true
+    },
+    {
+      "t": "council.opinion",
+      "councilId": "council:rubric",
+      "member": "accuracy",
+      "text": "Met. You picked the median for skewed data and said why."
+    },
+    {
+      "t": "quiz.result",
+      "quizId": "rubric:hw1-2",
+      "chapter": "rubric:hw1",
+      "student": "s_ana",
+      "correct": true
+    },
+    {
+      "t": "council.opinion",
+      "councilId": "council:rubric",
+      "member": "gaps",
+      "text": "Not yet. Spread is not mentioned at all. (no quote found)"
+    },
+    {
+      "t": "quiz.result",
+      "quizId": "rubric:hw1-3",
+      "chapter": "rubric:hw1",
+      "student": "s_ana",
+      "correct": false
+    },
+    {
+      "t": "council.verdict",
+      "councilId": "council:rubric",
+      "member": "judge",
+      "text": "Rubric check: two of three criteria met. Feedback only, no grade.",
+      "outcome": {
+        "title": "Rubric check: hw1",
+        "summary": "Two of three criteria met. Feedback only, so there is no grade; the answer stays yours.",
+        "items": [
+          {
+            "label": "Clarity",
+            "detail": "Clear: The order of ideas is easy to follow."
+          },
+          {
+            "label": "Accuracy",
+            "detail": "Accurate: You picked the median for skewed data and said why."
+          },
+          {
+            "label": "Gaps",
+            "detail": "Gaps remain: Spread is not mentioned at all. (no quote found)"
+          }
+        ],
+        "facts": [
+          {
+            "label": "Criteria met",
+            "value": "two of three"
+          },
+          {
+            "label": "Mode",
+            "value": "Feedback only"
+          }
+        ],
+        "why": [
+          {
+            "who": "clarity",
+            "text": "Met: \"The mean adds all the values and divides by how many there are\" The order of ideas is easy to follow."
+          },
+          {
+            "who": "accuracy",
+            "text": "Met: \"I used the median for the skewed data\" You picked the median for skewed data and said why."
+          },
+          {
+            "who": "gaps",
+            "text": "Not yet: Spread is not mentioned at all. (no quote found)"
+          }
+        ],
+        "notes": ["Feedback only: no grade, and the answer stays yours."]
+      }
+    },
+    {
+      "t": "agent.state",
+      "agent": "expert:rubric",
+      "state": "idle"
+    }
+  ],
+  "oral-exam-hut": [
+    {
+      "t": "call.start",
+      "agent": "expert:oral",
+      "callId": "call_demo",
+      "student": "s_ana"
+    },
+    {
+      "t": "call.caption",
+      "agent": "expert:oral",
+      "callId": "call_demo",
+      "text": "Welcome to Oral Exam practice, feedback only: nothing here is graded."
+    },
+    {
+      "t": "call.caption",
+      "agent": "expert:oral",
+      "callId": "call_demo",
+      "text": "In your own words, when would you pick the median over the mean?"
+    },
+    {
+      "t": "call.caption",
+      "agent": "expert:oral",
+      "callId": "call_demo",
+      "text": "Explain, in your own words, one more idea from Probability Topics."
+    },
+    {
+      "t": "call.caption",
+      "agent": "expert:oral",
+      "callId": "call_demo",
+      "text": "That is fine, that is what practice is for."
+    },
+    {
+      "t": "call.caption",
+      "agent": "expert:oral",
+      "callId": "call_demo",
+      "text": "I cannot write detailed feedback right now, so please revisit Descriptive Statistics: center and spread and Probability Topics in your notes."
+    },
+    {
+      "t": "call.caption",
+      "agent": "expert:oral",
+      "callId": "call_demo",
+      "text": "You skipped or were unsure about Probability Topics, so start there."
+    },
+    {
+      "t": "call.caption",
+      "agent": "expert:oral",
+      "callId": "call_demo",
+      "text": "That is the end of this practice exam, so go and revisit those topics."
+    },
+    {
+      "t": "call.end",
+      "agent": "expert:oral",
+      "callId": "call_demo"
+    }
+  ]
 }
