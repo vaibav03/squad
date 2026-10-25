@@ -115,6 +115,19 @@ importers:
         specifier: workspace:*
         version: link:../village
 
+  scripts/demo:
+    dependencies:
+      '@squad/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      zod:
+        specifier: ^4.0.0
+        version: 4.6.7
+    devDependencies:
+      '@types/better-sqlite3':
+        specifier: ^7.6.0
+        version: 7.6.13
+
 packages:
 
   '@esbuild/aix-ppc64@0.28.2':
