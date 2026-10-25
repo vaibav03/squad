@@ -22,7 +22,7 @@ import { labRoutes } from './lab';
 import { loadSession, saveSession } from './session';
 import { SignInStub } from './SignInStub';
 
-const HUB_URL = (import.meta.env.VITE_HUB_URL as string | undefined) || null;
+const HUB_URL = ((import.meta.env.VITE_HUB_URL ?? import.meta.env.VITE_HUB_BASE_URL) as string | undefined) || null;
 
 function useSession() {
   const [session, setSession] = useState<SquadSession | null>(() => loadSession());

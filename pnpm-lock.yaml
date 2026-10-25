@@ -116,6 +116,9 @@ importers:
       '@squad/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@squad/village':
+        specifier: workspace:*
+        version: link:../../packages/village
       '@squad/web':
         specifier: workspace:*
         version: link:../../packages/web

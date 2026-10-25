@@ -140,6 +140,7 @@ async function main(): Promise<void> {
     console.log('starting web host: pnpm --filter @squad/web-host dev');
     start('web', 'pnpm', ['--filter', '@squad/web-host', 'dev'], {
       HUB_BASE_URL: hub,
+      VITE_HUB_URL: hub,
       VITE_HUB_BASE_URL: hub,
     });
     const up = await waitForUrl(webBase, 30_000);

@@ -14,3 +14,4 @@ export * from './skills/doubt';
 export * from './skills/behind';
 export * from './skills/hwpolicy';
 export * from './create';
+export * from './quiz';

@@ -4,4 +4,4 @@
  * link), so this resolves by relative path. When web-host adds `"@squad/village": "workspace:*"`,
  * change this single line to `export * from '@squad/village/motion';`.
  */
-export * from '../../../../../packages/village/src/motion/index';
+export * from '@squad/village/motion';
