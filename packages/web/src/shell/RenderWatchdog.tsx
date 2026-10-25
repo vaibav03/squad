@@ -44,7 +44,6 @@ export function useRenderWatchdog(
       }
     }, 500);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey, round, ms]);
   return { stalled, reset: () => setRound((n) => n + 1) };
 }

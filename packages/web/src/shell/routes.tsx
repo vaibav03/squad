@@ -124,7 +124,6 @@ export async function importWithRetry(
  */
 export function PageHost({ meta, loader }: { meta: SquadRouteMeta; loader: Loader }) {
   const [attempt, setAttempt] = useState(0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const Lazy = useMemo(() => lazy(() => importWithRetry(loader)), [loader, attempt]);
   const again = () => setAttempt((n) => n + 1);
   const loading =
