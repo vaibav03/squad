@@ -2,7 +2,7 @@
 .lv-ovl {
   position: absolute;
   inset: 0;
-  z-index: var(--z-overlay);
+  z-index: var(--sq-z-modal);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -68,10 +68,13 @@
     max-height: calc(100% - var(--lv-s6));
     padding-bottom: 0;
   }
+  /* dock placement = the village dock region (shell/panel-dock.css): below the HUD, above the Chat launcher.
+     Without a dock root (gallery) the tokens fall back to the old 16px inset. */
   .lv-ovl[data-placement='dock'] {
     align-items: stretch;
     justify-content: flex-end;
-    padding: var(--lv-s4);
+    padding: var(--sq-dock-top, var(--lv-s4)) var(--sq-dock-right, var(--lv-s4))
+      var(--sq-dock-bottom, var(--lv-s4)) var(--sq-dock-gutter, var(--lv-s4));
   }
   .lv-ovl[data-placement='dock'] .lv-ovl__panel {
     border-bottom: 1px solid var(--lv-line);

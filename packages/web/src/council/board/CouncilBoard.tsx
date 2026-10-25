@@ -110,10 +110,12 @@ export function CouncilBoard({
   return (
     <OverlayFrame
       open={open}
+      dock="board"
       onClose={onClose}
       returnFocusTo={returnFocusTo}
       calm={calm}
       labelledBy="cb-title"
+      placement="dock"
       size="lg"
       className="cb-panel"
       initialFocus={initialFocus}

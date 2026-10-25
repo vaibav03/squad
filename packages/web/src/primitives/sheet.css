@@ -1,7 +1,7 @@
 .sq-sheet {
   position: fixed;
   inset: 0;
-  z-index: var(--z-overlay);
+  z-index: var(--sq-z-modal);
   display: flex;
 }
 .sq-sheet__scrim {
@@ -10,7 +10,7 @@
   background: var(--scrim);
   opacity: 0;
   transition: opacity var(--dur-base) var(--ease-out);
-  z-index: var(--z-scrim);
+  z-index: var(--sq-z-scrim);
 }
 .sq-sheet__trap {
   position: relative;
@@ -19,7 +19,7 @@
   height: 100%;
   pointer-events: none;
   outline: none;
-  z-index: var(--z-overlay);
+  z-index: var(--sq-z-modal);
 }
 .sq-sheet__panel {
   pointer-events: auto;

@@ -32,6 +32,10 @@ export interface ChatStore {
   since(afterSeq: number, chatIds: string[]): ChatMessage[];
   last(chatId: string): ChatMessage | undefined;
   lastSeq(): number;
+  /** A student's stored message in this chat that was sent with this clientId (durable idempotency across restarts). */
+  findByClientId(chatId: string, studentId: string, clientId: string): ChatMessage | undefined;
+  /** The bot message already stored as the answer to this trigger message with exactly this text, if any. */
+  findReply(chatId: string, replyTo: string, text: string): ChatMessage | undefined;
   /** Newest confirm-card message in this chat for this task. */
   findConfirm(chatId: string, taskId: string): ChatMessage | undefined;
   /** After a restart no confirm can still be pending (the bot drops them): mark those cards `timeout`. Returns how many. */
@@ -57,6 +61,9 @@ export function createChatStore(db: Db): ChatStore {
   );
   const byTask = db.prepare(
     'SELECT json FROM hub_chat_messages WHERE chat_id=? AND instr(json, ?) > 0 ORDER BY seq DESC LIMIT 5',
+  );
+  const byClient = db.prepare(
+    'SELECT json FROM hub_chat_messages WHERE chat_id=? AND instr(json, ?) > 0 ORDER BY seq DESC LIMIT 20',
   );
   const seqOf = (id: string): number | undefined => {
     const m = /^m_(\d+)$/.exec(id);
@@ -114,6 +121,16 @@ export function createChatStore(db: Db): ChatStore {
         s: number | null;
       };
       return r.s ?? 0;
+    },
+    findByClientId(chatId, studentId, clientId) {
+      return rows(byClient.all(chatId, `"clientId":${JSON.stringify(clientId)}`)).find(
+        (m) => m.clientId === clientId && m.sender.kind === 'student' && m.sender.id === studentId,
+      );
+    },
+    findReply(chatId, replyTo, text) {
+      return rows(byClient.all(chatId, `"replyTo":${JSON.stringify(replyTo)}`)).find(
+        (m) => m.replyTo === replyTo && m.sender.kind === 'persona' && m.text === text,
+      );
     },
     findConfirm(chatId, taskId) {
       // the taskId is matched as its JSON-encoded form, so it cannot widen the search
