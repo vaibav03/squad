@@ -1,0 +1,49 @@
+{
+ "demo": {
+  "at": "2026-10-25T06:36:38.952Z",
+  "rows": [
+   {
+    "title": "J1 sign in as Ana through the sign-in screen",
+    "status": "pass",
+    "note": "",
+    "ms": 1080
+   },
+   {
+    "title": "J1 sign in as Ben through the sign-in screen",
+    "status": "pass",
+    "note": "",
+    "ms": 1232
+   },
+   {
+    "title": "J1 sign in as Chi through the sign-in screen",
+    "status": "pass",
+    "note": "",
+    "ms": 1179
+   },
+   {
+    "title": "J1 sign in as Dev through the sign-in screen",
+    "status": "pass",
+    "note": "",
+    "ms": 1169
+   },
+   {
+    "title": "J1 setup: phone, PDFs, .ics, persona (Ana, through the UI)",
+    "status": "fail",
+    "note": "Error: E2E-001: Continue should enable once the hub accepted the PDFsBUG-E2E: Continue stays disabled after a successful live upload",
+    "ms": 6626
+   },
+   {
+    "title": "J1 chapters appear after ingest (hub courses + mastery)",
+    "status": "pass",
+    "note": "courses: [{\"courseId\":\"demo\",\"title\":\"Introductory Statistics (OpenStax excerpt)\",\"file\":\"ch2-descriptive-statistics.pdf\",\"status\":\"ready\",\"pct\":100},{\"courseId\":\"ch3_probability_topics\",\"title\":\"ch3_probability_topics\",\"file\":\"ch3_probability_topics.pdf\",\"status\":\"ready\",\"pct\":100},{\"courseId\":\"ch12_linear_; mastery 200: {\"courseId\":\"demo\",\"concepts\":[\"ch2\",\"ch3\",\"ch6\",\"ch12\"],\"mine\":[0,0,0,0],\"squadAvg\":[0,0,0,0]}",
+    "ms": 35
+   },
+   {
+    "title": "J1 other students ingest + calendars through the API (needed by later journeys)",
+    "status": "pass",
+    "note": "",
+    "ms": 462
+   }
+  ]
+ }
+}

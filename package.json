@@ -23,7 +23,9 @@
     "demo:live": "tsx scripts/demo/live.ts",
     "dev:all": "tsx scripts/dev/all.ts",
     "doctor": "tsx scripts/doctor.ts",
-    "squad:doctor": "tsx scripts/doctor.ts"
+    "squad:doctor": "tsx scripts/doctor.ts",
+    "e2e": "node e2e/run.mjs",
+    "e2e:live": "LIVE=1 node e2e/run.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
