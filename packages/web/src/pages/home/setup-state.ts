@@ -31,7 +31,9 @@ const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 
 /** GET /v1/imessage/link: the viewer's linked handles. Only the count is used, never the masked hint. */
 export async function phoneDone(ctx: HubCtx): Promise<boolean> {
-  return arr(obj(await getJson(ctx, '/v1/imessage/link')).links).length > 0;
+  if (arr(obj(await getJson(ctx, '/v1/imessage/link')).links).length > 0) return true;
+  // A phone verified at sign-up (no iMessage link yet) is also real server state: GET /v1/me phoneVerified.
+  return obj(await getJson(ctx, '/v1/me')).phoneVerified === true;
 }
 
 /** GET /v1/library/courses: at least one of the viewer's own, non-sample courses whose ingest finished (status ready). */

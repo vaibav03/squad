@@ -75,6 +75,9 @@ describe('setup readers (server state only)', () => {
     expect(await phoneDone(ctx)).toBe(false);
     answers['/v1/imessage/link'] = { links: [{ hint: '•••• 0077', linkedAt: 1 }] };
     expect(await phoneDone(ctx)).toBe(true);
+    answers['/v1/imessage/link'] = { links: [] };
+    answers['/v1/me'] = { user: { id: 'u' }, phoneVerified: true };
+    expect(await phoneDone(ctx)).toBe(true);
   });
   it('courses: sample-only or still-ingesting is not done; an own ready course is', async () => {
     answers['/v1/library/courses'] = { courses: [course({ sample: true, role: 'viewer' })] };
