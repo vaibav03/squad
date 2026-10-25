@@ -25,6 +25,9 @@ export function mountVillage(
   let ro: ResizeObserver | undefined;
   let vis: (() => void) | undefined;
   let mq: MediaQueryList | undefined;
+  let restoreAdd: (() => void) | undefined;
+  const phaserVis: Array<[string, EventListener, boolean]> = [];
+  let onMq: ((e: MediaQueryListEvent) => void) | undefined;
   const calm = {
     value: !!opts.calm || (typeof matchMedia === 'function' && matchMedia(REDUCED).matches),
   };
@@ -74,6 +77,9 @@ export function mountVillage(
     const dock = narrow ? PHONE_DOCK_PX : 0;
     root.style.alignItems = narrow ? 'flex-end' : 'center';
     root.style.paddingBottom = `${dock}px`;
+    root.style.background = narrow
+      ? 'var(--sqv-sky-top,#0b1d38)'
+      : 'linear-gradient(180deg,#060d1f 0%,#0b1d38 100%)';
     const s = computeScale(
       r.width || 960,
       (r.height || 540) - dock,
@@ -87,6 +93,10 @@ export function mountVillage(
       g.scale.resize(s.logicalW, s.logicalH);
       const c = g.canvas;
       c.style.imageRendering = 'pixelated';
+      // Phaser's ScaleManager (mode NONE) can keep the previous canvas CSS size after a zoom/size change (rotating a
+      // phone from portrait to landscape left a 195x270 picture in an 844x244 stage). The stage size is the truth.
+      c.style.width = `${s.cssW}px`;
+      c.style.height = `${s.cssH}px`;
     }
     return s;
   };
@@ -135,6 +145,13 @@ export function mountVillage(
           if (pendingCamera) scene?.cameraSet(pendingCamera);
         },
       });
+      // Phaser (3.90) adds a document 'visibilitychange' listener it never removes, which keeps every destroyed game
+      // alive. Record it while the game boots so destroy() can remove it.
+      const nativeAdd = document.addEventListener;
+      document.addEventListener = function (this: Document, t: string, fn: unknown, o?: unknown) {
+        if (/visibilitychange$/i.test(t)) phaserVis.push([t, fn as EventListener, o as boolean]);
+        return (nativeAdd as (...a: unknown[]) => void).call(this, t, fn, o);
+      } as typeof document.addEventListener;
       game = new Phaser.Game({
         type: Phaser.AUTO,
         parent: canvasHost,
@@ -154,12 +171,20 @@ export function mountVillage(
         fps: { target: 60, smoothStep: false },
         input: {
           keyboard: false,
+          // Clicks on DOM panels over the world (room info, council, chat dock) must not reach the world's pointer
+          // handlers: with window events on, a click on a panel hit the interior veil and made the player leave the room.
+          windowEvents: false,
           gamepad: false,
           mouse: { preventDefaultWheel: false },
           touch: { capture: true },
         },
         scene: [scene],
       });
+      restoreAdd = () => {
+        document.addEventListener = nativeAdd;
+        restoreAdd = undefined;
+      };
+      game.events.once('ready', () => restoreAdd?.());
       game.canvas.style.imageRendering = 'pixelated';
       game.canvas.setAttribute('aria-hidden', 'true');
       ro = new ResizeObserver(() => applySize(game));
@@ -172,12 +197,13 @@ export function mountVillage(
       };
       document.addEventListener('visibilitychange', vis);
       mq = matchMedia(REDUCED);
-      mq.addEventListener?.('change', (e) => {
+      onMq = (e) => {
         if (e.matches) {
           calm.value = true;
           scene?.ctx.bus.emit('calm', true);
         }
-      });
+      };
+      mq.addEventListener?.('change', onMq);
     } catch (e) {
       if (!destroyed) fail(e);
     }
@@ -190,10 +216,22 @@ export function mountVillage(
       destroyed = true;
       ro?.disconnect();
       if (vis) document.removeEventListener('visibilitychange', vis);
+      if (mq && onMq) mq.removeEventListener?.('change', onMq);
+      restoreAdd?.();
+      for (const [t, fn, o] of phaserVis) document.removeEventListener(t, fn, o);
+      phaserVis.length = 0;
+      // Phaser frees its GL context only when the canvas is garbage collected. Browsers allow ~16 live contexts, so
+      // ten Village <-> Home round trips used to exhaust them and blank the world. Release it explicitly.
+      const gl = (game?.renderer as { gl?: WebGLRenderingContext } | undefined)?.gl;
       try {
         game?.destroy(true);
       } catch (e) {
         log('destroy', e);
+      }
+      try {
+        gl?.getExtension('WEBGL_lose_context')?.loseContext();
+      } catch {
+        /* context already gone */
       }
       game = undefined;
       root.remove();

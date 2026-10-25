@@ -1,18 +1,13 @@
 import { classifyGeminiError } from './errors';
 import type { CacheHandle, Llm, LlmCacheRequest, LlmJsonRequest, LlmRequest } from './types';
 
-export type LlmFallbackReason =
-  'credits_depleted' | 'rate_limited' | 'invalid_key' | 'no_key' | 'forced_fake';
+export type LlmFallbackReason = 'credits_depleted' | 'no_key' | 'forced_fake' | 'auth';
 
 export interface LlmStatus {
   llm: 'real' | 'fake';
   reason?: LlmFallbackReason;
-  /** epoch ms of the (latest) switch to fake */
+  /** epoch ms of the switch to fake (or of the last failed re-probe) */
   since?: number;
-  /** epoch ms of the last real-model probe while on the fake */
-  lastProbeAt?: number;
-  /** earliest epoch ms of the next probe (only while a probe can still happen) */
-  nextProbeAt?: number;
 }
 
 export interface ResilientLlmOptions {
@@ -22,109 +17,105 @@ export interface ResilientLlmOptions {
   /** Start (and stay) on the fake. */
   forceFake?: boolean;
   now?: () => number;
-  /** Called when the wrapper switches to the fake (or changes the fake's reason). */
+  /** Called once when the wrapper switches to the fake. */
   onSwitch?: (s: LlmStatus) => void;
-  /** Called when a probe brings the real model back. */
+  /** Called when a re-probe brings the real model back. */
   onRecover?: (s: LlmStatus) => void;
-  /** Probe spacing: credits_depleted and rate_limited (default 60 s). */
-  probeEveryMs?: number;
-  /** Probe spacing for an invalid key (default 10 min). */
-  invalidKeyProbeEveryMs?: number;
+  /**
+   * After a credits_depleted/auth switch, try the real adapter again at most once per this many ms (the next
+   * call after the interval is the probe). Unset (default): the switch is permanent for this process.
+   */
+  reprobeMs?: number;
 }
 
-export type ResilientLlm = Llm & { status(): LlmStatus };
+export type ResilientLlm = Llm & {
+  status(): LlmStatus;
+  /** One tiny real call to learn the mode early or after a cooldown. Never throws; respects `reprobeMs`. */
+  probe(): Promise<LlmStatus>;
+};
+
+interface CacheMeta {
+  owner: 'real' | 'fake';
+  system?: string;
+}
 
 /**
- * Calls `real`. On credits_depleted, rate_limited or an invalid key it answers that same request from
- * `fake` and keeps serving the fake, but re-probes the real model with one tiny request (never on the
- * caller's path, at most once per 60 s, or once per 10 min for an invalid key). The first successful
- * probe switches back to the real model, so topping up credits needs no restart. Probes are triggered by
- * traffic and by `status()`. Other errors surface unchanged.
+ * Calls `real`; on a credits_depleted (or auth) error switches to `fake` and answers that same request from the
+ * fake. rate_limited/other errors surface unchanged (the adapter already retried rate limits). Without `reprobeMs`
+ * the real adapter is never called again after the switch; with it, it is retried once per interval and the
+ * wrapper switches back as soon as it answers (topped-up credits need no restart).
+ * A cache handle only works on the model that made it: when the other model answers, the handle is dropped and the
+ * context it held is sent as the system prompt instead.
  */
 export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
   const now = o.now ?? Date.now;
-  const every = o.probeEveryMs ?? 60_000;
-  const keyEvery = o.invalidKeyProbeEveryMs ?? 600_000;
-  const everyFor = (r: LlmFallbackReason | undefined) => (r === 'invalid_key' ? keyEvery : every);
-  const probable = (r: LlmFallbackReason | undefined) =>
-    r === 'credits_depleted' || r === 'rate_limited' || r === 'invalid_key';
   let state: LlmStatus = o.forceFake
     ? { llm: 'fake', reason: 'forced_fake', since: now() }
     : o.real
       ? { llm: 'real' }
       : { llm: 'fake', reason: 'no_key', since: now() };
-  let probing = false;
+  const caches = new Map<string, CacheMeta>();
 
-  const reasonOf = (e: unknown): LlmFallbackReason | undefined => {
-    const k = classifyGeminiError(e).kind;
-    return k === 'credits_depleted'
-      ? k
-      : k === 'rate_limited'
-        ? k
-        : k === 'auth'
-          ? 'invalid_key'
-          : undefined;
-  };
+  const probable = () =>
+    !!o.real &&
+    o.reprobeMs !== undefined &&
+    state.llm === 'fake' &&
+    (state.reason === 'credits_depleted' || state.reason === 'auth') &&
+    now() - (state.since ?? 0) >= o.reprobeMs;
 
-  function schedule(reason: LlmFallbackReason, at: number) {
-    state = { ...state, lastProbeAt: at, nextProbeAt: at + everyFor(reason) };
+  function portable<R extends { cache?: CacheHandle; system?: string }>(
+    req: R,
+    toFake: boolean,
+  ): R {
+    if (!req.cache) return req;
+    const meta = caches.get(req.cache.id);
+    if (!meta || (meta.owner === 'fake') === toFake) return req;
+    const { cache: _drop, ...rest } = req;
+    void _drop;
+    return { ...rest, system: [meta.system, req.system].filter(Boolean).join('\n\n') } as R;
   }
 
-  function maybeProbe(): void {
-    if (probing || !o.real || state.llm !== 'fake' || !probable(state.reason)) return;
-    const t = now();
-    if (state.nextProbeAt !== undefined && t < state.nextProbeAt) return;
-    probing = true;
-    const real = o.real;
-    void (async () => {
-      try {
-        await real.complete({ messages: 'ok', maxTokens: 1, model: 'fast' });
-        state = { llm: 'real' };
-        o.onRecover?.({ ...state });
-      } catch (e) {
-        const reason = reasonOf(e) ?? state.reason!;
-        const at = now();
-        state = { ...state, reason };
-        schedule(reason, at);
-      } finally {
-        probing = false;
-      }
-    })();
-  }
-
-  async function run<T>(f: (l: Llm) => Promise<T>): Promise<T> {
-    if (state.llm === 'fake' || !o.real) {
-      maybeProbe();
-      return f(o.fake);
-    }
+  async function run<T>(f: (l: Llm, toFake: boolean) => Promise<T>): Promise<T> {
+    if (!o.real || (state.llm === 'fake' && !probable())) return f(o.fake, true);
     try {
-      return await f(o.real);
-    } catch (e) {
-      const reason = reasonOf(e);
-      if (!reason) throw classifyGeminiError(e);
-      if (state.llm === 'real') {
-        const t = now();
-        state = {
-          llm: 'fake',
-          reason,
-          since: t,
-          lastProbeAt: t,
-          nextProbeAt: t + everyFor(reason),
-        };
-        o.onSwitch?.({ ...state });
+      const r = await f(o.real, false);
+      if (state.llm === 'fake') {
+        state = { llm: 'real' }; // credits are back
+        o.onRecover?.({ ...state });
       }
-      return f(o.fake);
+      return r;
+    } catch (e) {
+      const err = classifyGeminiError(e);
+      if (err.kind !== 'credits_depleted' && err.kind !== 'auth') throw err;
+      const fresh = state.llm === 'real';
+      state = { llm: 'fake', reason: err.kind, since: now() };
+      if (fresh) o.onSwitch?.(state);
+      return f(o.fake, true);
     }
   }
 
   return {
-    status() {
-      maybeProbe();
+    status: () => ({ ...state }),
+    complete: (req: LlmRequest) => run((l, t) => l.complete(portable(req, t))),
+    json: <T>(req: LlmJsonRequest<T>) => run((l, t) => l.json(portable(req, t))),
+    async createCache(req: LlmCacheRequest) {
+      let owner: CacheMeta['owner'] = 'real';
+      const h = await run((l, t) => {
+        owner = t ? 'fake' : 'real';
+        return l.createCache(req);
+      });
+      caches.set(h.id, { owner, ...(req.system !== undefined ? { system: req.system } : {}) });
+      return h;
+    },
+    async probe() {
+      if (!o.real || (state.llm === 'fake' && !probable())) return { ...state };
+      try {
+        await run((l) => l.complete({ model: 'fast', messages: 'ping', maxTokens: 1 }));
+      } catch {
+        /* rate limited or transient: the mode is unchanged */
+      }
       return { ...state };
     },
-    complete: (req: LlmRequest) => run((l) => l.complete(req)),
-    json: <T>(req: LlmJsonRequest<T>) => run((l) => l.json(req)),
-    createCache: (req: LlmCacheRequest) => run((l) => l.createCache(req)),
     async deleteCache(h: CacheHandle) {
       if (h.provider === 'fake') return o.fake.deleteCache?.(h);
       if (state.llm === 'real') return run((l) => l.deleteCache?.(h) ?? Promise.resolve());

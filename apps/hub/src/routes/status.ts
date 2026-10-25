@@ -6,12 +6,8 @@ export const DEMO_NOTICE = 'Demo mode: add GEMINI_API_KEY to .env for real answe
 const NOTICES: Record<string, string> = {
   no_key: DEMO_NOTICE,
   forced_fake: 'Demo mode: FORCE_FAKE_LLM=1, answers come from the scripted demo model',
-  credits_depleted:
-    'Demo mode: Gemini credits are depleted (AI Studio billing), answers come from the scripted demo model until credits are topped up (rechecked every minute)',
-  invalid_key:
-    'Demo mode: Gemini rejected the API key, answers come from the scripted demo model (rechecked every 10 minutes)',
-  rate_limited:
-    'Demo mode: Gemini is rate limiting, answers come from the scripted demo model until it recovers',
+  credits_depleted: 'Demo mode: Gemini credits depleted, add credits in AI Studio for real answers',
+  auth: 'Demo mode: Gemini rejected the API key, answers come from the scripted demo model',
 };
 
 /**
@@ -32,8 +28,6 @@ export function createStatusRoutes(deps: HubDeps): HubApp {
       ports: rt?.ports() ?? 'stub',
       ...(fake && llm.reason ? { reason: llm.reason } : {}),
       ...(fake && llm.since ? { since: llm.since } : {}),
-      ...(fake && llm.lastProbeAt ? { lastProbeAt: llm.lastProbeAt } : {}),
-      ...(fake && llm.nextProbeAt ? { nextProbeAt: llm.nextProbeAt } : {}),
       ...(fake ? { notice: NOTICES[llm.reason ?? 'no_key'] ?? DEMO_NOTICE } : {}),
     });
   });

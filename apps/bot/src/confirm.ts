@@ -8,6 +8,13 @@ export const DEFAULT_CONFIRM_TIMEOUT_MS = 600_000;
 export interface ConfirmDeps {
   db: Db;
   dm: (student: StudentId, text: string) => Promise<void>;
+  /** Transports with structured prompts (web cards) show the question themselves instead of the numbered DM text. */
+  prompt?: (
+    student: StudentId,
+    p: { taskId: string; question: string; options: string[] },
+  ) => Promise<void>;
+  /** Called once when a pending confirm resolves (answer is the option string or 'timeout'). */
+  resolved?: (student: StudentId, taskId: string, answer: ConfirmAnswer) => void;
   events: EventPublisher;
   now?: () => number;
   timeoutMs?: number;
@@ -82,6 +89,11 @@ export function createConfirmManager(deps: ConfirmDeps): ConfirmApi {
     });
     emit({ t: 'agent.state', agent: `student:${entry.student}`, state: 'idle' });
     log.info({ student: entry.student, taskId: entry.taskId, answer }, 'confirm resolved');
+    try {
+      deps.resolved?.(entry.student, entry.taskId, answer);
+    } catch (err) {
+      log.warn({ err: (err as Error).message }, 'confirm resolved hook failed');
+    }
     entry.resolve(answer);
     advance(entry.student);
   }
@@ -102,7 +114,15 @@ export function createConfirmManager(deps: ConfirmDeps): ConfirmApi {
       question: entry.question,
     });
     try {
-      await deps.dm(entry.student, formatConfirmDm(entry.question, entry.options));
+      if (deps.prompt) {
+        await deps.prompt(entry.student, {
+          taskId: entry.taskId,
+          question: entry.question,
+          options: entry.options,
+        });
+      } else {
+        await deps.dm(entry.student, formatConfirmDm(entry.question, entry.options));
+      }
     } catch (err) {
       active.delete(entry.student);
       deps.db.prepare('DELETE FROM pending_confirms WHERE id=?').run(entry.rowId);

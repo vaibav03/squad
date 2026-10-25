@@ -351,6 +351,37 @@ export function createParallax(scene: Phaser.Scene, d: ParallaxDeps) {
     }
   }
   let lastW = cam.width;
+  // The page-side band above the picture (phones) takes the sky's top-edge colour, so it never reads as a dead band.
+  const skyKeys = [
+    'parallax.0_sky',
+    'parallax.0_sky:dusk',
+    'parallax.0_sky:dawn',
+    'parallax.0_sky:day',
+  ];
+  const topRgb = skyKeys.map((k) => {
+    try {
+      const c = scene.textures.getPixel(0, 0, k);
+      return c ? ([c.red, c.green, c.blue] as const) : undefined;
+    } catch {
+      return undefined;
+    }
+  });
+  let lastTop = '';
+  const syncBand = (alphas: number[]) => {
+    const base = topRgb[0];
+    if (!base) return;
+    let rgb: number[] = [...base];
+    for (let i = 1; i < 4; i++) {
+      const c = topRgb[i];
+      const a = alphas[i - 1] ?? 0;
+      if (c && a > 0) rgb = rgb.map((v, j) => Math.round(v + (c[j]! - v) * a));
+    }
+    const css = `rgb(${rgb.join(',')})`;
+    if (css === lastTop) return;
+    lastTop = css;
+    const host = scene.game.canvas?.closest('.sqv-root') as HTMLElement | null;
+    host?.style.setProperty('--sqv-sky-top', css);
+  };
   return {
     update(t: number) {
       const n = d.time.nightness;
@@ -366,6 +397,7 @@ export function createParallax(scene: Phaser.Scene, d: ParallaxDeps) {
         sky.dusk.setAlpha(tw === 'dusk' ? twilight : 0);
         sky.dawn.setAlpha(tw === 'dawn' ? twilight : 0);
         sky.day.setAlpha(day);
+        syncBand([tw === 'dusk' ? twilight : 0, tw === 'dawn' ? twilight : 0, day]);
       }
       if (stars) {
         if (resized) stars.setSize(w, LOGICAL_H);
