@@ -20,7 +20,8 @@ import { InspectorPanel } from '../../overlays/inspector';
 import { setInspectorStore } from '../../overlays/inspector/bridge';
 import { SourceViewerHost } from '../../components/source-viewer';
 import { createInspectorStore, type InspectorStore } from '@squad/village/inspector';
-import { CouncilHall } from '../../council';
+import { createCouncilBoardStore } from '@squad/village/council';
+import { CouncilHall, CouncilBoardHost, setBoardStore } from '../../council';
 import { useToast } from '../../primitives/Toast';
 import { sendPhraseToChat } from './chat-send';
 import { OverlayHost } from './OverlayHost';
@@ -99,6 +100,17 @@ export default function VillagePage({ world }: { world?: string }) {
           offStore();
           prevClose();
         };
+        // The council board folds the same stream (a2a.message, council.stage and the legacy council.* events).
+        const board = createCouncilBoardStore({
+          defaultMode: replayName || !live ? 'demo' : 'live',
+        });
+        const offBoard = board.attach(feed.source);
+        const prevClose2 = feed.close;
+        feed.close = () => {
+          offBoard();
+          prevClose2();
+        };
+        setBoardStore(board);
         setInspector(store);
         setInspectorStore(store);
         const mount = await loadWorld(worldId);
@@ -132,6 +144,7 @@ export default function VillagePage({ world }: { world?: string }) {
       setEvent(null);
       setInspector(null);
       setInspectorStore(null);
+      setBoardStore(null);
     };
     // calm is applied live through setCalm; the world is not remounted for it.
   }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable]);
@@ -244,6 +257,11 @@ export default function VillagePage({ world }: { world?: string }) {
       )}
       <SourceViewerHost />
       <ChatDock enabled={live && !replayName} />
+      <CouncilBoardHost
+        hub={hub}
+        calm={calm}
+        returnFocusTo={stage.current?.querySelector<HTMLElement>('.sqv-stage')}
+      />
       <CouncilHall
         hub={hub}
         calm={calm}
