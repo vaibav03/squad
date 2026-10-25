@@ -26,8 +26,10 @@ export function bodyGuard(o: BodyOptions): MiddlewareHandler {
       (len !== undefined && len !== '0') || c.req.header('transfer-encoding') !== undefined;
     const multipart = ct.startsWith('multipart/form-data');
     const json = ct.startsWith('application/json') || /^application\/[\w.+-]+\+json/.test(ct);
+    // the course catalogue import takes CSV text as well as JSON
+    const csvOk = path === '/v1/library/catalogue' && /^text\/(csv|plain)/.test(ct);
     const strict = path.startsWith('/v1/') || path.startsWith('/__sim/');
-    if (hasBody && strict && !multipart && !json)
+    if (hasBody && strict && !multipart && !json && !csvOk)
       return c.json(err('unsupported_media_type', 'application/json required'), 415);
     const max = multipart ? o.multipartMax : o.jsonMax;
     if (len !== undefined && Number(len) > max)

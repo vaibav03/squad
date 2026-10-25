@@ -276,8 +276,14 @@ export const headers: Probe = async (c) => {
   const pa = pre.headers.get('access-control-allow-origin');
   if (pa === '*' || pa === 'https://evil.example')
     out.push(f('CORS-1', 'high', 'preflight allows a foreign Origin'));
-  if (r.headers.get('access-control-allow-credentials') === 'true')
-    out.push(f('CORS-2', 'medium', 'credentials allowed cross-origin'));
+  // Cookie sessions (product/accounts) need `allow-credentials` for the allow-listed web origin (hono sends the header
+  // on every response, but a browser ignores it without a matching allow-origin). Only a wildcard origin with
+  // credentials is a finding.
+  if (
+    r.headers.get('access-control-allow-credentials') === 'true' &&
+    r.headers.get('access-control-allow-origin') === '*'
+  )
+    out.push(f('CORS-2', 'medium', 'credentials allowed with a wildcard Origin'));
   return out;
 };
 
