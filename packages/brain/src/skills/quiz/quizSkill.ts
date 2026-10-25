@@ -103,6 +103,7 @@ export function createQuizSkill(deps: QuizSkillDeps): Skill {
         if (!parsed)
           return [out(`I did not catch that. ${renderQuestion(engine.payload(quizId))}`)];
         const before = engine.payload(quizId).index;
+        const cite = engine.citation(quizId, before);
         let res;
         try {
           res = await engine.answer(quizId, m.from, parsed);
@@ -110,14 +111,21 @@ export function createQuizSkill(deps: QuizSkillDeps): Skill {
           return [out((e as Error).message)];
         }
         const replies: OutboundMessage[] = [];
-        if (m.isGroup) await ctx.dm(m.from, res.feedback);
-        else replies.push(out(res.feedback));
+        // The page the explanation was written from is cited as a marker: the web chat turns it into a chip (after the
+        // hub checked the page exists) and iMessage shows it as plain text. Ungraded feedback cites nothing.
+        const feedback =
+          res.graded && cite ? `${res.feedback} [${cite.file} p.${cite.page}]` : res.feedback;
+        if (m.isGroup) await ctx.dm(m.from, feedback);
+        else replies.push(out(feedback));
         if (res.phase === 'done') {
           setActive(ctx, m.chatId, null);
           replies.push(out('That was the last question.'));
         } else if (res.phase === 'collecting' && engine.payload(quizId).index > before) {
           // everyone answered: the engine moved on, so the chat gets the next question
-          replies.push(out(renderQuestion(engine.payload(quizId))));
+          replies.push({
+            ...out(renderQuestion(engine.payload(quizId))),
+            provenance: { label: `Question written from ${engine.payload(quizId).chapter} course material; the page is cited after you answer` },
+          });
         }
         return replies;
       }
@@ -129,7 +137,12 @@ export function createQuizSkill(deps: QuizSkillDeps): Skill {
           students: studentsFor(m, ctx),
         });
         setActive(ctx, m.chatId, id);
-        return [out(renderQuestion(engine.payload(id)))];
+        return [
+          {
+            ...out(renderQuestion(engine.payload(id))),
+            provenance: { label: `Question written from ${chapter} course material; the page is cited after you answer` },
+          },
+        ];
       } catch (e) {
         return [out(`Could not start that quiz: ${(e as Error).message}`)];
       }

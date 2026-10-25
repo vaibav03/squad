@@ -1,7 +1,8 @@
 import type { OutboundMessage, Skill } from '@squad/core';
 import { isBehindIntent, isGradedGrab } from '../../experts/intent';
-import { canvasAnswer, isCanvasQuestion } from '../../context/answers';
+import { canvasAnswerWithSources, isCanvasQuestion } from '../../context/answers';
 import { calendarReply, dueReply, isCalendarQuestion } from '../../context/answers-rich';
+import { chatCitationForSource } from '../../citations/chat';
 import { ownSources } from '../../context/readable';
 import type { ContextStore } from '../../context/store';
 import type { ContextViewer } from '../../context/types';
@@ -69,8 +70,16 @@ export function createCanvasAnswerSkill(store: ContextStore, opts: CanvasAnswerO
             },
           ];
       }
-      const text = canvasAnswer(m.text, sources, t);
-      return text ? [{ chatId: m.chatId, text }] : [];
+      const r = canvasAnswerWithSources(m.text, sources, t);
+      return r
+        ? [
+            {
+              chatId: m.chatId,
+              text: r.text,
+              ...(r.used.length ? { citations: r.used.map((s) => chatCitationForSource(s)) } : {}),
+            },
+          ]
+        : [];
     },
   };
 }

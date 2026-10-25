@@ -6,6 +6,7 @@ import {
   stripMention,
 } from '../../experts/intent';
 import { NOT_IN_MATERIALS, type Brain } from '../../experts/types';
+import { chatCitationsFromAnswer } from '../../citations/chat';
 
 export const UNAVAILABLE_TEXT =
   "I couldn't reach the course brain just now. Try again in a minute.";
@@ -46,22 +47,7 @@ export function createDoubtSkill(brain: Brain, opts: DoubtOptions = {}): Skill {
           viewer ? { viewer, contextCourseId: null } : undefined,
         );
         text = a.grounded || a.reason === 'nothing_connected' ? a.text : NOT_IN_MATERIALS;
-        // Canvas/Drive/Calendar/Classroom citations travel structurally (chips that open the source viewer).
-        citations = a.grounded
-          ? a.citations.flatMap((c) =>
-              c.source
-                ? [
-                    {
-                      file: c.file,
-                      page: 1,
-                      label: c.file,
-                      source: c.source,
-                      ...(c.quote ? { quote: c.quote.slice(0, 600) } : {}),
-                    },
-                  ]
-                : [],
-            )
-          : [];
+        if (a.grounded) citations = chatCitationsFromAnswer(a.citations);
       } catch {
         // Any failure is answered honestly; nothing is invented from model memory.
         text = UNAVAILABLE_TEXT;

@@ -37,6 +37,7 @@ import { refreshBusyForTrip } from './context/busy';
 import { contextDueFor } from './context/plan';
 import { createDefaultPlanContext } from './plans/context';
 import { createPlanService } from './plans/service';
+import { contextServiceFor } from './context/service';
 import { createPlanStore } from './plans/store';
 import { COURSE_ID } from './cast';
 import { createQuizRoutes } from './routes/quiz';
@@ -157,6 +158,8 @@ export function createHub(opts: HubOptions = {}): Hub {
     deps,
     createDefaultPlanContext(deps.db, COURSE_ID, {
       contextDue: (squadId, members, from, to) => contextDueFor(deps, squadId, members, from, to),
+      store: () => contextServiceFor(deps).store,
+      squadsOf: (id) => deps.directory.squadsOf(id),
     }),
     createPlanStore(deps.db),
   );

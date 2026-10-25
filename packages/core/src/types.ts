@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { Llm } from './llm/types';
 import { CitationSourceSchema } from './context';
 import type { ChatCard, ChatCitation } from './chat';
+import type { ProvenanceHint } from './provenance';
 
 export type StudentId = string; // stable id, e.g. "s_ana"
 export type ChatId = string; // imessage-kit chat id (group or DM)
@@ -44,8 +45,10 @@ export interface OutboundMessage {
   personaId?: string;
   /** Structured card for transports that render one (the web chat); others show `text` only. */
   card?: ChatCard;
-  /** Verified source citations (Canvas, Drive, Calendar, Classroom); the web chat shows them as chips. */
+  /** Structured citations the skill already verified (non-PDF sources have no `(file p.N)` marker in the text). */
   citations?: ChatCitation[];
+  /** What the skill knows about where this reply came from when it has no citations (docs/provenance.md). */
+  provenance?: ProvenanceHint;
 }
 
 /** `'timeout'` is part of the contract (treated as "no" by callers). */

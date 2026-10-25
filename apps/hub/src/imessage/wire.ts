@@ -1,5 +1,6 @@
 // Starts the iMessage bridge inside the hub process. Off unless IMESSAGE_ENABLED=1 and an allowlist is set.
 import {
+  FakeIMessageTransport,
   configProblem,
   createIMessageGateway,
   imessageConfigFromEnv,
@@ -30,6 +31,9 @@ export interface AttachIMessageOptions {
   /** false: no retry and backfill timers (tests). */
   timers?: boolean;
 }
+
+/** The one chat guid the fixture transport knows. Allowlist it with IMESSAGE_ALLOWED_CHATS. */
+export const FIXTURE_CHAT = 'iMessage;+;chat-fixture-0001';
 
 /** The hub's logger takes (message, fields); the bot's takes (fields, message). */
 const botLog = (deps: Pick<HubDeps, 'log'>): Logger => ({
@@ -63,9 +67,15 @@ export async function attachIMessage(
     deps.log.info(`imessage: not started (${problem})`);
     return undefined;
   }
+  const env = o.env ?? process.env;
+  // IMESSAGE_FIXTURE=1 (with IMESSAGE_ENABLED=1 and an allowlist that names FIXTURE_CHAT) runs a scripted transport and
+  // binds it to a squad, for demos and e2e. The status and the web say "Fixture transport (no real iMessage)".
+  const fixture = !o.sdk && env.IMESSAGE_FIXTURE === '1';
+  const sdk =
+    o.sdk ?? (fixture ? new FakeIMessageTransport([{ chatId: FIXTURE_CHAT, name: 'Fixture group', kind: 'group' }]) : undefined);
   const gateway = createIMessageGateway({
     config,
-    ...(o.sdk ? { sdk: o.sdk } : {}),
+    ...(sdk ? { sdk } : {}),
     log: botLog(deps),
     ...(o.now ? { now: o.now } : {}),
     ...(o.sleep ? { sleep: o.sleep } : {}),
@@ -79,7 +89,13 @@ export async function attachIMessage(
     store: deps.imessage,
     ...(o.now ? { now: o.now } : {}),
     ...(o.timers !== undefined ? { timers: o.timers } : {}),
+    ...(o.sdk || fixture ? { fixture: true } : {}),
   });
+  if (fixture) {
+    const squad = env.IMESSAGE_FIXTURE_SQUAD ?? deps.directory.students()[0]?.id;
+    const squadId = env.IMESSAGE_FIXTURE_SQUAD ?? (squad ? deps.directory.squadOf(squad) : undefined);
+    if (squadId && !deps.imessage.binding(FIXTURE_CHAT)) deps.imessage.bind(FIXTURE_CHAT, squadId, 'fixture');
+  }
   deps.imessageSync = bridge.sync;
   await gateway.start((m) => bridge.handleInbound(m));
   // pick up what chat.db received while the hub was down (cursor per bound chat), then keep retrying queued sends
