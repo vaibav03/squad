@@ -31,6 +31,10 @@ ROSTER = [
     ('student-04', 'student-04', 'student'), ('student-05', 'student-05', 'student'), ('student-06', 'student-06', 'student'),
     ('mediator', 'mediator', 'mediator'), ('ta', 'ta', 'ta'),
 ]
+NAMES = {'cubbie': 'Cubbie', 'examiner': 'The Examiner', 'dean': 'The Dean', 'expert-ada': 'Prof. Ada', 'expert-sage': 'Sage', 'expert-monk': 'Brother Bit',
+         'expert-mage': 'Mage Moda', 'rival': 'The Rival', 'council-chill': 'Chill', 'council-grind': 'Grind', 'council-advisor': 'Advisor', 'chairman': 'The Chairman',
+         'feynman': 'Feynman Freshman', 'student-01': 'Student 1', 'student-02': 'Student 2', 'student-03': 'Student 3', 'student-04': 'Student 4',
+         'student-05': 'Student 5', 'student-06': 'Student 6', 'mediator': 'The Mediator', 'ta': 'The TA'}
 PAL = {v + (255,) for v in RGB.values()}
 
 def to_img(cv):
@@ -87,7 +91,7 @@ def main():
         json.dump(dict(version=2, id=rid, cell=dict(w=CELL, h=CELL), facing='right', anchors=dict(feet=ANCHOR, head=dict(x=16, y=top), bubble=dict(x=16, y=max(top - 3, 0))),
                        portrait='portrait.png', frames=pf, anims=pa), open(os.path.join(d, 'frames.json'), 'w'), indent=2)
         open(os.path.join(d, 'frames.json'), 'a').write('\n')
-        anims[rid] = per_anims; meta.append(dict(id=rid, role=role, spec=spec, headTop=top))
+        anims[rid] = per_anims; meta.append(dict(id=rid, name=NAMES[rid], role=role, spec=spec, headTop=top))
     check(atlas, 'atlas'); atlas.save(os.path.join(OUT, 'cast.png'), optimize=True)
     json.dump(dict(frames=jf, animations=anims, meta=dict(app='squad media-art build_cast.py', image='cast.png', format='RGBA8888', size=dict(w=atlas.width, h=atlas.height), scale='1',
               anchor=ANCHOR, facing='right', note='engine flips for left; keys <id>/<anim>/<n>, anims idle walk talk sit wave, plus <id>/portrait')), open(os.path.join(OUT, 'cast.json'), 'w'), indent=1)

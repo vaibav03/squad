@@ -50,7 +50,6 @@ def render(frame, show_bubble, head, scale, bg):
         for x in range(CARD_ART): px[x, gy + 1] = RGB['hill-near'] + (255,)
         for x in range(ox + 6, ox + 27):                     # hard-edged shadow ellipse on the ground
             px[x, gy] = RGB['ground'] + (255,)
-        for x in range(0, CARD_ART, 4): px[x, gy + 3] = RGB['hill-near'] + (255,) if gy + 3 < CARD_ART else None
     art.alpha_composite(frame, (ox, oy))
     if show_bubble: bubble(art, head, ox, oy)
     return art.resize((CARD_ART * scale, CARD_ART * scale), Image.NEAREST)

@@ -18,126 +18,147 @@
  "personas": [
   {
    "id": "cubbie",
+   "name": "Cubbie",
    "role": "cubbie",
    "spec": "cubbie",
    "headTop": 4
   },
   {
    "id": "examiner",
+   "name": "The Examiner",
    "role": "examiner",
    "spec": "examiner",
    "headTop": 4
   },
   {
    "id": "dean",
+   "name": "The Dean",
    "role": "dean",
    "spec": "dean",
    "headTop": 6
   },
   {
    "id": "expert-ada",
+   "name": "Prof. Ada",
    "role": "expert",
    "spec": "expert",
    "headTop": 3
   },
   {
    "id": "expert-sage",
+   "name": "Sage",
    "role": "expert",
    "spec": "expert-sage",
    "headTop": 6
   },
   {
    "id": "expert-monk",
+   "name": "Brother Bit",
    "role": "expert",
    "spec": "expert-monk",
    "headTop": 6
   },
   {
    "id": "expert-mage",
+   "name": "Mage Moda",
    "role": "expert",
    "spec": "expert-mage",
    "headTop": 1
   },
   {
    "id": "rival",
+   "name": "The Rival",
    "role": "rival",
    "spec": "rival",
    "headTop": 3
   },
   {
    "id": "council-chill",
+   "name": "Chill",
    "role": "council",
    "spec": "council-chill",
    "headTop": 5
   },
   {
    "id": "council-grind",
+   "name": "Grind",
    "role": "council",
    "spec": "council-hard",
    "headTop": 5
   },
   {
    "id": "council-advisor",
+   "name": "Advisor",
    "role": "council",
    "spec": "council-balance",
    "headTop": 5
   },
   {
    "id": "chairman",
+   "name": "The Chairman",
    "role": "council",
    "spec": "chairman",
    "headTop": 0
   },
   {
    "id": "feynman",
+   "name": "Feynman Freshman",
    "role": "feynman",
    "spec": "freshman",
    "headTop": 9
   },
   {
    "id": "student-01",
+   "name": "Student 1",
    "role": "student",
    "spec": "student",
    "headTop": 5
   },
   {
    "id": "student-02",
+   "name": "Student 2",
    "role": "student",
    "spec": "student-02",
    "headTop": 5
   },
   {
    "id": "student-03",
+   "name": "Student 3",
    "role": "student",
    "spec": "student-03",
    "headTop": 5
   },
   {
    "id": "student-04",
+   "name": "Student 4",
    "role": "student",
    "spec": "student-04",
    "headTop": 3
   },
   {
    "id": "student-05",
+   "name": "Student 5",
    "role": "student",
    "spec": "student-05",
    "headTop": 5
   },
   {
    "id": "student-06",
+   "name": "Student 6",
    "role": "student",
    "spec": "student-06",
    "headTop": 3
   },
   {
    "id": "mediator",
+   "name": "The Mediator",
    "role": "mediator",
    "spec": "mediator",
    "headTop": 4
   },
   {
    "id": "ta",
+   "name": "The TA",
    "role": "ta",
    "spec": "ta",
    "headTop": 3
