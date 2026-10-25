@@ -18,6 +18,7 @@ import {
 } from './mastery';
 import { paintRoomArrows } from '../council/roomArrows';
 import type { CouncilBoardStore } from '../council/store';
+import { PLAN_TABLE_H, PLAN_TABLE_W, paintPlanTable, requestPlanPanel } from './plan';
 import { SEAT_BOX, paintSeatRing, paintSeatTag, roomSeats, type RoomSeat } from './roomSeats';
 
 /**
@@ -307,6 +308,22 @@ const mod = {
       label: 'Open Mastery board',
       onActivate: () => requestMasteryPanel(),
     });
+    const planSlot = layout.slot('plan-table');
+    if (scene.textures.exists('scene-plan-table')) scene.textures.remove('scene-plan-table');
+    const planTex = scene.textures.createCanvas('scene-plan-table', PLAN_TABLE_W, PLAN_TABLE_H);
+    const planImage = scene.add
+      .image(planSlot.x, layout.groundY + 1, 'scene-plan-table')
+      .setOrigin(0.5, 1)
+      .setDepth(depth.buildings)
+      .setVisible(false);
+    const offPlan = ctx.interactables.register({
+      id: 'enter-plan-table',
+      x: planSlot.x,
+      radius: 30,
+      label: 'Open Study plan',
+      onActivate: () => requestPlanPanel(),
+    });
+    let planHash = '';
     let masterySnap: MasterySnapshot = { chapters: [] };
     let boardHash = '';
     function syncMastery(): void {
@@ -567,6 +584,15 @@ const mod = {
             boardImage.setVisible(true);
           }
         }
+        if (dirty) {
+          const pr = paintPlanTable(t, ctx.calm);
+          const ph = pr.hash();
+          if (ph !== planHash) {
+            planHash = ph;
+            blit(planTex, pr);
+            planImage.setVisible(true);
+          }
+        }
         for (const live of lives) {
           if (!dirty && live.lastHash) continue;
           const r = live.def.paint(live.state, 'exterior', o);
@@ -622,6 +648,9 @@ const mod = {
         offLeave();
         scene.input.keyboard?.off('keydown-ESC', leave);
         offBoard();
+        offPlan();
+        planImage.destroy();
+        if (scene.textures.exists('scene-plan-table')) scene.textures.remove('scene-plan-table');
         boardImage.destroy();
         if (scene.textures.exists('scene-mastery-board'))
           scene.textures.remove('scene-mastery-board');

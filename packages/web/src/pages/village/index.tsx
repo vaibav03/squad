@@ -7,6 +7,7 @@ import {
   withTripCutscene,
   type VillageSource,
 } from '@squad/village/sources';
+import { Button } from '../../primitives/Button';
 import { EmptyState } from '../../primitives/EmptyState';
 import { WorldLoading } from '../../shell/WorldLoading';
 import { useCalmMode } from '../../hooks/useCalmMode';
@@ -16,6 +17,7 @@ import { useShell } from '../../shell/shell-context';
 import { ChatDock } from '../chat/ChatDock';
 import { RoomLayer } from '../../overlays/room-info';
 import { MasteryLayer } from '../../overlays/mastery';
+import { PlanLayer } from '../../overlays/plan';
 import { InspectorPanel } from '../../overlays/inspector';
 import { setInspectorStore } from '../../overlays/inspector/bridge';
 import { SourceViewerHost } from '../../components/source-viewer';
@@ -34,6 +36,7 @@ const REPLAY_ALIAS: Record<string, string> = {
   track4b: 'track4b-council-degraded',
   track4c: 'track4c-council-private',
 };
+const LOAD_TIMEOUT_MS = 15000;
 
 interface Feed {
   source: VillageSource;
@@ -55,6 +58,7 @@ export default function VillagePage({ world }: { world?: string }) {
   const calmRef = useRef(calm);
   calmRef.current = calm;
   const [state, setState] = useState<'loading' | 'ready' | { error: string }>('loading');
+  const [attempt, setAttempt] = useState(0);
   const [event, setEvent] = useState<OverlayEvent | null>(null);
   const [inspector, setInspector] = useState<InspectorStore | null>(null);
   const q = new URLSearchParams(location.search);
@@ -83,6 +87,15 @@ export default function VillagePage({ world }: { world?: string }) {
     let dead = false;
     let feed: Feed | undefined;
     setState('loading');
+    // The world must open, or say why not: a stalled hub or chunk ends in an error with Retry, never a spinner forever.
+    const stall = setTimeout(
+      () =>
+        !dead &&
+        setState((s) =>
+          s === 'loading' ? { error: 'The village is taking too long to open.' } : s,
+        ),
+      LOAD_TIMEOUT_MS,
+    );
     void (async () => {
       try {
         const baseUrl = cfg.hubUrl!.replace(/\/+$/, '');
@@ -149,6 +162,7 @@ export default function VillagePage({ world }: { world?: string }) {
     })();
     return () => {
       dead = true;
+      clearTimeout(stall);
       feed?.close();
       handle.current?.destroy();
       handle.current = null;
@@ -158,7 +172,7 @@ export default function VillagePage({ world }: { world?: string }) {
       setBoardStore(null);
     };
     // calm is applied live through setCalm; the world is not remounted for it.
-  }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable]);
+  }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable, attempt]);
 
   // After the room-info panel closes, focus rests on its "?" button, where the world's own Esc/walk keys do not
   // reach. Forward Escape from the room layer's controls to the stage so a keyboard user can still leave the room.
@@ -233,6 +247,11 @@ export default function VillagePage({ world }: { world?: string }) {
             tone="error"
             title="The village did not load"
             body={state.error}
+            action={
+              <Button variant="primary" onClick={() => setAttempt((n) => n + 1)}>
+                Retry
+              </Button>
+            }
           />
         </div>
       )}
@@ -247,6 +266,13 @@ export default function VillagePage({ world }: { world?: string }) {
         calm={calm}
         onRun={runPhrase}
         initialOpen={q.get('mastery') === '1'}
+        returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
+      />
+      <PlanLayer
+        hub={hub}
+        calm={calm}
+        onRun={runPhrase}
+        initialOpen={q.get('plan') === '1'}
         returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
       />
       <OverlayHost

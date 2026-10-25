@@ -129,7 +129,8 @@ export function ChatView({
       <div className="sqc__state">
         <ErrorState
           title="Chat did not load"
-          error="We could not reach the hub. Check your connection and try again."
+          error={ctl.errorText}
+          retryLabel="Retry"
           onRetry={ctl.reload}
         />
       </div>,
@@ -181,6 +182,17 @@ export function ChatView({
                 ))}
               </div>
             </div>
+          ) : chats.length === 0 ? (
+            <EmptyState
+              icon="message"
+              title="No chats yet"
+              body="Your squad chat will show up here. Try again if it does not."
+              action={
+                <Button variant="secondary" onClick={ctl.reload}>
+                  Retry
+                </Button>
+              }
+            />
           ) : (
             <EmptyState
               icon="message"

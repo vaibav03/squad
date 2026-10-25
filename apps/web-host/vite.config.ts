@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Connect, type Plugin } from 'vite';
+import { execFileSync } from 'node:child_process';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
 
@@ -32,8 +33,41 @@ function repoAssetsPlugin(): Plugin {
   };
 }
 
+/**
+ * Build marker, fixed when the dev server starts or the bundle is built: git short sha (12, the same form the hub
+ * reports in /v1/status) plus a timestamp. The app compares it with the hub's sha and warns about a stale build.
+ */
+function buildInfo() {
+  const env = process.env.GIT_SHA || process.env.SOURCE_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA;
+  let sha = env ? env.slice(0, 12) : 'unknown';
+  if (!env)
+    try {
+      sha = execFileSync('git', ['rev-parse', '--short=12', 'HEAD'], {
+        cwd: __dirname,
+        stdio: ['ignore', 'pipe', 'ignore'],
+        timeout: 3000,
+      })
+        .toString()
+        .trim();
+    } catch {
+      /* no git: the marker says "unknown" and never warns */
+    }
+  return { sha, builtAt: process.env.BUILD_TIME || new Date().toISOString() };
+}
+
+const build = buildInfo();
+
+/** Puts the build sha into the static boot state in index.html. */
+function bootBuildPlugin(): Plugin {
+  return {
+    name: 'squad-boot-build',
+    transformIndexHtml: (html) => html.replaceAll('%SQUAD_BUILD%', build.sha),
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), repoAssetsPlugin()],
+  define: { __SQUAD_BUILD__: JSON.stringify(build) },
+  plugins: [react(), repoAssetsPlugin(), bootBuildPlugin()],
   server: { port: 5180, strictPort: false, fs: { allow: [resolve(__dirname, '../..')] } },
   preview: { port: 5180 },
   build: {

@@ -18,6 +18,7 @@ import type {
 import type { AccountsClient, Me } from './client';
 import { isApiError } from './errors';
 import { rememberName } from '@squad/village/inspector';
+import { UNAUTHORIZED_EVENT } from '../lib/http';
 import { loadToken, saveToken } from './storage';
 
 export type AccountStatus = 'loading' | 'signed-out' | 'signed-in' | 'offline';
@@ -171,6 +172,16 @@ export function AuthProvider({
   useEffect(() => {
     if (online && status === 'offline') void load();
   }, [online, status, load]);
+
+  // A data request answered 401 (rotated or expired token): re-check the session once; if it is really gone
+  // `load` ends in signed-out and the shell sends the user to sign in.
+  useEffect(() => {
+    const on = () => {
+      if (status === 'signed-in') void load();
+    };
+    window.addEventListener(UNAUTHORIZED_EVENT, on);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, on);
+  }, [status, load]);
 
   const refresh = useCallback(async () => {
     try {

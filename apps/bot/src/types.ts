@@ -58,7 +58,8 @@ export type DecisionReason =
   | 'no_skills'
   | 'confirm_reply' // DM consumed by a pending askConfirm
   | 'own_message'
-  | 'duplicate';
+  | 'duplicate'
+  | 'unknown_mention'; // `@word` that is not an agent: a help DM (rate limited), never a group reply
 
 export interface Decision {
   action: 'run' | 'quiet';
@@ -97,6 +98,8 @@ export interface ConfirmApi {
   /** Router calls this first for every DM: true => consumed by a pending confirm (router must not route it). */
   tryConsume(m: InboundMessage): boolean;
   hasPending(student: StudentId): boolean;
+  /** Drop a pending or queued card whose subject is gone (its ask resolves as 'timeout'). True when one was dropped. */
+  cancel(student: StudentId, taskId: string): boolean;
 }
 
 export interface MemoryApi {
@@ -130,6 +133,8 @@ export interface BotCtx extends Ctx {
 export type { Db, Llm };
 
 export interface BotOptions {
+  /** Display names of the people in a chat; unknown `@name` tags that match one never get the help DM. */
+  memberNames?: (chatId: ChatId, from: string) => string[];
   skills: Skill[];
   llm: Llm;
   transport: Transport;

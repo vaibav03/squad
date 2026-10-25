@@ -336,3 +336,48 @@
     display: inline-flex;
   }
 }
+
+/* build marker: a quiet label under the page; in the full-bleed village it floats over the corner */
+.sq-build {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 4px 16px calc(68px + var(--safe-bottom));
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted, #8a93a6);
+  opacity: 0.8;
+}
+.sq-build code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.sq-build__stale {
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: #111;
+  background: #ffc857;
+  font-weight: 600;
+}
+.sq-build__stale button {
+  margin-left: 8px;
+  font: inherit;
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+}
+.sq-shell.is-bleed .sq-build {
+  position: fixed;
+  left: 0;
+  bottom: calc(64px + var(--safe-bottom));
+  z-index: 5;
+  padding: 2px 8px;
+  pointer-events: none;
+  background: color-mix(in oklab, #000 45%, transparent);
+  color: #e8ecf5;
+}
+.sq-shell.is-bleed .sq-build__stale {
+  pointer-events: auto;
+}

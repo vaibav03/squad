@@ -196,22 +196,17 @@ describe('thread rendering', () => {
     render(<Harness api={api} active={GROUP_ID} />);
     expect(await screen.findByText('Chat did not load')).toBeTruthy();
     api.failChats = false;
-    fireEvent.click(screen.getByRole('button', { name: /try again/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^retry$/i }));
     await screen.findAllByTestId('chat-message');
   });
 
-  it('shows an offline banner and pauses sending', async () => {
+  it('shows an offline banner but never disables Send for a drafted message', async () => {
     setup();
     await screen.findAllByTestId('chat-message');
     act(() => void window.dispatchEvent(new Event('offline')));
     expect(await screen.findByTestId('chat-offline')).toBeTruthy();
-    expect(screen.getByTestId('chat-paused').textContent).toContain('offline');
     await userEvent.type(await input(), 'hello');
-    expect((screen.getByTestId('chat-send') as HTMLButtonElement).disabled).toBe(true);
-    act(() => void window.dispatchEvent(new Event('online')));
-    await waitFor(() =>
-      expect((screen.getByTestId('chat-send') as HTMLButtonElement).disabled).toBe(false),
-    );
+    expect((screen.getByTestId('chat-send') as HTMLButtonElement).disabled).toBe(false);
   });
 
   it('shows the offline banner when the stream drops', async () => {
@@ -349,7 +344,7 @@ describe('optimistic send', () => {
     await userEvent.type(await input(), 'fast{Enter}');
     const a = await screen.findByRole('alert');
     expect(a.textContent).toContain('too fast');
-    fireEvent.click(within(a).getByRole('button', { name: 'Remove' }));
+    fireEvent.click(within(a).getByRole('button', { name: 'Delete' }));
     expect(screen.queryByText('fast')).toBeNull();
   });
 });
@@ -379,6 +374,23 @@ describe('citations', () => {
       demo: true,
     });
     expect(await screen.findByTestId('chat-council-card')).toBeTruthy();
+  });
+
+  it('renders a study plan card with an Open plan link', async () => {
+    const { api } = setup();
+    api.pushMessage({
+      chatId: GROUP_ID,
+      ts: Date.now(),
+      sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+      text: 'Proposed a study plan.',
+      private: false,
+      attachments: [],
+      citations: [],
+      card: { type: 'plan', planId: 'pl_abcdefghij', rev: 1, status: 'proposed' },
+      demo: true,
+    });
+    const card = await screen.findByTestId('chat-plan-card');
+    expect(card.querySelector('a')?.getAttribute('href')).toBe('/squad/village?plan=1');
   });
 
   it('shows an error with retry when the excerpt is missing', async () => {

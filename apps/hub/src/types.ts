@@ -13,10 +13,13 @@ import type {
   VillageEvent,
 } from '@squad/core';
 import type { CouncilService } from '@squad/brain';
+import type { TripViewV2 } from '@squad/core';
+import type { TripService } from './trips/service';
 import type { HubConfig } from './config';
 import type { Logger } from './log';
 import type { Ports } from './ports';
 import type { ChatHub } from './chat/hub-chat';
+import type { PlanService } from './plans/service';
 
 export type LedgerEntryEventT = Extract<VillageEvent, { t: 'ledger.entry' }>;
 
@@ -202,41 +205,73 @@ export interface CallRegistry {
 }
 
 // ---------- trips ----------
-export type TripStatus = 'planning' | 'voting' | 'confirming' | 'confirmed';
+export type TripStatus =
+  'planning' | 'voting' | 'confirming' | 'confirmed' | 'failed' | 'expired' | 'cancelled';
+/** Collaborative-trip extras. Absent on legacy/seeded trips (mesh-driven), present on trips created through `/v1/trips`. */
+export interface TripCollab {
+  organizer: StudentId;
+  title: string;
+  source: 'chat' | 'page';
+  createdAt: number;
+  deadline: number;
+  window: { from: string; to: string };
+  /** Bumped on every option/plan change (never on votes). */
+  rev: number;
+  /** Per-option rev and who proposed it. */
+  optionMeta: Record<string, { by: string; rev: number; days: number; perPerson: number }>;
+  changes: { rev: number; by: StudentId; at: number; summary: string; optionId?: string }[];
+  constraints: {
+    state: 'pending' | 'running' | 'done' | 'waiting' | 'skipped' | 'failed';
+    waitingFor: { id: StudentId; reason: string }[];
+    overlapDays: string[] | null;
+    note: string | null;
+    checkedAt: number | null;
+  };
+  /** Mesh task ids of constraint runs (limits envelopes carry the run id as tripId). */
+  runs: string[];
+  agents: Record<
+    StudentId,
+    { state: 'online' | 'offline' | 'no_agent' | 'unknown'; since: number }
+  >;
+  chosen: { optionId: string; dates: string | null } | null;
+  recommendation: {
+    optionId: string | null;
+    mode: 'live' | 'degraded' | 'demo';
+    chair: string;
+    planner: string;
+    dissent: string[];
+    at: number;
+  } | null;
+  failure: { code: string; message: string } | null;
+  declined: StudentId[];
+  /** Student ids that were told at least once (mirror dedupe) */
+  mirrored?: string[];
+}
 export interface TripRecord {
   tripId: string;
   taskId: string;
   squadId: string;
   status: TripStatus;
-  options: { id: string; label: string; estCost?: string }[];
+  options: { id: string; label: string; estCost?: string; days?: number; perPerson?: number }[];
   dates: string | null;
   votes: { student: StudentId; ranking: string[] }[];
   vetoed: { optionId: string; by: 'mediator'; reason: string }[];
   confirmations: { student: StudentId; confirmed: boolean; optionId?: string }[];
   /** PRIVATE: each student's own limits. Only ever shown to that student. */
   limits: Record<StudentId, Record<string, string>>;
+  collab?: TripCollab;
 }
-export interface TripView {
-  tripId: string;
-  taskId: string;
-  status: TripStatus;
-  options: TripRecord['options'];
-  dates: string | null;
-  /** The viewer's own ranking only. The ballot is secret: nobody else's ranking is ever shown. */
-  myVote: string[] | null;
-  /** n of m voted; null for squads under 3 (no counts). */
-  voteProgress: { voted: number; of: number } | null;
-  vetoed: TripRecord['vetoed'];
-  confirmations: { student: StudentId; confirmed: boolean }[];
-  myLimits: Record<string, string> | null;
-}
+export type TripView = TripViewV2;
 export interface TripStore {
   /** Merges: per-student limits already stored are kept (incoming limits are merged in per student). */
   upsert(t: Omit<TripRecord, 'limits'> & { limits?: TripRecord['limits'] }): void;
   /** Merge one student's own limits (each student's agent posts its own). */
   mergeLimits(tripId: string, student: StudentId, limits: Record<string, string>): boolean;
   get(tripId: string): TripRecord | undefined;
+  /** By the record's task id or any of its constraint-run task ids. */
   byTask(taskId: string): TripRecord | undefined;
+  /** Replace a whole record (collaborative service only; keeps limits as given). */
+  put(t: TripRecord): void;
   list(squadId?: string): TripRecord[];
   vote(tripId: string, student: StudentId, ranking: string[]): TripRecord | undefined;
   confirm(
@@ -279,6 +314,8 @@ export interface HubDeps {
   events: EventLog;
   ledger: LedgerStore;
   trips: TripStore;
+  /** Collaborative trip service (routes, chat intents, mesh constraint runs). */
+  tripSvc: TripService;
   calls: CallRegistry;
   broker: Broker;
   state: SquadState;
@@ -302,20 +339,28 @@ export interface HubDeps {
   squads: SquadsStore;
   /** iMessage chat bindings, handle links and dedupe (docs/imessage.md). */
   imessage: ImessageStore;
+  /** The iMessage sync engine while the bridge runs (queue, delivery state, backfill); undefined when iMessage is off. */
+  imessageSync?: ImessageSync | undefined;
   codeSender: CodeSender;
+  /** Shared study plans (docs/study-plan.md). */
+  plans: PlanService;
   /** Live agent discussions; built lazily by `liveServiceFor` (live/wire.ts). */
   live?: LiveService;
   /** Real-ports wiring for live grounding/takeaways (set by adapters/real.ts). */
   liveWiring?: LiveWiring;
+  /** Connected sources (Canvas/Google): store, encrypted tokens, connectors; built lazily by `contextServiceFor`. */
+  context?: ContextService;
 }
 
 import type { CodeSender } from './code-sender';
 import type { LiveService } from './live/service';
+import type { ContextService } from './context/service';
 import type { LiveWiring } from './live/wire';
 import type { ConfirmRouter } from './confirms';
 import type { AccountsStore } from './store/accounts';
 import type { SquadsStore } from './store/squads';
 import type { ImessageStore } from './imessage/store';
+import type { ImessageSync } from './imessage/sync';
 
 /** Which providers are live right now; read lazily so a mid-run credits switch shows up. */
 export interface HubRuntime {

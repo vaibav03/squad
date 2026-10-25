@@ -334,6 +334,7 @@ export function createAuthRoutes(deps: HubDeps): HubApp {
       }
     deps.ledger.forget(id);
     deps.trips.forget(id);
+    deps.plans.store.forgetStudent(id);
     deps.accounts.revokeAll(id);
     deps.accounts.deleteUser(id);
     deps.squads.anonymizeAudit(id);

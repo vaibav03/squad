@@ -14,6 +14,7 @@ import { createCallRegistry } from './calls';
 import { loadHubConfig, type HubConfig } from './config';
 import { createChatHub } from './chat/hub-chat';
 import { createChatRoutes } from './chat/routes';
+import { createConnectionRoutes } from './routes/connections';
 import { createConfirmRouter } from './confirms';
 import { createIngestor } from './ingest';
 import { applySecurity, type SecurityOptions } from './middleware';
@@ -31,6 +32,12 @@ import { createInternalRoutes } from './routes/internal';
 import { createLiveRoutes } from './routes/live';
 import { createLibraryRoutes } from './routes/library';
 import { createMediaRoutes } from './routes/media';
+import { createPlanRoutes } from './plans/routes';
+import { refreshBusyForTrip } from './context/busy';
+import { createDefaultPlanContext } from './plans/context';
+import { createPlanService } from './plans/service';
+import { createPlanStore } from './plans/store';
+import { COURSE_ID } from './cast';
 import { createQuizRoutes } from './routes/quiz';
 import { createReplayRoutes } from './routes/replay';
 import { createSimRoutes } from './routes/sim';
@@ -48,6 +55,8 @@ import { createEventLog } from './store/eventlog';
 import { createLedgerStore } from './store/ledger';
 import { createSquadState } from './store/state';
 import { createTripStore } from './store/trips';
+import { createTripService } from './trips/service';
+import { createTripRoutes } from './routes/trips';
 import type { HubApp, HubDeps, HubEnv } from './types';
 
 export interface HubOptions {
@@ -130,6 +139,13 @@ export function createHub(opts: HubOptions = {}): Hub {
       ? mkdtempSync(join(tmpdir(), 'squad-chat-files-'))
       : join(dirname(config.dbPath), 'chat-files'),
   );
+  deps.plans = createPlanService(
+    deps,
+    createDefaultPlanContext(deps.db, COURSE_ID),
+    createPlanStore(deps.db),
+  );
+  deps.tripSvc = createTripService(deps);
+  deps.tripSvc.setBeforeConstraints((members) => refreshBusyForTrip(deps, members));
   if (config.seed) {
     seedDemo(deps);
     // The seeded demo squad becomes a real one (owner = its first member) so Members, invites and roles work.
@@ -184,10 +200,13 @@ export function createHub(opts: HubOptions = {}): Hub {
     createLibraryRoutes(deps),
     createCallRoutes(deps),
     createMediaRoutes(deps),
+    createTripRoutes(deps),
     createDomainRoutes(deps),
     createCouncilRoutes(deps),
     createLiveRoutes(deps),
     createChatRoutes(deps),
+    createConnectionRoutes(deps),
+    createPlanRoutes(deps),
     ...(config.sim ? [createSimRoutes(deps)] : []),
   ])
     app.route('/', routes);
@@ -205,6 +224,7 @@ export function createHub(opts: HubOptions = {}): Hub {
       obs.stop();
       deps.broker.closeAll();
       deps.chat.close();
+      deps.tripSvc.stop();
       if (ownDb) deps.db.close();
     },
   };

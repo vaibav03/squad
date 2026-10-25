@@ -26,7 +26,7 @@ import { useShell } from '../../shell/shell-context';
 import { pixelPortrait } from '../../pixel/portraits';
 import { HubError, postCalendar, uploadCourse } from './api';
 import { demoBlocks, PERSONA_CHOICES, SAMPLE_COURSES } from './fixtures';
-import { parseIcs } from './ics';
+import { parseIcs, redactedIcs } from './ics';
 import { saveSetupDone } from './progress';
 import {
   completedSteps,
@@ -46,6 +46,7 @@ import {
   type StepId,
 } from './model';
 import { WeekGrid } from './WeekGrid';
+import { ConnectionsStepCard } from '../connections/StepCard';
 import './setup.css';
 
 let uid = 0;
@@ -528,7 +529,10 @@ function CalendarStep({
     if (cfg.mode !== 'mock' && cfg.hubUrl) {
       setBusy(true);
       try {
-        await postCalendar({ hubUrl: cfg.hubUrl, token: cfg.token }, { ics: text, name: f.name });
+        await postCalendar(
+          { hubUrl: cfg.hubUrl, token: cfg.token },
+          { ics: redactedIcs(blocks), name: f.name },
+        );
       } catch (err) {
         setError(
           err instanceof HubError && err.code === 'offline'
@@ -644,6 +648,7 @@ function DoneStep({ completed }: { completed: StepId[] }) {
           {missing.map((m) => m.label).join(', ')}. You can finish these later from Home.
         </Notice>
       ) : null}
+      <ConnectionsStepCard />
       <Button
         variant="primary"
         size="lg"

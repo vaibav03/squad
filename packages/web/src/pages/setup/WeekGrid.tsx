@@ -43,7 +43,8 @@ export function WeekGrid({ blocks }: { blocks: BusyBlock[] }) {
         ))}
       </div>
       <figcaption className="sq-week__cap">
-        Only free or busy is shared. Event titles never leave your device.
+        Only free or busy is shared. Event titles stay in your browser: only start and end times are
+        sent and stored.
       </figcaption>
     </figure>
   );

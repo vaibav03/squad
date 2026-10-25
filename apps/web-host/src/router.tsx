@@ -16,6 +16,10 @@ import {
   EmptyState,
   Button,
   Gallery,
+  FailureState,
+  LoadingTimeout,
+  RouteTitle,
+  VisuallyHidden,
   RouterAppShell,
   SquadProvider,
   ToastProvider,
@@ -82,9 +86,16 @@ function LiveShellLayout() {
     ?.handle as SquadRouteMeta | undefined;
   if (account.status === 'loading')
     return (
-      <div style={{ padding: 24 }}>
-        <Skeleton shape="block" height={240} />
-      </div>
+      <LoadingTimeout
+        what="Signing you in"
+        timeoutMs={12000}
+        onRetry={() => window.location.reload()}
+      >
+        <div style={{ padding: 24 }} role="status" aria-live="polite">
+          <VisuallyHidden>Signing you in</VisuallyHidden>
+          <Skeleton shape="block" height={240} />
+        </div>
+      </LoadingTimeout>
     );
   if (account.status === 'signed-out' || !account.user)
     return (
@@ -189,15 +200,28 @@ function Providers() {
   const client = useMemo(() => (HUB_URL ? createAccountsClient({ hubUrl: HUB_URL }) : null), []);
   const body = (
     <ToastProvider>
+      <RouteTitle />
       <Outlet />
     </ToastProvider>
   );
   return client ? <AuthProvider client={client}>{body}</AuthProvider> : body;
 }
 
+/** Router-level error element: a route that throws shows this instead of React Router's default screen. */
+function RouteError() {
+  return (
+    <FailureState
+      title="Squad hit a problem"
+      body="Something went wrong while opening this page."
+      onRetry={() => window.location.reload()}
+    />
+  );
+}
+
 export const routes: RouteObject[] = [
   {
     element: <Providers />,
+    errorElement: <RouteError />,
     children: [
       { path: '/', element: <Navigate to="/squad" replace /> },
       { path: '/signin', element: <SignInRoute /> },

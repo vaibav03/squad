@@ -4,6 +4,7 @@ import { Icon } from '../../primitives/Icon';
 import { Markdown } from '../../primitives/Markdown';
 import { ConfirmMessageCard, QuizMessageCard } from './cards';
 import { CouncilChatCard } from '../../council';
+import { PLAN_OPEN_EVENT } from '@squad/village/rooms';
 import { LiveChatCard } from '../../live/LiveChatCard';
 import { useSquadConfig } from '../../shell/context';
 import { AudioPlayer, ImageAttachment } from './media';
@@ -204,6 +205,24 @@ export function MessageBubble(p: BubbleProps) {
             <CouncilChatCard hub={hub} runId={m.card.runId} calm={p.reduced} />
           </div>
         ) : null}
+        {m.card?.type === 'plan' ? (
+          <div className="sqc-plancard" data-testid="chat-plan-card">
+            <strong>Study plan</strong>
+            <span className="rr-dim"> {m.card.status ? `(${m.card.status})` : ''}</span>
+            <a
+              className="lv-btn"
+              href="/squad/village?plan=1"
+              onClick={(e) => {
+                if (location.pathname.includes('/village')) {
+                  e.preventDefault();
+                  globalThis.dispatchEvent(new Event(PLAN_OPEN_EVENT));
+                }
+              }}
+            >
+              Open plan
+            </a>
+          </div>
+        ) : null}
         {m.card?.type === 'live' ? (
           <div data-testid="chat-live-card">
             <LiveChatCard
@@ -243,11 +262,20 @@ export function MessageBubble(p: BubbleProps) {
           </div>
         ) : null}
 
-        {row.state === 'pending' ? <p className="sqc-msg__state">Sending</p> : null}
+        {row.state === 'pending' ? (
+          <p className="sqc-msg__state" data-testid="chat-msg-state" role="status">
+            Sending
+          </p>
+        ) : null}
+        {row.state === 'sent' && row.acked ? (
+          <p className="sqc-msg__state is-sent" data-testid="chat-msg-state">
+            Sent
+          </p>
+        ) : null}
         {row.state === 'failed' && row.localId ? (
-          <p className="sqc-msg__state is-failed" role="alert">
+          <p className="sqc-msg__state is-failed" role="alert" data-testid="chat-msg-state">
             <Icon name="alert" size={14} />
-            <span>{row.error ?? 'Not sent.'}</span>
+            <span>Failed to send. {row.error ?? ''}</span>
             <button
               type="button"
               className="sqc-link"
@@ -257,7 +285,7 @@ export function MessageBubble(p: BubbleProps) {
               Retry
             </button>
             <button type="button" className="sqc-link" onClick={() => p.onDiscard(row.localId!)}>
-              Remove
+              Delete
             </button>
           </p>
         ) : null}

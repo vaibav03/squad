@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import {
   parseAgentId,
   parseIcsBusy,
+  stripBusyTitles,
   type BusyBlock,
   type Llm,
   type StudentId,
@@ -27,6 +28,8 @@ import {
   type KeyVerifier,
   type MasteryStore,
 } from '@squad/brain';
+import { contextServiceFor } from '../context/service';
+import { contextBusyBlocks } from '../context/busy';
 import {
   createAudioServices,
   createCallPort,
@@ -102,7 +105,12 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     if (e.t !== 'quiz.answer' && e.t !== 'quiz.result') emit(e);
   };
 
-  const brain = createBrain({ llm: o.llm, db, emit: brainEmit });
+  const brain = createBrain({
+    llm: o.llm,
+    db,
+    emit: brainEmit,
+    context: contextServiceFor(deps).store,
+  });
   if (o.loadFixture !== false && !brain.store.getCourse(courseId))
     await loadFixtureCourse({ store: brain.store }, courseId);
 
@@ -130,7 +138,7 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
 
   const quiz = createRealQuizPort(deps, engine, courseId);
   const brainPort = createRealBrainPort(deps, brain, mastery, o);
-  const { media, call } = createAudioPorts(brain, courseId, o);
+  const { media, call } = createAudioPorts(brain, courseId, o, (s) => deps.directory.squadsOf(s));
 
   return {
     ports: { quiz, call, brain: brainPort, media },
@@ -321,7 +329,14 @@ function createRealBrainPort(
     // Busy blocks are stored per student (hub_busy_blocks, owner-private: never streamed) and pushed to
     // the owner's mesh agent so the next study/trip flow schedules around them.
     async loadCalendar(student, input) {
-      const blocks = input.demo ? demoBusyBlocks(deps.now()) : parseIcsBusy(input.ics ?? '');
+      const blocks = stripBusyTitles(
+        input.demo ? demoBusyBlocks(deps.now()) : parseIcsBusy(input.ics ?? ''),
+      );
+      // connected calendars (Google/Canvas events) contribute derived intervals too, never titles
+      const known = new Set(blocks.map((b) => `${b.start}|${b.end}`));
+      for (const b of contextBusyBlocks(deps, student))
+        if (!known.has(`${b.start}|${b.end}`)) blocks.push(b);
+      blocks.sort((a, b) => a.start.localeCompare(b.start));
       const tx = deps.db.transaction(() => {
         deps.db.prepare('DELETE FROM hub_busy_blocks WHERE student=?').run(student);
         const ins = deps.db.prepare(
@@ -380,6 +395,7 @@ function createAudioPorts(
   brain: Brain,
   defaultCourse: string,
   o: RealPortsOptions,
+  squadsOf: (student: StudentId) => string[],
 ): { media: MediaPort; call: Ports['call'] } {
   let n = 0;
   const answer: AnswerFn = async ({ agent, student, text }) => {
@@ -398,7 +414,10 @@ function createAudioPorts(
           ...(l.cite ? { cite: l.cite } : {}),
         }));
       }
-      const r = await brain.ask(defaultCourse, text);
+      const r = await brain.ask(defaultCourse, text, {
+        viewer: { studentId: student, squadIds: squadsOf(student) },
+        contextCourseId: null,
+      });
       return [{ text: r.text, ...(r.citations[0] ? { cite: r.citations[0] } : {}) }];
     } catch (e) {
       if (e instanceof BrainUnavailableError || e instanceof CaptionUnavailableError)

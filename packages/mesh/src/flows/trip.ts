@@ -7,6 +7,47 @@ import type { Coord, FlowOutcome } from './types';
 
 const NONE = { stage: 'none' as const, chosen: null, counts: null };
 
+/**
+ * Constraints only (collaborative trips): the hub owns options, ballots and confirmation, so the mesh only answers
+ * what the group's private inputs can answer without revealing them: do free days overlap (PSI), and which options
+ * does nobody's budget or veto rule out (secret-shared sums, aggregate only). Nothing is published to the hub from here
+ * except each member's own limits; the coordinator stands everyone down at the end.
+ */
+export async function runTripConstraints(c: Coord): Promise<FlowOutcome> {
+  const { taskId, open } = c;
+  const ids = optionsOf(open).map((o) => o.id);
+  const stand = async () => {
+    try {
+      await c.tell('result', NONE);
+    } catch {
+      /* a peer dropped; the task times out there */
+    }
+  };
+  if (ids.length === 0) {
+    await stand();
+    return { flow: 'trip', status: 'no_plan', reason: 'no_option' };
+  }
+  await c.runPsi();
+  const common = [...c.view().common].sort();
+  const cantAfford = await c.sum('cantAfford', 0);
+  const veto = await c.sum('veto', 0);
+  const { survivors, dropped } = filterOptions({
+    optionIds: ids,
+    cantAfford,
+    veto,
+    memberCount: c.memberCount,
+  });
+  for (const d of dropped) await c.emit(toOptionDroppedEvent(taskId, d.reason));
+  await stand();
+  return {
+    flow: 'trip',
+    status: 'constraints',
+    common,
+    survivors,
+    dropped: dropped.map((d) => ({ optionId: d.optionId, reason: d.reason })),
+  };
+}
+
 export async function runTrip(c: Coord): Promise<FlowOutcome> {
   const { taskId, open } = c;
   const opts = optionsOf(open);

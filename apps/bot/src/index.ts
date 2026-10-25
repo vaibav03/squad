@@ -23,3 +23,6 @@ export {
 export * from './imessage';
 export { createScheduler, type Scheduler } from './scheduler';
 export type { IMessageSdkLike, IMessageMessageLike } from './transports/imessage';
+export { createSharedPlanSkill } from './plan/skill';
+export type { PlanPort, PlanSayOut } from './plan/port';
+export { registerPlanNudges, PLAN_KINDS, type PlanNudges } from './plan/nudges';

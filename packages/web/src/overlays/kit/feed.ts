@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { notifyUnauthorized, REQUEST_TIMEOUT_MS, timedFetch, withTimeout } from '../../lib/http';
 import { useLiveConfig } from './live-config';
+
+const RETRY_BASE_MS = 1000;
+const RETRY_MAX_MS = 30_000;
+const HIDDEN_GRACE_MS = 20_000;
 
 /** A recorded script: events with a millisecond offset from start (same shape idea as the hub replay files). */
 export interface RecordedStep<E> {
@@ -12,7 +17,7 @@ export type FeedConnection =
   | 'connecting' // opening the stream
   | 'live' // SSE open
   | 'replaying' // recorded script playing (mock or replay mode)
-  | 'polling' // SSE failed twice, falling back
+  | 'polling' // kept for hosts that poll; the feed itself retries with backoff
   | 'offline' // navigator offline or hub unreachable
   | 'error'; // stream token or fetch rejected
 
@@ -89,39 +94,75 @@ export function useEventFeed<E>(opts: FeedOptions<E>, onEvent: (e: E) => void) {
     }
     let closed = false;
     let es: EventSource | null = null;
-    let poll: ReturnType<typeof setInterval> | null = null;
-    let errors = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let backoff = RETRY_BASE_MS;
+    let hiddenTimer: ReturnType<typeof setTimeout> | null = null;
+    let paused = false;
     const live = o.live;
-    const goOffline = () =>
-      setConnection(typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'error');
-    const startPolling = () => {
-      es?.close();
-      setConnection('polling');
-      poll = setInterval(() => void live.refresh?.(), 2000);
+    const headers: Record<string, string> = cfg.token
+      ? { Authorization: `Bearer ${cfg.token}` }
+      : {};
+    const offline = () => typeof navigator !== 'undefined' && !navigator.onLine;
+    const clearTimer = () => {
+      if (timer) clearTimeout(timer);
+      timer = null;
     };
-    (async () => {
+    const closeStream = () => {
+      if (es) {
+        es.onopen = es.onerror = es.onmessage = null;
+        es.close();
+      }
+      es = null;
+    };
+    /** The stream failed (token rejected, stream refused, nothing opened in time): say so and retry with backoff. */
+    const fail = () => {
+      if (closed || paused) return;
+      closeStream();
+      setConnection(offline() ? 'offline' : 'error');
+      clearTimer();
+      const wait = backoff;
+      backoff = Math.min(RETRY_MAX_MS, backoff * 2);
+      timer = setTimeout(() => void connect(), wait);
+    };
+    async function connect(): Promise<void> {
+      if (closed || paused) return;
+      closeStream();
+      clearTimer();
+      setConnection('connecting');
+      // the page snapshot and the stream token race in parallel; neither may block the other forever
+      void withTimeout(Promise.resolve(live.refresh?.())).catch(() => undefined);
       try {
-        setConnection('connecting');
-        await live.refresh?.();
-        const res = await fetch(`${cfg.hubUrl}/v1/squad/stream-token`, {
-          method: 'POST',
-          headers: cfg.token ? { Authorization: `Bearer ${cfg.token}` } : {},
-        });
+        const res = await timedFetch(
+          `${cfg.hubUrl}/v1/squad/stream-token`,
+          { method: 'POST', headers },
+          REQUEST_TIMEOUT_MS,
+          true,
+        );
+        if (res.status === 401) notifyUnauthorized();
         if (!res.ok) throw new Error(`stream-token ${res.status}`);
         const { st } = (await res.json()) as { st: string };
-        if (closed) return;
+        if (closed || paused) return;
         const q = new URLSearchParams({ st, ...(live.query ?? {}) });
-        es = new EventSource(`${cfg.hubUrl}/v1/squad/stream?${q}`);
-        es.onopen = () => {
-          errors = 0;
+        const src = new EventSource(`${cfg.hubUrl}/v1/squad/stream?${q}`);
+        es = src;
+        // no open within the timeout: treat as a failed attempt instead of "connecting" forever
+        timer = setTimeout(() => es === src && fail(), REQUEST_TIMEOUT_MS);
+        src.onopen = () => {
+          clearTimer();
+          backoff = RETRY_BASE_MS;
           setConnection('live');
         };
-        es.onerror = () => {
-          errors += 1;
-          if (errors >= 2) startPolling();
-          else setConnection('connecting');
+        src.onerror = () => {
+          // readyState CLOSED = the hub refused the stream (expired token, 401/403/404): the browser will not retry
+          // on its own, so we do, with a fresh stream token. While CONNECTING the browser retries itself.
+          if (src.readyState === 2) fail();
+          else {
+            setConnection(offline() ? 'offline' : 'connecting');
+            clearTimer();
+            timer = setTimeout(() => es === src && fail(), REQUEST_TIMEOUT_MS * 2);
+          }
         };
-        es.onmessage = (m) => {
+        src.onmessage = (m) => {
           try {
             const parsed = live.parse(JSON.parse(m.data));
             if (parsed) emit(parsed);
@@ -130,21 +171,47 @@ export function useEventFeed<E>(opts: FeedOptions<E>, onEvent: (e: E) => void) {
           }
         };
       } catch {
-        if (!closed) goOffline();
+        fail();
       }
-    })();
+    }
+    void connect();
     const onNet = () => {
-      if (typeof navigator !== 'undefined' && !navigator.onLine) setConnection('offline');
-      else setAttempt((n) => n + 1);
+      if (offline()) setConnection('offline');
+      else {
+        backoff = RETRY_BASE_MS;
+        void connect();
+      }
+    };
+    // A hidden tab gives its stream connection back after a grace period: browsers allow ~6 connections per host
+    // over HTTP/1.1, and a few forgotten tabs would otherwise starve every request of the tab in use.
+    const onVisibility = () => {
+      if (document.hidden) {
+        hiddenTimer = setTimeout(() => {
+          paused = true;
+          clearTimer();
+          closeStream();
+        }, HIDDEN_GRACE_MS);
+      } else {
+        if (hiddenTimer) clearTimeout(hiddenTimer);
+        hiddenTimer = null;
+        if (paused) {
+          paused = false;
+          backoff = RETRY_BASE_MS;
+          void connect();
+        }
+      }
     };
     window.addEventListener('offline', onNet);
     window.addEventListener('online', onNet);
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       closed = true;
-      es?.close();
-      if (poll) clearInterval(poll);
+      clearTimer();
+      if (hiddenTimer) clearTimeout(hiddenTimer);
+      closeStream();
       window.removeEventListener('offline', onNet);
       window.removeEventListener('online', onNet);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [cfg.mode, cfg.hubUrl, cfg.token, cfg.speed, attempt, opts.loop]);
 

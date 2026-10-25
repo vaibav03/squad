@@ -553,3 +553,35 @@ Branch `merge/batch19` (worktree `squad-wt/merge19`), landed as a true `--no-ff`
 
 - Landing merge commit: `408ce998ea30d6a0c72e254a98a955c80bb6d8f7` (parents `0699dc5bfaa4b89194acbe6097335e8059cc619d` = tag `pre-merge-batch19`, `98bad225eca7c16103d5c80e9056762e976f272f` = origin/merge/batch19; diff empty).
 - Rollback: `git revert -m 1 408ce998ea30d6a0c72e254a98a955c80bb6d8f7`.
+
+## Batch 20 (A): fix/floating-chat + fix/blank-shell into main (release blockers)
+
+Branch `merge/batch20` (worktree `squad-wt/merge20`), each branch its own `--no-ff` merge, then landed as one true merge.
+
+- fix/floating-chat (head `7f29458b`) merged cleanly.
+- fix/blank-shell (final head `0d9dcbf9`) conflicted in `apps/bot/src/store.ts` and `apps/bot/src/store.test.ts`: both branches fixed the same `students.handle` UNIQUE crash on hub restart. Kept BOTH behaviours: the pre-check keeps the readable hint (`handle (id)`), the try/catch fallback to the id stays as a safety net; both tests kept.
+- A first merge of blank-shell (head `aa0c564b`) failed lint (2 eslint errors, prettier) in `e2e/blank-rate.mjs` and `e2e/specs/j18-routes.spec.ts`; I fixed them in a lint-only commit, then the lead pushed the same fixes as `0d9dcbf9`, which was merged (took the lead's version of the conflicting file).
+- Checks: `pnpm check` exit 0; `pnpm demo:live` OK; hub smoke 107/107; browser smoke (fresh Playwright context, hub :8940 / web :5340 / agents 4801+, `pnpm dev:all` with agents, brand-new account + squad `summa`): /squad, /squad/setup, /squad/village render header and content, build marker web sha equals hub sha, floating chat loads, sends `Customer test: hello squad` (state Sent) and gets a Cubbie answer, 0 page errors. Browser smoke ran on the tree before the final docs/lint-only re-merge (no apps/ or packages/ diff since).
+
+### Landing (batch 20)
+
+- Landing merge commit: `2f8b2707eeb63305acc98454e3ba5e4f9aee2dd2` (parents `cb9d7085f415957053166258a04500ac21563772` = tag `pre-merge-batch20`, `947f008f` = merge/batch20).
+- Rollback: `git revert -m 1 2f8b2707eeb63305acc98454e3ba5e4f9aee2dd2`.
+
+## Batch 21 (B): w0-a2a-contracts, typed-mentions, nook-parity (+context-store), imessage-sync, study-plan into main
+
+Branch `merge/batch21` (worktree `squad-wt/merge21`), one `--no-ff` merge commit per branch in this order, `pnpm check` exit 0 after each, then landed as one true merge.
+
+- feature/w0-a2a-contracts: clean.
+- feature/typed-mentions: clean. `@cubbie` and `@cubbi` both route to Cubbie in the group-shaped fixtures (apps/bot `mentions.test.ts` + `mention.test.ts` 55/55, hub `mentions-engine.test.ts` + iMessage `bridge.test.ts` 64/64, core `mentions.test.ts`).
+- feature/nook-parity (its base feature/context-store lands with it, which is now an ancestor): conflict in `packages/core/src/index.ts`, kept both exports (`./a2a` and `stripBusyTitles`, `BUSY_TITLE` from `./ics`). A `pnpm install --frozen-lockfile` was needed for the new `apps/extension` workspace.
+- feature/imessage-sync: conflicts in `packages/core/src/chat.ts` (kept both imports) and `apps/hub/src/imessage/bridge.ts` (kept typed-mentions' `handles.set` for the unknown-tag help DM plus imessage-sync's `relay(..., h)` handling and `postUnlinked`).
+- feature/study-plan: three additive conflicts, kept both sides: `apps/hub/src/app.ts` (`createConnectionRoutes` + `createPlanRoutes`), `packages/core/src/index.ts` (`./mentions` + `./plan`), `packages/core/src/types.ts` (`CitationSourceSchema` + `ChatCard` imports).
+- Interaction fix (test only, flagged for the w0 lead): the hub smokes `domain.smoke` ("demo run ingests every VillageEvent type") and `squad.smoke` ("every event type round-trips") failed on `a2a.message` (and would on `council.stage`): those kinds are council-run-only and the plain demo run and smoke emitter never produce them. They now skip a shared `NOT_IN_PLAIN_RUN` set in `apps/hub/test/helpers.ts` (as `discussion.*` already is); delivery and filtering stay covered by `filter-a2a.test.ts` and the core a2a tests. No production code changed.
+- Checks on the final tree: `pnpm check` exit 0; `pnpm demo:live` OK; hub smoke 121/121; browser smoke (fresh Playwright context, hub :8960 / web :5360 / agents 4831+, `pnpm dev:all` with agents, new account and squad `summa`): /squad, /squad/setup, /squad/village render header and content, build marker web sha equals hub sha, floating chat loads, sends and gets a Cubbie answer, 0 page errors.
+- Follow-ups (not done, deliberately): (1) iMessage bridge `detectMention` call sites need no switch: `@squad/bot`'s `detectMention` is already a wrapper over the shared `parseMentions` (plus the "hey cubbie" lead-in rule), and replacing it with the bare parser would drop that rule. (2) `MentionAutocomplete` is not wired into the composer: `packages/web/src/pages/chat/Composer.tsx` already has its own working, test-id'd mention picker (`activeMention` / `matchMentions`), so swapping is a behaviour change to the fixed chat, not a small additive one. Follow-up: unify the two pickers.
+
+### Landing (batch 21)
+
+- Landing merge commit: `09494f1274503d1e2bec2cfb3d56f074d5b09afe` (parents `64aef4d85469208361014a617f17221bc2d23adb` = tag `pre-merge-batch21`, `5f7c724c09c759860d002a638c50546b0796d71f` = merge/batch21; only tracker docs differ).
+- Rollback: `git revert -m 1 09494f1274503d1e2bec2cfb3d56f074d5b09afe`.
