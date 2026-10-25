@@ -109,6 +109,16 @@ function openSse(url: string): Sse {
   return { frames, stop: () => ac.abort() };
 }
 
+interface HubLike {
+  url: string;
+  deps: {
+    ingest: { village(e: VillageEvent): unknown };
+    directory: { squadOf(id: string): string | undefined };
+    council?: unknown;
+  };
+  stop(): Promise<void>;
+}
+
 export async function main(): Promise<number> {
   const { env } = loadEnv();
   const redact = makeRedactor(env);
@@ -131,7 +141,7 @@ export async function main(): Promise<number> {
   });
 
   const hubMod = (await import(pathToFileURL(path.join(ROOT, 'apps/hub/src/server.ts')).href)) as {
-    startHub: typeof import('../../apps/hub/src/server').startHub;
+    startHub: (opts: Record<string, unknown>) => Promise<HubLike>;
   };
   const hub = await hubMod.startHub({
     config: {

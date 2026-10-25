@@ -40,7 +40,6 @@ const delegateAll = () =>
       call('delegate', { to: k, question: `Plan as ${k}`, why: `ask ${k}` }),
     ),
   );
-const plan = () => submit({ summary: 'Asked the planners.', stance: 'waiting' });
 const verdict = () =>
   submit({
     summary: 'Here is the checked plan.',
