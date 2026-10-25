@@ -469,3 +469,39 @@ Branch `merge/batch13` (worktree `squad-wt/merge13`), landed as a true `--no-ff`
 
 - Landing merge commit: `1cea988ebc6d6cb00ffe3b3d4779f081882c981b` (parents `0e4a52855b2e596835a04e14f045f2992e3ce995` = tag `pre-merge-batch13`, `58165c3163ee03eb8ea8c61e05d5961c8ce2a6d4` = origin/merge/batch13; only tracker docs differ).
 - Rollback: `git revert -m 1 1cea988ebc6d6cb00ffe3b3d4779f081882c981b`.
+
+## Batch 14: fix/names-council-inspect + feature/imessage-binding into main
+
+Branch `merge/batch14` (worktree `squad-wt/merge14`), landed as a true `--no-ff` merge. Not merged (leads still running): fix/e2e-round2, fix/blank-shell.
+
+- Both branches merged cleanly (names first, then iMessage); `pnpm check` was run after each merge (exit status read): 0 after names; after iMessage it exited 1 once on `packages/web` `LivePanel.test.tsx` "plays the scripted discussion" (a real-time scripted run, 5 s test and `findByText` timeouts, hit under a load average of 80+; 3 of 3 passes alone). The test now allows 25 s for the run to end and 30 s overall; `pnpm check` is then 0. The mesh `gate.test.ts` flake did not appear.
+- `pnpm demo:live` OK; `pnpm test:smoke hub` 102 of 102.
+- Browser, demo mode (hub :18914, web :15314): signed up "Maya Tester" through `/v1/auth/start` and `/verify`, created a squad, opened the village: clicking the character opens the inspector with the real name "Maya Tester (you)" and tabs Doing/Thinking/Chat/Agents (no raw `u_...` id anywhere on the page); `@cubbie what is a hash table?` was answered; 0 page errors. Frames in `docs/design/shots/merge14/`. The iMessage bridge ran only over its fake transport (unit tests), not a real Messages account.
+
+### Leftover branch review
+
+| Branch | State | Action |
+| --- | --- | --- |
+| fix/honest-status | ancestor of main | deleted (origin, local, worktree `honest`) |
+| merge/honest-status | ancestor of main | deleted (origin, local, worktree `merge-honest`) |
+| fix/e2e-bugs | ancestor of main | deleted on origin; the local branch and worktree `fixbugs` are kept because the worktree holds 3 untracked screenshots (`docs/design/shots/fixes/02-courses-1280.png`, `09-members-1280.png`, `12-mastery-1280.png`) that are not on main |
+| ws/hub | NOT an ancestor: 6 unique commits (`c1eeaec`, `1242ff7`, `5218f8c`, `50a570f`, `1b0ce39`, `690c1e0`: the original W1 hub workstream, publishing hub-api.md, call registry, ingest/filter/SSE, smoke tests, x.trip.limits merge and secret ballot) | kept; not deleted |
+
+### Landing (batch 14)
+
+- Landing merge commit: `3790e2cb7f7dce98a67c57ac40705073681e1645` (parents `96328ebaa89c54f79c9a59f1141ec2d71bbb9540` = tag `pre-merge-batch14`, `9bacde0a3222c3440504b66cf4f56c44b77a0f51` = origin/merge/batch14; only tracker docs differ).
+- Rollback: `git revert -m 1 3790e2cb7f7dce98a67c57ac40705073681e1645` (reverts both branches).
+- The demo stack was not restarted in this batch (the coordinator restarts it).
+
+## Batch 15: fix/names-council-inspect (remaining commits) into main
+
+Branch `merge/batch15` (worktree `squad-wt/merge15`), landed as a true `--no-ff` merge. These are the commits the names lead pushed after batch 14: hash-like ids never title-cased (announcer, ledger, call panel), a no-raw-ids regression scan (`scripts/dev/scan-raw-ids.mjs`) over every inspector tab, lint and prettier fixes.
+
+- One conflict, `packages/web/src/live/LivePanel.test.tsx`: both sides raised the scripted-discussion test timeout (the names branch to 20 s, main from batch 14 to 30 s overall plus 25 s for the run to end); main's values kept.
+- `pnpm check` exit status 0, `pnpm demo:live` OK, `pnpm test:smoke hub` 102 of 102.
+- Browser, demo mode (hub :18915, web :15315): new account "Maya Tester": inspector shows "Maya Tester (you)" with Doing/Thinking/Chat/Agents, no raw `u_...` id on the chat page, `@cubbie` question answered, 0 page errors. Frames in `docs/design/shots/merge15/`.
+
+### Landing (batch 15)
+
+- Landing merge commit: `ef8fbf2c06ce39553034adee36dd7e5db0c6e213` (parents `449ae511cbe474aec9e25a2919032914187a63fd` = tag `pre-merge-batch15`, `18d0ca662211eee9588335da72cadbdb68b89ac0` = origin/merge/batch15; diff empty).
+- Rollback: `git revert -m 1 ef8fbf2c06ce39553034adee36dd7e5db0c6e213`.

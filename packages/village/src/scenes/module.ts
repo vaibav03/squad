@@ -126,6 +126,7 @@ interface SeatStore {
   readonly room: { slot: string; who: string } | null;
   select(id: string | null, room?: { slot: string; who: string }): void;
   setSide(s: 'left' | 'right'): void;
+  isThinking?(id: string, who?: string): boolean;
 }
 interface Instance {
   update?(timeMs: number, deltaMs: number): void;
@@ -423,7 +424,12 @@ const mod = {
       seats.forEach((seat, i) => {
         const picked = !!st && st.selected === seat.agent && st.room?.who === seat.who;
         if (picked || i === kbSeat) paintSeatRing(r, seat);
-        if (i === hoverSeat || i === kbSeat) paintSeatTag(r, seat, i === kbSeat);
+        if (i === hoverSeat || i === kbSeat)
+          paintSeatTag(r, seat, i === kbSeat, {
+            on: !!st?.isThinking?.(seat.agent, seat.who),
+            t: o.t,
+            calm: o.calm,
+          });
       });
       return r;
     }
@@ -485,7 +491,7 @@ const mod = {
       ctx.player.sprite.setVisible(true);
       releaseInput?.();
       releaseInput = null;
-      if (store()?.room) store()?.select(null); // the popup belongs to the room
+      if (store()?.room?.slot) store()?.select(null); // the popup belongs to the room
       clearZones();
       session.leave();
       ctx.bus.emit('leave', { slotId: live.p.slotId });

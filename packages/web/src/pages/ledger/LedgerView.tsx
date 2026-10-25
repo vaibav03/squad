@@ -1,5 +1,6 @@
 import { useMemo, useState, type KeyboardEvent } from 'react';
 import { meetsMinGroupSize } from '@squad/core';
+import { studentLabel } from '@squad/village/inspector';
 import {
   Avatar,
   ConnectionBadge,
@@ -58,7 +59,7 @@ export function LedgerView(props: LedgerViewProps) {
       return next;
     });
 
-  const nameOf = (id: string) => roster.find((m) => m.id === id)?.name ?? id;
+  const nameOf = (id: string) => roster.find((m) => m.id === id)?.name ?? studentLabel(id);
 
   const renderRow = (r: LedgerRow, withAgent: boolean) => (
     <Row

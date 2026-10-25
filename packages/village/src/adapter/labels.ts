@@ -25,12 +25,65 @@ function title(s: string): string {
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
+/* ---- roster: student id -> display name (names only, squad members; set from the hub snapshot) ---- */
+let roster = new Map<string, string>();
+let viewerId: string | undefined;
+const anon = new Map<string, number>();
+
+/** Ids that are generated hashes (u_a193aba6d4e4, s_9f3c...), never shown. Demo ids like s_ana are fine. */
+export function looksLikeHash(ref: string): boolean {
+  const body = ref.replace(/^(?:[us]_)+/i, '');
+  return /^[0-9a-f]{6,}$/i.test(body) && /\d/.test(body);
+}
+
+export function setRoster(
+  members: readonly { id: string; name?: string }[],
+  me?: { id: string; name?: string },
+): void {
+  const m = new Map<string, string>();
+  for (const x of [...members, ...(me ? [me] : [])]) {
+    const n = x.name?.trim();
+    if (n && n !== x.id && !looksLikeHash(n)) m.set(x.id, n);
+  }
+  roster = m;
+  viewerId = me?.id;
+}
+
+/** Adds one known name (e.g. the signed-in account) without dropping the rest of the roster. */
+export function rememberName(id: string, name: string | undefined, isViewer = false): void {
+  const n = name?.trim();
+  if (n && n !== id && !looksLikeHash(n)) roster.set(id, n);
+  if (isViewer) viewerId = id;
+}
+
+export function clearRoster(): void {
+  roster = new Map();
+  viewerId = undefined;
+  anon.clear();
+}
+
+/** Friendly name for a student id: roster name, else a readable demo id, else 'Squadmate N' (never the raw id). */
+export function studentLabel(studentId: string): string {
+  const known = roster.get(studentId);
+  if (known) return known;
+  if (studentId === viewerId) return 'You';
+  if (!studentId || looksLikeHash(studentId) || /\d{4,}/.test(studentId)) {
+    let n = anon.get(studentId);
+    if (n === undefined) {
+      n = anon.size + 2;
+      anon.set(studentId, n);
+    }
+    return `Squadmate ${n}`;
+  }
+  return title(studentId.replace(/^(?:[us]_)+/i, ''));
+}
+
 /** Display name for an AgentId, e.g. 'student:s_ana' -> 'Ana', 'expert:ch5' -> 'Chapter 5 expert'. */
 export function agentName(id: string): string {
   const { kind, ref } = parseAgentId(id);
   switch (kind) {
     case 'student':
-      return title((ref ?? 'student').replace(/^s_/, ''));
+      return studentLabel(ref ?? 'student');
     case 'expert': {
       const m = /^(?:ch|chapter)[_-]?(\d+)$/i.exec(ref ?? '');
       return m ? `Chapter ${m[1]} expert` : `${title(ref ?? 'chapter')} expert`;
@@ -41,8 +94,11 @@ export function agentName(id: string): string {
       return 'Dean';
     case 'mediator':
       return 'Mediator';
-    default:
-      return title(id);
+    default: {
+      // never title-case an id that carries a hash
+      const bare = id.replace(/^[a-z]+:/i, '');
+      return looksLikeHash(bare) || /\d{4,}/.test(bare) ? studentLabel(bare) : title(id);
+    }
   }
 }
 
