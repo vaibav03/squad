@@ -579,3 +579,18 @@
   margin-top: var(--lv-s3);
   min-height: var(--lv-tap);
 }
+
+/* ---- optional art skin credit (licence: shown whenever the licensed Modern Interiors skin is on) ---- */
+.rr-skin {
+  position: absolute;
+  left: max(var(--lv-s4), var(--safe-left, 0px));
+  top: calc(var(--room-help-top, 72px) + var(--safe-top, 0px));
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--hud-bg);
+  color: var(--lv-text);
+  font-size: 11px;
+  line-height: 16px;
+  pointer-events: none;
+}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { getRoomSession, roomInfo } from '@squad/village/rooms';
+import { getActiveSkins, getRoomSession, roomInfo } from '@squad/village/rooms';
 import type { RoomInfo, RoomSession, RoomSnapshot } from '@squad/village/rooms';
 import { LvIcon } from '../kit';
 import { OutcomeCard } from './OutcomeCard';
@@ -21,6 +21,11 @@ export interface RoomLayerProps {
 const EMPTY: RoomSnapshot = { entered: null, transcripts: {}, outcomes: {} };
 const NO_ENTRIES: readonly never[] = [];
 const EVT = 'squad:room-session';
+
+function subscribeSkins(cb: () => void): () => void {
+  globalThis.addEventListener?.('squad:skins', cb);
+  return () => globalThis.removeEventListener?.('squad:skins', cb);
+}
 
 function subscribeLate(cb: () => void): () => void {
   globalThis.addEventListener?.(EVT, cb);
@@ -46,6 +51,7 @@ function markSeen(slot: string): void {
 export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: RoomLayerProps) {
   const late = useSyncExternalStore(subscribeLate, getRoomSession, () => undefined);
   const session = given ?? late;
+  const skins = useSyncExternalStore(subscribeSkins, getActiveSkins, getActiveSkins);
   const snap = useSyncExternalStore(
     (cb) => (session ? session.subscribe(cb) : () => undefined),
     () => (session ? session.snapshot() : EMPTY),
@@ -55,6 +61,7 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
   const info = slot ? infoFor(slot) : undefined;
   const entries = (slot && snap.transcripts[slot]) || NO_ENTRIES;
   const outcome = slot ? snap.outcomes[slot] : undefined;
+  const skin = slot ? skins.find((k) => k.scene === slot) : undefined;
 
   const [open, setOpen] = useState(false);
   const [planShown, setPlanShown] = useState(true);
@@ -97,6 +104,11 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
 
   return (
     <div className="rr-layer sq-scene" data-room={slot}>
+      {skin ? (
+        <p className="rr-skin" data-testid="skin-credit">
+          Skin: Modern Interiors. {skin.credit}
+        </p>
+      ) : null}
       {info ? (
         <button
           ref={helpRef}

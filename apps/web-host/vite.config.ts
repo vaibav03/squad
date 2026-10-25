@@ -4,6 +4,8 @@ import { execFileSync } from 'node:child_process';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
 
+import { interiorSkinPlugin } from '../../packages/village/src/scenes/skins/vitePlugin';
+
 const repoAssets = resolve(__dirname, '../../assets');
 const types: Record<string, string> = {
   '.png': 'image/png',
@@ -67,7 +69,12 @@ function bootBuildPlugin(): Plugin {
 
 export default defineConfig({
   define: { __SQUAD_BUILD__: JSON.stringify(build) },
-  plugins: [react(), repoAssetsPlugin(), bootBuildPlugin()],
+  plugins: [
+    react(),
+    repoAssetsPlugin(),
+    bootBuildPlugin(),
+    interiorSkinPlugin(resolve(__dirname, '../..')),
+  ],
   server: { port: 5180, strictPort: false, fs: { allow: [resolve(__dirname, '../..')] } },
   preview: { port: 5180 },
   build: {
