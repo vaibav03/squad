@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LIVE_PERSONAS, type LivePersonaId } from '@squad/core';
+import { voiceKey } from '@squad/village/inspector';
+import { getInspectorStore } from '../overlays/inspector/bridge';
 import { LvIcon } from '../overlays/kit/icons';
 import { Controls, HeaderTools, type CaptionSize } from './Controls';
 import { CaptionsBar, Room } from './Room';
@@ -113,6 +115,31 @@ export function LiveDiscussion({
     document.addEventListener('visibilitychange', on);
     return () => document.removeEventListener('visibilitychange', on);
   }, []);
+
+  // The inspector reads the same turns the table shows, and who is about to speak is marked as thinking.
+  const discussionId = state.snapshot?.id ?? 'live';
+  useEffect(() => {
+    const st = getInspectorStore();
+    if (!st) return;
+    for (const t of state.turns)
+      if (t.text.trim())
+        st.noteVoice({
+          who: t.speaker,
+          group: discussionId,
+          kind: t.interrupted ? 'yield' : 'turn',
+          text: t.text,
+          ...(t.to ? { to: t.to } : {}),
+          key: `${voiceKey(discussionId)}:${t.id}`,
+          at: t.ts,
+        });
+  }, [state.turns, discussionId]);
+  const thinkingId = state.floor.thinking;
+  useEffect(() => {
+    const st = getInspectorStore();
+    if (!st || !thinkingId) return;
+    st.setVoiceThinking(thinkingId, true);
+    return () => st.setVoiceThinking(thinkingId, false);
+  }, [thinkingId]);
 
   const jump = useCallback((id: string) => {
     setTab('transcript');
