@@ -15,6 +15,7 @@ import { useCalmMode } from '../../hooks/useCalmMode';
 import { hubStudentId } from '../../shell/dev-login';
 import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
+import { PanelDockRoot } from '../../shell/panel-dock';
 import { ChatDock } from '../chat/ChatDock';
 import { RoomLayer } from '../../overlays/room-info';
 import { MasteryLayer } from '../../overlays/mastery';
@@ -247,7 +248,7 @@ export default function VillagePage({ world }: { world?: string }) {
       </div>
     );
   return (
-    <div className="sq-world" onKeyDown={onRootKeyDown}>
+    <PanelDockRoot className="sq-world" onKeyDown={onRootKeyDown}>
       <div ref={stage} className="sq-world__stage" />
       {state === 'loading' && (
         <div className="sq-world__loading">
@@ -322,6 +323,6 @@ export default function VillagePage({ world }: { world?: string }) {
         calm={calm}
         returnFocusTo={stage.current?.querySelector<HTMLElement>('.sqv-stage')}
       />
-    </div>
+    </PanelDockRoot>
   );
 }

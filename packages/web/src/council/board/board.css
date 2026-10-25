@@ -3,12 +3,19 @@
 .lv-ovl .lv-ovl__panel.cb-panel {
   display: flex;
   flex-direction: column;
-  width: min(1120px, calc(100% - 32px));
+  /* fills the dock region (below the HUD, above the Chat launcher), up to 1120px wide */
+  width: min(1120px, 100%);
   max-width: none;
-  height: min(720px, calc(100% - 72px));
+  height: min(720px, 100%);
   max-height: none;
   padding: 0;
   overflow: hidden;
+}
+@media (min-width: 640px) {
+  .lv-ovl[data-placement='dock']:has(> .cb-panel) {
+    justify-content: center;
+    align-items: center;
+  }
 }
 .cb-sr {
   position: absolute;
@@ -737,7 +744,7 @@
   position: absolute;
   left: var(--space-3);
   bottom: var(--space-3);
-  z-index: 5;
+  z-index: var(--sq-z-hud);
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);

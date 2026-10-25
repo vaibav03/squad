@@ -70,6 +70,7 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
   return (
     <OverlayFrame
       open={open}
+      dock="room"
       onClose={onClose}
       returnFocusTo={returnFocusTo}
       calm={calm}
