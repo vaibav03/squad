@@ -1,4 +1,4 @@
-/* global process, window, console */
+/* global process, window */
 import { chromium } from 'playwright';
 const [port, out, x, w = '1280', h = '720', t = '3000'] = process.argv.slice(2);
 const b = await chromium.launch({
