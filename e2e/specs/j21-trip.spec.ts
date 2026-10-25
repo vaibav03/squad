@@ -83,7 +83,7 @@ const until = async <T>(
   }
 };
 const open = async (page: Page) => {
-  await page.goto('/squad/trips');
+  await page.goto('/squad/trips?full=1');
   await expect(
     page
       .getByTestId('trip-constraints')
@@ -134,7 +134,7 @@ test.afterAll(async () => {
 test('J21.1 Plan another trip on the Trip page creates a shared trip; the group chat says so', async () => {
   test.setTimeout(120_000);
   const p = A[ANA]!.page;
-  await p.goto('/squad/trips');
+  await p.goto('/squad/trips?full=1');
   await p.getByTestId('trip-another').getByTestId('trip-create-open').click();
   await p.getByLabel('Destination').fill('Cabo');
   await p.getByLabel('Month (optional)').selectOption('3');
