@@ -77,6 +77,38 @@ describe('hub rate limits for interactive use', () => {
   });
 });
 
+describe('chat limits only count sends and uploads', () => {
+  it('rules match exact paths, so page-load calls (file-token, history) are never counted as sends', () => {
+    const send = DEFAULT_RULES.find((r) => r.name === 'chat-send')!;
+    const up = DEFAULT_RULES.find((r) => r.name === 'chat-upload')!;
+    expect(send.path).toBe('/v1/chat/send');
+    expect(up.path).toBe('/v1/chat/upload');
+    expect(send.limit).toBeLessThanOrEqual(60);
+    expect(up.limit).toBeLessThanOrEqual(30);
+  });
+
+  it('120 file-token calls in a minute from one account are not throttled', async () => {
+    const h = hub();
+    // the rate limiter only needs a valid bearer subject (no seeded student required)
+    const { signToken } = await import('../auth');
+    const { token } = signToken(
+      'auth-test',
+      { kind: 'bearer', sub: 's_ana', ttlMs: 60_000 },
+      Date.now(),
+    );
+    let limited = 0;
+    for (let i = 0; i < 120; i++) {
+      const r = await h.app.request('/v1/chat/file-token', {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}` },
+      });
+      if (r.status === 429) limited++;
+    }
+    expect(limited).toBe(0);
+    await h.close();
+  });
+});
+
 describe('store ttl', () => {
   it.each([
     ['memory', () => memoryStore()],

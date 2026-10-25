@@ -86,7 +86,23 @@ export const DEFAULT_RULES: Rule[] = [
   { name: 'persona', method: 'PUT', path: '/v1/personas', limit: 20, windowMs: MIN, by: 'user' },
   { name: 'quiz-answer', method: 'POST', path: '/v1/quiz', limit: 120, windowMs: MIN, by: 'user' },
   // chat/council routes land from other leads; limits are keyed on path prefix so they apply on merge
-  { name: 'chat-send', method: 'POST', path: '/v1/chat', limit: 60, windowMs: MIN, by: 'user' },
+  // Exact paths: a prefix match also counted POST /v1/chat/file-token (one per page load) against the send limit.
+  {
+    name: 'chat-send',
+    method: 'POST',
+    path: '/v1/chat/send',
+    limit: 60,
+    windowMs: MIN,
+    by: 'user',
+  },
+  {
+    name: 'chat-upload',
+    method: 'POST',
+    path: '/v1/chat/upload',
+    limit: 30,
+    windowMs: MIN,
+    by: 'user',
+  },
   {
     name: 'council-ask',
     method: 'POST',
