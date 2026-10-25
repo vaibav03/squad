@@ -242,7 +242,7 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
     who: [
       {
         name: "Devil's TA",
-        does: 'Writes an explanation with exactly one planted error, then checks which line you point at.',
+        does: 'Writes an explanation with exactly one planted error, then checks which line you name.',
       },
     ],
     how: {
