@@ -7,13 +7,22 @@ export function repoUrl(assetBase: string, repoPath: string): string {
   return `${base}/${repoPath.replace(/^\/+/, '').replace(/^assets\//, '')}`;
 }
 
+export const MANIFEST_TIMEOUT_MS = 8000;
+
 /** Fetch + parse `<assetBase>/asset-manifest.json`. Missing or broken manifest returns []. */
 export async function fetchManifest(
   assetBase: string,
   log: (m: string, e?: unknown) => void,
 ): Promise<AssetSpec[]> {
+  // Gives up after 8 s: the manifest is awaited together with the engine chunk, so a hung request here would stall
+  // the whole boot with nothing on screen but the loading text.
+  const ctl = typeof AbortController === 'undefined' ? undefined : new AbortController();
+  const timer = ctl ? setTimeout(() => ctl.abort(), MANIFEST_TIMEOUT_MS) : undefined;
   try {
-    const res = await fetch(repoUrl(assetBase, 'asset-manifest.json'));
+    const res = await fetch(
+      repoUrl(assetBase, 'asset-manifest.json'),
+      ctl ? { signal: ctl.signal } : {},
+    );
     if (!res.ok) return [];
     const ct = res.headers.get('content-type') ?? '';
     if (ct.includes('text/html')) return []; // SPA fallback
@@ -23,6 +32,8 @@ export async function fetchManifest(
   } catch (e) {
     log('manifest unavailable, using built-in stubs', e);
     return [];
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 

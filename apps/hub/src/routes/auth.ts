@@ -17,7 +17,7 @@ import {
   signToken,
   viewerFor,
 } from '../auth';
-import { clientIp, createLimiter, readBody } from '../http';
+import { clientIp, createLimiter, rateLimited, readBody } from '../http';
 import type { UserRow } from '../store/accounts';
 import type { HubApp, HubDeps, HubEnv, Student } from '../types';
 
@@ -118,8 +118,7 @@ export function createAuthRoutes(deps: HubDeps): HubApp {
   // ---- accounts ----
   r.post('/v1/auth/start', async (c) => {
     const rl = limit(`start:${clientIp(c)}`, 20, 3_600_000);
-    if (!rl.ok)
-      return c.json({ error: { code: 'rate_limited', retryAfterS: rl.retryAfterS } }, 429);
+    if (!rl.ok) return rateLimited(c, rl.retryAfterS ?? 1);
     const b = await readBody(c, AuthStartBodySchema);
     if (!b.ok) return b.res;
     const channel = b.data.phone !== undefined ? 'phone' : 'email';
@@ -141,8 +140,7 @@ export function createAuthRoutes(deps: HubDeps): HubApp {
       ...(b.data.name ? { name: b.data.name } : {}),
     });
     if (!res.ok) {
-      if (res.error === 'rate_limited')
-        return c.json({ error: { code: 'rate_limited', retryAfterS: res.retryAfterS } }, 429);
+      if (res.error === 'rate_limited') return rateLimited(c, res.retryAfterS ?? 1);
       return c.json(
         { error: { code: 'invalid_request', message: 'Add your name to create an account.' } },
         400,
@@ -165,8 +163,7 @@ export function createAuthRoutes(deps: HubDeps): HubApp {
     if (!b.ok) return b.res;
     const res = deps.accounts.resend(b.data.challengeId);
     if (!res.ok) {
-      if (res.error === 'rate_limited')
-        return c.json({ error: { code: 'rate_limited', retryAfterS: res.retryAfterS } }, 429);
+      if (res.error === 'rate_limited') return rateLimited(c, res.retryAfterS ?? 1);
       return c.json(
         { error: { code: 'not_found', message: 'That request expired. Start again.' } },
         404,
@@ -191,8 +188,7 @@ export function createAuthRoutes(deps: HubDeps): HubApp {
 
   r.post('/v1/auth/verify', async (c) => {
     const rl = limit(`verify:${clientIp(c)}`, 60, 3_600_000);
-    if (!rl.ok)
-      return c.json({ error: { code: 'rate_limited', retryAfterS: rl.retryAfterS } }, 429);
+    if (!rl.ok) return rateLimited(c, rl.retryAfterS ?? 1);
     const b = await readBody(c, AuthVerifyBodySchema);
     if (!b.ok) return b.res;
     const res = deps.accounts.verify(b.data.challengeId, b.data.code);

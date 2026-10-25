@@ -1,7 +1,7 @@
 import { InviteCreateBodySchema, InviteJoinBodySchema, parseInviteInput } from '@squad/core';
 import { Hono } from 'hono';
 import { requireUser } from '../auth';
-import { clientIp, createLimiter, fail, readBody } from '../http';
+import { clientIp, createLimiter, fail, rateLimited, readBody } from '../http';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 import { activateSquad, announceMember } from './squads';
 
@@ -46,9 +46,8 @@ export function createInviteRoutes(deps: HubDeps): HubApp {
 
   // Public preview. Rate limited per address so codes cannot be walked.
   r.get('/v1/invites/:code', (c) => {
-    const rl = limit(`preview:${clientIp(c)}`, 30, 600_000);
-    if (!rl.ok)
-      return c.json({ error: { code: 'rate_limited', retryAfterS: rl.retryAfterS } }, 429);
+    const rl = limit(`preview:${clientIp(c)}`, 120, 600_000);
+    if (!rl.ok) return rateLimited(c, rl.retryAfterS ?? 1);
     const res = deps.squads.preview(c.req.param('code'));
     return res.ok ? c.json(res.preview) : fail(c, res);
   });
@@ -58,8 +57,7 @@ export function createInviteRoutes(deps: HubDeps): HubApp {
     if (!b.ok) return b.res;
     const uid = c.get('user').id;
     const rl = limit(`join:${uid}`, 10, 3_600_000);
-    if (!rl.ok)
-      return c.json({ error: { code: 'rate_limited', retryAfterS: rl.retryAfterS } }, 429);
+    if (!rl.ok) return rateLimited(c, rl.retryAfterS ?? 1);
     const code = parseInviteInput(b.data.code);
     if (!code)
       return c.json(

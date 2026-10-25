@@ -78,6 +78,7 @@ export function chatLoadReason(e: unknown, online = true): string {
     if (e.status === 0) return 'We could not reach the hub. Check your connection and try again.';
     if (e.status === 401) return 'Your session ended. Sign in again.';
     if (e.status === 403) return 'You do not have access to this chat.';
+    if (e.status === 429) return 'Too many requests. Wait a few seconds, then try again.';
     if (e.status === 409) return 'Create or join a squad to chat with it.';
     if (e.status === 404) return 'This chat was not found. Try again, or pick another squad.';
     if (e.status >= 500) return 'The hub had a problem answering. Try again in a moment.';

@@ -10,6 +10,7 @@ import {
 import { Button } from '../../primitives/Button';
 import { EmptyState } from '../../primitives/EmptyState';
 import { WorldLoading } from '../../shell/WorldLoading';
+import { SlowNote } from '../../shell/ErrorBoundary';
 import { useCalmMode } from '../../hooks/useCalmMode';
 import { hubStudentId } from '../../shell/dev-login';
 import { useSquadConfig } from '../../shell/context';
@@ -36,7 +37,11 @@ const REPLAY_ALIAS: Record<string, string> = {
   track4b: 'track4b-council-degraded',
   track4c: 'track4c-council-private',
 };
-const LOAD_TIMEOUT_MS = 15000;
+
+/** After this long the loading screen says "Still loading the village..." and offers Retry (it keeps loading). */
+export const VILLAGE_SLOW_AFTER_MS = 8000;
+/** Hard budget for opening the world (engine chunk, art, first frame). Past it: an error with Retry, never a spinner. */
+export const VILLAGE_LOAD_TIMEOUT_MS = 45000;
 
 interface Feed {
   source: VillageSource;
@@ -59,6 +64,9 @@ export default function VillagePage({ world }: { world?: string }) {
   calmRef.current = calm;
   const [state, setState] = useState<'loading' | 'ready' | { error: string }>('loading');
   const [attempt, setAttempt] = useState(0);
+  // what the loading screen is waiting for: the engine chunk, then the art and the first frame
+  const [phase, setPhase] = useState<'engine' | 'art'>('engine');
+  const [slow, setSlow] = useState(false);
   const [event, setEvent] = useState<OverlayEvent | null>(null);
   const [inspector, setInspector] = useState<InspectorStore | null>(null);
   const q = new URLSearchParams(location.search);
@@ -87,14 +95,18 @@ export default function VillagePage({ world }: { world?: string }) {
     let dead = false;
     let feed: Feed | undefined;
     setState('loading');
-    // The world must open, or say why not: a stalled hub or chunk ends in an error with Retry, never a spinner forever.
+    setPhase('engine');
+    setSlow(false);
+    // The world must open, or say why not. Visible at every point: "Opening the village", then (8 s) "Still loading
+    // the village..." with Retry while it keeps loading, then (45 s) an error with Retry, never a spinner forever.
+    const slowTimer = setTimeout(() => !dead && setSlow(true), VILLAGE_SLOW_AFTER_MS);
     const stall = setTimeout(
       () =>
         !dead &&
         setState((s) =>
           s === 'loading' ? { error: 'The village is taking too long to open.' } : s,
         ),
-      LOAD_TIMEOUT_MS,
+      VILLAGE_LOAD_TIMEOUT_MS,
     );
     void (async () => {
       try {
@@ -138,6 +150,7 @@ export default function VillagePage({ world }: { world?: string }) {
         setInspectorStore(store);
         const mount = await loadWorld(worldId);
         if (dead || !stage.current) return feed.close();
+        setPhase('art');
         // `?cutscene=trip&task=<id>`: the world plays the cutscene once per task (any key skips it).
         const trip = tripCutsceneFromQuery(location.search);
         const source = trip ? withTripCutscene(feed.source, trip) : feed.source;
@@ -163,6 +176,7 @@ export default function VillagePage({ world }: { world?: string }) {
     return () => {
       dead = true;
       clearTimeout(stall);
+      clearTimeout(slowTimer);
       feed?.close();
       handle.current?.destroy();
       handle.current = null;
@@ -237,7 +251,10 @@ export default function VillagePage({ world }: { world?: string }) {
       <div ref={stage} className="sq-world__stage" />
       {state === 'loading' && (
         <div className="sq-world__loading">
-          <WorldLoading />
+          <WorldLoading
+            label={phase === 'art' ? 'Loading the village art' : 'Opening the village'}
+          />
+          {slow && <SlowNote what="the village" onRetry={() => setAttempt((n) => n + 1)} />}
         </div>
       )}
       {typeof state === 'object' && (

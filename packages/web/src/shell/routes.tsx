@@ -133,12 +133,26 @@ export function PageHost({ meta, loader }: { meta: SquadRouteMeta; loader: Loade
   const Lazy = useMemo(() => lazy(() => importWithRetry(loader)), [loader, attempt]);
   const again = () => setAttempt((n) => n + 1);
   const loading =
-    meta.key === 'village' ? <WorldLoading /> : <Skeleton shape="block" height={240} />;
+    meta.key === 'village' ? (
+      <WorldLoading />
+    ) : (
+      <div role="status" aria-live="polite" style={{ padding: 24 }}>
+        <p style={{ margin: '0 0 16px' }}>Loading {meta.title}...</p>
+        <Skeleton shape="block" height={240} />
+      </div>
+    );
   return (
     <ErrorBoundary resetKey={attempt} onRetry={again} title={`${meta.title} could not load`}>
       <Suspense
         fallback={
-          <LoadingTimeout onRetry={again} what={meta.title}>
+          <LoadingTimeout
+            onRetry={again}
+            what={meta.title}
+            // the village ships a ~340 KB engine chunk: on a slow connection that legitimately takes a while,
+            // so it gets a longer budget (and says "Still loading" at 8 s) before it is called an error
+            timeoutMs={meta.key === 'village' ? 45000 : 12000}
+            slowWhat={meta.key === 'village' ? 'the village' : undefined}
+          >
             {loading}
           </LoadingTimeout>
         }

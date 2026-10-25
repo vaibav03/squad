@@ -11,6 +11,7 @@ import { routeTitleFor, squadNav } from './routes';
 import { FailureState } from './ErrorBoundary';
 import { useRenderWatchdog } from './RenderWatchdog';
 import { BuildMarker } from './BuildMarker';
+import { RateLimitBanner } from './RateLimitBanner';
 import { ShellContext } from './shell-context';
 import type { NavItem } from './types';
 import { useTheme, type ThemeChoice } from './useTheme';
@@ -182,6 +183,8 @@ export function AppShell({
             </div>
           </div>
         </header>
+
+        <RateLimitBanner />
 
         <main
           id="main"

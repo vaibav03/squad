@@ -1,3 +1,12 @@
+import {
+  clearRateLimited,
+  noteRateLimited,
+  RATE_LIMIT_AUTO_RETRIES,
+  RATE_LIMIT_MAX_WAIT_S,
+  retryAfterOf,
+  waitForRetry,
+} from './rate-limit';
+
 /** Data-read requests give up after this long so a page shows an error with Retry instead of loading forever. */
 export const REQUEST_TIMEOUT_MS = 8000;
 
@@ -28,17 +37,40 @@ export async function timedFetch(
   const method = (init.method ?? 'GET').toUpperCase();
   const limited =
     (method === 'GET' || force) && !init.signal && typeof AbortController !== 'undefined';
-  const ctl = limited ? new AbortController() : null;
-  const timer = ctl ? setTimeout(() => ctl.abort(), ms) : undefined;
-  try {
-    const res = await fetch(input, ctl ? { ...init, signal: ctl.signal } : init);
-    if (res.status === 401) notifyUnauthorized();
-    return res;
-  } catch (e) {
-    if (ctl?.signal.aborted) throw new TypeError('timeout');
-    throw e;
-  } finally {
-    if (timer) clearTimeout(timer);
+  const once = async (): Promise<Response> => {
+    const ctl = limited ? new AbortController() : null;
+    const timer = ctl ? setTimeout(() => ctl.abort(), ms) : undefined;
+    try {
+      const res = await fetch(input, ctl ? { ...init, signal: ctl.signal } : init);
+      if (res.status === 401) notifyUnauthorized();
+      return res;
+    } catch (e) {
+      if (ctl?.signal.aborted) throw new TypeError('timeout');
+      throw e;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  };
+  // Reads (and idempotent token requests) that hit HTTP 429 wait out Retry-After and try again, a couple of times.
+  // 429 is "slow down", never "offline": the last answer is returned so the page can say so, and the shell banner
+  // counts down meanwhile.
+  const retryable = method === 'GET' || force;
+  let attempt = 0;
+  for (;;) {
+    const res = await once();
+    if (res.status !== 429) {
+      if (attempt > 0) clearRateLimited();
+      return res;
+    }
+    const asked = retryAfterOf(res) ?? 2 ** attempt;
+    const wait = Math.min(RATE_LIMIT_MAX_WAIT_S, Math.max(1, asked));
+    if (!retryable || attempt >= RATE_LIMIT_AUTO_RETRIES) {
+      noteRateLimited(Math.max(1, asked), false);
+      return res;
+    }
+    noteRateLimited(wait, true);
+    attempt++;
+    await waitForRetry(wait * 1000);
   }
 }
 

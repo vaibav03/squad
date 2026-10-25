@@ -21,7 +21,8 @@ import { rememberName } from '@squad/village/inspector';
 import { UNAUTHORIZED_EVENT } from '../lib/http';
 import { loadToken, saveToken } from './storage';
 
-export type AccountStatus = 'loading' | 'signed-out' | 'signed-in' | 'offline';
+/** `rate-limited`: the hub answered 429 (slow down). It is retried automatically; it is never "offline". */
+export type AccountStatus = 'loading' | 'signed-out' | 'signed-in' | 'offline' | 'rate-limited';
 
 export interface AccountValue {
   status: AccountStatus;
@@ -35,6 +36,8 @@ export interface AccountValue {
   /** null until probed; true when the hub has developer sign-in on. */
   devLogin: boolean | null;
   online: boolean;
+  /** epoch ms of the next automatic retry while `status` is `rate-limited`, else null. */
+  retryAt: number | null;
   start(body: AuthStartBody): Promise<AuthStartResponse>;
   resend(challengeId: string): Promise<AuthStartResponse>;
   verify(challengeId: string, code: string): Promise<SessionResponse>;
@@ -73,6 +76,8 @@ export function AuthProvider({
   useEffect(() => {
     if (snap.user) rememberName(snap.user.id, snap.user.name, true);
   }, [snap.user]);
+  const [retryAt, setRetryAt] = useState<number | null>(null);
+  const limitTries = useRef(0);
   const alive = useRef(true);
   useEffect(() => {
     alive.current = true;
@@ -92,6 +97,8 @@ export function AuthProvider({
 
   const apply = useCallback((s: Snapshot) => {
     if (!alive.current) return;
+    limitTries.current = 0;
+    setRetryAt(null);
     setSnap(s);
     setStatus('signed-in');
   }, []);
@@ -111,7 +118,14 @@ export function AuthProvider({
   const failed = useCallback(
     (e: unknown) => {
       if (isApiError(e, 'unauthorized')) signedOut();
-      else if (alive.current) setStatus('offline');
+      else if (isApiError(e, 'rate_limited')) {
+        if (!alive.current) return;
+        // 429: back off (Retry-After, then a little more each time) and say so; never "offline"
+        limitTries.current += 1;
+        const base = Math.max(1, e.retryAfterS ?? 2) * 1000;
+        setRetryAt(Date.now() + base * (1 + 0.5 * Math.min(limitTries.current - 1, 4)));
+        setStatus('rate-limited');
+      } else if (alive.current) setStatus('offline');
     },
     [signedOut],
   );
@@ -168,6 +182,13 @@ export function AuthProvider({
     };
   }, []);
 
+  // Rate limited: try again by ourselves when the wait is over (`refresh` also lets the person do it sooner).
+  useEffect(() => {
+    if (status !== 'rate-limited' || retryAt === null) return;
+    const id = setTimeout(() => void load(), Math.max(250, retryAt - Date.now()));
+    return () => clearTimeout(id);
+  }, [status, retryAt, load]);
+
   // Coming back online while we were offline: try once more without being asked.
   useEffect(() => {
     if (online && status === 'offline') void load();
@@ -203,6 +224,7 @@ export function AuthProvider({
       client,
       devLogin,
       online,
+      retryAt,
       start: (b) => client.authStart(b),
       resend: (id) => client.authResend(id),
       async verify(challengeId, code) {
@@ -241,6 +263,7 @@ export function AuthProvider({
       client,
       devLogin,
       online,
+      retryAt,
       applySession,
       signedOut,
       refresh,
