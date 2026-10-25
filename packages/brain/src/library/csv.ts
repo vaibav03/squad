@@ -4,7 +4,7 @@ export function parseCsv(text: string): {
   lines: number[];
   unterminated: boolean;
 } {
-  const src = text.replace(/^﻿/, '');
+  const src = text.replace(/^\uFEFF/, '');
   const rows: string[][] = [];
   const lines: number[] = []; // 1-based source line where each row starts
   let row: string[] = [];

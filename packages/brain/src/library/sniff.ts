@@ -31,7 +31,7 @@ const isPdfMagic = (b: Uint8Array) => {
 export function decodeText(b: Uint8Array): string | null {
   if (b.includes(0)) return null;
   try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(b).replace(/^﻿/, '');
+    return new TextDecoder('utf-8', { fatal: true }).decode(b).replace(/^\uFEFF/, '');
   } catch {
     return null;
   }

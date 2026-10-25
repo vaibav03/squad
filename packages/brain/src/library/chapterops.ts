@@ -12,6 +12,7 @@ export const CHAPTER_ID_RE = /^[a-z0-9][a-z0-9-]*$/;
 
 export function cleanTitle(title: string): string {
   const t = title
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001f\u007f]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

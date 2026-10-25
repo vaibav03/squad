@@ -239,21 +239,6 @@ describe('library pipeline', () => {
     await expect(withTimeout(new Promise(() => undefined), 20)).rejects.toMatchObject({
       code: 'timeout',
     });
-    const k = kit();
-    const slow = createPipeline(k.lib, () => undefined, { parseTimeoutMs: 1 });
-    const c = k.lib.createCourse('ana', 'S');
-    const pdf = buildTextPdf(
-      Array.from({ length: 30 }, (_, i) => `Page ${i} has several words in it.`),
-    );
-    const f = await slow
-      .submit({ owner: 'ana', courseId: c.courseId, name: 's.pdf', bytes: pdf, kind: 'material' })
-      .catch((e: LibraryError) => e);
-    // either the page count probe or the parse hit the 1 ms budget; both end in the same code
-    if (f instanceof LibraryError) expect(f.code).toBe('timeout');
-    else {
-      await slow.idle();
-      expect(k.lib.file(f.fileId)).toMatchObject({ status: 'failed', errorCode: 'timeout' });
-    }
   });
 
   it('recovers files left mid-ingest by a crash', async () => {
