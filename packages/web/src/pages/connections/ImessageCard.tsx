@@ -11,6 +11,7 @@ import { Button } from '../../primitives/Button';
 import { Card } from '../../primitives/Card';
 import { Notice } from '../../primitives/Notice';
 import { useSquadConfig } from '../../shell/context';
+import { SendblueSetup, type SendblueSetupInfo } from './SendblueSetup';
 
 export const RUNBOOK_URL =
   'https://github.com/vaibav03/squad/blob/main/docs/imessage.md#6-manual-verification-runbook-you-with-a-spare-apple-id';
@@ -29,9 +30,18 @@ export interface ImessageCardViewProps {
   loading?: boolean;
   now: number;
   onRetry?: () => void;
+  /** Sendblue setup facts (names and URLs), when the hub has the provider. */
+  sendblue?: SendblueSetupInfo | null;
 }
 
-export function ImessageCardView({ status, error, loading, now, onRetry }: ImessageCardViewProps) {
+export function ImessageCardView({
+  status,
+  error,
+  loading,
+  now,
+  onRetry,
+  sendblue,
+}: ImessageCardViewProps) {
   const ind = status ? imessageIndicator(status, { kind: 'group' }, now) : null;
   const fixture = !!status && (status.fixture || status.mode === 'fixture');
   return (
@@ -86,6 +96,7 @@ export function ImessageCardView({ status, error, loading, now, onRetry }: Imess
           ) : null}
         </>
       )}
+      {sendblue ? <SendblueSetup info={sendblue} /> : null}
       <h4 className="sq-conn__h3">Safe setup</h4>
       <ol className="sq-conn__scopes" data-testid="connections-imessage-steps">
         {SETUP_STEPS.map((s) => (
@@ -107,6 +118,7 @@ export function ImessageCard() {
   const cfg = useSquadConfig();
   const [status, setStatus] = useState<ImessageStatus | null>(null);
   const [phase, setPhase] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [sendblue, setSendblue] = useState<SendblueSetupInfo | null>(null);
   const load = useCallback(async () => {
     if (!cfg.hubUrl) {
       setPhase('error');
@@ -120,6 +132,13 @@ export function ImessageCard() {
       if (p?.success) {
         setStatus(p.data);
         setPhase('ready');
+        // additive: an older hub answers 404 and the Sendblue section simply stays hidden
+        void timedFetch(`${cfg.hubUrl}/v1/imessage/setup`, {
+          headers: cfg.token ? { Authorization: `Bearer ${cfg.token}` } : {},
+        })
+          .then(async (r) => (r.ok ? ((await r.json()) as SendblueSetupInfo) : null))
+          .then((j) => setSendblue(j && Array.isArray(j.missingEnv) ? j : null))
+          .catch(() => setSendblue(null));
       } else setPhase('error');
     } catch {
       setPhase('error');
@@ -139,6 +158,7 @@ export function ImessageCard() {
       loading={phase === 'loading'}
       error={phase === 'error'}
       now={Date.now()}
+      sendblue={sendblue}
       onRetry={() => {
         setPhase('loading');
         void load();

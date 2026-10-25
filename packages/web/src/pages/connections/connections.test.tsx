@@ -72,7 +72,10 @@ describe('state badges', () => {
       />,
     );
     expect(screen.getByText(`label-${state}`)).toBeTruthy();
-    if (state === 'fixture') expect(screen.getAllByText('Fixture (simulated, not your account)').length).toBeGreaterThan(0);
+    if (state === 'fixture')
+      expect(screen.getAllByText('Fixture (simulated, not your account)').length).toBeGreaterThan(
+        0,
+      );
     else expect(screen.queryByText('Fixture (simulated, not your account)')).toBeNull();
     if (state === 'rate_limited') expect(screen.getByText(/Will retry in/)).toBeTruthy();
   });

@@ -20,7 +20,11 @@ export function askCubbie(
   try {
     sessionStorage.setItem(
       PENDING_CONTEXT_KEY,
-      JSON.stringify({ chatId, sourceIds: [{ sourceId: item.id }], prefill: askCubbiePrefill(item) }),
+      JSON.stringify({
+        chatId,
+        sourceIds: [{ sourceId: item.id }],
+        prefill: askCubbiePrefill(item),
+      }),
     );
   } catch {
     // storage blocked: the chat still opens, without a chip (the user can attach nothing; no silent fake)
