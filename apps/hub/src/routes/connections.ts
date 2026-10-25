@@ -17,7 +17,7 @@ import {
 import { requireUser } from '../auth';
 import { DEMO_ACCOUNT, scopeLabel } from '../context/account';
 import { applySharingChoice } from '../context/onboarding';
-import { importCounts, integrationStateOf } from '../context/state';
+import { importCounts, integrationStateOf, shareCategory } from '../context/state';
 import { TokenKeyError } from '../context/tokens';
 import { mergeContextBusy, purgeContextBusy } from '../context/busy';
 import { contextServiceFor, type ContextService } from '../context/service';
@@ -215,6 +215,7 @@ function sourceView(s: ContextSource, course: { name: string; code: string | nul
     courseLabel: course?.label ?? null,
     id: s.id,
     kind: s.kind,
+    category: shareCategory(s),
     title: s.title,
     courseId: s.courseId,
     url: s.url,
@@ -330,6 +331,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
             connectionId: x.id,
             provider: x.provider,
             kind: s.kind,
+            category: shareCategory(s),
             title: s.title,
             courseId: s.courseId,
             courseName: svc.courses.info(x.id, s.courseId)?.name ?? null,

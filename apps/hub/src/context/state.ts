@@ -40,7 +40,10 @@ const RANK: IntegrationState[] = [
 export function rollupState(infos: IntegrationStateInfo[]): IntegrationStateInfo {
   const active = infos.filter((i) => i.state !== 'not_connected');
   if (active.length === 0)
-    return { state: 'not_connected', sub: infos.some((i) => i.sub === 'disconnected') ? 'disconnected' : null };
+    return {
+      state: 'not_connected',
+      sub: infos.some((i) => i.sub === 'disconnected') ? 'disconnected' : null,
+    };
   return [...active].sort((a, b) => RANK.indexOf(a.state) - RANK.indexOf(b.state))[0]!;
 }
 
@@ -65,4 +68,38 @@ export function importCounts(sources: ContextSource[]): ImportCounts {
   }
   n.courses = courses.size;
   return n;
+}
+
+/** The four sharing categories shown to the customer (first-run Share step, Connections). One mapping, server side. */
+export type ShareCategory = 'courses' | 'assignments' | 'calendar' | 'drive';
+
+/**
+ * Which sharing category a source belongs to. Canvas modules, pages, files and announcements are COURSE material
+ * (never Drive); Drive documents are Google Drive/Docs sources only. Uses the external id prefix first because the
+ * Canvas demo stores modules and pages as `canvas_file` and announcements as `canvas_event`.
+ */
+export function shareCategory(
+  s: Pick<ContextSource, 'externalId' | 'kind' | 'dueAt'>,
+): ShareCategory {
+  const p = s.externalId.split(':')[0];
+  if (p === 'module' || p === 'page' || p === 'file' || p === 'announcement') return 'courses';
+  if (p === 'assignment') return 'assignments';
+  if (p === 'drive') return 'drive';
+  if (p === 'classroom') return 'assignments';
+  if (p === 'event' || p === 'cal' || p === 'feed') return 'calendar';
+  switch (s.kind) {
+    case 'canvas_assignment':
+      return 'assignments';
+    case 'gcal_event':
+    case 'canvas_event':
+      return 'calendar';
+    case 'gdoc':
+    case 'gdrive_file':
+    case 'pdf':
+      return 'drive';
+    case 'classroom_item':
+      return 'assignments';
+    default:
+      return 'courses';
+  }
 }

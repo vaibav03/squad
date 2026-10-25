@@ -19,6 +19,7 @@ import {
   CATEGORY_HINT,
   CATEGORY_LABEL,
   TOUR_RETURN,
+  categoryCounts,
   groupRows,
   providerHasData,
   providerViews,
@@ -212,7 +213,15 @@ export function ConnectStep({ t }: { t: TourData }) {
 
 /** Step 3: what was imported, with citations and Ask Cubbie (the shared review component, embedded). */
 export function ReviewStep({ t }: { t: TourData }) {
-  return <ReviewImport embedded state={t} />;
+  const counts = categoryCounts(t.connections, t.rows);
+  return (
+    <>
+      <p data-testid="review-summary" style={{ margin: '0 0 12px' }}>
+        {CATEGORIES.map((k) => `${CATEGORY_LABEL[k]}: ${counts[k]}`).join(' · ')}
+      </p>
+      <ReviewImport embedded state={t} />
+    </>
+  );
 }
 
 /** Step 4: choose what the squad can see. Default Private. Applied by the page's primary button. */
@@ -227,6 +236,7 @@ export function ShareStep({
 }) {
   if (t.rows === null) return <p role="status">Loading what was imported</p>;
   const g = groupRows(t.rows);
+  const counts = categoryCounts(t.connections, t.rows);
   const squad = (t.squadId && t.squadNames[t.squadId]) || 'your squad';
   return (
     <div style={stack} data-testid="share-list">
@@ -238,7 +248,7 @@ export function ShareStep({
       {CATEGORIES.map((k) => (
         <RadioCards
           key={k}
-          legend={`${CATEGORY_LABEL[k]} (${g[k].length}). ${CATEGORY_HINT[k]}`}
+          legend={`${CATEGORY_LABEL[k]} (${counts[k]}). ${CATEGORY_HINT[k]}`}
           value={chosen[k] ? 'squad' : 'private'}
           onValueChange={(v) => setChosen({ ...chosen, [k]: v === 'squad' })}
           columns={2}

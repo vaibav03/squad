@@ -45,9 +45,14 @@ export function parseOnboarding(j: unknown): Omit<OnboardingState, 'source'> | n
   if (!j || typeof j !== 'object') return null;
   const o = j as Record<string, unknown>;
   const ints = (o.integrations ?? undefined) as OnboardingState['integrations'];
-  const skippedObj = o.skipped && typeof o.skipped === 'object' ? (o.skipped as { at?: unknown }) : null;
+  const skippedObj =
+    o.skipped && typeof o.skipped === 'object' ? (o.skipped as { at?: unknown }) : null;
   const skippedAt =
-    typeof skippedObj?.at === 'number' ? skippedObj.at : typeof o.skippedAt === 'number' ? o.skippedAt : null;
+    typeof skippedObj?.at === 'number'
+      ? skippedObj.at
+      : typeof o.skippedAt === 'number'
+        ? o.skippedAt
+        : null;
   const connected =
     typeof o.connected === 'boolean'
       ? o.connected
@@ -60,7 +65,9 @@ export function parseOnboarding(j: unknown): Omit<OnboardingState, 'source'> | n
     skippedAt,
     ...(typeof o.identityDone === 'boolean' ? { identityDone: o.identityDone } : {}),
     ...(typeof o.sharingChosen === 'boolean' ? { sharingChosen: o.sharingChosen } : {}),
-    ...(typeof o.nextStep === 'string' ? { nextStep: o.nextStep as OnboardingState['nextStep'] } : {}),
+    ...(typeof o.nextStep === 'string'
+      ? { nextStep: o.nextStep as OnboardingState['nextStep'] }
+      : {}),
     ...(ints ? { integrations: ints } : {}),
   };
 }
