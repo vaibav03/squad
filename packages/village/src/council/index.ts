@@ -5,3 +5,4 @@ export * from './store';
 export * from './fixtures';
 export { a2aPartyName, councilAgentName } from '../adapter/labels';
 export * from './fromResult';
+export * from './handoffs';

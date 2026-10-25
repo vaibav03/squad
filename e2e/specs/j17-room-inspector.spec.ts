@@ -103,15 +103,15 @@ test('J17 Council Hall: click the chair and a member, the popup opens on the cha
     // clicking the floor opens nothing
     const floor = await seatAt(page, 20, 60);
     await page.mouse.click(floor.x, floor.y);
-    await expect(page.getByRole('complementary')).toHaveCount(0);
+    await expect(page.getByTestId('agent-focus-panel')).toHaveCount(0);
 
     // the chair (112, 89)
     const chair = await seatAt(page, 112, 89);
     await page.mouse.click(chair.x, chair.y);
-    const panel = page.getByRole('complementary');
+    const panel = page.getByTestId('agent-focus-panel');
     await expect(panel).toBeVisible();
-    await expect(panel.getByRole('tab', { name: 'Chat', selected: true })).toBeVisible();
-    await expect(panel.getByRole('heading', { name: 'Chair' })).toBeVisible();
+    await expect(panel.getByRole('tab', { name: 'Conversation', selected: true })).toBeVisible();
+    await expect(panel.getByRole('heading', { name: /^Chair/ })).toBeVisible();
     await expect(panel.getByText('Verified: all solvers agree on choice 1.')).toBeVisible();
     await expect(panel.getByText('MSE averages squared errors, so choice 1.')).toBeVisible();
     await shot(page, J, 'chair');
