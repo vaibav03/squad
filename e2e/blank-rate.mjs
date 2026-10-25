@@ -34,6 +34,8 @@ const ROUTES = [
   ['/squad/members', 'Members'],
   ['/squad/status', 'Status'],
   ['/squad/personas', 'Personas'],
+  ['/squad/connections', 'Connections'],
+  ['/squad/new', 'Create a squad'],
   ['/welcome', null],
   ['/join/xyz', null],
   ['/no/such/path', null],
