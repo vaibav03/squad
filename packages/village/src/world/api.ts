@@ -74,7 +74,14 @@ export interface WorldTime {
 /** Warm window light: scenes call this for every lit window / lamp so glow reacts to nightness. */
 export interface Lighting {
   /** Add a soft additive glow sprite at (x,y); returns a handle whose alpha follows nightness. */
-  addGlow(opts: { x: number; y: number; radius: number; color?: number; intensity?: number; flicker?: boolean }): Glow;
+  addGlow(opts: {
+    x: number;
+    y: number;
+    radius: number;
+    color?: number;
+    intensity?: number;
+    flicker?: boolean;
+  }): Glow;
 }
 export interface Glow {
   setIntensity(v: number): void; // 0..1, multiplied by nightness
@@ -258,5 +265,12 @@ export interface VillageHandle {
 /** Repo-relative asset a world part needs. Boot queues every `ASSETS` list (parallax, character, hud, ...). */
 export type AssetSpec =
   | { type: 'image'; key: string; path: string }
-  | { type: 'spritesheet'; key: string; path: string; frameWidth: number; frameHeight: number; endFrame?: number }
+  | {
+      type: 'spritesheet';
+      key: string;
+      path: string;
+      frameWidth: number;
+      frameHeight: number;
+      endFrame?: number;
+    }
   | { type: 'atlas'; key: string; path: string; atlasPath: string };

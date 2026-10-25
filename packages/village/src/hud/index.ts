@@ -1,5 +1,13 @@
 // STUB (replaced by the camera+HUD sub-agent). Signatures are the contract.
-import type { AgentRegistry, CameraApi, Interactable, PlayerApi, VillageBus, WorldLayout, WorldTime } from '../world/api';
+import type {
+  AgentRegistry,
+  CameraApi,
+  Interactable,
+  PlayerApi,
+  VillageBus,
+  WorldLayout,
+  WorldTime,
+} from '../world/api';
 
 export interface HudDeps {
   parent: HTMLElement; // mount container; HUD DOM is appended here, above the canvas

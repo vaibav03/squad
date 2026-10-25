@@ -1,6 +1,15 @@
 // STUB (replaced by the character+input sub-agent). Signatures are the contract.
 import type Phaser from 'phaser';
-import type { AssetSpec, CameraApi, Interactable, MotionTokens, PlayerApi, VillageBus, WorldLayout, WorldTime } from '../world/api';
+import type {
+  AssetSpec,
+  CameraApi,
+  Interactable,
+  MotionTokens,
+  PlayerApi,
+  VillageBus,
+  WorldLayout,
+  WorldTime,
+} from '../world/api';
 
 export const ASSETS: AssetSpec[] = [];
 
