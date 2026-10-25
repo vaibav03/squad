@@ -49,6 +49,12 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     title: 'Mastery',
     nav: { label: 'Mastery', icon: 'book', order: 6 },
   },
+  {
+    key: 'courses',
+    path: '/squad/courses/:courseId?',
+    title: 'Courses',
+    nav: { label: 'Courses', icon: 'book', order: 7 },
+  },
 ];
 
 /** nav links resolve params-free targets */

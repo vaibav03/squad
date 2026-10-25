@@ -131,7 +131,6 @@ export function DeleteCourseSheet({
     return () => {
       live = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, course.id, attempt, api]);
 
   const ok = counts !== null && deleteConfirmed(typed, course.title, false);

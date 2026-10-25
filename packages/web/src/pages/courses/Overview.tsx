@@ -148,7 +148,11 @@ export function Overview({ status, courses, onRetry, onNew, onSample }: Overview
               materials.
             </Notice>
           )}
-          <ul className={view === 'grid' ? 'cr-grid' : 'cr-list'} data-testid="course-list" data-view={view}>
+          <ul
+            className={view === 'grid' ? 'cr-grid' : 'cr-list'}
+            data-testid="course-list"
+            data-view={view}
+          >
             {courses.map((c) => (
               <li key={c.id}>
                 <CourseCard course={c} view={view} />

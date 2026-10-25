@@ -57,7 +57,10 @@ export function FileStatusChip({ status }: { status: IngestStatus }) {
 export function RoleChip({ role }: { role: CourseRole }) {
   return (
     <span data-testid="course-role" data-role={role}>
-      <Chip tone={roleTone(role)} icon={role === 'owner' ? 'user' : role === 'squad' ? 'users' : 'book'}>
+      <Chip
+        tone={roleTone(role)}
+        icon={role === 'owner' ? 'user' : role === 'squad' ? 'users' : 'book'}
+      >
         {roleLabel(role)}
       </Chip>
     </span>

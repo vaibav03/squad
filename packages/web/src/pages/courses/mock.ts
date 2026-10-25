@@ -89,7 +89,6 @@ export function createMockApi(opts: MockOptions = {}): LibraryApi & { dispose: (
     throw new HubError('not_found', 404);
   };
   const refresh = (c: CourseDetail): void => {
-    c.files.forEach((f) => (f.pages = f.pages));
     c.fileCount = c.files.length;
     c.pageCount = c.files.reduce((a, f) => a + (f.status === 'ready' ? (f.pages ?? 0) : 0), 0);
     c.status = deriveCourseStatus(c.files);

@@ -165,7 +165,12 @@ export function UploadRow({
       data-code={item.code}
     >
       <span className="cr-file__icon" aria-hidden="true">
-        <Icon name={item.state === 'uploading' ? 'upload' : item.state === 'duplicate' ? 'info' : 'alert'} size={18} />
+        <Icon
+          name={
+            item.state === 'uploading' ? 'upload' : item.state === 'duplicate' ? 'info' : 'alert'
+          }
+          size={18}
+        />
       </span>
       <div className="cr-file__main">
         <p className="cr-file__name">{item.name}</p>
@@ -209,11 +214,18 @@ export function UploadRow({
         )}
       </div>
       <div className="cr-file__actions">
-        {item.state === 'error' && item.code !== 'unsupported_type' && item.code !== 'too_large' && (
-          <Button variant="secondary" iconStart="arrow-right" onClick={onRetry} data-testid="upload-retry">
-            Retry
-          </Button>
-        )}
+        {item.state === 'error' &&
+          item.code !== 'unsupported_type' &&
+          item.code !== 'too_large' && (
+            <Button
+              variant="secondary"
+              iconStart="arrow-right"
+              onClick={onRetry}
+              data-testid="upload-retry"
+            >
+              Retry
+            </Button>
+          )}
         <Button variant="ghost" onClick={onDismiss} data-testid="upload-dismiss">
           {item.state === 'uploading' ? 'Cancel' : 'Dismiss'}
         </Button>
@@ -280,7 +292,12 @@ export function FileItem({
           </div>
         )}
         {failed && (
-          <p className="cr-file__err" role="alert" data-testid="file-error" data-code={file.error?.code}>
+          <p
+            className="cr-file__err"
+            role="alert"
+            data-testid="file-error"
+            data-code={file.error?.code}
+          >
             <Icon name="alert" size={16} />
             <span>{errorMessage(file.error?.code, file.error?.message)}</span>
           </p>
@@ -291,7 +308,12 @@ export function FileItem({
         {canEdit && !confirming && (
           <div className="cr-file__actions">
             {failed && (
-              <Button variant="secondary" iconStart="arrow-right" onClick={onRetry} data-testid="file-retry">
+              <Button
+                variant="secondary"
+                iconStart="arrow-right"
+                onClick={onRetry}
+                data-testid="file-retry"
+              >
                 Retry
               </Button>
             )}
@@ -374,7 +396,9 @@ export function FilesPanel({
       {canEdit ? (
         <DropZone limits={limits} onFiles={onAdd} />
       ) : (
-        <Notice tone="info">You can read these files but only the person who added them can change them.</Notice>
+        <Notice tone="info">
+          You can read these files but only the person who added them can change them.
+        </Notice>
       )}
       <p className="cr-vh" role="status" aria-live="polite" data-testid="files-live">
         {liveMsg}
