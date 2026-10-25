@@ -1,8 +1,8 @@
 import type Phaser from 'phaser';
 
-export const CHAR_ATLAS = 'characters';
+export const CHAR_ATLAS = 'atlas.characters';
 const RATES: Record<string, number> = { idle: 2, walk: 8, talk: 8, sit: 2, wave: 4 };
-export const WALK_FPS = 14; // student walk plays faster than the 8 fps atlas default so ground speed (3 px/frame stride) stays brisk
+export const WALK_FPS = 12; // 3 px planted-foot stride per frame x 12 fps = 36 px/s: no foot sliding (design handoff)
 
 /** Creates `<cast>-<anim>` animations (e.g. 'student-walk') for every group in the composed character atlas. Idempotent. Shared with NPC code. */
 export function ensureCharacterAnims(scene: Phaser.Scene, atlasKey = CHAR_ATLAS): void {
@@ -19,10 +19,20 @@ export function ensureCharacterAnims(scene: Phaser.Scene, atlasKey = CHAR_ATLAS)
     if (scene.anims.exists(key)) continue;
     frames.sort((a, b) => Number(a.split('/').pop()) - Number(b.split('/').pop()));
     const rate = RATES[key.split('-').pop()!] ?? 8;
-    scene.anims.create({ key, frames: frames.map((f) => ({ key: atlasKey, frame: f })), frameRate: rate, repeat: -1 });
+    scene.anims.create({
+      key,
+      frames: frames.map((f) => ({ key: atlasKey, frame: f })),
+      frameRate: rate,
+      repeat: -1,
+    });
   }
   const walk = scene.anims.get('student-walk');
   if (walk && !scene.anims.exists('student-walk-fast')) {
-    scene.anims.create({ key: 'student-walk-fast', frames: walk.frames.map((f) => ({ key: atlasKey, frame: f.textureFrame })), frameRate: WALK_FPS, repeat: -1 });
+    scene.anims.create({
+      key: 'student-walk-fast',
+      frames: walk.frames.map((f) => ({ key: atlasKey, frame: f.textureFrame })),
+      frameRate: WALK_FPS,
+      repeat: -1,
+    });
   }
 }

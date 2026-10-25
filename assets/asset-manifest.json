@@ -1,0 +1,5310 @@
+{
+ "version": 1,
+ "generator": "assets/pixel/composed/scripts/build_manifest.py",
+ "palette": {
+  "ink": "#070f1f",
+  "sky-deep": "#0b1d38",
+  "sky-mid": "#0a3a63",
+  "sky-low": "#0c6e9e",
+  "cloud-lo": "#6fa3b8",
+  "cloud-hi": "#b4d6da",
+  "moon": "#fff2c4",
+  "hill-far": "#4a7695",
+  "hill-mid": "#2f5f84",
+  "hill-near": "#1c4466",
+  "ground": "#122b3f",
+  "leaf-dark": "#0d3a4f",
+  "leaf-lit": "#22808a",
+  "wall-lit": "#c9d4e4",
+  "wall-mid": "#8c9bb8",
+  "wall-shade": "#56648a",
+  "roof-wine": "#7a3552",
+  "roof-shade": "#4a2440",
+  "wood-lit": "#b07a52",
+  "wood": "#6e4a3c",
+  "wood-dark": "#3a2634",
+  "glow-core": "#fff0a8",
+  "glow": "#ffc857",
+  "ember": "#f08a3a",
+  "alert": "#e0485a",
+  "ok": "#5fcf8a",
+  "skin-lt": "#f3cfae",
+  "violet": "#8f7bff"
+ },
+ "scale": {
+  "nativeTile": 16,
+  "charCell": 32,
+  "zoomDesktop": 3,
+  "zoomPhone": 2
+ },
+ "viewport": {
+  "desktopNative": [
+   427,
+   240
+  ],
+  "phoneNative": "195 x (screenHeightPx / 2)",
+  "worldHeight": 270,
+  "groundLineY": 240,
+  "note": "All art is placed at 1x in a native-resolution canvas; CSS/canvas upscales by integer zoom (3 desktop, 2 phone). Camera scrollY = 30 so the view spans world y 30..270 and the ground band sits at the bottom of the screen."
+ },
+ "licenses": {
+  "ORIG": "original, CC0-dedicated by Squad",
+  "ORIG*": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+  "AT": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+  "CC0-NA": "CC0 1.0 (Ninja Adventure, Pixel-boy and AAA), requantized to Squad palette"
+ },
+ "assets": [
+  {
+   "id": "house.tenement",
+   "group": "building",
+   "need": "chapter house: tenement shape (tallest silhouette)",
+   "file": "assets/pixel/composed/buildings/houses/house_tenement_lit.png",
+   "kind": "image",
+   "size": [
+    160,
+    232
+   ],
+   "anchor": [
+    80,
+    231
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "lit": "assets/pixel/composed/buildings/houses/house_tenement_lit.png",
+    "dark": "assets/pixel/composed/buildings/houses/house_tenement_dark.png"
+   },
+   "depthHint": "buildings",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (10, 10, 170, 231), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+   "notes": "lit = occupied/active chapter (warm windows), dark = idle chapter. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "house.shop",
+   "group": "building",
+   "need": "chapter house: shop shape",
+   "file": "assets/pixel/composed/buildings/houses/house_shop_lit.png",
+   "kind": "image",
+   "size": [
+    198,
+    183
+   ],
+   "anchor": [
+    99,
+    182
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "lit": "assets/pixel/composed/buildings/houses/house_shop_lit.png",
+    "dark": "assets/pixel/composed/buildings/houses/house_shop_dark.png"
+   },
+   "depthHint": "buildings",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (184, 59, 382, 231), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+   "notes": "lit = occupied/active chapter (warm windows), dark = idle chapter. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "house.hut",
+   "group": "building",
+   "need": "chapter house: hut shape (smallest, only one <=135px)",
+   "file": "assets/pixel/composed/buildings/houses/house_hut_lit.png",
+   "kind": "image",
+   "size": [
+    128,
+    133
+   ],
+   "anchor": [
+    64,
+    132
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "lit": "assets/pixel/composed/buildings/houses/house_hut_lit.png",
+    "dark": "assets/pixel/composed/buildings/houses/house_hut_dark.png"
+   },
+   "depthHint": "buildings",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (397, 98, 525, 231), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+   "notes": "lit = occupied/active chapter (warm windows), dark = idle chapter. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "house.cottage",
+   "group": "building",
+   "need": "chapter house: cottage shape",
+   "file": "assets/pixel/composed/buildings/houses/house_cottage_lit.png",
+   "kind": "image",
+   "size": [
+    236,
+    162
+   ],
+   "anchor": [
+    118,
+    161
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "lit": "assets/pixel/composed/buildings/houses/house_cottage_lit.png",
+    "dark": "assets/pixel/composed/buildings/houses/house_cottage_dark.png"
+   },
+   "depthHint": "buildings",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (13, 347, 249, 508), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+   "notes": "lit = occupied/active chapter (warm windows), dark = idle chapter. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "house.brick",
+   "group": "building",
+   "need": "chapter house: brick shape",
+   "file": "assets/pixel/composed/buildings/houses/house_brick_lit.png",
+   "kind": "image",
+   "size": [
+    194,
+    172
+   ],
+   "anchor": [
+    97,
+    171
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "lit": "assets/pixel/composed/buildings/houses/house_brick_lit.png",
+    "dark": "assets/pixel/composed/buildings/houses/house_brick_dark.png"
+   },
+   "depthHint": "buildings",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (cut-out box (268, 342, 462, 509), re-graded by hand-tuned night ramp, windows/chimney/sign plank added)",
+   "notes": "lit = occupied/active chapter (warm windows), dark = idle chapter. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "house.signboard",
+   "group": "building",
+   "need": "hanging sign plank for chapter houses (text drawn at runtime)",
+   "file": "assets/pixel/composed/buildings/houses/signboard_empty.png",
+   "kind": "image",
+   "size": [
+    32,
+    14
+   ],
+   "anchor": [
+    16,
+    13
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "buildings",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled (this project)",
+   "notes": "32x14 plank; flat text region x2..29,y6..12 (own art, not trimmed). Anchor is the BOTTOM row, so place it by its bottom-centre.",
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.council-hall",
+   "group": "landmark",
+   "need": "council hall exterior",
+   "file": "assets/pixel/composed/buildings/landmarks/council_hall.png",
+   "kind": "image",
+   "size": [
+    139,
+    124
+   ],
+   "anchor": [
+    69,
+    123
+   ],
+   "originFrac": [
+    0.4964,
+    1.0
+   ],
+   "variants": {
+    "active": "assets/pixel/composed/buildings/landmarks/council_hall.png",
+    "locked": "assets/pixel/composed/buildings/landmarks/council_hall_locked.png"
+   },
+   "depthHint": "buildings",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "hand-pixeled landmark composed in Autumn Town style",
+   "notes": "locked variant has identical size/anchor (dark windows, desaturated). Overlay ui.padlock on the door. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.debate-stage",
+   "group": "landmark",
+   "need": "debate stage",
+   "file": "assets/pixel/composed/buildings/landmarks/debate_stage.png",
+   "kind": "image",
+   "size": [
+    197,
+    145
+   ],
+   "anchor": [
+    98,
+    144
+   ],
+   "originFrac": [
+    0.4975,
+    1.0
+   ],
+   "variants": {
+    "active": "assets/pixel/composed/buildings/landmarks/debate_stage.png",
+    "locked": "assets/pixel/composed/buildings/landmarks/debate_stage_locked.png"
+   },
+   "depthHint": "buildings",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (stage with curtains, night re-grade) + hand-pixeled lecterns/bunting/banner",
+   "notes": "locked variant has identical size/anchor (dark windows, desaturated). Overlay ui.padlock on the door. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.round-table-pavilion",
+   "group": "landmark",
+   "need": "round table pavilion",
+   "file": "assets/pixel/composed/buildings/landmarks/round_table_pavilion.png",
+   "kind": "image",
+   "size": [
+    124,
+    94
+   ],
+   "anchor": [
+    62,
+    93
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "active": "assets/pixel/composed/buildings/landmarks/round_table_pavilion.png",
+    "locked": "assets/pixel/composed/buildings/landmarks/round_table_pavilion_locked.png"
+   },
+   "depthHint": "buildings",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "hand-pixeled landmark composed in Autumn Town style",
+   "notes": "locked variant has identical size/anchor (dark windows, desaturated). Overlay ui.padlock on the door. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.feynman-porch",
+   "group": "landmark",
+   "need": "Feynman porch",
+   "file": "assets/pixel/composed/buildings/landmarks/feynman_porch.png",
+   "kind": "image",
+   "size": [
+    114,
+    91
+   ],
+   "anchor": [
+    57,
+    90
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "active": "assets/pixel/composed/buildings/landmarks/feynman_porch.png",
+    "locked": "assets/pixel/composed/buildings/landmarks/feynman_porch_locked.png"
+   },
+   "depthHint": "buildings",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "hand-pixeled landmark composed in Autumn Town style",
+   "notes": "locked variant has identical size/anchor (dark windows, desaturated). Overlay ui.padlock on the door. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.oral-exam-hut",
+   "group": "landmark",
+   "need": "oral exam hut",
+   "file": "assets/pixel/composed/buildings/landmarks/oral_exam_hut.png",
+   "kind": "image",
+   "size": [
+    73,
+    77
+   ],
+   "anchor": [
+    36,
+    76
+   ],
+   "originFrac": [
+    0.4932,
+    1.0
+   ],
+   "variants": {
+    "active": "assets/pixel/composed/buildings/landmarks/oral_exam_hut.png",
+    "locked": "assets/pixel/composed/buildings/landmarks/oral_exam_hut_locked.png"
+   },
+   "depthHint": "buildings",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "hand-pixeled landmark composed in Autumn Town style",
+   "notes": "locked variant has identical size/anchor (dark windows, desaturated). Overlay ui.padlock on the door. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.rubric-courthouse",
+   "group": "landmark",
+   "need": "rubric courthouse",
+   "file": "assets/pixel/composed/buildings/landmarks/rubric_courthouse.png",
+   "kind": "image",
+   "size": [
+    123,
+    101
+   ],
+   "anchor": [
+    61,
+    100
+   ],
+   "originFrac": [
+    0.4959,
+    1.0
+   ],
+   "variants": {
+    "active": "assets/pixel/composed/buildings/landmarks/rubric_courthouse.png",
+    "locked": "assets/pixel/composed/buildings/landmarks/rubric_courthouse_locked.png"
+   },
+   "depthHint": "buildings",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "hand-pixeled landmark composed in Autumn Town style",
+   "notes": "locked variant has identical size/anchor (dark windows, desaturated). Overlay ui.padlock on the door. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.exam-oracle",
+   "group": "landmark",
+   "need": "exam oracle tower",
+   "file": "assets/pixel/composed/buildings/landmarks/exam_oracle.png",
+   "kind": "image",
+   "size": [
+    63,
+    131
+   ],
+   "anchor": [
+    31,
+    130
+   ],
+   "originFrac": [
+    0.4921,
+    1.0
+   ],
+   "variants": {
+    "active": "assets/pixel/composed/buildings/landmarks/exam_oracle.png",
+    "locked": "assets/pixel/composed/buildings/landmarks/exam_oracle_locked.png"
+   },
+   "depthHint": "buildings",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "hand-pixeled landmark composed in Autumn Town style",
+   "notes": "locked variant has identical size/anchor (dark windows, desaturated). Overlay ui.padlock on the door. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.devils-ta-cave",
+   "group": "landmark",
+   "need": "devil's TA cave",
+   "file": "assets/pixel/composed/buildings/landmarks/devils_ta_cave.png",
+   "kind": "image",
+   "size": [
+    134,
+    97
+   ],
+   "anchor": [
+    67,
+    96
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "active": "assets/pixel/composed/buildings/landmarks/devils_ta_cave.png",
+    "locked": "assets/pixel/composed/buildings/landmarks/devils_ta_cave_locked.png"
+   },
+   "depthHint": "buildings",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_ForestDay.png (cave rock) + hand-pixeled mouth, chalkboard, glints",
+   "notes": "locked variant has identical size/anchor (dark windows, desaturated). Overlay ui.padlock on the door. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.classroom-house",
+   "group": "landmark",
+   "need": "classroom house",
+   "file": "assets/pixel/composed/buildings/landmarks/classroom_house.png",
+   "kind": "image",
+   "size": [
+    113,
+    110
+   ],
+   "anchor": [
+    56,
+    109
+   ],
+   "originFrac": [
+    0.4956,
+    1.0
+   ],
+   "variants": {
+    "active": "assets/pixel/composed/buildings/landmarks/classroom_house.png",
+    "locked": "assets/pixel/composed/buildings/landmarks/classroom_house_locked.png"
+   },
+   "depthHint": "buildings",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "hand-pixeled landmark composed in Autumn Town style",
+   "notes": "locked variant has identical size/anchor (dark windows, desaturated). Overlay ui.padlock on the door. Door/window/sign/chimney meta in assets/pixel/composed/buildings/provenance.json is in pre-trim canvas space and is NOT published here; only sprite size + anchor are authoritative. Re-measure on the trimmed PNG before attaching smoke, signs or door triggers.",
+   "meta_coords_stale": true,
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.panic-booth",
+   "group": "landmark",
+   "need": "panic booth (2am glow state)",
+   "file": "assets/pixel/composed/buildings/landmarks/panic_booth_off.png",
+   "kind": "image",
+   "size": [
+    28,
+    60
+   ],
+   "anchor": [
+    14,
+    59
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "off": "assets/pixel/composed/buildings/landmarks/panic_booth_off.png",
+    "glow": "assets/pixel/composed/buildings/landmarks/panic_booth_glow.png",
+    "locked": "assets/pixel/composed/buildings/landmarks/panic_booth_locked.png"
+   },
+   "depthHint": "buildings",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled landmark",
+   "notes": "glow variant is 33x60 (wider: halo dither) with its own anchor [16, 59]; off/locked are 28x60 anchor [14, 59]. Swap texture AND origin when toggling.",
+   "meta_coords_stale": true,
+   "glowAnchor": [
+    16,
+    59
+   ],
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.padlock-8x8",
+   "group": "landmark",
+   "need": "padlock overlay centred on a locked landmark door",
+   "file": "assets/pixel/composed/buildings/landmarks/padlock_8x8.png",
+   "kind": "image",
+   "size": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    7
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "duplicate of ui.padlock; prefer ui.padlock.",
+   "depthZ": 60
+  },
+  {
+   "id": "landmark.windmill",
+   "group": "landmark",
+   "need": "windmill (tower body, no sails)",
+   "file": "assets/pixel/composed/buildings/windmill/windmill_lit.png",
+   "kind": "image",
+   "size": [
+    42,
+    84
+   ],
+   "anchor": [
+    21,
+    83
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "lit": "assets/pixel/composed/buildings/windmill/windmill_lit.png",
+    "dark": "assets/pixel/composed/buildings/windmill/windmill_dark.png"
+   },
+   "depthHint": "buildings",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled (this project); 128px vector windmill rejected: isometric, does not match side-view scale",
+   "notes": "hub (sail pivot) = [21,25] from sprite top-left; verified by eye on the lit PNG. 84px tall tower; windmill is a backdrop/landmark, not a foreground house.",
+   "hub": [
+    21,
+    25
+   ],
+   "depthZ": 20
+  },
+  {
+   "id": "landmark.windmill.sails",
+   "group": "landmark",
+   "need": "windmill sail rotation strip",
+   "file": "assets/pixel/composed/buildings/windmill/windmill_sails_strip.png",
+   "kind": "spritesheet",
+   "size": [
+    576,
+    72
+   ],
+   "frame": {
+    "w": 72,
+    "h": 72,
+    "count": 8
+   },
+   "anchor": [
+    36,
+    36
+   ],
+   "originFrac": [
+    0.5,
+    0.5
+   ],
+   "depthHint": "buildings",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled (rasterised procedurally, palette only)",
+   "notes": "8 frames x 11.25deg = one 90deg cycle (4-fold symmetric). Put pivot [36,36] on windmill hub: sailsX = windmillX + (hub.x - anchor.x) = windmillX + 0, sailsY = windmillY - (anchor.y - hub.y) = windmillY - 58 (windmill anchor [21,83], hub [21,25]); sails origin = their pivot (0.5,0.5). Loop frames 0..7 at 6-10 fps.",
+   "base_angle_deg": 22.5,
+   "cycle_deg": 90,
+   "depthZ": 20
+  },
+  {
+   "id": "prop.lamp-post-tall-lit",
+   "group": "prop",
+   "need": "tall street lamp (lit only; larger than prop.lamp-post)",
+   "file": "assets/pixel/composed/buildings/props/lamp_post_lit.png",
+   "kind": "image",
+   "size": [
+    23,
+    95
+   ],
+   "anchor": [
+    11,
+    94
+   ],
+   "originFrac": [
+    0.4783,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownDay.png (lamp post box 396,236,419,331) night re-graded",
+   "notes": "23x95. No unlit twin. Prefer prop.lamp-post (24x64) at human scale; this one is kept for a tall boulevard lamp at council hall.",
+   "depthZ": 10
+  },
+  {
+   "id": "interior.study",
+   "group": "interior",
+   "need": "student study / chapter house interior",
+   "file": "assets/pixel/composed/buildings/interiors/interior_study.png",
+   "kind": "image",
+   "size": [
+    224,
+    128
+   ],
+   "anchor": [
+    112,
+    112
+   ],
+   "originFrac": [
+    0.5,
+    0.875
+   ],
+   "depthHint": "interior",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "hand-pixeled interior composed in Autumn Town style",
+   "notes": "224x128 untrimmed fixed canvas; floor line y=112 (anchor is floor-centre). Anchors (px from top-left): {\"desk\": [164, 112], \"lamp\": [143, 72], \"chair\": [111, 112], \"window\": [167, 39], \"floor_y\": 112}",
+   "floorY": 112,
+   "anchors": {
+    "desk": [
+     164,
+     112
+    ],
+    "lamp": [
+     143,
+     72
+    ],
+    "chair": [
+     111,
+     112
+    ],
+    "window": [
+     167,
+     39
+    ],
+    "floor_y": 112
+   },
+   "depthZ": 0
+  },
+  {
+   "id": "interior.classroom",
+   "group": "interior",
+   "need": "classroom house interior",
+   "file": "assets/pixel/composed/buildings/interiors/interior_classroom.png",
+   "kind": "image",
+   "size": [
+    224,
+    128
+   ],
+   "anchor": [
+    112,
+    112
+   ],
+   "originFrac": [
+    0.5,
+    0.875
+   ],
+   "depthHint": "interior",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "hand-pixeled interior composed in Autumn Town style",
+   "notes": "224x128 untrimmed fixed canvas; floor line y=112 (anchor is floor-centre). Anchors (px from top-left): {\"chalkboard_center\": [112, 41], \"expert_desk\": [170, 112], \"student_desk\": [48, 112], \"lamp\": [112, 40], \"floor_y\": 112}",
+   "floorY": 112,
+   "anchors": {
+    "chalkboard_center": [
+     112,
+     41
+    ],
+    "expert_desk": [
+     170,
+     112
+    ],
+    "student_desk": [
+     48,
+     112
+    ],
+    "lamp": [
+     112,
+     40
+    ],
+    "floor_y": 112
+   },
+   "depthZ": 0
+  },
+  {
+   "id": "interior.council",
+   "group": "interior",
+   "need": "council hall interior",
+   "file": "assets/pixel/composed/buildings/interiors/interior_council.png",
+   "kind": "image",
+   "size": [
+    224,
+    128
+   ],
+   "anchor": [
+    112,
+    112
+   ],
+   "originFrac": [
+    0.5,
+    0.875
+   ],
+   "depthHint": "interior",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "hand-pixeled interior composed in Autumn Town style",
+   "notes": "224x128 untrimmed fixed canvas; floor line y=112 (anchor is floor-centre). Anchors (px from top-left): {\"seats\": {\"chairman\": [112, 89], \"council_left\": [50, 103], \"council_right\": [174, 103], \"council_front\": [112, 121]}, \"lantern_slot\": [112, 13], \"table_center\": [112, 85], \"floor_y\": 112}",
+   "floorY": 112,
+   "anchors": {
+    "seats": {
+     "chairman": [
+      112,
+      89
+     ],
+     "council_left": [
+      50,
+      103
+     ],
+     "council_right": [
+      174,
+      103
+     ],
+     "council_front": [
+      112,
+      121
+     ]
+    },
+    "lantern_slot": [
+     112,
+     13
+    ],
+    "table_center": [
+     112,
+     85
+    ],
+    "floor_y": 112
+   },
+   "depthZ": 0
+  },
+  {
+   "id": "interior.oral-exam",
+   "group": "interior",
+   "need": "oral exam hut interior",
+   "file": "assets/pixel/composed/buildings/interiors/interior_oral_exam.png",
+   "kind": "image",
+   "size": [
+    224,
+    128
+   ],
+   "anchor": [
+    112,
+    112
+   ],
+   "originFrac": [
+    0.5,
+    0.875
+   ],
+   "depthHint": "interior",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "hand-pixeled interior composed in Autumn Town style",
+   "notes": "224x128 untrimmed fixed canvas; floor line y=112 (anchor is floor-centre). Anchors (px from top-left): {\"chair\": [102, 100], \"lamp\": [104, 30], \"floor_y\": 112}",
+   "floorY": 112,
+   "anchors": {
+    "chair": [
+     102,
+     100
+    ],
+    "lamp": [
+     104,
+     30
+    ],
+    "floor_y": 112
+   },
+   "depthZ": 0
+  },
+  {
+   "id": "atlas.characters",
+   "group": "persona",
+   "need": "all 11 cast members, 5 animations + portrait each (single texture atlas)",
+   "file": "assets/pixel/composed/characters/atlas.png",
+   "kind": "atlas",
+   "size": [
+    416,
+    352
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 143
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "characters/atlas.png + atlas.json packed by make_characters.py",
+   "notes": "Frame keys \"<persona>/<anim>/<n>\" and \"<persona>/portrait\"; atlas.json also carries Phaser `animations` with frameRate/repeat. All frames 32x32, pivot (0.5,1.0). Art faces RIGHT: flipX for left. Walk: planted foot moves 3px/frame so ground speed = 3*fps = 24 px/s at 8 fps.",
+   "atlasJson": "assets/pixel/composed/characters/atlas.json",
+   "facing": "right",
+   "frameCount": 143,
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "walkStridePxPerFrame": 3,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.student",
+   "group": "persona",
+   "need": "persona: student (player)",
+   "file": "assets/pixel/composed/characters/student/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/student/walk.png",
+    "idle": "assets/pixel/composed/characters/student/idle.png",
+    "talk": "assets/pixel/composed/characters/student/talk.png",
+    "sit": "assets/pixel/composed/characters/student/sit.png",
+    "wave": "assets/pixel/composed/characters/student/wave.png",
+    "portrait": "assets/pixel/composed/characters/student/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"student/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=player; palette skin=wood-lit hair=wood outfit=roof-wine. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.dean",
+   "group": "persona",
+   "need": "persona: dean",
+   "file": "assets/pixel/composed/characters/dean/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/dean/walk.png",
+    "idle": "assets/pixel/composed/characters/dean/idle.png",
+    "talk": "assets/pixel/composed/characters/dean/talk.png",
+    "sit": "assets/pixel/composed/characters/dean/sit.png",
+    "wave": "assets/pixel/composed/characters/dean/wave.png",
+    "portrait": "assets/pixel/composed/characters/dean/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"dean/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=dean; palette skin=skin-lt hair=wall-mid outfit=wood-lit. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.expert",
+   "group": "persona",
+   "need": "persona: chapter expert",
+   "file": "assets/pixel/composed/characters/expert/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/expert/walk.png",
+    "idle": "assets/pixel/composed/characters/expert/idle.png",
+    "talk": "assets/pixel/composed/characters/expert/talk.png",
+    "sit": "assets/pixel/composed/characters/expert/sit.png",
+    "wave": "assets/pixel/composed/characters/expert/wave.png",
+    "portrait": "assets/pixel/composed/characters/expert/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"expert/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=chapter expert; palette skin=wood hair=wood-dark outfit=hill-far. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.council-chill",
+   "group": "persona",
+   "need": "persona: council member (chill)",
+   "file": "assets/pixel/composed/characters/council-chill/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/council-chill/walk.png",
+    "idle": "assets/pixel/composed/characters/council-chill/idle.png",
+    "talk": "assets/pixel/composed/characters/council-chill/talk.png",
+    "sit": "assets/pixel/composed/characters/council-chill/sit.png",
+    "wave": "assets/pixel/composed/characters/council-chill/wave.png",
+    "portrait": "assets/pixel/composed/characters/council-chill/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"council-chill/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=council member (chill); palette skin=skin-lt hair=wood-dark outfit=wall-mid. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.council-hard",
+   "group": "persona",
+   "need": "persona: council member (hard)",
+   "file": "assets/pixel/composed/characters/council-hard/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/council-hard/walk.png",
+    "idle": "assets/pixel/composed/characters/council-hard/idle.png",
+    "talk": "assets/pixel/composed/characters/council-hard/talk.png",
+    "sit": "assets/pixel/composed/characters/council-hard/sit.png",
+    "wave": "assets/pixel/composed/characters/council-hard/wave.png",
+    "portrait": "assets/pixel/composed/characters/council-hard/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"council-hard/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=council member (hard); palette skin=wood-lit hair=wood-dark outfit=roof-shade. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.council-balance",
+   "group": "persona",
+   "need": "persona: council member (balance)",
+   "file": "assets/pixel/composed/characters/council-balance/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/council-balance/walk.png",
+    "idle": "assets/pixel/composed/characters/council-balance/idle.png",
+    "talk": "assets/pixel/composed/characters/council-balance/talk.png",
+    "sit": "assets/pixel/composed/characters/council-balance/sit.png",
+    "wave": "assets/pixel/composed/characters/council-balance/wave.png",
+    "portrait": "assets/pixel/composed/characters/council-balance/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"council-balance/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=council member (balance); palette skin=wood hair=wall-lit outfit=leaf-lit. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.chairman",
+   "group": "persona",
+   "need": "persona: chairman",
+   "file": "assets/pixel/composed/characters/chairman/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/chairman/walk.png",
+    "idle": "assets/pixel/composed/characters/chairman/idle.png",
+    "talk": "assets/pixel/composed/characters/chairman/talk.png",
+    "sit": "assets/pixel/composed/characters/chairman/sit.png",
+    "wave": "assets/pixel/composed/characters/chairman/wave.png",
+    "portrait": "assets/pixel/composed/characters/chairman/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"chairman/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=chairman; palette skin=skin-lt hair=cloud-hi outfit=sky-mid. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.examiner",
+   "group": "persona",
+   "need": "persona: examiner",
+   "file": "assets/pixel/composed/characters/examiner/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/examiner/walk.png",
+    "idle": "assets/pixel/composed/characters/examiner/idle.png",
+    "talk": "assets/pixel/composed/characters/examiner/talk.png",
+    "sit": "assets/pixel/composed/characters/examiner/sit.png",
+    "wave": "assets/pixel/composed/characters/examiner/wave.png",
+    "portrait": "assets/pixel/composed/characters/examiner/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"examiner/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=examiner; palette skin=wood-lit hair=wood-dark outfit=hill-near. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.freshman",
+   "group": "npc",
+   "need": "persona: freshman (NPC)",
+   "file": "assets/pixel/composed/characters/freshman/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/freshman/walk.png",
+    "idle": "assets/pixel/composed/characters/freshman/idle.png",
+    "talk": "assets/pixel/composed/characters/freshman/talk.png",
+    "sit": "assets/pixel/composed/characters/freshman/sit.png",
+    "wave": "assets/pixel/composed/characters/freshman/wave.png",
+    "portrait": "assets/pixel/composed/characters/freshman/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"freshman/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=freshman NPC; palette skin=skin-lt hair=glow outfit=ok. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.mediator",
+   "group": "persona",
+   "need": "persona: mediator",
+   "file": "assets/pixel/composed/characters/mediator/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/mediator/walk.png",
+    "idle": "assets/pixel/composed/characters/mediator/idle.png",
+    "talk": "assets/pixel/composed/characters/mediator/talk.png",
+    "sit": "assets/pixel/composed/characters/mediator/sit.png",
+    "wave": "assets/pixel/composed/characters/mediator/wave.png",
+    "portrait": "assets/pixel/composed/characters/mediator/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"mediator/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=mediator; palette skin=wood hair=wood-dark outfit=wall-lit. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.ta",
+   "group": "persona",
+   "need": "persona: teaching assistant",
+   "file": "assets/pixel/composed/characters/ta/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/ta/walk.png",
+    "idle": "assets/pixel/composed/characters/ta/idle.png",
+    "talk": "assets/pixel/composed/characters/ta/talk.png",
+    "sit": "assets/pixel/composed/characters/ta/sit.png",
+    "wave": "assets/pixel/composed/characters/ta/wave.png",
+    "portrait": "assets/pixel/composed/characters/ta/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"ta/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=teaching assistant; palette skin=wood-lit hair=wood-dark outfit=ember. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": 2,
+     "fps": 2
+    },
+    "walk": {
+     "frames": 4,
+     "fps": 8
+    },
+    "talk": {
+     "frames": 2,
+     "fps": 8
+    },
+    "sit": {
+     "frames": 2,
+     "fps": 2
+    },
+    "wave": {
+     "frames": 2,
+     "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "parallax.0_sky",
+   "group": "parallax",
+   "need": "sky gradient (night)",
+   "file": "assets/pixel/composed/backgrounds/0_sky.png",
+   "kind": "tile",
+   "size": [
+    16,
+    270
+   ],
+   "variants": {
+    "dusk": "assets/pixel/composed/backgrounds/0_sky_dusk.png",
+    "dawn": "assets/pixel/composed/backgrounds/0_sky_dawn.png",
+    "day": "assets/pixel/composed/backgrounds/0_sky_day.png"
+   },
+   "scrollFactor": 0,
+   "depthHint": "sky",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py (procedural, palette-only)",
+   "notes": "banded 2px-dither 16x270 column: stretch/tile across the viewport width (tileSprite, scrollFactor 0). Variants are time-of-day skies of identical size.",
+   "groundLineY": 240,
+   "tileX": true,
+   "depthZ": 0
+  },
+  {
+   "id": "parallax.1_stars",
+   "group": "parallax",
+   "need": "star field",
+   "file": "assets/pixel/composed/backgrounds/1_stars.png",
+   "kind": "tile",
+   "size": [
+    480,
+    270
+   ],
+   "variants": {
+    "twinkle_0": "assets/pixel/composed/backgrounds/1_stars_twinkle_0.png",
+    "twinkle_1": "assets/pixel/composed/backgrounds/1_stars_twinkle_1.png",
+    "twinkle_2": "assets/pixel/composed/backgrounds/1_stars_twinkle_2.png",
+    "twinkle_3": "assets/pixel/composed/backgrounds/1_stars_twinkle_3.png",
+    "twinkle_mask": "assets/pixel/composed/backgrounds/1_stars_twinkle_mask.png"
+   },
+   "scrollFactor": 0.02,
+   "depthHint": "sky",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py (procedural, palette-only)",
+   "notes": "static star field; cycle the 4 twinkle frames (~400 ms each) as a second tileSprite on top, or tween alpha. twinkle_mask marks the animated pixels.",
+   "groundLineY": 240,
+   "twinkleMsPerFrame": 400,
+   "depthZ": 0
+  },
+  {
+   "id": "parallax.2_moon",
+   "group": "parallax",
+   "need": "crescent moon with halo",
+   "file": "assets/pixel/composed/backgrounds/2_moon.png",
+   "kind": "tile",
+   "size": [
+    80,
+    80
+   ],
+   "anchor": [
+    40,
+    40
+   ],
+   "originFrac": [
+    0.5,
+    0.5
+   ],
+   "scrollFactor": 0.02,
+   "depthHint": "sky",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py (procedural, palette-only)",
+   "notes": "crescent 29px, halo r=33, origin (0.5,0.5); suggested screen position (86,56) of a 427x240 view",
+   "groundLineY": 240,
+   "depthZ": 0
+  },
+  {
+   "id": "parallax.3_clouds_far",
+   "group": "parallax",
+   "need": "far clouds",
+   "file": "assets/pixel/composed/backgrounds/3_clouds_far.png",
+   "kind": "tile",
+   "size": [
+    480,
+    270
+   ],
+   "scrollFactor": 0.1,
+   "depthHint": "clouds-far",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py (procedural, palette-only)",
+   "notes": "full 480x270 composed layer; individual cloud sprites are listed separately (parallax.cloud-*). Drift slowly +x (tile position or sprite tween) on top of the scrollFactor.",
+   "groundLineY": 240,
+   "depthZ": 3
+  },
+  {
+   "id": "parallax.4_clouds_near",
+   "group": "parallax",
+   "need": "near clouds",
+   "file": "assets/pixel/composed/backgrounds/4_clouds_near.png",
+   "kind": "tile",
+   "size": [
+    480,
+    270
+   ],
+   "scrollFactor": 0.2,
+   "depthHint": "clouds-near",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py (procedural, palette-only)",
+   "notes": "full 480x270 composed layer; individual cloud sprites are listed separately (parallax.cloud-*). Drift slowly +x (tile position or sprite tween) on top of the scrollFactor.",
+   "groundLineY": 240,
+   "depthZ": 4
+  },
+  {
+   "id": "parallax.5_hills_far",
+   "group": "parallax",
+   "need": "far pale hills",
+   "file": "assets/pixel/composed/backgrounds/5_hills_far.png",
+   "kind": "tile",
+   "size": [
+    480,
+    270
+   ],
+   "anchor": [
+    0,
+    269
+   ],
+   "originFrac": [
+    0.0,
+    1.0
+   ],
+   "scrollFactor": 0.3,
+   "depthHint": "hills",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py (procedural, palette-only)",
+   "notes": "bottom-anchored 480x270 tile, x-wraps seamlessly; origin (0,1) at world y=270.",
+   "groundLineY": 240,
+   "depthZ": 6
+  },
+  {
+   "id": "parallax.6_hills_mid",
+   "group": "parallax",
+   "need": "mid hills",
+   "file": "assets/pixel/composed/backgrounds/6_hills_mid.png",
+   "kind": "tile",
+   "size": [
+    480,
+    270
+   ],
+   "anchor": [
+    0,
+    269
+   ],
+   "originFrac": [
+    0.0,
+    1.0
+   ],
+   "scrollFactor": 0.45,
+   "depthHint": "hills",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py (procedural, palette-only)",
+   "notes": "bottom-anchored 480x270 tile, x-wraps seamlessly; origin (0,1) at world y=270.",
+   "groundLineY": 240,
+   "depthZ": 6
+  },
+  {
+   "id": "parallax.7_hills_near",
+   "group": "parallax",
+   "need": "near hills",
+   "file": "assets/pixel/composed/backgrounds/7_hills_near.png",
+   "kind": "tile",
+   "size": [
+    480,
+    270
+   ],
+   "anchor": [
+    0,
+    269
+   ],
+   "originFrac": [
+    0.0,
+    1.0
+   ],
+   "scrollFactor": 0.6,
+   "depthHint": "hills",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py (procedural, palette-only)",
+   "notes": "bottom-anchored 480x270 tile, x-wraps seamlessly; origin (0,1) at world y=270.",
+   "groundLineY": 240,
+   "depthZ": 6
+  },
+  {
+   "id": "parallax.8_fenceline",
+   "group": "parallax",
+   "need": "fence line + dark trees behind street",
+   "file": "assets/pixel/composed/backgrounds/8_fenceline.png",
+   "kind": "tile",
+   "size": [
+    480,
+    270
+   ],
+   "anchor": [
+    0,
+    269
+   ],
+   "originFrac": [
+    0.0,
+    1.0
+   ],
+   "scrollFactor": 0.9,
+   "depthHint": "fence",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py (procedural, palette-only)",
+   "notes": "posts stand on y=240 bottom-anchored 480x270 tile, x-wraps seamlessly; origin (0,1) at world y=270.",
+   "groundLineY": 240,
+   "depthZ": 8
+  },
+  {
+   "id": "parallax.9_ground",
+   "group": "parallax",
+   "need": "ground strip (street level)",
+   "file": "assets/pixel/composed/backgrounds/9_ground.png",
+   "kind": "tile",
+   "size": [
+    480,
+    30
+   ],
+   "anchor": [
+    0,
+    0
+   ],
+   "originFrac": [
+    0.0,
+    0.0
+   ],
+   "scrollFactor": 1.0,
+   "depthHint": "ground",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py (procedural, palette-only)",
+   "notes": "origin top-left at y=240 (top of the ground band). 480x30.",
+   "groundLineY": 240,
+   "depthZ": 9
+  },
+  {
+   "id": "parallax.10_foreground",
+   "group": "parallax",
+   "need": "foreground grass in front of actors",
+   "file": "assets/pixel/composed/backgrounds/10_foreground.png",
+   "kind": "tile",
+   "size": [
+    480,
+    270
+   ],
+   "anchor": [
+    0,
+    269
+   ],
+   "originFrac": [
+    0.0,
+    1.0
+   ],
+   "scrollFactor": 1.2,
+   "depthHint": "foreground",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py (procedural, palette-only)",
+   "notes": "bottom-anchored 480x270 tile, x-wraps seamlessly; origin (0,1) at world y=270.",
+   "groundLineY": 240,
+   "depthZ": 50
+  },
+  {
+   "id": "parallax.cloud-far-0",
+   "group": "parallax",
+   "need": "far cloud sprite 0 (free-floating drifters)",
+   "file": "assets/pixel/composed/backgrounds/clouds/far_0.png",
+   "kind": "image",
+   "size": [
+    42,
+    23
+   ],
+   "anchor": [
+    21,
+    11
+   ],
+   "originFrac": [
+    0.5,
+    0.4783
+   ],
+   "scrollFactor": 0.1,
+   "depthHint": "clouds-far",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py",
+   "notes": "outlined puffy cloud sprite; use for spawning drifting clouds.",
+   "depthZ": 3
+  },
+  {
+   "id": "parallax.cloud-far-1",
+   "group": "parallax",
+   "need": "far cloud sprite 1 (free-floating drifters)",
+   "file": "assets/pixel/composed/backgrounds/clouds/far_1.png",
+   "kind": "image",
+   "size": [
+    34,
+    20
+   ],
+   "anchor": [
+    17,
+    10
+   ],
+   "originFrac": [
+    0.5,
+    0.5
+   ],
+   "scrollFactor": 0.1,
+   "depthHint": "clouds-far",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py",
+   "notes": "outlined puffy cloud sprite; use for spawning drifting clouds.",
+   "depthZ": 3
+  },
+  {
+   "id": "parallax.cloud-far-2",
+   "group": "parallax",
+   "need": "far cloud sprite 2 (free-floating drifters)",
+   "file": "assets/pixel/composed/backgrounds/clouds/far_2.png",
+   "kind": "image",
+   "size": [
+    50,
+    24
+   ],
+   "anchor": [
+    25,
+    12
+   ],
+   "originFrac": [
+    0.5,
+    0.5
+   ],
+   "scrollFactor": 0.1,
+   "depthHint": "clouds-far",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py",
+   "notes": "outlined puffy cloud sprite; use for spawning drifting clouds.",
+   "depthZ": 3
+  },
+  {
+   "id": "parallax.cloud-far-3",
+   "group": "parallax",
+   "need": "far cloud sprite 3 (free-floating drifters)",
+   "file": "assets/pixel/composed/backgrounds/clouds/far_3.png",
+   "kind": "image",
+   "size": [
+    38,
+    21
+   ],
+   "anchor": [
+    19,
+    10
+   ],
+   "originFrac": [
+    0.5,
+    0.4762
+   ],
+   "scrollFactor": 0.1,
+   "depthHint": "clouds-far",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py",
+   "notes": "outlined puffy cloud sprite; use for spawning drifting clouds.",
+   "depthZ": 3
+  },
+  {
+   "id": "parallax.cloud-far-4",
+   "group": "parallax",
+   "need": "far cloud sprite 4 (free-floating drifters)",
+   "file": "assets/pixel/composed/backgrounds/clouds/far_4.png",
+   "kind": "image",
+   "size": [
+    46,
+    22
+   ],
+   "anchor": [
+    23,
+    11
+   ],
+   "originFrac": [
+    0.5,
+    0.5
+   ],
+   "scrollFactor": 0.1,
+   "depthHint": "clouds-far",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py",
+   "notes": "outlined puffy cloud sprite; use for spawning drifting clouds.",
+   "depthZ": 3
+  },
+  {
+   "id": "parallax.cloud-far-5",
+   "group": "parallax",
+   "need": "far cloud sprite 5 (free-floating drifters)",
+   "file": "assets/pixel/composed/backgrounds/clouds/far_5.png",
+   "kind": "image",
+   "size": [
+    32,
+    19
+   ],
+   "anchor": [
+    16,
+    9
+   ],
+   "originFrac": [
+    0.5,
+    0.4737
+   ],
+   "scrollFactor": 0.1,
+   "depthHint": "clouds-far",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py",
+   "notes": "outlined puffy cloud sprite; use for spawning drifting clouds.",
+   "depthZ": 3
+  },
+  {
+   "id": "parallax.cloud-near-0",
+   "group": "parallax",
+   "need": "near cloud sprite 0 (free-floating drifters)",
+   "file": "assets/pixel/composed/backgrounds/clouds/near_0.png",
+   "kind": "image",
+   "size": [
+    62,
+    32
+   ],
+   "anchor": [
+    31,
+    16
+   ],
+   "originFrac": [
+    0.5,
+    0.5
+   ],
+   "scrollFactor": 0.2,
+   "depthHint": "clouds-near",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py",
+   "notes": "outlined puffy cloud sprite; use for spawning drifting clouds.",
+   "depthZ": 4
+  },
+  {
+   "id": "parallax.cloud-near-1",
+   "group": "parallax",
+   "need": "near cloud sprite 1 (free-floating drifters)",
+   "file": "assets/pixel/composed/backgrounds/clouds/near_1.png",
+   "kind": "image",
+   "size": [
+    50,
+    27
+   ],
+   "anchor": [
+    25,
+    13
+   ],
+   "originFrac": [
+    0.5,
+    0.4815
+   ],
+   "scrollFactor": 0.2,
+   "depthHint": "clouds-near",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py",
+   "notes": "outlined puffy cloud sprite; use for spawning drifting clouds.",
+   "depthZ": 4
+  },
+  {
+   "id": "parallax.cloud-near-2",
+   "group": "parallax",
+   "need": "near cloud sprite 2 (free-floating drifters)",
+   "file": "assets/pixel/composed/backgrounds/clouds/near_2.png",
+   "kind": "image",
+   "size": [
+    72,
+    34
+   ],
+   "anchor": [
+    36,
+    17
+   ],
+   "originFrac": [
+    0.5,
+    0.5
+   ],
+   "scrollFactor": 0.2,
+   "depthHint": "clouds-near",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py",
+   "notes": "outlined puffy cloud sprite; use for spawning drifting clouds.",
+   "depthZ": 4
+  },
+  {
+   "id": "parallax.cloud-near-3",
+   "group": "parallax",
+   "need": "near cloud sprite 3 (free-floating drifters)",
+   "file": "assets/pixel/composed/backgrounds/clouds/near_3.png",
+   "kind": "image",
+   "size": [
+    54,
+    29
+   ],
+   "anchor": [
+    27,
+    14
+   ],
+   "originFrac": [
+    0.5,
+    0.4828
+   ],
+   "scrollFactor": 0.2,
+   "depthHint": "clouds-near",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py",
+   "notes": "outlined puffy cloud sprite; use for spawning drifting clouds.",
+   "depthZ": 4
+  },
+  {
+   "id": "parallax.cloud-near-4",
+   "group": "parallax",
+   "need": "near cloud sprite 4 (free-floating drifters)",
+   "file": "assets/pixel/composed/backgrounds/clouds/near_4.png",
+   "kind": "image",
+   "size": [
+    64,
+    31
+   ],
+   "anchor": [
+    32,
+    15
+   ],
+   "originFrac": [
+    0.5,
+    0.4839
+   ],
+   "scrollFactor": 0.2,
+   "depthHint": "clouds-near",
+   "license": "original (procedural), CC0-dedicated by Squad",
+   "source": "make_backgrounds.py",
+   "notes": "outlined puffy cloud sprite; use for spawning drifting clouds.",
+   "depthZ": 4
+  },
+  {
+   "id": "prop.bench",
+   "group": "prop",
+   "need": "bench (sit spot)",
+   "file": "assets/pixel/composed/props/bench.png",
+   "kind": "image",
+   "size": [
+    62,
+    26
+   ],
+   "anchor": [
+    31,
+    25
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.barrel",
+   "group": "prop",
+   "need": "barrel",
+   "file": "assets/pixel/composed/props/barrel.png",
+   "kind": "image",
+   "size": [
+    21,
+    25
+   ],
+   "anchor": [
+    10,
+    24
+   ],
+   "originFrac": [
+    0.4762,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.stall-bunting",
+   "group": "prop",
+   "need": "market stall with bunting",
+   "file": "assets/pixel/composed/props/stall-bunting.png",
+   "kind": "image",
+   "size": [
+    99,
+    76
+   ],
+   "anchor": [
+    49,
+    75
+   ],
+   "originFrac": [
+    0.4949,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.stall-awning",
+   "group": "prop",
+   "need": "market stall awning",
+   "file": "assets/pixel/composed/props/stall-awning.png",
+   "kind": "image",
+   "size": [
+    93,
+    76
+   ],
+   "anchor": [
+    46,
+    75
+   ],
+   "originFrac": [
+    0.4946,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.bunting-a",
+   "group": "prop",
+   "need": "bunting string (long)",
+   "file": "assets/pixel/composed/props/bunting-a.png",
+   "kind": "image",
+   "size": [
+    106,
+    20
+   ],
+   "anchor": [
+    53,
+    19
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.bunting-b",
+   "group": "prop",
+   "need": "bunting string (short)",
+   "file": "assets/pixel/composed/props/bunting-b.png",
+   "kind": "image",
+   "size": [
+    40,
+    16
+   ],
+   "anchor": [
+    20,
+    15
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.sofa",
+   "group": "prop",
+   "need": "sofa (interior)",
+   "file": "assets/pixel/composed/props/sofa.png",
+   "kind": "image",
+   "size": [
+    97,
+    54
+   ],
+   "anchor": [
+    48,
+    53
+   ],
+   "originFrac": [
+    0.4948,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.sofa-small",
+   "group": "prop",
+   "need": "small sofa (interior)",
+   "file": "assets/pixel/composed/props/sofa-small.png",
+   "kind": "image",
+   "size": [
+    48,
+    27
+   ],
+   "anchor": [
+    24,
+    26
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.bookshelf",
+   "group": "prop",
+   "need": "bookshelf (interior)",
+   "file": "assets/pixel/composed/props/bookshelf.png",
+   "kind": "image",
+   "size": [
+    34,
+    49
+   ],
+   "anchor": [
+    17,
+    48
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.signpost-board",
+   "group": "prop",
+   "need": "signpost board",
+   "file": "assets/pixel/composed/props/signpost-board.png",
+   "kind": "image",
+   "size": [
+    32,
+    28
+   ],
+   "anchor": [
+    16,
+    27
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.signpost-arrow",
+   "group": "prop",
+   "need": "signpost arrow",
+   "file": "assets/pixel/composed/props/signpost-arrow.png",
+   "kind": "image",
+   "size": [
+    23,
+    29
+   ],
+   "anchor": [
+    11,
+    28
+   ],
+   "originFrac": [
+    0.4783,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.stump",
+   "group": "prop",
+   "need": "tree stump (sit spot)",
+   "file": "assets/pixel/composed/props/stump.png",
+   "kind": "image",
+   "size": [
+    35,
+    25
+   ],
+   "anchor": [
+    17,
+    24
+   ],
+   "originFrac": [
+    0.4857,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.shelf-table",
+   "group": "prop",
+   "need": "shelf table (interior)",
+   "file": "assets/pixel/composed/props/shelf-table.png",
+   "kind": "image",
+   "size": [
+    64,
+    23
+   ],
+   "anchor": [
+    32,
+    22
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.crate-a",
+   "group": "prop",
+   "need": "crate",
+   "file": "assets/pixel/composed/props/crate-a.png",
+   "kind": "image",
+   "size": [
+    18,
+    21
+   ],
+   "anchor": [
+    9,
+    20
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.crate-b",
+   "group": "prop",
+   "need": "crate",
+   "file": "assets/pixel/composed/props/crate-b.png",
+   "kind": "image",
+   "size": [
+    18,
+    21
+   ],
+   "anchor": [
+    9,
+    20
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.stool",
+   "group": "prop",
+   "need": "stool",
+   "file": "assets/pixel/composed/props/stool.png",
+   "kind": "image",
+   "size": [
+    9,
+    11
+   ],
+   "anchor": [
+    4,
+    10
+   ],
+   "originFrac": [
+    0.4444,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.lamp-post",
+   "group": "prop",
+   "need": "street lamp (unlit)",
+   "file": "assets/pixel/composed/props/lamp-post.png",
+   "kind": "image",
+   "size": [
+    24,
+    64
+   ],
+   "anchor": [
+    12,
+    63
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "lit": "assets/pixel/composed/props/lamp-post-lit.png"
+   },
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "lit/unlit twins, identical size/anchor. Add prop.lamp-halo at the lamp head when lit.",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.lamp-halo",
+   "group": "prop",
+   "need": "lamp light pool (warm dither)",
+   "file": "assets/pixel/composed/props/lamp-halo.png",
+   "kind": "image",
+   "size": [
+    56,
+    40
+   ],
+   "anchor": [
+    28,
+    20
+   ],
+   "originFrac": [
+    0.5,
+    0.5
+   ],
+   "depthHint": "fx-light",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "dithered warm pool for lit street lamps",
+   "depthZ": 45
+  },
+  {
+   "id": "prop.rock-big",
+   "group": "prop",
+   "need": "rock",
+   "file": "assets/pixel/composed/props/rock-big.png",
+   "kind": "image",
+   "size": [
+    41,
+    23
+   ],
+   "anchor": [
+    20,
+    22
+   ],
+   "originFrac": [
+    0.4878,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.rock-small",
+   "group": "prop",
+   "need": "rock",
+   "file": "assets/pixel/composed/props/rock-small.png",
+   "kind": "image",
+   "size": [
+    19,
+    22
+   ],
+   "anchor": [
+    9,
+    21
+   ],
+   "originFrac": [
+    0.4737,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.tuft-a",
+   "group": "prop",
+   "need": "grass tuft",
+   "file": "assets/pixel/composed/props/tuft-a.png",
+   "kind": "image",
+   "size": [
+    30,
+    22
+   ],
+   "anchor": [
+    15,
+    21
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-front",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+   "depthZ": 40
+  },
+  {
+   "id": "prop.tuft-b",
+   "group": "prop",
+   "need": "grass tuft",
+   "file": "assets/pixel/composed/props/tuft-b.png",
+   "kind": "image",
+   "size": [
+    30,
+    25
+   ],
+   "anchor": [
+    15,
+    24
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-front",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+   "depthZ": 40
+  },
+  {
+   "id": "prop.tuft-c",
+   "group": "prop",
+   "need": "grass tuft",
+   "file": "assets/pixel/composed/props/tuft-c.png",
+   "kind": "image",
+   "size": [
+    28,
+    26
+   ],
+   "anchor": [
+    14,
+    25
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-front",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+   "depthZ": 40
+  },
+  {
+   "id": "prop.tuft-d",
+   "group": "prop",
+   "need": "grass tuft",
+   "file": "assets/pixel/composed/props/tuft-d.png",
+   "kind": "image",
+   "size": [
+    17,
+    15
+   ],
+   "anchor": [
+    8,
+    14
+   ],
+   "originFrac": [
+    0.4706,
+    1.0
+   ],
+   "depthHint": "props-front",
+   "license": "Autumn Town (Nirva): creator statement \"free to use/edit in any commercial or personal project without crediting me\" (not a formal CC license); derived night re-grade",
+   "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+   "depthZ": 40
+  },
+  {
+   "id": "prop.flower",
+   "group": "prop",
+   "need": "flower",
+   "file": "assets/pixel/composed/props/flower.png",
+   "kind": "image",
+   "size": [
+    5,
+    7
+   ],
+   "anchor": [
+    2,
+    6
+   ],
+   "originFrac": [
+    0.4,
+    1.0
+   ],
+   "depthHint": "props-front",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "flower.png is a duplicate sprite of flower-1; use flower-1..3.",
+   "depthZ": 40
+  },
+  {
+   "id": "prop.tree-1",
+   "group": "prop",
+   "need": "round dark tree",
+   "file": "assets/pixel/composed/props/tree-1.png",
+   "kind": "image",
+   "size": [
+    54,
+    66
+   ],
+   "anchor": [
+    27,
+    65
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.tree-2",
+   "group": "prop",
+   "need": "round dark tree",
+   "file": "assets/pixel/composed/props/tree-2.png",
+   "kind": "image",
+   "size": [
+    46,
+    60
+   ],
+   "anchor": [
+    23,
+    59
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.tree-3",
+   "group": "prop",
+   "need": "round dark tree",
+   "file": "assets/pixel/composed/props/tree-3.png",
+   "kind": "image",
+   "size": [
+    62,
+    74
+   ],
+   "anchor": [
+    31,
+    73
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.tree-4",
+   "group": "prop",
+   "need": "round dark tree",
+   "file": "assets/pixel/composed/props/tree-4.png",
+   "kind": "image",
+   "size": [
+    38,
+    54
+   ],
+   "anchor": [
+    19,
+    53
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.tree-5",
+   "group": "prop",
+   "need": "round dark tree",
+   "file": "assets/pixel/composed/props/tree-5.png",
+   "kind": "image",
+   "size": [
+    50,
+    62
+   ],
+   "anchor": [
+    25,
+    61
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.tree-6",
+   "group": "prop",
+   "need": "round dark tree",
+   "file": "assets/pixel/composed/props/tree-6.png",
+   "kind": "image",
+   "size": [
+    42,
+    58
+   ],
+   "anchor": [
+    21,
+    57
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.pine-1",
+   "group": "prop",
+   "need": "pine tree",
+   "file": "assets/pixel/composed/props/pine-1.png",
+   "kind": "image",
+   "size": [
+    30,
+    62
+   ],
+   "anchor": [
+    15,
+    61
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.pine-2",
+   "group": "prop",
+   "need": "pine tree",
+   "file": "assets/pixel/composed/props/pine-2.png",
+   "kind": "image",
+   "size": [
+    24,
+    50
+   ],
+   "anchor": [
+    12,
+    49
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.bush-1",
+   "group": "prop",
+   "need": "bush",
+   "file": "assets/pixel/composed/props/bush-1.png",
+   "kind": "image",
+   "size": [
+    24,
+    16
+   ],
+   "anchor": [
+    12,
+    15
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-front",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 40
+  },
+  {
+   "id": "prop.bush-2",
+   "group": "prop",
+   "need": "bush",
+   "file": "assets/pixel/composed/props/bush-2.png",
+   "kind": "image",
+   "size": [
+    18,
+    12
+   ],
+   "anchor": [
+    9,
+    11
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-front",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 40
+  },
+  {
+   "id": "prop.flower-1",
+   "group": "prop",
+   "need": "flower",
+   "file": "assets/pixel/composed/props/flower-1.png",
+   "kind": "image",
+   "size": [
+    5,
+    7
+   ],
+   "anchor": [
+    2,
+    6
+   ],
+   "originFrac": [
+    0.4,
+    1.0
+   ],
+   "depthHint": "props-front",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 40
+  },
+  {
+   "id": "prop.flower-2",
+   "group": "prop",
+   "need": "flower",
+   "file": "assets/pixel/composed/props/flower-2.png",
+   "kind": "image",
+   "size": [
+    5,
+    7
+   ],
+   "anchor": [
+    2,
+    6
+   ],
+   "originFrac": [
+    0.4,
+    1.0
+   ],
+   "depthHint": "props-front",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 40
+  },
+  {
+   "id": "prop.flower-3",
+   "group": "prop",
+   "need": "flower",
+   "file": "assets/pixel/composed/props/flower-3.png",
+   "kind": "image",
+   "size": [
+    5,
+    7
+   ],
+   "anchor": [
+    2,
+    6
+   ],
+   "originFrac": [
+    0.4,
+    1.0
+   ],
+   "depthHint": "props-front",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 40
+  },
+  {
+   "id": "prop.fence",
+   "group": "prop",
+   "need": "fence segment (tiles in x)",
+   "file": "assets/pixel/composed/props/fence.png",
+   "kind": "tile",
+   "size": [
+    16,
+    16
+   ],
+   "anchor": [
+    0,
+    15
+   ],
+   "originFrac": [
+    0.0,
+    1.0
+   ],
+   "depthHint": "ground-tiles",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "tileX": true,
+   "depthZ": 9
+  },
+  {
+   "id": "prop.mailbox",
+   "group": "prop",
+   "need": "mailbox",
+   "file": "assets/pixel/composed/props/mailbox.png",
+   "kind": "image",
+   "size": [
+    14,
+    22
+   ],
+   "anchor": [
+    7,
+    21
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.window-dark",
+   "group": "prop",
+   "need": "window decal (unlit)",
+   "file": "assets/pixel/composed/props/window-dark.png",
+   "kind": "image",
+   "size": [
+    8,
+    10
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "8x10 window decal for house builders, same on-wall alignment",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.window-lit",
+   "group": "prop",
+   "need": "window decal (lit)",
+   "file": "assets/pixel/composed/props/window-lit.png",
+   "kind": "image",
+   "size": [
+    8,
+    10
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "8x10 window decal for house builders, same on-wall alignment",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.window-curtained",
+   "group": "prop",
+   "need": "window decal (curtained)",
+   "file": "assets/pixel/composed/props/window-curtained.png",
+   "kind": "image",
+   "size": [
+    8,
+    10
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "8x10 window decal for house builders, same on-wall alignment",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.desk-lamp",
+   "group": "prop",
+   "need": "desk lamp (interior)",
+   "file": "assets/pixel/composed/props/desk-lamp.png",
+   "kind": "image",
+   "size": [
+    12,
+    12
+   ],
+   "anchor": [
+    6,
+    11
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.desk",
+   "group": "prop",
+   "need": "desk (interior)",
+   "file": "assets/pixel/composed/props/desk.png",
+   "kind": "image",
+   "size": [
+    48,
+    26
+   ],
+   "anchor": [
+    24,
+    25
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.chair",
+   "group": "prop",
+   "need": "chair (interior)",
+   "file": "assets/pixel/composed/props/chair.png",
+   "kind": "image",
+   "size": [
+    14,
+    13
+   ],
+   "anchor": [
+    7,
+    12
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.books",
+   "group": "prop",
+   "need": "books (interior)",
+   "file": "assets/pixel/composed/props/books.png",
+   "kind": "image",
+   "size": [
+    15,
+    9
+   ],
+   "anchor": [
+    7,
+    8
+   ],
+   "originFrac": [
+    0.4667,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.chalkboard",
+   "group": "prop",
+   "need": "chalkboard (interior/classroom)",
+   "file": "assets/pixel/composed/props/chalkboard.png",
+   "kind": "image",
+   "size": [
+    48,
+    32
+   ],
+   "anchor": [
+    24,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "empty 48x32 frame; tick/cross overlays fit slate inner area x4..43,y4..27.",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.chalk-tick",
+   "group": "prop",
+   "need": "chalkboard tick overlay",
+   "file": "assets/pixel/composed/props/chalk-tick.png",
+   "kind": "image",
+   "size": [
+    12,
+    8
+   ],
+   "anchor": [
+    6,
+    7
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.chalk-cross",
+   "group": "prop",
+   "need": "chalkboard cross overlay",
+   "file": "assets/pixel/composed/props/chalk-cross.png",
+   "kind": "image",
+   "size": [
+    10,
+    8
+   ],
+   "anchor": [
+    5,
+    7
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.round-table",
+   "group": "prop",
+   "need": "round table (debate)",
+   "file": "assets/pixel/composed/props/round-table.png",
+   "kind": "image",
+   "size": [
+    34,
+    22
+   ],
+   "anchor": [
+    17,
+    21
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "props-back",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.scroll",
+   "group": "prop",
+   "need": "scroll",
+   "file": "assets/pixel/composed/props/scroll.png",
+   "kind": "image",
+   "size": [
+    16,
+    6
+   ],
+   "anchor": [
+    8,
+    5
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.map",
+   "group": "prop",
+   "need": "map",
+   "file": "assets/pixel/composed/props/map.png",
+   "kind": "image",
+   "size": [
+    13,
+    8
+   ],
+   "anchor": [
+    6,
+    7
+   ],
+   "originFrac": [
+    0.4615,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "prop.telescope",
+   "group": "prop",
+   "need": "telescope",
+   "file": "assets/pixel/composed/props/telescope.png",
+   "kind": "image",
+   "size": [
+    26,
+    30
+   ],
+   "anchor": [
+    13,
+    29
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "interior-props",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 10
+  },
+  {
+   "id": "vehicle.van",
+   "group": "vehicle",
+   "need": "trip vehicle (van)",
+   "file": "assets/pixel/composed/props/van.png",
+   "kind": "spritesheet",
+   "size": [
+    128,
+    40
+   ],
+   "frame": {
+    "w": 64,
+    "h": 40,
+    "count": 2,
+    "fps": 6
+   },
+   "anchor": [
+    0,
+    39
+   ],
+   "originFrac": [
+    0.0,
+    1.0
+   ],
+   "variants": {
+    "luggage": "assets/pixel/composed/props/van-luggage.png"
+   },
+   "depthHint": "vehicle",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "faces right; frame 1 = body bobs 1px + wheel spokes rotate wheels on y=39, front at x=51, headlight cone x52..63. van-luggage is the packed variant. Only one van exists; no second colourway (see gaps).",
+   "frontX": 51,
+   "depthZ": 32
+  },
+  {
+   "id": "vehicle.van-cone",
+   "group": "vehicle",
+   "need": "van headlight cone (long)",
+   "file": "assets/pixel/composed/props/van-cone.png",
+   "kind": "image",
+   "size": [
+    24,
+    20
+   ],
+   "anchor": [
+    0,
+    10
+   ],
+   "originFrac": [
+    0.0,
+    0.5
+   ],
+   "depthHint": "vehicle",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "longer headlight cone if the cutscene wants it",
+   "depthZ": 32
+  },
+  {
+   "id": "vehicle.road-tile",
+   "group": "vehicle",
+   "need": "road tile (trip road)",
+   "file": "assets/pixel/composed/props/road-tile.png",
+   "kind": "tile",
+   "size": [
+    32,
+    16
+   ],
+   "depthHint": "vehicle",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "verge+road edge with dashed centre line, road top at y=4",
+   "tileX": true,
+   "roadTopY": 4,
+   "depthZ": 32
+  },
+  {
+   "id": "fx.campfire-fire",
+   "group": "fx",
+   "need": "campfire flame only (6 frames, composable)",
+   "file": "assets/pixel/composed/fx/campfire-fire.png",
+   "kind": "spritesheet",
+   "size": [
+    96,
+    22
+   ],
+   "frame": {
+    "w": 16,
+    "h": 22,
+    "count": 6,
+    "fps": 9
+   },
+   "anchor": [
+    8,
+    21
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "fx",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled (procedural flame; palette ember/glow/glow-core/alert), reference fx/campfire-sprite-sheet.png",
+   "notes": "fire only; place over campfire-base.png with fire bottom at base ring centre",
+   "depthZ": 25
+  },
+  {
+   "id": "fx.campfire-base",
+   "group": "fx",
+   "need": "campfire log ring only",
+   "file": "assets/pixel/composed/fx/campfire-base.png",
+   "kind": "image",
+   "size": [
+    32,
+    14
+   ],
+   "anchor": [
+    16,
+    13
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "fx",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "log ring + stones + crossed logs; draw fire with its bottom ~ y=9 of this sprite",
+   "depthZ": 25
+  },
+  {
+   "id": "fx.campfire",
+   "group": "fx",
+   "need": "campfire (fire + base, 6 frames)",
+   "file": "assets/pixel/composed/fx/campfire.png",
+   "kind": "spritesheet",
+   "size": [
+    192,
+    34
+   ],
+   "frame": {
+    "w": 32,
+    "h": 34,
+    "count": 6,
+    "fps": 9
+   },
+   "anchor": [
+    16,
+    33
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "fx",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "composite of campfire-fire + campfire-base",
+   "depthZ": 25
+  },
+  {
+   "id": "fx.campfire-light",
+   "group": "fx",
+   "need": "campfire light pool (additive/alpha)",
+   "file": "assets/pixel/composed/fx/campfire-light.png",
+   "kind": "image",
+   "size": [
+    112,
+    44
+   ],
+   "anchor": [
+    56,
+    22
+   ],
+   "originFrac": [
+    0.5,
+    0.5
+   ],
+   "depthHint": "fx-light",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "additive-friendly lighting pool, centre it on the fire at ground level; 4 stepped bands glow-core/glow/ember with dithered edges, no alpha",
+   "depthZ": 45
+  },
+  {
+   "id": "fx.campfire-sparks",
+   "group": "fx",
+   "need": "campfire sparks (3 frames)",
+   "file": "assets/pixel/composed/fx/campfire-sparks.png",
+   "kind": "spritesheet",
+   "size": [
+    24,
+    12
+   ],
+   "frame": {
+    "w": 8,
+    "h": 12,
+    "count": 3,
+    "fps": 6
+   },
+   "anchor": [
+    4,
+    11
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "fx",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 25
+  },
+  {
+   "id": "fx.chimney-smoke",
+   "group": "fx",
+   "need": "chimney smoke (8 frames)",
+   "file": "assets/pixel/composed/fx/chimney-smoke.png",
+   "kind": "spritesheet",
+   "size": [
+    192,
+    40
+   ],
+   "frame": {
+    "w": 24,
+    "h": 40,
+    "count": 8,
+    "fps": 5
+   },
+   "anchor": [
+    6,
+    35
+   ],
+   "originFrac": [
+    0.25,
+    0.875
+   ],
+   "depthHint": "fx",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled puffs (assets/pixel/fx/chimney_smoke.png is dithered noise cone, did not fit the outlined-cloud look)",
+   "depthZ": 25
+  },
+  {
+   "id": "fx.star-1",
+   "group": "fx",
+   "need": "twinkling star sprite 1 (3 frames)",
+   "file": "assets/pixel/composed/fx/star-1.png",
+   "kind": "spritesheet",
+   "size": [
+    15,
+    5
+   ],
+   "frame": {
+    "w": 5,
+    "h": 5,
+    "count": 3,
+    "fps": 2
+   },
+   "anchor": [
+    2,
+    2
+   ],
+   "originFrac": [
+    0.4,
+    0.4
+   ],
+   "depthHint": "fx",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 25
+  },
+  {
+   "id": "fx.star-2",
+   "group": "fx",
+   "need": "twinkling star sprite 2 (3 frames)",
+   "file": "assets/pixel/composed/fx/star-2.png",
+   "kind": "spritesheet",
+   "size": [
+    15,
+    5
+   ],
+   "frame": {
+    "w": 5,
+    "h": 5,
+    "count": 3,
+    "fps": 2
+   },
+   "anchor": [
+    2,
+    2
+   ],
+   "originFrac": [
+    0.4,
+    0.4
+   ],
+   "depthHint": "fx",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 25
+  },
+  {
+   "id": "fx.star-3",
+   "group": "fx",
+   "need": "twinkling star sprite 3 (3 frames)",
+   "file": "assets/pixel/composed/fx/star-3.png",
+   "kind": "spritesheet",
+   "size": [
+    15,
+    5
+   ],
+   "frame": {
+    "w": 5,
+    "h": 5,
+    "count": 3,
+    "fps": 2
+   },
+   "anchor": [
+    2,
+    2
+   ],
+   "originFrac": [
+    0.4,
+    0.4
+   ],
+   "depthHint": "fx",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 25
+  },
+  {
+   "id": "fx.star-4",
+   "group": "fx",
+   "need": "twinkling star sprite 4 (3 frames)",
+   "file": "assets/pixel/composed/fx/star-4.png",
+   "kind": "spritesheet",
+   "size": [
+    15,
+    5
+   ],
+   "frame": {
+    "w": 5,
+    "h": 5,
+    "count": 3,
+    "fps": 2
+   },
+   "anchor": [
+    2,
+    2
+   ],
+   "originFrac": [
+    0.4,
+    0.4
+   ],
+   "depthHint": "fx",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 25
+  },
+  {
+   "id": "ui.envelope",
+   "group": "ui",
+   "need": "envelope",
+   "file": "assets/pixel/composed/ui/envelope.png",
+   "kind": "image",
+   "size": [
+    16,
+    12
+   ],
+   "anchor": [
+    8,
+    11
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.envelope-pop",
+   "group": "ui",
+   "need": "envelope pop-in (4 frames)",
+   "file": "assets/pixel/composed/ui/envelope-pop.png",
+   "kind": "spritesheet",
+   "size": [
+    72,
+    14
+   ],
+   "frame": {
+    "w": 18,
+    "h": 14,
+    "count": 4,
+    "fps": 22
+   },
+   "anchor": [
+    9,
+    13
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "180ms ease-out pop: sizes 6x5, 12x9, 18x14 overshoot, 16x12 final",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.padlock",
+   "group": "ui",
+   "need": "padlock (locked)",
+   "file": "assets/pixel/composed/ui/padlock.png",
+   "kind": "image",
+   "size": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    7
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.padlock-open",
+   "group": "ui",
+   "need": "padlock (open)",
+   "file": "assets/pixel/composed/ui/padlock-open.png",
+   "kind": "image",
+   "size": [
+    8,
+    8
+   ],
+   "anchor": [
+    4,
+    7
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.door-ring",
+   "group": "ui",
+   "need": "door pulse ring (3 sizes)",
+   "file": "assets/pixel/composed/ui/door-ring.png",
+   "kind": "spritesheet",
+   "size": [
+    96,
+    16
+   ],
+   "frame": {
+    "w": 32,
+    "h": 16,
+    "count": 3
+   },
+   "anchor": [
+    16,
+    8
+   ],
+   "originFrac": [
+    0.5,
+    0.5
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "3 sizes 24x12/28x14/32x16 centred in 32x16 frames; pulse by scale/alpha tween per motion row 10",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.door-ring-ok",
+   "group": "ui",
+   "need": "door ring (ok colour)",
+   "file": "assets/pixel/composed/ui/door-ring-ok.png",
+   "kind": "image",
+   "size": [
+    24,
+    12
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "ok-coloured ring",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.check",
+   "group": "ui",
+   "need": "check mark",
+   "file": "assets/pixel/composed/ui/check.png",
+   "kind": "image",
+   "size": [
+    12,
+    10
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.marker-alert",
+   "group": "ui",
+   "need": "alert marker (!) above heads",
+   "file": "assets/pixel/composed/ui/marker-alert.png",
+   "kind": "image",
+   "size": [
+    8,
+    14
+   ],
+   "anchor": [
+    4,
+    13
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.marker-question",
+   "group": "ui",
+   "need": "question marker (?) above heads",
+   "file": "assets/pixel/composed/ui/marker-question.png",
+   "kind": "image",
+   "size": [
+    8,
+    14
+   ],
+   "anchor": [
+    4,
+    13
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.lantern-council",
+   "group": "ui",
+   "need": "council lantern (3-frame flicker)",
+   "file": "assets/pixel/composed/ui/lantern-council.png",
+   "kind": "spritesheet",
+   "size": [
+    30,
+    16
+   ],
+   "frame": {
+    "w": 10,
+    "h": 16,
+    "count": 3,
+    "fps": 6
+   },
+   "anchor": [
+    5,
+    0
+   ],
+   "originFrac": [
+    0.5,
+    0.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "3-frame flicker; hangs from the top",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.lantern-dissent",
+   "group": "ui",
+   "need": "dissent lantern (3-frame flicker)",
+   "file": "assets/pixel/composed/ui/lantern-dissent.png",
+   "kind": "spritesheet",
+   "size": [
+    30,
+    16
+   ],
+   "frame": {
+    "w": 10,
+    "h": 16,
+    "count": 3,
+    "fps": 6
+   },
+   "anchor": [
+    5,
+    0
+   ],
+   "originFrac": [
+    0.5,
+    0.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "3-frame flicker; hangs from the top",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.lantern-street",
+   "group": "ui",
+   "need": "street lantern (3-frame flicker)",
+   "file": "assets/pixel/composed/ui/lantern-street.png",
+   "kind": "spritesheet",
+   "size": [
+    30,
+    16
+   ],
+   "frame": {
+    "w": 10,
+    "h": 16,
+    "count": 3,
+    "fps": 3
+   },
+   "anchor": [
+    5,
+    0
+   ],
+   "originFrac": [
+    0.5,
+    0.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "3-frame flicker; hangs from the top",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.zzz",
+   "group": "ui",
+   "need": "sleeping zzz (3 frames)",
+   "file": "assets/pixel/composed/ui/zzz.png",
+   "kind": "spritesheet",
+   "size": [
+    42,
+    18
+   ],
+   "frame": {
+    "w": 14,
+    "h": 18,
+    "count": 3,
+    "fps": 2
+   },
+   "anchor": [
+    0,
+    17
+   ],
+   "originFrac": [
+    0.0,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.notes",
+   "group": "ui",
+   "need": "music/notes particles (2 frames)",
+   "file": "assets/pixel/composed/ui/notes.png",
+   "kind": "spritesheet",
+   "size": [
+    17,
+    9
+   ],
+   "frame": {
+    "w": 8,
+    "h": 9,
+    "count": 2,
+    "spacing": 1,
+    "fps": 3
+   },
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.bubble-wall",
+   "group": "ui",
+   "need": "speech bubble (wall palette) 9-slice",
+   "file": "assets/pixel/composed/ui/bubble-wall.png",
+   "kind": "nineslice",
+   "size": [
+    24,
+    24
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "this.add.nineslice(x,y,key,undefined,w,h,5,5,5,5) (Phaser >= 3.60)",
+   "nineslice": {
+    "corner": 5,
+    "borders": [
+     5,
+     5,
+     5,
+     5
+    ]
+   },
+   "depthZ": 60
+  },
+  {
+   "id": "ui.bubble-wall-tail-left",
+   "group": "ui",
+   "need": "wall bubble tail (left)",
+   "file": "assets/pixel/composed/ui/bubble-wall-tail-left.png",
+   "kind": "image",
+   "size": [
+    8,
+    6
+   ],
+   "anchor": [
+    0,
+    0
+   ],
+   "originFrac": [
+    0.0,
+    0.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "top row overlaps the bubble bottom border; x offset from bubble left >= 6",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.bubble-wall-tail-right",
+   "group": "ui",
+   "need": "wall bubble tail (right)",
+   "file": "assets/pixel/composed/ui/bubble-wall-tail-right.png",
+   "kind": "image",
+   "size": [
+    8,
+    6
+   ],
+   "anchor": [
+    7,
+    0
+   ],
+   "originFrac": [
+    1.0,
+    0.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "mirror of left; top row overlaps bottom border",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.thought-wall-dots",
+   "group": "ui",
+   "need": "thought bubble trail dots (wall)",
+   "file": "assets/pixel/composed/ui/thought-wall-dots.png",
+   "kind": "image",
+   "size": [
+    8,
+    11
+   ],
+   "anchor": [
+    0,
+    0
+   ],
+   "originFrac": [
+    0.0,
+    0.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "2 trailing dots; place below the bubble bottom border",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.bubble-moon",
+   "group": "ui",
+   "need": "speech bubble (moon palette) 9-slice",
+   "file": "assets/pixel/composed/ui/bubble-moon.png",
+   "kind": "nineslice",
+   "size": [
+    24,
+    24
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "this.add.nineslice(x,y,key,undefined,w,h,5,5,5,5) (Phaser >= 3.60)",
+   "nineslice": {
+    "corner": 5,
+    "borders": [
+     5,
+     5,
+     5,
+     5
+    ]
+   },
+   "depthZ": 60
+  },
+  {
+   "id": "ui.bubble-moon-tail-left",
+   "group": "ui",
+   "need": "moon bubble tail (left)",
+   "file": "assets/pixel/composed/ui/bubble-moon-tail-left.png",
+   "kind": "image",
+   "size": [
+    8,
+    6
+   ],
+   "anchor": [
+    0,
+    0
+   ],
+   "originFrac": [
+    0.0,
+    0.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "top row overlaps the bubble bottom border; x offset from bubble left >= 6",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.bubble-moon-tail-right",
+   "group": "ui",
+   "need": "moon bubble tail (right)",
+   "file": "assets/pixel/composed/ui/bubble-moon-tail-right.png",
+   "kind": "image",
+   "size": [
+    8,
+    6
+   ],
+   "anchor": [
+    7,
+    0
+   ],
+   "originFrac": [
+    1.0,
+    0.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "mirror of left; top row overlaps bottom border",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.thought-moon-dots",
+   "group": "ui",
+   "need": "thought bubble trail dots (moon)",
+   "file": "assets/pixel/composed/ui/thought-moon-dots.png",
+   "kind": "image",
+   "size": [
+    8,
+    11
+   ],
+   "anchor": [
+    0,
+    0
+   ],
+   "originFrac": [
+    0.0,
+    0.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "2 trailing dots; place below the bubble bottom border",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.withheld-bar",
+   "group": "ui",
+   "need": "withheld/redaction black bar 9-slice",
+   "file": "assets/pixel/composed/ui/withheld-bar.png",
+   "kind": "nineslice",
+   "size": [
+    16,
+    8
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "static black bar; stretch horizontally; never animated this.add.nineslice(x,y,key,undefined,w,h,2,2,2,2) (Phaser >= 3.60)",
+   "nineslice": {
+    "corner": 2,
+    "borders": [
+     2,
+     2,
+     2,
+     2
+    ]
+   },
+   "depthZ": 60
+  },
+  {
+   "id": "ui.notice-board",
+   "group": "ui",
+   "need": "notice board (unlit)",
+   "file": "assets/pixel/composed/ui/notice-board.png",
+   "kind": "image",
+   "size": [
+    64,
+    48
+   ],
+   "anchor": [
+    32,
+    47
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "slots": {
+    "size": [
+     16,
+     12
+    ],
+    "origin_xy": [
+     [
+      5,
+      15
+     ],
+     [
+      23,
+      15
+     ],
+     [
+      41,
+      15
+     ],
+     [
+      5,
+      28
+     ],
+     [
+      23,
+      28
+     ],
+     [
+      41,
+      28
+     ]
+    ],
+    "face_rect": [
+     4,
+     15,
+     56,
+     26
+    ],
+    "note": "6 slots 3x2"
+   },
+   "depthZ": 60
+  },
+  {
+   "id": "ui.notice-board-lit",
+   "group": "ui",
+   "need": "notice board (lit)",
+   "file": "assets/pixel/composed/ui/notice-board-lit.png",
+   "kind": "image",
+   "size": [
+    64,
+    48
+   ],
+   "anchor": [
+    32,
+    47
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "slots": {
+    "size": [
+     16,
+     12
+    ],
+    "origin_xy": [
+     [
+      5,
+      15
+     ],
+     [
+      23,
+      15
+     ],
+     [
+      41,
+      15
+     ],
+     [
+      5,
+      28
+     ],
+     [
+      23,
+      28
+     ],
+     [
+      41,
+      28
+     ]
+    ],
+    "face_rect": [
+     4,
+     15,
+     56,
+     26
+    ]
+   },
+   "depthZ": 60
+  },
+  {
+   "id": "ui.card-shared",
+   "group": "ui",
+   "need": "card state: shared",
+   "file": "assets/pixel/composed/ui/card-shared.png",
+   "kind": "image",
+   "size": [
+    16,
+    12
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "green tick",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.card-hidden",
+   "group": "ui",
+   "need": "card state: hidden",
+   "file": "assets/pixel/composed/ui/card-hidden.png",
+   "kind": "image",
+   "size": [
+    16,
+    12
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "padlock + black bar",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.card-blocked",
+   "group": "ui",
+   "need": "card state: blocked",
+   "file": "assets/pixel/composed/ui/card-blocked.png",
+   "kind": "image",
+   "size": [
+    16,
+    12
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "red stop mark",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.card-pinned",
+   "group": "ui",
+   "need": "card state: pinned",
+   "file": "assets/pixel/composed/ui/card-pinned.png",
+   "kind": "image",
+   "size": [
+    16,
+    12
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "pinned envelope",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.trip-door",
+   "group": "ui",
+   "need": "trip door (closed/open)",
+   "file": "assets/pixel/composed/ui/trip-door.png",
+   "kind": "spritesheet",
+   "size": [
+    64,
+    40
+   ],
+   "frame": {
+    "w": 32,
+    "h": 40,
+    "count": 2
+   },
+   "anchor": [
+    16,
+    39
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "original, CC0-dedicated by Squad",
+   "source": "hand-pixeled",
+   "notes": "frame 0 closed, 1 open",
+   "depthZ": 60
+  },
+  {
+   "id": "ui.emote-alert",
+   "group": "ui",
+   "need": "emote: alert",
+   "file": "assets/pixel/composed/ui/emote-alert.png",
+   "kind": "image",
+   "size": [
+    16,
+    16
+   ],
+   "anchor": [
+    8,
+    15
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "CC0 1.0 (Ninja Adventure, Pixel-boy and AAA), requantized to Squad palette",
+   "source": "assets/pixel/ui/ninja-adventure/Emote/emote21.png requantized",
+   "notes": "native 16px from Ninja Adventure, 2x coarser than scene art: use ONLY above characters at the same 1x scale (do not enlarge).",
+   "coarse16": true,
+   "depthZ": 60
+  },
+  {
+   "id": "ui.emote-question",
+   "group": "ui",
+   "need": "emote: question",
+   "file": "assets/pixel/composed/ui/emote-question.png",
+   "kind": "image",
+   "size": [
+    16,
+    16
+   ],
+   "anchor": [
+    8,
+    15
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "CC0 1.0 (Ninja Adventure, Pixel-boy and AAA), requantized to Squad palette",
+   "source": "assets/pixel/ui/ninja-adventure/Emote/emote23.png requantized",
+   "notes": "native 16px from Ninja Adventure, 2x coarser than scene art: use ONLY above characters at the same 1x scale (do not enlarge).",
+   "coarse16": true,
+   "depthZ": 60
+  },
+  {
+   "id": "ui.emote-heart",
+   "group": "ui",
+   "need": "emote: heart",
+   "file": "assets/pixel/composed/ui/emote-heart.png",
+   "kind": "image",
+   "size": [
+    16,
+    16
+   ],
+   "anchor": [
+    8,
+    15
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "CC0 1.0 (Ninja Adventure, Pixel-boy and AAA), requantized to Squad palette",
+   "source": "assets/pixel/ui/ninja-adventure/Emote/emote27.png requantized",
+   "notes": "native 16px from Ninja Adventure, 2x coarser than scene art: use ONLY above characters at the same 1x scale (do not enlarge).",
+   "coarse16": true,
+   "depthZ": 60
+  },
+  {
+   "id": "ui.emote-zzz",
+   "group": "ui",
+   "need": "emote: zzz",
+   "file": "assets/pixel/composed/ui/emote-zzz.png",
+   "kind": "image",
+   "size": [
+    16,
+    16
+   ],
+   "anchor": [
+    8,
+    15
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "CC0 1.0 (Ninja Adventure, Pixel-boy and AAA), requantized to Squad palette",
+   "source": "assets/pixel/ui/ninja-adventure/Emote/emote28.png requantized",
+   "notes": "native 16px from Ninja Adventure, 2x coarser than scene art: use ONLY above characters at the same 1x scale (do not enlarge).",
+   "coarse16": true,
+   "depthZ": 60
+  },
+  {
+   "id": "ui.emote-dots",
+   "group": "ui",
+   "need": "emote: typing dots",
+   "file": "assets/pixel/composed/ui/emote-dots.png",
+   "kind": "image",
+   "size": [
+    16,
+    16
+   ],
+   "anchor": [
+    8,
+    15
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "CC0 1.0 (Ninja Adventure, Pixel-boy and AAA), requantized to Squad palette",
+   "source": "assets/pixel/ui/ninja-adventure/Emote/emote20.png requantized",
+   "notes": "native 16px from Ninja Adventure, 2x coarser than scene art: use ONLY above characters at the same 1x scale (do not enlarge).",
+   "coarse16": true,
+   "depthZ": 60
+  },
+  {
+   "id": "ui.emote-smile",
+   "group": "ui",
+   "need": "emote: smile",
+   "file": "assets/pixel/composed/ui/emote-smile.png",
+   "kind": "image",
+   "size": [
+    16,
+    16
+   ],
+   "anchor": [
+    8,
+    15
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "depthHint": "ui-world",
+   "license": "CC0 1.0 (Ninja Adventure, Pixel-boy and AAA), requantized to Squad palette",
+   "source": "assets/pixel/ui/ninja-adventure/Emote/emote11.png requantized",
+   "notes": "native 16px from Ninja Adventure, 2x coarser than scene art: use ONLY above characters at the same 1x scale (do not enlarge).",
+   "coarse16": true,
+   "depthZ": 60
+  },
+  {
+   "id": "font.jersey-10",
+   "group": "font",
+   "need": "pixel display font (headings, in-world text)",
+   "file": "assets/fonts/jersey-10/Jersey10-Regular.ttf",
+   "kind": "font",
+   "size": null,
+   "depthHint": "ui-screen",
+   "license": "SIL OFL 1.1; Copyright 2023 The Soft Type Project Authors (https://github.com/scfried/soft-type-jersey)",
+   "source": "assets/fonts/jersey-10/ (Google Fonts upstream); license file assets/fonts/jersey-10/OFL.txt",
+   "notes": "family \"Jersey 10\"; art pixel em 9.3333, sizes 18.667/28/37.333/56 px (typography.md). Also latin/latin-ext woff2. Load via CSS @font-face and await document.fonts.load() before creating text.",
+   "depthZ": 100
+  },
+  {
+   "id": "font.silkscreen",
+   "group": "font",
+   "need": "pixel micro font (labels, caps only)",
+   "file": "assets/fonts/silkscreen/Silkscreen-Regular.ttf",
+   "kind": "font",
+   "size": null,
+   "depthHint": "ui-screen",
+   "license": "SIL OFL 1.1; Copyright 2001 The Silkscreen Project Authors (https://github.com/googlefonts/silkscreen)",
+   "source": "assets/fonts/silkscreen/ (Google Fonts upstream); license file assets/fonts/silkscreen/OFL.txt",
+   "notes": "family \"Silkscreen\"; sizes 8/16/24 px; caps only. Load via CSS @font-face and await document.fonts.load() before creating text.",
+   "depthZ": 100
+  },
+  {
+   "id": "font.inter",
+   "group": "font",
+   "need": "DOM UI font (panels, body text outside the canvas)",
+   "file": "assets/fonts/inter/InterVariable.ttf",
+   "kind": "font",
+   "size": null,
+   "depthHint": "ui-screen",
+   "license": "SIL OFL 1.1; Copyright 2020 The Inter Project Authors (https://github.com/rsms/inter)",
+   "source": "assets/fonts/inter/ (Google Fonts upstream); license file assets/fonts/inter/OFL.txt",
+   "notes": "family \"Inter Variable\", weight axis 100..900. Latin + latin-ext woff2 present. Load via CSS @font-face and await document.fonts.load() before creating text.",
+   "depthZ": 100
+  }
+ ],
+ "layers": [
+  {
+   "z": 0,
+   "name": "sky",
+   "asset": "parallax.0_sky",
+   "scrollFactor": 0,
+   "y": "tileSprite, origin (0,0), y=0, height 270",
+   "notes": "stretch 16px column across width"
+  },
+  {
+   "z": 1,
+   "name": "stars",
+   "asset": "parallax.1_stars",
+   "scrollFactor": 0.02,
+   "y": "origin (0,1) at y=270",
+   "notes": "twinkle overlay"
+  },
+  {
+   "z": 2,
+   "name": "moon",
+   "asset": "parallax.2_moon",
+   "scrollFactor": 0.02,
+   "y": "origin (0.5,0.5) at screen (86,56)",
+   "notes": ""
+  },
+  {
+   "z": 3,
+   "name": "clouds-far",
+   "asset": "parallax.3_clouds_far",
+   "scrollFactor": 0.1,
+   "y": "origin (0,1) at y=270",
+   "notes": "drift +x"
+  },
+  {
+   "z": 4,
+   "name": "clouds-near",
+   "asset": "parallax.4_clouds_near",
+   "scrollFactor": 0.2,
+   "y": "origin (0,1) at y=270",
+   "notes": "drift +x"
+  },
+  {
+   "z": 5,
+   "name": "hills-far",
+   "asset": "parallax.5_hills_far",
+   "scrollFactor": 0.3,
+   "y": "origin (0,1) at y=270",
+   "notes": ""
+  },
+  {
+   "z": 6,
+   "name": "hills-mid",
+   "asset": "parallax.6_hills_mid",
+   "scrollFactor": 0.45,
+   "y": "origin (0,1) at y=270",
+   "notes": ""
+  },
+  {
+   "z": 7,
+   "name": "hills-near",
+   "asset": "parallax.7_hills_near",
+   "scrollFactor": 0.6,
+   "y": "origin (0,1) at y=270",
+   "notes": ""
+  },
+  {
+   "z": 8,
+   "name": "fence",
+   "asset": "parallax.8_fenceline",
+   "scrollFactor": 0.9,
+   "y": "origin (0,1) at y=270; posts stand on y=240",
+   "notes": ""
+  },
+  {
+   "z": 9,
+   "name": "ground",
+   "asset": "parallax.9_ground",
+   "scrollFactor": 1.0,
+   "y": "origin (0,0) at y=240",
+   "notes": "480x30"
+  },
+  {
+   "z": 10,
+   "name": "props-back",
+   "asset": "prop.* (trees, lamps, signposts)",
+   "scrollFactor": 1.0,
+   "y": "origin (0.5,1) at y=240 (+/- up to 6 px depth jitter)",
+   "notes": "behind buildings"
+  },
+  {
+   "z": 20,
+   "name": "buildings",
+   "asset": "house.*, landmark.*",
+   "scrollFactor": 1.0,
+   "y": "origin = originFrac at y=240",
+   "notes": "ground contact on the ground line"
+  },
+  {
+   "z": 25,
+   "name": "fx",
+   "asset": "fx.chimney-smoke, fx.campfire*",
+   "scrollFactor": 1.0,
+   "y": "per anchor",
+   "notes": "smoke above buildings"
+  },
+  {
+   "z": 30,
+   "name": "actors",
+   "asset": "atlas.characters / persona.*",
+   "scrollFactor": 1.0,
+   "y": "origin (0.5,1) at y=240; sort by y between 236..244",
+   "notes": ""
+  },
+  {
+   "z": 40,
+   "name": "props-front",
+   "asset": "prop.tuft/flower/bush",
+   "scrollFactor": 1.0,
+   "y": "origin (0.5,1) at y=240..246",
+   "notes": "overlap actor feet"
+  },
+  {
+   "z": 45,
+   "name": "fx-light",
+   "asset": "fx.campfire-light, prop.lamp-halo",
+   "scrollFactor": 1.0,
+   "y": "centred on ground contact",
+   "notes": "blendMode ADD"
+  },
+  {
+   "z": 50,
+   "name": "foreground",
+   "asset": "parallax.10_foreground",
+   "scrollFactor": 1.2,
+   "y": "origin (0,1) at y=270",
+   "notes": "content only in bottom ~25px"
+  },
+  {
+   "z": 60,
+   "name": "ui-world",
+   "asset": "ui.* (bubbles, markers, emotes, rings)",
+   "scrollFactor": 1.0,
+   "y": "above actor head",
+   "notes": ""
+  },
+  {
+   "z": 100,
+   "name": "ui-screen",
+   "asset": "DOM / fonts",
+   "scrollFactor": 0,
+   "y": "-",
+   "notes": "HUD, dock"
+  }
+ ],
+ "sizeWarnings": [
+  "Character is 32px cell (~28px figure). Tenement is 232px tall = 8.3x a person. Use it only as a backdrop/dormitory landmark (e.g. beyond the fence, x-parallax 0.9) and never in the street row.",
+  "A person is about door height in Autumn Town scale. Heights by chapter shape: tenement 232px, shop 183px, brick 172px, cottage 162px, hut 133px. Only the hut (133px) meets the <=135px foreground recommendation; cottage (162px) is borderline-large, brick (172px), shop (183px) and tenement (232px) are mid-ground/landmark only.",
+  "Landmark heights: council-hall 124px, debate-stage 145px, round-table-pavilion 94px, feynman-porch 91px, oral-exam-hut 77px, rubric-courthouse 101px, exam-oracle 131px, devils-ta-cave 97px, classroom-house 110px, panic-booth 60px, windmill 84px. exam-oracle (131px) and debate-stage (145px) are intentionally tall; flag if the street row feels crowded.",
+  "Windmill is 84px tall and only 42px wide: reads as a small silhouette; keep as backdrop landmark (hub-anchored sails 72x72 overhang the roof; check parallax clipping).",
+  "Trees: heights 50-74px; mid-scale dark trees are fine in props-back; they are shorter than the cottage/brick/shop houses.",
+  "Emotes (ui.emote-*) are native 16px Ninja Adventure art (2x coarser than 1x scene art) - keep at their native scale above heads; do not scale up.",
+  "Lamp posts: props 64px vs tall boulevard lamp 95px; the 95px one is taller than a hut door."
+ ],
+ "packsNotChosen": [
+  {
+   "path": "assets/pixel/buildings/windmill-128px-vector-style.png",
+   "name": "windmill-128px (OGA, CC0)",
+   "exists": true,
+   "decision": "NOT chosen: 128x128 vector-style isometric windmill; wrong projection and 2-3x too large for the 28px-person scale. Replaced by hand-pixeled landmark.windmill (42x84 side-view) + sails strip."
+  },
+  {
+   "path": "assets/pixel/buildings/village-buildings-oga",
+   "name": "village-buildings-oga (CC0)",
+   "exists": true,
+   "decision": "NOT chosen: 64px sprites in a different pixel scale/perspective; outlines do not match; would read as a mashup next to Autumn Town. Only the Autumn Town cut-outs are used."
+  },
+  {
+   "path": "assets/pixel/buildings/kenney-tiny-town",
+   "name": "Kenney Tiny Town (CC0)",
+   "exists": true,
+   "decision": "NOT chosen: 16px tiles are 2x coarser than the 32px character scale."
+  },
+  {
+   "path": "assets/pixel/buildings/autumn-town",
+   "name": "Autumn Town buildings/props (Nirva)",
+   "exists": true,
+   "decision": "USED as the source for houses, debate stage and Autumn-derived props (night re-graded into the Squad palette); raw day art is never loaded."
+  },
+  {
+   "path": "assets/pixel/characters/ninja-adventure-npcs-16px",
+   "name": "Ninja Adventure NPCs 16px",
+   "exists": true,
+   "decision": "NOT chosen: 16px sprites must not mix with scene art. Cast was redrawn at 32px (originals). Only requantized emotes are reused."
+  },
+  {
+   "path": "assets/pixel/characters/autumn-town-npcs-32px",
+   "name": "Autumn Town NPCs 32px",
+   "exists": true,
+   "decision": "Style/proportion reference only; no pixels copied (cast was redrawn to palette with the required poses)."
+  },
+  {
+   "path": "assets/pixel/characters/autumn-town-player-day-night-32px",
+   "name": "Autumn Town player sheets",
+   "exists": true,
+   "decision": "Style/proportion reference only."
+  },
+  {
+   "path": "assets/pixel/characters/kenney-roguelike-characters",
+   "name": "Kenney Roguelike characters",
+   "exists": true,
+   "decision": "NOT chosen: 16px scale and different outline style."
+  },
+  {
+   "path": "assets/pixel/characters/kenney-pixel-platformer-chars",
+   "name": "Kenney Pixel Platformer chars",
+   "exists": true,
+   "decision": "NOT chosen: different scale/style."
+  },
+  {
+   "path": "assets/pixel/characters/gothicvania-hero",
+   "name": "Gothicvania hero",
+   "exists": true,
+   "decision": "NOT chosen: action-game hero, different proportions, no talk/sit poses."
+  },
+  {
+   "path": "assets/pixel/characters/oga-pixel-platformer-chars",
+   "name": "OGA pixel platformer chars",
+   "exists": true,
+   "decision": "NOT chosen: different scale/style."
+  },
+  {
+   "path": "assets/pixel/backgrounds/generated-village",
+   "name": "generated-village (earlier in-house parallax, 320x180)",
+   "exists": true,
+   "decision": "SUPERSEDED by composed/backgrounds (480x270, palette-locked, ground line y=240)."
+  },
+  {
+   "path": "assets/pixel/backgrounds/gothicvania-night-town",
+   "name": "Gothicvania night town",
+   "exists": true,
+   "decision": "NOT chosen: gothic palette/scale; would break the cerulean night look."
+  },
+  {
+   "path": "assets/pixel/backgrounds/hills-scenery-day",
+   "name": "hills-scenery-day (OGA)",
+   "exists": true,
+   "decision": "NOT chosen: day palette; hills re-drawn procedurally in palette."
+  },
+  {
+   "path": "assets/pixel/backgrounds/pixel-clouds-oga",
+   "name": "pixel-clouds-oga",
+   "exists": true,
+   "decision": "NOT chosen: no outlined puffy style; new outlined clouds were drawn."
+  },
+  {
+   "path": "assets/pixel/backgrounds/fence-lamp-oga",
+   "name": "fence-lamp-oga",
+   "exists": true,
+   "decision": "NOT chosen: different style; own fence and lamp-post drawn."
+  },
+  {
+   "path": "assets/pixel/backgrounds/autumn-town-day-night",
+   "name": "Autumn Town day/night backgrounds",
+   "exists": true,
+   "decision": "NOT chosen: fixed scene illustrations, not parallax-friendly; used as palette reference only."
+  },
+  {
+   "path": "assets/pixel/backgrounds/kenney-pixel-platformer-bg",
+   "name": "Kenney platformer bg",
+   "exists": true,
+   "decision": "NOT chosen: day/cartoon palette."
+  },
+  {
+   "path": "assets/pixel/fx/chimney_smoke.png",
+   "name": "chimney_smoke.png (OGA, CC0)",
+   "exists": true,
+   "decision": "NOT chosen: dithered noise cone; clashes with outlined clouds. Replaced by fx.chimney-smoke."
+  },
+  {
+   "path": "assets/pixel/fx/campfire-sprite-sheet.png",
+   "name": "campfire-sprite-sheet (OGA, CC0)",
+   "exists": true,
+   "decision": "NOT chosen: 4 frames 32x32 non-palette; used as reference for the hand-pixeled fx.campfire."
+  },
+  {
+   "path": "assets/pixel/fx/ninja-adventure",
+   "name": "Ninja Adventure FX",
+   "exists": true,
+   "decision": "NOT chosen: 16px scale."
+  },
+  {
+   "path": "assets/pixel/ui/ninja-adventure",
+   "name": "Ninja Adventure UI",
+   "exists": true,
+   "decision": "Only 6 emotes (Emote/emote11,20,21,23,27,28) requantized and reused as ui.emote-*; dialog/theme art not used."
+  },
+  {
+   "path": "assets/pixel/ui/kenney-pixel-ui-pack",
+   "name": "Kenney Pixel UI",
+   "exists": true,
+   "decision": "NOT chosen: UI is DOM/Inter; in-world bubbles are original 9-slice."
+  },
+  {
+   "path": "assets/pixel/ui/kenney-ui-pixel-adventure",
+   "name": "Kenney UI Pixel Adventure",
+   "exists": true,
+   "decision": "NOT chosen: see above."
+  },
+  {
+   "path": "assets/pixel/ui/kenney-emotes-pixel",
+   "name": "Kenney emotes pixel",
+   "exists": true,
+   "decision": "NOT chosen: different style than the chosen Ninja emotes."
+  },
+  {
+   "path": "assets/pixel/ui/speech-emote-balloons-oga",
+   "name": "OGA speech/emote balloons",
+   "exists": true,
+   "decision": "NOT chosen: own 9-slice bubbles drawn in palette."
+  },
+  {
+   "path": "assets/pixel/interiors/ninja-adventure-interior",
+   "name": "Ninja Adventure interiors 16px",
+   "exists": true,
+   "decision": "NOT chosen: 16px scale; interiors redrawn at 224x128."
+  },
+  {
+   "path": "assets/pixel/monsters",
+   "name": "monsters (all packs)",
+   "exists": true,
+   "decision": "Out of scope for the village (no monster need)."
+  },
+  {
+   "path": "assets/pixel/items",
+   "name": "items (Ninja/Kenney)",
+   "exists": true,
+   "decision": "NOT chosen: 16px scale; props redrawn."
+  },
+  {
+   "path": "assets/fluent-objects",
+   "name": "Fluent objects + Lucide icons",
+   "exists": true,
+   "decision": "DOM-side only (3D/flat icons, hero art, lottie); not part of the pixel scene. Lucide icons (assets/fluent-objects/icons, 38 SVGs) are the candidate mobile dock icons - see gaps."
+  },
+  {
+   "path": "assets/fluent-characters",
+   "name": "Fluent characters",
+   "exists": true,
+   "decision": "DOM-side only; not used in the pixel scene."
+  }
+ ],
+ "gaps": [
+  {
+   "need": "NPC extras: cat, birds, fireflies",
+   "why": "No ambient-creature sprites exist in composed/ (ninja-adventure-animal 16px is the wrong scale).",
+   "suggested approach": "Hand-pixel a 3-4 frame cat (sit/walk) at ~14px tall, a 2-frame bird for the fence line, and use a 3x3 glow-core dot sprite as firefly particles (Phaser emitter, ADD blend)."
+  },
+  {
+   "need": "Lit-window flicker frames",
+   "why": "Windows are baked into lit/dark house PNGs; no per-window frames exist.",
+   "suggested approach": "Engine-side: overlay prop.window-lit decals with an alpha tween (0.85..1, random 600-1800 ms); meta window rects are stale, so re-measure first."
+  },
+  {
+   "need": "Rain / snow",
+   "why": "No weather particles.",
+   "suggested approach": "Phaser particle emitter with a 1x2 / 2x2 px white sprite drawn at runtime (palette cloud-hi); no art needed beyond that."
+  },
+  {
+   "need": "Second van / colourway",
+   "why": "Only van and van-luggage exist.",
+   "suggested approach": "Palette-remap the van (roof-wine -> hill-far) with a new variant script; bus-stop sign optional."
+  },
+  {
+   "need": "Feynman freshman sitting on the porch",
+   "why": "freshman has a generic sit pose but landmark.feynman-porch has no seat anchor (provenance has only a stale sign_slot).",
+   "suggested approach": "Measure a seat point on the trimmed feynman_porch.png and place persona.freshman sit frames there; optionally add a porch-specific sit pose."
+  },
+  {
+   "need": "Dissenter bubble variants",
+   "why": "Only wall and moon bubble palettes exist.",
+   "suggested approach": "Add a third bubble (alert-tinted outline) and matching tails for dissent speech; reuse the 9-slice recipe in props_ui.py."
+  },
+  {
+   "need": "Mobile dock icons",
+   "why": "No pixel dock icons. Lucide SVGs exist in assets/fluent-objects/icons (38, e.g. users, vote, lock, bus, mail).",
+   "suggested approach": "Use Lucide SVGs in the DOM dock (phone) and tint to palette; optionally hand-pixel 16x16 versions for in-canvas use."
+  },
+  {
+   "need": "Day variants of buildings",
+   "why": "Not produced.",
+   "suggested approach": "Not needed: tint/multiply in engine, or swap the sky variant only."
+  },
+  {
+   "need": "Interiors for debate stage, rubric courthouse, exam oracle, devil's TA cave",
+   "why": "Only 4 interiors exist: study, classroom, council, oral exam.",
+   "suggested approach": "Reuse interior.council for the courthouse and debate stage (stage props overlay), interior.oral-exam for the oracle; draw a dark cave interior (stalactite silhouette, glints) as a new 224x128 sheet."
+  },
+  {
+   "need": "Per-persona 4-frame idle",
+   "why": "Idle is 2 frames at 2 fps for every persona.",
+   "suggested approach": "Acceptable for now; extend idle to 4 frames in make_characters.py if breathing needs more life."
+  },
+  {
+   "need": "Wind-blown grass / tree sway",
+   "why": "Static tufts and trees.",
+   "suggested approach": "Engine-side vertical-shear tween on prop.tuft-*; no new art needed."
+  },
+  {
+   "need": "Building door / sign / chimney anchors",
+   "why": "Provenance meta is pre-trim and stale (flagged meta_coords_stale).",
+   "suggested approach": "Re-run the building generators to export post-trim coordinates (door rect, chimney top, sign slot, seats) into provenance.json; until then do eyeball placement from PNG."
+  },
+  {
+   "need": "Left-facing and back-facing character frames",
+   "why": "Art faces right only; no back or front views.",
+   "suggested approach": "flipX for left; add front/back idle only if a scene needs it."
+  },
+  {
+   "need": "Sit anchors",
+   "why": "persona sit frames exist but bench/stool/stump have no seat anchors in provenance.",
+   "suggested approach": "Use anchor bottom-centre of the prop plus a y offset of -4 px for the person and tune per prop."
+  },
+  {
+   "need": "Unlit twin for the tall lamp post",
+   "why": "buildings/props/lamp_post_lit.png has no unlit version.",
+   "suggested approach": "Palette-remap lit -> unlit or use prop.lamp-post."
+  },
+  {
+   "need": "Fonts in canvas",
+   "why": "Silkscreen/Jersey are TTF only for canvas text.",
+   "suggested approach": "Use CSS @font-face and Phaser text, or hand-pixel a bitmap font if crispness at 3x becomes a problem."
+  }
+ ],
+ "phaserLoadHints": {
+  "notes": {
+   "scale": "All art at 1x. Game config: type AUTO, pixelArt true (roundPixels true), width 427 height 240 on desktop (zoom 3) and 195 x floor(h/2) on phone (zoom 2). Never scale sprites by non-integer factors.",
+   "origin": "originFrac is anchor/size; bottom-row anchors map to fy=1. Prefer sprite.setOrigin(...originFrac) and position at the ground contact (x, 240).",
+   "atlasFacing": "Characters face right; set flipX for left. Walk speed = 24 px/s at 8 fps (3 px per frame).",
+   "parallax": "For layers with scrollFactor<1 use this.add.tileSprite(0, 270, viewW, 270, key).setOrigin(0,1).setScrollFactor(0) and update tilePositionX = cam.scrollX * factor in update(); for factor 1 use plain images/tileSprite scrollFactor 1.",
+   "nineslice": "Phaser >= 3.60: this.add.nineslice(x, y, key, undefined, w, h, 5, 5, 5, 5) for bubbles (corner 5); corner 2 for withheld-bar.",
+   "variants": "Variant textures are loaded as '<id>:<variant>' (e.g. 'house.hut:dark'); swap with sprite.setTexture().",
+   "animations": "Spritesheet animations: this.anims.create({ key: id, frames: this.anims.generateFrameNumbers(id), frameRate: fps, repeat: -1 }). fps values are in the manifest `frame.fps`.",
+   "blend": "Light pools (fx.campfire-light, prop.lamp-halo) use blendMode ADD (or ordinary alpha 0.6); they contain no alpha ramp, only stepped dithered bands."
+  },
+  "preload": {
+   "parallax": [
+    "this.load.image('parallax.0_sky', 'assets/pixel/composed/backgrounds/0_sky.png');",
+    "this.load.image('parallax.0_sky:dusk', 'assets/pixel/composed/backgrounds/0_sky_dusk.png');",
+    "this.load.image('parallax.0_sky:dawn', 'assets/pixel/composed/backgrounds/0_sky_dawn.png');",
+    "this.load.image('parallax.0_sky:day', 'assets/pixel/composed/backgrounds/0_sky_day.png');",
+    "this.load.image('parallax.1_stars', 'assets/pixel/composed/backgrounds/1_stars.png');",
+    "this.load.image('parallax.1_stars:twinkle_0', 'assets/pixel/composed/backgrounds/1_stars_twinkle_0.png');",
+    "this.load.image('parallax.1_stars:twinkle_1', 'assets/pixel/composed/backgrounds/1_stars_twinkle_1.png');",
+    "this.load.image('parallax.1_stars:twinkle_2', 'assets/pixel/composed/backgrounds/1_stars_twinkle_2.png');",
+    "this.load.image('parallax.1_stars:twinkle_3', 'assets/pixel/composed/backgrounds/1_stars_twinkle_3.png');",
+    "this.load.image('parallax.1_stars:twinkle_mask', 'assets/pixel/composed/backgrounds/1_stars_twinkle_mask.png');",
+    "this.load.image('parallax.2_moon', 'assets/pixel/composed/backgrounds/2_moon.png');",
+    "this.load.image('parallax.3_clouds_far', 'assets/pixel/composed/backgrounds/3_clouds_far.png');",
+    "this.load.image('parallax.4_clouds_near', 'assets/pixel/composed/backgrounds/4_clouds_near.png');",
+    "this.load.image('parallax.5_hills_far', 'assets/pixel/composed/backgrounds/5_hills_far.png');",
+    "this.load.image('parallax.6_hills_mid', 'assets/pixel/composed/backgrounds/6_hills_mid.png');",
+    "this.load.image('parallax.7_hills_near', 'assets/pixel/composed/backgrounds/7_hills_near.png');",
+    "this.load.image('parallax.8_fenceline', 'assets/pixel/composed/backgrounds/8_fenceline.png');",
+    "this.load.image('parallax.9_ground', 'assets/pixel/composed/backgrounds/9_ground.png');",
+    "this.load.image('parallax.10_foreground', 'assets/pixel/composed/backgrounds/10_foreground.png');",
+    "this.load.image('parallax.cloud-far-0', 'assets/pixel/composed/backgrounds/clouds/far_0.png');",
+    "this.load.image('parallax.cloud-far-1', 'assets/pixel/composed/backgrounds/clouds/far_1.png');",
+    "this.load.image('parallax.cloud-far-2', 'assets/pixel/composed/backgrounds/clouds/far_2.png');",
+    "this.load.image('parallax.cloud-far-3', 'assets/pixel/composed/backgrounds/clouds/far_3.png');",
+    "this.load.image('parallax.cloud-far-4', 'assets/pixel/composed/backgrounds/clouds/far_4.png');",
+    "this.load.image('parallax.cloud-far-5', 'assets/pixel/composed/backgrounds/clouds/far_5.png');",
+    "this.load.image('parallax.cloud-near-0', 'assets/pixel/composed/backgrounds/clouds/near_0.png');",
+    "this.load.image('parallax.cloud-near-1', 'assets/pixel/composed/backgrounds/clouds/near_1.png');",
+    "this.load.image('parallax.cloud-near-2', 'assets/pixel/composed/backgrounds/clouds/near_2.png');",
+    "this.load.image('parallax.cloud-near-3', 'assets/pixel/composed/backgrounds/clouds/near_3.png');",
+    "this.load.image('parallax.cloud-near-4', 'assets/pixel/composed/backgrounds/clouds/near_4.png');"
+   ],
+   "building": [
+    "this.load.image('house.tenement', 'assets/pixel/composed/buildings/houses/house_tenement_lit.png');",
+    "this.load.image('house.tenement:dark', 'assets/pixel/composed/buildings/houses/house_tenement_dark.png');",
+    "this.load.image('house.shop', 'assets/pixel/composed/buildings/houses/house_shop_lit.png');",
+    "this.load.image('house.shop:dark', 'assets/pixel/composed/buildings/houses/house_shop_dark.png');",
+    "this.load.image('house.hut', 'assets/pixel/composed/buildings/houses/house_hut_lit.png');",
+    "this.load.image('house.hut:dark', 'assets/pixel/composed/buildings/houses/house_hut_dark.png');",
+    "this.load.image('house.cottage', 'assets/pixel/composed/buildings/houses/house_cottage_lit.png');",
+    "this.load.image('house.cottage:dark', 'assets/pixel/composed/buildings/houses/house_cottage_dark.png');",
+    "this.load.image('house.brick', 'assets/pixel/composed/buildings/houses/house_brick_lit.png');",
+    "this.load.image('house.brick:dark', 'assets/pixel/composed/buildings/houses/house_brick_dark.png');",
+    "this.load.image('house.signboard', 'assets/pixel/composed/buildings/houses/signboard_empty.png');"
+   ],
+   "landmark": [
+    "this.load.image('landmark.council-hall', 'assets/pixel/composed/buildings/landmarks/council_hall.png');",
+    "this.load.image('landmark.council-hall:locked', 'assets/pixel/composed/buildings/landmarks/council_hall_locked.png');",
+    "this.load.image('landmark.debate-stage', 'assets/pixel/composed/buildings/landmarks/debate_stage.png');",
+    "this.load.image('landmark.debate-stage:locked', 'assets/pixel/composed/buildings/landmarks/debate_stage_locked.png');",
+    "this.load.image('landmark.round-table-pavilion', 'assets/pixel/composed/buildings/landmarks/round_table_pavilion.png');",
+    "this.load.image('landmark.round-table-pavilion:locked', 'assets/pixel/composed/buildings/landmarks/round_table_pavilion_locked.png');",
+    "this.load.image('landmark.feynman-porch', 'assets/pixel/composed/buildings/landmarks/feynman_porch.png');",
+    "this.load.image('landmark.feynman-porch:locked', 'assets/pixel/composed/buildings/landmarks/feynman_porch_locked.png');",
+    "this.load.image('landmark.oral-exam-hut', 'assets/pixel/composed/buildings/landmarks/oral_exam_hut.png');",
+    "this.load.image('landmark.oral-exam-hut:locked', 'assets/pixel/composed/buildings/landmarks/oral_exam_hut_locked.png');",
+    "this.load.image('landmark.rubric-courthouse', 'assets/pixel/composed/buildings/landmarks/rubric_courthouse.png');",
+    "this.load.image('landmark.rubric-courthouse:locked', 'assets/pixel/composed/buildings/landmarks/rubric_courthouse_locked.png');",
+    "this.load.image('landmark.exam-oracle', 'assets/pixel/composed/buildings/landmarks/exam_oracle.png');",
+    "this.load.image('landmark.exam-oracle:locked', 'assets/pixel/composed/buildings/landmarks/exam_oracle_locked.png');",
+    "this.load.image('landmark.devils-ta-cave', 'assets/pixel/composed/buildings/landmarks/devils_ta_cave.png');",
+    "this.load.image('landmark.devils-ta-cave:locked', 'assets/pixel/composed/buildings/landmarks/devils_ta_cave_locked.png');",
+    "this.load.image('landmark.classroom-house', 'assets/pixel/composed/buildings/landmarks/classroom_house.png');",
+    "this.load.image('landmark.classroom-house:locked', 'assets/pixel/composed/buildings/landmarks/classroom_house_locked.png');",
+    "this.load.image('landmark.panic-booth', 'assets/pixel/composed/buildings/landmarks/panic_booth_off.png');",
+    "this.load.image('landmark.panic-booth:glow', 'assets/pixel/composed/buildings/landmarks/panic_booth_glow.png');",
+    "this.load.image('landmark.panic-booth:locked', 'assets/pixel/composed/buildings/landmarks/panic_booth_locked.png');",
+    "this.load.image('landmark.padlock-8x8', 'assets/pixel/composed/buildings/landmarks/padlock_8x8.png');",
+    "this.load.image('landmark.windmill', 'assets/pixel/composed/buildings/windmill/windmill_lit.png');",
+    "this.load.image('landmark.windmill:dark', 'assets/pixel/composed/buildings/windmill/windmill_dark.png');",
+    "this.load.spritesheet('landmark.windmill.sails', 'assets/pixel/composed/buildings/windmill/windmill_sails_strip.png', { frameWidth: 72, frameHeight: 72 });"
+   ],
+   "interior": [
+    "this.load.image('interior.study', 'assets/pixel/composed/buildings/interiors/interior_study.png');",
+    "this.load.image('interior.classroom', 'assets/pixel/composed/buildings/interiors/interior_classroom.png');",
+    "this.load.image('interior.council', 'assets/pixel/composed/buildings/interiors/interior_council.png');",
+    "this.load.image('interior.oral-exam', 'assets/pixel/composed/buildings/interiors/interior_oral_exam.png');"
+   ],
+   "persona": [
+    "this.load.atlas('atlas.characters', 'assets/pixel/composed/characters/atlas.png', 'assets/pixel/composed/characters/atlas.json');"
+   ],
+   "npc": [],
+   "prop": [
+    "this.load.image('prop.lamp-post-tall-lit', 'assets/pixel/composed/buildings/props/lamp_post_lit.png');",
+    "this.load.image('prop.bench', 'assets/pixel/composed/props/bench.png');",
+    "this.load.image('prop.barrel', 'assets/pixel/composed/props/barrel.png');",
+    "this.load.image('prop.stall-bunting', 'assets/pixel/composed/props/stall-bunting.png');",
+    "this.load.image('prop.stall-awning', 'assets/pixel/composed/props/stall-awning.png');",
+    "this.load.image('prop.bunting-a', 'assets/pixel/composed/props/bunting-a.png');",
+    "this.load.image('prop.bunting-b', 'assets/pixel/composed/props/bunting-b.png');",
+    "this.load.image('prop.sofa', 'assets/pixel/composed/props/sofa.png');",
+    "this.load.image('prop.sofa-small', 'assets/pixel/composed/props/sofa-small.png');",
+    "this.load.image('prop.bookshelf', 'assets/pixel/composed/props/bookshelf.png');",
+    "this.load.image('prop.signpost-board', 'assets/pixel/composed/props/signpost-board.png');",
+    "this.load.image('prop.signpost-arrow', 'assets/pixel/composed/props/signpost-arrow.png');",
+    "this.load.image('prop.stump', 'assets/pixel/composed/props/stump.png');",
+    "this.load.image('prop.shelf-table', 'assets/pixel/composed/props/shelf-table.png');",
+    "this.load.image('prop.crate-a', 'assets/pixel/composed/props/crate-a.png');",
+    "this.load.image('prop.crate-b', 'assets/pixel/composed/props/crate-b.png');",
+    "this.load.image('prop.stool', 'assets/pixel/composed/props/stool.png');",
+    "this.load.image('prop.lamp-post', 'assets/pixel/composed/props/lamp-post.png');",
+    "this.load.image('prop.lamp-post:lit', 'assets/pixel/composed/props/lamp-post-lit.png');",
+    "this.load.image('prop.lamp-halo', 'assets/pixel/composed/props/lamp-halo.png');",
+    "this.load.image('prop.rock-big', 'assets/pixel/composed/props/rock-big.png');",
+    "this.load.image('prop.rock-small', 'assets/pixel/composed/props/rock-small.png');",
+    "this.load.image('prop.tuft-a', 'assets/pixel/composed/props/tuft-a.png');",
+    "this.load.image('prop.tuft-b', 'assets/pixel/composed/props/tuft-b.png');",
+    "this.load.image('prop.tuft-c', 'assets/pixel/composed/props/tuft-c.png');",
+    "this.load.image('prop.tuft-d', 'assets/pixel/composed/props/tuft-d.png');",
+    "this.load.image('prop.flower', 'assets/pixel/composed/props/flower.png');",
+    "this.load.image('prop.tree-1', 'assets/pixel/composed/props/tree-1.png');",
+    "this.load.image('prop.tree-2', 'assets/pixel/composed/props/tree-2.png');",
+    "this.load.image('prop.tree-3', 'assets/pixel/composed/props/tree-3.png');",
+    "this.load.image('prop.tree-4', 'assets/pixel/composed/props/tree-4.png');",
+    "this.load.image('prop.tree-5', 'assets/pixel/composed/props/tree-5.png');",
+    "this.load.image('prop.tree-6', 'assets/pixel/composed/props/tree-6.png');",
+    "this.load.image('prop.pine-1', 'assets/pixel/composed/props/pine-1.png');",
+    "this.load.image('prop.pine-2', 'assets/pixel/composed/props/pine-2.png');",
+    "this.load.image('prop.bush-1', 'assets/pixel/composed/props/bush-1.png');",
+    "this.load.image('prop.bush-2', 'assets/pixel/composed/props/bush-2.png');",
+    "this.load.image('prop.flower-1', 'assets/pixel/composed/props/flower-1.png');",
+    "this.load.image('prop.flower-2', 'assets/pixel/composed/props/flower-2.png');",
+    "this.load.image('prop.flower-3', 'assets/pixel/composed/props/flower-3.png');",
+    "this.load.image('prop.fence', 'assets/pixel/composed/props/fence.png');",
+    "this.load.image('prop.mailbox', 'assets/pixel/composed/props/mailbox.png');",
+    "this.load.image('prop.window-dark', 'assets/pixel/composed/props/window-dark.png');",
+    "this.load.image('prop.window-lit', 'assets/pixel/composed/props/window-lit.png');",
+    "this.load.image('prop.window-curtained', 'assets/pixel/composed/props/window-curtained.png');",
+    "this.load.image('prop.desk-lamp', 'assets/pixel/composed/props/desk-lamp.png');",
+    "this.load.image('prop.desk', 'assets/pixel/composed/props/desk.png');",
+    "this.load.image('prop.chair', 'assets/pixel/composed/props/chair.png');",
+    "this.load.image('prop.books', 'assets/pixel/composed/props/books.png');",
+    "this.load.image('prop.chalkboard', 'assets/pixel/composed/props/chalkboard.png');",
+    "this.load.image('prop.chalk-tick', 'assets/pixel/composed/props/chalk-tick.png');",
+    "this.load.image('prop.chalk-cross', 'assets/pixel/composed/props/chalk-cross.png');",
+    "this.load.image('prop.round-table', 'assets/pixel/composed/props/round-table.png');",
+    "this.load.image('prop.scroll', 'assets/pixel/composed/props/scroll.png');",
+    "this.load.image('prop.map', 'assets/pixel/composed/props/map.png');",
+    "this.load.image('prop.telescope', 'assets/pixel/composed/props/telescope.png');"
+   ],
+   "vehicle": [
+    "this.load.spritesheet('vehicle.van', 'assets/pixel/composed/props/van.png', { frameWidth: 64, frameHeight: 40 });",
+    "this.load.image('vehicle.van:luggage', 'assets/pixel/composed/props/van-luggage.png');",
+    "this.load.image('vehicle.van-cone', 'assets/pixel/composed/props/van-cone.png');",
+    "this.load.image('vehicle.road-tile', 'assets/pixel/composed/props/road-tile.png');"
+   ],
+   "fx": [
+    "this.load.spritesheet('fx.campfire-fire', 'assets/pixel/composed/fx/campfire-fire.png', { frameWidth: 16, frameHeight: 22 });",
+    "this.load.image('fx.campfire-base', 'assets/pixel/composed/fx/campfire-base.png');",
+    "this.load.spritesheet('fx.campfire', 'assets/pixel/composed/fx/campfire.png', { frameWidth: 32, frameHeight: 34 });",
+    "this.load.image('fx.campfire-light', 'assets/pixel/composed/fx/campfire-light.png');",
+    "this.load.spritesheet('fx.campfire-sparks', 'assets/pixel/composed/fx/campfire-sparks.png', { frameWidth: 8, frameHeight: 12 });",
+    "this.load.spritesheet('fx.chimney-smoke', 'assets/pixel/composed/fx/chimney-smoke.png', { frameWidth: 24, frameHeight: 40 });",
+    "this.load.spritesheet('fx.star-1', 'assets/pixel/composed/fx/star-1.png', { frameWidth: 5, frameHeight: 5 });",
+    "this.load.spritesheet('fx.star-2', 'assets/pixel/composed/fx/star-2.png', { frameWidth: 5, frameHeight: 5 });",
+    "this.load.spritesheet('fx.star-3', 'assets/pixel/composed/fx/star-3.png', { frameWidth: 5, frameHeight: 5 });",
+    "this.load.spritesheet('fx.star-4', 'assets/pixel/composed/fx/star-4.png', { frameWidth: 5, frameHeight: 5 });"
+   ],
+   "ui": [
+    "this.load.image('ui.envelope', 'assets/pixel/composed/ui/envelope.png');",
+    "this.load.spritesheet('ui.envelope-pop', 'assets/pixel/composed/ui/envelope-pop.png', { frameWidth: 18, frameHeight: 14 });",
+    "this.load.image('ui.padlock', 'assets/pixel/composed/ui/padlock.png');",
+    "this.load.image('ui.padlock-open', 'assets/pixel/composed/ui/padlock-open.png');",
+    "this.load.spritesheet('ui.door-ring', 'assets/pixel/composed/ui/door-ring.png', { frameWidth: 32, frameHeight: 16 });",
+    "this.load.image('ui.door-ring-ok', 'assets/pixel/composed/ui/door-ring-ok.png');",
+    "this.load.image('ui.check', 'assets/pixel/composed/ui/check.png');",
+    "this.load.image('ui.marker-alert', 'assets/pixel/composed/ui/marker-alert.png');",
+    "this.load.image('ui.marker-question', 'assets/pixel/composed/ui/marker-question.png');",
+    "this.load.spritesheet('ui.lantern-council', 'assets/pixel/composed/ui/lantern-council.png', { frameWidth: 10, frameHeight: 16 });",
+    "this.load.spritesheet('ui.lantern-dissent', 'assets/pixel/composed/ui/lantern-dissent.png', { frameWidth: 10, frameHeight: 16 });",
+    "this.load.spritesheet('ui.lantern-street', 'assets/pixel/composed/ui/lantern-street.png', { frameWidth: 10, frameHeight: 16 });",
+    "this.load.spritesheet('ui.zzz', 'assets/pixel/composed/ui/zzz.png', { frameWidth: 14, frameHeight: 18 });",
+    "this.load.spritesheet('ui.notes', 'assets/pixel/composed/ui/notes.png', { frameWidth: 8, frameHeight: 9, spacing: 1 });",
+    "this.load.image('ui.bubble-wall', 'assets/pixel/composed/ui/bubble-wall.png');",
+    "this.load.image('ui.bubble-wall-tail-left', 'assets/pixel/composed/ui/bubble-wall-tail-left.png');",
+    "this.load.image('ui.bubble-wall-tail-right', 'assets/pixel/composed/ui/bubble-wall-tail-right.png');",
+    "this.load.image('ui.thought-wall-dots', 'assets/pixel/composed/ui/thought-wall-dots.png');",
+    "this.load.image('ui.bubble-moon', 'assets/pixel/composed/ui/bubble-moon.png');",
+    "this.load.image('ui.bubble-moon-tail-left', 'assets/pixel/composed/ui/bubble-moon-tail-left.png');",
+    "this.load.image('ui.bubble-moon-tail-right', 'assets/pixel/composed/ui/bubble-moon-tail-right.png');",
+    "this.load.image('ui.thought-moon-dots', 'assets/pixel/composed/ui/thought-moon-dots.png');",
+    "this.load.image('ui.withheld-bar', 'assets/pixel/composed/ui/withheld-bar.png');",
+    "this.load.image('ui.notice-board', 'assets/pixel/composed/ui/notice-board.png');",
+    "this.load.image('ui.notice-board-lit', 'assets/pixel/composed/ui/notice-board-lit.png');",
+    "this.load.image('ui.card-shared', 'assets/pixel/composed/ui/card-shared.png');",
+    "this.load.image('ui.card-hidden', 'assets/pixel/composed/ui/card-hidden.png');",
+    "this.load.image('ui.card-blocked', 'assets/pixel/composed/ui/card-blocked.png');",
+    "this.load.image('ui.card-pinned', 'assets/pixel/composed/ui/card-pinned.png');",
+    "this.load.spritesheet('ui.trip-door', 'assets/pixel/composed/ui/trip-door.png', { frameWidth: 32, frameHeight: 40 });",
+    "this.load.image('ui.emote-alert', 'assets/pixel/composed/ui/emote-alert.png');",
+    "this.load.image('ui.emote-question', 'assets/pixel/composed/ui/emote-question.png');",
+    "this.load.image('ui.emote-heart', 'assets/pixel/composed/ui/emote-heart.png');",
+    "this.load.image('ui.emote-zzz', 'assets/pixel/composed/ui/emote-zzz.png');",
+    "this.load.image('ui.emote-dots', 'assets/pixel/composed/ui/emote-dots.png');",
+    "this.load.image('ui.emote-smile', 'assets/pixel/composed/ui/emote-smile.png');"
+   ],
+   "font": []
+  },
+  "animationSnippet": "// after preload: register every animation from the atlas JSON\nconst atlas = this.cache.json.get('characters-anims'); // this.load.json('characters-anims', '<atlas.json>')\nfor (const [persona, anims] of Object.entries(atlas.animations)) {\n  for (const [name, a] of Object.entries(anims)) {\n    this.anims.create({ key: `${persona}:${name}`, frames: a.frames.map(f => ({ key: 'atlas.characters', frame: f })),\n                        frameRate: a.frameRate, repeat: a.repeat });\n  }\n}\n// sprites: this.add.sprite(x, 240, 'atlas.characters', 'student/idle/0').setOrigin(0.5, 1); sprite.play('student:walk');"
+ },
+ "verification": {
+  "mismatches": [
+   "assets/pixel/composed/ui/notes.png: provenance frame [9, 8] x2 is wrong for a 17x9 PNG; real layout is 2 frames of 8x9 separated by a 1px gap (manifest uses frame 8x9, spacing 1)"
+  ],
+  "missingFiles": [],
+  "offPalette": [],
+  "notes": [
+   "atlas.json: 143 frames = 11 personas x (12 animation frames + 1 portrait); 132 animation frame refs, all inside the 416x352 atlas.",
+   "palette check ran on 243 distinct PNGs referenced by the manifest.",
+   "Two lamp posts exist: props/lamp-post(.lit) 24x64 and buildings/props/lamp_post_lit 23x95 (different heights, different folders); manifest keeps both with distinct ids.",
+   "props/flower.png duplicates props/flower-1.png (same 5x7 size).",
+   "1 building PNGs have transparent padding (bbox != full canvas): windmill_sails_strip.png",
+   "Building provenance doors/windows/sign_slot/chimney_x/seats/chair/glints/slit/chalkboard rects are pre-trim canvas coordinates; every building sprite PNG (sails strip excepted, see previous note) now has bbox == full canvas so they CANNOT be mapped back without the original trim offsets. Treated as stale and not published.",
+   "Windmill hub [21,25] checked by eye on windmill_lit.png: it lands on the wooden roof beam/hub block, so it is published (windmill meta is not part of the stale set).",
+   "Interior anchors (floor_y 112, seats, desks) are in an untrimmed 224x128 canvas and are published as-is; only size was cross-checked, positions were not visually verified."
+  ],
+  "assetCount": 164
+ }
+}

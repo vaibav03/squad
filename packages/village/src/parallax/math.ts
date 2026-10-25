@@ -6,10 +6,14 @@ export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 /** Target nightness 0..1 for a fixed mode, or from the clock for 'auto'. */
 export function targetNightness(mode: TimeMode, hours: number): number {
   switch (mode) {
-    case 'night': return 1;
-    case 'day': return 0;
-    case 'dusk': return 0.62;
-    case 'dawn': return 0.4;
+    case 'night':
+      return 1;
+    case 'day':
+      return 0;
+    case 'dusk':
+      return 0.62;
+    case 'dawn':
+      return 0.4;
     case 'auto': {
       const h = ((hours % 24) + 24) % 24;
       if (h >= 21 || h < 5) return 1;
@@ -22,11 +26,16 @@ export function targetNightness(mode: TimeMode, hours: number): number {
 
 export function modeClockHours(mode: TimeMode, realHours: number): number {
   switch (mode) {
-    case 'night': return 22.17;
-    case 'dusk': return 19.33;
-    case 'dawn': return 5.83;
-    case 'day': return 13;
-    case 'auto': return realHours;
+    case 'night':
+      return 22.17;
+    case 'dusk':
+      return 19.33;
+    case 'dawn':
+      return 5.83;
+    case 'day':
+      return 13;
+    case 'auto':
+      return realHours;
   }
 }
 
