@@ -17,7 +17,10 @@ export interface PlaceResolver {
 }
 
 /** Student -> home slot, in order of appearance; the viewer always gets home-1 (their own house). */
-export function createPlaceResolver(ctx: VillageContext, homeFor: (agentId: string) => number | undefined): PlaceResolver {
+export function createPlaceResolver(
+  ctx: VillageContext,
+  homeFor: (agentId: string) => number | undefined,
+): PlaceResolver {
   const L = ctx.layout;
   const g = L.groundY;
   const commons = { x: L.slot('commons').x, y: g };

@@ -51,7 +51,8 @@ export function preloadMeshAssets(ctx: VillageContext, load: Phaser.Loader.Loade
   for (const [k, s] of Object.entries(SHEETS)) {
     if (!has(k)) load.spritesheet(k, ctx.assets.url(s.path), { frameWidth: s.w, frameHeight: s.h });
   }
-  if (!has(CAST_ATLAS.key)) load.atlas(CAST_ATLAS.key, ctx.assets.url(CAST_ATLAS.png), ctx.assets.url(CAST_ATLAS.json));
+  if (!has(CAST_ATLAS.key))
+    load.atlas(CAST_ATLAS.key, ctx.assets.url(CAST_ATLAS.png), ctx.assets.url(CAST_ATLAS.json));
 }
 
 /** Pixel font (Jersey 10, OFL). Resolves when usable; failure falls back to monospace silently. */

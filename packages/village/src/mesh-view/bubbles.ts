@@ -16,6 +16,8 @@ export interface BubbleSpec {
   lines?: readonly string[];
   minMs: number;
   tone?: 'alert';
+  /** Prefix lines with a dash (shared-field lists). Off for single values. */
+  bullets?: boolean;
   /** Where the tail points (world px); a function re-anchors every frame (follows a walking speaker). */
   anchor: () => { x: number; y: number } | undefined;
   /** Lane for the commons: bubbles in the same lane never overlap; later ones wait. */
@@ -43,17 +45,23 @@ export interface BubbleManager {
 export function createBubbles(ctx: VillageContext): BubbleManager {
   const live = new Map<string, Live>();
   const queued: BubbleSpec[] = [];
-  const laneBusy = (lane: string) => [...live.values()].some((b) => b.spec.lane === lane && !b.leaving);
+  const laneBusy = (lane: string) =>
+    [...live.values()].some((b) => b.spec.lane === lane && !b.leaving);
 
   const build = (spec: BubbleSpec): Live | undefined => {
     const a = spec.anchor();
     if (!a) return undefined;
-    const body = [spec.text, ...(spec.lines ?? []).slice(0, MAX_LINES).map((l) => `- ${l}`)].join('\n');
+    const body = [
+      spec.text,
+      ...(spec.lines ?? []).slice(0, MAX_LINES).map((l) => (spec.bullets === false ? l : `- ${l}`)),
+    ].join('\n');
     const label = pixelText(ctx, body, { color: 'ink', wrap: WRAP_PX, size: 9.333 });
     const iconW = spec.tone === 'alert' ? 10 : 0;
     const w = Math.max(24, Math.ceil(label.width) + PAD_X * 2 + iconW);
     const h = Math.max(18, Math.ceil(label.height) + PAD_Y * 2);
-    const slice = ctx.scene.add.nineslice(0, 0, 'mv-bubble-wall', undefined, w, h, 5, 5, 5, 5).setOrigin(0, 0);
+    const slice = ctx.scene.add
+      .nineslice(0, 0, 'mv-bubble-wall', undefined, w, h, 5, 5, 5, 5)
+      .setOrigin(0, 0);
     const tail = ctx.scene.add.image(0, 0, 'mv-tail-wall-l').setOrigin(0, 0);
     const kids: Phaser.GameObjects.GameObject[] = [slice, tail, label];
     let icon: Phaser.GameObjects.Image | undefined;

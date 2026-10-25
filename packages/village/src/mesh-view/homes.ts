@@ -9,7 +9,15 @@ import { pixelText, tween } from './util';
 export const HOME_SLOTS = ['home-1', 'home-2', 'home-3'] as const;
 
 /** Geometry of house_hut_*.png (128x133, ground anchor (64,132)); mirrored when the house is flipped. */
-const HUT = { w: 128, h: 133, door: -22, doorY: -14, window: { x: 38, y: -61 }, chimney: { x: 40, y: -122 }, sign: { x: -42, y: -93, w: 28, h: 9 } };
+const HUT = {
+  w: 128,
+  h: 133,
+  door: -22,
+  doorY: -14,
+  window: { x: 38, y: -61 },
+  chimney: { x: 40, y: -122 },
+  sign: { x: -42, y: -107, w: 28, h: 9 },
+};
 
 interface Home {
   slotId: string;
@@ -48,7 +56,12 @@ export function createHomes(ctx: VillageContext): HomeManager {
   ensureLocked(scene, 'mv-hut-lit', 'mv-hut-locked-lit', true);
 
   if (!ctx.scene.anims.exists('mv-smoke')) {
-    ctx.scene.anims.create({ key: 'mv-smoke', frames: ctx.scene.anims.generateFrameNumbers('mv-smoke', { start: 0, end: 7 }), frameRate: 5, repeat: -1 });
+    ctx.scene.anims.create({
+      key: 'mv-smoke',
+      frames: ctx.scene.anims.generateFrameNumbers('mv-smoke', { start: 0, end: 7 }),
+      frameRate: 5,
+      repeat: -1,
+    });
   }
 
   HOME_SLOTS.forEach((id, i) => {
@@ -60,16 +73,41 @@ export function createHomes(ctx: VillageContext): HomeManager {
     }
     const flip = i === 2; // one mirrored house breaks the repetition
     const sgn = flip ? -1 : 1;
-    const house = ctx.scene.add.image(slot.x, g + 1, 'mv-hut-locked-dim').setOrigin(0.5, 1).setDepth(ctx.depth.buildings).setFlipX(flip);
-    const label = pixelText(ctx, '', { color: 'ink', size: 9.333 }).setDepth(ctx.depth.props).setVisible(false);
-    homes.push({ slotId: id, slotX: slot.x, flip, doorX: slot.x + sgn * HUT.door, house, label, mine: false, lit: false });
+    const house = ctx.scene.add
+      .image(slot.x, g + 1, 'mv-hut-locked-dim')
+      .setOrigin(0.5, 1)
+      .setDepth(ctx.depth.buildings)
+      .setFlipX(flip);
+    const label = pixelText(ctx, '', { color: 'ink', size: 9.333 })
+      .setDepth(ctx.depth.props)
+      .setVisible(false);
+    homes.push({
+      slotId: id,
+      slotX: slot.x,
+      flip,
+      doorX: slot.x + sgn * HUT.door,
+      house,
+      label,
+      mine: false,
+      lit: false,
+    });
   });
 
-  const tex = (h: Home) => (h.mine ? (h.lit ? 'mv-hut-lit' : 'mv-hut-dark') : h.lit ? 'mv-hut-locked-lit' : 'mv-hut-locked-dim');
+  const tex = (h: Home) =>
+    h.mine
+      ? h.lit
+        ? 'mv-hut-lit'
+        : 'mv-hut-dark'
+      : h.lit
+        ? 'mv-hut-locked-lit'
+        : 'mv-hut-locked-dim';
 
   const lockFor = (h: Home) => {
     if (h.lock) return h.lock;
-    h.lock = ctx.scene.add.image(h.doorX, g - 14, 'mv-padlock').setOrigin(0.5, 0.5).setDepth(ctx.depth.props + 1);
+    h.lock = ctx.scene.add
+      .image(h.doorX, g - 26, 'mv-padlock')
+      .setOrigin(0.5, 0.5)
+      .setDepth(ctx.depth.props + 1);
     return h.lock;
   };
 
@@ -89,7 +127,10 @@ export function createHomes(ctx: VillageContext): HomeManager {
       const s = HUT.sign;
       h.label.setText(text);
       const cx = h.slotX + sgn * (s.x + s.w / 2);
-      h.label.setPosition(Math.round(cx - h.label.width / 2), g + s.y - 1).setVisible(true).setAlpha(0);
+      h.label
+        .setPosition(Math.round(cx - h.label.width / 2), g + s.y)
+        .setVisible(true)
+        .setAlpha(0);
       tween(ctx, h.label, { alpha: 1 }, { ms: 200 });
       if (!mine) lockFor(h);
     }
@@ -99,7 +140,8 @@ export function createHomes(ctx: VillageContext): HomeManager {
 
   const me = ctx.me ? `student:${ctx.me}` : undefined;
   if (me) assign(me, true);
-  for (const a of ctx.agents.list()) if (parseAgentId(a.id).kind === 'student') assign(a.id, a.id === me);
+  for (const a of ctx.agents.list())
+    if (parseAgentId(a.id).kind === 'student') assign(a.id, a.id === me);
 
   const applyLit = (h: Home, lit: boolean) => {
     if (h.lit === lit) return;
@@ -107,7 +149,14 @@ export function createHomes(ctx: VillageContext): HomeManager {
     h.house.setTexture(tex(h));
     const sgn = h.flip ? -1 : 1;
     if (lit) {
-      h.glow ??= ctx.lighting.addGlow({ x: h.slotX + sgn * HUT.window.x, y: g + HUT.window.y, radius: 18, color: 0xffc857, intensity: 0.8, flicker: !ctx.calm });
+      h.glow ??= ctx.lighting.addGlow({
+        x: h.slotX + sgn * HUT.window.x,
+        y: g + HUT.window.y,
+        radius: 18,
+        color: 0xffc857,
+        intensity: 0.8,
+        flicker: !ctx.calm,
+      });
       h.glow.setIntensity(1);
       if (!h.smoke) {
         h.smoke = ctx.scene.add
@@ -130,7 +179,9 @@ export function createHomes(ctx: VillageContext): HomeManager {
       return assign(agentId, agentId === me)?.doorX;
     },
     setLit(agentId, lit) {
-      const h = byAgent.get(agentId) ?? (parseAgentId(agentId).kind === 'student' ? assign(agentId, agentId === me) : undefined);
+      const h =
+        byAgent.get(agentId) ??
+        (parseAgentId(agentId).kind === 'student' ? assign(agentId, agentId === me) : undefined);
       if (h) applyLit(h, lit);
     },
     unlockFor(agentId) {

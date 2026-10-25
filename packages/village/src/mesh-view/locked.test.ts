@@ -12,7 +12,9 @@ describe('remapLocked', () => {
     expect([...d]).toEqual([200, 100, 50, 0]);
   });
   it('maps everything onto the cool ramp', () => {
-    const ramp = [PAL.ink, PAL.skyDeep, PAL.hillNear, PAL.hillMid, PAL.wallShade].map((c) => rgb(c).join(','));
+    const ramp = [PAL.ink, PAL.skyDeep, PAL.hillNear, PAL.hillMid, PAL.wallShade].map((c) =>
+      rgb(c).join(','),
+    );
     for (const c of [PAL.roofWine, PAL.wallLit, PAL.wood, PAL.glow, PAL.skinLt]) {
       const d = px(...rgb(c));
       remapLocked(d, false);

@@ -59,7 +59,10 @@ function ensureAnims(ctx: VillageContext, persona: string): void {
     if (a.exists(key)) return;
     a.create({
       key,
-      frames: Array.from({ length: count }, (_, i) => ({ key: CAST_ATLAS.key, frame: `${persona}/${name}/${i}` })),
+      frames: Array.from({ length: count }, (_, i) => ({
+        key: CAST_ATLAS.key,
+        frame: `${persona}/${name}/${i}`,
+      })),
       frameRate: fps,
       repeat: -1,
     });
@@ -83,11 +86,13 @@ export function createActors(ctx: VillageContext): ActorManager {
       .setAlpha(0);
     sprite.play(`mv-${persona}-idle`);
     tween(ctx, sprite, { alpha: 1 }, { ms: 180 });
-    const tag = pixelText(ctx, agentName(id), { color: 'wallLit', size: 9.333 }).setDepth(ctx.depth.actorFx).setVisible(false);
+    const tag = pixelText(ctx, agentName(id), { color: 'wallLit', size: 9.333 })
+      .setDepth(ctx.depth.actorFx)
+      .setVisible(false);
     let chain: Promise<void> = Promise.resolve();
     let moving: Phaser.Tweens.Tween | undefined;
     let tagOn = false;
-    const placeTag = () => tag.setPosition(snap(sprite.x - tag.width / 2), snap(sprite.y - 38));
+    const placeTag = () => tag.setPosition(snap(sprite.x - tag.width / 2), snap(sprite.y + 3));
 
     const walk = (to: number) =>
       new Promise<void>((resolve) => {
@@ -98,13 +103,18 @@ export function createActors(ctx: VillageContext): ActorManager {
         sprite.setFlipX(dir < 0);
         if (ctx.calm) {
           // reduced motion: 60 ms out, snap, 60 ms in (docs/specs/08 row 3)
-          tween(ctx, sprite, { alpha: 0 }, {
-            ms: 60,
-            onComplete: () => {
-              sprite.x = snap(to);
-              tween(ctx, sprite, { alpha: 1 }, { ms: 60, onComplete: () => resolve() });
+          tween(
+            ctx,
+            sprite,
+            { alpha: 0 },
+            {
+              ms: 60,
+              onComplete: () => {
+                sprite.x = snap(to);
+                tween(ctx, sprite, { alpha: 1 }, { ms: 60, onComplete: () => resolve() });
+              },
             },
-          });
+          );
           return;
         }
         sprite.play(`mv-${persona}-walk`, true);
@@ -114,23 +124,33 @@ export function createActors(ctx: VillageContext): ActorManager {
           resolve();
         };
         const stop = () => {
-          moving = tween(ctx, sprite, { x: to }, {
-            ms: STOP_MS,
-            ease: ctx.motion.easeOut,
-            onUpdate: () => (sprite.x = snap(sprite.x)),
-            onComplete: () => {
-              sprite.x = snap(to);
-              finish();
+          moving = tween(
+            ctx,
+            sprite,
+            { x: to },
+            {
+              ms: STOP_MS,
+              ease: ctx.motion.easeOut,
+              onUpdate: () => (sprite.x = snap(sprite.x)),
+              onComplete: () => {
+                sprite.x = snap(to);
+                finish();
+              },
             },
-          });
+          );
         };
         if (lead < 1) return stop();
-        moving = tween(ctx, sprite, { x: from + dir * lead }, {
-          ms: (lead / WALK_PX_PER_S) * 1000,
-          ease: (t) => t,
-          onUpdate: () => (sprite.x = snap(sprite.x)),
-          onComplete: stop,
-        });
+        moving = tween(
+          ctx,
+          sprite,
+          { x: from + dir * lead },
+          {
+            ms: (lead / WALK_PX_PER_S) * 1000,
+            ease: (t) => t,
+            onUpdate: () => (sprite.x = snap(sprite.x)),
+            onComplete: stop,
+          },
+        );
       });
 
     const actor: Actor = {

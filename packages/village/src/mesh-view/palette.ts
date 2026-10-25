@@ -32,7 +32,10 @@ export const PAL = {
 export type PalKey = keyof typeof PAL;
 
 export const hex = (c: string): number => parseInt(c.slice(1), 16);
-export const COLOR = Object.fromEntries(Object.entries(PAL).map(([k, v]) => [k, hex(v)])) as Record<PalKey, number>;
+export const COLOR = Object.fromEntries(Object.entries(PAL).map(([k, v]) => [k, hex(v)])) as Record<
+  PalKey,
+  number
+>;
 
 /** Jersey 10 (OFL), docs/design/typography.md; 9.333 px is exactly one art pixel. */
 export const FONT_FAMILY = "'Jersey 10'";

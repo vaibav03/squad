@@ -11,7 +11,15 @@ export function tween(
   ctx: VillageContext,
   targets: object | object[],
   props: Record<string, number>,
-  o: { ms: number; ease?: Ease; delay?: number; onUpdate?: () => void; onComplete?: () => void; repeat?: number; yoyo?: boolean },
+  o: {
+    ms: number;
+    ease?: Ease;
+    delay?: number;
+    onUpdate?: () => void;
+    onComplete?: () => void;
+    repeat?: number;
+    yoyo?: boolean;
+  },
 ): Phaser.Tweens.Tween {
   return ctx.scene.tweens.add({
     targets,

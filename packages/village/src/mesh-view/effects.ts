@@ -18,8 +18,14 @@ const MARKER_HOLD_MS = 20000;
 export function createEffects(ctx: VillageContext): Effects {
   const g = ctx.layout.groundY;
   const sc = ctx.scene;
-  const rings = new Map<string, { img: Phaser.GameObjects.Image; label?: Phaser.GameObjects.Text; tw?: Phaser.Tweens.Tween }>();
-  const markers = new Map<string, { img: Phaser.GameObjects.Image; timer: Phaser.Time.TimerEvent }>();
+  const rings = new Map<
+    string,
+    { img: Phaser.GameObjects.Image; label?: Phaser.GameObjects.Text; tw?: Phaser.Tweens.Tween }
+  >();
+  const markers = new Map<
+    string,
+    { img: Phaser.GameObjects.Image; timer: Phaser.Time.TimerEvent }
+  >();
   const temp = new Set<Phaser.GameObjects.GameObject>();
 
   const stopRing = (agentId: string) => {
@@ -35,12 +41,21 @@ export function createEffects(ctx: VillageContext): Effects {
     ring(agentId, doorX, on) {
       if (!on) return stopRing(agentId);
       if (rings.has(agentId)) return;
-      const img = sc.add.image(snap(doorX), g - 1, 'mv-ring', 1).setOrigin(0.5, 0.5).setDepth(ctx.depth.props + 3);
-      const entry: { img: Phaser.GameObjects.Image; label?: Phaser.GameObjects.Text; tw?: Phaser.Tweens.Tween } = { img };
+      const img = sc.add
+        .image(snap(doorX), g - 1, 'mv-ring', 1)
+        .setOrigin(0.5, 0.5)
+        .setDepth(ctx.depth.props + 3);
+      const entry: {
+        img: Phaser.GameObjects.Image;
+        label?: Phaser.GameObjects.Text;
+        tw?: Phaser.Tweens.Tween;
+      } = { img };
       if (ctx.calm) {
         // reduced motion: static ring plus the word "waiting" (design 8.11)
         img.setAlpha(0.7);
-        const label = pixelText(ctx, 'waiting', { color: 'wallLit', size: 9.333 }).setDepth(ctx.depth.worldUi);
+        const label = pixelText(ctx, 'waiting', { color: 'wallLit', size: 9.333 }).setDepth(
+          ctx.depth.worldUi,
+        );
         label.setPosition(snap(doorX - label.width / 2), g - 18);
         entry.label = label;
       } else {
@@ -59,8 +74,15 @@ export function createEffects(ctx: VillageContext): Effects {
     },
     tick(doorX, agentId) {
       stopRing(agentId);
-      const ok = sc.add.image(snap(doorX), g - 1, 'mv-ring-ok').setOrigin(0.5, 0.5).setDepth(ctx.depth.props + 3).setAlpha(0);
-      const check = sc.add.image(snap(doorX), g - 22, 'mv-check').setOrigin(0.5, 1).setDepth(ctx.depth.actorFx + 1);
+      const ok = sc.add
+        .image(snap(doorX), g - 1, 'mv-ring-ok')
+        .setOrigin(0.5, 0.5)
+        .setDepth(ctx.depth.props + 3)
+        .setAlpha(0);
+      const check = sc.add
+        .image(snap(doorX), g - 22, 'mv-check')
+        .setOrigin(0.5, 1)
+        .setDepth(ctx.depth.actorFx + 1);
       temp.add(ok).add(check);
       const w = check.width;
       const h = check.height;
@@ -80,20 +102,28 @@ export function createEffects(ctx: VillageContext): Effects {
         tween(ctx, ok, { alpha: 1 }, { ms: 120 });
       }
       sc.time.delayedCall(1500, () => {
-        tween(ctx, [ok, check], { alpha: 0 }, {
-          ms: 150,
-          onComplete: () => {
-            ok.destroy();
-            check.destroy();
-            temp.delete(ok);
-            temp.delete(check);
+        tween(
+          ctx,
+          [ok, check],
+          { alpha: 0 },
+          {
+            ms: 150,
+            onComplete: () => {
+              ok.destroy();
+              check.destroy();
+              temp.delete(ok);
+              temp.delete(check);
+            },
           },
-        });
+        );
       });
     },
     marker(key, x, y) {
       this.clearMarker(key);
-      const img = sc.add.image(snap(x), snap(y), 'mv-alert').setOrigin(0.5, 1).setDepth(ctx.depth.actorFx + 3);
+      const img = sc.add
+        .image(snap(x), snap(y), 'mv-alert')
+        .setOrigin(0.5, 1)
+        .setDepth(ctx.depth.actorFx + 3);
       if (ctx.calm) {
         img.setAlpha(1); // static marker, no pop
       } else {
