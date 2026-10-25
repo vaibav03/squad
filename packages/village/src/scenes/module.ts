@@ -124,7 +124,7 @@ export interface HostCtx {
 interface SeatStore {
   readonly selected: string | null;
   readonly room: { slot: string; who: string } | null;
-  select(id: string | null, room?: { slot: string; who: string }): void;
+  select(id: string | null, room?: { slot: string; who: string; initialTab?: 'chat' }): void;
   setSide(s: 'left' | 'right'): void;
   isThinking?(id: string, who?: string): boolean;
 }
