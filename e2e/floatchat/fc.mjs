@@ -1,8 +1,8 @@
 import { chromium } from 'playwright';
 const CH =
   '/Users/vaibav/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
-const H = 'http://localhost:8921',
-  W = 'http://localhost:5321';
+const H = process.env.FC_HUB || 'http://localhost:8921',
+  W = process.env.FC_WEB || 'http://localhost:5321';
 const post = async (p, b, t) =>
   (
     await fetch(H + p, {
