@@ -1,0 +1,1167 @@
+{
+ "version": 1,
+ "cell": {
+  "w": 24,
+  "h": 24
+ },
+ "anchors": {
+  "feet": {
+   "x": 12,
+   "y": 23
+  },
+  "head": {
+   "x": 12,
+   "y": 9
+  },
+  "bubble": {
+   "x": 12,
+   "y": 5
+  },
+  "hand": {
+   "x": 17,
+   "y": 17
+  }
+ },
+ "personas": [
+  {
+   "id": "cubbie",
+   "name": "Cubbie",
+   "role": "cubbie",
+   "source": "CaveLion2",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "examiner",
+   "name": "The Examiner",
+   "role": "examiner",
+   "source": "Inspector",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "dean",
+   "name": "The Dean",
+   "role": "dean",
+   "source": "Master",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "expert-ada",
+   "name": "Prof. Ada",
+   "role": "expert",
+   "source": "OldWoman",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "expert-sage",
+   "name": "Sage",
+   "role": "expert",
+   "source": "OldMan",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "expert-monk",
+   "name": "Brother Bit",
+   "role": "expert",
+   "source": "Monk2",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "expert-mage",
+   "name": "Mage Moda",
+   "role": "expert",
+   "source": "SorcererBlack",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "rival",
+   "name": "The Rival",
+   "role": "rival",
+   "source": "Hunter",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "council-chill",
+   "name": "Chill",
+   "role": "council",
+   "source": "Villager6",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "council-grind",
+   "name": "Grind",
+   "role": "council",
+   "source": "Samurai",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "council-advisor",
+   "name": "Advisor",
+   "role": "council",
+   "source": "Noble",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "chairman",
+   "name": "The Chairman",
+   "role": "council",
+   "source": "Sultan",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "feynman",
+   "name": "Feynman Freshman",
+   "role": "feynman",
+   "source": "EggBoy",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "student-01",
+   "name": "Student 1",
+   "role": "student",
+   "source": "Boy",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "student-02",
+   "name": "Student 2",
+   "role": "student",
+   "source": "Villager3",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "student-03",
+   "name": "Student 3",
+   "role": "student",
+   "source": "Villager4",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "student-04",
+   "name": "Student 4",
+   "role": "student",
+   "source": "Woman",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "student-05",
+   "name": "Student 5",
+   "role": "student",
+   "source": "Cavegirl2",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  },
+  {
+   "id": "student-06",
+   "name": "Student 6",
+   "role": "student",
+   "source": "Villager5",
+   "anims": {
+    "idle_r": {
+     "frames": [
+      "idle_r_0",
+      "idle_r_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "idle_f": {
+     "frames": [
+      "idle_f_0",
+      "idle_f_1"
+     ],
+     "fps": 2,
+     "loop": true
+    },
+    "walk_r": {
+     "frames": [
+      "walk_r_0",
+      "walk_r_1",
+      "walk_r_2",
+      "walk_r_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "walk_f": {
+     "frames": [
+      "walk_f_0",
+      "walk_f_1",
+      "walk_f_2",
+      "walk_f_3"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_r": {
+     "frames": [
+      "talk_r_0",
+      "talk_r_1"
+     ],
+     "fps": 8,
+     "loop": true
+    },
+    "talk_f": {
+     "frames": [
+      "talk_f_0",
+      "talk_f_1"
+     ],
+     "fps": 8,
+     "loop": true
+    }
+   }
+  }
+ ]
+}
