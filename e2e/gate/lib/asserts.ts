@@ -35,7 +35,9 @@ export class Asserts {
     this.results.push({
       name,
       pass,
-      ...(pass ? {} : { detail: `expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}` }),
+      ...(pass
+        ? {}
+        : { detail: `expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}` }),
     });
     return pass;
   }
@@ -51,13 +53,21 @@ export class Asserts {
     const ids = new Set(msgs.map((m) => m.id));
     const seqs = msgs.map((m) => m.seq);
     const inc = seqs.every((s, i) => i === 0 || s > seqs[i - 1]!);
-    this.ok(name, ids.size === msgs.length && inc, `ids=${ids.size}/${msgs.length} seq=${seqs.join(',')}`);
+    this.ok(
+      name,
+      ids.size === msgs.length && inc,
+      `ids=${ids.size}/${msgs.length} seq=${seqs.join(',')}`,
+    );
   }
 
   /** None of `forbidden` may appear in `text`. Reports the surface and the sentinel NAME, never the surrounding text. */
   noLeak(surface: string, text: string, forbidden: string[] = defaultSentinels()) {
     const hit = forbidden.filter((f) => f && text.toLowerCase().includes(f.toLowerCase()));
-    this.ok(`no sentinel in ${surface}`, hit.length === 0, `leaked: ${hit.map((h) => h.slice(0, 12) + '...').join(', ')}`);
+    this.ok(
+      `no sentinel in ${surface}`,
+      hit.length === 0,
+      `leaked: ${hit.map((h) => h.slice(0, 12) + '...').join(', ')}`,
+    );
   }
 
   /** No raw id, handle, or GUID in text a person reads. */
@@ -69,8 +79,14 @@ export class Asserts {
   /** The surface says honestly whether it is a demo model: demo labelled when llm is fake, never when it is real. */
   modeBadge(surface: string, text: string, llm: 'gemini' | 'fake') {
     const labelled = /\bdemo\b/i.test(text);
-    if (llm === 'fake') this.ok(`demo label visible on ${surface}`, labelled, 'status says fake but no "Demo" label');
-    else this.ok(`no demo label on ${surface} while llm is real`, !labelled, 'a "Demo" label is shown while llm=gemini');
+    if (llm === 'fake')
+      this.ok(`demo label visible on ${surface}`, labelled, 'status says fake but no "Demo" label');
+    else
+      this.ok(
+        `no demo label on ${surface} while llm is real`,
+        !labelled,
+        'a "Demo" label is shown while llm=gemini',
+      );
   }
 
   async shot(page: Page, name: string): Promise<string> {

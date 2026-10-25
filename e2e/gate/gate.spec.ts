@@ -14,7 +14,7 @@ const JOURNEY: StepDef<GateCtx>[] = [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10];
 
 let ctx: GateCtx;
 test.beforeAll(async ({ browser }) => {
-  ctx = await makeCtx(browser);
+  ctx = await makeCtx(browser, { kind: 'journey' });
 });
 test.afterAll(async () => {
   await disposeCtx(ctx);

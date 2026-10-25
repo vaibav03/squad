@@ -15,7 +15,12 @@ export async function api(
     headers['content-type'] = 'application/json';
     body = JSON.stringify(init.json);
   }
-  const r = await fetch(`${HUB}${p}`, { ...init, headers, body, redirect: init.redirect ?? 'manual' });
+  const r = await fetch(`${HUB}${p}`, {
+    ...init,
+    headers,
+    body,
+    redirect: init.redirect ?? 'manual',
+  });
   const text = await r.text();
   let json: any = null;
   try {
@@ -26,29 +31,49 @@ export async function api(
   return { status: r.status, text, json, headers: r.headers };
 }
 
+/** The hub's ChatMessage wire shape (packages/core/src/chat.ts + chat-sync.ts). Only what the gate asserts on. */
 export interface HMsg {
-  id: string;
+  id: string; // `m_<seq>`
   seq: number;
+  ts: number;
   chatId: string;
-  sender: { kind: string; id?: string; name: string };
+  sender: { kind: 'student' | 'persona' | 'system'; id?: string; name: string; emoji?: string };
   text: string;
-  private?: boolean;
-  citations?: { file?: string; page?: number; label: string; source?: { kind: string; uri?: string } }[];
+  private: boolean;
+  citations: {
+    file: string;
+    page: number;
+    label: string;
+    source?: { kind: string; [k: string]: unknown };
+  }[];
   card?: { type: string; [k: string]: unknown };
-  demo?: boolean;
-  via?: string;
-  originTs?: number;
-  late?: boolean;
-  delivery?: { state: string; reason?: string };
+  demo: boolean;
+  transport?: 'web' | 'imessage';
+  externalId?: string;
+  deliveryState?: {
+    state: string;
+    reason?: string;
+    label: string;
+    attempts?: number;
+    degraded?: boolean;
+  };
+  senderLabel?: string;
+  receivedLate?: boolean;
   [k: string]: unknown;
 }
 
 export async function history(token: string, chatId: string, limit = 100): Promise<HMsg[]> {
-  const r = await api(token, `/v1/chat/history?chatId=${encodeURIComponent(chatId)}&limit=${limit}`);
+  const r = await api(
+    token,
+    `/v1/chat/history?chatId=${encodeURIComponent(chatId)}&limit=${limit}`,
+  );
   return r.status === 200 ? (r.json.messages as HMsg[]) : [];
 }
 
 export const isBot = (m: HMsg) => m.sender.kind === 'persona';
+/** Hub messages in the one shared thread order: message time, then hub sequence. */
+export const threadOrder = (msgs: HMsg[]): HMsg[] =>
+  [...msgs].sort((a, b) => a.ts - b.ts || a.seq - b.seq);
 
 export async function waitFor<T>(
   fn: () => Promise<T | undefined | false>,
@@ -71,7 +96,10 @@ export async function waitBot(
   after = 0,
   ms = 40_000,
 ): Promise<HMsg | undefined> {
-  return waitFor(async () => (await history(token, chatId)).find((m) => isBot(m) && m.seq > after && pred(m)), ms);
+  return waitFor(
+    async () => (await history(token, chatId)).find((m) => isBot(m) && m.seq > after && pred(m)),
+    ms,
+  );
 }
 
 export const lastSeq = async (token: string, chatId: string) =>
@@ -93,20 +121,28 @@ export async function webActor(browser: Browser, user: WorldUser): Promise<WebAc
     viewport: { width: 1280, height: 800 },
     reducedMotion: 'reduce',
   });
-  await ctx.addInitScript((t) => {
-    try {
-      localStorage.setItem('squad.token', t);
-    } catch {
-      /* blocked */
-    }
-  }, user.token);
+  await ctx.addInitScript(
+    (u) => {
+      try {
+        localStorage.setItem(
+          'squad.session',
+          JSON.stringify({ userId: u.id, name: u.name, token: u.token, live: true }),
+        );
+        localStorage.setItem('squad.token', u.token);
+      } catch {
+        /* blocked */
+      }
+    },
+    { id: user.id, name: user.name, token: user.token },
+  );
   const page = await ctx.newPage();
   const a: WebActor = { user, ctx, page, bodies: [], consoleErrors: [], texts: [] };
   page.on('console', (m) => m.type() === 'error' && a.consoleErrors.push(m.text()));
   ctx.on('response', async (r) => {
     try {
       const ct = r.headers()['content-type'] ?? '';
-      if (/json|text\/plain/.test(ct) && r.url().startsWith(HUB)) a.bodies.push(`${r.url()}\n${await r.text()}`);
+      if (/json|text\/plain/.test(ct) && r.url().startsWith(HUB))
+        a.bodies.push(`${r.url()}\n${await r.text()}`);
     } catch {
       /* body unavailable */
     }

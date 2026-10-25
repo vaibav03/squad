@@ -71,12 +71,18 @@ export function branchTable(
 export const P = {
   context: {
     owner: 'feature/nook-parity',
-    files: [{ path: 'packages/core/src/context.ts' }, { path: 'packages/brain/src/context/store.ts' }],
+    files: [
+      { path: 'packages/core/src/context.ts' },
+      { path: 'packages/brain/src/context/store.ts' },
+    ],
     why: 'ContextItem store, normalizer, retrieval, citation generalisation (feature/context-store lands inside nook-parity)',
   },
   connectors: {
     owner: 'feature/nook-parity',
-    files: [{ path: 'apps/hub/src/routes/connections.ts' }, { path: 'apps/hub/src/context/service.ts' }],
+    files: [
+      { path: 'apps/hub/src/routes/connections.ts' },
+      { path: 'apps/hub/src/context/service.ts' },
+    ],
     why: 'Canvas + Google connections routes with encrypted tokens, minimal scopes and the labelled simulator',
   },
   mentions: {

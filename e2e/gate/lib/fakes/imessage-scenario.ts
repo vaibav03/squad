@@ -18,7 +18,7 @@ export interface Receipt {
 
 interface StoredRow {
   id: string;
-  chatId: string;
+  chatId: string | null;
   chatKind: string;
   participant: string | null;
   text: string | null;
@@ -31,8 +31,8 @@ export class ScenarioTransport extends FakeIMessageTransport {
   readonly receipts: Receipt[] = [];
   private dropped = false;
   private delayMs = 0;
-  private n = 0;
-  private readonly t0 = Date.parse('2026-10-26T12:00:00Z');
+  private seqN = 0;
+  private readonly t0 = Date.now() - 60_000;
   /** Rows that arrived while the watcher was down (what backfill must recover). */
   private gapIds = new Set<string>();
 
@@ -116,7 +116,7 @@ export class ScenarioTransport extends FakeIMessageTransport {
   }
 
   private stamp(m: FakeIncoming): FakeIncoming {
-    const seq = ++this.n;
+    const seq = ++this.seqN;
     return {
       ...m,
       id: m.id ?? `GATE-GUID-${Date.now().toString(36)}-${String(seq).padStart(4, '0')}`,
@@ -171,7 +171,7 @@ export class ScenarioTransport extends FakeIMessageTransport {
           attachments: [],
         } as (typeof this.history)[number]);
       this.gapIds = new Set(j.gap);
-      this.n = this.history.length;
+      this.seqN = this.history.length;
     } catch {
       /* first start */
     }

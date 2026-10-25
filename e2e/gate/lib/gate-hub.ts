@@ -1,6 +1,7 @@
 // The gate's hub entrypoint (FIXTURE ONLY). Same wiring as apps/hub/src/main.ts, except the iMessage bridge sits on
 // a scripted ScenarioTransport that a loopback-only control server drives. It refuses to start with GATE_REAL=1:
 // real runs use the real apps/hub/src/main.ts with the real SDK (see e2e/gate/real/smoke.ts).
+import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { startHub } from '../../../apps/hub/src/server';
@@ -15,14 +16,45 @@ if (process.env.GATE_REAL === '1') {
   process.exit(2);
 }
 const CTL_PORT = Number(process.env.GATE_CTL_PORT ?? 8942);
+
+// Test seam: outgoing calls to the Google hosts and to the fixture Canvas origin go to the gate's fake servers (HTTP,
+// loopback), so the REAL connectors run unmodified. Nothing else is touched; this process refuses GATE_REAL runs.
+const GOOGLE_FAKE = `http://localhost:${process.env.GATE_GOOGLE_PORT ?? 8941}`;
+const CANVAS_FAKE = `http://localhost:${process.env.GATE_CANVAS_PORT ?? 8940}`;
+const GOOGLE_HOSTS = new Set([
+  'accounts.google.com',
+  'oauth2.googleapis.com',
+  'openidconnect.googleapis.com',
+  'www.googleapis.com',
+  'classroom.googleapis.com',
+]);
+const realFetch = globalThis.fetch.bind(globalThis);
+globalThis.fetch = ((input: string | URL | Request, init?: RequestInit) => {
+  const raw = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+  let u: URL | undefined;
+  try {
+    u = new URL(raw);
+  } catch {
+    /* relative or malformed: leave it alone */
+  }
+  if (u && GOOGLE_HOSTS.has(u.host))
+    return realFetch(`${GOOGLE_FAKE}/__h/${u.host}${u.pathname}${u.search}`, init);
+  if (u && u.host === 'canvas.fixture.invalid')
+    return realFetch(`${CANVAS_FAKE}${u.pathname}${u.search}`, init);
+  return realFetch(input as RequestInfo, init);
+}) as typeof fetch;
 const TMP = process.env.GATE_TMP ?? path.resolve(process.cwd(), 'e2e/gate/.tmp');
 const DRY = process.env.GATE_IM_DRY_RUN === '1';
 
 // Chat and handle pools: the gateway allowlists are fixed at start, worlds draw from the pools.
-const CHATS = Array.from({ length: 12 }, (_, i) => `iMessage;+;gate-c${i + 1}`);
+const WORLDS = 24; // fresh worlds per stack: the journey plus the variants
+const CHATS = Array.from({ length: WORLDS * 2 }, (_, i) => `iMessage;+;gate-c${i + 1}`);
 const SPARE_CHAT = 'iMessage;+;gate-spare'; // allowlisted but never bound to a squad
-const phone = (w: number, u: number) => `+155570${String(w).padStart(2, '0')}${String(u).padStart(2, '0')}`;
-const HANDLES = Array.from({ length: 12 }, (_, w) => Array.from({ length: 8 }, (_, u) => phone(w, u))).flat();
+const phone = (w: number, u: number) =>
+  `+155570${String(w).padStart(2, '0')}${String(u).padStart(2, '0')}`;
+const HANDLES = Array.from({ length: WORLDS }, (_, w) =>
+  Array.from({ length: 8 }, (_, u) => phone(w, u)),
+).flat();
 
 const hub = await startHub();
 const obs = getObs(hub.deps)!;
@@ -30,15 +62,22 @@ obs.installProcessHandlers();
 const agentUrls = agentUrlsFromEnv();
 hub.deps.confirms.setAgentUrls(agentUrls);
 // trip-collab adds a trip service that needs the agent urls; absent on trees where it has not landed
-(hub.deps as unknown as { tripSvc?: { setAgentUrls(u: unknown): void } }).tripSvc?.setAgentUrls(agentUrls);
+(hub.deps as unknown as { tripSvc?: { setAgentUrls(u: unknown): void } }).tripSvc?.setAgentUrls(
+  agentUrls,
+);
 const chat = await attachChatEngine(hub, {
   realPorts: true,
   agentUrls,
   instrument: (llm) => instrumentLlm(llm, obs.metrics),
 });
 const sdk = new ScenarioTransport(path.join(TMP, 'chatdb-gap.json'));
+// A virtual clock for the iMessage bridge only: the outbound retry ladder is 2 s, 8 s, 30 s, 2 min, 5 min; the
+// scenario skips it with /ctl/clock/advance instead of sleeping for minutes.
+let skew = 0;
+const vnow = () => Date.now() + skew;
 const im = await attachIMessage(hub, {
   sdk,
+  now: vnow,
   config: {
     enabled: true,
     dryRun: DRY,
@@ -71,7 +110,23 @@ const call = async (method: string, p: string, token?: string, body?: unknown) =
   return { status: r.status, body: json };
 };
 
-let worldIdx = 0;
+const JOURNEY_FILE = path.join(TMP, 'world-journey.json');
+const IDX_FILE = path.join(TMP, 'world-idx');
+let journey: Record<string, any> | undefined;
+// (wired below once wireAgents exists)
+try {
+  journey = JSON.parse(fs.readFileSync(JOURNEY_FILE, 'utf8'));
+} catch {
+  /* first start */
+}
+// persisted so a hub restart never hands out phones and chats that an earlier world already owns
+let worldIdx = (() => {
+  try {
+    return Number(fs.readFileSync(IDX_FILE, 'utf8')) || 0;
+  } catch {
+    return 0;
+  }
+})();
 async function signUp(name: string, ph: string) {
   const s = await call('POST', '/v1/auth/start', undefined, { name, phone: ph });
   const v = await call('POST', '/v1/auth/verify', undefined, {
@@ -82,10 +137,42 @@ async function signUp(name: string, ph: string) {
   return { id: v.body.user.id as string, token: v.body.token as string, phone: ph, name };
 }
 
-/** One fixture world: Rhea, Ben, Cy in squad A (group chat A), plus squad B with Cy and Dan (group chat B). */
-async function makeWorld(opts: { b?: boolean } = {}) {
+type U = { id: string; token: string; phone: string; name: string };
+const AGENT_BASE = Number(process.env.GATE_AGENT_BASE ?? 4771);
+
+/** Points the trip service and the confirm flow at the agent of each journey member (slot order rhea, ben, cy, dan). */
+function wireAgents(users: Record<string, U>) {
+  const urls: Record<string, string> = {};
+  ['rhea', 'ben', 'cy', 'dan'].forEach((k, i) => {
+    if (users[k]) urls[users[k]!.id] = `http://localhost:${AGENT_BASE + i}`;
+  });
+  hub.deps.confirms.setAgentUrls(urls);
+  (hub.deps as unknown as { tripSvc?: { setAgentUrls(u: unknown): void } }).tripSvc?.setAgentUrls(
+    urls,
+  );
+  return urls;
+}
+if (journey) wireAgents(journey.users as Record<string, U>);
+
+/**
+ * Fresh world: Rhea, Ben, Cy in squad A (group chat A); with `b`, squad B with Dan and Cy (group chat B).
+ * Journey world (kind 'journey', a singleton that survives a hub restart): Rhea, Ben, Cy and Dan all in squad A, and
+ * the hub wired to their four live agents, whose private profiles the stack generates for exactly these ids.
+ */
+async function makeWorld(opts: { b?: boolean; kind?: 'fresh' | 'journey' } = {}) {
+  if (opts.kind === 'journey' && journey) {
+    // after a hub restart the accounts and the squad persist; only the tokens are re-issued
+    const u: Record<string, U> = {};
+    for (const [k, v] of Object.entries(journey.users as Record<string, U>))
+      u[k] = await signUp(v.name, v.phone);
+    journey = { ...journey, users: u };
+    wireAgents(u);
+    return journey;
+  }
   const w = worldIdx++;
-  if (w >= 6) throw new Error('world pool exhausted (max 6 worlds; restart the gate stack)');
+  fs.writeFileSync(IDX_FILE, String(worldIdx));
+  if (w >= WORLDS)
+    throw new Error(`world pool exhausted (max ${WORLDS} worlds; restart the gate stack)`);
   const rhea = await signUp('Rhea', phone(w, 0));
   const ben = await signUp('Ben', phone(w, 1));
   const cy = await signUp('Cy', phone(w, 2));
@@ -95,12 +182,19 @@ async function makeWorld(opts: { b?: boolean } = {}) {
   const codeA = invA.body.invite.code as string;
   await call('POST', '/v1/invites/join', ben.token, { code: codeA });
   await call('POST', '/v1/invites/join', cy.token, { code: codeA });
-  const out: Record<string, unknown> = {
+  const out: Record<string, any> = {
     index: w,
     users: { rhea, ben, cy },
-    squadA: { id: squadA, invite: codeA, chat: CHATS[w]! , chatId: `group:${squadA}` },
+    squadA: { id: squadA, invite: codeA, chat: CHATS[2 * w]!, chatId: `group:${squadA}` },
   };
-  if (opts.b) {
+  if (opts.kind === 'journey') {
+    const dan = await signUp('Dan', phone(w, 3));
+    await call('POST', '/v1/invites/join', dan.token, { code: codeA });
+    out.users = { rhea, ben, cy, dan };
+    wireAgents(out.users);
+    journey = out;
+    fs.writeFileSync(JOURNEY_FILE, JSON.stringify(out));
+  } else if (opts.b) {
     const dan = await signUp('Dan', phone(w, 3));
     const b = await call('POST', '/v1/squads', dan.token, { name: `Bio Crew ${w}` });
     const squadB = b.body.squad.id as string;
@@ -109,12 +203,7 @@ async function makeWorld(opts: { b?: boolean } = {}) {
     // Cy belongs to B on the web but is deliberately NOT opted into context sharing for B.
     await call('POST', '/v1/invites/join', cy.token, { code: codeB });
     out.users = { rhea, ben, cy, dan };
-    out.squadB = {
-      id: squadB,
-      invite: codeB,
-      chat: CHATS[(w + 6) % 12]!,
-      chatId: `group:${squadB}`,
-    };
+    out.squadB = { id: squadB, invite: codeB, chat: CHATS[2 * w + 1]!, chatId: `group:${squadB}` };
   }
   return out;
 }
@@ -143,6 +232,15 @@ const ctl = http.createServer(async (req, res) => {
     const b = req.method === 'POST' ? await readJson(req) : {};
     if (p === '/ctl/health') return json(res, 200, { ok: true, dry: DRY });
     if (p === '/ctl/world') return json(res, 200, await makeWorld(b));
+    if (p === '/ctl/trip/agents') {
+      // explicit user id -> agent url map (the journey world is wired automatically; this is for custom worlds)
+      const m = (b.map ?? {}) as Record<string, string>;
+      hub.deps.confirms.setAgentUrls(m);
+      (
+        hub.deps as unknown as { tripSvc?: { setAgentUrls(u: unknown): void } }
+      ).tripSvc?.setAgentUrls(m);
+      return json(res, 200, { ok: true, count: Object.keys(m).length });
+    }
     if (p === '/ctl/im/say') {
       await sdk.say(b.chat, b.from, b.text, b.guid ? { id: b.guid } : {});
       await im.bridge.flush();
@@ -199,8 +297,17 @@ const ctl = http.createServer(async (req, res) => {
     }
     if (p === '/ctl/im/log')
       return json(res, 200, {
-        log: sdk.history.map((m) => ({ id: m.id, chatId: m.chatId, sender: m.participant, text: m.text })),
+        log: sdk.history.map((m) => ({
+          id: m.id,
+          chatId: m.chatId,
+          sender: m.participant,
+          text: m.text,
+        })),
       });
+    if (p === '/ctl/clock/advance') {
+      skew += Number(b.ms ?? 0);
+      return json(res, 200, { skewMs: skew });
+    }
     if (p === '/ctl/im/receipt') {
       sdk.receipt(b.guid, b.state ?? 'delivered', b.reason);
       return json(res, 200, { ok: true });

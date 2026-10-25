@@ -48,7 +48,11 @@ export class LiveBudget {
     try {
       fs.writeFileSync(
         LEDGER,
-        JSON.stringify({ calls: this.calls, agents: [...this.agents], estUsd: this.calls * COST_PER_CALL_USD }),
+        JSON.stringify({
+          calls: this.calls,
+          agents: [...this.agents],
+          estUsd: this.calls * COST_PER_CALL_USD,
+        }),
       );
     } catch {
       /* best effort */

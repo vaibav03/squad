@@ -1,5 +1,9 @@
-// Fake Canvas: the calendar feed (.ics) plus a minimal REST surface for the optional token path.
-// Controls (loopback only): POST /_ctl/mode {mode: ok|404|410|moved}, POST /_ctl/token {valid:boolean}, GET /_ctl/requests.
+// Fake Canvas, served over HTTP (loopback). The gate hub redirects https://canvas.fixture.invalid to this server with a
+// fetch seam in lib/gate-hub.ts, so the REAL connectors (packages/brain canvas-rest + the hub connection routes) run
+// unmodified against it. Surface: the REST subset canvas-rest.ts reads (users/self, courses, assignments, files; bearer
+// token) plus the calendar feed (.ics).
+// Controls (loopback only): POST /_ctl/mode {mode: ok|404|410|moved|big|rate_limited}, POST /_ctl/token {valid:boolean},
+// POST /_ctl/reset, GET /_ctl/requests.
 import http from 'node:http';
 import { SENTINELS } from '../config';
 import { ASSIGNMENTS, COURSE, feedIcs } from './content';
@@ -15,7 +19,7 @@ export const CANVAS_TOKEN = 'canvas-fake-token-1234';
 
 export async function startFakeCanvas(port: number): Promise<FakeServer> {
   const base = `http://localhost:${port}`;
-  let mode: 'ok' | '404' | '410' | 'moved' | 'big' = 'ok';
+  let mode: 'ok' | '404' | '410' | 'moved' | 'big' | 'rate_limited' = 'ok';
   let tokenValid = true;
   let etagN = 1;
   const requests: { method: string; path: string; at: number }[] = [];
@@ -55,20 +59,63 @@ export async function startFakeCanvas(port: number): Promise<FakeServer> {
       return send(200, feedIcs(base, mode === 'big' ? 600 : 0), 'text/calendar', { etag });
     }
     if (p.startsWith('/api/v1/')) {
+      if (mode === '404') return send(404, JSON.stringify({ errors: [{ message: 'not found' }] }));
+      if (mode === '410') return send(410, JSON.stringify({ errors: [{ message: 'gone' }] }));
+      if (mode === 'moved')
+        return send(301, '', 'text/plain', { location: 'http://moved.invalid' + p });
+      if (mode === 'rate_limited')
+        return send(429, 'slow down', 'text/plain', { 'retry-after': '120' });
       const ok = req.headers.authorization === `Bearer ${CANVAS_TOKEN}` && tokenValid;
       if (!ok) return send(401, JSON.stringify({ errors: [{ message: 'Invalid access token.' }] }));
+      if (p === '/api/v1/users/self')
+        return send(
+          200,
+          JSON.stringify({
+            id: 7001,
+            name: 'Gate Student',
+            primary_email: 'gate.student@fixture.invalid',
+          }),
+        );
       if (p === '/api/v1/courses')
-        return send(200, JSON.stringify([{ id: COURSE.id, name: COURSE.name, course_code: COURSE.code }]));
+        return send(
+          200,
+          JSON.stringify([{ id: COURSE.id, name: COURSE.name, course_code: COURSE.code }]),
+        );
+      if (p === `/api/v1/courses/${COURSE.id}/files`)
+        return send(
+          200,
+          JSON.stringify([
+            {
+              id: 'f_slides5',
+              display_name: 'Lecture 5 slides.pdf',
+              'content-type': 'application/pdf',
+              size: 120_000,
+              url: `${base}/files/f_slides5/download`,
+              updated_at: '2026-10-20T09:00:00Z',
+            },
+          ]),
+        );
       if (p === `/api/v1/courses/${COURSE.id}/assignments`)
         return send(
           200,
           JSON.stringify(
-            ASSIGNMENTS.map((a) => ({
+            [
+              ...ASSIGNMENTS,
+              ...(mode === 'big'
+                ? Array.from({ length: 80 }, (_, i) => ({
+                    id: `a_x${i}`,
+                    title: `Extra practice ${i}`,
+                    dueAt: '2026-12-01T10:00:00Z',
+                    description: 'Practice set.',
+                  }))
+                : []),
+            ].map((a) => ({
               id: a.id,
               name: a.title,
               due_at: a.dueAt,
               description: a.description,
-              html_url: `${base}/courses/${COURSE.id}/assignments/${a.id}`,
+              html_url: `https://canvas.fixture.invalid/courses/${COURSE.id}/assignments/${a.id}`,
+              updated_at: '2026-10-22T12:00:00Z',
               // present on the wire on purpose: the connector must drop it at parse
               submission: { score: SENTINELS.grade, grade: SENTINELS.grade },
             })),

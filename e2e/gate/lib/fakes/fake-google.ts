@@ -1,12 +1,19 @@
-// Fake Google: OAuth (authorize, token, revoke), Calendar freebusy + events, Drive files/export, Picker stub, Classroom.
-// It enforces scopes like Google does (a drive.file token cannot see unpicked files; freebusy cannot read titles) and
-// records every request so the gate can assert what the hub asked for. Loopback only.
+// Fake Google over HTTP (loopback). The gate hub rewrites the Google hosts (accounts, oauth2, openidconnect, www,
+// classroom .googleapis.com) to `${GOOGLE}/__h/<host>/...` with a fetch seam in lib/gate-hub.ts, so the REAL connector
+// (packages/brain google-live + the hub OAuth routes: PKCE, state, token exchange, refresh, revoke) runs unmodified.
+// It enforces scopes like Google does (a drive.file token cannot see unpicked files; events need calendar.readonly) and
+// records every request so the gate can assert what the hub asked for.
 //
 // Controls: POST /_ctl/{revoke,expire,ttl,over-grant,pick,reset,fail-refresh}, GET /_ctl/{requests,grants}.
+//   revoke       every grant revoked: the next refresh is invalid_grant and API calls are 401
+//   expire       every issued access token is expired (refresh still works)
+//   ttl          expires_in (seconds) of tokens issued from now on
+//   over-grant   the consent grants one extra, unrequested scope (the hub must keep only the allowed set)
+//   fail-refresh the next n refreshes answer 500
 import crypto from 'node:crypto';
 import http from 'node:http';
 import { SENTINELS } from '../config';
-import { BUSY, CLASSROOM, DRIVE_FILES, PRIVATE_EVENT } from './content';
+import { BUSY, CLASSROOM, DRIVE_FILES, EVENTS, PRIVATE_EVENT } from './content';
 import type { FakeServer } from './fake-canvas';
 
 interface Grant {
@@ -24,8 +31,9 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
   let ttlS = 3600;
   let overGrant = false;
   let failRefresh = 0;
-  const picked = new Set<string>();
-  const requests: { method: string; path: string; scope?: string; status: number; at: number }[] = [];
+  const picked = new Set<string>([DRIVE_FILES.picked.id]);
+  const requests: { method: string; path: string; scope?: string; status: number; at: number }[] =
+    [];
   const json = (res: http.ServerResponse, code: number, body: unknown) => {
     res.writeHead(code, { 'content-type': 'application/json' });
     res.end(JSON.stringify(body));
@@ -38,7 +46,10 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
 
   const srv = http.createServer((req, res) => {
     const u = new URL(req.url ?? '/', base);
-    const p = u.pathname;
+    // `/__h/<host>/<path>`: the logical Google host is the first segment; plain paths keep working for the controls
+    const hm = /^\/__h\/([^/]+)(\/.*)?$/.exec(u.pathname);
+    const host = hm?.[1] ?? '';
+    const p = hm ? (hm[2] ?? '/') : u.pathname;
     let raw = '';
     req.on('data', (c) => (raw += c));
     req.on('end', () => {
@@ -51,13 +62,23 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
         }
       })();
       const log = (status: number, scope?: string) =>
-        requests.push({ method: req.method ?? 'GET', path: p, status, at: Date.now(), ...(scope ? { scope } : {}) });
+        requests.push({
+          method: req.method ?? 'GET',
+          path: p,
+          status,
+          at: Date.now(),
+          ...(scope ? { scope } : {}),
+        });
 
       if (p.startsWith('/_ctl/')) {
         if (p === '/_ctl/requests') return json(res, 200, { requests });
         if (p === '/_ctl/grants')
           return json(res, 200, {
-            grants: [...grants.values()].map((g) => ({ id: g.id, scopes: g.scopes, revoked: g.revoked })),
+            grants: [...grants.values()].map((g) => ({
+              id: g.id,
+              scopes: g.scopes,
+              revoked: g.revoked,
+            })),
           });
         if (p === '/_ctl/revoke') for (const g of grants.values()) g.revoked = true;
         if (p === '/_ctl/expire') for (const a of access.values()) a.expired = true;
@@ -73,6 +94,7 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
           access.clear();
           codes.clear();
           picked.clear();
+          picked.add(DRIVE_FILES.picked.id);
           requests.length = 0;
           ttlS = 3600;
           overGrant = false;
@@ -87,7 +109,12 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
         const redirect = u.searchParams.get('redirect_uri') ?? '';
         const state = u.searchParams.get('state') ?? '';
         const code = `code-${crypto.randomBytes(6).toString('hex')}`;
-        codes.set(code, { scopes: overGrant ? [...scopes, 'https://www.googleapis.com/auth/gmail.readonly'] : scopes, redirect });
+        codes.set(code, {
+          scopes: overGrant
+            ? [...scopes, 'https://www.googleapis.com/auth/gmail.readonly']
+            : scopes,
+          redirect,
+        });
         const allow = `${redirect}${redirect.includes('?') ? '&' : '?'}code=${code}&state=${encodeURIComponent(state)}`;
         const deny = `${redirect}${redirect.includes('?') ? '&' : '?'}error=access_denied&state=${encodeURIComponent(state)}`;
         log(200);
@@ -95,7 +122,9 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
         return res.end(
           `<!doctype html><title>Fake Google consent</title><h1>Squad (fake) wants access</h1><ul>${scopes
             .map((s) => `<li data-scope="${s}">${s}</li>`)
-            .join('')}</ul><a id="allow" href="${allow}">Allow</a> <a id="deny" href="${deny}">Deny</a>`,
+            .join(
+              '',
+            )}</ul><a id="allow" href="${allow}">Allow</a> <a id="deny" href="${deny}">Deny</a>`,
         );
       }
       if (p === '/token' && req.method === 'POST') {
@@ -126,9 +155,21 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
             failRefresh--;
             return (log(500), json(res, 500, { error: 'temporarily_unavailable' }));
           }
-          if (!g || g.revoked) return (log(400), json(res, 400, { error: 'invalid_grant', error_description: 'Token has been expired or revoked.' }));
+          if (!g || g.revoked)
+            return (
+              log(400),
+              json(res, 400, {
+                error: 'invalid_grant',
+                error_description: 'Token has been expired or revoked.',
+              })
+            );
           log(200);
-          return json(res, 200, { access_token: issue(g), expires_in: ttlS, scope: g.scopes.join(' '), token_type: 'Bearer' });
+          return json(res, 200, {
+            access_token: issue(g),
+            expires_in: ttlS,
+            scope: g.scopes.join(' '),
+            token_type: 'Bearer',
+          });
         }
         return json(res, 400, { error: 'unsupported_grant_type' });
       }
@@ -150,7 +191,9 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
         }
         if (!a.grant.scopes.some((s) => s.endsWith(scope))) {
           log(403, scope);
-          json(res, 403, { error: { code: 403, status: 'PERMISSION_DENIED', message: `needs ${scope}` } });
+          json(res, 403, {
+            error: { code: 403, status: 'PERMISSION_DENIED', message: `needs ${scope}` },
+          });
           return false;
         }
         return true;
@@ -165,7 +208,26 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
       if (p === '/calendar/v3/calendars/primary/events') {
         if (!need('calendar.readonly')) return;
         log(200, 'calendar.readonly');
-        return json(res, 200, { items: [{ id: PRIVATE_EVENT.id, summary: PRIVATE_EVENT.summary }] });
+        return json(res, 200, {
+          items: [
+            ...EVENTS.map((e) => ({
+              id: e.id,
+              summary: e.title,
+              start: { dateTime: e.startsAt },
+              end: { dateTime: e.endsAt },
+              updated: '2026-10-20T10:00:00Z',
+              status: 'confirmed',
+            })),
+            {
+              id: PRIVATE_EVENT.id,
+              summary: PRIVATE_EVENT.summary,
+              start: { dateTime: '2026-10-30T15:00:00Z' },
+              end: { dateTime: '2026-10-30T16:00:00Z' },
+              updated: '2026-10-21T10:00:00Z',
+              status: 'confirmed',
+            },
+          ],
+        });
       }
       if (p === '/drive/v3/files') {
         if (!need('drive.file')) return;
@@ -174,14 +236,34 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
         return json(res, 200, {
           files: Object.values(DRIVE_FILES)
             .filter((f) => picked.has(f.id))
-            .map((f) => ({ id: f.id, name: f.name, mimeType: 'application/vnd.google-apps.document' })),
+            .map((f) => ({
+              id: f.id,
+              name: f.name,
+              mimeType: 'application/vnd.google-apps.document',
+            })),
         });
       }
-      const exp = /^\/drive\/v3\/files\/([^/]+)\/export$/.exec(p);
+      const meta = /^\/drive\/v3\/files\/([^/]+)$/.exec(p);
+      if (meta && u.searchParams.get('alt') !== 'media') {
+        if (!need('drive.file')) return;
+        const f = Object.values(DRIVE_FILES).find((x) => x.id === meta[1]);
+        if (!f || !picked.has(f.id))
+          return (log(404, 'drive.file'), json(res, 404, { error: { code: 404 } }));
+        log(200, 'drive.file');
+        return json(res, 200, {
+          id: f.id,
+          name: f.name,
+          mimeType: 'application/vnd.google-apps.document',
+          modifiedTime: '2026-10-19T10:00:00Z',
+          webViewLink: `https://docs.google.com/document/d/${f.id}/edit`,
+        });
+      }
+      const exp = meta ? meta : /^\/drive\/v3\/files\/([^/]+)\/export$/.exec(p);
       if (exp) {
         if (!need('drive.file')) return;
         const f = Object.values(DRIVE_FILES).find((x) => x.id === exp[1]);
-        if (!f || !picked.has(f.id)) return (log(404, 'drive.file'), json(res, 404, { error: { code: 404 } }));
+        if (!f || !picked.has(f.id))
+          return (log(404, 'drive.file'), json(res, 404, { error: { code: 404 } }));
         log(200, 'drive.file');
         res.writeHead(200, { 'content-type': 'text/plain' });
         return res.end(f.text);
@@ -193,6 +275,12 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
           `<!doctype html><title>Fake Picker</title><button id="pick" data-id="${DRIVE_FILES.picked.id}">${DRIVE_FILES.picked.name}</button>`,
         );
       }
+      if (p === '/v1/userinfo' && host === 'openidconnect.googleapis.com') {
+        if (!a || a.expired || a.exp < Date.now() || a.grant.revoked)
+          return (log(401), json(res, 401, { error: { code: 401 } }));
+        log(200);
+        return json(res, 200, { sub: 'gate-google-sub-1', email: 'gate.student@fixture.invalid' });
+      }
       if (p === '/v1/courses') {
         if (!need('classroom.courses.readonly')) return;
         log(200, 'classroom.courses.readonly');
@@ -201,7 +289,13 @@ export async function startFakeGoogle(port: number): Promise<FakeServer> {
       if (/^\/v1\/courses\/[^/]+\/courseWork$/.test(p)) {
         if (!need('classroom.coursework.me.readonly')) return;
         log(200, 'classroom.coursework.me.readonly');
-        return json(res, 200, { courseWork: CLASSROOM.work });
+        return json(res, 200, {
+          courseWork: CLASSROOM.work.map((w) => ({
+            ...w,
+            alternateLink: `https://classroom.google.com/c/${CLASSROOM.course.id}/a/${w.id}`,
+            updateTime: '2026-10-22T10:00:00Z',
+          })),
+        });
       }
       log(404);
       json(res, 404, { error: 'not_found' });

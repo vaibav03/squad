@@ -25,7 +25,9 @@ export const VARIANTS = Array.from({ length: 12 }, (_, i) => `V${i + 1}`);
 
 const git = (...a: string[]): string => {
   try {
-    return execFileSync('git', a, { cwd: REPO, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    return execFileSync('git', a, { cwd: REPO, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
   } catch {
     return '';
   }
@@ -75,13 +77,27 @@ export interface Summary {
   total: number;
 }
 
-export async function buildReport(): Promise<{ md: string; json: unknown; summary: Summary; code: number }> {
+export async function buildReport(): Promise<{
+  md: string;
+  json: unknown;
+  summary: Summary;
+  code: number;
+}> {
   const fx = readResults(RESULTS_DIR).filter((r) => r.mode === 'fixture');
-  const rl = [...readResults(RESULTS_DIR), ...readResults(REAL_RESULTS_DIR)].filter((r) => r.mode === 'real');
+  const rl = [...readResults(RESULTS_DIR), ...readResults(REAL_RESULTS_DIR)].filter(
+    (r) => r.mode === 'real',
+  );
   const byId = (rs: StepResult[], id: string) => rs.find((r) => r.id === id);
   const ids = [...JOURNEY, ...VARIANTS];
 
-  const summary: Summary = { fixtureFail: 0, realFail: 0, notBuilt: 0, blocked: 0, fixturePass: 0, total: ids.length };
+  const summary: Summary = {
+    fixtureFail: 0,
+    realFail: 0,
+    notBuilt: 0,
+    blocked: 0,
+    fixturePass: 0,
+    total: ids.length,
+  };
   for (const id of ids) {
     const f = byId(fx, id);
     const r = byId(rl, id);
@@ -139,7 +155,9 @@ export async function buildReport(): Promise<{ md: string; json: unknown; summar
 
   const md: string[] = [];
   md.push('# Release gate report', '');
-  md.push(`Generated ${new Date().toISOString()} by \`pnpm gate\` (tree ${branch}@${head}, origin/main@${main}).`);
+  md.push(
+    `Generated ${new Date().toISOString()} by \`pnpm gate\` (tree ${branch}@${head}, origin/main@${main}).`,
+  );
   md.push(
     `Mode: LLM ${LIVE ? '`LIVE=1` (real Gemini only if the hub probe says the key has credit)' : 'fake model, labelled **Demo**'}; real integrations ${GATE_REAL ? 'requested' : 'not requested'}.`,
     '',
@@ -161,7 +179,8 @@ export async function buildReport(): Promise<{ md: string; json: unknown; summar
     md.push('', '## Failures', '');
     for (const r of failed) {
       md.push(`### ${r.id} (${r.mode}) ${r.title}`, '');
-      for (const a of r.assertions.filter((x) => !x.pass)) md.push(`- ${a.name}${a.detail ? `: ${a.detail}` : ''}`);
+      for (const a of r.assertions.filter((x) => !x.pass))
+        md.push(`- ${a.name}${a.detail ? `: ${a.detail}` : ''}`);
       md.push('');
     }
   }
@@ -170,15 +189,32 @@ export async function buildReport(): Promise<{ md: string; json: unknown; summar
   if (nb.length) {
     md.push('', '## Not built yet (owner branch not on origin/main)', '');
     md.push('| Owner branch | On origin | Landed on this tree |', '|---|---|---|');
-    for (const b of branches) md.push(`| \`${b.branch}\` | ${b.onOrigin ? 'yes' : 'no'} | ${b.landed ? 'yes' : 'no'} |`);
+    for (const b of branches)
+      md.push(`| \`${b.branch}\` | ${b.onOrigin ? 'yes' : 'no'} | ${b.landed ? 'yes' : 'no'} |`);
     md.push('', 'Steps waiting, with what is missing:', '');
-    for (const r of nb) md.push(`- ${r.id} ${r.title}: ${(r.owner ?? []).map((o) => `\`${o}\``).join(', ')} (${r.reason ?? ''})`);
+    for (const r of nb)
+      md.push(
+        `- ${r.id} ${r.title}: ${(r.owner ?? []).map((o) => `\`${o}\``).join(', ')} (${r.reason ?? ''})`,
+      );
     const pv = nb.filter((r) => r.preview?.length);
     if (pv.length) {
-      md.push('', 'Preview assertions that already run against what is on main (informational, never counted as PASS):', '');
+      md.push(
+        '',
+        'Preview assertions that already run against what is on main (informational, never counted as PASS):',
+        '',
+      );
       for (const r of pv) {
         const p = r.preview ?? [];
-        md.push(`- ${r.id}: ${p.filter((x) => x.pass).length}/${p.length} would pass${p.some((x) => !x.pass) ? ` (failing: ${p.filter((x) => !x.pass).map((x) => x.name).join('; ')})` : ''}`);
+        md.push(
+          `- ${r.id}: ${p.filter((x) => x.pass).length}/${p.length} would pass${
+            p.some((x) => !x.pass)
+              ? ` (failing: ${p
+                  .filter((x) => !x.pass)
+                  .map((x) => x.name)
+                  .join('; ')})`
+              : ''
+          }`,
+        );
       }
     }
   }
@@ -186,14 +222,23 @@ export async function buildReport(): Promise<{ md: string; json: unknown; summar
   md.push('', '## External blockers (code cannot fix these)', '');
   md.push('| Blocker | Now | Why | Runbook |', '|---|---|---|---|');
   for (const b of blockers)
-    md.push(`| \`${b.code}\` | ${b.blocked ? 'BLOCKED' : 'clear'} | ${b.reason} | [runbook](RELEASE-GATE.md${b.runbook}) |`);
+    md.push(
+      `| \`${b.code}\` | ${b.blocked ? 'BLOCKED' : 'clear'} | ${b.reason} | [runbook](RELEASE-GATE.md${b.runbook}) |`,
+    );
 
   const notes = [...fx, ...rl].flatMap((r) => r.notes.map((n) => `- ${r.id} (${r.mode}): ${n}`));
   if (notes.length) md.push('', '## Notes', '', ...notes);
   if (keys.length) md.push('', '## Key screenshots', '', ...keys.map((k) => `- \`${k}\``));
   md.push('', 'How to run and read this: [RELEASE-GATE.md](RELEASE-GATE.md).', '');
 
-  const code = harnessBroke ? 2 : summary.fixtureFail + summary.realFail > 0 ? 1 : process.env.GATE_STRICT === '1' && (summary.notBuilt > 0 || summary.blocked > 0 || notRun > 0) ? 3 : 0;
+  const code = harnessBroke
+    ? 2
+    : summary.fixtureFail + summary.realFail > 0
+      ? 1
+      : process.env.GATE_STRICT === '1' &&
+          (summary.notBuilt > 0 || summary.blocked > 0 || notRun > 0)
+        ? 3
+        : 0;
   const json = {
     generatedAt: new Date().toISOString(),
     tree: { branch, head, originMain: main },

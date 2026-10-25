@@ -84,7 +84,8 @@ export async function runStep<C>(def: StepDef<C>, mode: Mode, ctx: C): Promise<S
     // External prerequisites are reported honestly whether or not a real run was requested.
     let b: Blocker | undefined;
     for (const k of def.realNeeds ?? []) b ??= await blockerFor(k);
-    if (b) return done({ status: 'BLOCKED', reason: b.code, runbook: b.runbook, notes: [b.reason] });
+    if (b)
+      return done({ status: 'BLOCKED', reason: b.code, runbook: b.runbook, notes: [b.reason] });
     if (!GATE_REAL)
       return done({
         status: 'SKIPPED',

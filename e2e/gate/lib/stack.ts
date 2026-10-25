@@ -24,6 +24,7 @@ import {
   WEB_PORT,
 } from './config';
 import { portBusy, waitFor } from '../../lib/stack';
+import { CONNECTOR_ENV } from './contract';
 
 const peers = () => AGENT_IDS.map((id) => `${id}=${AGENT_URL(id)}`).join(',');
 const PIDS = path.join(TMP, 'stack.pids');
@@ -58,17 +59,11 @@ export const baseEnv = (): NodeJS.ProcessEnv => ({
   FORCE_COLOR: '0',
   GATE_TMP: TMP,
   GATE_CTL_PORT: String(CTL_PORT),
-  // Connector contract for the feature leads (docs/qa/RELEASE-GATE.md "Env contract"): the hub must read these so the
-  // gate can point it at the fakes. Unknown to main today, harmless there.
-  GOOGLE_CLIENT_ID: 'gate-fake-client',
-  GOOGLE_CLIENT_SECRET: 'gate-fake-secret',
-  GOOGLE_AUTH_URL: `${GOOGLE}/o/oauth2/v2/auth`,
-  GOOGLE_TOKEN_URL: `${GOOGLE}/token`,
-  GOOGLE_REVOKE_URL: `${GOOGLE}/revoke`,
-  GOOGLE_API_BASE: GOOGLE,
-  GOOGLE_REDIRECT_URI: `${HUB}/v1/connect/google/callback`,
-  CANVAS_ALLOWED_HOSTS: 'localhost',
-  CONNECTIONS_KEY: 'gate-only-encryption-key-not-a-secret-0123456789',
+  // Connectors: the hub runs its REAL Google and Canvas code. A fake OAuth client switches Google to live mode; the
+  // gate hub's fetch seam sends every Google host to the fake Google server (never to Google).
+  ...CONNECTOR_ENV,
+  GOOGLE_OAUTH_CLIENT_ID: 'gate-fake-client-id',
+  GOOGLE_OAUTH_CLIENT_SECRET: 'gate-fake-client-secret',
   ...(LIVE ? {} : { FORCE_FAKE_LLM: '1' }),
 });
 
@@ -101,20 +96,18 @@ function startHubProc(): number {
   return launch('hub', 'pnpm', ['exec', 'tsx', 'e2e/gate/lib/gate-hub.ts'], baseEnv());
 }
 
+/** Phase 1: fake servers, the gate hub and the web host. The agents start in phase 2 (startAgents) because their
+ *  private profiles are generated for the journey world's accounts, which exist only once the hub is up. */
 export function startStack(): void {
   fs.mkdirSync(TMP, { recursive: true });
   const pids: Record<string, number> = {};
-  pids.fakes = launch('fakes', 'pnpm', ['exec', 'tsx', 'e2e/gate/lib/fakes/fakes-main.ts'], baseEnv());
+  pids.fakes = launch(
+    'fakes',
+    'pnpm',
+    ['exec', 'tsx', 'e2e/gate/lib/fakes/fakes-main.ts'],
+    baseEnv(),
+  );
   pids.hub = startHubProc();
-  for (const id of AGENT_IDS)
-    pids[id] = launch(`agent-${id}`, 'pnpm', ['--filter', '@squad/agent', 'start'], {
-      ...baseEnv(),
-      AGENT_ID: id,
-      PORT: String(AGENT_PORT(id)),
-      PEERS: peers(),
-      FAKE_LLM: LIVE ? '0' : '1',
-      CONFIRM_MODE: 'scripted',
-    });
   pids.web = launch(
     'web',
     'pnpm',
@@ -124,12 +117,80 @@ export function startStack(): void {
   writePids(pids);
 }
 
-export async function stackUp(ms = 120_000): Promise<boolean> {
+// ---- agents: one process per journey member, their private profile generated for the member's account id ----
+/** fixture slot (the agent fixtures are keyed s_ana ...) -> the world user it is the agent of */
+export const SLOT_USER: Record<string, 'rhea' | 'ben' | 'cy' | 'dan'> = {
+  s_ana: 'rhea',
+  s_ben: 'ben',
+  s_chi: 'cy',
+  s_dev: 'dan',
+};
+const FIXTURES = path.join(TMP, 'agent-fixtures');
+
+export function journeyUsers(): Record<string, { id: string; name: string }> | undefined {
+  try {
+    return (
+      JSON.parse(fs.readFileSync(path.join(TMP, 'world-journey.json'), 'utf8')) as {
+        users: Record<string, { id: string; name: string }>;
+      }
+    ).users;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Copies the agent fixtures and re-keys the four profiles to the journey accounts (same private content). */
+export function prepareAgentFixtures(): void {
+  const users = journeyUsers();
+  if (!users) throw new Error('journey world not created yet');
+  fs.rmSync(FIXTURES, { recursive: true, force: true });
+  fs.cpSync(path.join(REPO, 'apps/agent/fixtures'), FIXTURES, { recursive: true });
+  const peerMap: Record<string, string> = {};
+  for (const slot of AGENT_IDS) {
+    const u = users[SLOT_USER[slot]!]!;
+    const prof = JSON.parse(fs.readFileSync(path.join(FIXTURES, `${slot}.json`), 'utf8'));
+    fs.writeFileSync(
+      path.join(FIXTURES, `${u.id}.json`),
+      JSON.stringify({ ...prof, id: u.id, name: u.name }),
+    );
+    peerMap[u.id] = AGENT_URL(slot);
+  }
+  fs.writeFileSync(path.join(FIXTURES, 'peers.json'), JSON.stringify(peerMap));
+}
+
+const agentPeers = () => {
+  const users = journeyUsers() ?? {};
+  return AGENT_IDS.map((slot) => `${users[SLOT_USER[slot]!]?.id ?? slot}=${AGENT_URL(slot)}`).join(
+    ',',
+  );
+};
+
+function launchAgent(slot: string): number {
+  const users = journeyUsers() ?? {};
+  return launch(`agent-${slot}`, 'pnpm', ['--filter', '@squad/agent', 'start'], {
+    ...baseEnv(),
+    AGENT_ID: users[SLOT_USER[slot]!]?.id ?? slot,
+    AGENTS_FIXTURES: FIXTURES,
+    PORT: String(AGENT_PORT(slot)),
+    PEERS: agentPeers(),
+    FAKE_LLM: LIVE ? '0' : '1',
+    CONFIRM_MODE: 'scripted',
+  });
+}
+
+export function startAgents(): void {
+  prepareAgentFixtures();
+  const pids = readPids();
+  for (const slot of AGENT_IDS) pids[slot] = launchAgent(slot);
+  writePids(pids);
+}
+
+export async function stackUp(ms = 120_000, withAgents = true): Promise<boolean> {
   const checks = [
     `${HUB}/health`,
     `${WEB}/`,
     `${CTL}/ctl/health`,
-    ...AGENT_IDS.map((id) => `${AGENT_URL(id)}/healthz`),
+    ...(withAgents ? AGENT_IDS.map((id) => `${AGENT_URL(id)}/healthz`) : []),
   ];
   const ok = (await Promise.all(checks.map((u) => waitFor(u, ms)))).every(Boolean);
   // fakes have no health route; a 404 still proves they listen
@@ -179,14 +240,7 @@ export function stopAgent(id: string): void {
 /** Starts that agent again and records its new PID. */
 export async function startAgent(id: string): Promise<boolean> {
   const pids = readPids();
-  pids[id] = launch(`agent-${id}`, 'pnpm', ['--filter', '@squad/agent', 'start'], {
-    ...baseEnv(),
-    AGENT_ID: id,
-    PORT: String(AGENT_PORT(id)),
-    PEERS: peers(),
-    FAKE_LLM: LIVE ? '0' : '1',
-    CONFIRM_MODE: 'scripted',
-  });
+  pids[id] = launchAgent(id);
   writePids(pids);
   return waitFor(`${AGENT_URL(id)}/healthz`, 60_000);
 }

@@ -7,4 +7,7 @@ const canvas = await startFakeCanvas(CANVAS_PORT);
 const google = await startFakeGoogle(GOOGLE_PORT);
 console.log(`fakes: canvas ${canvas.url}, google ${google.url}`);
 for (const sig of ['SIGINT', 'SIGTERM'] as const)
-  process.once(sig, () => void Promise.all([canvas.close(), google.close()]).then(() => process.exit(0)));
+  process.once(
+    sig,
+    () => void Promise.all([canvas.close(), google.close()]).then(() => process.exit(0)),
+  );

@@ -1,13 +1,17 @@
 // Builds a GateCtx: one fixture world (one squad, one group thread), the LLM mode switch, the live budget guard and
 // browser actors. Everything is closed again in dispose().
 import type { Browser } from '@playwright/test';
-import { im } from './fakes/client';
+import type { World } from './fakes/client';
+import { ctl } from './fakes/ctl';
 import { LiveBudget, liveMode } from './live';
 import { webActor } from './hub';
 import type { GateCtx } from './ctx';
 
-export async function makeCtx(browser: Browser, opts: { b?: boolean; actors?: boolean } = {}): Promise<GateCtx> {
-  const world = await im.world({ b: !!opts.b });
+export async function makeCtx(
+  browser: Browser,
+  opts: { b?: boolean; kind?: 'fresh' | 'journey'; actors?: boolean } = {},
+): Promise<GateCtx> {
+  const world = (await ctl.world({ kind: opts.kind ?? 'fresh', b: !!opts.b })) as World;
   const ctx: GateCtx = {
     browser,
     world,

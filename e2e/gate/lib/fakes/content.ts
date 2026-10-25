@@ -85,13 +85,69 @@ export const CLASSROOM = {
   submissionGrade: SENTINELS.grade,
 };
 
-/** What a fixture-world question should be answered from (stable facts for S3/S5 assertions). */
+/**
+ * What the HUB's own fixture upstream holds (packages/brain/fixtures/connectors/{canvas,google}.json, served by the
+ * in-process fake connectors). These, not the HTTP fakes' data above, are what S1-S3 assert against.
+ * Synthetic and original; no real course, institution or person.
+ */
+export const HUB_FIXTURE = {
+  canvas: {
+    assignments: [
+      { title: 'Assignment 3: Sampling Distributions', due: 'Nov 2' },
+      { title: 'Assignment 4: Confidence Intervals', due: 'Nov 16' },
+      { title: 'Lab Report 2: Osmosis in Potato Cores', due: 'Nov 5' },
+    ],
+    announcement: {
+      title: 'Midterm review session moved',
+      needle: 'midterm review session moved Thursday room',
+    },
+    file: {
+      title: 'week5-sampling-lecture.pdf',
+      /** verbatim sentence on page 3 of the file */
+      quote:
+        'The standard error of the mean equals the population standard deviation divided by the square root of the sample size.',
+    },
+    /** sources one Canvas fixture connection yields: 3 assignments + 1 announcement (canvas_event) + 1 file */
+    counts: { canvas_assignment: 3, canvas_event: 1, canvas_file: 1 } as Record<string, number>,
+  },
+  google: {
+    picked: { id: 'doc-notes-1', title: 'Sampling distributions: my notes' },
+    /** in the fixture Drive but NOT picked in the Picker: drive.file must never see it */
+    unpicked: {
+      id: 'file-sheet-2',
+      title: 'survey-results-summary.txt',
+      textNeedle: 'Class survey summary',
+    },
+    /** private calendar titles: never in hub_busy_blocks, never bulk-shared */
+    eventTitles: [
+      'Study group: sampling distributions',
+      'Office hours with the teaching assistant',
+    ],
+    eventNeedle: 'study group library annex sampling distributions',
+    classroom: { title: 'Reflection: when does the mean mislead?' },
+    /** with only `picked` chosen: 2 calendar events + 1 picked doc + 1 Classroom item */
+    counts: { gcal_event: 2, gdoc: 1, classroom_item: 1 } as Record<string, number>,
+  },
+  /** raw upstream account ids the hub must never store or return (only a salted hash is kept) */
+  rawAccountIds: ['fixture-canvas-user-1', 'fixture.student@example.invalid'],
+} as const;
+
+/** Strings that exist only in data that must never reach a squad surface (unpicked Drive file, private calendar titles). */
+export const PRIVATE_FIXTURE: string[] = [
+  HUB_FIXTURE.google.unpicked.title,
+  HUB_FIXTURE.google.unpicked.textNeedle,
+  ...HUB_FIXTURE.google.eventTitles,
+];
+
+/** What a fixture-world question should be answered from (stable facts for S3/S5 assertions; real hub fixture). */
 export const FACTS = {
+  /** Nook "what is due" answer: deterministic, produced from the asker's own Canvas sources before any model runs. */
   hw4Question: 'when is the stats homework due?',
-  hw4Needle: 'Homework 4',
-  hw4DueDay: 'Oct 29',
+  hw4Needle: 'Assignment 3: Sampling Distributions',
+  hw4DueDay: 'Nov 2',
+  /** content question: answered from retrieved chunks by the model (needs a real LLM to be grounded). */
   cltQuestion: 'what does the standard error of the mean equal?',
-  cltQuote: 'The standard error of the mean equals sigma divided by the square root of n.',
+  cltQuote: HUB_FIXTURE.canvas.file.quote,
   unsupported: 'what is the capital of Burkina Faso?',
 };
 

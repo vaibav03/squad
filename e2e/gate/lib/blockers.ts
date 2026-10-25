@@ -23,17 +23,20 @@ export function definedEnvNames(): Set<string> {
 export const RUNBOOKS: Record<string, { code: string; reason: string; anchor: string }> = {
   google_client: {
     code: 'no_google_client',
-    reason: 'GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are not set: the Google OAuth client and consent screen are not registered.',
+    reason:
+      'GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET are not set: the Google OAuth client and consent screen are not registered.',
     anchor: '#google-oauth-client-and-consent-screen',
   },
   google_account: {
     code: 'no_own_google_account',
-    reason: 'GATE_OWN_GOOGLE_EMAIL is not set: real runs only ever use the user\'s own Google account.',
+    reason:
+      "GATE_OWN_GOOGLE_EMAIL is not set: real runs only ever use the user's own Google account.",
     anchor: '#google-oauth-client-and-consent-screen',
   },
   canvas_feed: {
     code: 'no_canvas_feed',
-    reason: 'GATE_CANVAS_FEED_URL / GATE_OWN_CANVAS_HOST are not set: no Canvas calendar feed of the user\'s own to read.',
+    reason:
+      "GATE_CANVAS_FEED_URL / GATE_OWN_CANVAS_HOST are not set: no Canvas calendar feed of the user's own to read.",
     anchor: '#canvas-institution-token-or-feed',
   },
   canvas_token: {
@@ -43,17 +46,20 @@ export const RUNBOOKS: Record<string, { code: string; reason: string; anchor: st
   },
   apple: {
     code: 'apple_unverified',
-    reason: 'imessage-kit on this macOS has no recorded passing allowlisted run (Full Disk Access, Automation, Messages signed in).',
+    reason:
+      'imessage-kit on this macOS has no recorded passing allowlisted run (Full Disk Access, Automation, Messages signed in).',
     anchor: '#apple-behaviour-and-permissions',
   },
   second_person: {
     code: 'needs_second_person',
-    reason: 'A real multi-participant group needs other consenting people; Apple has no API to create groups.',
+    reason:
+      'A real multi-participant group needs other consenting people; Apple has no API to create groups.',
     anchor: '#real-multi-person-imessage-group',
   },
   llm: {
     code: 'llm_credits',
-    reason: 'GET /v1/status says the model is the demo stand-in (no key, rejected key, or depleted Gemini credits).',
+    reason:
+      'GET /v1/status says the model is the demo stand-in (no key, rejected key, or depleted Gemini credits).',
     anchor: '#gemini-credits-live-and-elevenlabs-plan',
   },
   elevenlabs: {
@@ -63,9 +69,15 @@ export const RUNBOOKS: Record<string, { code: string; reason: string; anchor: st
   },
 };
 
-async function hubStatus(): Promise<{ llm?: string; tts?: string; ttsReason?: string } | undefined> {
+async function hubStatus(): Promise<
+  { llm?: string; tts?: string; ttsReason?: string } | undefined
+> {
   try {
-    return (await (await fetch(`${HUB}/v1/status`)).json()) as { llm?: string; tts?: string; ttsReason?: string };
+    return (await (await fetch(`${HUB}/v1/status`)).json()) as {
+      llm?: string;
+      tts?: string;
+      ttsReason?: string;
+    };
   } catch {
     return undefined;
   }
@@ -81,15 +93,21 @@ export async function blockerFor(key: string): Promise<Blocker | undefined> {
   });
   switch (key) {
     case 'google_client':
-      return names.has('GOOGLE_CLIENT_ID') && names.has('GOOGLE_CLIENT_SECRET') ? undefined : b('google_client');
+      return names.has('GOOGLE_OAUTH_CLIENT_ID') && names.has('GOOGLE_OAUTH_CLIENT_SECRET')
+        ? undefined
+        : b('google_client');
     case 'google_account':
       return names.has('GATE_OWN_GOOGLE_EMAIL') ? undefined : b('google_account');
     case 'canvas_feed':
-      return names.has('GATE_CANVAS_FEED_URL') && names.has('GATE_OWN_CANVAS_HOST') ? undefined : b('canvas_feed');
+      return names.has('GATE_CANVAS_FEED_URL') && names.has('GATE_OWN_CANVAS_HOST')
+        ? undefined
+        : b('canvas_feed');
     case 'canvas_token':
       return names.has('GATE_CANVAS_TOKEN') ? undefined : b('canvas_token');
     case 'apple':
-      return names.has('GATE_APPLE_VERIFIED') && names.has('IMESSAGE_ALLOWED_CHATS') ? undefined : b('apple');
+      return names.has('GATE_APPLE_VERIFIED') && names.has('IMESSAGE_ALLOWED_CHATS')
+        ? undefined
+        : b('apple');
     case 'second_person':
       return process.env.GATE_REAL_GROUP_HAS_OTHERS === '1' ? undefined : b('second_person');
     case 'llm': {
