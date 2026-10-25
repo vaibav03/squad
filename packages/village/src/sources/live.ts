@@ -138,7 +138,15 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
       log.warn('a subscriber threw');
     }
   };
+  // What the world needs to catch up when it subscribes after the snapshot was delivered (it boots slower
+  // than the first fetch): the last snapshot's events, with agent states kept current by the stream.
+  let caughtUp: VillageEvent[] | undefined;
   const emit = (e: VillageEvent, m?: EventMeta) => {
+    if (caughtUp && e.t === 'agent.state' && !m?.snapshot) {
+      const i = caughtUp.findIndex((x) => x.t === 'agent.state' && x.agent === e.agent);
+      if (i >= 0) caughtUp[i] = e;
+      else caughtUp.push(e);
+    }
     for (const fn of [...subs]) call(fn, e, m);
   };
   const reportError = (k: LiveErrorKind) => {
@@ -219,6 +227,7 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
       seen = new Set(events.map((e) => JSON.stringify(e)));
       for (const fn of [...snapSubs]) call(fn, snap);
       const meta: EventMeta = resync ? { snapshot: true, resync: true } : { snapshot: true };
+      caughtUp = [...events];
       for (const e of events) emit(e, { ...meta });
       ok = true;
     } catch (err) {
@@ -351,7 +360,9 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
 
   return {
     subscribe(fn) {
+      const late = caughtUp && !closed && !loading ? [...caughtUp] : [];
       subs.add(fn);
+      for (const e of late) call(fn, e, { snapshot: true });
       return () => subs.delete(fn);
     },
     get status() {
