@@ -59,3 +59,11 @@ Merge order suggestion: spine, hub, brain-answers, brain-quiz, mesh-crypto, mesh
 - Weak spots to polish later: lit-window spill, interior lamp dithering, sofa/stalls/bunting crispness, dawn bands, tree highlights, tiny faces at 1x. The last dusk background revision was regenerated but not re-viewed. The Playwright capture script and the walk cycle were never run or watched.
 - Walk speed decision: 36 px/s at 12 fps (3 px planted-foot per frame), with Left/Mid/Right presets and tap-to-walk for distance.
 - Chapter-house row uses only the hut and smaller landmarks; larger Autumn Town houses are one-per-screen or backdrop.
+
+## Demo (from the demo handoff)
+- After merging hub and web-shell: run `pnpm demo:preflight` and `pnpm demo:replay track2`, then check visuals against the beat tables in `docs/demo/track2/README.md` and `track3/README.md`. `demo:replay` on bare main stops with a "merge ws/hub" error until the hub lands.
+- Chapter ids disagree: the hub seed uses `cse310`, `expert:ch5`, `qz_ch5_*`; the brain fixture chapters are `ch2`, `ch3`, `ch6`, `ch12`; the replays use `ch6`, `ch12` and demo course id `demo`. Make the hub seed and brain agree at integration.
+- Web host dev port is 5180 (web-shell), the launcher passes `HUB_CORS_ORIGINS` and `VITE_HUB_BASE_URL` (variable name is a guess: check the host's actual name).
+- If the village adapter treats `agent.message.kind` strings differently, adjust the replays. Kinds used: task.open, psi.blind, psi.tokens, psi.common, share.vec, share.sum, conflict, option_dropped, query, query_denied, result.
+- The doubt answer panel and Step Diff are hub-endpoint panels with no VillageEvent, so the replay only shows agent states around them (the presenter narrates).
+- Owner must sign in to `hackathon.py` to produce the submission previews (`docs/submission/PREVIEWS.md`); `--yes` only after review. Not done yet: GIFs (`docs/demo/media/trackN.gif`), screen recordings and dry runs (need the integrated village and real phones). Cost per question is unmeasured.
