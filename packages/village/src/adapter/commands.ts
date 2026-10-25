@@ -37,11 +37,16 @@ export type OverlayRequest =
 
 export type SceneCommand =
   /** Window lit / dim, desk lamp, NPC typing, "on a call" sign. */
-  | { readonly c: 'setAgentState'; readonly agent: string; readonly state: AgentState }
-  | { readonly c: 'walkTo'; readonly agent: string; readonly to: Place; readonly carrying?: string }
+  | { readonly type: 'setAgentState'; readonly agent: string; readonly state: AgentState }
+  | {
+      readonly type: 'walkTo';
+      readonly agent: string;
+      readonly to: Place;
+      readonly carrying?: string;
+    }
   /** Envelope pops at `from`'s door, travels to `to` (carried), hand-off glides to the receiver. */
   | {
-      readonly c: 'spawnEnvelope';
+      readonly type: 'spawnEnvelope';
       readonly id: string;
       readonly from: string;
       readonly to: string | 'commons';
@@ -49,7 +54,7 @@ export type SceneCommand =
       readonly kind: string;
     }
   | {
-      readonly c: 'bubble';
+      readonly type: 'showBubble';
       readonly key: string; // replaces an existing bubble with the same key
       readonly at: Place | { readonly kind: 'agent'; readonly agent: string };
       readonly style: BubbleStyle;
@@ -58,57 +63,66 @@ export type SceneCommand =
       readonly minMs: number; // dwell: >= 1200 ms per 20 chars
       readonly dissent?: boolean; // red-lined dissenter bubble that stays
     }
-  | { readonly c: 'dismissBubble'; readonly key: string }
+  | { readonly type: 'dismissBubble'; readonly key: string }
   /** Red "!" alert. `at` is the commons for mediator vetoes, a door for gate blocks. */
-  | { readonly c: 'marker'; readonly at: Place; readonly reason: AlertReason; readonly key: string }
-  | { readonly c: 'clearMarker'; readonly key: string }
-  /** Pulsing ring at a door while waiting for the student's yes. */
-  | { readonly c: 'ring'; readonly agent: string; readonly on: boolean }
-  | { readonly c: 'tick'; readonly at: Place } // small check mark after confirm.done
   | {
-      readonly c: 'ledgerCard';
+      readonly type: 'marker';
+      readonly at: Place;
+      readonly reason: AlertReason;
+      readonly key: string;
+    }
+  | { readonly type: 'clearMarker'; readonly key: string }
+  /** Pulsing ring at a door while waiting for the student's yes. */
+  | { readonly type: 'ring'; readonly agent: string; readonly on: boolean }
+  | { readonly type: 'tick'; readonly at: Place } // small check mark after confirm.done
+  | {
+      readonly type: 'ledgerCard';
       readonly taskId: string;
       readonly student: string;
       readonly card: LedgerCard;
     }
-  | { readonly c: 'setGlow'; readonly chapter: string; readonly box: number }
+  | { readonly type: 'setGlow'; readonly chapter: string; readonly box: number }
   | {
-      readonly c: 'chalkboard';
+      readonly type: 'chalkboard';
       readonly chapter: string;
       readonly mark: 'question' | 'tick' | 'cross' | 'none';
     }
   | {
-      readonly c: 'callPortrait';
+      readonly type: 'callPortrait';
       readonly agent: string;
       readonly on: boolean;
       readonly student?: string;
     }
   | {
-      readonly c: 'councilOpinion';
+      readonly type: 'councilOpinion';
       readonly councilId: string;
       readonly member: string;
       readonly text: string;
     }
   | {
-      readonly c: 'councilRank';
+      readonly type: 'councilRank';
       readonly councilId: string;
       readonly member: string;
       readonly order: readonly string[];
     }
   | {
-      readonly c: 'councilVerdict';
+      readonly type: 'councilVerdict';
       readonly councilId: string;
       readonly member: string;
       readonly text: string;
       readonly dissenter?: string;
     }
-  | { readonly c: 'lantern'; readonly councilId: string; readonly flicker: boolean }
-  | { readonly c: 'openOverlay'; readonly request: OverlayRequest }
-  | { readonly c: 'playTrip'; readonly taskId: string; readonly squadId: string }
+  | { readonly type: 'lantern'; readonly councilId: string; readonly flicker: boolean }
+  | { readonly type: 'openOverlay'; readonly request: OverlayRequest }
+  | { readonly type: 'playTrip'; readonly taskId: string; readonly squadId: string }
   /** Polite live-region text for the a11y feed ("Council verdict: start with chapter 5"). */
-  | { readonly c: 'announce'; readonly text: string; readonly politeness: 'polite' | 'assertive' };
+  | {
+      readonly type: 'announce';
+      readonly text: string;
+      readonly politeness: 'polite' | 'assertive';
+    };
 
-export type SceneCommandType = SceneCommand['c'];
+export type SceneCommandType = SceneCommand['type'];
 
 /** Who is looking: overlays open only for this student. */
 export interface AdapterContext {

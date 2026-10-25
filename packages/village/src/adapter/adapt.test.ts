@@ -5,9 +5,9 @@ import { adapt, adaptUnknown } from './adapt';
 import type { SceneCommand } from './commands';
 
 const ctx = { me: 's_ana' };
-const tags = (cs: SceneCommand[]) => cs.map((c) => c.c);
-const find = <T extends SceneCommand['c']>(cs: SceneCommand[], t: T) =>
-  cs.find((c): c is Extract<SceneCommand, { c: T }> => c.c === t);
+const tags = (cs: SceneCommand[]) => cs.map((c) => c.type);
+const find = <T extends SceneCommand['type']>(cs: SceneCommand[], t: T) =>
+  cs.find((c): c is Extract<SceneCommand, { type: T }> => c.type === t);
 
 const SAMPLES = {
   'agent.state': { t: 'agent.state', agent: 'dean', state: 'studying' },
@@ -81,7 +81,7 @@ describe('agent.message', () => {
     const out = adapt(SAMPLES['agent.message'] as VillageEvent, ctx);
     expect(tags(out)).toContain('spawnEnvelope');
     expect(find(out, 'walkTo')).toMatchObject({ agent: 'student:s_ben', to: { kind: 'commons' } });
-    const b = find(out, 'bubble')!;
+    const b = find(out, 'showBubble')!;
     expect(b.lines).toEqual(['free evenings']);
     expect(b.at).toEqual({ kind: 'commons' });
   });
@@ -98,7 +98,7 @@ describe('agent.message', () => {
       ctx,
     );
     expect(find(out, 'spawnEnvelope')?.to).toBe('commons');
-    expect(find(out, 'bubble')?.text).toBe('Post');
+    expect(find(out, 'showBubble')?.text).toBe('Post');
   });
   it.each([
     ['conflict', 'Conflict found'],
@@ -110,7 +110,7 @@ describe('agent.message', () => {
       ctx,
     );
     expect(find(out, 'marker')).toMatchObject({ at: { kind: 'commons' }, reason: kind });
-    expect(find(out, 'bubble')?.text).toBe(words);
+    expect(find(out, 'showBubble')?.text).toBe(words);
     expect(tags(out)).not.toContain('spawnEnvelope');
     expect(tags(out).includes('ledgerCard')).toBe(kind === 'query_denied');
     expect(JSON.stringify(out).toLowerCase()).not.toContain('student:');
@@ -127,7 +127,7 @@ describe('agent.message', () => {
       },
       ctx,
     );
-    expect(find(out, 'bubble')!.text.length).toBeLessThanOrEqual(28);
+    expect(find(out, 'showBubble')!.text.length).toBeLessThanOrEqual(28);
   });
 });
 
@@ -243,7 +243,7 @@ describe('call', () => {
       'Photosynthesis converts light energy into chemical energy stored in glucose molecules';
     const b = find(
       adapt({ t: 'call.caption', agent: 'expert:ch5', callId: 'c1', text }, ctx),
-      'bubble',
+      'showBubble',
     )!;
     expect(b.text.length).toBeLessThanOrEqual(61);
     expect(b.text.endsWith('…')).toBe(true);
@@ -288,7 +288,7 @@ describe('bubble dwell', () => {
         { t: 'agent.message', from: 'dean', to: 'commons', taskId: 't', kind: 'k', shared: [long] },
         ctx,
       ),
-      'bubble',
+      'showBubble',
     )!;
     expect(msg.minMs).toBe(9000);
   });

@@ -23,8 +23,8 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
   switch (event.t) {
     case 'agent.state': {
       const out: SceneCommand[] = [
-        { c: 'setAgentState', agent: event.agent, state: event.state },
-        { c: 'ring', agent: event.agent, on: event.state === 'waiting_for_student' },
+        { type: 'setAgentState', agent: event.agent, state: event.state },
+        { type: 'ring', agent: event.agent, on: event.state === 'waiting_for_student' },
       ];
       const who = agentName(event.agent);
       const words = {
@@ -33,7 +33,7 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
         in_call: `${who} is on a call`,
         waiting_for_student: `${who} is waiting for a yes`,
       }[event.state];
-      out.push({ c: 'announce', text: words, politeness: 'polite' });
+      out.push({ type: 'announce', text: words, politeness: 'polite' });
       return out;
     }
 
@@ -45,17 +45,17 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       const id = `env:${event.taskId}:${event.from}:${event.to}:${event.kind}`;
       if (!fromMediator) {
         out.push({
-          c: 'spawnEnvelope',
+          type: 'spawnEnvelope',
           id,
           from: event.from,
           to: event.to,
           taskId: event.taskId,
           kind: event.kind,
         });
-        out.push({ c: 'walkTo', agent: event.from, to: COMMONS, carrying: id });
+        out.push({ type: 'walkTo', agent: event.from, to: COMMONS, carrying: id });
       }
       out.push({
-        c: 'bubble',
+        type: 'showBubble',
         key: `msg:${id}`,
         at: COMMONS,
         style: 'speech',
@@ -65,7 +65,7 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       });
       if (alert) {
         out.push({
-          c: 'marker',
+          type: 'marker',
           at: COMMONS,
           reason: alert,
           key: `alert:${event.taskId}:${event.kind}`,
@@ -73,7 +73,7 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       }
       if (event.kind === 'query_denied') {
         out.push({
-          c: 'ledgerCard',
+          type: 'ledgerCard',
           taskId: event.taskId,
           student: fromMediator ? 'mediator' : event.from,
           card: { kind: 'blocked', field: 'request' },
@@ -81,7 +81,7 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       }
       const speaker = fromMediator ? 'The mediator' : agentName(event.from);
       out.push({
-        c: 'announce',
+        type: 'announce',
         text: alert
           ? `${kindText}.`
           : event.shared.length > 0
@@ -97,19 +97,19 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       if (event.blocked) {
         return [
           {
-            c: 'ledgerCard',
+            type: 'ledgerCard',
             taskId: event.taskId,
             student: event.student,
             card: { kind: 'blocked', field: event.field },
           },
           {
-            c: 'marker',
+            type: 'marker',
             at: door(studentAgent(event.student)),
             reason: 'blocked',
             key: `blocked:${event.taskId}:${event.student}:${event.field}`,
           },
           {
-            c: 'announce',
+            type: 'announce',
             text: `Blocked by privacy gate: ${who}'s ${event.field}.`,
             politeness: 'assertive',
           },
@@ -118,13 +118,13 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       if (event.withheld === 'hidden' || event.shared === undefined) {
         return [
           {
-            c: 'ledgerCard',
+            type: 'ledgerCard',
             taskId: event.taskId,
             student: event.student,
             card: { kind: 'hidden', field: event.field },
           },
           {
-            c: 'announce',
+            type: 'announce',
             text: `${who} kept ${event.field} hidden.`,
             politeness: 'polite',
           },
@@ -132,13 +132,13 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       }
       return [
         {
-          c: 'ledgerCard',
+          type: 'ledgerCard',
           taskId: event.taskId,
           student: event.student,
           card: { kind: 'shared', field: event.field, shared: event.shared },
         },
         {
-          c: 'announce',
+          type: 'announce',
           text: `${who} shared ${event.field}: ${event.shared}.`,
           politeness: 'polite',
         },
@@ -147,15 +147,15 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
 
     case 'confirm.pending': {
       const agent = studentAgent(event.student);
-      const out: SceneCommand[] = [{ c: 'ring', agent, on: true }];
+      const out: SceneCommand[] = [{ type: 'ring', agent, on: true }];
       if (event.student === ctx.me) {
         out.push({
-          c: 'openOverlay',
+          type: 'openOverlay',
           request: { overlay: 'openConfirm', taskId: event.taskId, question: event.question },
         });
       }
       out.push({
-        c: 'announce',
+        type: 'announce',
         text: `${studentName(event.student)}'s agent is waiting for a yes: ${event.question}`,
         politeness: 'polite',
       });
@@ -165,17 +165,17 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
     case 'confirm.done': {
       const agent = studentAgent(event.student);
       const out: SceneCommand[] = [
-        { c: 'ring', agent, on: false },
-        { c: 'tick', at: door(agent) },
+        { type: 'ring', agent, on: false },
+        { type: 'tick', at: door(agent) },
       ];
       if (event.student === ctx.me) {
         out.push({
-          c: 'openOverlay',
+          type: 'openOverlay',
           request: { overlay: 'close', which: 'confirm', taskId: event.taskId },
         });
       }
       out.push({
-        c: 'announce',
+        type: 'announce',
         text: `${studentName(event.student)} said yes.`,
         politeness: 'polite',
       });
@@ -185,9 +185,9 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
     case 'council.opinion': {
       const text = event.text ?? '';
       return [
-        { c: 'councilOpinion', councilId: event.councilId, member: event.member, text },
+        { type: 'councilOpinion', councilId: event.councilId, member: event.member, text },
         {
-          c: 'announce',
+          type: 'announce',
           text: text ? `${event.member}: ${text}` : `${event.member} has an opinion.`,
           politeness: 'polite',
         },
@@ -197,13 +197,13 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
     case 'council.rank':
       return [
         {
-          c: 'councilRank',
+          type: 'councilRank',
           councilId: event.councilId,
           member: event.member,
           order: event.order ?? [],
         },
         {
-          c: 'announce',
+          type: 'announce',
           text: event.order?.length
             ? `${event.member} ranks: ${event.order.join(', ')}.`
             : `${event.member} ranked the answers.`,
@@ -216,7 +216,7 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       const dissenter = event.dissenter ?? (event.dissent ? event.member : undefined);
       const out: SceneCommand[] = [
         {
-          c: 'councilVerdict',
+          type: 'councilVerdict',
           councilId: event.councilId,
           member: event.member,
           text,
@@ -224,10 +224,10 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
         },
       ];
       if (dissenter) {
-        out.push({ c: 'lantern', councilId: event.councilId, flicker: true });
+        out.push({ type: 'lantern', councilId: event.councilId, flicker: true });
       }
       out.push({
-        c: 'announce',
+        type: 'announce',
         text: `Council verdict: ${text || 'decided'}.${dissenter ? ' One member dissented: uncertain, ask your TA.' : ''}`,
         politeness: dissenter ? 'assertive' : 'polite',
       });
@@ -235,15 +235,17 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
     }
 
     case 'quiz.question': {
-      const out: SceneCommand[] = [{ c: 'chalkboard', chapter: event.chapter, mark: 'question' }];
+      const out: SceneCommand[] = [
+        { type: 'chalkboard', chapter: event.chapter, mark: 'question' },
+      ];
       if (event.target === ctx.me) {
         out.push({
-          c: 'openOverlay',
+          type: 'openOverlay',
           request: { overlay: 'openQuiz', quizId: event.quizId, chapter: event.chapter },
         });
       }
       out.push({
-        c: 'announce',
+        type: 'announce',
         text: `Quiz question on ${chapterName(event.chapter)}.`,
         politeness: 'polite',
       });
@@ -253,9 +255,9 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
     case 'quiz.answer': {
       const mark = event.correct === undefined ? 'none' : event.correct ? 'tick' : 'cross';
       return [
-        { c: 'chalkboard', chapter: event.chapter, mark },
+        { type: 'chalkboard', chapter: event.chapter, mark },
         {
-          c: 'announce',
+          type: 'announce',
           text: `A quiz answer came in for ${chapterName(event.chapter)}.`,
           politeness: 'polite',
         },
@@ -265,9 +267,9 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
     case 'quiz.result': {
       const mark = event.correct === undefined ? 'none' : event.correct ? 'tick' : 'cross';
       return [
-        { c: 'chalkboard', chapter: event.chapter, mark },
+        { type: 'chalkboard', chapter: event.chapter, mark },
         {
-          c: 'announce',
+          type: 'announce',
           text: `Quiz round finished for ${chapterName(event.chapter)}.`,
           politeness: 'polite',
         },
@@ -277,21 +279,21 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
     case 'call.start': {
       const out: SceneCommand[] = [
         {
-          c: 'callPortrait',
+          type: 'callPortrait',
           agent: event.agent,
           on: true,
           ...(event.student ? { student: event.student } : {}),
         },
-        { c: 'setAgentState', agent: event.agent, state: 'in_call' },
+        { type: 'setAgentState', agent: event.agent, state: 'in_call' },
       ];
       if (event.student !== undefined && event.student === ctx.me) {
         out.push({
-          c: 'openOverlay',
+          type: 'openOverlay',
           request: { overlay: 'openCall', agent: event.agent, callId: event.callId },
         });
       }
       out.push({
-        c: 'announce',
+        type: 'announce',
         text: `${agentName(event.agent)} started a call.`,
         politeness: 'polite',
       });
@@ -303,7 +305,7 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       if (!text) return [];
       return [
         {
-          c: 'bubble',
+          type: 'showBubble',
           key: `caption:${event.callId}`,
           at: { kind: 'agent', agent: event.agent },
           style: 'caption',
@@ -315,25 +317,29 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
 
     case 'call.end':
       return [
-        { c: 'dismissBubble', key: `caption:${event.callId}` },
-        { c: 'callPortrait', agent: event.agent, on: false },
-        { c: 'setAgentState', agent: event.agent, state: 'idle' },
-        { c: 'openOverlay', request: { overlay: 'close', which: 'call', callId: event.callId } },
-        { c: 'announce', text: `${agentName(event.agent)} ended the call.`, politeness: 'polite' },
+        { type: 'dismissBubble', key: `caption:${event.callId}` },
+        { type: 'callPortrait', agent: event.agent, on: false },
+        { type: 'setAgentState', agent: event.agent, state: 'idle' },
+        { type: 'openOverlay', request: { overlay: 'close', which: 'call', callId: event.callId } },
+        {
+          type: 'announce',
+          text: `${agentName(event.agent)} ended the call.`,
+          politeness: 'polite',
+        },
       ];
 
     case 'trip.confirmed':
       return [
-        { c: 'playTrip', taskId: event.taskId, squadId: event.squadId },
-        { c: 'announce', text: 'Everyone said yes. Trip confirmed.', politeness: 'assertive' },
+        { type: 'playTrip', taskId: event.taskId, squadId: event.squadId },
+        { type: 'announce', text: 'Everyone said yes. Trip confirmed.', politeness: 'assertive' },
       ];
 
     case 'mastery.changed':
       if (event.student !== ctx.me) return [];
       return [
-        { c: 'setGlow', chapter: event.chapter, box: event.box },
+        { type: 'setGlow', chapter: event.chapter, box: event.box },
         {
-          c: 'announce',
+          type: 'announce',
           text: `${chapterName(event.chapter)} is getting stronger.`,
           politeness: 'polite',
         },
