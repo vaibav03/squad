@@ -120,8 +120,9 @@ test('J22 organizer confirms; a member marks an item done from chat; decisions a
 }) => {
   const ana = await actor(browser, 's_ana');
   await ana.page.goto('/squad/village?plan=1');
-  const confirm = ana.page.getByTestId('plan-confirm');
-  if (await confirm.count()) await confirm.click();
+  await expect(ana.page.getByTestId('plan-status')).toBeVisible({ timeout: 30_000 });
+  // Dev never answered, so the organizer starts the plan
+  await ana.page.getByTestId('plan-confirm').click();
   await expect(ana.page.getByTestId('plan-status')).toContainText(/active/i, { timeout: 20_000 });
   await shot(ana.page, J, 'village-panel-active');
   await ana.ctx.close();
