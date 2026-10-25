@@ -79,7 +79,7 @@ describe('demo workspaces', () => {
     expect(r.json.connection).toMatchObject({ fixture: true, integrationState: 'demo' });
     const k = r.json.connection.counts;
     expect(k.calendarEvents).toBeGreaterThanOrEqual(5);
-    expect(k.driveDocs).toBe(2);
+    expect(k.driveDocs).toBe(6);
     expect(k.classroomItems).toBe(2);
     expect(k.courses).toBe(1);
   });

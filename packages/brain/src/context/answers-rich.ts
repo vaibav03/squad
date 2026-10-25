@@ -266,3 +266,90 @@ export function calendarReply(
     count: inRange.length,
   };
 }
+
+// ---------------------------------------------------------------- combined: due items + Google files to study
+
+const STUDY_FILE_KINDS = new Set(['gdoc', 'gdrive_file']);
+export const STUDY_FILES_RE =
+  /\b(google (?:files?|docs?|drive)|drive|gdocs?|google docs?)\b/i;
+const STUDY_VERB_RE = /\b(study|read|review|prep(?:are)?|revise)\b/i;
+const DUE_WORD_RE = /\b(due|deadlines?|assignments?|homework|hw|upcoming|to-?do)\b/i;
+/** Two intents in one message: what is due AND which Google files to study. Routed to `combinedDueStudyReply`. */
+export const isCombinedDueStudyQuestion = (t: string): boolean =>
+  DUE_WORD_RE.test(t) && STUDY_FILES_RE.test(t) && STUDY_VERB_RE.test(t);
+
+const STOP = new Set(
+  'the and for with from that this your you are was how what when into about each their than then them its has have not but can all one two use used'.split(' '),
+);
+const words = (t: string): Set<string> =>
+  new Set((t.toLowerCase().match(/[a-z]{4,}/g) ?? []).filter((w) => !STOP.has(w)));
+const codeOf = (label: string): string => (/^([A-Z]{2,5} ?\d{2,3})\b/.exec(label)?.[1] ?? '').replace(' ', '');
+
+const shortDay = (ms: number, tz: string): string =>
+  new Date(ms).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: tz });
+
+/**
+ * ONE answer for "what is due from Canvas this week and what Google files should I study?": the due list exactly as
+ * `dueReply` builds it (course "CODE: Name", exact dates, "Next after this week"), then the asker's Drive/Docs files
+ * matched to the courses and topics of the due items, each with a short reason, every item cited.
+ */
+export function combinedDueStudyReply(
+  store: ContextStore,
+  sources: ContextSource[],
+  now: number,
+  courseNames: ReadonlyMap<string, string> = new Map(),
+  q = '',
+  tz = 'UTC',
+): RichReply | null {
+  const due = dueReply(store, sources, now, courseNames, q, tz);
+  if (!due) return null;
+  const files = sources.filter((s) => STUDY_FILE_KINDS.has(s.kind));
+  if (files.length === 0)
+    return {
+      text: `${due.text}\n\nGoogle files to study: no Google Drive or Docs files are imported yet. Connect Google in Connections and pick the files you want Cubbie to read.`,
+      citations: due.citations,
+    };
+  const win = dueWindow(q, now, tz);
+  const upcoming = sources
+    .filter((s) => DUE_KINDS.has(s.kind) && s.dueAt !== null && s.dueAt >= now - DAY)
+    .sort((a, b) => a.dueAt! - b.dueAt!);
+  const inWin = (s: ContextSource) => (win.kind === 'all' ? true : s.dueAt! >= win.from && s.dueAt! < win.to);
+  const scored = files.map((f) => {
+    const fw = words(`${f.title} ${store.chunks(f.id).map((c) => c.text).join(' ')}`);
+    const fcode = codeOf(f.title);
+    let best: { a: ContextSource; shared: string[]; score: number } | null = null;
+    for (const a of upcoming) {
+      const label = courseOf(store, a, courseNames);
+      if (!fcode || codeOf(label) !== fcode) continue;
+      const aw = words(`${a.title} ${store.chunks(a.id).map((c) => c.text).join(' ')}`);
+      const shared = [...aw].filter((w) => fw.has(w)).slice(0, 3);
+      const score = shared.length + (inWin(a) ? 100 : 0);
+      if (!best || score > best.score) best = { a, shared, score };
+    }
+    return { f, best };
+  });
+  const picked = scored
+    .filter((x) => x.best)
+    .sort((a, b) => b.best!.score - a.best!.score)
+    .slice(0, 5);
+  if (picked.length === 0)
+    return {
+      text: `${due.text}\n\nGoogle files to study: none of your imported Drive or Docs files match the courses of these items.`,
+      citations: due.citations,
+    };
+  const lines = picked.map(({ f, best }) => {
+    const topic = best!.shared.length ? `; covers ${best!.shared.join(', ')}` : '';
+    return `- ${f.title}: for ${best!.a.title} (due ${shortDay(best!.a.dueAt!, tz)})${topic}`;
+  });
+  const fileCites = picked.map(({ f, best }): ChatCitation => {
+    const c = chatCitationFor(store, f, best!.a.title);
+    return {
+      ...c,
+      source: { ...c.source!, provenance: f.provenance.endsWith(':fixture') ? 'fixture' : 'real' },
+    };
+  });
+  return {
+    text: `${due.text}\n\nGoogle files to study:\n${lines.join('\n')}`,
+    citations: [...due.citations, ...fileCites],
+  };
+}
