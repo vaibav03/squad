@@ -22,6 +22,7 @@ import { createCallRoutes } from './routes/call';
 import { createCouncilRoutes } from './routes/council';
 import { createDomainRoutes } from './routes/domain';
 import { createInternalRoutes } from './routes/internal';
+import { createLibraryRoutes } from './routes/library';
 import { createMediaRoutes } from './routes/media';
 import { createQuizRoutes } from './routes/quiz';
 import { createReplayRoutes } from './routes/replay';
@@ -95,7 +96,7 @@ export function createHub(opts: HubOptions = {}): Hub {
       origin: (origin) =>
         config.corsOrigins.includes('*') || config.corsOrigins.includes(origin) ? origin : null,
       allowHeaders: ['authorization', 'content-type', 'last-event-id', 'x-nook-internal'],
-      allowMethods: ['GET', 'POST', 'PUT', 'OPTIONS'],
+      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       exposeHeaders: ['content-type'],
     }),
   );
@@ -119,6 +120,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createStreamRoutes(deps),
     createReplayRoutes(deps),
     createQuizRoutes(deps),
+    createLibraryRoutes(deps),
     createCallRoutes(deps),
     createMediaRoutes(deps),
     createDomainRoutes(deps),
