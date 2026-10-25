@@ -6,6 +6,7 @@ import {
   type CouncilRanking,
   type CouncilResult,
 } from '@squad/core';
+import { InspectableVoice } from '../overlays/inspector/InspectableVoice';
 import { LvIcon, type LvIconName } from '../overlays/kit/icons';
 import { rankingText } from './pacer';
 import './council.css';
@@ -25,7 +26,9 @@ export function MemberCard({ m }: { m: CouncilMemberResult }) {
   return (
     <article className="cn-member" data-member={m.id} data-failed={failed || undefined}>
       <header className="cn-member__head">
-        <span className="cn-member__name">{m.name}</span>
+        <InspectableVoice who={m.id} name={m.name} slot="council-hall" className="cn-member__name">
+          {m.name}
+        </InspectableVoice>
         <span className="cn-member__stance">{m.stance}</span>
       </header>
       {failed ? (
@@ -64,7 +67,14 @@ export function MemberCard({ m }: { m: CouncilMemberResult }) {
 export function MemberSkeleton({ name, id }: { name: string; id?: string }) {
   return (
     <li className="cn-member cn-member--wait" data-member={id}>
-      <span className="cn-member__name">{name}</span>
+      <InspectableVoice
+        who={id ?? name}
+        name={name}
+        slot="council-hall"
+        className="cn-member__name"
+      >
+        {name}
+      </InspectableVoice>
       <p className="cn-wait">{name} is thinking...</p>
       <span className="cn-skel" style={{ width: '92%' }} aria-hidden="true" />
       <span className="cn-skel" style={{ width: '68%' }} aria-hidden="true" />

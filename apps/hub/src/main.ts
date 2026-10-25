@@ -2,6 +2,7 @@ import { startHub } from './server';
 import { attachChatEngine } from './chat/engine';
 import { getObs, instrumentLlm } from './observability';
 import { agentUrlsFromEnv } from './wire';
+import { attachIMessage } from './imessage/wire';
 
 const hub = await startHub();
 const obs = getObs(hub.deps)!;
@@ -21,14 +22,16 @@ const chat = await attachChatEngine(hub, {
       hub.deps.log.warn(`llm: serving the demo model (${reason}); GET /v1/status shows why`),
     ),
 });
+// iMessage bridge: off unless IMESSAGE_ENABLED=1 plus an allowlist (docs/imessage.md).
+const imessage = await attachIMessage(hub);
 const st = hub.deps.runtime!.llm();
 hub.deps.log.info(
   `ports: ${hub.deps.runtime!.ports()}, llm: ${st.llm}${st.reason ? ` (${st.reason})` : ''}; GET /v1/status shows why`,
 );
 for (const sig of ['SIGINT', 'SIGTERM'] as const) {
   process.once(sig, () => {
-    void chat
-      .stop()
+    void Promise.resolve(imessage?.stop())
+      .then(() => chat.stop())
       .then(() => hub.stop())
       .then(() => process.exit(0));
     setTimeout(() => process.exit(1), 5000).unref();

@@ -28,7 +28,7 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
   const scene = ctx.scene;
   const gfx = scene.add.graphics().setDepth(ctx.depth.actorFx);
   const ring = scene.add.graphics().setDepth(ctx.depth.actors - 1);
-  const tag = pixelText(ctx, '', { color: 'cloudHi', size: 9.333 })
+  const tag = pixelText(ctx, '', { color: 'cloudHi', size: 8 })
     .setShadow(1, 1, PAL.ink, 0, false, true)
     .setDepth(ctx.depth.worldUi)
     .setVisible(false);
@@ -156,14 +156,29 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
           Math.max(hover.sprite.x - tag.width / 2, cam.scrollX + 2),
           cam.scrollX + cam.width - 2 - tag.width,
         );
-        tag.setPosition(snap(x), snap(hover.sprite.getBounds().y - tag.height - 3));
-        gfx.fillStyle(COLOR.ink, 0.88);
-        gfx.fillRect(
-          snap(tag.x) - 3,
-          snap(tag.y) - 2,
-          Math.ceil(tag.width) + 6,
-          Math.ceil(tag.height) + 4,
-        );
+        tag.setPosition(snap(x), snap(hover.sprite.getBounds().y - tag.height + 8));
+        // compact pixel plate: tight padding, thin border, never a large slab
+        const bw = Math.ceil(tag.width) + 4;
+        const bh = Math.ceil(tag.height) + 2;
+        gfx.fillStyle(COLOR.ink, 0.8);
+        gfx.fillRect(snap(tag.x) - 2, snap(tag.y) - 1, bw, bh);
+        gfx.lineStyle(1, COLOR.cloudLo, 0.9);
+        gfx.strokeRect(snap(tag.x) - 2 + 0.5, snap(tag.y) - 1 + 0.5, bw - 1, bh - 1);
+        const think = store.isThinking(hover.id);
+        if (think) {
+          gfx.fillStyle(COLOR.ink, 0.8);
+          gfx.fillRect(snap(tag.x) + bw - 2, snap(tag.y) - 1, 14, bh);
+          gfx.lineStyle(1, COLOR.cloudLo, 0.9);
+          gfx.strokeRect(snap(tag.x) + bw - 2 + 0.5, snap(tag.y) - 1 + 0.5, 13, bh - 1);
+        }
+        if (think) {
+          // tiny 'thinking' dots beside the name: opacity only, steady in Calm mode
+          for (let i = 0; i < 3; i++) {
+            const a = calm ? 0.9 : 0.35 + 0.65 * Math.max(0, Math.sin(now / 260 - i * 0.9));
+            gfx.fillStyle(COLOR.cloudHi, a);
+            gfx.fillRect(snap(tag.x) + bw + 1 + i * 4, snap(tag.y) + 3, 2, 2);
+          }
+        }
       } else tag.setVisible(false);
       // follow: ease the camera toward the selected character (whole pixels, no zoom change)
       if (store.follow && selSprite && now - followAt > FOLLOW_EVERY_MS) {

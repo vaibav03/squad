@@ -8,35 +8,37 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `fix/` | 1 | 4 | 43 | Claude Sonnet 5.5 (3) |
+| `fix/` | 2 | 12 | 47 | Claude Sonnet 5.5 (10) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `fix/names-council-inspect` | 4 | 43 | 2026-10-25 02:41 | 2026-10-25 03:00 | Vaibav |
+| `fix/e2e-round2` | 8 | 38 | 2026-10-25 02:27 | 2026-10-25 03:06 | Vaibav |
+| `fix/names-council-inspect` | 4 | 9 | 2026-10-25 03:15 | 2026-10-25 03:19 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 182 |
+| (no trailer) | 191 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 463 |
+| Claude Sonnet 5.5 | 477 |
 
 ## Commits landed on main by area (subject prefix)
 
 | Area | Commits |
 |---|---:|
-| (other) | 89 |
+| (other) | 93 |
 | Initial commit | 1 |
 | Merge batch 1 | 1 |
 | Merge batch 10 | 1 |
 | Merge batch 11 | 1 |
 | Merge batch 12 | 1 |
 | Merge batch 13 | 1 |
+| Merge batch 14 | 1 |
 | Merge batch 2 | 1 |
 | Merge batch 3 | 1 |
 | Merge batch 4 | 1 |
@@ -61,8 +63,9 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | design | 18 |
 | docs | 23 |
 | e2e | 27 |
-| fix | 19 |
+| fix | 22 |
 | hub | 5 |
+| imessage | 3 |
 | inspector | 13 |
 | integration | 41 |
 | interior-engine | 9 |
@@ -74,6 +77,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | merge batch11 | 3 |
 | merge batch12 | 2 |
 | merge batch13 | 3 |
+| merge batch14 | 4 |
 | merge batch2 | 7 |
 | merge batch3 | 3 |
 | merge batch4 | 3 |
@@ -112,5 +116,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Author | Commits |
 |---|---:|
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 363 |
+| Vaibav | 386 |
 | vaibav03 | 26 |

@@ -42,6 +42,8 @@ import { seedDemo } from './sim/seed';
 import { createAccountsStore } from './store/accounts';
 import { createDirectory } from './store/directory';
 import { createSquadsStore } from './store/squads';
+import { createImessageStore } from './imessage/store';
+import { createImessageRoutes } from './imessage/routes';
 import { createEventLog } from './store/eventlog';
 import { createLedgerStore } from './store/ledger';
 import { createSquadState } from './store/state';
@@ -98,6 +100,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     onDisband: (id) => void deps.db.prepare('DELETE FROM hub_events WHERE squad_id=?').run(id),
     onLog: (msg, f) => log.debug(msg, f),
   });
+  deps.imessage = createImessageStore(deps.db, now);
   deps.codeSender =
     opts.codeSender ??
     (config.codeSender === 'imessage' && config.imessageSendUrl
@@ -171,6 +174,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createSquadRoutes(deps),
     createMemberRoutes(deps),
     createInviteRoutes(deps),
+    createImessageRoutes(deps),
     createInternalRoutes(deps),
     createStatusRoutes(deps),
     createStateRoutes(deps),

@@ -66,8 +66,13 @@ export interface ChatHub {
   engine?: ChatEngine;
   setEngine(e: ChatEngine): void;
   subscribe(viewer: Viewer, afterSeq?: number): ChatSub;
-  send(viewer: Viewer, body: ChatSendBody): Promise<SendResult>;
+  /** `via` names the channel a student message came from ('web' by default; the iMessage bridge passes 'imessage'). */
+  send(viewer: Viewer, body: ChatSendBody, o?: { via?: string }): Promise<SendResult>;
   postBot(p: BotPost): ChatMessage | undefined;
+  /** Observe every stored bot message (after the leak guard), e.g. to mirror it to iMessage. Returns an unsubscribe. */
+  onBotPost(fn: (m: ChatMessage) => void): () => void;
+  /** Observe every stored student message with the channel it came from. */
+  onStudentMessage(fn: (m: ChatMessage, via: string) => void): () => void;
   resolveConfirm(student: string, taskId: string, answer: string): void;
   summaries(viewer: Viewer): ChatSummary[];
   count(): number;
@@ -158,6 +163,16 @@ export function createChatHub(
   const inflight = new Map<string, number>();
   const clientIds = new Map<string, { at: number; message: ChatMessage }>();
   let runSeq = 0;
+  const botListeners = new Set<(m: ChatMessage) => void>();
+  const studentListeners = new Set<(m: ChatMessage, via: string) => void>();
+  const notify = <A extends unknown[]>(set: Set<(...a: A) => void>, ...a: A) => {
+    for (const fn of [...set])
+      try {
+        fn(...a);
+      } catch (e) {
+        deps.log.error('chat listener failed', { err: (e as Error).name });
+      }
+  };
   /** Replies are labelled demo whenever the hub's runtime says the real model is not answering. */
   const isDemo = () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : true);
 
@@ -224,7 +239,7 @@ export function createChatHub(
       }
       return sub;
     },
-    async send(viewer, body) {
+    async send(viewer, body, o) {
       if (!canAccessChat(viewer, body.chatId)) return { ok: false, status: 403, code: 'forbidden' };
       const text = body.text.trim();
       if (!text && !(body.attachments?.length ?? 0))
@@ -277,6 +292,7 @@ export function createChatHub(
         demo: false,
       });
       publish(message);
+      notify(studentListeners, message, o?.via ?? 'web');
       if (body.clientId) clientIds.set(`${viewer.studentId}|${body.clientId}`, { at: t, message });
 
       const engine = hub.engine;
@@ -340,7 +356,16 @@ export function createChatHub(
         demo: isDemo(),
       });
       publish(m);
+      notify(botListeners, m);
       return m;
+    },
+    onBotPost(fn) {
+      botListeners.add(fn);
+      return () => void botListeners.delete(fn);
+    },
+    onStudentMessage(fn) {
+      studentListeners.add(fn);
+      return () => void studentListeners.delete(fn);
     },
     resolveConfirm(student, taskId, answer) {
       const chatId = dmChatId(student);

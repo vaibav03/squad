@@ -16,12 +16,14 @@ import {
   buildMedia,
   createBot,
   createDemoLlm,
+  createScheduler,
   createSkills,
   detectMention,
   registerMediaPersonas,
   type Bot,
   type EventPublisher,
   type Logger,
+  type Scheduler,
 } from '@squad/bot';
 import { COURSE_ID } from '../cast';
 import type { HubDeps } from '../types';
@@ -54,6 +56,8 @@ export interface ChatEngineOptions {
 
 export interface ChatEngineHandle {
   bot: Bot;
+  /** The proactive scheduler, when HUB_SCHEDULER=1 or IMESSAGE_ENABLED=1 started one. */
+  scheduler?: Scheduler;
   llm: ResilientLlm;
   stop(): Promise<void>;
 }
@@ -132,7 +136,14 @@ export async function attachChatEngine(
     });
     shared = { brain: rp.brain, mastery: rp.mastery };
   }
+  // Proactive nudges and Catch Me Up replies reach students through ctx.dm / ctx.send, so they are mirrored to iMessage
+  // by the bridge like any other bot message. The scheduler only runs when asked for (docs/imessage.md).
+  const scheduler =
+    env.HUB_SCHEDULER === '1' || env.IMESSAGE_ENABLED === '1'
+      ? createScheduler({ db: deps.db, log: quietLog(deps), ...(o.now ? { now: o.now } : {}) })
+      : undefined;
   const skills = await createSkills({
+    ...(scheduler ? { proactive: scheduler } : {}),
     llm,
     db: deps.db,
     emit: (e) => events.publish(e),
@@ -188,6 +199,10 @@ export async function attachChatEngine(
     log: quietLog(deps),
   });
   await bot.start();
+  if (scheduler) {
+    scheduler.bind(bot.ctx);
+    scheduler.start();
+  }
 
   // The village ConfirmSheet and POST /v1/confirms/:taskId can answer a chat confirm card too: a yes/no is typed into
   // the student's DM, exactly as if they had answered in the chat (the bot's own confirm manager resolves it).
@@ -220,7 +235,18 @@ export async function attachChatEngine(
       const title = store.getChapter(courseId, p.chapter)?.title;
       return { chapter: p.chapter, ...(title ? { title } : {}), text: p.text };
     },
-    stop: () => bot.stop(),
+    stop: () => {
+      scheduler?.stop();
+      return bot.stop();
+    },
   });
-  return { bot, llm, stop: () => bot.stop() };
+  return {
+    bot,
+    llm,
+    ...(scheduler ? { scheduler } : {}),
+    stop: () => {
+      scheduler?.stop();
+      return bot.stop();
+    },
+  };
 }

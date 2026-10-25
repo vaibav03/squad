@@ -291,6 +291,8 @@ export interface HubDeps {
   accounts: AccountsStore;
   /** Squads, memberships, invites, audit log. */
   squads: SquadsStore;
+  /** iMessage chat bindings, handle links and dedupe (docs/imessage.md). */
+  imessage: ImessageStore;
   codeSender: CodeSender;
   /** Live agent discussions; built lazily by `liveServiceFor` (live/wire.ts). */
   live?: LiveService;
@@ -304,6 +306,7 @@ import type { LiveWiring } from './live/wire';
 import type { ConfirmRouter } from './confirms';
 import type { AccountsStore } from './store/accounts';
 import type { SquadsStore } from './store/squads';
+import type { ImessageStore } from './imessage/store';
 
 /** Which providers are live right now; read lazily so a mid-run credits switch shows up. */
 export interface HubRuntime {

@@ -115,7 +115,8 @@ export function agentKind(id: string): ActivityView['kind'] {
 
 export function displayName(id: string, me?: string): string {
   const n = agentName(id);
-  return me && id === `student:${me}` ? `${n} (you)` : n;
+  if (me && id === `student:${me}`) return n === 'You' ? n : `${n} (you)`;
+  return n;
 }
 
 export function roleOf(id: string, me?: string): string {
@@ -135,11 +136,11 @@ export function roleOf(id: string, me?: string): string {
   }
 }
 
-export function placeOf(id: string, state: RunState): string {
+export function placeOf(id: string, state: RunState, me?: string): string {
   const base = (() => {
     switch (agentKind(id)) {
       case 'student':
-        return `${agentName(id)}'s house`;
+        return me && id === `student:${me}` ? 'your house' : `${agentName(id)}'s house`;
       case 'expert':
         return `the ${agentName(id).replace(' expert', '')} house`;
       case 'council':
@@ -229,7 +230,7 @@ export function eventWords(
   switch (e.t) {
     case 'agent.state': {
       const who = agentName(e.agent);
-      const place = placeOf(e.agent, e.state);
+      const place = placeOf(e.agent, e.state, opts.me);
       const now = {
         idle: `Idle ${place}`,
         studying: `Studying ${place}`,
@@ -506,7 +507,7 @@ export function describeActivity(
   const kind = agentKind(id);
   const isMe = me !== undefined && id === `student:${me}`;
   const state = agent.state;
-  const place = placeOf(id, state);
+  const place = placeOf(id, state, me);
   const latest = recent.at(-1);
   const words = (r: StampedEvent) => wordsFor(r.event, r.mine, { ...(me ? { me } : {}) });
 
