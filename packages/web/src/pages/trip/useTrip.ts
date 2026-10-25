@@ -92,7 +92,7 @@ export function useTrip(tripId?: string) {
       setStatus('ready');
     } catch {
       setStatus('error');
-      setErrorMessage('The hub answered, but the trip could not be read. Try again.');
+      setErrorMessage('Squad answered, but the trip could not be read. Try again.');
     }
   }, [live, cfg.hubUrl, base, headers, tripId, netFail]);
 
@@ -152,7 +152,7 @@ export function useTrip(tripId?: string) {
             ...(body === undefined ? {} : { body: JSON.stringify(body) }),
           });
         } catch {
-          setActionError('Could not reach the hub. Nothing was changed; try again.');
+          setActionError('Could not reach Squad. Nothing was changed; try again.');
           return undefined;
         }
         const raw: unknown = await res.json().catch(() => null);
@@ -205,7 +205,7 @@ export function useTrip(tripId?: string) {
             body: JSON.stringify(body),
           });
         } catch {
-          setActionError('Could not reach the hub. Nothing was created; try again.');
+          setActionError('Could not reach Squad. Nothing was created; try again.');
           return;
         }
         const raw: unknown = await res.json().catch(() => null);

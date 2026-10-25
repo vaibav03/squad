@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Button, Page, Skeleton } from '../../primitives';
+import { LinkButton } from '../../primitives/LinkButton';
 import {
   Avatar,
   ConnectionBadge,
@@ -79,19 +80,21 @@ export function TripView(props: TripViewProps) {
       className="lv-trip"
       eyebrow="Plan together"
       title={trip?.title ?? 'Trip planner'}
+      lede="Everyone's calendars and budgets stay private. Your agent checks them and only shares what has to be shared."
+      next={
+        trip
+          ? 'Vote on the options below; the trip is confirmed when everyone agrees.'
+          : 'Plan a trip with your group in chat, then come back here to vote.'
+      }
       actions={<ConnectionBadge connection={connection} />}
     >
-      <p className="lv-lede">
-        Everyone&rsquo;s calendars and budgets stay private. Your agent checks them and only shares
-        what has to be shared.
-      </p>
       {status === 'loading' && <TripSkeleton />}
       {status === 'error' && (
         <div data-testid="trip-error">
           <StateBlock
             kind="error"
             title="The trip did not load"
-            body={errorMessage ?? 'The hub did not answer. Your answers are safe; try again.'}
+            body={errorMessage ?? 'Squad did not answer. Your answers are safe; try again.'}
             onRetry={onRetry}
             retryLabel="Retry"
           />
@@ -143,13 +146,28 @@ function EmptyTrip({
         Plan one with your squad. Everyone&rsquo;s agent checks free days and budgets without
         sharing calendars.
       </p>
-      <CreateForm busy={busy} onCreate={onCreate} openLabel="Plan a trip" />
+      <LinkButton
+        to="/squad/chat?wizard=trip"
+        variant="primary"
+        iconEnd="arrow-right"
+        data-testid="trip-plan-in-chat"
+      >
+        Plan a trip with your group
+      </LinkButton>
+      <CreateForm
+        busy={busy}
+        onCreate={onCreate}
+        openLabel="Use a quick form instead"
+        variant="secondary"
+      />
       {error && (
         <p role="alert" className="lv-trip__err" data-testid="trip-action-error">
           {error}
         </p>
       )}
-      <p className="lv-card__foot">Or ask in chat: @cubbie plan a trip to Cabo in March</p>
+      <p className="lv-card__foot">
+        In chat, Cubbie asks where, when and how much, then your group votes.
+      </p>
     </section>
   );
 }
@@ -159,10 +177,12 @@ function CreateForm({
   busy,
   onCreate,
   openLabel,
+  variant = 'primary',
 }: {
   busy: boolean;
   onCreate: TripActions['create'];
   openLabel: string;
+  variant?: 'primary' | 'secondary';
 }) {
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({ destination: '', month: '', days: '', perPerson: '' });
@@ -175,7 +195,7 @@ function CreateForm({
     <>
       {!open && (
         <Button
-          variant="primary"
+          variant={variant}
           data-testid="trip-create-open"
           iconStart="plane"
           onClick={() => setOpen(true)}

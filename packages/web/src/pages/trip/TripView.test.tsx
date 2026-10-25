@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { TripView, noActions, type TripActions, type TripViewProps } from './TripView';
 import {
@@ -23,7 +24,9 @@ const base: TripViewProps = {
   me: 's_ana',
 };
 function view(p: Partial<TripViewProps> = {}, a: Partial<TripActions> = {}) {
-  return render(<TripView {...base} {...p} actions={{ ...noActions, ...a }} />);
+  return render(<TripView {...base} {...p} actions={{ ...noActions, ...a }} />, {
+    wrapper: MemoryRouter,
+  });
 }
 const id = (s: string) => screen.getByTestId(s);
 const q = (s: string) => screen.queryByTestId(s);
@@ -34,7 +37,9 @@ describe('TripView states', () => {
     view({ trip: null }, { create });
     expect(screen.getByRole('heading', { name: 'No trip planned yet' })).toBeTruthy();
     expect(screen.getByText(/Plan one with your squad/)).toBeTruthy();
-    expect(screen.getByText(/@cubbie plan a trip to Cabo in March/)).toBeTruthy();
+    expect(
+      screen.getByRole('link', { name: 'Plan a trip with your group' }).getAttribute('href'),
+    ).toBe('/squad/chat?wizard=trip');
     expect(screen.queryByText(/hub did not answer/)).toBeNull();
     fireEvent.click(id('trip-create-open'));
     fireEvent.change(screen.getByLabelText('Destination'), { target: { value: 'Cabo' } });
@@ -271,7 +276,7 @@ describe('TripView states', () => {
   it('network error: honest copy with Retry; offline too', () => {
     const onRetry = vi.fn();
     const { unmount } = view({ status: 'error', trip: undefined, onRetry });
-    expect(screen.getByText(/The hub did not answer/)).toBeTruthy();
+    expect(screen.getByText(/Squad did not answer/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(onRetry).toHaveBeenCalled();
     unmount();
