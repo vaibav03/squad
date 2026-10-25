@@ -2,12 +2,8 @@ import type { MotionTokens } from './api';
 
 /** cubic-bezier(x1,y1,x2,y2) solver. Replaced by the motion lead's src/motion when it lands (same curve values). */
 function bezier(x1: number, y1: number, x2: number, y2: number): (t: number) => number {
-  const cx = 3 * x1,
-    bx = 3 * (x2 - x1) - cx,
-    ax = 1 - cx - bx;
-  const cy = 3 * y1,
-    by = 3 * (y2 - y1) - cy,
-    ay = 1 - cy - by;
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+  const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
   const sx = (t: number) => ((ax * t + bx) * t + cx) * t;
   const sy = (t: number) => ((ay * t + by) * t + cy) * t;
   const dx = (t: number) => (3 * ax * t + 2 * bx) * t + cx;

@@ -1,42 +1,30 @@
 import { LOGICAL_H } from '../world/api';
 
 export interface ScaleResult {
-  zoom: number; // integer css px per logical px
-  logicalW: number;
-  logicalH: number;
-  cssW: number; // canvas css size, always an integer multiple of logical size
+  zoom: number; // art zoom: 3 at css width >= 900, else 2 (docs/design/DESIGN.md 2.2), reduced only if the height cannot fit
+  k: number; // device pixels per art pixel (integer)
+  cssPerPx: number; // k / dpr: css px per art pixel (may be fractional at DPR 1.25/1.5, but device-aligned)
+  logicalW: number; // native view width in art pixels
+  logicalH: number; // native view height, <= 270 (bottom-anchored camera shows the lower part)
+  cssW: number;
   cssH: number;
-  offsetX: number; // letterbox offsets inside the container (css px)
-  offsetY: number;
 }
 
-/** Narrowest logical width we accept before dropping a zoom step (phones: 390 css px -> 2x -> 195 logical). */
-export const MIN_LOGICAL_W = 180;
-export const MAX_LOGICAL_W = 480;
+const MIN_VIEW_H = 168; // below this we drop a zoom step rather than crop the sky further
 
 /**
- * Integer scaling only. The canvas buffer is the logical size; CSS shows it at `zoom` css px per logical px
- * with `image-rendering: pixelated`. We prefer a zoom for which `zoom * dpr` is an integer (so every logical
- * pixel covers a whole number of device pixels: 2x at DPR 2/3, 4x at DPR 1.5 ...), but never drop more than
- * one step below the largest zoom that fits.
+ * Integer art scaling only. Device pixels per art pixel `k = max(zoom, round(zoom * dpr))` is an integer, so
+ * every art pixel covers a whole number of device pixels (no shimmering rows at DPR 1.25/1.5/1.75). The canvas buffer
+ * is the native size; CSS shows it at k/dpr css px per art pixel with image-rendering: pixelated.
  */
 export function computeScale(containerW: number, containerH: number, dpr = 1): ScaleResult {
-  const cw = Math.max(1, Math.floor(containerW));
-  const ch = Math.max(1, Math.floor(containerH));
-  const fitByH = Math.floor(ch / LOGICAL_H);
-  const fitByW = Math.floor(cw / MIN_LOGICAL_W);
-  const zmax = Math.max(1, Math.min(fitByH, fitByW));
-  const isWhole = (z: number) => Math.abs(z * dpr - Math.round(z * dpr)) < 1e-6;
-  let zoom = zmax;
-  for (const z of [zmax, zmax - 1]) {
-    if (z >= 1 && isWhole(z)) {
-      zoom = z;
-      break;
-    }
-  }
-  const logicalW = Math.min(MAX_LOGICAL_W, Math.max(1, Math.floor(cw / zoom)));
-  const logicalH = LOGICAL_H;
-  const cssW = logicalW * zoom;
-  const cssH = logicalH * zoom;
-  return { zoom, logicalW, logicalH, cssW, cssH, offsetX: Math.floor((cw - cssW) / 2), offsetY: Math.max(0, Math.floor((ch - cssH) / 2)) };
+  const cw = Math.max(1, containerW);
+  const ch = Math.max(1, containerH);
+  let zoom = cw >= 900 ? 3 : 2;
+  while (zoom > 1 && Math.floor(ch / zoom) < MIN_VIEW_H) zoom--;
+  const k = Math.max(zoom, Math.round(zoom * dpr));
+  const cssPerPx = k / dpr;
+  const logicalW = Math.max(64, Math.floor(cw / cssPerPx));
+  const logicalH = Math.max(64, Math.min(LOGICAL_H, Math.floor(ch / cssPerPx)));
+  return { zoom, k, cssPerPx, logicalW, logicalH, cssW: logicalW * cssPerPx, cssH: logicalH * cssPerPx };
 }
