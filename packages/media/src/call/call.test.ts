@@ -36,8 +36,6 @@ describe('call port', () => {
     const port = createCallPort({
       tts,
       answer: fakeAnswer,
-      emit: (e) => void events.push(e.speaking),
-      speakingTailMs: 5,
     });
     const s = (await port.open({ callId: 'c1', agent: 'expert:ch5', student: 's_ana' }))!;
     const g = await collect(s.greeting());

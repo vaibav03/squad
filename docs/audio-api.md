@@ -28,7 +28,7 @@ const callPort  = audio.callPort({ answer: brainAnswerFn });          // hub Cal
 - `CallPort` / `MediaPort` / `CallSession` / `CallTurn` are declared locally and are structurally identical to `apps/hub/src/ports.ts` (docs/hub-api.md section 11).
 - `AnswerFn(req:{agent, student, text, history}) => AsyncIterable|Promise<{text, cite?}[]>` is what brain must supply. Captions equal exactly what it yields; nothing else is added, so withheld values can only leak if brain emits them.
 - One `CallTurn` per sentence (caption + cached audio clip, mp3 `audio/mpeg`). TTS or budget failure yields a text-only turn (captions keep working).
-- `x.persona.speaking {agent, speaking, callId}` is posted to `/internal/events` as an extension envelope: true on the first audio turn, false 1 s after the last (and on close).
+- The call path emits no events. The talking animation is driven by the hub's `call.start`, `call.caption` and `call.end` events; audio clips travel on the hub call websocket.
 
 ## Services
 

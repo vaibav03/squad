@@ -84,7 +84,6 @@ export function createAudioServices(o: AudioOptions = {}): AudioServices {
         : undefined;
       return createCallPort({
         tts,
-        emit: hubSpeakingEmitter({ baseUrl: cfg.hubBaseUrl, secret: cfg.internalEventsSecret }),
         budget,
         ...(transcriber ? { transcriber } : {}),
         ...c,
