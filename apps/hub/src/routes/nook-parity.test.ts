@@ -33,6 +33,7 @@ function setup(opts: { now?: () => number } = {}) {
       authSecret: SECRET,
       logLevel: 'silent',
       webUrl: 'http://localhost:5330',
+      publicWebUrl: 'http://localhost:5330',
       baseUrl: 'http://localhost:8930',
     },
     ...(opts.now ? { now: opts.now } : {}),
