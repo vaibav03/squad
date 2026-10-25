@@ -1,5 +1,5 @@
 import type { LiveConfig } from '../../overlays/kit/live-config';
-import { mockExcerpt } from './fixtures';
+import { mockExcerpt, mockExternalExcerpt } from './fixtures';
 import type { SourceCitation, SourceExcerpt } from './types';
 
 export class OfflineError extends Error {}
@@ -13,10 +13,18 @@ interface Flight {
 const flights = new Map<string, Flight>();
 
 export const citationKey = (
-  c: Pick<SourceCitation, 'file' | 'page' | 'quote' | 'courseId'>,
+  c: Pick<SourceCitation, 'file' | 'page' | 'quote' | 'courseId' | 'source'>,
   cfg: Pick<LiveConfig, 'mode' | 'hubUrl'>,
 ): string =>
-  JSON.stringify([cfg.mode, cfg.hubUrl ?? '', c.courseId ?? '', c.file, c.page, c.quote ?? '']);
+  JSON.stringify([
+    cfg.mode,
+    cfg.hubUrl ?? '',
+    c.courseId ?? '',
+    c.file,
+    c.page,
+    c.quote ?? '',
+    ...(c.source ? [c.source.kind, c.source.id, c.source.anchor ?? ''] : []),
+  ]);
 
 export const getCached = (key: string) => cache.get(key);
 export const clearSourceCache = () => {
@@ -25,6 +33,12 @@ export const clearSourceCache = () => {
 };
 
 function sourceUrl(c: SourceCitation, hubUrl: string): string {
+  if (c.source) {
+    const q = new URLSearchParams({ id: c.source.id, kind: c.source.kind });
+    if (c.source.anchor) q.set('anchor', c.source.anchor);
+    if (c.quote) q.set('quote', c.quote);
+    return `${hubUrl.replace(/\/$/, '')}/v1/context/source?${q.toString()}`;
+  }
   const p = new URLSearchParams({ file: c.file, page: String(c.page) });
   if (c.quote) p.set('quote', c.quote);
   if (c.courseId) p.set('courseId', c.courseId);
@@ -39,7 +53,7 @@ async function run(
   if (cfg.mode !== 'live') {
     await new Promise((r) => setTimeout(r, 0));
     if (signal.aborted) throw new DOMException('aborted', 'AbortError');
-    return mockExcerpt(c);
+    return c.source ? mockExternalExcerpt(c) : mockExcerpt(c);
   }
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new OfflineError();
   let res: Response;
@@ -60,7 +74,10 @@ async function run(
   }
   const b = body as { ok?: unknown; reason?: unknown } | null;
   if (b && typeof b === 'object' && typeof b.ok === 'boolean') {
-    if (b.ok === false && !['removed', 'page_missing', 'not_found'].includes(String(b.reason))) {
+    if (
+      b.ok === false &&
+      !['removed', 'page_missing', 'not_found', 'revoked'].includes(String(b.reason))
+    ) {
       throw new Error('Unexpected response');
     }
     return b as unknown as SourceExcerpt;

@@ -3,7 +3,8 @@ import { Button } from '../../primitives/Button';
 import { Icon } from '../../primitives/Icon';
 import { Notice } from '../../primitives/Notice';
 import { Skeleton } from '../../primitives/Skeleton';
-import type { SourceExcerpt } from './types';
+import { ExternalExcerptBody } from './ExternalExcerpt';
+import { isExternalExcerpt, type PdfSourceExcerpt, type SourceExcerpt } from './types';
 import './source-viewer.css';
 
 export type SourceViewPhase = 'loading' | 'ready' | 'error' | 'offline';
@@ -15,7 +16,7 @@ export interface SourceExcerptViewProps {
   /** Go to another page of the same file (page +/- 1, no quote). */
   onPage?: (page: number) => void;
   /** Override the default plain-link behaviour of "Open in file" (e.g. authed blob open). */
-  onOpenFile?: (excerpt: Extract<SourceExcerpt, { ok: true }>) => void;
+  onOpenFile?: (excerpt: PdfSourceExcerpt) => void;
   /** Absolute href used as the plain link fallback. */
   openHref?: string;
   onClose?: () => void;
@@ -23,6 +24,8 @@ export interface SourceExcerptViewProps {
 
 export function liveMessage(excerpt: SourceExcerpt | null | undefined): string {
   if (!excerpt || !excerpt.ok || !excerpt.quote) return '';
+  if (isExternalExcerpt(excerpt))
+    return excerpt.quoteVerified ? `Verified quote found in ${excerpt.title}` : 'Quote not found';
   return excerpt.quoteVerified ? `Verified quote found on page ${excerpt.page}` : 'Quote not found';
 }
 
@@ -83,6 +86,10 @@ export function SourceExcerptView({
           title: 'That page is not in this file',
           text: 'The citation points to a page the file does not have. The file may have been replaced with a shorter version.',
         },
+        revoked: {
+          title: 'Access to this source was revoked',
+          text: 'The Canvas or Google connection was disconnected, so its imported text was deleted and can no longer be shown. Reconnect to bring it back, or check the answer against the original.',
+        },
         not_found: {
           title: 'Source not found',
           text: 'This citation does not match any file in the course library. It may belong to a different course.',
@@ -101,6 +108,8 @@ export function SourceExcerptView({
         </Notice>
       );
     }
+
+    if (isExternalExcerpt(excerpt)) return <ExternalExcerptBody excerpt={excerpt} />;
 
     const hasHit = excerpt.lines.some((l) => l.hit);
     const quoteText =
@@ -238,7 +247,11 @@ export function SourceExcerptView({
 
   return (
     <div className="sq-source">
-      {excerpt && excerpt.ok ? <p className="sq-source__tag">{excerpt.file}</p> : null}
+      {excerpt && excerpt.ok ? (
+        <p className="sq-source__tag">
+          {isExternalExcerpt(excerpt) ? excerpt.title : excerpt.file}
+        </p>
+      ) : null}
       {body}
       <div className="sq-sr-only" role="status" aria-live="polite" data-testid="source-live">
         {message}
