@@ -132,16 +132,16 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
     'CREATE TABLE IF NOT EXISTS imsg_demo_links(handle_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, linked_at INTEGER NOT NULL)',
   );
   const userByHash = (hash: string): string | undefined => {
+    // demo mode only: a handle that said `join <demo code>` acts as the demo student, even when the same number
+    // also owns a real Squad account (otherwise the demo thread on the web would never see its messages)
+    if (deps.config.demoCode) {
+      const d = deps.db.prepare('SELECT user_id FROM imsg_demo_links WHERE handle_hash=?').get(hash) as
+        { user_id: string } | undefined;
+      if (d?.user_id) return d.user_id;
+    }
     const r = deps.db.prepare('SELECT id FROM acct_users WHERE contact_hash=?').get(hash) as
       { id: string } | undefined;
-    if (r?.id) return r.id;
-    const l = store.linkedUser(hash);
-    if (l) return l;
-    if (!deps.config.demoCode) return undefined; // demo links only count while demo mode is on
-    return (
-      deps.db.prepare('SELECT user_id FROM imsg_demo_links WHERE handle_hash=?').get(hash) as
-        { user_id: string } | undefined
-    )?.user_id;
+    return r?.id ?? store.linkedUser(hash);
   };
   const resolveUser = (handle: string): string | undefined => {
     const id = ident(handle);
@@ -342,7 +342,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       );
       return;
     }
-    if (!userId && isDemoJoin(m.text)) {
+    if (isDemoJoin(m.text)) {
       // demo only (config.demoCode unset otherwise): this allowlisted handle acts as the demo student
       deps.db
         .prepare(
@@ -405,13 +405,12 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
         return;
       }
       // demo only: this handle acts as the demo student, so @cubbie sees the same (Demo) context as the web
-      if (!userId)
-        deps.db
+      deps.db
           .prepare(
             'INSERT INTO imsg_demo_links(handle_hash,user_id,linked_at) VALUES(?,?,?) ON CONFLICT(handle_hash) DO UPDATE SET user_id=excluded.user_id',
           )
           .run(id.hash, DEMO_USER, now());
-      store.bind(m.chatGuid, DEMO_SQUAD, userId ?? DEMO_USER);
+      store.bind(m.chatGuid, DEMO_SQUAD, DEMO_USER);
       store.setSyncSettings(DEMO_SQUAD, { mirror: 'full' });
       log.info('imessage: chat bound (demo)', { squadId: DEMO_SQUAD });
       say(
