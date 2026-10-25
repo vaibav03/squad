@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { IntegrationStateSchema, type IntegrationState } from '@squad/core';
 import { timedFetch } from '../../lib/http';
 import { STATE_COPY, STATES, type ConnState } from './model';
 
@@ -55,6 +56,11 @@ const RawConnection = z.looseObject({
     })
     .nullish(),
   grantedScopes: z.array(z.string()).optional(),
+  grantedScopeLabels: z.array(z.string()).optional(),
+  /** The hub's ONE state (INTEGRATION_STATE_LABELS); the web derives it only when this is absent. */
+  integrationState: IntegrationStateSchema.optional(),
+  integrationSub: z.enum(['disconnected']).nullish(),
+  counts: z.record(z.string(), z.number()).optional(),
 });
 
 export interface Connection {
@@ -80,6 +86,11 @@ export interface Connection {
   needsReconnect: boolean;
   /** The provider rejected the credential but it has not expired by the clock. */
   degraded?: boolean;
+  integrationState?: IntegrationState;
+  integrationSub?: 'disconnected' | null;
+  /** Per-type counts from the hub (courses, modules, assignments, pages, files, calendarEvents, driveDocs, classroomItems). */
+  counts?: Record<string, number>;
+  grantedScopeLabels?: string[];
   account: { label: string; name: string | null; host: string | null } | null;
   /** Scopes Google/Canvas actually granted (falls back to the requested scopes). */
   grantedScopes: string[];
@@ -116,6 +127,10 @@ export function toConnection(raw: z.infer<typeof RawConnection>): Connection {
     sharedWithSquads: raw.sharedWithSquads,
     needsReconnect: raw.needsReconnect ?? (state === 'expired' || state === 'revoked'),
     degraded: raw.degraded === true,
+    ...(raw.integrationState ? { integrationState: raw.integrationState } : {}),
+    ...(raw.integrationSub !== undefined ? { integrationSub: raw.integrationSub ?? null } : {}),
+    ...(raw.counts ? { counts: raw.counts } : {}),
+    ...(raw.grantedScopeLabels ? { grantedScopeLabels: raw.grantedScopeLabels } : {}),
     account: raw.account
       ? { label: raw.account.label, name: raw.account.name ?? null, host: raw.account.host ?? null }
       : null,
@@ -165,6 +180,7 @@ const SourceRows = z.looseObject({
       title: z.string(),
       sharedWith: z.array(z.string()).default([]),
       courseId: z.string().nullish(),
+      courseName: z.string().nullish(),
       dueAt: z.number().nullish(),
       startsAt: z.number().nullish(),
       modifiedAt: z.number().nullish(),
@@ -180,6 +196,8 @@ export interface SourceRow {
   title: string;
   sharedWith: string[];
   courseId: string | null;
+  /** Human course name when the hub sends it; never the raw id. */
+  courseName?: string | null;
   dueAt: number | null;
   startsAt: number | null;
   fetchedAt: number | null;
@@ -283,6 +301,7 @@ export const hub = (ctx: Ctx) => ({
         title: s.title,
         sharedWith: s.sharedWith,
         courseId: s.courseId ?? null,
+        courseName: s.courseName ?? null,
         dueAt: s.dueAt ?? null,
         startsAt: s.startsAt ?? null,
         fetchedAt: s.fetchedAt ?? null,

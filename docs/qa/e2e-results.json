@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T14:59:36.889Z",
+  "at": "2026-10-25T15:39:44.313Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -541,6 +541,36 @@
     "status": "skipped",
     "note": "",
     "ms": 0
+   },
+   {
+    "title": "1 connect the demo workspaces (labelled, no real account)",
+    "status": "pass",
+    "note": "",
+    "ms": 479
+   },
+   {
+    "title": "2 review screen: per-type counts with correct plurals, state and last sync",
+    "status": "pass",
+    "note": "",
+    "ms": 384
+   },
+   {
+    "title": "3 per-source share toggle: Private -> Shared with <squad> -> Private; calendar stays free/busy only",
+    "status": "pass",
+    "note": "",
+    "ms": 436
+   },
+   {
+    "title": "4 a citation chip opens the source viewer (demo labelled)",
+    "status": "pass",
+    "note": "",
+    "ms": 128
+   },
+   {
+    "title": "5 \"Ask Cubbie with this\" puts the context chip in the group composer, prompt prefilled, not sent",
+    "status": "pass",
+    "note": "",
+    "ms": 661
    }
   ]
  }
