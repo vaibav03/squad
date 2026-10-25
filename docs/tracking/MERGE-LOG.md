@@ -245,3 +245,34 @@ Frames: `docs/design/shots/merge5/`.
 
 - Landing merge commit: `52c9a73d794ff74e397ce110a44d7f5fdea6d548` (parents `3e21a141b0ae13eee9e02125dffd949830b66c05` = tag `pre-merge-batch5`, `eaa24679759e4d631f48827c34c92d702e89d4c0` = origin/merge/batch5; the only diff vs the batch tip is tracker docs that moved on main).
 - Rollback: `git revert -m 1 52c9a73d794ff74e397ce110a44d7f5fdea6d548`.
+
+## Batch 6 (verification and docs): ops/live-verify, audit/perf, audit/a11y, docs/guide, e2e/acceptance into main
+
+Branch `merge/batch6` (worktree `squad-wt/merge6`), landed as a true `--no-ff` merge.
+
+### Manual resolutions
+
+1. Root `package.json`: the only conflict, hit on every merge; union of scripts (`live:verify`, `live:images`, `perf:*`, `a11y:check`, `e2e`, `e2e:live` on top of main's).
+2. Lint errors that the audit and e2e branches brought (unused `shotN`/`statSync`, `import()` type annotations, `any` in the a11y lib, async promise executor in `perf/hub-bench.ts`, empty catch in `perf/runtime.mjs`): fixed at the source, not suppressed; Prettier run over `e2e`, `scripts/{a11y,perf,docs,live}` and README.
+3. Docs status boxes refreshed to match main (rooms/a, rooms/b, council/ask, chat/web, qa/web are on main): `docs/guide/ROOMS.md` (status box, table, notes 1 and 2, keeping-honest note), `docs/guide/USER-GUIDE.md`, `README.md`, `docs/FAQ.md`, `docs/SUBMISSION-STORY.md`, `docs/qa/E2E-README.md`, `docs/security/FINDINGS.md` (CHAT-1 now says rerun). The Council Hall row stays Partial: `@cubbie council <question>` works, but the quiz answer-key verifier is still not wired by default.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` (0 lint errors), `pnpm test:smoke all`, `pnpm demo:live` | pass |
+| `scripts/docs/check-links.ts` | 9 files, 85 relative links, ok |
+| Browser (hub :18866, web :15266) | village 1280x800 and 390x844, /squad/courses, /squad/chat: 0 page errors, 0 HTTP >= 400; chat answered in demo mode |
+
+Frames: `docs/design/shots/merge6/`. Not run: `pnpm e2e` (Playwright acceptance suite), `perf:*`, `a11y:check`, `live:verify` (needs keys); only their code and unit tests landed.
+
+### Known gaps
+
+- Acceptance, perf and a11y suites are on main but were not executed in this merge.
+- A nested `scripts/a11y/package.json` and `package-lock.json` came from audit/a11y (outside the pnpm workspace).
+- web-host security headers (HDR-1) still open (see batch 5).
+
+### Landing (batch 6)
+
+- Landing merge commit: `8f5f49ec6629ade9f5397ce8dbd334edf33ef398` (parents `d9c8d349e8c9746c8aeb326e0cc19e6f29546f99` = tag `pre-merge-batch6`, `10198617d3112c08c986f218dd7253b34170f875` = origin/merge/batch6; only tracker docs differ).
+- Rollback: `git revert -m 1 8f5f49ec6629ade9f5397ce8dbd334edf33ef398`.
