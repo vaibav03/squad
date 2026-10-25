@@ -31,9 +31,9 @@ interface DemoCourse {
 
 const COURSES: DemoCourse[] = [
   {
-    id: 'data101',
-    code: 'DATA 101',
-    name: 'Introduction to Data Analysis',
+    id: 'stat101',
+    code: 'STAT 101',
+    name: 'Introduction to Statistics',
     modules: [
       { id: 'm1', title: 'Module 1: Describing data', items: ['Lecture page: Centre and spread', 'Slides: Week 1 summary statistics', 'Assignment 1: Describe a dataset'] },
       { id: 'm2', title: 'Module 2: Uncertainty', items: ['Lecture page: Sampling and error', 'Assignment 2: Sampling experiment'] },
@@ -69,7 +69,7 @@ const COURSES: DemoCourse[] = [
       { id: 'a2', name: 'Assignment 2: Sampling experiment', dueInDays: 10, points: 30, text: 'Draw 200 random samples of size 25 and plot how the sample means vary. Explain what happens to the spread when the sample size is quadrupled.' },
     ],
     announcements: [{ id: 'n1', title: 'Office hours moved to Thursday', agoDays: 1, text: 'This week office hours move to Thursday 15:00 in the study lounge. Bring questions about Assignment 1.' }],
-    events: [{ id: 'e1', title: 'DATA 101 quiz 1', inDays: 6, hour: 10, text: 'Quiz 1 covers module 1: centre and spread.' }],
+    events: [{ id: 'e1', title: 'STAT 101 quiz 1', inDays: 6, hour: 10, text: 'Quiz 1 covers module 1: centre and spread.' }],
   },
   {
     id: 'bio120',
@@ -114,7 +114,7 @@ const COURSES: DemoCourse[] = [
   {
     id: 'hist140',
     code: 'HIST 140',
-    name: 'Trade and Empire in World History',
+    name: 'Modern World History',
     modules: [
       { id: 'm1', title: 'Module 1: Overland routes', items: ['Lecture page: The caravan economy', 'Reading response 1'] },
       { id: 'm2', title: 'Module 2: Maritime networks', items: ['Lecture page: Monsoon trade', 'Slides: Week 3 ports and power'] },
@@ -226,11 +226,11 @@ export function createDemoCanvasConnector(now: () => number = Date.now): CanvasC
 // ---------------------------------------------------------------- Google demo
 
 const CLASSES: { id: string; title: string; dow: number; hour: number; room: string; note: string }[] = [
-  { id: 'data', title: 'DATA 101 lecture', dow: 1, hour: 10, room: 'Hall B', note: 'Lecture on centre, spread and sampling.' },
+  { id: 'data', title: 'STAT 101 lecture', dow: 1, hour: 10, room: 'Hall B', note: 'Lecture on centre, spread and sampling.' },
   { id: 'bio', title: 'BIO 120 lecture', dow: 2, hour: 9, room: 'Science 204', note: 'Lecture on membranes and energy.' },
   { id: 'hist', title: 'HIST 140 seminar', dow: 3, hour: 13, room: 'Arts 12', note: 'Seminar on trade routes.' },
   { id: 'bio-lab', title: 'BIO 120 lab', dow: 4, hour: 14, room: 'Lab 3', note: 'Osmosis lab session.' },
-  { id: 'study', title: 'Study group: DATA 101', dow: 0, hour: 18, room: 'Library annex', note: 'Work through the sampling experiment together.' },
+  { id: 'study', title: 'Study group: STAT 101', dow: 0, hour: 18, room: 'Library annex', note: 'Work through the sampling experiment together.' },
   { id: 'gym', title: 'Climbing wall', dow: 5, hour: 17, room: 'Rec centre', note: 'Weekly session.' },
 ];
 
@@ -238,7 +238,7 @@ const DRIVE = [
   {
     id: 'demo-notes-data',
     kind: 'gdoc' as const,
-    name: 'DATA 101: my lecture notes',
+    name: 'STAT 101: my lecture notes',
     text: '# Centre and spread\n\nMean is the balance point; median is the middle value.\n\n# Sampling error\n\nStatistics vary from sample to sample. Bigger samples give a smaller standard error.',
   },
   {

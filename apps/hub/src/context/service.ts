@@ -35,10 +35,11 @@ import {
   type GoogleConnector,
   type Provider,
   type SyncReport,
+  courseLabel,
 } from '@squad/brain';
 import type { HubDeps } from '../types';
 import { configuredWebOrigin, isAllowedWebOrigin } from '../web-origin';
-import { FIXTURE_ACCOUNT_LABEL, createAccountStore, maskEmail, type AccountStore } from './account';
+import { DEMO_ACCOUNT, createAccountStore, maskEmail, type AccountStore, type CourseNameStore } from './account';
 import { createExtensionAuth, type ExtensionAuth } from './extension-auth';
 import { createTokenStore, type TokenSecrets, type TokenStore } from './tokens';
 
@@ -47,6 +48,8 @@ export interface ContextService {
   tokens: TokenStore;
   /** Masked display identity per connection (label / name / Canvas host). */
   accounts: AccountStore;
+  /** Course display names per connection (from the connector's course list). */
+  courses: CourseNameStore;
   connectors: {
     /** Synthetic upstreams (mode `fixture`). */
     canvas: CanvasConnector & { controls?: FakeControls };
@@ -224,6 +227,16 @@ export function createContextService(
       }),
   };
   const accounts = createAccountStore(deps.db);
+  const courses: CourseNameStore = {
+    replace: (id, list) => store.setCourses(id, list),
+    info(connId, courseId) {
+      const c = store.course(connId, courseId);
+      return c ? { name: c.name, code: c.code, label: courseLabel({ courseName: c.name, courseCode: c.code })! } : null;
+    },
+    name: (connId, courseId) => courses.info(connId, courseId)?.label ?? null,
+    // purged together with the connection's sources (store.revokeConnection / deleteConnection)
+    delete: () => undefined,
+  };
   const ext = createExtensionAuth(deps.db, deps.now);
   deps.db.exec(`CREATE TABLE IF NOT EXISTS ctx_oauth_states(
     state TEXT PRIMARY KEY, user_id TEXT NOT NULL, return_to TEXT NOT NULL, picked_json TEXT NOT NULL,
@@ -308,6 +321,7 @@ export function createContextService(
     store,
     tokens,
     accounts,
+    courses,
     connectors,
     ext,
     googleOAuth: oauth,
@@ -458,7 +472,7 @@ export function createContextService(
           return undefined;
         }
       };
-      if (!live) accounts.set(id, { label: FIXTURE_ACCOUNT_LABEL });
+      if (!live) accounts.set(id, { label: DEMO_ACCOUNT.label, name: DEMO_ACCOUNT.name });
       else {
         const host = hostOf(input.baseUrl);
         accounts.set(id, { label: host ? `Canvas ${host} (student token)` : 'Canvas (student token)', ...(host ? { host } : {}) });
@@ -540,6 +554,7 @@ export function createContextService(
         `${payload.origin.replace(/\/+$/, '')}#${payload.canvas_user_id}`,
       );
       if (expect !== c.accountHash) return { error: 'canvas_session_mismatch' };
+      courses.replace(c.id, payload.courses.map((x) => ({ id: x.id, name: x.name, code: x.course_code })));
       // A push is the whole picture Canvas gave the extension, so it is a full pass (deletions detected).
       store.setStatus(c.id, 'live', null);
       store.patchSyncState(c.id, { retryAfter: null });
@@ -673,7 +688,7 @@ export function createContextService(
           };
         } else {
           if (code !== 'sim') return fail('authorization_failed');
-          acct = { label: FIXTURE_ACCOUNT_LABEL };
+          acct = { label: DEMO_ACCOUNT.label, name: DEMO_ACCOUNT.name };
           externalAccount = await connectors.google.accountId({
             accessToken: '',
             scopes: [],
@@ -822,6 +837,16 @@ export function createContextService(
               auth as GoogleAuth,
             );
       if (report.outcome === 'revoked') tokens.delete(c.id);
+      else if (report.outcome === 'ok') {
+        // Best effort: learn the course names so the UI shows "Introduction to Data Analysis", not an id.
+        try {
+          const conn = fresh.provider === 'canvas' ? canvasConnector(fresh) : googleConnector(fresh);
+          const list = await (conn as { listCourses(a: unknown): Promise<{ id: string; name: string; code?: string }[]> }).listCourses(auth);
+          courses.replace(c.id, list.map((x) => ({ id: x.id, name: x.name, code: x.code ?? null })));
+        } catch {
+          /* names are cosmetic: a failing course list never fails the sync */
+        }
+      }
       deps.log.info('context.sync', {
         connectionId: c.id,
         provider: c.provider,
@@ -851,6 +876,7 @@ export function createContextService(
       }
       tokens.delete(c.id);
       accounts.delete(c.id);
+      courses.delete(c.id);
       const purged = store.revokeConnection(c.id, 'revoked', deps.now());
       deps.log.info('context.disconnect', {
         connectionId: c.id,

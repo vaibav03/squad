@@ -15,7 +15,7 @@ import {
   type ContextViewer,
 } from '@squad/brain';
 import { requireUser } from '../auth';
-import { FIXTURE_ACCOUNT_LABEL } from '../context/account';
+import { DEMO_ACCOUNT, scopeLabel } from '../context/account';
 import { applySharingChoice } from '../context/onboarding';
 import { importCounts, integrationStateOf } from '../context/state';
 import { TokenKeyError } from '../context/tokens';
@@ -188,11 +188,13 @@ function view(svc: ContextService, c: ContextConnection) {
     sources: { total: sources.length, byKind },
     sharedWithSquads: squads,
     /** Masked identity of the chosen account; null once disconnected. Never the raw e-mail. */
-    account: state === 'revoked' ? null : fixture ? { label: FIXTURE_ACCOUNT_LABEL } : svc.accounts.get(c.id),
+    account: state === 'revoked' ? null : fixture ? { ...DEMO_ACCOUNT } : svc.accounts.get(c.id),
     /** Always true for fixture data: simulated, not the person's account. */
     fixture,
     /** Short names of the scopes this connection holds (the least-privilege set), e.g. `calendar.readonly`. */
     grantedScopes: c.scopes.map(shortScope),
+    /** One-line human words per scope, parallel to grantedScopes. */
+    grantedScopeLabels: c.scopes.map((x) => scopeLabel(shortScope(x))),
     /** When this connection was first made (first import). */
     importedAt: c.createdAt,
     /** The ONE shared state: not_connected | connecting | syncing | live | demo | degraded | reauth_required. */
@@ -206,8 +208,11 @@ function view(svc: ContextService, c: ContextConnection) {
 
 const shortScope = (s: string) => s.replace('https://www.googleapis.com/auth/', '');
 
-function sourceView(s: ContextSource) {
+function sourceView(s: ContextSource, course: { name: string; code: string | null; label: string } | null = null) {
   return {
+    courseName: course?.name ?? null,
+    courseCode: course?.code ?? null,
+    courseLabel: course?.label ?? null,
     id: s.id,
     kind: s.kind,
     title: s.title,
@@ -327,6 +332,9 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
             kind: s.kind,
             title: s.title,
             courseId: s.courseId,
+            courseName: svc.courses.info(x.id, s.courseId)?.name ?? null,
+            courseCode: svc.courses.info(x.id, s.courseId)?.code ?? null,
+            courseLabel: svc.courses.info(x.id, s.courseId)?.label ?? null,
             whenAt: when,
             whenKind: s.dueAt !== null ? ('due' as const) : s.startsAt !== null ? ('starts' as const) : null,
             fetchedAt: s.fetchedAt,
@@ -350,7 +358,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     const svc = contextServiceFor(deps);
     const conn = svc.store.connection(c.req.param('id'));
     if (!conn || conn.ownerId !== c.get('user').id) return err(c, 404, 'not_found');
-    return c.json({ sources: svc.store.sourcesOfConnection(conn.id).map(sourceView) });
+    return c.json({ sources: svc.store.sourcesOfConnection(conn.id).map((s) => sourceView(s, svc.courses.info(conn.id, s.courseId))) });
   });
 
   r.post('/v1/connections/:id/sync', need, async (c) => {
