@@ -1,7 +1,9 @@
 // Canonical timeline + demo join for the Sendblue transport. FIXTURES ONLY: fake Sendblue server, fetch fenced to loopback.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChatMessage } from '@squad/core';
+import { GOOGLE_SCOPES } from '@squad/brain';
 import { createHub, type Hub } from '../../app';
+import { signToken } from '../../auth';
 import { attachChatEngine, type ChatEngineHandle } from '../../chat/engine';
 import { attachIMessage, type IMessageHandle } from '../wire';
 import { startFakeSendblue, type FakeSendblue } from './fake-sendblue';
@@ -17,6 +19,23 @@ const WH = 'SBWEBHOOK-sentinel-canon';
 const KEY = 'SBKEY-sentinel-canon';
 const SECRET = 'SBSECRET-sentinel-canon';
 const CHAT = 'group:sq_demo';
+const AUTH = 'canon-test-secret-0123456789abcdef';
+
+/** The web demo student connects the Canvas + Google demo workspaces (as the web does). */
+async function connectDemoWorkspaces() {
+  const tok = signToken(AUTH, { kind: 'bearer', sub: 's_ana', ttlMs: 60_000 }, Date.now()).token;
+  for (const body of [
+    { provider: 'canvas', variant: 'demo', scopes: ['canvas.demo_workspace'] },
+    { provider: 'google', variant: 'demo', scopes: Object.values(GOOGLE_SCOPES) },
+  ]) {
+    const r = await hub.app.request('/v1/connections', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${tok}` },
+      body: JSON.stringify(body),
+    });
+    expect(r.status).toBeLessThan(300);
+  }
+}
 
 const realFetch = globalThis.fetch;
 const fenced = vi.fn(async (url: any, init?: any) => {
@@ -39,6 +58,7 @@ async function boot(demoCode?: string) {
       logLevel: 'silent',
       production: false,
       webUrl: 'https://squad.test',
+      authSecret: AUTH,
       ...(demoCode ? { demoCode } : {}),
     },
   });
@@ -84,6 +104,13 @@ const waitFor = async (pred: () => boolean, ms = 8000) => {
     await new Promise((r) => setTimeout(r, 20));
   }
 };
+const dmInbound = async (from: string, content: string, handle?: string) => {
+  const r = await fake.inbound({ from, content, ...(handle ? { handle } : {}) });
+  expect(r.status).toBe(200);
+  await im.bridge.flush();
+};
+const dmSends = () =>
+  fake.sent.filter((s) => s.endpoint === 'send-message').map((s) => String(s.body.content ?? ''));
 const inbound = async (from: string, content: string, groupId = GID, handle?: string) => {
   const r = await fake.inbound({ from, content, groupId, ...(handle ? { handle } : {}) });
   expect(r.status).toBe(200);
@@ -183,5 +210,54 @@ describe('canonical timeline', () => {
     await inbound(GUEST, 'still visible', GID, 'MSG-G2');
     await settle();
     expect(imsgMsgs().some((m) => m.text === 'still visible')).toBe(true);
+  });
+});
+
+describe('1:1 demo join', () => {
+  const Q = '@cubbie what is due from Canvas this week and what Google files should I study?';
+  const dm = () => hub.deps.chat.store.history('dm:s_ana', { limit: 100 }).messages;
+
+  it('join 123456 in a 1:1 links the handle; @cubbie relays into dm:s_ana and the reply goes out once', async () => {
+    await boot('123456');
+    await connectDemoWorkspaces();
+    await dmInbound(JOINER, 'join 123456', 'DM-J1');
+    await waitFor(() => dmSends().some((t) => t.includes('demo student')));
+    await dmInbound(JOINER, Q, 'DM-Q1');
+    await waitFor(() => dm().some((m) => m.sender.kind === 'persona'));
+    const q = dm().find((m) => m.sender.kind === 'student')!;
+    expect(q.sender).toMatchObject({ kind: 'student', id: 's_ana' });
+    expect(q.provider).toBe('sendblue');
+    expect(q.transport).toBe('imessage');
+    await waitFor(() => dm().some((m) => m.sender.kind === 'persona' && m.citations.length > 0));
+    const a = dm().find((m) => m.sender.kind === 'persona' && m.citations.length > 0)!;
+    expect(a.provenance?.mode).toBe('demo');
+    expect(a.provenance?.sources).toBeGreaterThan(0);
+    await waitFor(() => dmSends().some((t) => t.includes('Cubbie') || t.length > 40));
+    await settle();
+    const replies = dmSends().filter((t) => !t.includes('demo student'));
+    expect(replies.length).toBeGreaterThan(0);
+    const n = dmSends().length;
+    await dmInbound(JOINER, Q, 'DM-Q1'); // redelivery
+    await settle();
+    expect(dmSends()).toHaveLength(n);
+    expect(JSON.stringify(dm())).not.toContain(JOINER);
+  });
+
+  it('a non-allowlisted handle stores and answers nothing', async () => {
+    await boot('123456');
+    await dmInbound(OUTSIDER, 'join 123456');
+    await dmInbound(OUTSIDER, Q);
+    await settle();
+    expect(fake.sent).toHaveLength(0);
+    expect(dm().filter((m) => m.transport === 'imessage')).toHaveLength(0);
+  });
+
+  it('demo code off: ignored (normal unknown-handle reply, no link)', async () => {
+    await boot();
+    await dmInbound(JOINER, 'join 123456');
+    await dmInbound(JOINER, Q);
+    await settle();
+    expect(dmSends().some((t) => t.includes('demo student'))).toBe(false);
+    expect(dm().filter((m) => m.transport === 'imessage')).toHaveLength(0);
   });
 });

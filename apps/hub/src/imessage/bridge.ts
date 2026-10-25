@@ -342,6 +342,20 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       );
       return;
     }
+    if (!userId && isDemoJoin(m.text)) {
+      // demo only (config.demoCode unset otherwise): this allowlisted handle acts as the demo student
+      deps.db
+        .prepare(
+          'INSERT INTO imsg_demo_links(handle_hash,user_id,linked_at) VALUES(?,?,?) ON CONFLICT(handle_hash) DO UPDATE SET user_id=excluded.user_id',
+        )
+        .run(id.hash, DEMO_USER, now());
+      handles.set(DEMO_USER, m.sender);
+      say(
+        m.sender,
+        'This number is now linked to the Squad demo student (sample data, not a real account). Try: @cubbie what is due from Canvas this week and what Google files should I study?',
+      );
+      return;
+    }
     if (!userId) {
       const code = store.linkCodeFor(id.hash, id.hint);
       if (!hintCooldown(`first:${id.hash}`))
