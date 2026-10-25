@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { KIND_LABEL, a2aPartyName, modeInfo } from '@squad/village/council';
+import { KIND_LABEL, a2aPartyName, modeInfo, statusLine } from '@squad/village/council';
 import type { RoomOutcome } from '@squad/core';
 import type { RoomInfo, TranscriptEntry } from '@squad/village/rooms';
 import { RoomTranscript } from '../../overlays/room-info/RoomTranscript';
@@ -43,6 +43,7 @@ export function CouncilDock({
   onRun,
 }: CouncilDockProps) {
   const hub = useCouncilHub();
+  const [collapsed, setCollapsed] = useState(false);
   const { status } = useCouncilStatus(hub);
   const api = useCouncilRuns(hub, keys);
   const board = useBoardStoreRef();
@@ -89,8 +90,38 @@ export function CouncilDock({
   const phrase = info?.how.phrase ?? null;
   const runIt = onRun && phrase ? () => onRun(phrase) : undefined;
 
+  const v = boardRun?.verdict;
+  const summary = boardRun
+    ? (v ? (v.answer && v.answer !== v.summary ? v.answer : v.summary) : statusLine(boardRun))
+        .replace(/\s+/g, ' ')
+        .trim()
+    : empty
+      ? 'No council has met yet'
+      : 'Council';
+
   return (
-    <section className="cd-dock" data-testid="council-dock" aria-label="Council">
+    <section
+      className="cd-dock"
+      data-testid="council-dock"
+      data-collapsed={collapsed ? 'true' : 'false'}
+      aria-label="Council"
+    >
+      <header className="cd-head">
+        <span className="cd-head__line" data-testid="council-dock-summary">
+          {summary}
+        </span>
+        <button
+          type="button"
+          className="cd-head__btn"
+          data-testid="council-dock-toggle"
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? 'Expand council panel' : 'Collapse council panel'}
+          onClick={() => setCollapsed((c) => !c)}
+        >
+          <span aria-hidden="true" className="cd-head__chev" />
+        </button>
+      </header>
+      <div className="cd-body" hidden={collapsed}>
       {empty ? (
         <div className="cd-card" data-testid="council-room-status">
           <EmptyCouncilState hub={hub} store={board} onConvene={onConvene} hideStrip />
@@ -159,6 +190,7 @@ export function CouncilDock({
           ) : null}
         </details>
       ) : null}
+      </div>
     </section>
   );
 }

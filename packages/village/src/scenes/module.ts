@@ -577,6 +577,14 @@ const mod = {
       fade = { from: alphaNow, to: 1, since: now, dur: ctx.calm ? 120 : 200 };
       fading = true;
       if (assets) blit(interiorTex, paintRoom(live, { t: now, calm: ctx.calm, assets }));
+      // a council room shares the screen with the docked council panel: slide the room clear of it (panel on the
+      // right on wide screens, a bottom sheet on narrow ones), so the table and the seats stay in view
+      const wide = typeof window !== 'undefined' && window.innerWidth >= 1000;
+      const councilRoom = live.p.slotId === 'council-hall' || live.p.slotId === 'round-table';
+      interiorImg?.setPosition(
+        Math.round(scene.scale.width * (councilRoom && wide ? 0.31 : 0.5)) - INT_W / 2,
+        Math.round(scene.scale.height * (councilRoom && !wide ? 0.26 : 0.5)) - INT_H / 2,
+      );
       veil?.setVisible(true);
       interiorImg?.setVisible(true);
       ctx.bus.emit('announce', `Inside ${live.def.describe(live.state)}`);
