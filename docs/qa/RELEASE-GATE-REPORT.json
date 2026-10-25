@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-10-25T12:42:31.744Z",
+  "generatedAt": "2026-10-25T13:02:48.550Z",
   "tree": {
     "branch": "feature/release-gate",
-    "head": "80b8674b",
-    "originMain": "d646013a"
+    "head": "1f6d310c",
+    "originMain": "7b09a9c6"
   },
   "mode": {
     "live": false,
@@ -11,14 +11,1441 @@
   },
   "verdict": "RED (a BUILT step failed)",
   "summary": {
-    "fixtureFail": 2,
+    "fixtureFail": 4,
     "realFail": 0,
-    "notBuilt": 1,
-    "blocked": 0,
-    "fixturePass": 0,
+    "notBuilt": 0,
+    "blocked": 5,
+    "fixturePass": 5,
     "total": 22
   },
   "fixture": [
+    {
+      "id": "S1",
+      "title": "Connect Canvas and Google Workspace with minimal permissions",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "GET /v1/connections is 200",
+          "pass": true
+        },
+        {
+          "name": "hub has a Google OAuth client (fake) and runs the real flow",
+          "pass": true
+        },
+        {
+          "name": "hub declares exactly the minimal Google scopes",
+          "pass": true
+        },
+        {
+          "name": "hub declares exactly the Canvas scopes",
+          "pass": true
+        },
+        {
+          "name": "no declared scope is a bulk or write grant",
+          "pass": true
+        },
+        {
+          "name": "nothing is connected before the user connects",
+          "pass": true
+        },
+        {
+          "name": "bulk Drive scope is refused",
+          "pass": true
+        },
+        {
+          "name": "Gmail scope is refused",
+          "pass": true
+        },
+        {
+          "name": "an allowed scope mixed with a bulk one is refused whole",
+          "pass": true
+        },
+        {
+          "name": "Google connect with mode live is refused (use the OAuth sign-in)",
+          "pass": true
+        },
+        {
+          "name": "Canvas refuses a Google scope",
+          "pass": true
+        },
+        {
+          "name": "Canvas token needs an https base URL",
+          "pass": true
+        },
+        {
+          "name": "Canvas feed on loopback is refused (SSRF guard)",
+          "pass": true
+        },
+        {
+          "name": "unauthenticated connect is 401",
+          "pass": true
+        },
+        {
+          "name": "Canvas rejecting the token fails the connect honestly",
+          "pass": true
+        },
+        {
+          "name": "a rejected connect leaves no connection behind",
+          "pass": true
+        },
+        {
+          "name": "Canvas connect is accepted (201)",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in Canvas connect response",
+          "pass": true
+        },
+        {
+          "name": "Canvas granted scopes equal exactly its one allowed scope",
+          "pass": true
+        },
+        {
+          "name": "Canvas connection is live (token variant)",
+          "pass": true
+        },
+        {
+          "name": "Canvas mode label says live and is not a demo label",
+          "pass": true
+        },
+        {
+          "name": "first sync ran on connect: 3 assignments + 1 file",
+          "pass": true
+        },
+        {
+          "name": "connecting the same Canvas account twice is refused",
+          "pass": true
+        },
+        {
+          "name": "hub read only users/self, courses, assignments and files from Canvas",
+          "pass": true
+        },
+        {
+          "name": "hub never asked Canvas for submissions or grades",
+          "pass": true
+        },
+        {
+          "name": "authorize talks to the real Google authorize endpoint shape",
+          "pass": true
+        },
+        {
+          "name": "PKCE S256 is used",
+          "pass": true
+        },
+        {
+          "name": "PKCE challenge present, verifier never in the URL",
+          "pass": true
+        },
+        {
+          "name": "state is an opaque one-time value",
+          "pass": true
+        },
+        {
+          "name": "redirect_uri is the hub callback",
+          "pass": true
+        },
+        {
+          "name": "requested scopes are exactly identity + the allowed set",
+          "pass": true
+        },
+        {
+          "name": "requested scopes minus identity equal exactly the allowed set",
+          "pass": true
+        },
+        {
+          "name": "no requested scope is a bulk or write grant",
+          "pass": true
+        },
+        {
+          "name": "the hub reports the same scopes it requests",
+          "pass": true
+        },
+        {
+          "name": "the consent page lists exactly what was requested",
+          "pass": true
+        },
+        {
+          "name": "callback redirects (302)",
+          "pass": true
+        },
+        {
+          "name": "callback returns to the web app",
+          "pass": true
+        },
+        {
+          "name": "callback reports status=connected",
+          "pass": true
+        },
+        {
+          "name": "callback reports mode=live",
+          "pass": true
+        },
+        {
+          "name": "replaying the callback is refused (single-use state)",
+          "pass": true
+        },
+        {
+          "name": "the replay creates no duplicate event or connection",
+          "pass": true
+        },
+        {
+          "name": "a bogus OAuth state is refused",
+          "pass": true
+        },
+        {
+          "name": "an absolute return_to is refused",
+          "pass": true
+        },
+        {
+          "name": "the fake really over-granted a Gmail scope (control check)",
+          "pass": true
+        },
+        {
+          "name": "granted scopes are only the allowed set, despite the over-grant",
+          "pass": true
+        },
+        {
+          "name": "no granted scope is a bulk or write grant",
+          "pass": true
+        },
+        {
+          "name": "Drive access is per file only (drive.file, nothing else with \"drive\")",
+          "pass": true
+        },
+        {
+          "name": "cancelling consent redirects with status=error",
+          "pass": true
+        },
+        {
+          "name": "reconnecting works",
+          "pass": true
+        },
+        {
+          "name": "exactly one Canvas connection",
+          "pass": true
+        },
+        {
+          "name": "reconnecting Google keeps exactly one connection",
+          "pass": true
+        },
+        {
+          "name": "Google connection is live with the same granted set",
+          "pass": true
+        },
+        {
+          "name": "Google mode label says live and is not a demo label",
+          "pass": true
+        },
+        {
+          "name": "Google variant is oauth",
+          "pass": true
+        },
+        {
+          "name": "every Google API call used an allowed scope and none was refused",
+          "pass": true
+        },
+        {
+          "name": "hub never touched Gmail or the unpicked Drive file",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in every hub response in this step",
+          "pass": true
+        },
+        {
+          "name": "connection view carries no credential, account or hash field",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in /v1/status",
+          "pass": true
+        },
+        {
+          "name": "no credential is in the database in plaintext (refresh sentinel, access token, Canvas token)",
+          "pass": true
+        },
+        {
+          "name": "raw upstream account ids are never stored (salted hash only)",
+          "pass": true
+        },
+        {
+          "name": "two connection rows exist for the user",
+          "pass": true
+        },
+        {
+          "name": "account hashes are digests, not ids",
+          "pass": true
+        },
+        {
+          "name": "each connection has an AES-GCM token row (12-byte iv, non-empty ciphertext)",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in hub log",
+          "pass": true
+        },
+        {
+          "name": "feed connect is accepted",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in feed connect response",
+          "pass": true
+        },
+        {
+          "name": "a feed connection is fixture-mode and says so",
+          "pass": true
+        },
+        {
+          "name": "feed mode label is an honest demo label",
+          "pass": true
+        },
+        {
+          "name": "session register creates a connection",
+          "pass": true
+        },
+        {
+          "name": "session connection holds exactly the session scope",
+          "pass": true
+        },
+        {
+          "name": "session connection says it syncs from the browser extension",
+          "pass": true
+        },
+        {
+          "name": "the same Canvas login cannot be bound to a second Squad account",
+          "pass": true
+        },
+        {
+          "name": "and the owner is not disclosed",
+          "pass": true
+        },
+        {
+          "name": "only exact https origins are accepted",
+          "pass": true
+        },
+        {
+          "name": "a payload for a different Canvas origin is refused",
+          "pass": true
+        },
+        {
+          "name": "another user cannot sync it (404, not 403)",
+          "pass": true
+        },
+        {
+          "name": "web Connections page shows the Canvas card",
+          "pass": true
+        },
+        {
+          "name": "web shows the Google card",
+          "pass": true
+        },
+        {
+          "name": "web shows both connections as connected",
+          "pass": true
+        },
+        {
+          "name": "web explains Drive access in plain words (only picked files)",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in Connections page text",
+          "pass": true
+        },
+        {
+          "name": "no raw ids on the Connections page",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in web responses",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in web storage",
+          "pass": true
+        }
+      ],
+      "evidence": [
+        "docs/design/shots/gate/s1-01-connections.png"
+      ],
+      "notes": [],
+      "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
+      "ms": 1265,
+      "at": "2026-10-25T12:57:56.217Z"
+    },
+    {
+      "id": "S2",
+      "title": "Ingest and normalize permitted context",
+      "mode": "fixture",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "name": "3 canvas_assignment source(s) imported",
+          "pass": true
+        },
+        {
+          "name": "1 canvas_file source(s) imported",
+          "pass": true
+        },
+        {
+          "name": "3 gcal_event source(s) imported",
+          "pass": true
+        },
+        {
+          "name": "1 gdoc source(s) imported",
+          "pass": true
+        },
+        {
+          "name": "1 classroom_item source(s) imported",
+          "pass": true
+        },
+        {
+          "name": "nothing beyond the expected kinds",
+          "pass": true
+        },
+        {
+          "name": "no Drive file beyond the picked one (drive.file is per file)",
+          "pass": true
+        },
+        {
+          "name": "the picked Drive file is the one imported",
+          "pass": true
+        },
+        {
+          "name": "the unpicked Drive file was never imported",
+          "pass": true
+        },
+        {
+          "name": "the private-title calendar event is held, owner-private",
+          "pass": true
+        },
+        {
+          "name": "assignments, Drive doc and Classroom items link to https origins",
+          "pass": true
+        },
+        {
+          "name": "every source says which live connector produced it",
+          "pass": true
+        },
+        {
+          "name": "every source starts private and shared with nobody",
+          "pass": true
+        },
+        {
+          "name": "API and database agree on the source count",
+          "pass": true
+        },
+        {
+          "name": "stable ids: src_ + 24 hex",
+          "pass": true
+        },
+        {
+          "name": "every source has a sha-256 contentHash and a source:// uri",
+          "pass": true
+        },
+        {
+          "name": "every source is chunked with a stable anchor and non-empty text",
+          "pass": true
+        },
+        {
+          "name": "derived data carries a retention date (about 180 days)",
+          "pass": true
+        },
+        {
+          "name": "items are private in the database too (no share rows yet)",
+          "pass": true
+        },
+        {
+          "name": "manual re-sync accepted for every hub-synced connection",
+          "pass": true
+        },
+        {
+          "name": "re-sync reports nothing added, removed or failed",
+          "pass": true
+        },
+        {
+          "name": "re-sync is idempotent (count unchanged)",
+          "pass": true
+        },
+        {
+          "name": "re-sync keeps ids and content hashes",
+          "pass": true
+        },
+        {
+          "name": "the unpicked Drive file was never requested from Google",
+          "pass": true
+        },
+        {
+          "name": "unpicked Drive file (name and text) is never stored",
+          "pass": true
+        },
+        {
+          "name": "no grade string is stored (the fake Canvas sends one on the wire)",
+          "pass": true
+        },
+        {
+          "name": "no credential is stored in plaintext",
+          "pass": true
+        },
+        {
+          "name": "busy blocks hold no titles",
+          "pass": true
+        },
+        {
+          "name": "busy blocks were derived from the connected calendar",
+          "pass": true
+        },
+        {
+          "name": "squad member has no connections of their own to see",
+          "pass": true
+        },
+        {
+          "name": "squad search returns nothing while nothing is shared",
+          "pass": true
+        },
+        {
+          "name": "...also with no squad header",
+          "pass": true
+        },
+        {
+          "name": "another member cannot list a connection's sources (404)",
+          "pass": true
+        },
+        {
+          "name": "another member cannot sync it (404)",
+          "pass": true
+        },
+        {
+          "name": "another member cannot share it (404)",
+          "pass": true
+        },
+        {
+          "name": "another member cannot disconnect it (404)",
+          "pass": true
+        },
+        {
+          "name": "a private source looks exactly like a missing one to others",
+          "pass": true
+        },
+        {
+          "name": "sharing into a squad the owner is not in is refused (404)",
+          "pass": true
+        },
+        {
+          "name": "share all accepted",
+          "pass": true
+        },
+        {
+          "name": "share all covers every non-calendar source",
+          "pass": true
+        },
+        {
+          "name": "sharing twice does not duplicate share rows",
+          "pass": true
+        },
+        {
+          "name": "non-calendar sources are shared with that squad only",
+          "pass": true
+        },
+        {
+          "name": "calendar events stay private (never bulk-shared)",
+          "pass": true
+        },
+        {
+          "name": "the squad member can now read every shared source",
+          "pass": true
+        },
+        {
+          "name": "and nothing else (no calendar event, no unpicked file)",
+          "pass": true
+        },
+        {
+          "name": "shared hits are marked shared with live provenance",
+          "pass": true
+        },
+        {
+          "name": "squad search for a private string finds none of it (SENTINEL_UNPIC...)",
+          "pass": true
+        },
+        {
+          "name": "squad search for a private string finds none of it (Private notes ...)",
+          "pass": true
+        },
+        {
+          "name": "squad search for a private string finds none of it (SENTINEL_CAL_T...)",
+          "pass": true
+        },
+        {
+          "name": "squad search for a private string finds none of it (STAT 201 revie...)",
+          "pass": true
+        },
+        {
+          "name": "squad search for a private string finds none of it (STAT 201 offic...)",
+          "pass": true
+        },
+        {
+          "name": "squad search for a private string finds none of it (SENTINEL_CAL_T...)",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in squad search results",
+          "pass": true
+        },
+        {
+          "name": "an explicitly shared calendar event becomes readable",
+          "pass": true
+        },
+        {
+          "name": "and is gone again once withdrawn",
+          "pass": true
+        },
+        {
+          "name": "after opt-out the squad sees nothing",
+          "pass": true
+        },
+        {
+          "name": "after opt-out the sources are private again",
+          "pass": true
+        },
+        {
+          "name": "a withdrawn source answers 404 to the member",
+          "pass": true
+        },
+        {
+          "name": "web shows the imported counts",
+          "pass": true
+        },
+        {
+          "name": "web shows the share state",
+          "pass": true
+        },
+        {
+          "name": "no raw squad or student ids on the Connections page after sharing",
+          "pass": false,
+          "detail": "found: squad id"
+        }
+      ],
+      "evidence": [
+        "docs/design/shots/gate/s2-01-connections-shared.png"
+      ],
+      "notes": [],
+      "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
+      "ms": 1243,
+      "at": "2026-10-25T12:57:57.565Z",
+      "reason": "no raw squad or student ids on the Connections page after sharing"
+    },
+    {
+      "id": "S3",
+      "title": "Agents retrieve permitted context with verified citations",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "GET /v1/context/search is 200",
+          "pass": true
+        },
+        {
+          "name": "the shared lecture-notes chunk is retrieved for the squad member",
+          "pass": true
+        },
+        {
+          "name": "hit is marked shared and live-sourced from Google",
+          "pass": true
+        },
+        {
+          "name": "hit citation quote is a verbatim sentence of the chunk",
+          "pass": true
+        },
+        {
+          "name": "citation names the hit source",
+          "pass": true
+        },
+        {
+          "name": "the citation resolves through GET /v1/context/source",
+          "pass": true
+        },
+        {
+          "name": "the quote is verified verbatim by the hub",
+          "pass": true
+        },
+        {
+          "name": "the quoted line is highlighted",
+          "pass": true
+        },
+        {
+          "name": "viewer says live provenance and names the provider",
+          "pass": true
+        },
+        {
+          "name": "viewer links to the Drive document",
+          "pass": true
+        },
+        {
+          "name": "viewer tells the member it is shared by someone else",
+          "pass": true
+        },
+        {
+          "name": "the lecture sentence itself is verified on its page",
+          "pass": true
+        },
+        {
+          "name": "a forged quote is NOT verified",
+          "pass": true
+        },
+        {
+          "name": "a wrong kind is a miss, not a leak",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in source viewer response",
+          "pass": true
+        },
+        {
+          "name": "the private-title calendar event Rhea did not share is 404 for Ben",
+          "pass": true
+        },
+        {
+          "name": "retrieval returns nothing for an unsupported question",
+          "pass": true
+        },
+        {
+          "name": "private string not retrievable by the squad (SENTINEL_UNPIC...)",
+          "pass": true
+        },
+        {
+          "name": "private string not retrievable by the squad (Private notes ...)",
+          "pass": true
+        },
+        {
+          "name": "private string not retrievable by the squad (SENTINEL_CAL_T...)",
+          "pass": true
+        },
+        {
+          "name": "a bot answer arrived for the due question",
+          "pass": true
+        },
+        {
+          "name": "answer lists the assignments from Rhea's synced Canvas, in due order",
+          "pass": true
+        },
+        {
+          "name": "answer carries the first due date in UTC",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in due answer",
+          "pass": true
+        },
+        {
+          "name": "no raw ids in due answer",
+          "pass": true
+        },
+        {
+          "name": "answer demo flag matches the model mode",
+          "pass": true
+        },
+        {
+          "name": "demo label visible on due answer",
+          "pass": true
+        },
+        {
+          "name": "a bot answer arrived for the content question",
+          "pass": true
+        },
+        {
+          "name": "no citation names a private source",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in content answer",
+          "pass": true
+        },
+        {
+          "name": "no raw ids in content answer",
+          "pass": true
+        },
+        {
+          "name": "answer demo flag matches the model mode",
+          "pass": true
+        },
+        {
+          "name": "demo label visible on content answer",
+          "pass": true
+        },
+        {
+          "name": "a bot answer arrived for the unsupported question",
+          "pass": true
+        },
+        {
+          "name": "answer is the not-in-materials refusal",
+          "pass": true
+        },
+        {
+          "name": "no citation is invented",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in refusal",
+          "pass": true
+        },
+        {
+          "name": "web chat opens the squad thread",
+          "pass": true
+        },
+        {
+          "name": "the due answer is visible in the web chat",
+          "pass": true
+        },
+        {
+          "name": "the web bubble shows the assignment list",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in web chat bubble",
+          "pass": true
+        },
+        {
+          "name": "Demo label visible on the demo-model answer",
+          "pass": true
+        },
+        {
+          "name": "the content answer is visible in the web chat",
+          "pass": true
+        },
+        {
+          "name": "one citation chip per chat citation",
+          "pass": true
+        },
+        {
+          "name": "the chip opens the excerpt sheet",
+          "pass": true
+        },
+        {
+          "name": "the excerpt is not an error",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in excerpt sheet",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in web chat thread",
+          "pass": true
+        }
+      ],
+      "evidence": [
+        "docs/design/shots/gate/s3-01-citation-excerpt.png",
+        "docs/design/shots/gate/s3-02-cubbie-answers.png"
+      ],
+      "notes": [
+        "demo model: the context-claims prompt is not served by the demo LLM, so a context-grounded chat answer cannot be produced without LIVE=1; retrieval and the viewer are asserted above"
+      ],
+      "label": "fixture (retrieval and source viewer asserted at the API; chat answers use the demo model unless LIVE=1)",
+      "ms": 1397,
+      "at": "2026-10-25T12:57:59.400Z"
+    },
+    {
+      "id": "S4",
+      "title": "Group iMessage tagging @cubbie / @cubbi",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "tagged iMessage became a hub chat message",
+          "pass": true
+        },
+        {
+          "name": "attributed to the right member (Rhea), not a raw handle",
+          "pass": true
+        },
+        {
+          "name": "no raw ids in hub message text",
+          "pass": true
+        },
+        {
+          "name": "exactly one hub message for the tag",
+          "pass": true
+        },
+        {
+          "name": "a mention in a chat that is not on the allowlist posts nothing to the hub",
+          "pass": true
+        },
+        {
+          "name": "and nothing is sent back into it",
+          "pass": true
+        },
+        {
+          "name": "a mention in an allowlisted but unbound chat posts nothing to the squad thread",
+          "pass": true
+        },
+        {
+          "name": "the unbound chat only gets the join hint",
+          "pass": true
+        },
+        {
+          "name": "message carries transport=imessage",
+          "pass": true
+        },
+        {
+          "name": "message carries the Apple GUID as externalId",
+          "pass": true
+        },
+        {
+          "name": "senderLabel is the member name, never a number",
+          "pass": true
+        },
+        {
+          "name": "@cubbi alias is recognised and answered",
+          "pass": true
+        },
+        {
+          "name": "@cubbi is answered by Cubbie",
+          "pass": true
+        },
+        {
+          "name": "xref row stores the GUID",
+          "pass": true
+        },
+        {
+          "name": "xref direction is in",
+          "pass": true
+        },
+        {
+          "name": "xref maps the GUID to the hub message id",
+          "pass": true
+        },
+        {
+          "name": "xref never stores a raw handle (hash only)",
+          "pass": true
+        },
+        {
+          "name": "unlinked handle gets the link prompt only",
+          "pass": true
+        },
+        {
+          "name": "and nothing is posted to the web thread",
+          "pass": true
+        },
+        {
+          "name": "no raw ids in link prompt",
+          "pass": true
+        },
+        {
+          "name": "unlinked chatter is shown as read-only context",
+          "pass": true
+        },
+        {
+          "name": "under a masked label, never the number",
+          "pass": true
+        },
+        {
+          "name": "and the bot does not answer it",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [],
+      "label": "fixture",
+      "ms": 2545,
+      "at": "2026-10-25T12:58:00.924Z"
+    },
+    {
+      "id": "S5",
+      "title": "Route to the correct live agent with the same grounded context",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "@tutor reply arrived",
+          "pass": true
+        },
+        {
+          "name": "@tutor is answered by the tutor persona, not generic Cubbie",
+          "pass": true
+        },
+        {
+          "name": "@tutor text is not prefixed twice",
+          "pass": true
+        },
+        {
+          "name": "@tutor mode label honest (demo=true, llm=fake)",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in @tutor answer",
+          "pass": true
+        },
+        {
+          "name": "no raw ids in @tutor answer",
+          "pass": true
+        },
+        {
+          "name": "@planner reply arrived",
+          "pass": true
+        },
+        {
+          "name": "@planner is answered by the planner persona, not generic Cubbie",
+          "pass": true
+        },
+        {
+          "name": "@planner text is not prefixed twice",
+          "pass": true
+        },
+        {
+          "name": "@planner mode label honest (demo=true, llm=fake)",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in @planner answer",
+          "pass": true
+        },
+        {
+          "name": "no raw ids in @planner answer",
+          "pass": true
+        },
+        {
+          "name": "status says honestly which model answers",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [
+        "@tutor: the demo model cannot ground a content answer; citations are asserted with LIVE=1",
+        "@planner: the demo model cannot ground a content answer; citations are asserted with LIVE=1"
+      ],
+      "label": "fixture",
+      "ms": 116,
+      "at": "2026-10-25T12:58:03.577Z"
+    },
+    {
+      "id": "S6",
+      "title": "Reply delivered into the same iMessage group",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "exactly one outbound per reply",
+          "pass": true
+        },
+        {
+          "name": "every outbound went to the same chat guid",
+          "pass": true
+        },
+        {
+          "name": "outbound text length <= 900",
+          "pass": true
+        },
+        {
+          "name": "outbound is prefixed with the persona name",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in iMessage outbound",
+          "pass": true
+        },
+        {
+          "name": "no raw ids in iMessage outbound",
+          "pass": true
+        },
+        {
+          "name": "xref direction=out status=sent for the reply",
+          "pass": true
+        },
+        {
+          "name": "the web message says it was sent to iMessage",
+          "pass": true
+        },
+        {
+          "name": "a delivery receipt shows as delivered",
+          "pass": true
+        },
+        {
+          "name": "a failing send is shown as queued or failed, never as sent",
+          "pass": true
+        },
+        {
+          "name": "and the label says so in words",
+          "pass": true
+        },
+        {
+          "name": "nothing reached Apple while it was failing",
+          "pass": true
+        },
+        {
+          "name": "after the retry the message is sent",
+          "pass": true
+        },
+        {
+          "name": "and delivered to Apple exactly once",
+          "pass": true
+        }
+      ],
+      "evidence": [
+        "docs/design/shots/gate/s6-01-delivery-state.png"
+      ],
+      "notes": [],
+      "label": "fixture",
+      "ms": 2422,
+      "at": "2026-10-25T12:58:03.796Z"
+    },
+    {
+      "id": "S7",
+      "title": "Web chat shows the complete ordered conversation (and mirrors back)",
+      "mode": "fixture",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "name": "one hub message after 3 duplicate GUID deliveries",
+          "pass": true
+        },
+        {
+          "name": "ids unique and seq strictly increasing",
+          "pass": true
+        },
+        {
+          "name": "the hub thread is in the shared order (message time, then sequence)",
+          "pass": true
+        },
+        {
+          "name": "Rhea opens the group chat",
+          "pass": true
+        },
+        {
+          "name": "Ben opens the group chat",
+          "pass": true
+        },
+        {
+          "name": "Rhea and Ben see the same ordered message ids",
+          "pass": true
+        },
+        {
+          "name": "DOM message ids unique",
+          "pass": true
+        },
+        {
+          "name": "the web thread is the complete hub thread, in order",
+          "pass": true
+        },
+        {
+          "name": "iMessage-origin message carries a \"via iMessage\" tag",
+          "pass": false
+        },
+        {
+          "name": "bot replies are attributed to a persona",
+          "pass": true
+        },
+        {
+          "name": "no raw ids in web thread",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in web thread",
+          "pass": true
+        },
+        {
+          "name": "Demo label visible on bot replies while the model is the stand-in",
+          "pass": true
+        },
+        {
+          "name": "a plain web message stays out of the iMessage group",
+          "pass": true
+        },
+        {
+          "name": "and its delivery state says web_only",
+          "pass": true
+        },
+        {
+          "name": "the bubble says it is web-only",
+          "pass": true
+        },
+        {
+          "name": "a web message that tags an agent posts as \"Ben (via Squad): ...\"",
+          "pass": true
+        },
+        {
+          "name": "and does not bounce back as a second web message",
+          "pass": true
+        }
+      ],
+      "evidence": [
+        "docs/design/shots/gate/s7-01-web-mirror-rhea.png",
+        "docs/design/shots/gate/s7-02-web-mirror-ben.png"
+      ],
+      "notes": [],
+      "label": "fixture",
+      "ms": 7134,
+      "at": "2026-10-25T12:58:06.298Z",
+      "reason": "iMessage-origin message carries a \"via iMessage\" tag"
+    },
+    {
+      "id": "S8",
+      "title": "Conversation continues into a collaborative trip plan",
+      "mode": "fixture",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "name": "@cubbie plan a trip in the group created a trip",
+          "pass": true
+        },
+        {
+          "name": "organizer is the asker (Rhea)",
+          "pass": true
+        },
+        {
+          "name": "trip was created from chat",
+          "pass": true
+        },
+        {
+          "name": "trip id is not a hard-coded demo id",
+          "pass": true
+        },
+        {
+          "name": "Ben sees the same trip id (stable)",
+          "pass": true
+        },
+        {
+          "name": "Cy sees the same trip id (stable)",
+          "pass": true
+        },
+        {
+          "name": "hub chat carries the trip card text",
+          "pass": false
+        },
+        {
+          "name": "card links to the trip page",
+          "pass": false
+        },
+        {
+          "name": "web thread shows the trip text with its link",
+          "pass": true
+        },
+        {
+          "name": "iMessage carries the trip as readable text",
+          "pass": true
+        },
+        {
+          "name": "no raw ids in iMessage trip text",
+          "pass": true
+        },
+        {
+          "name": "iMessage text is plain (no markdown)",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in iMessage trip text",
+          "pass": true
+        },
+        {
+          "name": "voting is open",
+          "pass": true
+        },
+        {
+          "name": "per-member state chips (one per squad member)",
+          "pass": true
+        },
+        {
+          "name": "at least two live options",
+          "pass": false,
+          "detail": "1 live"
+        },
+        {
+          "name": "Rhea vote accepted",
+          "pass": true
+        },
+        {
+          "name": "Rhea's vote is announced in the group (no ranking)",
+          "pass": false
+        },
+        {
+          "name": "another member sees no ranking of mine",
+          "pass": true
+        },
+        {
+          "name": "participation hidden below 3 voters",
+          "pass": true
+        },
+        {
+          "name": "Ben vote accepted",
+          "pass": true
+        },
+        {
+          "name": "Ben's vote is announced in the group (no ranking)",
+          "pass": false
+        },
+        {
+          "name": "counts still hidden at 2 voters",
+          "pass": true
+        },
+        {
+          "name": "Ben's ranking is not in Rhea's trip payload",
+          "pass": false
+        },
+        {
+          "name": "Cy vote accepted",
+          "pass": true
+        },
+        {
+          "name": "Cy's vote is announced in the group (no ranking)",
+          "pass": false
+        },
+        {
+          "name": "per-member vote rows (3 distinct voters)",
+          "pass": true
+        },
+        {
+          "name": "each stored row is that member's own ranking",
+          "pass": true
+        },
+        {
+          "name": "voting closed once everyone voted (confirming)",
+          "pass": true
+        },
+        {
+          "name": "Ben's ranking never appears in Rhea's browser payloads",
+          "pass": false
+        },
+        {
+          "name": "Rhea (API) confirmation is announced",
+          "pass": false
+        },
+        {
+          "name": "Ben (iMessage \"confirm\") confirmation is announced",
+          "pass": false
+        },
+        {
+          "name": "two of three is not a trip",
+          "pass": true
+        },
+        {
+          "name": "Cy (API) confirmation is announced",
+          "pass": false
+        },
+        {
+          "name": "a repeated confirm is harmless",
+          "pass": true
+        },
+        {
+          "name": "trip is confirmed",
+          "pass": true
+        },
+        {
+          "name": "\"Trip confirmed\" is said exactly once",
+          "pass": false,
+          "detail": "expected 1, got 0"
+        },
+        {
+          "name": "trip.confirmed reached the village stream exactly once",
+          "pass": true
+        },
+        {
+          "name": "iMessage says the trip is confirmed",
+          "pass": true
+        },
+        {
+          "name": "confirmed page offers the cutscene deep link",
+          "pass": true
+        },
+        {
+          "name": "cutscene deep link opens the village",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in group chat (trip)",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in iMessage (trip)",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in Rhea's browser payloads (trip)",
+          "pass": true
+        },
+        {
+          "name": "agent s_ben is down",
+          "pass": true
+        },
+        {
+          "name": "trip is created while an agent is down",
+          "pass": true
+        },
+        {
+          "name": "constraints wait for the missing agent",
+          "pass": true
+        },
+        {
+          "name": "Ben's agent is reported offline (not \"no agent\")",
+          "pass": true
+        },
+        {
+          "name": "the wait names the member",
+          "pass": true
+        },
+        {
+          "name": "note says the agent is offline",
+          "pass": true
+        },
+        {
+          "name": "trip stays open (planning), not voting or confirmed",
+          "pass": true
+        },
+        {
+          "name": "web shows \"agent is offline, trip waits for <name>\"",
+          "pass": true
+        },
+        {
+          "name": "web member chip says \"Agent offline\"",
+          "pass": true
+        },
+        {
+          "name": "hub chat posts the offline notice",
+          "pass": false
+        },
+        {
+          "name": "iMessage receives the offline notice",
+          "pass": true
+        },
+        {
+          "name": "notice names the member and not a raw id",
+          "pass": true
+        },
+        {
+          "name": "still not confirmed after waiting",
+          "pass": true
+        },
+        {
+          "name": "stored trip is not confirmed",
+          "pass": true
+        },
+        {
+          "name": "confirm before voting closes is refused (409)",
+          "pass": true
+        },
+        {
+          "name": "no \"Trip confirmed\" message for this trip",
+          "pass": true
+        },
+        {
+          "name": "agent s_ben restarted",
+          "pass": true
+        },
+        {
+          "name": "Retry resumes the trip once the agent is back",
+          "pass": true
+        }
+      ],
+      "evidence": [
+        "docs/design/shots/gate/s8-01-trip-voting.png",
+        "docs/design/shots/gate/s8-02-trip-cutscene.png",
+        "docs/design/shots/gate/s8-03-trip-agent-offline.png"
+      ],
+      "notes": [],
+      "label": "fixture (demo labelled)",
+      "ms": 211986,
+      "at": "2026-10-25T12:58:14.025Z",
+      "reason": "hub chat carries the trip card text"
+    },
     {
       "id": "S9",
       "title": "... and a shared study plan",
@@ -34,63 +1461,124 @@
       "evidence": [],
       "notes": [],
       "label": "fixture (demo labelled)",
-      "ms": 60525,
-      "at": "2026-10-25T12:41:03.149Z",
+      "ms": 60596,
+      "at": "2026-10-25T13:01:46.854Z",
       "reason": "a plan card reached the group"
-    },
-    {
-      "id": "S10",
-      "title": "Decisions, updates, failures and agent activity stay synchronized in web and iMessage",
-      "mode": "fixture",
-      "status": "NOT_BUILT",
-      "assertions": [],
-      "evidence": [],
-      "notes": [],
-      "label": "fixture (demo labelled)",
-      "ms": 534,
-      "at": "2026-10-25T12:42:05.857Z",
-      "owner": [
-        "feature/trip-collab",
-        "feature/w5-council-board"
-      ],
-      "reason": "Trip object, per-member state, rev + 409 conflicts, confirm once; agent activity (typing, thinking, offline) surfaced on the board",
-      "preview": []
-    },
-    {
-      "id": "V4",
-      "title": "Expired access token: transparent refresh; refresh failure falls to V3",
-      "mode": "fixture",
-      "status": "FAIL",
-      "assertions": [
-        {
-          "name": "a sync after the token expired succeeds (one transparent retry)",
-          "pass": true
-        },
-        {
-          "name": "the hub refreshed the token (a refresh call reached the token endpoint)",
-          "pass": false
-        },
-        {
-          "name": "and the connection is still live, no user-visible failure",
-          "pass": false,
-          "detail": "expected \"live\", got \"revoked\""
-        },
-        {
-          "name": "a refused refresh ends needing reconnect (the V3 state)",
-          "pass": true
-        }
-      ],
-      "evidence": [],
-      "notes": [
-        "after refused refresh: state=revoked label=Disconnected: imported data deleted"
-      ],
-      "label": "fixture",
-      "ms": 288,
-      "at": "2026-10-25T12:42:06.717Z",
-      "reason": "the hub refreshed the token (a refresh call reached the token endpoint)"
     }
   ],
   "real": [
+    {
+      "id": "S1",
+      "title": "Connect Canvas and Google Workspace with minimal permissions",
+      "mode": "real",
+      "status": "BLOCKED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 70,
+      "at": "2026-10-25T12:57:57.484Z",
+      "reason": "no_google_client",
+      "runbook": "#google-oauth-client-and-consent-screen"
+    },
+    {
+      "id": "S2",
+      "title": "Ingest and normalize permitted context",
+      "mode": "real",
+      "status": "BLOCKED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 60,
+      "at": "2026-10-25T12:57:58.809Z",
+      "reason": "no_google_client",
+      "runbook": "#google-oauth-client-and-consent-screen"
+    },
+    {
+      "id": "S3",
+      "title": "Agents retrieve permitted context with verified citations",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 120,
+      "at": "2026-10-25T12:58:00.799Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "S4",
+      "title": "Group iMessage tagging @cubbie / @cubbi",
+      "mode": "real",
+      "status": "BLOCKED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 102,
+      "at": "2026-10-25T12:58:03.470Z",
+      "reason": "apple_unverified",
+      "runbook": "#apple-behaviour-and-permissions"
+    },
+    {
+      "id": "S5",
+      "title": "Route to the correct live agent with the same grounded context",
+      "mode": "real",
+      "status": "BLOCKED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 97,
+      "at": "2026-10-25T12:58:03.693Z",
+      "reason": "llm_credits",
+      "runbook": "#gemini-credits-live-and-elevenlabs-plan"
+    },
+    {
+      "id": "S6",
+      "title": "Reply delivered into the same iMessage group",
+      "mode": "real",
+      "status": "BLOCKED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 67,
+      "at": "2026-10-25T12:58:06.219Z",
+      "reason": "apple_unverified",
+      "runbook": "#apple-behaviour-and-permissions"
+    },
+    {
+      "id": "S7",
+      "title": "Web chat shows the complete ordered conversation (and mirrors back)",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 106,
+      "at": "2026-10-25T12:58:13.433Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "S8",
+      "title": "Conversation continues into a collaborative trip plan",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 109,
+      "at": "2026-10-25T13:01:46.014Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
     {
       "id": "S9",
       "title": "... and a shared study plan",
@@ -100,40 +1588,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 262,
-      "at": "2026-10-25T12:42:03.679Z",
-      "reason": "real_not_requested",
-      "runbook": "#smoke-path"
-    },
-    {
-      "id": "S10",
-      "title": "Decisions, updates, failures and agent activity stay synchronized in web and iMessage",
-      "mode": "real",
-      "status": "NOT_BUILT",
-      "assertions": [],
-      "evidence": [],
-      "notes": [],
-      "label": "real",
-      "ms": 270,
-      "at": "2026-10-25T12:42:06.394Z",
-      "owner": [
-        "feature/trip-collab",
-        "feature/w5-council-board"
-      ],
-      "reason": "Trip object, per-member state, rev + 409 conflicts, confirm once; agent activity (typing, thinking, offline) surfaced on the board",
-      "preview": []
-    },
-    {
-      "id": "V4",
-      "title": "Expired access token: transparent refresh; refresh failure falls to V3",
-      "mode": "real",
-      "status": "SKIPPED",
-      "assertions": [],
-      "evidence": [],
-      "notes": [],
-      "label": "real",
-      "ms": 111,
-      "at": "2026-10-25T12:42:07.007Z",
+      "ms": 124,
+      "at": "2026-10-25T13:02:47.458Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     }
@@ -196,17 +1652,11 @@
       "runbook": "#gemini-credits-live-and-elevenlabs-plan"
     }
   ],
-  "branches": [
-    {
-      "branch": "feature/trip-collab",
-      "onOrigin": false,
-      "landed": false
-    },
-    {
-      "branch": "feature/w5-council-board",
-      "onOrigin": true,
-      "landed": false
-    }
-  ],
-  "keyScreenshots": []
+  "branches": [],
+  "keyScreenshots": [
+    "docs/design/shots/gate/key-s3-01-citation-excerpt.png",
+    "docs/design/shots/gate/key-s6-01-delivery-state.png",
+    "docs/design/shots/gate/key-s7-01-web-mirror-rhea.png",
+    "docs/design/shots/gate/key-s8-01-trip-voting.png"
+  ]
 }

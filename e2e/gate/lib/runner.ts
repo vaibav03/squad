@@ -58,10 +58,19 @@ export async function runStep<C>(def: StepDef<C>, mode: Mode, ctx: C): Promise<S
   };
   const guarded = async (fn?: (c: C, a: Asserts) => Promise<void>) => {
     if (!fn) return;
+    const limit = Number(process.env.GATE_STEP_TIMEOUT_MS ?? 270_000);
+    let timer: NodeJS.Timeout | undefined;
     try {
-      await fn(ctx, a);
+      await Promise.race([
+        fn(ctx, a),
+        new Promise<never>((_, rej) => {
+          timer = setTimeout(() => rej(new Error(`step timed out after ${limit / 1000}s`)), limit);
+        }),
+      ]);
     } catch (e) {
       a.fail('step threw', String((e as Error).message ?? e).slice(0, 300));
+    } finally {
+      if (timer) clearTimeout(timer);
     }
   };
 

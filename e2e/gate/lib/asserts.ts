@@ -20,6 +20,14 @@ export const RAW_ID_PATTERNS: [string, RegExp][] = [
 
 export class Asserts {
   readonly results: AssertionResult[] = [];
+  private readonly trace = process.env.GATE_TRACE === '1';
+  private push(r: AssertionResult) {
+    this.results.push(r);
+    if (this.trace)
+      console.log(
+        `[${this.stepId}] ${r.pass ? 'ok  ' : 'FAIL'} ${r.name}${r.detail ? `  (${r.detail})` : ''}`,
+      );
+  }
   readonly evidence: string[] = [];
   readonly notes: string[] = [];
   private shotN = 0;
@@ -27,12 +35,12 @@ export class Asserts {
   constructor(private readonly stepId: string) {}
 
   ok(name: string, cond: unknown, detail?: string): boolean {
-    this.results.push({ name, pass: !!cond, ...(detail && !cond ? { detail } : {}) });
+    this.push({ name, pass: !!cond, ...(detail && !cond ? { detail } : {}) });
     return !!cond;
   }
   eq<T>(name: string, actual: T, expected: T): boolean {
     const pass = JSON.stringify(actual) === JSON.stringify(expected);
-    this.results.push({
+    this.push({
       name,
       pass,
       ...(pass
@@ -45,7 +53,7 @@ export class Asserts {
     this.notes.push(text);
   }
   fail(name: string, detail: string) {
-    this.results.push({ name, pass: false, detail });
+    this.push({ name, pass: false, detail });
   }
 
   /** ids unique and seq strictly increasing */

@@ -13,7 +13,7 @@ export default defineConfig({
   workers: 1,
   fullyParallel: false,
   retries: 0,
-  timeout: 300_000,
+  timeout: 900_000,
   expect: { timeout: 10_000 },
   globalSetup: './lib/global-setup.ts',
   globalTeardown: './lib/global-teardown.ts',

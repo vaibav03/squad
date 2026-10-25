@@ -160,10 +160,13 @@ if (journey) wireAgents(journey.users as Record<string, U>);
 
 /**
  * Fresh world: Rhea, Ben, Cy in squad A (group chat A); with `b`, squad B with Dan and Cy (group chat B).
- * Journey world (kind 'journey', a singleton that survives a hub restart): Rhea, Ben, Cy and Dan all in squad A, and
+ * Journey world (kind 'journey', a singleton that survives a hub restart): Rhea, Ben, Cy in squad A (Dan only has an agent), and
  * the hub wired to their four live agents, whose private profiles the stack generates for exactly these ids.
  */
-async function makeWorld(opts: { b?: boolean; kind?: 'fresh' | 'journey' } = {}) {
+async function makeWorld(
+  opts: { b?: boolean; kind?: 'fresh' | 'journey'; relogin?: boolean } = {},
+) {
+  if (opts.kind === 'journey' && journey && !opts.relogin) return journey;
   if (opts.kind === 'journey' && journey) {
     // after a hub restart the accounts and the squad persist; only the tokens are re-issued
     const u: Record<string, U> = {};
@@ -192,8 +195,8 @@ async function makeWorld(opts: { b?: boolean; kind?: 'fresh' | 'journey' } = {})
     squadA: { id: squadA, invite: codeA, chat: CHATS[2 * w]!, chatId: `group:${squadA}` },
   };
   if (opts.kind === 'journey') {
+    // Dan has an account and a live agent but is NOT in squad A: the journey is a squad of three (Rhea, Ben, Cy)
     const dan = await signUp('Dan', phone(w, 3));
-    await call('POST', '/v1/invites/join', dan.token, { code: codeA });
     out.users = { rhea, ben, cy, dan };
     wireAgents(out.users);
     journey = out;

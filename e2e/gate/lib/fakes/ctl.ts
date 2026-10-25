@@ -12,8 +12,9 @@ async function post(p: string, body: unknown = {}): Promise<any> {
 
 export const ctl = {
   /** A fresh world (default) or the journey singleton (agent-backed, survives a hub restart). */
-  world: (opts: { kind?: 'fresh' | 'journey'; b?: boolean } = {}): Promise<any> =>
-    post('/ctl/world', opts),
+  world: (
+    opts: { kind?: 'fresh' | 'journey'; b?: boolean; relogin?: boolean } = {},
+  ): Promise<any> => post('/ctl/world', opts),
   /** Moves the iMessage bridge clock forward so the next retry/expiry rung is due. */
   advance: (ms: number): Promise<{ skewMs: number }> => post('/ctl/clock/advance', { ms }),
   /** A delivery receipt from "Apple" for an outbound GUID (`out-N`). */
