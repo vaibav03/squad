@@ -28,9 +28,8 @@ describe('ImessageCardView', () => {
   });
   it('labels a fixture transport honestly', () => {
     render(<ImessageCardView status={{ ...live, mode: 'fixture', fixture: true }} now={NOW} />);
-    expect(screen.getByTestId('connections-imessage-fixture').textContent).toBe(
-      'Fixture transport (no real iMessage)',
-    );
+    expect(screen.getByTestId('connections-imessage-fixture').textContent).toContain('Demo data');
+    expect(screen.getByTestId('messaging-phase').textContent).toBe('Demo data');
   });
   it('dry run and off', () => {
     render(<ImessageCardView status={{ ...live, mode: 'dry_run', dryRun: true }} now={NOW} />);
@@ -55,10 +54,10 @@ describe('ImessageCardView', () => {
     expect(a.getAttribute('target')).toBe('_blank');
     expect(screen.getByText('docs/imessage.md')).toBeTruthy();
   });
-  it('error state has a Retry', () => {
+  it('error state has Try again', () => {
     const retry = vi.fn();
     render(<ImessageCardView status={null} error now={NOW} onRetry={retry} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(retry).toHaveBeenCalled();
   });
 });

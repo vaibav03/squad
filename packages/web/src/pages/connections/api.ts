@@ -233,7 +233,9 @@ export const hub = (ctx: Ctx) => ({
         dueAt: s.dueAt ?? null,
         startsAt: s.startsAt ?? null,
         fetchedAt: s.fetchedAt ?? null,
-        provenance: (s.provenance ?? '').endsWith(':fixture') ? ('fixture' as const) : ('real' as const),
+        provenance: (s.provenance ?? '').endsWith(':fixture')
+          ? ('fixture' as const)
+          : ('real' as const),
       }),
     );
   },
@@ -273,6 +275,35 @@ export const hub = (ctx: Ctx) => ({
         baseUrl,
         token,
       },
+    );
+    return toConnection(r.connection);
+  },
+  /** Demo workspace: example items, labelled Demo data everywhere. No real account is read. */
+  async connectDemo(provider: 'canvas' | 'google'): Promise<Connection> {
+    const body =
+      provider === 'canvas'
+        ? {
+            provider,
+            variant: 'feed',
+            scopes: ['canvas.calendar_feed'],
+            feedUrl: 'https://canvas.demo.example/feeds/calendars/demo.ics',
+          }
+        : {
+            provider,
+            mode: 'fixture',
+            scopes: [
+              'https://www.googleapis.com/auth/calendar.readonly',
+              'https://www.googleapis.com/auth/drive.file',
+              'https://www.googleapis.com/auth/classroom.courses.readonly',
+              'https://www.googleapis.com/auth/classroom.coursework.me.readonly',
+            ],
+          };
+    const r = await call(
+      ctx,
+      'POST',
+      '/v1/connections',
+      z.looseObject({ connection: RawConnection }),
+      body,
     );
     return toConnection(r.connection);
   },

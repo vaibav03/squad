@@ -168,9 +168,10 @@ const CONCRETE: Record<string, string> = {
   '/squad/courses/:courseId?': '/squad/courses',
   '/squad/welcome-tour/:step?': '/squad/welcome-tour/connect',
 };
-// mastery has no page of its own: it redirects into the village overlay (covered by its own test below)
+// mastery and health have no page of their own: they redirect (mastery into the village overlay, health into
+// /squad/connections#health, which pages/health/health.test.tsx covers)
 const TOP = squadRouteMeta
-  .filter((m) => m.key !== 'mastery')
+  .filter((m) => m.key !== 'mastery' && m.key !== 'health')
   .map((m) => ({
     path: CONCRETE[m.path] ?? m.path,
     title: m.title,

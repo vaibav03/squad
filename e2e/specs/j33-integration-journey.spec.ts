@@ -89,7 +89,7 @@ test('1 empty state: disconnected is honest, health says what is missing', async
     expect(chk(h, 'canvas_connected').status).not.toBe('pass');
     expect(chk(h, 'google_connected').status).not.toBe('pass');
     expect(chk(h, 'items_visible').status).not.toBe('pass');
-    await expect(ana.page.getByTestId('health-banner')).toBeVisible({ timeout: 20_000 });
+    await expect(ana.page.getByTestId('health-headline')).toBeVisible({ timeout: 20_000 });
   });
 });
 
@@ -222,8 +222,10 @@ test('7 shared study plan seeded from imports persists across reload; trip avail
 test('8 health page: every link is a real probe; breaking links flips the exact check', async () => {
   await step('health', async () => {
     const page = ana.page;
-    await page.goto('/squad/connections/health');
-    await expect(page.getByTestId('health-page')).toBeVisible({ timeout: 20_000 });
+    await page.goto('/squad/connections/health'); // redirects to /squad/connections#health
+    await expect(page).toHaveURL(/\/squad\/connections#health$/);
+    await expect(page.getByTestId('health-headline')).toBeVisible({ timeout: 20_000 });
+    await page.getByText('Details for whoever runs this').first().click();
     for (const id of ['canvas_connected', 'canvas_synced', 'google_connected', 'google_synced', 'redirect_origin', 'items_visible', 'context_retrievable', 'cubbie_reachable', 'model_provider', 'imessage_bridge'])
       await expect(page.getByTestId(`health-check-${id}`)).toBeVisible();
     await snap(ana, '1-health');

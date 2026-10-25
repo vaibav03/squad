@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  FIXTURE_LABEL,
   ImessageStatusSchema,
   agoWords,
   imessageIndicator,
@@ -9,6 +8,9 @@ import {
 import { timedFetch } from '../../lib/http';
 import { Button } from '../../primitives/Button';
 import { Card } from '../../primitives/Card';
+import { Chip } from '../../primitives/Chip';
+import { PHASE_LABEL } from '../../lib/connection-phase';
+import { TRUTH_LABELS } from '../../lib/state-labels';
 import { Notice } from '../../primitives/Notice';
 import { useSquadConfig } from '../../shell/context';
 
@@ -35,23 +37,40 @@ export function ImessageCardView({ status, error, loading, now, onRetry }: Imess
   const ind = status ? imessageIndicator(status, { kind: 'group' }, now) : null;
   const fixture = !!status && (status.fixture || status.mode === 'fixture');
   return (
-    <Card className="sq-conn__card" id="imessage" data-testid="connections-imessage">
-      <h3 className="sq-conn__h3">iMessage</h3>
+    <Card className="sq-conn__card" id="messaging" data-testid="connections-imessage">
+      <div className="sq-conn__row">
+        <h2 className="sq-conn__h">Messaging: iMessage with Sendblue</h2>
+        {status && ind ? (
+          <Chip tone={!status.enabled ? 'ember' : fixture || status.dryRun ? 'violet' : 'ok'}>
+            <span data-testid="messaging-phase">
+              {!status.enabled
+                ? TRUTH_LABELS.notset.short
+                : fixture || status.dryRun
+                  ? PHASE_LABEL.demo
+                  : PHASE_LABEL.live}
+            </span>
+          </Chip>
+        ) : null}
+      </div>
+      <p className="sq-conn__meta">
+        Text Cubbie from your phone and get answers in the same group chat. Chat always works on the
+        web too.
+      </p>
       {loading ? (
-        <p role="status">Checking the iMessage bridge</p>
+        <p role="status">Checking messaging</p>
       ) : error || !status || !ind ? (
         <Notice
           tone="warn"
-          title="Could not read the iMessage bridge status"
+          title="Could not check messaging"
           action={
             onRetry ? (
-              <Button size="sm" onClick={onRetry}>
-                Retry
+              <Button size="sm" variant="secondary" onClick={onRetry}>
+                Try again
               </Button>
             ) : undefined
           }
         >
-          This hub did not answer. Messages stay on the web.
+          Squad did not answer. Your chat still works on the web.
         </Notice>
       ) : (
         <>
@@ -65,39 +84,44 @@ export function ImessageCardView({ status, error, loading, now, onRetry }: Imess
           <p className="sq-conn__meta">{ind.detail}</p>
           {fixture ? (
             <p className="sq-conn__meta" data-testid="connections-imessage-fixture">
-              {FIXTURE_LABEL}
+              Demo data: no real iMessage is sent.
             </p>
           ) : null}
           {status.enabled ? (
-            <ul className="sq-conn__scopes" aria-label="iMessage bridge details">
-              <li>Transport: {status.transport ?? 'unknown'}</li>
-              <li>
-                Queued: {status.queued ?? 0}, failed: {status.failed ?? 0}
-              </li>
-              <li>
-                Last sync: {status.lastSyncAt ? agoWords(status.lastSyncAt, now) : 'no sync yet'}
-              </li>
-              {(status.squads ?? []).map((s) => (
-                <li key={s.squadId}>
-                  {s.name}: {s.bound} group{s.bound === 1 ? '' : 's'} bound
+            <details className="sq-conn__fallback">
+              <summary>Details for whoever runs this</summary>
+              <ul className="sq-conn__scopes" aria-label="iMessage bridge details">
+                <li>Transport: {status.transport ?? 'unknown'}</li>
+                <li>
+                  Queued: {status.queued ?? 0}, failed: {status.failed ?? 0}
                 </li>
-              ))}
-            </ul>
+                <li>
+                  Last sync: {status.lastSyncAt ? agoWords(status.lastSyncAt, now) : 'no sync yet'}
+                </li>
+                {(status.squads ?? []).map((s) => (
+                  <li key={s.squadId}>
+                    {s.name}: {s.bound} group{s.bound === 1 ? '' : 's'} bound
+                  </li>
+                ))}
+              </ul>
+            </details>
           ) : null}
         </>
       )}
-      <h4 className="sq-conn__h3">Safe setup</h4>
-      <ol className="sq-conn__scopes" data-testid="connections-imessage-steps">
-        {SETUP_STEPS.map((s) => (
-          <li key={s}>{s}</li>
-        ))}
-      </ol>
-      <p className="sq-conn__meta">
-        Full steps are in <code>docs/imessage.md</code>.{' '}
-        <a href={RUNBOOK_URL} target="_blank" rel="noreferrer noopener">
-          Open the runbook
-        </a>
-      </p>
+      <details className="sq-conn__fallback">
+        <summary>Safe setup, for whoever runs this</summary>
+        <ol className="sq-conn__scopes" data-testid="connections-imessage-steps">
+          {SETUP_STEPS.map((s) => (
+            <li key={s}>{s}</li>
+          ))}
+        </ol>
+        <p className="sq-conn__meta">
+          Full steps are in <code>docs/imessage.md</code>.{' '}
+          <a href={RUNBOOK_URL} target="_blank" rel="noreferrer noopener">
+            Open the runbook
+          </a>
+        </p>
+      </details>
     </Card>
   );
 }
@@ -130,8 +154,8 @@ export function ImessageCard() {
     void load();
   }, [load]);
   useEffect(() => {
-    if (window.location.hash === '#imessage')
-      document.getElementById('imessage')?.scrollIntoView?.();
+    if (window.location.hash === '#imessage' || window.location.hash === '#messaging')
+      document.getElementById('messaging')?.scrollIntoView?.();
   }, [phase]);
   return (
     <ImessageCardView

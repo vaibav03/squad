@@ -3,7 +3,7 @@ import { Button } from '../../primitives/Button';
 import { Chip } from '../../primitives/Chip';
 import type { SourceRow } from './api';
 import { askCubbie } from './askCubbie';
-import { CALENDAR_KINDS, FIXTURE_LABEL, itemTypeLabel, relTime, squadLabel } from './model';
+import { CALENDAR_KINDS, itemTypeLabel, relTime, squadLabel } from './model';
 
 export interface ItemListProps {
   connectionId: string;
@@ -38,7 +38,8 @@ export function ItemList(p: ItemListProps) {
   if (rows.length === 0)
     return (
       <p className="sq-conn__meta" data-testid="items-empty">
-        Nothing imported yet. Items appear here after the first sync.
+        Nothing imported yet. Items appear here after the first import. Press Sync now if it has
+        been a while.
       </p>
     );
   const shown = all ? rows : rows.slice(0, 8);
@@ -64,7 +65,7 @@ export function ItemList(p: ItemListProps) {
               </div>
               <div className="sq-conn__itemside">
                 <Chip tone={r.provenance === 'fixture' ? 'violet' : 'ok'}>
-                  {r.provenance === 'fixture' ? FIXTURE_LABEL : 'Real'}
+                  {r.provenance === 'fixture' ? 'Demo data' : 'Live'}
                 </Chip>
                 <span data-testid="item-sharing">
                   <Chip tone={shareNames.length ? 'ember' : 'neutral'}>
@@ -87,7 +88,7 @@ export function ItemList(p: ItemListProps) {
                 {p.squadId ? (
                   <Button
                     size="sm"
-                    variant="primary"
+                    variant="secondary"
                     iconStart="sparkle"
                     data-testid="ask-cubbie"
                     onClick={() => askCubbie(p.squadId!, r, p.navigate)}

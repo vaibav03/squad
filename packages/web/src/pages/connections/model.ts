@@ -4,6 +4,18 @@ export const STATES = ['live', 'fixture', 'expired', 'revoked', 'rate_limited', 
 export type ConnState = (typeof STATES)[number];
 export type StateTone = 'ok' | 'neutral' | 'alert' | 'ember' | 'violet';
 
+import type { ConnPhase } from '../../lib/connection-phase';
+
+export const PHASE_TONE: Record<ConnPhase, StateTone> = {
+  not_connected: 'neutral',
+  connecting: 'neutral',
+  syncing: 'ember',
+  live: 'ok',
+  demo: 'violet',
+  degraded: 'ember',
+  reauth: 'alert',
+};
+
 export const STATE_TONE: Record<ConnState, StateTone> = {
   live: 'ok',
   fixture: 'violet',
@@ -15,8 +27,8 @@ export const STATE_TONE: Record<ConnState, StateTone> = {
 
 /** The one-line state a card leads with: real | fixture | disconnected, never a generic success badge. */
 export const STATE_HEADLINE: Record<ConnState, string> = {
-  live: 'Real account',
-  fixture: 'Fixture',
+  live: 'Live',
+  fixture: 'Demo data',
   expired: 'Expired',
   revoked: 'Disconnected',
   rate_limited: 'Rate limited',
@@ -26,14 +38,14 @@ export const STATE_HEADLINE: Record<ConnState, string> = {
 /** Fallback copy when the hub sends no `stateLabel`. */
 export const STATE_COPY: Record<ConnState, string> = {
   live: 'Connected',
-  fixture: 'Fixture (simulated, not your account)',
+  fixture: 'Demo data: example items, not your account',
   expired: 'Expired: reconnect to resume syncing',
   revoked: 'Disconnected: imported data deleted',
   rate_limited: 'Paused: the provider asked us to slow down',
   error: 'Error: showing the last imported data',
 };
 
-export const FIXTURE_LABEL = 'Fixture (simulated, not your account)';
+export const FIXTURE_LABEL = 'Demo data: example items, not your account';
 
 export const SCOPE_WORDS: Record<string, string> = {
   'https://www.googleapis.com/auth/calendar.readonly':
@@ -51,21 +63,34 @@ export const SCOPE_WORDS: Record<string, string> = {
 export const scopeWords = (s: string): string =>
   SCOPE_WORDS[s] ?? 'Read-only access to one data type.';
 
-export const KIND_LABEL: Record<string, string> = {
-  canvas_assignment: 'assignments',
-  canvas_file: 'files',
-  canvas_event: 'Canvas events',
-  gdoc: 'Docs',
-  gdrive_file: 'Drive files',
-  gcal_event: 'calendar events',
-  classroom_item: 'Classroom items',
-  pdf: 'PDFs',
+/** [one, many] as a customer reads them: "1 Classroom item", "4 PDFs". */
+export const KIND_LABEL: Record<string, [string, string]> = {
+  canvas_assignment: ['Canvas assignment', 'Canvas assignments'],
+  canvas_file: ['Canvas file', 'Canvas files'],
+  canvas_event: ['Canvas event', 'Canvas events'],
+  canvas_page: ['Canvas page', 'Canvas pages'],
+  gdoc: ['Google Doc', 'Google Docs'],
+  gdrive_file: ['Drive file', 'Drive files'],
+  gcal_event: ['calendar event', 'calendar events'],
+  classroom_item: ['Classroom item', 'Classroom items'],
+  classroom_coursework: ['Classroom item', 'Classroom items'],
+  classroom_course: ['Classroom course', 'Classroom courses'],
+  pdf: ['PDF', 'PDFs'],
 };
-export const kindCounts = (byKind: Record<string, number>): string[] =>
-  Object.entries(byKind)
-    .filter(([, n]) => n > 0)
+export const kindCounts = (byKind: Record<string, number>): string[] => {
+  // Merge kinds that read the same ("Classroom item" for coursework and items).
+  const merged = new Map<string, number>();
+  for (const [k, n] of Object.entries(byKind)) {
+    if (n <= 0) continue;
+    const label = KIND_LABEL[k];
+    const key = label ? label[0] : k.replace(/_/g, ' ');
+    merged.set(key, (merged.get(key) ?? 0) + n);
+  }
+  const plural = new Map(Object.values(KIND_LABEL).map(([a, b]) => [a, b]));
+  return [...merged.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, n]) => `${n} ${KIND_LABEL[k] ?? k}`);
+    .map(([k, n]) => `${n} ${n === 1 ? k : (plural.get(k) ?? `${k}s`)}`);
+};
 
 const ITEM_TYPE: Record<string, string> = {
   canvas_assignment: 'Canvas assignment',
@@ -99,12 +124,17 @@ export const ERROR_COPY: Record<string, string> = {
   canvas_registration_failed: 'Squad could not register that Canvas account. Try again.',
   scope_not_allowed: 'That access level is not offered. Squad only asks for read-only access.',
   already_connected: 'That account is already connected.',
-  token_store_unconfigured: 'This server cannot store credentials yet, so it cannot connect.',
-  live_not_available: 'Live connections are not available on this server yet.',
-  google_not_configured: 'Google sign-in is not set up on this server.',
+  token_store_unconfigured:
+    'This copy of Squad cannot keep sign-in details safely yet, so it cannot connect.',
+  live_not_available:
+    'Live connections are not available here yet. Use the demo workspace instead.',
+  google_not_configured:
+    'Google sign-in is not set up here yet. Use the Google demo workspace instead.',
   connection_expired: 'This connection expired. Reconnect to sync.',
   connection_revoked: 'This connection was disconnected.',
-  offline: 'Cannot reach the hub.',
+  offline: 'Cannot reach Squad. Check your connection and try again.',
+  http_401: 'Your Squad sign-in expired. Sign in again to continue.',
+  http_403: 'Your account is not allowed to do that here.',
 };
 export const errorCopy = (code: string): string =>
   ERROR_COPY[code] ?? 'Something went wrong. Nothing was changed.';
