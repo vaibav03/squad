@@ -6,6 +6,16 @@ import { publishRoomSession } from './rooms';
 import { eventChapter } from './model/events';
 import { Raster } from './pixel/raster';
 import { PLACEMENTS, chapterSlotFor, type Placement } from './registry';
+import {
+  BOARD_H,
+  BOARD_W,
+  chapterNumber,
+  paintBoard,
+  publishMastery,
+  requestMasteryPanel,
+  sameMastery,
+  type MasterySnapshot,
+} from './mastery';
 import { SEAT_BOX, paintSeatRing, paintSeatTag, roomSeats, type RoomSeat } from './roomSeats';
 
 /**
@@ -114,7 +124,7 @@ export interface HostCtx {
 interface SeatStore {
   readonly selected: string | null;
   readonly room: { slot: string; who: string } | null;
-  select(id: string | null, room?: { slot: string; who: string }): void;
+  select(id: string | null, room?: { slot: string; who: string; initialTab?: 'chat' }): void;
   setSide(s: 'left' | 'right'): void;
   isThinking?(id: string, who?: string): boolean;
 }
@@ -277,6 +287,46 @@ const mod = {
 
     PLACEMENTS.forEach((p, i) => place(p, p.chapter ? `ch${i + 1}` : p.slotId));
 
+    // The Mastery board: a walk-up notice board. Enter opens the in-world mastery panel (DOM, in the web host).
+    const boardSlot = layout.slot('mastery-board');
+    if (scene.textures.exists('scene-mastery-board')) scene.textures.remove('scene-mastery-board');
+    const boardTex = scene.textures.createCanvas('scene-mastery-board', BOARD_W, BOARD_H);
+    const boardImage = scene.add
+      .image(boardSlot.x, layout.groundY + 1, 'scene-mastery-board')
+      .setOrigin(0.5, 1)
+      .setDepth(depth.buildings)
+      .setVisible(false);
+    const offBoard = ctx.interactables.register({
+      id: 'enter-mastery-board',
+      x: boardSlot.x,
+      radius: 30,
+      label: 'Open Mastery board',
+      onActivate: () => requestMasteryPanel(),
+    });
+    let masterySnap: MasterySnapshot = { chapters: [] };
+    let boardHash = '';
+    function syncMastery(): void {
+      const next: MasterySnapshot = {
+        chapters: lives
+          .filter((l) => l.p.chapter)
+          .map((l) => {
+            const st = l.state as { instance: string; title: string; glow: number; access: string };
+            return {
+              slot: l.p.slotId,
+              instance: st.instance,
+              title: st.title,
+              box: st.access === 'open' ? st.glow * 5 : 0, // a quiet house has nothing to show yet
+              n: chapterNumber(st.instance) ?? chapterNumber(l.p.slotId),
+              open: st.access === 'open',
+            };
+          }),
+      };
+      if (sameMastery(masterySnap, next)) return;
+      masterySnap = next;
+      publishMastery(next);
+    }
+    syncMastery();
+
     function ensureInterior(): void {
       if (interiorImg) return;
       if (scene.textures.exists('scene-interior')) scene.textures.remove('scene-interior');
@@ -327,7 +377,7 @@ const mod = {
       if (!seat || !st || !inside) return;
       const cx = Math.round(scene.scale.width / 2);
       st.setSide(cx - INT_W / 2 + seat.x > scene.scale.width / 2 ? 'left' : 'right');
-      st.select(seat.agent, { slot: inside.p.slotId, who: seat.who });
+      st.select(seat.agent, { slot: inside.p.slotId, who: seat.who, initialTab: 'chat' });
     }
     /** Rebuild the hit zones when the cast of the room changes (council seats fill in as members speak). */
     function syncSeats(live: Live): void {
@@ -473,6 +523,7 @@ const mod = {
         }
         if (live.state !== before) live.label = live.def.describe(live.state);
       }
+      syncMastery();
     });
 
     loadAssets(ctx)
@@ -495,6 +546,15 @@ const mod = {
         const dirty = acc >= REPAINT_MS;
         if (dirty) acc = 0;
         const o = { t, calm: ctx.calm, assets };
+        if (dirty) {
+          const br = paintBoard(masterySnap.chapters, t, ctx.calm);
+          const bh = br.hash();
+          if (bh !== boardHash) {
+            boardHash = bh;
+            blit(boardTex, br);
+            boardImage.setVisible(true);
+          }
+        }
         for (const live of lives) {
           if (!dirty && live.lastHash) continue;
           const r = live.def.paint(live.state, 'exterior', o);
@@ -543,6 +603,10 @@ const mod = {
         offEvent();
         offLeave();
         scene.input.keyboard?.off('keydown-ESC', leave);
+        offBoard();
+        boardImage.destroy();
+        if (scene.textures.exists('scene-mastery-board'))
+          scene.textures.remove('scene-mastery-board');
         document.removeEventListener('keydown', onRoomKey, true);
         clearZones();
         releaseInput?.();

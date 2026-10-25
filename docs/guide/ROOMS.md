@@ -4,6 +4,8 @@ Squad Village is a pixel campus. Each building is a **room**: a place where one 
 
 For the step-by-step student view see [USER-GUIDE.md](USER-GUIDE.md).
 
+**Mastery is in the village.** The chapter houses show your mastery on their signs, the chapter room panel and the Agent Inspector (for that chapter's expert) show the same words-plus-pips summary, and the **Mastery board** at the entrance of the study district opens the full panel. There is no separate Mastery page or tab.
+
 ![Room info panel in the village](../design/shots/ux/room-info/panel-1280.png)
 
 > **Status box (read this first).** Verified against the merged tree on `origin/main` after batches 1 to 6 (rooms/a, rooms/b, council/ask, chat/web and qa/web are all on `main`; see `docs/tracking/MERGE-LOG.md`).

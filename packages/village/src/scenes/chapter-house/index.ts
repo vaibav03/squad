@@ -1,6 +1,7 @@
 import type { VillageEvent } from '@squad/core';
 import type { SceneBundle, SceneDef, SceneCommand, SceneCtx, ShotDef } from '../contract';
 import { initBase, reduceBase, type BaseState } from '../model/base';
+import { masteryWord } from '../mastery';
 import { chapterLabel } from './style';
 import { DOOR, EXT_H, EXT_W, paintExterior } from './exterior';
 import { ENTRY, INT_H, INT_W, paintInterior } from './interior';
@@ -50,15 +51,7 @@ export const chapterHouse: SceneDef<ChapterHouseState> = {
           : state.occupant === 'waiting'
             ? 'expert is waiting for you'
             : 'expert is resting';
-    const g = state.glow;
-    const mastery =
-      g < 0.3
-        ? 'mastery just beginning'
-        : g < 0.7
-          ? 'mastery growing'
-          : g < 0.95
-            ? 'mastery strong'
-            : 'mastery glowing';
+    const mastery = `mastery ${masteryWord(state.glow * 5).toLowerCase()}`;
     return `${name}, ${expert}, ${mastery}.`;
   },
   onEnter(state, at) {
