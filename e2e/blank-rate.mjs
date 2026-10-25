@@ -21,7 +21,9 @@ const PAR = Number(arg('par', 4));
 // p-<mode>: faults injected by scripts/dev/fault-proxy.mjs (HUB must point at the proxy, and so must the web build)
 const PROXY = process.env.PROXY ?? HUB;
 const PCOND = COND.startsWith('p-') ? COND.slice(2) : null;
-const DEADLINE = Number(arg('deadline', COND === 'normal' || COND === 'cpu4' ? 14000 : PCOND ? 34000 : 26000));
+const DEADLINE = Number(
+  arg('deadline', COND === 'normal' || COND === 'cpu4' ? 14000 : PCOND ? 34000 : 26000),
+);
 
 const ROUTES = [
   ['/squad', 'Home'],
@@ -102,7 +104,7 @@ const probe = () => {
     text: t.slice(0, 300),
     textLen: t.length,
     canvas,
-    loading: /(loading|connecting|signing you in|opening the village|starting squad)/i.test(t),
+    loading: /\b(loading|connecting|signing you in|opening the village|starting squad)\b/i.test(t),
     skeleton: !!scope?.querySelector('[class*="skeleton" i]') && t.length < 40,
     rootLen: text(root).length,
   };
@@ -124,7 +126,9 @@ async function settle(page, expectTitle, deadline = DEADLINE) {
         const why = [];
         // hub down or session gone: the sign-in / offline-with-Retry screen is the correct, non-blank outcome
         const signIn =
-          (COND === 'down' || COND === '401' || ['down', '401', 'slow', 'flap', '429'].includes(PCOND ?? '')) &&
+          (COND === 'down' ||
+            COND === '401' ||
+            ['down', '401', 'slow', 'flap', '429'].includes(PCOND ?? '')) &&
           again.title.startsWith('Welcome');
         if (!signIn && expectTitle && !again.title.startsWith(expectTitle))
           why.push(`title=${again.title}`);
