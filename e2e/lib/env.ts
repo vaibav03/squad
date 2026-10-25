@@ -17,5 +17,6 @@ export const STUDENTS = ['s_ana', 's_ben', 's_chi', 's_dev'] as const;
 export type StudentId = (typeof STUDENTS)[number];
 export const AGENT_BASE = Number(process.env.E2E_AGENT_BASE ?? 4151);
 export const AGENT_IDS = ['s_ana', 's_ben', 's_cam', 's_dev'] as const; // agents are named after the dev:all fixtures
-export const AGENT_PORT = (id: string) => AGENT_BASE + AGENT_IDS.indexOf(id as (typeof AGENT_IDS)[number]);
+export const AGENT_PORT = (id: string) =>
+  AGENT_BASE + AGENT_IDS.indexOf(id as (typeof AGENT_IDS)[number]);
 export const AGENT_URL = (id: string) => `http://localhost:${AGENT_PORT(id)}`;

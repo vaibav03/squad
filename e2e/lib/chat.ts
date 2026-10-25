@@ -2,7 +2,8 @@ import type { Page } from '@playwright/test';
 import { api, apiLogin, chatMerged, blocked, note, type Actor } from './helpers';
 
 export const GROUP = 'group:sq_demo';
-export const botMsgs = (page: Page) => page.locator('[data-testid="chat-message"][data-sender-id="cubbie"]');
+export const botMsgs = (page: Page) =>
+  page.locator('[data-testid="chat-message"][data-sender-id="cubbie"]');
 
 /** Skip as blocked when the chat feature is not on the stack under test. */
 export async function needChat(): Promise<void> {
@@ -16,7 +17,10 @@ export async function needRoute(route: string, branch: string): Promise<void> {
 export async function openChat(a: Actor, chatId: string): Promise<void> {
   const { page } = a;
   await page.goto('/squad/chat');
-  await page.locator('[data-testid="chat-list"],[data-testid="chat-thread"]').first().waitFor({ timeout: 20_000 });
+  await page
+    .locator('[data-testid="chat-list"],[data-testid="chat-thread"]')
+    .first()
+    .waitFor({ timeout: 20_000 });
   const row = page.getByTestId(`chat-row-${chatId}`);
   if (await row.count()) await row.click();
   await page.getByTestId('chat-composer-input').waitFor({ timeout: 10_000 });
@@ -28,8 +32,16 @@ export async function say(page: Page, text: string): Promise<void> {
   await box.press('Enter');
 }
 /** Send over the API (used for quick plants and for flows the UI does not drive). */
-export async function sendApi(token: string, chatId: string, text: string, attachments?: { id: string }[]) {
-  const r = await api(token, '/v1/chat/send', { method: 'POST', json: { chatId, text, ...(attachments ? { attachments } : {}) } });
+export async function sendApi(
+  token: string,
+  chatId: string,
+  text: string,
+  attachments?: { id: string }[],
+) {
+  const r = await api(token, '/v1/chat/send', {
+    method: 'POST',
+    json: { chatId, text, ...(attachments ? { attachments } : {}) },
+  });
   return r;
 }
 export interface HMsg {
@@ -39,7 +51,14 @@ export interface HMsg {
   sender: { kind: string; id?: string; name: string };
   text: string;
   private: boolean;
-  attachments: { id: string; kind: string; mime: string; name?: string; bytes?: number; url: string }[];
+  attachments: {
+    id: string;
+    kind: string;
+    mime: string;
+    name?: string;
+    bytes?: number;
+    url: string;
+  }[];
   citations: { file: string; page: number; label: string }[];
   card?: { type: string; [k: string]: unknown };
   demo: boolean;
@@ -51,7 +70,12 @@ export async function history(token: string, chatId: string): Promise<HMsg[]> {
 }
 export const isBot = (m: HMsg) => m.sender.kind === 'persona';
 /** Poll history until a bot message after `afterCount` bot messages satisfies `pred`. */
-export async function waitBot(token: string, chatId: string, pred: (m: HMsg) => boolean, ms = 40_000): Promise<HMsg | undefined> {
+export async function waitBot(
+  token: string,
+  chatId: string,
+  pred: (m: HMsg) => boolean,
+  ms = 40_000,
+): Promise<HMsg | undefined> {
   const end = Date.now() + ms;
   while (Date.now() < end) {
     const m = (await history(token, chatId)).filter(isBot).reverse().find(pred);
@@ -94,5 +118,10 @@ export function makePng(w = 64, h = 64, shade = 200): Buffer {
   ihdr[9] = 2;
   const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(w * 3, shade)]);
   const raw = Buffer.concat(Array.from({ length: h }, () => row));
-  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', zlib.deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
 }

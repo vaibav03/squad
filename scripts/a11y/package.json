@@ -4,5 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "description": "Standalone (non-workspace) deps for pnpm a11y:check. Installed on demand by check.ts.",
-  "dependencies": { "axe-core": "^4.10.0" }
+  "dependencies": {
+    "axe-core": "^4.10.0"
+  }
 }

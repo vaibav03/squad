@@ -58,7 +58,8 @@ export const specs: Spec[] = [
       await page.keyboard.down('ArrowRight');
       await page
         .waitForFunction(
-          () => (document.querySelector('.sqv-prompt') as HTMLElement | null)?.dataset.show === 'true',
+          () =>
+            (document.querySelector('.sqv-prompt') as HTMLElement | null)?.dataset.show === 'true',
           undefined,
           { timeout: 8000 },
         )
@@ -72,7 +73,10 @@ export const specs: Spec[] = [
       await page.click('button[aria-controls=sqv-help]');
       await page.keyboard.press('Escape');
       await page.waitForTimeout(300);
-      ok((await focused(page)).includes('sqv-stage') || (await focused(page)).includes('sqv-btn'), 'focus lost after Esc: ' + (await focused(page)));
+      ok(
+        (await focused(page)).includes('sqv-stage') || (await focused(page)).includes('sqv-btn'),
+        'focus lost after Esc: ' + (await focused(page)),
+      );
     },
   },
   {
@@ -93,7 +97,9 @@ export const specs: Spec[] = [
         await page.keyboard.press('Tab');
         if ((await focused(page)).includes('sqv-chip')) return;
       }
-      throw new Error('Tab stays on .sqv-stage (place cycling) for 9 presses before reaching the first chip');
+      throw new Error(
+        'Tab stays on .sqv-stage (place cycling) for 9 presses before reaching the first chip',
+      );
     },
   },
   {
@@ -105,7 +111,10 @@ export const specs: Spec[] = [
       for (let i = 0; i < 12; i++) {
         await page.keyboard.press('Tab');
         const inside = await dlg.evaluate((d) => d.contains(document.activeElement));
-        ok(inside, `focus escaped the quiz dialog after ${i + 1} Tab presses (now on ${await focused(page)})`);
+        ok(
+          inside,
+          `focus escaped the quiz dialog after ${i + 1} Tab presses (now on ${await focused(page)})`,
+        );
       }
     },
   },
@@ -114,7 +123,10 @@ export const specs: Spec[] = [
     async run(page) {
       await openQuiz(page);
       await page.keyboard.press('Escape');
-      await page.waitForSelector('[role=dialog][aria-modal=true]', { state: 'detached', timeout: 3000 });
+      await page.waitForSelector('[role=dialog][aria-modal=true]', {
+        state: 'detached',
+        timeout: 3000,
+      });
       const f = await focused(page);
       ok(f.includes('canvas') || f.includes('sqv-stage'), 'focus not returned to world, on ' + f);
     },
@@ -126,7 +138,10 @@ export const specs: Spec[] = [
       await openQuiz(page);
       for (let i = 0; i < 3; i++) await page.keyboard.press('Tab');
       await page.keyboard.press('Escape');
-      await page.waitForSelector('[role=dialog][aria-modal=true]', { state: 'detached', timeout: 2000 });
+      await page.waitForSelector('[role=dialog][aria-modal=true]', {
+        state: 'detached',
+        timeout: 2000,
+      });
     },
   },
   {
@@ -136,7 +151,10 @@ export const specs: Spec[] = [
       await gotoRoute(page, village);
       const bad = await page.evaluate(() =>
         [...document.querySelectorAll('.sqv-hud button')]
-          .map((e) => ({ n: e.getAttribute('aria-label') ?? e.textContent, r: e.getBoundingClientRect() }))
+          .map((e) => ({
+            n: e.getAttribute('aria-label') ?? e.textContent,
+            r: e.getBoundingClientRect(),
+          }))
           .filter((x) => x.r.width && (x.r.width < 44 || x.r.height < 44))
           .map((x) => `${x.n} ${Math.round(x.r.width)}x${Math.round(x.r.height)}`),
       );
@@ -149,7 +167,10 @@ export const specs: Spec[] = [
     async run(page) {
       const bad: string[] = [];
       for (const id of ['home', 'ledger', 'trip', 'setup', 'personas', 'mastery']) {
-        await gotoRoute(page, ROUTES.find((r) => r.id === id)!);
+        await gotoRoute(
+          page,
+          ROUTES.find((r) => r.id === id)!,
+        );
         const t = await page.title();
         if (!t || t === 'Squad') bad.push(`${id}: "${t}"`);
       }

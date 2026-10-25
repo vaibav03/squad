@@ -105,23 +105,23 @@ More: [Track 3 walkthrough](docs/demo/track3/README.md), [Track 2 walkthrough](d
 
 ## Demo mode versus real keys
 
-| Capability              | Demo mode (no keys)                                | Real keys                                                         |
-| ----------------------- | -------------------------------------------------- | ----------------------------------------------------------------- |
-| Bot, agents, experts    | Scripted `FakeLlm` stand-in, labeled "Demo"        | Gemini (`GEMINI_API_KEY`); needs billing credits in AI Studio     |
-| Voices                  | Captions only (`tts: none`)                        | ElevenLabs (`ELEVENLABS_API_KEY`)                                 |
-| Mesh crypto             | Real (PSI, secret sharing, gate, ledger)           | Real (never uses an LLM)                                          |
-| Calendars, budgets      | Seeded fixtures (4 students)                       | Seeded fixtures (real import is a later ticket)                   |
-| Hub internal secret     | Dev default `dev-internal-secret` under `dev:all`  | Set `INTERNAL_EVENTS_SECRET` in `.env`                            |
+| Capability           | Demo mode (no keys)                               | Real keys                                                     |
+| -------------------- | ------------------------------------------------- | ------------------------------------------------------------- |
+| Bot, agents, experts | Scripted `FakeLlm` stand-in, labeled "Demo"       | Gemini (`GEMINI_API_KEY`); needs billing credits in AI Studio |
+| Voices               | Captions only (`tts: none`)                       | ElevenLabs (`ELEVENLABS_API_KEY`)                             |
+| Mesh crypto          | Real (PSI, secret sharing, gate, ledger)          | Real (never uses an LLM)                                      |
+| Calendars, budgets   | Seeded fixtures (4 students)                      | Seeded fixtures (real import is a later ticket)               |
+| Hub internal secret  | Dev default `dev-internal-secret` under `dev:all` | Set `INTERNAL_EVENTS_SECRET` in `.env`                        |
 
 Ask the hub which mode it is in: `GET /v1/status` returns `llm` (`gemini` or `fake`), `tts` (`elevenlabs` or `none`), `demo` and, when it fell back, a `reason`:
 
-| `reason`            | Meaning                                                    | Recovery                                                   |
-| ------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
-| `no_key`            | No `GEMINI_API_KEY` set                                    | Add the key and restart                                    |
-| `forced_fake`       | `FORCE_FAKE_LLM=1`                                         | Unset it                                                   |
-| `credits_depleted`  | Gemini returned 402 (prepayment or credits depleted)       | Top up billing; the hub re-probes every 60 s, no restart   |
-| `rate_limited`      | Gemini 429                                                 | Re-probes every 60 s                                       |
-| `invalid_key`       | Gemini rejected the key (401)                              | Fix the key; re-probes every 10 minutes                    |
+| `reason`           | Meaning                                              | Recovery                                                 |
+| ------------------ | ---------------------------------------------------- | -------------------------------------------------------- |
+| `no_key`           | No `GEMINI_API_KEY` set                              | Add the key and restart                                  |
+| `forced_fake`      | `FORCE_FAKE_LLM=1`                                   | Unset it                                                 |
+| `credits_depleted` | Gemini returned 402 (prepayment or credits depleted) | Top up billing; the hub re-probes every 60 s, no restart |
+| `rate_limited`     | Gemini 429                                           | Re-probes every 60 s                                     |
+| `invalid_key`      | Gemini rejected the key (401)                        | Fix the key; re-probes every 10 minutes                  |
 
 While in fallback, answers come from the scripted model and the village and web show a Demo notice. Details: [architecture, LLM layer](docs/architecture/OVERVIEW.md).
 
@@ -183,18 +183,18 @@ Rules enforced in code:
 
 ## Documentation
 
-| Doc                                                                | For                                                      |
-| ------------------------------------------------------------------ | -------------------------------------------------------- |
-| [User guide](docs/guide/USER-GUIDE.md)                             | Students: set up, skills and phrases, privacy, fixes     |
-| [Rooms](docs/guide/ROOMS.md)                                       | The 13 rooms and their status                            |
-| [Architecture](docs/architecture/OVERVIEW.md)                      | Diagrams: packages, events, privacy, LLM layer, stores   |
-| [Hub API](docs/api/HUB-API.md)                                     | Endpoints (table generated from the code)                |
-| [Submission story](docs/SUBMISSION-STORY.md)                       | Tracks 2 and 3 narrative, limits, real versus demo       |
-| [Judge Q&A](docs/demo/QA.md)                                       | Short honest answers                                     |
-| [Contributing](docs/CONTRIBUTING.md), [FAQ](docs/FAQ.md)          | Worktrees, commits, tests, adding a skill, room or event |
-| [Credits](docs/CREDITS.md)                                         | Art, fonts, dependencies, course material                |
-| Specs: [docs/specs/00-OVERVIEW.md](docs/specs/00-OVERVIEW.md)      | Contracts and design; decisions in `docs/DECISIONS.md`   |
-| [Branch tracker](docs/tracking/README.md), [QA](docs/qa/ROOMS-AUDIT.md) | Other leads' docs                                   |
+| Doc                                                                     | For                                                      |
+| ----------------------------------------------------------------------- | -------------------------------------------------------- |
+| [User guide](docs/guide/USER-GUIDE.md)                                  | Students: set up, skills and phrases, privacy, fixes     |
+| [Rooms](docs/guide/ROOMS.md)                                            | The 13 rooms and their status                            |
+| [Architecture](docs/architecture/OVERVIEW.md)                           | Diagrams: packages, events, privacy, LLM layer, stores   |
+| [Hub API](docs/api/HUB-API.md)                                          | Endpoints (table generated from the code)                |
+| [Submission story](docs/SUBMISSION-STORY.md)                            | Tracks 2 and 3 narrative, limits, real versus demo       |
+| [Judge Q&A](docs/demo/QA.md)                                            | Short honest answers                                     |
+| [Contributing](docs/CONTRIBUTING.md), [FAQ](docs/FAQ.md)                | Worktrees, commits, tests, adding a skill, room or event |
+| [Credits](docs/CREDITS.md)                                              | Art, fonts, dependencies, course material                |
+| Specs: [docs/specs/00-OVERVIEW.md](docs/specs/00-OVERVIEW.md)           | Contracts and design; decisions in `docs/DECISIONS.md`   |
+| [Branch tracker](docs/tracking/README.md), [QA](docs/qa/ROOMS-AUDIT.md) | Other leads' docs                                        |
 
 ## Troubleshooting
 

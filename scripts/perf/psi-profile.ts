@@ -4,7 +4,10 @@
  * Breaks one ring PSI down into hash-to-curve, scalar multiply, decode/encode and the measured end-to-end time,
  * and compares against a precomputed-hash and a fixed-base-window variant (what a speed-up would look like).
  */
-import { ristretto255, ristretto255_hasher } from '../../packages/mesh/node_modules/@noble/curves/ed25519.js';
+import {
+  ristretto255,
+  ristretto255_hasher,
+} from '../../packages/mesh/node_modules/@noble/curves/ed25519.js';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { runRingPsi, psiKeygen, PSI_DST } from '../../packages/mesh/src/psi/index.ts';
 import { secureSum } from '../../packages/mesh/src/secretshare/index.ts';
@@ -25,11 +28,16 @@ const enc = new TextEncoder();
 const rng = seededRng('perf');
 const k = psiKeygen(rng);
 const P = ristretto255.Point;
-const base = ristretto255_hasher.hashToCurve(enc.encode('slot:1'), { DST: PSI_DST }) as InstanceType<typeof P>;
+const base = ristretto255_hasher.hashToCurve(enc.encode('slot:1'), {
+  DST: PSI_DST,
+}) as InstanceType<typeof P>;
 const hex = base.multiply(k).toHex();
 
 const prim = {
-  hashToCurveMs: ms(() => ristretto255_hasher.hashToCurve(enc.encode('slot:' + Math.random()), { DST: PSI_DST }), 200),
+  hashToCurveMs: ms(
+    () => ristretto255_hasher.hashToCurve(enc.encode('slot:' + Math.random()), { DST: PSI_DST }),
+    200,
+  ),
   scalarMultMs: ms(() => base.multiply(k), 200),
   decodeMs: ms(() => P.fromHex(hex), 500),
   encodeMs: ms(() => base.toHex(), 500),
@@ -43,7 +51,9 @@ function trip(parties: number, items: number, padTo: number) {
 function tripOnce(parties: number, items: number, padTo: number) {
   const ps = Array.from({ length: parties }, (_, i) => ({
     id: 'p' + i,
-    items: Array.from({ length: items }, (_, j) => `slot:${(j * (i + 2)) % 60}`).filter((v, ix, a) => a.indexOf(v) === ix),
+    items: Array.from({ length: items }, (_, j) => `slot:${(j * (i + 2)) % 60}`).filter(
+      (v, ix, a) => a.indexOf(v) === ix,
+    ),
   }));
   const t = performance.now();
   runRingPsi(ps, { padTo, seed: 's' });
@@ -56,7 +66,9 @@ const ring = {
   'study n=6 pad=168': trip(6, 100, 168),
 };
 const mults = (n: number, pad: number) => n * pad * n; // each party's pad points get n multiplies (1 prepare + n-1 apply)
-const inputs = Object.fromEntries(['a', 'b', 'c', 'd'].map((m) => [m, Array.from({ length: 168 }, (_, i) => i % 7)]));
+const inputs = Object.fromEntries(
+  ['a', 'b', 'c', 'd'].map((m) => [m, Array.from({ length: 168 }, (_, i) => i % 7)]),
+);
 const ss = ms(() => secureSum(inputs, seededRng('ss')), 20);
 const out = {
   node: process.version,
@@ -75,7 +87,8 @@ const unsafe = ms(() => base.multiplyUnsafe(k), 300);
 const hashCached = new Map<string, unknown>();
 const cachedHash = ms(() => {
   const l = 'slot:7';
-  if (!hashCached.has(l)) hashCached.set(l, ristretto255_hasher.hashToCurve(enc.encode(l), { DST: PSI_DST }));
+  if (!hashCached.has(l))
+    hashCached.set(l, ristretto255_hasher.hashToCurve(enc.encode(l), { DST: PSI_DST }));
 }, 5000);
 const candidates = {
   multiplyMs: prim.scalarMultMs,

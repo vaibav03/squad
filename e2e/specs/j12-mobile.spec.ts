@@ -12,7 +12,9 @@ const PAGES: [string, string][] = [
   ['mastery', '/squad/mastery'],
 ];
 
-test('J12 every page fits a 390x844 phone with no horizontal scroll and no page errors', async ({ browser }) => {
+test('J12 every page fits a 390x844 phone with no horizontal scroll and no page errors', async ({
+  browser,
+}) => {
   test.setTimeout(240_000);
   const paths = [...PAGES];
   if (await chatMerged()) paths.push(['chat', '/squad/chat']);
@@ -21,7 +23,10 @@ test('J12 every page fits a 390x844 phone with no horizontal scroll and no page 
   for (const [name, p] of paths) {
     await a.page.goto(p);
     await a.page.waitForTimeout(name === 'village' ? 4000 : 1800);
-    const m = await a.page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
+    const m = await a.page.evaluate(() => ({
+      sw: document.documentElement.scrollWidth,
+      cw: document.documentElement.clientWidth,
+    }));
     if (m.sw > m.cw + 1) overflow.push(`${name} (${m.sw}>${m.cw})`);
     await shot(a.page, J, name);
   }
@@ -31,7 +36,9 @@ test('J12 every page fits a 390x844 phone with no horizontal scroll and no page 
   await a.ctx.close();
 });
 
-test('J12 keyboard only: skip link, tab to the village, camera buttons, back out', async ({ browser }) => {
+test('J12 keyboard only: skip link, tab to the village, camera buttons, back out', async ({
+  browser,
+}) => {
   const a = await actor(browser, 's_ana');
   const { page } = a;
   await page.goto('/squad');
@@ -52,12 +59,17 @@ test('J12 keyboard only: skip link, tab to the village, camera buttons, back out
   await shot(page, J, 'keyboard-focus');
   await page.keyboard.press('Enter');
   await page.waitForURL(/\/squad\/village/);
-  await expect(page.locator('[aria-label^="Council Hall"]').first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('[aria-label^="Council Hall"]').first()).toBeVisible({
+    timeout: 30_000,
+  });
   await page.getByRole('button', { name: 'Zoom', exact: true }).focus();
   await page.keyboard.press('Enter');
   await page.getByRole('switch', { name: 'Calm mode' }).focus();
   await page.keyboard.press('Space');
-  await expect(page.getByRole('switch', { name: 'Calm mode' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByRole('switch', { name: 'Calm mode' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
   await shot(page, J, 'keyboard-village');
   expect(a.pageErrors).toEqual([]);
   await a.ctx.close();

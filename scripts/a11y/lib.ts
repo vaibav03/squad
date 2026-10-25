@@ -12,9 +12,21 @@ import { fileURLToPath } from 'node:url';
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const A11Y_DIR = path.join(ROOT, 'scripts/a11y');
 const webHostReq = createRequire(path.join(ROOT, 'apps/web-host/package.json'));
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-export const pw = webHostReq('playwright') as typeof import('playwright');
+export const pw = webHostReq('playwright') as typeof PW;
 export type { Page, Browser, BrowserContext } from 'playwright';
+import type * as PW from 'playwright';
+import type { Browser, Page } from 'playwright';
+
+interface AxeRawNode {
+  target: unknown[];
+  html: unknown;
+}
+interface AxeRaw {
+  id: string;
+  impact?: string | null;
+  help: string;
+  nodes: AxeRawNode[];
+}
 
 export function axeSource(): string {
   const p = path.join(A11Y_DIR, 'node_modules/axe-core/axe.min.js');
@@ -39,9 +51,14 @@ export interface Variant {
 export const vname = (v: Variant) =>
   `${v.w}x${v.h}-${v.theme}-${v.calm ? 'calm' : 'full'}-${v.reduced ? 'rm' : 'motion'}${v.forced ? '-forced' : ''}${v.zoom && v.zoom !== 1 ? `-z${v.zoom * 100}` : ''}`;
 
-export const SESSION = { userId: 'ana', name: 'Ana', token: 'dev-ana', avatarUrl: '/avatars/ana.png' };
+export const SESSION = {
+  userId: 'ana',
+  name: 'Ana',
+  token: 'dev-ana',
+  avatarUrl: '/avatars/ana.png',
+};
 
-export async function newPage(browser: import('playwright').Browser, v: Variant) {
+export async function newPage(browser: Browser, v: Variant) {
   const ctx = await browser.newContext({
     viewport: { width: v.w, height: v.h },
     reducedMotion: v.reduced ? 'reduce' : 'no-preference',
@@ -91,7 +108,7 @@ export const ROUTES: RouteDef[] = [
   { id: 'notfound', url: '/nope' },
 ];
 
-export async function gotoRoute(page: import('playwright').Page, r: RouteDef) {
+export async function gotoRoute(page: Page, r: RouteDef) {
   await page.goto(BASE + r.url, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle').catch(() => {});
   if (r.village) {
@@ -108,19 +125,28 @@ export interface AxeViolation {
   nodes: { target: string[]; html: string }[];
 }
 
-export async function runAxe(page: import('playwright').Page, opts: { selector?: string } = {}): Promise<AxeViolation[]> {
+export async function runAxe(
+  page: Page,
+  opts: { selector?: string } = {},
+): Promise<AxeViolation[]> {
   await page.evaluate(axeSource());
   const res = await page.evaluate(async (sel) => {
     const ax = (window as unknown as { axe: any }).axe; // eslint-disable-line @typescript-eslint/no-explicit-any
     const r = await ax.run(sel ? { include: [sel] } : document, {
-      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'] },
+      runOnly: {
+        type: 'tag',
+        values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'],
+      },
       resultTypes: ['violations'],
     });
-    return r.violations.map((v: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+    return r.violations.map((v: AxeRaw) => ({
       id: v.id,
       impact: v.impact,
       help: v.help,
-      nodes: v.nodes.map((n: any) => ({ target: n.target.map(String), html: String(n.html).slice(0, 200) })), // eslint-disable-line @typescript-eslint/no-explicit-any
+      nodes: v.nodes.map((n: AxeRawNode) => ({
+        target: n.target.map(String),
+        html: String(n.html).slice(0, 200),
+      })),
     }));
   }, opts.selector);
   return res as AxeViolation[];

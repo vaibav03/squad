@@ -8,7 +8,10 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
-const run = (f) => { const r = spawnSync('node', [join(here, f)], { cwd: root, stdio: 'inherit' }); if (r.status) process.exit(r.status); };
+const run = (f) => {
+  const r = spawnSync('node', [join(here, f)], { cwd: root, stdio: 'inherit' });
+  if (r.status) process.exit(r.status);
+};
 run('bundle.mjs');
 const skip = process.argv.includes('--skip-runtime');
 if (!skip) run('runtime.mjs');
@@ -20,17 +23,35 @@ const kb = (n) => n / 1024;
 const rows = [];
 const chk = (name, actual, max, { min = false, warn = false } = {}) => {
   const ok = min ? actual >= max : actual <= max;
-  rows.push({ name, actual: Math.round(actual * 100) / 100, budget: (min ? '>= ' : '<= ') + max, result: ok ? 'ok' : warn ? 'WARN' : 'FAIL' });
+  rows.push({
+    name,
+    actual: Math.round(actual * 100) / 100,
+    budget: (min ? '>= ' : '<= ') + max,
+    result: ok ? 'ok' : warn ? 'WARN' : 'FAIL',
+  });
 };
 chk('phaser chunk gzip kB', kb(bundle.phaserChunk?.gzip ?? 0), b.bundle.phaserGzipKb);
-chk('largest app chunk gzip kB', kb(bundle.largestNonPhaserJs?.gzip ?? 0), b.bundle.largestAppChunkGzipKb);
+chk(
+  'largest app chunk gzip kB',
+  kb(bundle.largestNonPhaserJs?.gzip ?? 0),
+  b.bundle.largestAppChunkGzipKb,
+);
 chk('total JS gzip kB', kb(bundle.totals.jsGzip), b.bundle.totalJsGzipKb);
 chk('total JS brotli kB', kb(bundle.totals.jsBrotli), b.bundle.totalJsBrotliKb);
 if (!skip) {
   const nonVillage = Object.entries(rt.routes).filter(([r]) => r !== '/squad/village');
-  chk('max non-village route JS kB', Math.max(...nonVillage.map(([, v]) => v.jsKb)), b.routes.nonVillageJsKb);
+  chk(
+    'max non-village route JS kB',
+    Math.max(...nonVillage.map(([, v]) => v.jsKb)),
+    b.routes.nonVillageJsKb,
+  );
   chk('village route JS kB', rt.routes['/squad/village'].jsKb, b.routes.villageJsKb);
-  if (b.routes.phaserOnlyOnVillage) chk('routes loading phaser besides village', nonVillage.filter(([, v]) => v.phaserLoaded).length, 0);
+  if (b.routes.phaserOnlyOnVillage)
+    chk(
+      'routes loading phaser besides village',
+      nonVillage.filter(([, v]) => v.phaserLoaded).length,
+      0,
+    );
   const strict = process.env.STRICT_FPS === '1';
   for (const [vp, v] of Object.entries(rt.village)) {
     chk(`${vp} ready ms`, v.readyMs, b.village.readyMs);

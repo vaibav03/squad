@@ -8,7 +8,18 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
-import { A11Y_DIR, BASE, ROOT, ROUTES, gotoRoute, newPage, pw, runAxe, vname, type Variant } from './lib';
+import {
+  A11Y_DIR,
+  BASE,
+  ROOT,
+  ROUTES,
+  gotoRoute,
+  newPage,
+  pw,
+  runAxe,
+  vname,
+  type Variant,
+} from './lib';
 import { specs } from '../../apps/web-host/e2e-a11y/specs';
 
 const args = new Set(process.argv.slice(2));
@@ -51,23 +62,38 @@ async function main() {
         await gotoRoute(page, r);
         for (const x of await runAxe(page)) {
           found[`${r.id}|${vname(v)}|${x.id}`] = x.nodes.length;
-          if (args.has('--verbose')) console.log(r.id, vname(v), x.id, x.nodes.length, x.nodes[0]?.target.join(' '));
+          if (args.has('--verbose'))
+            console.log(r.id, vname(v), x.id, x.nodes.length, x.nodes[0]?.target.join(' '));
         }
         await ctx.close();
       }
-    const base: Record<string, number> = existsSync(BASELINE) ? JSON.parse(readFileSync(BASELINE, 'utf8')) : {};
+    const base: Record<string, number> = existsSync(BASELINE)
+      ? JSON.parse(readFileSync(BASELINE, 'utf8'))
+      : {};
     if (args.has('--update-baseline')) {
-      writeFileSync(BASELINE, JSON.stringify(Object.fromEntries(Object.entries(found).sort()), null, 2) + '\n');
+      writeFileSync(
+        BASELINE,
+        JSON.stringify(Object.fromEntries(Object.entries(found).sort()), null, 2) + '\n',
+      );
       console.log(`baseline written: ${Object.keys(found).length} entries`);
     } else {
       for (const [k, n] of Object.entries(found))
         if (!(k in base)) failures.push(`NEW axe violation ${k} (${n} nodes)`);
         else if (n > base[k]!) failures.push(`WORSE axe violation ${k}: ${base[k]} -> ${n} nodes`);
       const fixed = Object.keys(base).filter((k) => !(k in found));
-      if (fixed.length) console.log(`note: ${fixed.length} baseline entries no longer occur; run --update-baseline to ratchet`);
+      if (fixed.length)
+        console.log(
+          `note: ${fixed.length} baseline entries no longer occur; run --update-baseline to ratchet`,
+        );
     }
     for (const s of specs) {
-      const { ctx, page } = await newPage(browser, { w: s.viewport?.w ?? 1280, h: s.viewport?.h ?? 800, theme: 'dark', calm: false, reduced: false });
+      const { ctx, page } = await newPage(browser, {
+        w: s.viewport?.w ?? 1280,
+        h: s.viewport?.h ?? 800,
+        theme: 'dark',
+        calm: false,
+        reduced: false,
+      });
       let err: string | undefined;
       try {
         await s.run(page);
@@ -77,8 +103,11 @@ async function main() {
       await ctx.close();
       const tag = s.knownFail ? ` [known-fail ${s.knownFail}]` : '';
       if (err && !s.knownFail) failures.push(`SPEC FAIL ${s.name}: ${err}`);
-      else if (!err && s.knownFail) failures.push(`SPEC NOW PASSES ${s.name}: remove knownFail ${s.knownFail}`);
-      console.log(`${err ? (s.knownFail ? 'xfail' : 'FAIL ') : s.knownFail ? 'XPASS' : 'pass '} ${s.name}${tag}${err ? '  -> ' + err : ''}`);
+      else if (!err && s.knownFail)
+        failures.push(`SPEC NOW PASSES ${s.name}: remove knownFail ${s.knownFail}`);
+      console.log(
+        `${err ? (s.knownFail ? 'xfail' : 'FAIL ') : s.knownFail ? 'XPASS' : 'pass '} ${s.name}${tag}${err ? '  -> ' + err : ''}`,
+      );
     }
   } finally {
     await browser.close();
