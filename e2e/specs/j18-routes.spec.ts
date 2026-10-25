@@ -1,6 +1,6 @@
 // J18: every route renders content (a page, a bounded loading state or an error state with Retry), never a blank shell,
 // and the document title, main landmark and nav highlight follow the router location. Fresh contexts, real hub.
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Browser, type Page } from '@playwright/test';
 import { HUB, WEB } from '../lib/env';
 import { apiLogin } from '../lib/helpers';
 
@@ -16,7 +16,7 @@ const ROUTES: [string, string][] = [
   ['/squad/status', 'Status'],
 ];
 
-async function freshPage(browser: import('@playwright/test').Browser, token: string | null) {
+async function freshPage(browser: Browser, token: string | null) {
   const ctx = await browser.newContext({
     baseURL: WEB,
     viewport: { width: 1280, height: 800 },
@@ -133,7 +133,9 @@ test.describe('j18 routes never render a blank shell', () => {
     }
   });
 
-  test('trips settles into a trip or the empty state (never loading forever)', async ({ browser }) => {
+  test('trips settles into a trip or the empty state (never loading forever)', async ({
+    browser,
+  }) => {
     const { ctx, page } = await freshPage(browser, token);
     await page.goto('/squad/trips');
     await expectSettled(page, 'Trip');

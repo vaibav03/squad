@@ -76,7 +76,9 @@ const probe = () => {
   const text = (el) => {
     if (!el) return '';
     const c = el.cloneNode(true);
-    c.querySelectorAll('[data-agentation],[class*="agentation" i],[aria-label="Notifications"]').forEach((n) => n.remove());
+    c.querySelectorAll(
+      '[data-agentation],[class*="agentation" i],[aria-label="Notifications"]',
+    ).forEach((n) => n.remove());
     return (c.innerText ?? c.textContent ?? '').replace(/\s+/g, ' ').trim();
   };
   const scope = main ?? root;
@@ -88,7 +90,9 @@ const probe = () => {
     path: location.pathname,
     hasMain: !!main,
     mainLabel: main?.getAttribute('aria-label') ?? null,
-    current: [...document.querySelectorAll('nav a[aria-current="page"]')].map((a) => a.textContent.trim()),
+    current: [...document.querySelectorAll('nav a[aria-current="page"]')].map((a) =>
+      a.textContent.trim(),
+    ),
     text: t.slice(0, 300),
     textLen: t.length,
     canvas,
@@ -113,8 +117,15 @@ async function settle(page, expectTitle, deadline = DEADLINE) {
         const why = [];
         // hub down or session gone: the sign-in / offline-with-Retry screen is the correct, non-blank outcome
         const signIn = (COND === 'down' || COND === '401') && again.title.startsWith('Welcome');
-        if (!signIn && expectTitle && !again.title.startsWith(expectTitle)) why.push(`title=${again.title}`);
-        if (!signIn && expectTitle && again.hasMain && again.mainLabel && again.mainLabel !== expectTitle)
+        if (!signIn && expectTitle && !again.title.startsWith(expectTitle))
+          why.push(`title=${again.title}`);
+        if (
+          !signIn &&
+          expectTitle &&
+          again.hasMain &&
+          again.mainLabel &&
+          again.mainLabel !== expectTitle
+        )
           why.push(`main=${again.mainLabel}`);
         return { ok: why.length === 0, ms: Date.now() - t0, snap: again, why: why.join(';') };
       }
@@ -122,7 +133,12 @@ async function settle(page, expectTitle, deadline = DEADLINE) {
     await sleep(250);
   }
   const final = await page.evaluate(probe).catch(() => snap);
-  const kind = !final || (final.rootLen === 0 && !final.canvas) ? 'blank' : final.loading || final.skeleton ? 'stuck' : 'other';
+  const kind =
+    !final || (final.rootLen === 0 && !final.canvas)
+      ? 'blank'
+      : final.loading || final.skeleton
+        ? 'stuck'
+        : 'other';
   return { ok: false, ms: Date.now() - t0, snap: final, why: kind };
 }
 
@@ -144,13 +160,21 @@ async function applyCond(ctx, page) {
     });
   // data endpoints only: sign-in and the account work, everything else hangs (dataslow) or answers 500 (data500)
   const accountPath = (u) =>
-    u === '/health' || u === '/v1/status' || u.startsWith('/v1/auth/') || u === '/v1/me' || u === '/v1/squads';
+    u === '/health' ||
+    u === '/v1/status' ||
+    u.startsWith('/v1/auth/') ||
+    u === '/v1/me' ||
+    u === '/v1/squads';
   if (COND === 'dataslow' || COND === 'data500')
     await ctx.route(hubRe, async (route) => {
       const u = new URL(route.request().url()).pathname;
       if (accountPath(u)) return route.continue();
       if (COND === 'data500')
-        return route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":{"code":"boom"}}' });
+        return route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: '{"error":{"code":"boom"}}',
+        });
       await sleep(40000);
       route.abort('timedout').catch(() => undefined);
     });
@@ -159,13 +183,27 @@ async function applyCond(ctx, page) {
     await ctx.route(hubRe, (route) => {
       const u = new URL(route.request().url()).pathname;
       if (u === '/health' || u.startsWith('/v1/auth/dev')) return route.continue();
-      return route.fulfill({ status: 401, contentType: 'application/json', body: '{"error":{"code":"unauthorized"}}' });
+      return route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: '{"error":{"code":"unauthorized"}}',
+      });
     });
 }
 
 async function fresh(browser, token) {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
-  if (token) await ctx.addInitScript((t) => { try { if (!localStorage.getItem('squad.token')) localStorage.setItem('squad.token', t); } catch {} }, token);
+  const ctx = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    reducedMotion: 'reduce',
+  });
+  if (token)
+    await ctx.addInitScript((t) => {
+      try {
+        if (!localStorage.getItem('squad.token')) localStorage.setItem('squad.token', t);
+      } catch {
+        /* storage unavailable */
+      }
+    }, token);
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -176,7 +214,9 @@ async function fresh(browser, token) {
 async function runRoute(browser, token, [path, title]) {
   const { ctx, page, errors } = await fresh(browser, token);
   try {
-    await page.goto(`${WEB}${path}`, { waitUntil: 'commit', timeout: 20000 }).catch(() => undefined);
+    await page
+      .goto(`${WEB}${path}`, { waitUntil: 'commit', timeout: 20000 })
+      .catch(() => undefined);
     const r = await settle(page, WHO === 'anon' ? null : title);
     return { name: path, ...r, errors };
   } finally {
@@ -193,21 +233,46 @@ async function runSeq(browser, token) {
     steps.push({ name, ...r });
   };
   try {
-    await step('goto setup', 'Set up', () => page.goto(`${WEB}/squad/setup`, { waitUntil: 'commit' }));
+    await step('goto setup', 'Set up', () =>
+      page.goto(`${WEB}/squad/setup`, { waitUntil: 'commit' }),
+    );
     await step('typed /squad', 'Home', () => page.goto(`${WEB}/squad`, { waitUntil: 'commit' }));
-    await step('link village', 'Village', () => page.getByRole('link', { name: /^Village$/ }).first().click());
-    await step('link setup', 'Set up', () => page.locator('a[href="/squad/setup"]').first().click());
+    await step('link village', 'Village', () =>
+      page
+        .getByRole('link', { name: /^Village$/ })
+        .first()
+        .click(),
+    );
+    await step('link setup', 'Set up', () =>
+      page.locator('a[href="/squad/setup"]').first().click(),
+    );
     await step('link home', 'Home', () => page.locator('a[href="/squad"]').first().click());
-    await step('link village 2', 'Village', () => page.locator('a[href="/squad/village"]').first().click());
-    await step('link courses', 'Courses', () => page.locator('a[href="/squad/courses"]').first().click());
+    await step('link village 2', 'Village', () =>
+      page.locator('a[href="/squad/village"]').first().click(),
+    );
+    await step('link courses', 'Courses', () =>
+      page.locator('a[href="/squad/courses"]').first().click(),
+    );
     await step('back', 'Village', () => page.goBack());
     await step('back 2', 'Home', () => page.goBack());
     await step('forward', 'Village', () => page.goForward());
     await step('refresh', 'Village', () => page.reload({ waitUntil: 'commit' }));
-    await step('mastery redirect', 'Village', () => page.goto(`${WEB}/squad/mastery`, { waitUntil: 'commit' }));
-    await step('mastery->courses', 'Courses', () => page.goto(`${WEB}/squad/courses`, { waitUntil: 'commit' }));
+    await step('mastery redirect', 'Village', () =>
+      page.goto(`${WEB}/squad/mastery`, { waitUntil: 'commit' }),
+    );
+    await step('mastery->courses', 'Courses', () =>
+      page.goto(`${WEB}/squad/courses`, { waitUntil: 'commit' }),
+    );
     const bad = steps.find((s) => !s.ok);
-    return { name: 'seq', ok: !bad, ms: steps.reduce((a, s) => a + s.ms, 0), why: bad ? `${bad.name}: ${bad.why}` : '', snap: bad?.snap, errors, steps };
+    return {
+      name: 'seq',
+      ok: !bad,
+      ms: steps.reduce((a, s) => a + s.ms, 0),
+      why: bad ? `${bad.name}: ${bad.why}` : '',
+      snap: bad?.snap,
+      errors,
+      steps,
+    };
   } finally {
     await ctx.close();
   }
@@ -231,7 +296,9 @@ const browser = await chromium.launch();
 try {
   const token = WHO === 'anon' ? null : WHO === 'seed' ? await seededToken() : await newAccount();
   const jobs = [];
-  if (SCEN === 'routes') for (let i = 0; i < N; i++) for (const r of ROUTES) jobs.push(() => runRoute(browser, token, r));
+  if (SCEN === 'routes')
+    for (let i = 0; i < N; i++)
+      for (const r of ROUTES) jobs.push(() => runRoute(browser, token, r));
   else for (let i = 0; i < N; i++) jobs.push(() => runSeq(browser, token));
   const res = await pool(jobs, PAR, (f) => f());
   const by = {};
@@ -240,17 +307,33 @@ try {
     b.n++;
     if (r.ok) b.ok++;
     else {
-      const k = ['blank', 'stuck'].includes(r.why) ? r.why : /title|main/.test(r.why) ? 'other' : r.why.split(':')[1]?.trim() === 'blank' ? 'blank' : r.why.split(':')[1]?.trim() === 'stuck' ? 'stuck' : 'other';
+      const k = ['blank', 'stuck'].includes(r.why)
+        ? r.why
+        : /title|main/.test(r.why)
+          ? 'other'
+          : r.why.split(':')[1]?.trim() === 'blank'
+            ? 'blank'
+            : r.why.split(':')[1]?.trim() === 'stuck'
+              ? 'stuck'
+              : 'other';
       b[k]++;
       b.sample = `${r.why} | ${r.snap?.title} | ${r.snap?.text?.slice(0, 80)}`;
     }
     b.maxMs = Math.max(b.maxMs, r.ms);
-    if (process.env.DEBUG_SNAP) console.error(r.name, r.ok, r.ms, JSON.stringify(r.snap?.text?.slice(0, 120)));
+    if (process.env.DEBUG_SNAP)
+      console.error(r.name, r.ok, r.ms, JSON.stringify(r.snap?.text?.slice(0, 120)));
   }
   const total = res.length;
   const ok = res.filter((r) => r.ok).length;
-  console.log(JSON.stringify({ who: WHO, cond: COND, scenario: SCEN, total, ok, bad: total - ok, by }, null, 0));
-  if (process.argv.includes('--verbose')) for (const [k, v] of Object.entries(by)) console.log(' ', k, JSON.stringify(v));
+  console.log(
+    JSON.stringify(
+      { who: WHO, cond: COND, scenario: SCEN, total, ok, bad: total - ok, by },
+      null,
+      0,
+    ),
+  );
+  if (process.argv.includes('--verbose'))
+    for (const [k, v] of Object.entries(by)) console.log(' ', k, JSON.stringify(v));
 } finally {
   await browser.close();
 }
