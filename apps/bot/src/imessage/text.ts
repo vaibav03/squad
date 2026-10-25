@@ -176,6 +176,17 @@ export function renderForIMessage(msg: RenderableMessage, o: RenderOptions = {})
         .filter(Boolean)
         .join('\n'),
     );
+  } else if (card?.type === 'plan') {
+    blocks.push(
+      [
+        body,
+        /Open the plan in Squad/i.test(body)
+          ? ''
+          : `Open the plan in Squad${o.link ? `: ${o.link}` : ' (in the Squad app)'}`,
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    );
   } else if (body) blocks.push(body);
 
   if (msg.citations?.length && card?.type !== 'council' && card?.type !== 'quiz') {

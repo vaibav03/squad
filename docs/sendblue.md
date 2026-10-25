@@ -232,3 +232,20 @@ Absent for Sendblue: `SENDBLUE_API_KEY`, `SENDBLUE_API_SECRET`, `SENDBLUE_FROM_N
 Absent for Google (owned by feature/integration-journey): `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`,
 `GOOGLE_OAUTH_REDIRECT_URI` (scopes are that branch's). Sendblue account scopes: an API key pair, a dedicated or shared line,
 and (for groups) a plan with group messaging.
+
+## 7. Demo mode: join 123456, canonical timeline, echo rules
+
+* **Demo join.** Only when `HUB_ALLOW_DEMO=1` and `HUB_DEMO_CODE` is 6 digits (`config.demoCode`; default demo value 123456), `join 123456`
+  in an allowlisted Sendblue group binds that group to the demo squad `sq_demo`, sets the squad's mirror mode to `full`, and links the
+  sender handle (hash only) to the demo student `s_ana` (table `imsg_demo_links`, honoured only while demo mode is on). With demo mode
+  off the code is ignored entirely. Normal invite-code joining is unchanged. @cubbie from that handle goes through the same
+  `deps.chat.send` as the web, so the answer carries the same sources, Demo provenance and citations. The stored message shows the demo
+  student with the "via iMessage (Sendblue)" transport label; replies keep the "demo data" footer.
+* **Canonical timeline.** Every accepted inbound message from an allowlisted, bound group is stored in `group:<squadId>` with
+  `transport: imessage`, `provider: sendblue` and the Sendblue `message_handle` as origin id (`imsg_xref` makes webhook redelivery a
+  no-op). A linked sender uses their account; an unlinked sender is stored as a guest labelled `iMessage ••••<last4>` (never the full number).
+  Unknown or non-allowlisted groups/handles: 200, nothing stored, nothing answered.
+* **Mirror out / echo.** Web human messages (mirror `full` for the demo squad), @cubbie replies and plan cards go out as text to the
+  bound group once per message (outbound queue keyed by message id; plan cards end with `Open the plan in Squad: <link>`). iMessage-origin
+  messages never mirror back, and a mirrored `Name (via Squad): ...` copy returning as an inbound webhook is dropped as an echo.
+* **Degraded.** Dry run or a failed send leaves the message in the web timeline with `Dry run, not sent` / `Failed` + Retry.

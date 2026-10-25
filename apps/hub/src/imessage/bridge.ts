@@ -26,7 +26,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { HubDeps } from '../types';
 import { activateSquad, announceMember } from '../routes/squads';
-import { parseCommand } from './commands';
+import { parseCommand, stripMention } from './commands';
 import { maskHandle, type ImessageStore } from './store';
 import { createImessageSync, BACKFILL_ANSWER_MAX_MS, type ImessageSync } from './sync';
 import { DELIVERY_LABELS, absolutizeLinks } from '@squad/core';
@@ -127,10 +127,21 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
     };
   };
 
+  // demo handle -> roster student links (the roster student s_ana has no acct_users row, so imsg_links' FK cannot hold it)
+  deps.db.exec(
+    'CREATE TABLE IF NOT EXISTS imsg_demo_links(handle_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, linked_at INTEGER NOT NULL)',
+  );
   const userByHash = (hash: string): string | undefined => {
     const r = deps.db.prepare('SELECT id FROM acct_users WHERE contact_hash=?').get(hash) as
       { id: string } | undefined;
-    return r?.id ?? store.linkedUser(hash);
+    if (r?.id) return r.id;
+    const l = store.linkedUser(hash);
+    if (l) return l;
+    if (!deps.config.demoCode) return undefined; // demo links only count while demo mode is on
+    return (
+      deps.db.prepare('SELECT user_id FROM imsg_demo_links WHERE handle_hash=?').get(hash) as
+        { user_id: string } | undefined
+    )?.user_id;
   };
   const resolveUser = (handle: string): string | undefined => {
     const id = ident(handle);
@@ -199,6 +210,16 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
     lines.push('Say @cubbie plus your question and I will answer here and in the web chat.');
     return lines.join('\n');
   }
+
+  // ---------- demo join (HUB_ALLOW_DEMO=1 and a 6-digit HUB_DEMO_CODE only; config.demoCode is unset otherwise) ----------
+  const DEMO_SQUAD = 'sq_demo';
+  const DEMO_USER = 's_ana';
+  const isDemoJoin = (text: string): boolean => {
+    const code = deps.config.demoCode;
+    if (!code || !/^\d{6}$/.test(code)) return false;
+    const m = /^join\s+(\d{6})\s*$/i.exec(stripMention(text.trim()).text.trim());
+    return !!m && m[1] === code;
+  };
 
   // ---------- join / leave ----------
   function joinFlow(
@@ -355,6 +376,37 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
     const bound = binding && deps.directory.squad(binding.squadId) ? binding : undefined;
     if (binding && !bound) store.unbind(m.chatGuid); // the squad was disbanded
 
+    if (id && isDemoJoin(m.text)) {
+      if (bound) {
+        say(
+          m.chatGuid,
+          bound.squadId === DEMO_SQUAD
+            ? 'This chat is already linked to the demo squad.'
+            : `This chat is already linked to ${squadName(bound.squadId)}.`,
+        );
+        return;
+      }
+      if (!isMember(DEMO_SQUAD, DEMO_USER)) {
+        say(m.chatGuid, 'The demo squad is not available.');
+        return;
+      }
+      // demo only: this handle acts as the demo student, so @cubbie sees the same (Demo) context as the web
+      if (!userId)
+        deps.db
+          .prepare(
+            'INSERT INTO imsg_demo_links(handle_hash,user_id,linked_at) VALUES(?,?,?) ON CONFLICT(handle_hash) DO UPDATE SET user_id=excluded.user_id',
+          )
+          .run(id.hash, DEMO_USER, now());
+      store.bind(m.chatGuid, DEMO_SQUAD, userId ?? DEMO_USER);
+      store.setSyncSettings(DEMO_SQUAD, { mirror: 'full' });
+      log.info('imessage: chat bound (demo)', { squadId: DEMO_SQUAD });
+      say(
+        m.chatGuid,
+        `${summary(m.chatGuid, DEMO_SQUAD)}\nDemo mode: answers use the sample demo data.`,
+      );
+      return;
+    }
+
     if (cmd?.kind === 'join') {
       if (!userId) {
         say(
@@ -414,7 +466,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
           m.chatGuid,
           `I cannot match that number to a Squad account yet. Text me directly for a code, or sign up at ${web}/welcome.`,
         );
-      if (!mention) postUnlinked(m, id, bound.squadId, h);
+      if (!mention || o.provider === 'sendblue') postUnlinked(m, id, bound.squadId, h);
       return;
     }
     if (!isMember(bound.squadId, userId)) {
@@ -423,7 +475,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
           m.chatGuid,
           `${nameOf(userId)}, you are not in ${squadName(bound.squadId)} yet. Send: join <invite code>`,
         );
-      if (!mention) postUnlinked(m, id, bound.squadId, h);
+      if (!mention || o.provider === 'sendblue') postUnlinked(m, id, bound.squadId, h);
       return;
     }
     handles.set(userId, m.sender); // lets a private reply (the unknown-tag help DM) reach this person's own 1:1
@@ -435,8 +487,13 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
    * thread as read-only context under a masked handle label (never the raw number), not routed to the bot.
    */
   function postUnlinked(m: GatewayInbound, id: Ident | undefined, squadId: string, h: Handling) {
-    if (!store.syncSettings(squadId).showUnlinked) return;
-    const label = id?.hint ?? 'Someone';
+    const canonical = o.provider === 'sendblue'; // Sendblue: every accepted group message is kept on the web
+    if (!canonical && !store.syncSettings(squadId).showUnlinked) return;
+    const label = canonical
+      ? id?.channel === 'phone'
+        ? `iMessage \u2022\u2022\u2022\u2022${id.normalized.slice(-4)}`
+        : 'iMessage guest'
+      : (id?.hint ?? 'Someone');
     const chatId = `group:${squadId}`;
     const a = sync.intakeAttachments(m.attachments, (b, mime, name) =>
       saveAdopted(b, mime, name, chatId),
