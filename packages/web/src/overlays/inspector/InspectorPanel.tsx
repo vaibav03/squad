@@ -71,7 +71,6 @@ export function InspectorPanel({ store, calm, returnFocusTo, hub, mode = 'live' 
     };
     document.addEventListener('keydown', onKey, true);
     return () => document.removeEventListener('keydown', onKey, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, store]);
 
   // Opened from the keyboard (focus is on a chip, not the stage or body): move focus to the panel title.
