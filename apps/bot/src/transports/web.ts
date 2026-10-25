@@ -43,19 +43,6 @@ export interface WebOutbound {
   provenance?: ProvenanceHint;
 }
 
-const citeKey = (c: ChatCitation) =>
-  c.source ? `${c.source.kind}/${c.source.id}#${c.source.anchor ?? ''}` : `${c.file}#${c.page}`;
-/** Marker citations first, then the structured ones a skill attached (verified sources), without duplicates. */
-function mergeCitations(a: ChatCitation[], b: ChatCitation[] | undefined): ChatCitation[] {
-  const seen = new Set<string>();
-  return [...a, ...(b ?? [])].filter((c) => {
-    const k = citeKey(c);
-    if (seen.has(k)) return false;
-    seen.add(k);
-    return true;
-  });
-}
-
 export interface WebTransportOptions {
   /** Every bot message, in send order. May be async; send resolves when it does. */
   onMessage(o: WebOutbound): void | Promise<void>;
@@ -108,7 +95,7 @@ export class WebTransport implements Transport {
       personaName: persona.name,
       ...(persona.emoji ? { emoji: persona.emoji } : {}),
       text,
-      citations: quiz ? [] : mergeCitations(citations, o.citations),
+      citations: quiz ? [] : mergeCitations(o.citations ?? [], citations),
       ...(o.provenance ? { provenance: o.provenance } : {}),
       attachments: o.attachments ?? [],
       ...(council
