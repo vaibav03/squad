@@ -55,7 +55,7 @@ export const ChatCardSchema = z.discriminatedUnion('type', [
   z.strictObject({
     type: z.literal('council'),
     runId: z.string().regex(/^cn_[a-z0-9]{12}$/),
-    question: z.string().max(600),
+    question: z.string().max(600).optional(),
   }),
 ]);
 export type ChatCard = z.infer<typeof ChatCardSchema>;
@@ -109,7 +109,10 @@ export type ChatUpdate = z.infer<typeof ChatUpdateSchema>;
 export const ChatSendBodySchema = z.strictObject({
   chatId: ChatIdSchema,
   text: z.string().max(4000),
-  attachments: z.array(z.strictObject({ id: z.string() })).max(4).optional(),
+  attachments: z
+    .array(z.strictObject({ id: z.string() }))
+    .max(4)
+    .optional(),
 });
 export type ChatSendBody = z.infer<typeof ChatSendBodySchema>;
 

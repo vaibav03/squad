@@ -67,3 +67,15 @@ export function parseQuizCard(text: string): { card: ChatCard; text: string } | 
     },
   };
 }
+
+const COUNCIL_RUN = /\n?\(council run (cn_[a-z0-9]{12})\)\s*$/;
+
+/**
+ * The council skill ends its reply with `(council run cn_xxxxxxxxxxxx)`; the web client renders the structured result
+ * (`GET /v1/council/:id`) instead. The text keeps the plain verdict so the message still reads without the card.
+ */
+export function parseCouncilCard(text: string): { card: ChatCard; text: string } | undefined {
+  const m = COUNCIL_RUN.exec(text);
+  if (!m) return undefined;
+  return { text: text.slice(0, m.index).trimEnd(), card: { type: 'council', runId: m[1]! } };
+}
