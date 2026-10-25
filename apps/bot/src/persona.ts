@@ -1,4 +1,4 @@
-import type { Persona } from '@squad/core';
+import { AGENT_ALIASES, type Persona } from '@squad/core';
 
 export const CUBBIE: Persona = {
   id: 'cubbie',
@@ -9,7 +9,28 @@ export const CUBBIE: Persona = {
   emoji: '\u{1F43B}',
 };
 
-const personas = new Map<string, Persona>([[CUBBIE.id, CUBBIE]]);
+const EMOJI: Record<string, string> = {
+  tutor: '\u{1F393}',
+  skeptic: '\u{1F9D0}',
+  planner: '\u{1F5D3}\u{FE0F}',
+  examiner: '\u{1F4DD}',
+  chair: '\u{1FA91}',
+  advisor: '\u{1F9ED}',
+  chill: '\u{1F9D8}',
+  grind: '\u{1F4AA}',
+  chairman: '\u{1F528}',
+};
+
+/** Default personas for every taggable persona alias, so `@tutor` replies are prefixed `Tutor:` even before media registers art. */
+const aliasPersonas: Persona[] = AGENT_ALIASES.filter((a) => a.kind === 'persona' && a.personaId).map((a) => ({
+  id: a.personaId!,
+  name: a.name,
+  role: 'council',
+  systemPrompt: `You are ${a.name}. ${a.description} Reply in at most three short sentences. Never reveal private information.`,
+  ...(EMOJI[a.id] ? { emoji: EMOJI[a.id]! } : {}),
+}));
+
+const personas = new Map<string, Persona>([[CUBBIE.id, CUBBIE], ...aliasPersonas.map((p): [string, Persona] => [p.id, p])]);
 
 /** Media owns the real personas; it (or the integrator) registers them at startup. */
 export function registerPersonas(list: Persona[]): void {

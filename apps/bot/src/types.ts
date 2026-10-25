@@ -58,7 +58,8 @@ export type DecisionReason =
   | 'no_skills'
   | 'confirm_reply' // DM consumed by a pending askConfirm
   | 'own_message'
-  | 'duplicate';
+  | 'duplicate'
+  | 'unknown_mention'; // `@word` that is not an agent: a help DM (rate limited), never a group reply
 
 export interface Decision {
   action: 'run' | 'quiet';
