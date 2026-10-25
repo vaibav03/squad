@@ -149,7 +149,10 @@ export function runImport(o: ImportOpts): ImportReport {
     const dir = join(o.out, r.id);
     mkdirSync(dir, { recursive: true });
     const files: Partial<Record<LayerName, string>> = {};
-    for (const [name, raster] of Object.entries(layers) as [LayerName, NonNullable<(typeof layers)[LayerName]>][]) {
+    for (const [name, raster] of Object.entries(layers) as [
+      LayerName,
+      NonNullable<(typeof layers)[LayerName]>,
+    ][]) {
       writeFileSync(join(dir, `${name}.png`), encodePng(raster));
       files[name] = `${name}.png`;
       rep.written.push(`${r.id}/${name}.png`);

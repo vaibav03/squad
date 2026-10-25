@@ -97,7 +97,14 @@ export function paintInterior(s: CouncilHallState, o: PaintOpts): Raster {
   if (s.lantern !== 'off') {
     const f = lanternFrame(s, o);
     put(r, { ...A.sheet('ui.lantern-dissent', f), ax: 5, ay: 0 }, L.lantern[0], L.lantern[1]);
-    r.glow(L.lantern[0], L.lantern[1] + 11, 14, s.lantern === 'flicker' ? 'alert' : 'glow', f === 0 ? 0.12 : 0.38, 3);
+    r.glow(
+      L.lantern[0],
+      L.lantern[1] + 11,
+      14,
+      s.lantern === 'flicker' ? 'alert' : 'glow',
+      f === 0 ? 0.12 : 0.38,
+      3,
+    );
   }
   if (s.lantern === 'flicker') {
     const t = 'UNCERTAIN, ASK YOUR TA';

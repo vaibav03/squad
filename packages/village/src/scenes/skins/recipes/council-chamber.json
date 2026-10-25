@@ -3,10 +3,7 @@
   "scene": "council-hall",
   "title": "Council Chamber (Modern Interiors)",
   "credit": "World art: Modern Interiors by LimeZu",
-  "size": [
-    224,
-    128
-  ],
+  "size": [224, 128],
   "sheets": {
     "conf": "1_Interiors/16x16/Theme_Sorter/13_Conference_Hall_16x16.png",
     "generic": "1_Interiors/16x16/Theme_Sorter/1_Generic_16x16.png",
@@ -329,20 +326,10 @@
       "x": 112,
       "y": 89
     },
-    "rowX": [
-      50,
-      112,
-      174
-    ],
+    "rowX": [50, 112, 174],
     "rowTip": 66,
-    "lantern": [
-      112,
-      30
-    ],
-    "planSheet": [
-      37,
-      4
-    ],
+    "lantern": [112, 30],
+    "planSheet": [37, 4],
     "floorRing": false,
     "entry": {
       "x": 112,

@@ -21,7 +21,9 @@ export function checkSpriteBounds(
     const d = dims(s.sheet);
     if (!d) continue;
     if (s.x + s.w > d.w || s.y + s.h > d.h)
-      out.push(`sprite ${name}: ${s.w}x${s.h} at ${s.x},${s.y} is outside ${recipe.sheets[s.sheet]} (${d.w}x${d.h})`);
+      out.push(
+        `sprite ${name}: ${s.w}x${s.h} at ${s.x},${s.y} is outside ${recipe.sheets[s.sheet]} (${d.w}x${d.h})`,
+      );
   }
   return out;
 }
@@ -46,7 +48,9 @@ export function compose(recipe: Recipe, load: SheetLoader): Partial<Record<Layer
       if (!s) throw new Error(`recipe ${recipe.id}: unknown sprite ${name}`);
       const sh = sheet(s.sheet);
       if (s.x + s.w > sh.w || s.y + s.h > sh.h)
-        throw new Error(`recipe ${recipe.id}: sprite ${name} is outside its sheet (${sh.w}x${sh.h})`);
+        throw new Error(
+          `recipe ${recipe.id}: sprite ${name} is outside its sheet (${sh.w}x${sh.h})`,
+        );
       c = sh.crop(s.x, s.y, s.w, s.h);
       cut.set(name, c);
     }

@@ -59,7 +59,9 @@ const out = resolve(opt('out') ?? DEFAULT_OUT);
 
 try {
   const rep = runImport({ source, recipes, out, dryRun });
-  console.log(`pack: ${rep.source}\nout:  ${rep.out}${dryRun ? '  (dry run, nothing written)' : ''}`);
+  console.log(
+    `pack: ${rep.source}\nout:  ${rep.out}${dryRun ? '  (dry run, nothing written)' : ''}`,
+  );
   for (const r of rep.recipes) {
     console.log(`\n${r.id}: ${r.files.length} pack files`);
     for (const f of r.files) console.log(`  ${f.found ? 'ok     ' : 'MISSING'} ${f.path}`);

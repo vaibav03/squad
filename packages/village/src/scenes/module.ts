@@ -240,7 +240,12 @@ async function loadSkins(ctx: HostCtx): Promise<Map<string, LoadedSkin>> {
       });
     }
     publishActiveSkins(
-      [...out.values()].map((k) => ({ scene: k.scene, id: k.id, title: k.title, credit: k.credit })),
+      [...out.values()].map((k) => ({
+        scene: k.scene,
+        id: k.id,
+        title: k.title,
+        credit: k.credit,
+      })),
     );
   } catch {
     out.clear();
