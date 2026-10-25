@@ -325,7 +325,7 @@ export function createChatHub(
         answering.add(message.id);
         const answers = engine.mentions(text, chatId);
         const run = async () => {
-          const off = answers ? typingStart(chatId, 'cubbie', 'Cubbie') : () => {};
+          const off = answers ? typingStart(chatId, 'cubbie', 'Squad') : () => {};
           try {
             // one bot turn per stored message: the answers posted inside it are keyed to this message id
             await trigger.run({ id: message.id }, () =>
@@ -415,7 +415,7 @@ export function createChatHub(
         attachments = c.attachments;
         paths = c.paths;
       }
-      // "Ask Cubbie" context: every field is re-derived from the store through the viewer's read gate.
+      // "Ask Squad" context: every field is re-derived from the store through the viewer's read gate.
       const ctxFull: ChatContextRef[] = [];
       if (body.context?.length) {
         const cv = { studentId: viewer.studentId, squadIds: [viewer.squadId] };
@@ -624,7 +624,7 @@ export function createChatHub(
           id: group,
           kind: 'group',
           title: deps.directory.squad(viewer.squadId)?.name ?? 'Squad',
-          ...(count !== null ? { subtitle: `${plural(count, 'member')} and Cubbie` } : {}),
+          ...(count !== null ? { subtitle: `${plural(count, 'member')} and Squad` } : {}),
           private: false,
           members: members.map((s) => ({ id: s.id, name: s.name })),
           ...(lg ? { last: lg } : {}),
@@ -632,8 +632,8 @@ export function createChatHub(
         {
           id: dm,
           kind: 'dm',
-          title: 'Cubbie',
-          subtitle: 'Only you and Cubbie',
+          title: 'Squad',
+          subtitle: 'Only you and Squad',
           private: true,
           members: [{ id: viewer.studentId, name: nameOf(viewer.studentId) }],
           ...(ld ? { last: ld } : {}),

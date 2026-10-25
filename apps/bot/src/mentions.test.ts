@@ -23,12 +23,12 @@ const texts = (t: ReturnType<typeof mk>, to?: string) =>
   t.sent.filter((s) => !to || s.chatId === to).map((s) => s.text ?? '');
 
 describe('explicit agent mentions', () => {
-  it('@cubbie and @cubbi both reach the router (Cubbie-prefixed)', async () => {
+  it('@cubbie and @cubbi both reach the router (Squad-prefixed)', async () => {
     for (const w of ['@cubbie', '@Cubbi', '@CUBBIE', '@squad']) {
       const t = mk();
       await t.say('s_ana', G, `${w} what is a z-score?`);
       expect(texts(t, G)).toHaveLength(1);
-      expect(texts(t, G)[0]).toMatch(/^\u{1F43B} Cubbie: /u);
+      expect(texts(t, G)[0]).toMatch(/^\u{1F43B} Squad: /u);
     }
   });
   it('@tutor always replies, persona-prefixed, even with a low policy score', async () => {
@@ -37,7 +37,7 @@ describe('explicit agent mentions', () => {
     expect(r.decision).toMatchObject({ action: 'run', reason: 'mentioned' });
     expect(texts(t, G)).toHaveLength(1);
     expect(texts(t, G)[0]).toMatch(/Tutor: /);
-    expect(texts(t, G)[0]).not.toMatch(/Cubbie/);
+    expect(texts(t, G)[0]).not.toMatch(/Squad/);
   });
   it('teacher is a tutor alias; chairman and chill and grind have their own voice', async () => {
     const t = mk();
@@ -76,7 +76,7 @@ describe('explicit agent mentions', () => {
     await t.say('s_ana', G, '@cubbi');
     expect(texts(t, G)).toHaveLength(1);
     expect(texts(t, G)[0]).toContain('What do you need?');
-    expect(texts(t, G)[0]).toMatch(/Cubbie: /);
+    expect(texts(t, G)[0]).toMatch(/Squad: /);
   });
   it('works in a DM too', async () => {
     const t = mk();

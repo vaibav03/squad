@@ -24,11 +24,11 @@ describe('activeMentionQuery', () => {
 });
 
 describe('suggestions', () => {
-  it('Cubbie first for @, @cub and @cubbi', () => {
-    expect(mentionSuggestions('@', 1)[0]!.alias).toBe('cubbie');
+  it('Squad first for @, @cub and @cubbi', () => {
+    expect(mentionSuggestions('@', 1)[0]!.alias).toBe('squad');
     expect(mentionSuggestions('@cub', 4).map((s) => s.alias)).toEqual(['cubbie', 'cubbi']);
     expect(mentionSuggestions('@cubbi', 6).map((s) => s.alias)).toEqual(['cubbie', 'cubbi']);
-    expect(mentionSuggestions('@cubbie', 7)[0]!.agent.name).toBe('Cubbie');
+    expect(mentionSuggestions('@cubbie', 7)[0]!.agent.name).toBe('Squad');
     expect(mentionSuggestions('@tu', 3)[0]!.alias).toBe('tutor');
   });
   it('applySuggestion replaces the typed word and moves the caret', () => {
@@ -47,7 +47,7 @@ describe('<MentionAutocomplete>', () => {
     );
     expect(container.innerHTML).toBe('');
   });
-  it('lists Cubbie first and selects on click', () => {
+  it('lists Squad first and selects on click', () => {
     const onSelect = vi.fn();
     render(<MentionAutocomplete text="@cub" caret={4} onSelect={onSelect} />);
     const opts = screen.getAllByRole('option');

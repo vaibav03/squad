@@ -38,7 +38,7 @@ describe('provider state machine', () => {
     expect([v.state, v.label, v.showConnectPanel, v.cta, v.ctaLabel]).toEqual(['live', 'Live', false, 'review', 'Review imported context']);
     expect(v.lastSyncText).toBe('Last synced 42 s ago (ok)');
     expect(v.text).not.toMatch(/first sync/i);
-    expect(d([c()], { reviewed: true }).ctaLabel).toBe('Ask Cubbie with this');
+    expect(d([c()], { reviewed: true }).ctaLabel).toBe('Ask Squad with this');
     expect(d([c({ sources: { total: 0, byKind: {} } })]).cta).toBe('none');
   });
   it('demo is its own state: label Demo data, never Live', () => {

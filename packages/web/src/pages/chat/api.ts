@@ -37,7 +37,7 @@ export interface ChatApi {
   ): Promise<{ messages: ChatMessage[]; hasMore: boolean }>;
   send(body: ChatSendInput): Promise<ChatMessage>;
   upload(file: File): Promise<ChatAttachment>;
-  /** A hub-verified context ref for "Ask Cubbie" (`groupView` is what a group chat may show). Rejects when unreadable. */
+  /** A hub-verified context ref for "Ask Squad" (`groupView` is what a group chat may show). Rejects when unreadable. */
   contextRef?(
     sourceId: string,
     anchor?: string,

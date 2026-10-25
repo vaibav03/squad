@@ -23,7 +23,7 @@ describe('router', () => {
     const t = createTestBot();
     await t.say('s_ana', 'group:test', '@cubbie hi');
     expect(t.sent).toHaveLength(1);
-    expect(t.sent[0]!.text).toMatch(/^\u{1F43B} Cubbie: /u);
+    expect(t.sent[0]!.text).toMatch(/^\u{1F43B} Squad: /u);
     expect(t.sent[0]!.chatId).toBe('group:test');
   });
 

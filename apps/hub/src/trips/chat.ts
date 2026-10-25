@@ -8,7 +8,7 @@ import type { TripService } from './service';
 
 /** Agents whose tag addresses trip planning (the shared alias table maps cubbie/cubbi/squad to `cubbie`). */
 const TRIP_AGENTS = new Set(['cubbie', 'planner', 'council']);
-/** True when the text tags Cubbie, the planner or the council, by the shared mention parser (typos, emails, quotes and code do not count). */
+/** True when the text tags Squad, the planner or the council, by the shared mention parser (typos, emails, quotes and code do not count). */
 export function addressesTrip(text: string): boolean {
   return parseMentions(text).mentions.some((m) => TRIP_AGENTS.has(m.agent.id));
 }
@@ -36,7 +36,7 @@ export interface TripChatCtx {
   nameOf(id: string): string;
 }
 
-const usage = 'Tell me where: "@cubbie plan a trip to Cabo in March".';
+const usage = 'Tell me where: "@squad plan a trip to Cabo in March".';
 
 export function parseCreate(
   text: string,
@@ -80,7 +80,7 @@ export async function handleTripChat(
     void deps.chat.postBot({
       chatId,
       personaId: 'cubbie',
-      personaName: 'Cubbie',
+      personaName: 'Squad',
       text: t,
       citations: [],
       attachments: [],

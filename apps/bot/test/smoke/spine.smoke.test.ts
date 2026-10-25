@@ -54,7 +54,7 @@ describe('spine smoke', () => {
   it('4. persona prefix on sends; isFromMe/bot messages are ignored', async () => {
     const t = createTestBot();
     await t.say('s_ana', 'group:test', '@cubbie hi');
-    expect(t.sent[0]!.text).toMatch(/^\u{1F43B} Cubbie: /u);
+    expect(t.sent[0]!.text).toMatch(/^\u{1F43B} Squad: /u);
     const r = await t.say('bot', 'group:test', '@cubbie hi', { ts: 1 });
     expect(r.decision.reason).toBe('own_message');
     expect(t.sent).toHaveLength(1);
@@ -88,7 +88,7 @@ describe('spine smoke', () => {
     // the cooldown an exam line speaks again
     const texts = r.sent.map((s) => s.text ?? '');
     expect(texts).toHaveLength(4);
-    expect(texts[0]).toMatch(/Cubbie: /);
+    expect(texts[0]).toMatch(/Squad: /);
     expect(texts[1]).toMatch(/3-question quiz/);
     expect(texts[2]).toMatch(/something went wrong/);
     expect(texts[3]).toMatch(/3-question quiz/);

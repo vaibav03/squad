@@ -80,7 +80,7 @@ describe('chat idempotency', () => {
             hub.deps.chat.postBot({
               chatId: m.chatId,
               personaId: 'cubbie',
-              personaName: 'Cubbie',
+              personaName: 'Squad',
               text: 'Here is the one answer (idempotency three)',
               citations: [],
               attachments: [],
@@ -113,7 +113,7 @@ describe('chat idempotency', () => {
       hub.deps.chat.store.append({
         chatId: GROUP,
         ts: Date.now() + i,
-        sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+        sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
         text: 'Round table plan (legacy dupes)',
         private: false,
         attachments: [],

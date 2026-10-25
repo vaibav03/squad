@@ -37,7 +37,7 @@ export interface InboundMessage {
   mentionsBot: boolean;
   ts: number;
   replyTo?: string;
-  /** Hub-verified items the student attached with "Ask Cubbie" (structured; never parsed from the text). */
+  /** Hub-verified items the student attached with "Ask Squad" (structured; never parsed from the text). */
   context?: ChatContextRef[];
 }
 

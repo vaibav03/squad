@@ -150,7 +150,7 @@ describe('gate and banner UI', () => {
     );
     expect(
       screen.getByRole('heading', {
-        name: 'Connect your learning context so Cubbie can answer from your real courses',
+        name: 'Connect your learning context so Squad can answer from your real courses',
       }),
     ).toBeTruthy();
     expect(

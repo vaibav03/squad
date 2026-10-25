@@ -233,7 +233,7 @@ describe('1:1 demo join', () => {
     const a = dm().find((m) => m.sender.kind === 'persona' && m.citations.length > 0)!;
     expect(a.provenance?.mode).toBe('demo');
     expect(a.provenance?.sources).toBeGreaterThan(0);
-    await waitFor(() => dmSends().some((t) => t.includes('Cubbie') || t.length > 40));
+    await waitFor(() => dmSends().some((t) => t.includes('Squad') || t.length > 40));
     await settle();
     const replies = dmSends().filter((t) => !t.includes('demo student'));
     expect(replies.length).toBeGreaterThan(0);

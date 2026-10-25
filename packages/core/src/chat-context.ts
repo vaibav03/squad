@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * Structured context a student attaches to a chat message ("Ask Cubbie" on an imported Canvas/Google item).
+ * Structured context a student attaches to a chat message ("Ask Squad" on an imported Canvas/Google item).
  * The client sends only `sourceId` (+ optional `anchor`) that matter; the HUB re-reads the source through the viewer's
  * read gate and rebuilds every other field, so a forged title/provenance is never trusted or shown.
  */

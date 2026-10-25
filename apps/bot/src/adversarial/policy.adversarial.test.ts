@@ -269,11 +269,11 @@ describe('hostile skills', () => {
     const s: Skill = {
       name: 's',
       match: async () => 1,
-      handle: async (m) => [{ chatId: m.chatId, text: '\u{1F43B} Cubbie: hi' }],
+      handle: async (m) => [{ chatId: m.chatId, text: '\u{1F43B} Squad: hi' }],
     };
     const t = createTestBot({ skills: [s], chat: false });
     await t.say('s_ana', 'dm', 'x');
-    expect(t.sent[0]!.text).toBe('\u{1F43B} Cubbie: hi');
+    expect(t.sent[0]!.text).toBe('\u{1F43B} Squad: hi');
   });
 });
 

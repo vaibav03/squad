@@ -6,8 +6,8 @@ All `/v1/chat/*` routes need `Authorization: Bearer <token>` (from `POST /v1/aut
 
 ## Chats
 - Group: `group:sq_demo` (the squad; members s_ana, s_ben, s_chi, s_dev). Everyone in the squad sees it.
-- DM: `dm:<studentId>`, a private chat between one student and Cubbie. Only that student ever receives or can read it (stream, history, files). Private replies ("am I behind?", confirm questions, quiz feedback) arrive here; the group only gets "Sent you a DM.".
-- Mentions: in a group the bot answers when the text has `@cubbie` or `@squad` (word bounded, any case), a leading `cubbie,` / `hey cubbie`, or when an unprompted skill scores >= 0.8 (at most one unprompted message per chat per 2 min). Every DM message is a mention. Student-to-student group messages that do not mention the bot are just stored and streamed.
+- DM: `dm:<studentId>`, a private chat between one student and Squad. Only that student ever receives or can read it (stream, history, files). Private replies ("am I behind?", confirm questions, quiz feedback) arrive here; the group only gets "Sent you a DM.".
+- Mentions: in a group the bot answers when the text has `@squad` or `@squad` (word bounded, any case), a leading `cubbie,` / `hey cubbie`, or when an unprompted skill scores >= 0.8 (at most one unprompted message per chat per 2 min). Every DM message is a mention. Student-to-student group messages that do not mention the bot are just stored and streamed.
 
 ## Endpoints
 | Endpoint | Response |
@@ -39,8 +39,8 @@ At most 3 live streams per student (the oldest is closed). Same framing as `/v1/
 
 ## Citations and attachments
 - Grounded doubt answers carry `citations: [{file, page, label}]` parsed from the verified `[file p.N]` markers; the text keeps the markers so it reads correctly without UI. The client shows chips; a chip opens the excerpt from `/v1/chat/citation`.
-- Step Diff: upload an image, send it in the student's DM (`attachments:[{id}]`) while a diff is open (`@cubbie diff` in the group opens one).
-- Podcast / explainer: `@cubbie podcast ch3` -> an `audio` attachment (audio/mp4 `.m4a`); `@cubbie picture it ch3` -> an `image` attachment (png). Served from `/v1/chat/files/<token>` with unguessable names.
+- Step Diff: upload an image, send it in the student's DM (`attachments:[{id}]`) while a diff is open (`@squad diff` in the group opens one).
+- Podcast / explainer: `@squad podcast ch3` -> an `audio` attachment (audio/mp4 `.m4a`); `@squad picture it ch3` -> an `image` attachment (png). Served from `/v1/chat/files/<token>` with unguessable names.
 
 ## Honesty in demo mode
 No `GEMINI_API_KEY`: the hub uses a deterministic extractive demo model over the committed OpenStax sample (4 chapters) and fake audio/image engines; every bot message has `demo: true` and the UI must show the `notice` from `/v1/status`. `ELEVENLABS_API_KEY` switches TTS to `elevenlabs`. Keys are never printed or logged.
@@ -50,7 +50,7 @@ No `GEMINI_API_KEY`: the hub uses a deterministic extractive demo model over the
 2. Sentinels `$180` and `therapy` (seeded private ledger rows, and any text a student DMs) never reach another viewer through any chat route.
 3. Group messages never carry private data; personal skill output goes to the DM only.
 
-## Ask Cubbie: structured context (journey)
+## Ask Squad: structured context (journey)
 
 - `POST /v1/chat/send` accepts `context: ChatContextRef[]` (max 3, `packages/core/src/chat-context.ts`). The hub keeps only
   `sourceId` and `location.anchor` from each ref and re-derives title, course, location, provenance (`real` | `fixture`) from

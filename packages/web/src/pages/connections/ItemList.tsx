@@ -25,7 +25,7 @@ const when = (r: SourceRow, now: number): string | null => {
   return `${r.dueAt ? 'due' : 'starts'} ${d} UTC (${relTime(t, now)})`;
 };
 
-/** The imported items of one connection: type, course/event, imported-at, sharing state, share toggle, Ask Cubbie. */
+/** The imported items of one connection: type, course/event, imported-at, sharing state, share toggle, Ask Squad. */
 export function ItemList(p: ItemListProps) {
   const [all, setAll] = useState(false);
   const rows = p.rows;
@@ -87,7 +87,7 @@ export function ItemList(p: ItemListProps) {
                     data-testid="ask-cubbie"
                     onClick={() => askCubbie(p.squadId!, r, p.navigate)}
                   >
-                    Ask Cubbie
+                    Ask Squad
                   </Button>
                 ) : null}
               </div>

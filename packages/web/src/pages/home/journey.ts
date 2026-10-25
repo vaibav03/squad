@@ -36,9 +36,9 @@ export const JOURNEY: readonly JourneyDef[] = [
   },
   {
     key: 'ask',
-    verb: 'ask Cubbie a question',
-    title: 'Ask Cubbie something',
-    body: 'Cubbie is your study helper. Ask about an assignment, or send an imported item to Cubbie.',
+    verb: 'ask Squad a question',
+    title: 'Ask Squad something',
+    body: 'Squad is your study helper. Ask about an assignment, or send an imported item to Squad.',
     button: 'Open the squad chat',
     to: '/squad/chat',
   },

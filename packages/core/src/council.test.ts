@@ -67,7 +67,7 @@ describe('council contract', () => {
       seq: 1,
       chatId: 'group:sq_demo',
       ts: 1,
-      sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+      sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
       text: 'The council has spoken.',
       private: false,
       attachments: [],

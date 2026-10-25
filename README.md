@@ -5,7 +5,7 @@
 ![pnpm](https://img.shields.io/badge/pnpm-10-F69220)
 ![license](https://img.shields.io/badge/repo-private-lightgrey)
 
-Squad puts a study group's agents where the group already talks. Type `@cubbie` in your group chat and get answers grounded in your own course files, with page citations. Each student also has a private agent that plans study sessions and trips with the others without ever showing a calendar, a budget or a DM. A walkable pixel village renders all of it live, so you can see who asked what, what was shared, and what was kept hidden.
+Squad puts a study group's agents where the group already talks. Type `@squad` in your group chat and get answers grounded in your own course files, with page citations. Each student also has a private agent that plans study sessions and trips with the others without ever showing a calendar, a budget or a DM. A walkable pixel village renders all of it live, so you can see who asked what, what was shared, and what was kept hidden.
 
 ![Squad village at night: the notice board says Ben kept his calendar hidden while Ana's agent sends 168 blinded tokens](docs/design/shots/merge1/village-track2-desk.png)
 
@@ -17,10 +17,10 @@ Squad puts a study group's agents where the group already talks. Type `@cubbie` 
 
 ## What Squad is
 
-- A group-chat bot (`@cubbie`) with skills: grounded doubt answers, quizzes, Feynman practice, step-by-step solution diffs, study plans, podcasts and explainers.
+- A group-chat bot (`@squad`) with skills: grounded doubt answers, quizzes, Feynman practice, step-by-step solution diffs, study plans, podcasts and explainers.
 - A mesh of per-student agents that coordinate through PSI (private set intersection) and secret sharing, so common free time and budget fit are computed without anyone's raw data leaving their agent.
 - A village (Phaser) and a web app that only consume events from one hub. Thirteen rooms each have a purpose; a ledger shows every disclosure and every refusal.
-- Entered in Track 3 (group chat) and Track 2 (agents) of the Cubbie hackathon. One shared core runs both.
+- Entered in Track 3 (group chat) and Track 2 (agents) of the Squad hackathon. One shared core runs both.
 
 Who it is for: students in a study group (and the judges, teammates and builders reading this). A student does not need to read code: start at the [User guide](docs/guide/USER-GUIDE.md).
 
@@ -70,7 +70,7 @@ Call an expert agent from the village; captions are always shown, voice plays wh
 
 ### Mastery
 
-Mastery lives in the village itself, not on a separate page. Each chapter house shows your mastery on its sign (pips), the HUD shows a chip with the word and pips when you stand at a house, and the **Mastery board** at the entrance of the study district (walk up, press Enter) opens an in-game panel with every chapter, your weakest topics and a **Practise this** button that sends `@cubbie quiz me on chapter N` to the squad chat. Words plus pips only: no points, streaks, grades or leaderboards by design, and squad averages appear only for groups of three or more. The old `/squad/mastery` link redirects to `/squad/village?mastery=1`, which opens the panel.
+Mastery lives in the village itself, not on a separate page. Each chapter house shows your mastery on its sign (pips), the HUD shows a chip with the word and pips when you stand at a house, and the **Mastery board** at the entrance of the study district (walk up, press Enter) opens an in-game panel with every chapter, your weakest topics and a **Practise this** button that sends `@squad quiz me on chapter N` to the squad chat. Words plus pips only: no points, streaks, grades or leaderboards by design, and squad averages appear only for groups of three or more. The old `/squad/mastery` link redirects to `/squad/village?mastery=1`, which opens the panel.
 
 ![Mastery board panel](docs/design/shots/e2e/rooms/mastery-1280.png)
 
@@ -217,13 +217,13 @@ Rules enforced in code:
 - Security model is semi-honest; there is no range proof over a committed budget.
 - iMessage via `imessage-kit` is a prototype transport; production would use Apple Messages for Business or a messaging API.
 - Measured cost per question: not yet measured. We publish a number only once we measure it.
-- Next: single-player Cubbie becomes multiplayer on this core; integration into the Nook clone mounts `@squad/web` under `/squad/*`.
+- Next: single-player Squad becomes multiplayer on this core; integration into the Nook clone mounts `@squad/web` under `/squad/*`.
 
 ## Credits
 
 Course material: Introductory Statistics 2e, Barbara Illowsky, Susan Dean and OpenStax contributors, OpenStax, Rice University, CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), free at https://openstax.org/details/books/introductory-statistics-2e. We extracted page ranges of four chapters unchanged; no endorsement by OpenStax or Rice University is implied.
 
-Art: CC0 packs by Pixel-boy and AAA, Kenney, Luis Zuno (ansimuz) and OpenGameArt contributors; Autumn Town by Nirva; Microsoft Fluent Emoji (MIT); Lucide (ISC); fonts Inter, Jersey 10 and Silkscreen (OFL 1.1). Modern Interiors by LimeZu is licensed to the repo owner and is not redistributed here. Every pack, license and credit line: [docs/CREDITS.md](docs/CREDITS.md). No Cubbie assets or branding are used.
+Art: CC0 packs by Pixel-boy and AAA, Kenney, Luis Zuno (ansimuz) and OpenGameArt contributors; Autumn Town by Nirva; Microsoft Fluent Emoji (MIT); Lucide (ISC); fonts Inter, Jersey 10 and Silkscreen (OFL 1.1). Modern Interiors by LimeZu is licensed to the repo owner and is not redistributed here. Every pack, license and credit line: [docs/CREDITS.md](docs/CREDITS.md). No Squad assets or branding are used.
 
 ## Dev guide
 
@@ -233,7 +233,7 @@ pnpm check              # typecheck + lint (eslint + prettier --check) + unit te
 pnpm test:smoke <ws>    # one workstream's smoke tests (bot|agent|hub|web-host|core|brain|mesh|media|village|web|all)
 pnpm format             # prettier --write
 pnpm dev                # each app's own `dev` script (use pnpm dev:all for the whole stack)
-pnpm bot:chat           # talk to @cubbie in the terminal (CLI transport)
+pnpm bot:chat           # talk to @squad in the terminal (CLI transport)
 ```
 
 `@squad/core` is the shared contract package (`VillageEvent` zod schema, replay schema, `postEvent`, `Llm` and `FakeLlm`, sentinel test util); contract changes go only through `packages/core`. Workflow and commit rules: [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).

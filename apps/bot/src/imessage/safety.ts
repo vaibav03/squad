@@ -41,7 +41,7 @@ const FLOOD_N = 8;
 const FLOOD_WINDOW_MS = 10_000;
 const FLOOD_MUTE_MS = 5 * 60_000;
 const SEEN_MAX = 4000;
-/** Our own persona prefixes ("🐻 Cubbie: ", "🎙 Host: "): another bot echoing us, or our own text coming back. */
+/** Our own persona prefixes ("🐻 Squad: ", "🎙 Host: "): another bot echoing us, or our own text coming back. */
 const BOT_PREFIX = /^\s*\p{Extended_Pictographic}️?\s*[\p{L}][\p{L} ]{0,20}:\s/u;
 
 export interface Safety {

@@ -55,13 +55,13 @@ export function MemberStack({ chat }: { chat: ChatSummary }) {
   if (chat.kind === 'dm')
     return (
       <span className="sqc-stack sqc-stack--dm" aria-hidden="true">
-        <ChatAvatar sender={{ kind: 'persona', id: 'cubbie', name: 'Cubbie' }} />
+        <ChatAvatar sender={{ kind: 'persona', id: 'cubbie', name: 'Squad' }} />
         <span className="sqc-stack__lock">
           <Icon name="lock" size={10} />
         </span>
       </span>
     );
-  // Group: a 2x2 mosaic (first three students plus Cubbie) at exactly half size, so the pixels stay whole.
+  // Group: a 2x2 mosaic (first three students plus Squad) at exactly half size, so the pixels stay whole.
   const tiles = [
     ...chat.members
       .slice(0, 3)

@@ -1,4 +1,4 @@
-// `@cubbie discuss: <topic>` / "start a discussion on <topic>": starts a live agent discussion through the hub
+// `@squad discuss: <topic>` / "start a discussion on <topic>": starts a live agent discussion through the hub
 // (the hub injects the starter), replies with a short line and the `(live discussion ld_xxxxxxxxxxxx)` footer that the
 // web transport turns into the `live` card.
 import type { InboundMessage, OutboundMessage, Skill } from '@squad/core';
@@ -10,7 +10,7 @@ export interface LiveStarter {
 }
 
 export const LIVE_USAGE =
-  'Start a live study discussion: "@cubbie discuss: how do z-scores work?" or "@cubbie start a discussion on regression". Five agents talk it through, you can interrupt, and you leave with takeaways.';
+  'Start a live study discussion: "@squad discuss: how do z-scores work?" or "@squad start a discussion on regression". Five agents talk it through, you can interrupt, and you leave with takeaways.';
 export const LIVE_BUSY =
   'You already have a live discussion running. Finish or stop that one first.';
 export const LIVE_RATE =

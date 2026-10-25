@@ -154,7 +154,7 @@ export function ChatCouncilCard({
                   type="button"
                   className="sqc-btn"
                   data-testid="council-add-plan"
-                  onClick={() => actions?.fill(`@cubbie add to my study plan: ${v.next}`)}
+                  onClick={() => actions?.fill(`@squad add to my study plan: ${v.next}`)}
                 >
                   Add to plan
                 </button>
@@ -162,7 +162,7 @@ export function ChatCouncilCard({
                   type="button"
                   className="sqc-btn"
                   data-testid="council-follow-up"
-                  onClick={() => actions?.fill('@cubbie ask the council: ')}
+                  onClick={() => actions?.fill('@squad ask the council: ')}
                 >
                   Ask follow-up
                 </button>

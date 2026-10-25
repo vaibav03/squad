@@ -119,7 +119,7 @@ export function parseDeadline(text: string, nowMs: number, tz: string): Deadline
 export function stripAddress(text: string): string {
   return (
     text
-      .replace(/^\s*(?:hey\s+|hi\s+)?@?cubbie\b[\s,:-]*/i, '')
+      .replace(/^\s*(?:hey\s+|hi\s+)?(?:@(?:cubbie|squad)|cubbie)\b[\s,:-]*/i, '')
       // "I pinky promise to ..." must keep "I promise to ..." (the commitment phrase), not become "I to ..."
       .replace(/\b(i(?:'ll|\s+will)?\s+)pinky\s+promise\b/i, '$1promise')
       .replace(/\bpinky\s+promise\b[\s,:!-]*/i, '')

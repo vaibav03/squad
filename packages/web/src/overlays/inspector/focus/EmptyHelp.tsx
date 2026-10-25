@@ -48,7 +48,7 @@ const TIER_ICON: Record<EmptyBadge['tier'], LvIconName> = {
 
 /**
  * Never a dead end: what is empty, the provider state in words, and what to do next. Council agents get 'Start a council'
- * (a real run with a hub, the labelled scripted sample without one) and 'Ask Cubbie'; others get 'Ask Cubbie about <topic>'.
+ * (a real run with a hub, the labelled scripted sample without one) and 'Ask Squad'; others get 'Ask Squad about <topic>'.
  * When a council has run, the persisted last run is named instead of the start prompt.
  */
 export function EmptyHelp({
@@ -136,7 +136,7 @@ export function EmptyHelp({
         )
       ) : (
         <p className="af-dim">
-          Nothing to show here yet. Ask Cubbie about {topic} and it fills in as the agents work.
+          Nothing to show here yet. Ask Squad about {topic} and it fills in as the agents work.
         </p>
       )}
       <div className="af-help__actions">
@@ -157,7 +157,7 @@ export function EmptyHelp({
               data-testid="af-ask-cubbie"
               onClick={() => askCubbie()}
             >
-              Ask Cubbie
+              Ask Squad
             </button>
           </>
         ) : (
@@ -167,7 +167,7 @@ export function EmptyHelp({
             data-testid="af-ask-cubbie"
             onClick={() => askCubbie()}
           >
-            Ask Cubbie about {topic}
+            Ask Squad about {topic}
           </button>
         )}
       </div>

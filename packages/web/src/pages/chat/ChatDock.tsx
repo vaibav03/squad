@@ -68,7 +68,7 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
     if (shown) requestAnimationFrame(() => composer.current?.focus());
   }, [shown, group?.id]);
 
-  // "Ask Cubbie" buttons elsewhere (the focused agent panel) open this composer.
+  // "Ask Squad" buttons elsewhere (the focused agent panel) open this composer.
   useEffect(() => {
     if (!enabled) return;
     const on = () => {

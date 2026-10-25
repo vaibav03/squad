@@ -50,7 +50,7 @@ export async function postCouncilAction(
     if (kind === 'plan' && body?.error?.code === 'no_plan')
       return {
         ok: false,
-        message: 'There is no study plan yet. Ask Cubbie to make one in the chat first.',
+        message: 'There is no study plan yet. Ask Squad to make one in the chat first.',
       };
     if (kind === 'plan' && res.status === 409)
       return { ok: false, message: 'The study plan is closed, so nothing was added.' };

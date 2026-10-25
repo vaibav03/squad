@@ -129,7 +129,7 @@ export function LedgerDrawer({ groupId, onClose, fetchLedger, notice, now }: Led
                   variant="primary"
                   onClick={() => {
                     onClose();
-                    requestChatPrefill('@cubbie make a study plan for our next exam');
+                    requestChatPrefill('@squad make a study plan for our next exam');
                   }}
                 >
                   Plan something in chat

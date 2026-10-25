@@ -18,7 +18,7 @@ const msg = (
     sender:
       kind === 'student'
         ? { kind, id: 's_ana', name: 'Ana' }
-        : { kind, id: 'cubbie', name: 'Cubbie' },
+        : { kind, id: 'cubbie', name: 'Squad' },
     text,
     private: false,
     attachments: [],

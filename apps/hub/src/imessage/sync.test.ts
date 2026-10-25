@@ -434,7 +434,7 @@ describe('mirroring rules and routing', () => {
 
   it('DMs never cross threads in either direction', async () => {
     await bind();
-    await c.sdk.dm(ANA, 'a private word for Cubbie', { createdAt: at(5) });
+    await c.sdk.dm(ANA, 'a private word for Squad', { createdAt: at(5) });
     await flush();
     expect(JSON.stringify(history())).not.toContain('a private word');
     const n = c.sdk.sent.length;

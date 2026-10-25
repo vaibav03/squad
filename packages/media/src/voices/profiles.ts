@@ -20,7 +20,7 @@ const PREVIEW = (line: string) =>
 export const VOICE_PROFILES: VoiceProfile[] = [
   {
     key: 'cubbie',
-    name: 'Squad Cubbie',
+    name: 'Squad',
     description:
       'A warm, upbeat young adult voice with a friendly bear-like gentleness, clear diction, quick and encouraging, a hint of a smile in every sentence. Podcast host energy.',
     sample: PREVIEW('Hey team, quick recap time. Here is what actually matters from this chapter.'),

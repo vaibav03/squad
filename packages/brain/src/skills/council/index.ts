@@ -10,7 +10,7 @@ import { stripMention } from '../../experts/intent';
 import { CouncilBusyError, type CouncilService } from '../../councils/ask-types';
 
 export const COUNCIL_USAGE =
-  'Ask the council anything you are stuck on: "@cubbie council B or C?", "@cubbie council is this proof right?" or "@cubbie ask the council which approach to use for problem 3". Three members answer on their own, rank each other, and a chair gives one verdict.';
+  'Ask the council anything you are stuck on: "@squad council B or C?", "@squad council is this proof right?" or "@squad ask the council which approach to use for problem 3". Three members answer on their own, rank each other, and a chair gives one verdict.';
 export const COUNCIL_BUSY = 'The council is still working on your last question. Give it a moment.';
 export const COUNCIL_RATE =
   'You have asked the council a lot in the last hour. Try again a little later.';
@@ -63,7 +63,7 @@ export interface CouncilSkillOptions {
 }
 
 /**
- * `@cubbie council <question>` and natural "ask the council ...". Scores 0.97 when the bot is addressed, so it
+ * `@squad council <question>` and natural "ask the council ...". Scores 0.97 when the bot is addressed, so it
  * beats the doubt skill; never reaches 0.8 without a mention (cannot speak unprompted).
  */
 export function createCouncilSkill(service: CouncilService, opts: CouncilSkillOptions = {}): Skill {
