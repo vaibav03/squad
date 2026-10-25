@@ -1,0 +1,28 @@
+{
+  "name": "@squad/interior",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./sources": "./src/shared/sources.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --dir src --passWithNoTests",
+    "test:smoke": "vitest run --dir test --passWithNoTests",
+    "dev": "vite --config vite.config.ts",
+    "gen:assets": "node scripts/gen-tileset.mjs && node scripts/gen-demo-map.mjs",
+    "shots": "node scripts/shot.mjs"
+  },
+  "dependencies": {
+    "@squad/core": "workspace:*",
+    "easystarjs": "^0.4.4",
+    "phaser": "3.90.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1",
+    "vite": "^6.4.5"
+  }
+}
