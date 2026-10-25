@@ -120,3 +120,31 @@ export interface BotCtx extends Ctx {
 }
 
 export type { Db, Llm };
+
+export interface BotOptions {
+  skills: import('@squad/core').Skill[];
+  llm: Llm;
+  transport: Transport;
+  db: Db;
+  roster?: Roster;
+  events?: EventPublisher; // default: createEventPublisher() (posts to hub)
+  log?: Logger;
+  now?: () => number; // injectable clock
+  confirmTimeoutMs?: number; // default 600_000
+  policy?: Partial<PolicyConfig>;
+  scoreTimeoutMs?: number; // default 1500
+}
+
+export interface RouteResult {
+  decision: Decision;
+  sent: OutboundMessage[];
+}
+
+export interface Bot {
+  ctx: BotCtx;
+  start(): Promise<void>;
+  stop(): Promise<void>;
+  /** The transport's onMsg target: ignore-own, dedupe, confirm-consume, score, decide, run, send, log. */
+  handle(m: InboundMessage): Promise<RouteResult>;
+  confirms: ConfirmApi;
+}
