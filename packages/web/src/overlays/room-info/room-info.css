@@ -452,6 +452,51 @@
 .rr-who__row .rr-dot {
   margin-top: 8px;
 }
+.rr-who__row {
+  align-items: center;
+  /* small entrance when the panel opens: 160 ms ease-out, 40 ms stagger, transform + opacity only, never from scale 0 */
+  animation: rr-who-in 160ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+@keyframes rr-who-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rr-who__avatar {
+  margin: 3px;
+  transition: transform 125ms ease;
+}
+.rr-who__state {
+  display: inline-block;
+  margin-left: var(--lv-s2);
+  padding: 0 6px;
+  border: 1px solid var(--lv-line);
+  border-radius: var(--lv-r2, 4px);
+  font: 700 var(--text-xs) / 1.2 var(--lv-font-ui);
+  color: var(--lv-text-dim);
+  vertical-align: 1px;
+}
+/* hover: that member talks and the avatar nudges 1px. Pointer devices only. */
+@media (hover: hover) and (pointer: fine) {
+  .rr-who__row:hover .rr-who__avatar {
+    --ca-row: 1;
+    --ca-line: var(--state-studying, #ffc857);
+    transform: translateY(-1px);
+  }
+  .rr-who__row:hover .rr-who__state {
+    font-size: 0;
+  }
+  .rr-who__row:hover .rr-who__state::after {
+    content: 'Speaking';
+    font-size: var(--text-xs);
+  }
+}
 .rr-how {
   padding: var(--lv-s3);
   margin-bottom: var(--lv-s3);
@@ -497,6 +542,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .rr-who__row {
+    animation-name: rr-who-fade;
+    animation-delay: 0ms;
+  }
+  .rr-who__avatar {
+    transition: none;
+  }
   .rr-line {
     animation: none;
   }
@@ -506,6 +558,23 @@
   }
 }
 
+@keyframes rr-who-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+:root[data-calm='true'] .rr-who__row,
+.rr-who__row[data-calm='true'] {
+  animation-name: rr-who-fade;
+  animation-delay: 0ms;
+}
+:root[data-calm='true'] .rr-who__avatar,
+.rr-who__row[data-calm='true'] .rr-who__avatar {
+  transition: none;
+}
 .rr-ask {
   margin-top: var(--lv-s3);
   min-height: var(--lv-tap);

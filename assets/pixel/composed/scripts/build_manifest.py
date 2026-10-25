@@ -268,6 +268,10 @@ PERSONAS = [
     ('freshman', 'persona: freshman (NPC)', 'npc'),
     ('mediator', 'persona: mediator', 'persona'),
     ('ta', 'persona: teaching assistant', 'persona'),
+    ('cast-chill', 'council cast: Chill (green hoodie, tea, moon charm)', 'persona'),
+    ('cast-grind', 'council cast: Grind (orange headband, books, coffee)', 'persona'),
+    ('cast-advisor', 'council cast: Advisor (purple, glasses, clipboard)', 'persona'),
+    ('cast-chair', 'council cast: Chairman (pale grey-blue, crest, gavel)', 'persona'),
 ]
 ANIMS = CH['animations']
 add('atlas.characters', 'persona', 'all 11 cast members, 5 animations + portrait each (single texture atlas)',
@@ -280,7 +284,9 @@ add('atlas.characters', 'persona', 'all 11 cast members, 5 animations + portrait
     animations={k: dict(v) for k, v in ANIMS.items()}, walkStridePxPerFrame=CH['walk']['stride_px_per_frame'])
 for pid, need, grp in PERSONAS:
     info = CH['characters'][pid]
-    vs = {a: C(f'characters/{pid}/{a}.png') for a in ['walk', 'idle', 'talk', 'sit', 'wave']}
+    cast = pid.startswith('cast-')
+    vs = {a: C(f'characters/{pid}/{a}.png') for a in ['walk', 'idle', 'talk', 'sit', 'wave'] + (['think'] if cast else [])}
+    if cast: vs['bust'] = C(f'characters/{pid}/bust.png')
     vs['portrait'] = C(f'characters/{pid}/portrait.png')
     add(f'persona.{pid}', grp, need, C(f'characters/{pid}/walk.png'), kind='atlas', frame=(32, 32, 8),
         anchor=[16, 31], variants=vs, depth='actors', license=L_CHAR,
@@ -289,7 +295,7 @@ for pid, need, grp in PERSONAS:
         notes='Load through atlas.characters (frames "%s/<anim>/<n>"). Per-animation PNG strips in `variants` are '
               'for reference/tools only. role=%s; palette skin=%s hair=%s outfit=%s. Portrait is an opaque 32x32 tile '
               '(show at 2x/3x in UI).' % (pid, info['role'], info['skin'], info['hair'], info['outfit']),
-        loadVia='atlas.characters', animations={a: {'frames': ANIMS[a]['frames'], 'fps': ANIMS[a]['fps']} for a in ANIMS},
+        loadVia='atlas.characters', animations={a: {'frames': ATLAS['animations'][pid][a]['frames'] if cast else ANIMS[a]['frames'], 'fps': ATLAS['animations'][pid][a]['frameRate'] if cast else ANIMS[a]['fps']} for a in (ATLAS['animations'][pid] if cast else ANIMS)},
         loadVariants=False)
 
 # ================================================================== BACKGROUNDS
@@ -551,8 +557,9 @@ for lid, lay in BG['layers'].items():
     w, h = dims(C(f'backgrounds/{lay["file"]}'))
     if list(lay['size']) != [w, h]:
         VERIFY['mismatches'].append(f'backgrounds/{lay["file"]}: provenance size {lay["size"]} != PNG {[w, h]}')
+CH_CAST = CH.get('council_cast_animations', {})
 for pid in CH['characters']:
-    for a, spec in ANIMS.items():
+    for a, spec in ({**ANIMS, **CH_CAST} if pid.startswith('cast-') else ANIMS).items():
         w, h = dims(C(f'characters/{pid}/{a}.png'))
         if (w, h) != (32 * spec['frames'], 32):
             VERIFY['mismatches'].append(f'characters/{pid}/{a}.png: {w}x{h} but expected {32 * spec["frames"]}x32 ({spec["frames"]} frames)')
