@@ -2,6 +2,9 @@
 // Wire kinds, gate, ledger, PSI, shares and the mediator math come from @squad/mesh (mesh-crypto's API,
 // docs/mesh-api.md on ws/mesh-crypto). This file only defines what the FLOWS own.
 import type { AgentMessage, AskConfirm, Llm, VillageEvent } from '@squad/core';
+import type { TaskState, Payload, SharePurpose } from '../protocol';
+import type { Ledger } from '../ledger/ledger';
+import type { TaskView } from './hooks';
 
 export type StudentId = string;
 
@@ -18,7 +21,8 @@ export interface PrivateProfile {
   hourCost: Record<string, 0 | 1 | 2 | 3>;
   budget: number; // private cap per person for a trip, in dollars
   /** Hard no's. `optionId` or `tag` (matches TripOption tags known to the agent via options.json); reason is private. */
-  hardNos: { optionId?: string; tag?: string; reason: string }[];
+  hardNos: { optionId: string; reason: string }[];
+  tripExtrasPerDay?: number; // private incidental cost per day (food etc.), checked in the simulate round
   tripRanking: string[]; // private ranked option ids, best first
   topics: { canTeach: string[]; weak: string[] };
 }
@@ -26,18 +30,15 @@ export interface PrivateProfile {
 /** Public trip option as the organizer proposes it (shared by design; the quote is public data). */
 export interface TripOptionPublic {
   id: string;
-  label: string;
+  label: string; // /^[A-Za-z0-9_.:-]{1,64}$/
   days: number; // length in days; dates are chosen by PSI over free days
   perPerson: number; // public quote in dollars
-  tags: string[]; // public attributes ("bar", "alcohol"); a hard-no may match on a tag
 }
 
 export type Net = {
   /** Deliver one wire message to `to`'s agent, return its reply. Rejects on offline/timeouts. */
   send(to: StudentId, msg: AgentMessage): Promise<WireReply>;
 };
-
-export type TaskState = 'submitted' | 'working' | 'input-required' | 'completed' | 'failed' | 'canceled';
 
 /** HTTP/in-process reply to a message: A2A task state plus an optional reply message. */
 export interface WireReply {
@@ -58,7 +59,9 @@ export interface AgentDeps {
   emitter: Emitter;
   askConfirm: AskConfirm;
   llm: Llm; // used only for explanations to the student; never for agent-to-agent text
-  seed: string; // rng seed (deterministic for scripted/tests; secureRng when undefined in production)
+  seed?: string; // rng seed (deterministic for scripted/tests; secureRng when undefined in production)
+  queryBudget?: number; // per-task cap on query + psi.blind sends (default 8)
+  ledger?: Ledger;
   now?: () => number;
   /** Public per-option data this agent can resolve tags against (from the task.open it received). */
   log?: (line: string) => void; // must never receive withheld values
@@ -67,10 +70,27 @@ export interface AgentDeps {
 
 /** What the flow coordinator (mediator, hosted by the initiating agent) returns. */
 export type FlowOutcome =
-  | { flow: 'study'; status: 'scheduled'; slot: string; hybrid?: boolean; coverage?: { topic: string; weak: number | null; lead: string | null }[] }
+  | {
+      flow: 'study';
+      status: 'scheduled';
+      slot: string;
+      hybrid?: boolean;
+      coverage?: { topic: string; weak: number | null; lead: string | null }[];
+    }
   | { flow: 'study'; status: 'no_slot'; hybrid: string | null }
-  | { flow: 'trip'; status: 'confirmed'; optionId: string; dates: string[]; perPerson: number; venmo: string[] }
-  | { flow: 'trip'; status: 'no_plan'; reason: 'no_option' | 'declined' | 'timeout' | 'offline' | 'no_dates' }
+  | {
+      flow: 'trip';
+      status: 'confirmed';
+      optionId: string;
+      dates: string[];
+      perPerson: number;
+      venmo: string[];
+    }
+  | {
+      flow: 'trip';
+      status: 'no_plan';
+      reason: 'no_option' | 'declined' | 'timeout' | 'offline' | 'no_dates';
+    }
   | { flow: 'study' | 'trip'; status: 'failed'; reason: 'offline' | 'timeout' | 'blocked' };
 
 export interface FlowAgent {
@@ -78,8 +98,44 @@ export interface FlowAgent {
   /** A2A entry point: validates through the gate, dispatches by kind. Never throws. */
   handle(raw: unknown): Promise<WireReply>;
   /** Start a study or trip task with this agent as coordinator/mediator. */
-  startStudy(a: { taskId: string; members: StudentId[]; window: { from: string; to: string }; examAt?: string; topics?: string[]; squadId?: string }): Promise<FlowOutcome>;
-  startTrip(a: { taskId: string; members: StudentId[]; window: { from: string; to: string }; options: TripOptionPublic[]; squadId: string }): Promise<FlowOutcome>;
+  startStudy(a: {
+    taskId: string;
+    members: StudentId[];
+    window: { from: string; to: string };
+    examAt?: string;
+    topics?: string[];
+    squadId?: string;
+  }): Promise<FlowOutcome>;
+  startTrip(a: {
+    taskId: string;
+    members: StudentId[];
+    window: { from: string; to: string };
+    options: TripOptionPublic[];
+    squadId: string;
+  }): Promise<FlowOutcome>;
   /** Ask a peer's agent for a private value (the query flow). Always ends in query.denied. */
-  askPeer(about: 'budget' | 'calendar' | 'hardNo' | 'weakTopic', target: StudentId, taskId: string): Promise<'denied'>;
+  askPeer(
+    about: 'budget' | 'calendar' | 'hardNo' | 'weakTopic',
+    target: StudentId,
+    taskId: string,
+  ): Promise<'denied'>;
+}
+
+/** Coordinator (mediator) toolbox the study/trip modules use. Implemented in runtime.ts. */
+export interface Coord {
+  readonly taskId: string;
+  readonly self: StudentId;
+  readonly members: StudentId[]; // sorted
+  readonly memberCount: number;
+  readonly open: Payload<'task.open'>;
+  /** The coordinator's own participant view (after PSI: `common` is its own resolved common items). */
+  view(): TaskView;
+  runPsi(): Promise<{ tokenCounts: number; commonCount: number }>;
+  sum(purpose: SharePurpose, round: number): Promise<number[]>;
+  /** Send a mediator message (from 'mediator') to every member. option_dropped/conflict/result only. */
+  tell(kind: 'option_dropped' | 'result' | 'conflict', payload: unknown): Promise<void>;
+  /** Propose to every student; true only if EVERY student answers yes. Timeout/offline = no. */
+  confirm(proposal: Payload<'result'>, optionId: string): Promise<boolean>;
+  emit(e: VillageEvent): Promise<void>;
+  venmoOf(): string;
 }

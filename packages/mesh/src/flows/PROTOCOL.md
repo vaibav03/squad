@@ -25,5 +25,5 @@ Identical canonical messages twice are rejected by the ReplayGuard: every reques
    Mediator announces `result {stage:'candidates', candidates:top2, chosen:null}` to members; `simulate` round 0 over [top1, top2] (1 = "no" under full private limits: cost with the actual picked dates incl. nights, budget, hardNo, dates free) -> `simulate`. First with zero no => proposal.
    Confirm exactly as study (askConfirm "<label>, <dates>, $<perPerson> each. Yes?"). All yes => emit `trip.confirmed {taskId, squadId}` ONCE, then `result {stage:'final', ..., venmo}` using `splitEvenly` + `venmoLink` (payee = coordinator's venmo). Any no or timeout => next candidate (max 2), else conflict 'no_plan'. Never emit trip.confirmed on a no/timeout.
 6. Query: asker's agent -> target `query {about, target}`; target's gate `answerQuery` -> `query.denied`; events: agent.message kind query (from student asker to target), then from 'mediator' kind query_denied, plus blocked ledger entry.
-Min group (<3): mediator publishes no counts anywhere (events, results, payload `counts:null`).
-Failure: offline peer / timeout (peerMs) => flow outcome failed/no_plan, tasks `failed`, agent.state idle, no trip.confirmed.
+   Min group (<3): mediator publishes no counts anywhere (events, results, payload `counts:null`).
+   Failure: offline peer / timeout (peerMs) => flow outcome failed/no_plan, tasks `failed`, agent.state idle, no trip.confirmed.
