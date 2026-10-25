@@ -8,21 +8,33 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `chat/` | 1 | 9 | 143 | Claude Sonnet 5.5 (9) |
+| `chat/` | 1 | 12 | 153 | Claude Sonnet 5.5 (12) |
 | `council/` | 1 | 12 | 99 | Claude Sonnet 5.5 (6) |
-| `qa/` | 1 | 9 | 275 | Claude Sonnet 5.5 (8) |
+| `docs/` | 1 | 7 | 13 | Claude Sonnet 5.5 (7) |
+| `e2e/` | 1 | 2 | 30 | Claude Sonnet 5.5 (2) |
+| `ops/` | 1 | 1 | 17 | Claude Sonnet 5.5 (1) |
+| `product/` | 3 | 9 | 60 | Claude Sonnet 5.5 (9) |
+| `qa/` | 1 | 11 | 277 | Claude Sonnet 5.5 (10) |
 | `rooms/` | 2 | 11 | 138 | Claude Sonnet 5.5 (11) |
+| `security/` | 1 | 1 | 11 | Claude Sonnet 5.5 (1) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `chat/web` | 9 | 143 | 2026-10-24 22:47 | 2026-10-24 23:27 | Vaibav |
+| `chat/web` | 12 | 153 | 2026-10-24 22:47 | 2026-10-24 23:36 | Vaibav |
 | `council/ask` | 12 | 99 | 2026-10-24 22:48 | 2026-10-24 23:24 | Vaibav |
-| `qa/web` | 9 | 275 | 2026-10-24 22:54 | 2026-10-24 23:27 | Vaibav |
+| `docs/guide` | 7 | 13 | 2026-10-24 23:31 | 2026-10-24 23:36 | Vaibav |
+| `e2e/acceptance` | 2 | 30 | 2026-10-24 23:36 | 2026-10-24 23:37 | Vaibav |
+| `ops/live-verify` | 1 | 17 | 2026-10-24 23:37 | 2026-10-24 23:37 | Vaibav |
+| `product/accounts` | 2 | 31 | 2026-10-24 23:32 | 2026-10-24 23:38 | Vaibav |
+| `product/courses` | 3 | 15 | 2026-10-24 23:32 | 2026-10-24 23:36 | Vaibav |
+| `product/proactive` | 4 | 14 | 2026-10-24 23:34 | 2026-10-24 23:37 | Vaibav |
+| `qa/web` | 11 | 277 | 2026-10-24 22:54 | 2026-10-24 23:28 | Vaibav |
 | `rooms/a` | 7 | 60 | 2026-10-24 23:04 | 2026-10-24 23:13 | Vaibav |
 | `rooms/b` | 4 | 78 | 2026-10-24 23:07 | 2026-10-24 23:17 | Vaibav |
+| `security/review` | 1 | 11 | 2026-10-24 23:35 | 2026-10-24 23:35 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
@@ -30,7 +42,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Co-Authored-By | Commits |
 |---|---:|
 | (no trailer) | 60 |
-| Claude Sonnet 5.5 | 316 |
+| Claude Sonnet 5.5 | 341 |
 
 ## Commits landed on main by area (subject prefix)
 
@@ -73,5 +85,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Author | Commits |
 |---|---:|
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 84 |
+| Vaibav | 109 |
 | vaibav03 | 26 |

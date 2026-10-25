@@ -1,0 +1,88 @@
+[
+  {
+    "t": "agent.state",
+    "agent": "council:debate",
+    "state": "studying"
+  },
+  {
+    "t": "council.opinion",
+    "councilId": "council:debate",
+    "member": "pro",
+    "text": "The chapter defines the terms the questions use, so reading it first removes guesswork. [ch2-descriptive-statistics.pdf p.1]"
+  },
+  {
+    "t": "council.opinion",
+    "councilId": "council:debate",
+    "member": "con",
+    "text": "Questions show what the exam asks; reading can wait until you hit a gap."
+  },
+  {
+    "t": "council.rank",
+    "councilId": "council:debate",
+    "member": "pro",
+    "order": [
+      "con"
+    ]
+  },
+  {
+    "t": "council.rank",
+    "councilId": "council:debate",
+    "member": "con",
+    "order": [
+      "pro"
+    ]
+  },
+  {
+    "t": "council.verdict",
+    "councilId": "council:debate",
+    "member": "chair",
+    "text": "Stronger argument: Read the chapter first. Pro tied the claim to the page; Con only asserted it.",
+    "dissent": false,
+    "outcome": {
+      "title": "Verdict: Read the chapter first",
+      "summary": "Pro tied the claim to the page; Con only asserted it.",
+      "items": [
+        {
+          "label": "For: Read the chapter first",
+          "detail": "The chapter defines the terms the questions use, so reading it first removes guesswork. [ch2-descriptive-statistics.pdf p.1]"
+        },
+        {
+          "label": "Against: Start with practice questions",
+          "detail": "Questions show what the exam asks; reading can wait until you hit a gap."
+        }
+      ],
+      "facts": [
+        {
+          "label": "Room vote",
+          "value": "2 for, 1 against"
+        },
+        {
+          "label": "Chair picked",
+          "value": "Read the chapter first"
+        },
+        {
+          "label": "Grounding",
+          "value": "Your course materials"
+        }
+      ],
+      "why": [
+        {
+          "who": "pro",
+          "text": "The chapter defines the terms the questions use, so reading it first removes guesswork. [ch2-descriptive-statistics.pdf p.1]"
+        },
+        {
+          "who": "con",
+          "text": "Questions show what the exam asks; reading can wait until you hit a gap."
+        }
+      ],
+      "notes": [
+        "Cited and checked: ch2-descriptive-statistics.pdf p.1."
+      ]
+    }
+  },
+  {
+    "t": "agent.state",
+    "agent": "council:debate",
+    "state": "idle"
+  }
+]
