@@ -59,6 +59,8 @@ test('J32 village: a sprite and a HUD chip each open ONE focused panel that swap
 
   // a HUD chip (a real button): swaps the panel instead of stacking another
   const first = await title(page);
+  await expect(page.locator('.sqv-rail__title')).toHaveText('Your study agents');
+  await expect(page.locator('.sqv-rail__hint')).toContainText('Tap an agent');
   const chips = page.locator('.sqv-chip');
   const n = await chips.count();
   expect(n).toBeGreaterThan(1);
@@ -68,11 +70,16 @@ test('J32 village: a sprite and a HUD chip each open ONE focused panel that swap
     expect(await chip.evaluate((el) => el.tagName)).toBe('BUTTON');
     expect(await chip.getAttribute('role')).toBeNull();
     expect(await chip.getAttribute('aria-pressed')).not.toBeNull();
-    expect(await chip.getAttribute('aria-label')).toMatch(/, (Resting|Thinking|Speaking|Waiting)$/);
-    expect(await chip.getAttribute('title')).toMatch(/: (Resting|Thinking|Speaking|Waiting)/);
+    expect(await chip.getAttribute('aria-label')).toMatch(/, (idle|working|on a call|waiting on you): open$/);
+    expect(await chip.getAttribute('title')).toMatch(/(Idle|Working|On a call|Waiting on you)/);
     await expect(chip.locator('img')).toHaveCount(1);
-    await expect(chip.locator('.sqv-status__w')).toHaveText(/^(Resting|Thinking|Speaking|Waiting)$/);
+    await expect(chip.locator('.sqv-status__w')).toHaveText(/^(Idle|Working|On a call|Waiting on you)$/);
     expect(await chip.locator('.sqv-glyph').count()).toBe(0);
+    // a full name under the portrait, never a lone initial; a status glyph (icon) beside the word
+    expect(((await chip.locator('.sqv-name').textContent()) ?? '').trim().length).toBeGreaterThan(1);
+    await expect(chip.locator('.sqv-status svg')).toHaveCount(1);
+    // real button semantics: no role override, focusable, named
+    expect(await chip.evaluate((el) => el.tagName === 'BUTTON' && el.tabIndex >= 0)).toBe(true);
   }
   // distinct portraits: not every chip shares one picture
   const srcs = await chips.locator('img').evaluateAll((els) => els.map((e) => (e as HTMLImageElement).src));

@@ -15,6 +15,8 @@ import {
   KIND_ROLE,
   STATE_LABEL,
   STATUS_WORD,
+  KIND_BLURB,
+  chipName,
   chipOrder,
   closePopovers,
   formatClock,
@@ -182,7 +184,18 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
   });
 
   // chips
-  const chips = el('div', 'sqv-panel sqv-chips', { role: 'group', 'aria-label': 'Agents' });
+  const rail = el('div', 'sqv-rail');
+  const railTitle = el('p', 'sqv-rail__title', {}, 'Your study agents');
+  const HINT = "Tap an agent to see what it's doing.";
+  const railHint = el('p', 'sqv-rail__hint', { id: 'sqv-rail-hint' }, HINT);
+  const chips = el('div', 'sqv-panel sqv-chips', {
+    role: 'group',
+    'aria-label': 'Your study agents',
+    'aria-describedby': 'sqv-rail-hint',
+  });
+  const railHead = el('div', 'sqv-rail__head');
+  railHead.append(railTitle, railHint);
+  rail.append(railHead, chips);
 
   // roving focus: arrows move between the agent chips, Enter/Space activates (native button)
   chips.addEventListener('keydown', (e) => {
@@ -247,7 +260,7 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
   };
   document.addEventListener('keydown', onEsc, true);
 
-  root.append(chips, clockWrap, ctrl, menuWrap, mid, bottom);
+  root.append(rail, clockWrap, ctrl, menuWrap, mid, bottom);
   d.parent.appendChild(root);
   mid.appendChild(pop);
 
@@ -271,10 +284,10 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
     root.style.setProperty('--bottom-h', narrow ? (outBottom ? '80px' : 'auto') : 'auto');
     if (narrow) {
       pop.append(seg, calmWrap, helpWrap);
-      bottom.appendChild(chips);
+      bottom.appendChild(rail);
     } else {
       ctrl.append(seg, calmWrap, helpWrap);
-      root.insertBefore(chips, clockWrap);
+      root.insertBefore(rail, clockWrap);
     }
   };
   const ro = new ResizeObserver(relayout);
@@ -310,18 +323,31 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
           img.replaceWith(el('span', 'sqv-initial', { 'aria-hidden': 'true' }, initialOf(a.name)));
         });
         c.appendChild(img);
+        c.appendChild(el('span', 'sqv-name'));
         const st = el('span', 'sqv-status');
         st.appendChild(statusIcon());
         st.appendChild(el('span', 'sqv-status__w'));
         c.appendChild(st);
+        // the hint line doubles as the focus/hover tooltip (a native title does not show on keyboard focus)
+        const tip = () => {
+          railHint.textContent = `${a.name}: ${KIND_BLURB[a.kind]}`;
+        };
+        const untip = () => {
+          railHint.textContent = HINT;
+        };
+        c.addEventListener('mouseenter', tip);
+        c.addEventListener('focus', tip);
+        c.addEventListener('mouseleave', untip);
+        c.addEventListener('blur', untip);
         c.addEventListener('click', () => d.focusAgent(a.id));
         chipEls.set(a.id, c);
       }
       c.dataset.state = a.state;
       const act = d.inspector?.view(a.id)?.headline;
       const word = STATUS_WORD[a.state];
-      c.setAttribute('aria-label', `${a.name}, ${word}`);
-      c.title = `${a.name}, ${KIND_ROLE[a.kind]}: ${word}${act ? `. ${act}` : ''}. Open its panel`;
+      c.setAttribute('aria-label', chipName(a.name, a.state));
+      c.title = `${a.name}, ${KIND_ROLE[a.kind]}: ${KIND_BLURB[a.kind]} ${word}${act ? `: ${act}` : ''}.`;
+      c.querySelector('.sqv-name')!.textContent = a.name;
       c.querySelector('.sqv-status__w')!.textContent = word;
       setStatusIcon(c.querySelector('.sqv-status svg')!, a.state);
       c.dataset.selected = String(d.inspector?.selected === a.id);
@@ -333,7 +359,7 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
         c.remove();
         chipEls.delete(id);
       }
-    chips.style.display = list.length ? '' : 'none';
+    rail.style.display = list.length ? '' : 'none';
   };
   const unsubs = [
     d.bus.on('agentState', () => {

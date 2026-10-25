@@ -469,9 +469,6 @@ export function InspectorPanel({
     isCouncil || board?.has(v.id) ? (
       <div className="ai-tabpanel">
         <HierarchyTab agentId={v.id} board={board} inspector={store} />
-        {!board?.hierarchy(v.id) && !board?.runs().some((r) => r.councilId === v.id) ? (
-          <EmptyHelp isCouncil topic={name} now={now} />
-        ) : null}
       </div>
     ) : (
       <div className="ai-tabpanel">
