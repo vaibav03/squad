@@ -10,3 +10,4 @@ export * from './sentinel';
 export * from './llm';
 export { parseIcsBusy } from './ics';
 export type { BusyBlock } from './ics';
+export * from './telemetry';
