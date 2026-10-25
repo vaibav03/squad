@@ -58,6 +58,13 @@ export const ChatCardSchema = z.discriminatedUnion('type', [
     question: z.string().max(600).optional(),
   }),
   /** Live discussion takeaways card; fetch `GET /v1/live/:id` (docs/live-discussion.md). */
+  /** Shared study plan card; fetch `GET /v1/plans/:planId` (docs/study-plan.md). */
+  z.strictObject({
+    type: z.literal('plan'),
+    planId: z.string().regex(/^pl_[a-z0-9]{10}$/),
+    rev: z.number().int().nonnegative().optional(),
+    status: z.string().max(20).optional(),
+  }),
   z.strictObject({
     type: z.literal('live'),
     liveId: z.string().regex(/^ld_[a-z0-9]{12}$/),
