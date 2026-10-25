@@ -20,34 +20,40 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     nav: { label: 'Village', icon: 'map', order: 1, primary: true },
   },
   {
+    key: 'chat',
+    path: '/squad/chat',
+    title: 'Chat',
+    nav: { label: 'Chat', icon: 'message', order: 2, primary: true },
+  },
+  {
     key: 'setup',
     path: '/squad/setup/:step?',
     title: 'Setup',
-    nav: { label: 'Setup', icon: 'sparkle', order: 4 },
+    nav: { label: 'Setup', icon: 'sparkle', order: 5 },
   },
   {
     key: 'personas',
     path: '/squad/personas',
     title: 'Personas',
-    nav: { label: 'Personas', icon: 'users', order: 5 },
+    nav: { label: 'Personas', icon: 'users', order: 6 },
   },
   {
     key: 'ledger',
     path: '/squad/ledger/:taskId?',
     title: 'Glass Box',
-    nav: { label: 'Ledger', icon: 'ledger', order: 2, primary: true },
+    nav: { label: 'Ledger', icon: 'ledger', order: 3, primary: true },
   },
   {
     key: 'trip',
     path: '/squad/trips/:tripId',
     title: 'Trip',
-    nav: { label: 'Trip', icon: 'plane', order: 3, primary: true },
+    nav: { label: 'Trip', icon: 'plane', order: 4 },
   },
   {
     key: 'mastery',
     path: '/squad/mastery/:courseId?',
     title: 'Mastery',
-    nav: { label: 'Mastery', icon: 'book', order: 6 },
+    nav: { label: 'Mastery', icon: 'book', order: 7 },
   },
 ];
 
