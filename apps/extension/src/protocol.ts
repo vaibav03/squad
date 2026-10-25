@@ -126,6 +126,10 @@ export function createHandler(deps: HandlerDeps) {
     } catch (e) {
       outcome = e instanceof CanvasAccessError ? e.kind : 'error';
       if (outcome === 'error') log('[squad-ext] sync failed');
+      // Tell the hub what Canvas said so the connection shows the honest state (expired / rate_limited) everywhere.
+      await post(`/v1/connections/${encodeURIComponent(connectionId)}/canvas-report`, token, {
+        outcome,
+      }).catch(() => undefined);
     }
     const t = now();
     await deps.store.patch({ syncFinishedAt: t, lastSyncOutcome: outcome, lastSyncFinishedAt: t });
