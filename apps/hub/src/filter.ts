@@ -51,6 +51,12 @@ const filterVillageEventRaw: FilterVillageFn = (event, viewer, ctx) => {
     case 'council.verdict':
     case 'quiz.question':
     case 'trip.confirmed':
+    case 'discussion.started':
+    case 'discussion.turn':
+    case 'discussion.interrupted':
+    case 'discussion.takeaway':
+    case 'discussion.ended':
+      // text/cites are already absent for private runs (the engine strips them at the source)
       return event;
     default:
       return null;

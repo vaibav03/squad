@@ -79,3 +79,12 @@ export function parseCouncilCard(text: string): { card: ChatCard; text: string }
   if (!m) return undefined;
   return { text: text.slice(0, m.index).trimEnd(), card: { type: 'council', runId: m[1]! } };
 }
+
+const LIVE_RUN = /\n?\(live discussion (ld_[a-z0-9]{12})\)\s*$/;
+
+/** The live skill ends its reply with `(live discussion ld_xxxxxxxxxxxx)`; the web client renders the `live` card. */
+export function parseLiveCard(text: string): { card: ChatCard; text: string } | undefined {
+  const m = LIVE_RUN.exec(text);
+  if (!m) return undefined;
+  return { text: text.slice(0, m.index).trimEnd(), card: { type: 'live', liveId: m[1]! } };
+}

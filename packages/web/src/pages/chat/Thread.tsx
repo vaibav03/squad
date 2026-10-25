@@ -22,6 +22,8 @@ import { Composer, type ComposerHandle } from './Composer';
 import { MemberStack, TypingIndicator } from './parts';
 import { QUICK_PROMPTS_DM, QUICK_PROMPTS_GROUP, buildRows, dmIdFor, type ThreadRow } from './model';
 import type { ChatController } from './useChat';
+import { LivePanel } from '../../live/LivePanel';
+import { useSquadConfig } from '../../shell/context';
 
 // ------------------------------------------------------------------ banners
 
@@ -490,6 +492,9 @@ export function ThreadPane({
       ? 'Cubbie, your study buddy'
       : `Shared with your squad · ${chat.subtitle ?? `${names.join(', ')} and Cubbie`}`;
   const paused = pausedCopy(ctl);
+  const cfg = useSquadConfig();
+  const liveHub = cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token ?? null } : null;
+  const [liveTopic, setLiveTopic] = useState<string | null>(null);
   return (
     <div className="sqc-thread" data-chat-kind={chat.kind}>
       <header className="sqc-head">
@@ -544,7 +549,18 @@ export function ThreadPane({
         compact={compact}
         paused={paused}
         onSend={(input) => ctl.send(chat.id, input)}
+        onDiscuss={setLiveTopic}
       />
+      {liveTopic ? (
+        <LivePanel
+          hub={liveHub}
+          open
+          topic={liveTopic}
+          chatId={chat.id}
+          calm={reduced}
+          onClose={() => setLiveTopic(null)}
+        />
+      ) : null}
     </div>
   );
 }

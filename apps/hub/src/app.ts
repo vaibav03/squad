@@ -28,6 +28,7 @@ import { createCallRoutes } from './routes/call';
 import { createCouncilRoutes } from './routes/council';
 import { createDomainRoutes } from './routes/domain';
 import { createInternalRoutes } from './routes/internal';
+import { createLiveRoutes } from './routes/live';
 import { createLibraryRoutes } from './routes/library';
 import { createMediaRoutes } from './routes/media';
 import { createQuizRoutes } from './routes/quiz';
@@ -181,6 +182,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createMediaRoutes(deps),
     createDomainRoutes(deps),
     createCouncilRoutes(deps),
+    createLiveRoutes(deps),
     createChatRoutes(deps),
     ...(config.sim ? [createSimRoutes(deps)] : []),
   ])

@@ -57,6 +57,12 @@ export const ChatCardSchema = z.discriminatedUnion('type', [
     runId: z.string().regex(/^cn_[a-z0-9]{12}$/),
     question: z.string().max(600).optional(),
   }),
+  /** Live discussion takeaways card; fetch `GET /v1/live/:id` (docs/live-discussion.md). */
+  z.strictObject({
+    type: z.literal('live'),
+    liveId: z.string().regex(/^ld_[a-z0-9]{12}$/),
+    topic: z.string().max(400).optional(),
+  }),
 ]);
 export type ChatCard = z.infer<typeof ChatCardSchema>;
 

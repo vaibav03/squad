@@ -59,6 +59,28 @@ const ev: Record<(typeof VILLAGE_EVENT_TYPES)[number], VillageEvent> = {
   'quiz.answer': { t: 'quiz.answer', quizId: 'q', chapter: 'ch6', student: 's_ana' },
   'quiz.result': { t: 'quiz.result', quizId: 'q', chapter: 'ch6', student: 's_ana', correct: true },
   'call.start': { t: 'call.start', agent: 'expert:ch6', callId: 'c', student: 's_ana' },
+  'discussion.started': { t: 'discussion.started', discussionId: 'ld_abcdefghijkl' },
+  'discussion.turn': {
+    t: 'discussion.turn',
+    discussionId: 'ld_abcdefghijkl',
+    agent: 'council:live-tutor',
+    member: 'tutor',
+    to: 'council:live-skeptic',
+    turnId: 't1',
+    text: 'Start from the definition.',
+  },
+  'discussion.interrupted': {
+    t: 'discussion.interrupted',
+    discussionId: 'ld_abcdefghijkl',
+    agent: 'council:live-tutor',
+  },
+  'discussion.takeaway': {
+    t: 'discussion.takeaway',
+    discussionId: 'ld_abcdefghijkl',
+    kind: 'decision',
+    text: 'Use the definition first.',
+  },
+  'discussion.ended': { t: 'discussion.ended', discussionId: 'ld_abcdefghijkl' },
   'call.caption': {
     t: 'call.caption',
     agent: 'expert:ch6',
@@ -70,7 +92,15 @@ const ev: Record<(typeof VILLAGE_EVENT_TYPES)[number], VillageEvent> = {
   'trip.confirmed': { t: 'trip.confirmed', taskId: 't', squadId: 'sq' },
   'mastery.changed': { t: 'mastery.changed', student: 's_ana', chapter: 'ch6', box: 2 },
 };
-const silent = new Set(['agent.state', 'call.start', 'call.end', 'mastery.changed']);
+const silent = new Set([
+  'agent.state',
+  'call.start',
+  'call.end',
+  'mastery.changed',
+  'discussion.started',
+  'discussion.takeaway',
+  'discussion.ended',
+]);
 
 describe('exchangesFromEvent covers the union', () => {
   for (const t of VILLAGE_EVENT_TYPES)
@@ -123,6 +153,25 @@ describe('readable threads', () => {
     expect(s.links()).toEqual([
       expect.objectContaining({ a: 'student:s_ana', b: 'student:s_ben' }),
     ]);
+  });
+  it('discussion turn appears in the speaker and addressee threads with from/to', () => {
+    const s = store();
+    s.apply(ev['discussion.turn']);
+    const c = s.conversation('council:live-tutor');
+    expect(c.thread[0]!.text).toBe('Start from the definition.');
+    expect(c.thread[0]!.direction).toBe('out');
+    expect(c.thread[0]!.to.id).toBe('council:live-skeptic');
+    expect(s.conversation('council:live-skeptic').thread[0]!.direction).toBe('in');
+  });
+  it('discussion turn without text shows no text', () => {
+    const s = store();
+    s.apply({ ...ev['discussion.turn'], text: undefined } as VillageEvent);
+    expect(s.conversation('council:live-tutor').thread).toHaveLength(0);
+  });
+  it('discussion interrupted reads as yielding to the student', () => {
+    const s = store();
+    s.apply(ev['discussion.interrupted']);
+    expect(s.conversation('council:live-tutor').thread[0]!.text).toBe('Yielded to the student');
   });
   it('chat: the viewer and the expert on a call, with the citation', () => {
     const s = store();
