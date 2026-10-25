@@ -8,3 +8,4 @@ export * from './replay';
 export * from './internal-events';
 export * from './sentinel';
 export * from './llm';
+export * from './chat';
