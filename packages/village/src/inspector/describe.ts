@@ -366,6 +366,30 @@ export function eventWords(
         log: `${agentName(e.agent)} ended the call`,
         skill: 'Expert call',
       };
+    case 'discussion.started':
+      return { now: 'Joined the discussion', log: 'Joined the discussion', skill: 'Discussion' };
+    case 'discussion.ended':
+      return { now: 'Left the discussion', log: 'Left the discussion', skill: 'Discussion' };
+    case 'discussion.turn': {
+      const text = e.text ? shortCaption(safe(e.text, mine), 90) : '';
+      const to = e.to ? agentName(e.to) : '';
+      return {
+        now: text ? `Saying: ${text}` : to ? `Talking to ${to}` : 'Talking in the discussion',
+        log: text
+          ? `${e.agent ? agentName(e.agent) : 'Someone'} says: ${text}`
+          : `${e.agent ? agentName(e.agent) : 'Someone'} spoke`,
+        ...(text && to ? { context: `Talking to ${to}` } : {}),
+        skill: 'Discussion',
+      };
+    }
+    case 'discussion.takeaway':
+      return {
+        now: `Noting a ${(e.kind ?? 'takeaway').replace('_', ' ')}`,
+        log: `Noted a ${(e.kind ?? 'takeaway').replace('_', ' ')}`,
+        skill: 'Discussion',
+      };
+    case 'discussion.interrupted':
+      return { now: 'Yielded to the student', log: 'Yielded to the student', skill: 'Discussion' };
     case 'trip.confirmed':
       return {
         now: 'Celebrating: everyone said yes',
@@ -427,6 +451,10 @@ export function involved(event: VillageEvent, me?: string): string[] {
     case 'call.caption':
     case 'call.end':
       return [event.agent, ...(event.student ? [`student:${event.student}`] : [])];
+    case 'discussion.turn':
+    case 'discussion.interrupted':
+    case 'discussion.takeaway':
+      return [...(event.agent ? [event.agent] : []), ...(event.to ? [event.to] : [])];
     case 'trip.confirmed':
       return []; // the store fans this out to every student agent
     default:

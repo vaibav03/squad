@@ -151,7 +151,7 @@ export const VillageEventSchema = z.discriminatedUnion('t', [
   CallEvent,
   TripConfirmedEvent,
   MasteryChangedEvent,
-  DiscussionEvent,
+  DiscussionEvent.extend(Extras),
 ]);
 
 export type VillageEvent = z.infer<typeof VillageEventSchema>;
