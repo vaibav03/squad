@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 import type { ModuleInstance, SceneModule, VillageContext } from '../world/api';
 import { COLOR, PAL } from '../mesh-view/palette';
 import { pixelText, snap } from '../mesh-view/util';

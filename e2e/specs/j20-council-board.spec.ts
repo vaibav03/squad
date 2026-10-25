@@ -120,6 +120,18 @@ test('J20 degraded replay says Degraded with its reason, in a word and a glyph',
   await expect(dlg).toBeVisible({ timeout: 30_000 });
   await expect(dlg.locator('.cb-head .cb-mode')).toContainText(/Demo|Degraded/);
   await expect(dlg.getByTestId('cb-verdict')).toBeVisible({ timeout: 30_000 });
+  // the agent that lost its live part says so, in a word, a glyph and (in the title) the reason
+  const deg = dlg.locator('.cb-node .cb-mode', { hasText: 'Degraded' });
+  await expect(deg.first()).toBeVisible();
+  await expect(deg.first()).toHaveAttribute('title', /rate limited/);
+  await expect(deg.first().locator('.cb-mode__glyph')).not.toBeEmpty();
+  // and the Practitioner's own card is one of them
+  await expect(
+    dlg
+      .locator('.cb-node')
+      .filter({ has: page.locator('.cb-card__name', { hasText: 'Practitioner' }) })
+      .locator('.cb-mode'),
+  ).toContainText('Degraded');
   await snap(page, '3-degraded');
   await a.ctx.close();
 });
@@ -223,4 +235,40 @@ test('J20 arrows: messages between council agents draw links in the Council Hall
     await snap(page, calm ? '7-room-arrows-calm' : '6-room-arrows');
     await a.ctx.close();
   }
+});
+
+test('J20 Hierarchy tab in the Agent Inspector shows position, delegations and opens the board', async ({
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  const a = await actor(browser, 's_ana');
+  const { page } = a;
+  await page.goto('/squad/village?replay=track4&board=1');
+  const dlg = board(page);
+  await expect(dlg.getByTestId('cb-verdict')).toBeVisible({ timeout: 40_000 });
+  await expect(dlg.locator('.cb-stepper__count')).toContainText('All 7 steps done', {
+    timeout: 30_000,
+  });
+  await page.keyboard.press('Escape');
+  await expect(dlg).toHaveCount(0);
+  // open the inspector on anyone, then walk the roster to the Chair
+  await page.locator('.sqv-stage').focus();
+  await page.keyboard.press('i');
+  const panel = page.getByRole('complementary');
+  await expect(panel).toBeVisible();
+  const next = panel.getByRole('button', { name: 'Next agent' });
+  const heading = panel.getByRole('heading', { level: 2 });
+  for (let i = 0; i < 40; i++) {
+    if (/Ask council|Chair|Skeptic|Teacher|Practitioner/.test((await heading.textContent()) ?? ''))
+      break;
+    await next.click();
+  }
+  await panel.getByRole('tab', { name: 'Hierarchy' }).click();
+  const h = panel.getByTestId('hierarchy');
+  await expect(h.locator('.cb-mode')).toContainText('Demo');
+  await expect(h).toContainText('Chair');
+  await snap(page, '8-hierarchy');
+  await h.getByRole('button', { name: 'Open council board' }).click();
+  await expect(board(page)).toBeVisible();
+  await a.ctx.close();
 });

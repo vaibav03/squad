@@ -603,7 +603,8 @@ const mod = {
           }
         }
         if (inside) syncSeats(inside);
-        const bv = (ctx.registry.get('councilBoard') as CouncilBoardStore | undefined)?.version ?? -1;
+        const bv =
+          (ctx.registry.get('councilBoard') as CouncilBoardStore | undefined)?.version ?? -1;
         if (bv !== boardVersion) {
           boardVersion = bv;
           arrowsOn = true;

@@ -6,6 +6,7 @@ import {
   ARROW_WIDTH,
   arrowHead,
   councilRole,
+  roomCouncils,
   planArrows,
   seatPositions,
   type ArrowLink,
@@ -121,12 +122,18 @@ describe('seatPositions', () => {
   it('maps chair and members, skipping other councils', () => {
     const links = [
       { ...link(0, 0), from: 'council:quizkey-chair', to: 'council:quizkey-solver-b' },
-      { ...link(1, 0), from: 'council:ask-chair', to: 'council:ask-skeptic' },
+      { ...link(1, 0), from: 'council:planner-chair', to: 'council:planner-chill' },
     ];
     const r = seatPositions(links, seats, 'council:quizkey');
     expect(r.links).toHaveLength(1);
     expect(r.positions.get('council:quizkey-chair')).toEqual({ x: 112, y: 89 });
     expect(r.positions.get('council:quizkey-solver-b')).toEqual({ x: 112, y: 121 });
+  });
+  it('the Council Hall also seats the Ask council; the Round Table seats the planner', () => {
+    const ask = { ...link(0, 0), from: 'council:ask-chair', to: 'council:ask-skeptic' };
+    expect(seatPositions([ask], seats, 'council:quizkey').links).toHaveLength(1);
+    expect(seatPositions([ask], seats, 'council:planner').links).toHaveLength(0);
+    expect([...roomCouncils('council:planner')].sort()).toEqual(['planner', 'roundtable']);
   });
   it('gives unseated roles a free member seat', () => {
     const l = { ...link(0, 0), from: 'council:ask-skeptic', to: 'council:ask-teacher' };

@@ -191,7 +191,7 @@ export function Feed({ run, filter, onFilter, jumpTo, selectedId, onSelect }: Fe
   const pending = useRef<string | null>(null);
   useEffect(() => {
     if (jumpTo) pending.current = jumpTo.id;
-  }, [jumpTo?.n]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [jumpTo?.n]);
   useEffect(() => {
     const id = pending.current;
     if (!id) return;
@@ -208,7 +208,7 @@ export function Feed({ run, filter, onFilter, jumpTo, selectedId, onSelect }: Fe
     el.focus({ preventScroll: true });
     setFlash(id);
     setFocusIdx(visible.findIndex((m) => m.id === id));
-  }, [jumpTo?.n, visible.length, filter.agent, filter.kind]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [jumpTo?.n, visible.length, filter.agent, filter.kind]);
 
   useEffect(() => {
     if (!flash) return;
