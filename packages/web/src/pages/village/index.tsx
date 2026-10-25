@@ -14,6 +14,7 @@ import { hubStudentId } from '../../shell/dev-login';
 import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
 import { ChatDock } from '../chat/ChatDock';
+import { CouncilHall } from '../../council';
 import { OverlayHost } from './OverlayHost';
 import { DEFAULT_WORLD, loadWorld, type WorldHandle } from './worlds';
 import './village.css';
@@ -151,6 +152,7 @@ export default function VillagePage({ world }: { world?: string }) {
         onClosed={onClosed}
       />
       <ChatDock enabled={live && !replayName} />
+      <CouncilHall hub={hub} calm={calm} returnFocusTo={stage.current?.querySelector('canvas')} />
     </div>
   );
 }

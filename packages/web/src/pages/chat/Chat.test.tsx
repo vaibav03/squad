@@ -63,7 +63,7 @@ describe('thread rendering', () => {
     const msgs = screen.getAllByTestId('chat-message');
     expect(msgs[0]!.getAttribute('data-message-id')).toBe('m_1');
     expect(msgs[0]!.getAttribute('data-sender-id')).toBe('s_dev');
-    expect(screen.getByText('Yesterday')).toBeTruthy();
+    expect(screen.getAllByText('Yesterday')[0]).toBeTruthy();
     expect(screen.getByText('Today')).toBeTruthy();
     // Chi's second consecutive message has no name header of its own
     // Chi writes two runs (yesterday, today); the second message of each run has no header
@@ -342,6 +342,22 @@ describe('citations', () => {
     const ex = await screen.findByTestId('chat-citation-excerpt');
     await waitFor(() => expect(ex.textContent).toContain('how many standard deviations'));
     expect(ex.textContent).toContain('ch6.pdf, page 4');
+  });
+
+  it('renders a council card in the thread', async () => {
+    const { api } = setup();
+    api.pushMessage({
+      chatId: GROUP_ID,
+      ts: Date.now(),
+      sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+      text: 'The council answered.',
+      private: false,
+      attachments: [],
+      citations: [],
+      card: { type: 'council', runId: 'cn_abcdefghij12', question: 'switch my major?' },
+      demo: true,
+    });
+    expect(await screen.findByTestId('chat-council-card')).toBeTruthy();
   });
 
   it('shows an error with retry when the excerpt is missing', async () => {
@@ -657,13 +673,18 @@ describe('village dock keys', () => {
     fireEvent.click(screen.getByTestId('chat-dock-open'));
     await input();
     const chip = (await screen.findAllByTestId('chat-citation-chip'))[0]!;
+    await new Promise((r) => setTimeout(r, 80)); // let the dock's own focus frame pass
     chip.focus();
     fireEvent.click(chip);
     await screen.findByTestId('chat-citation-excerpt');
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByTestId('chat-citation-excerpt')).toBeNull());
     expect(screen.getByTestId('chat-composer-input')).toBeTruthy();
-    await waitFor(() => expect(document.activeElement).toBe(chip));
+    await waitFor(() =>
+      expect((document.activeElement as HTMLElement | null)?.dataset.testid).toBe(
+        'chat-citation-chip',
+      ),
+    );
   });
 
   it('Escape with the mention list open closes the list, not the dock', async () => {

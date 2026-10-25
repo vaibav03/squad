@@ -121,7 +121,13 @@ export async function attachChatEngine(
     emit: (e) => events.publish(e),
     ...(media ? { media } : {}),
     courseId: () => courseId,
-    ...(shared ? { shared } : {}),
+    demo: () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : true),
+    onCouncil: (c) => void (deps.council ??= c),
+    ...(shared
+      ? { shared: { ...shared, ...(deps.council ? { council: deps.council } : {}) } }
+      : deps.council
+        ? { shared: { council: deps.council } }
+        : {}),
   });
 
   const roster: { students: Student[]; chats: { id: string; name: string; members: string[] }[] } =

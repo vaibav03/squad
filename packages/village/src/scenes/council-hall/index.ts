@@ -5,12 +5,10 @@ import { ENTRY, INT_H, INT_W, paintInterior } from './interior';
 import { handlesCouncil, mapCouncilEvent } from './map';
 import { initCouncilHall, reduceCouncil, type CouncilHallState } from './state';
 import { shots } from './shots';
+import { SESSION_MS } from './words';
 
 export type { CouncilHallState } from './state';
 export { mapCouncilEvent, handlesCouncil } from './map';
-
-/** A council ran in the last 20 s of scene time: the hall's windows are lit. */
-const SESSION_MS = 20000;
 
 export const councilHall: SceneDef<CouncilHallState> = {
   id: 'council-hall',
@@ -37,15 +35,25 @@ export const councilHall: SceneDef<CouncilHallState> = {
     if (s.access === 'dim')
       return 'Council Hall, quiet. Three council members and a chairman sit inside.';
     const parts = ['Council Hall, in session'];
-    if (s.verdict) {
-      parts.push(`verdict: ${s.verdict.text}`);
-      if (s.verdict.dissenter || s.lantern === 'flicker') {
-        parts.push('one member dissents, the lantern flickers: uncertain, ask your TA');
-      }
-    } else if (s.rank) {
-      parts.push('members are ranking each other');
-    } else if (s.bubbles.length > 0) {
+    const last = [...s.bubbles].reverse().find((b) => b.text !== '');
+    if (s.bubbles.length > 0) {
       parts.push(`${s.bubbles.length} opinions given`);
+      if (last) parts.push(`${last.who} said: ${last.text.slice(0, 160)}`);
+    }
+    if (s.ranks.length > 0) {
+      parts.push(`${s.ranks.length} of the members ranked the others`);
+    }
+    if (s.verdict) {
+      parts.push(
+        s.verdict.text === ''
+          ? 'the chairman gave a verdict'
+          : `verdict: ${s.verdict.text.slice(0, 200)}`,
+      );
+      if (s.verdict.dissenter || s.lantern === 'flicker') {
+        const d = s.verdict.dissenter;
+        const who = d && s.seats[d] !== undefined ? ` (${d})` : '';
+        parts.push(`one member dissents${who}: uncertain, ask your TA`);
+      }
     }
     return `${parts.join(', ')}.`;
   },

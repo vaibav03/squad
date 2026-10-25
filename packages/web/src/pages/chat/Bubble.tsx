@@ -3,6 +3,8 @@ import type { ChatCitation, ChatMessage, HubStatus } from '@squad/core';
 import { Icon } from '../../primitives/Icon';
 import { Markdown } from '../../primitives/Markdown';
 import { ConfirmMessageCard, QuizMessageCard } from './cards';
+import { CouncilChatCard } from '../../council';
+import { useSquadConfig } from '../../shell/context';
 import { AudioPlayer, ImageAttachment } from './media';
 import { ChatAvatar } from './parts';
 import {
@@ -62,6 +64,8 @@ function useLinkHosts(ref: React.RefObject<HTMLElement | null>, text: string) {
 
 export function MessageBubble(p: BubbleProps) {
   const { row, api, status } = p;
+  const cfg = useSquadConfig();
+  const hub = cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token ?? null } : null;
   const m = row.message;
   const sender = m.sender;
   const bubbleRef = useRef<HTMLDivElement>(null);
@@ -193,6 +197,11 @@ export function MessageBubble(p: BubbleProps) {
             onOpenDm={p.onOpenDm}
             disabled={p.paused}
           />
+        ) : null}
+        {m.card?.type === 'council' ? (
+          <div data-testid="chat-council-card">
+            <CouncilChatCard hub={hub} runId={m.card.runId} calm={p.reduced} />
+          </div>
         ) : null}
         {m.card?.type === 'confirm' ? (
           <ConfirmMessageCard

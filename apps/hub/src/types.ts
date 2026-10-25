@@ -11,6 +11,7 @@ import type {
   LlmStatus,
   VillageEvent,
 } from '@squad/core';
+import type { CouncilService } from '@squad/brain';
 import type { HubConfig } from './config';
 import type { Logger } from './log';
 import type { Ports } from './ports';
@@ -256,6 +257,8 @@ export interface HubDeps {
   state: SquadState;
   ingest: Ingestor;
   ports: Ports;
+  /** Ask-the-council service. Built with the real ports, or lazily (demo model) by the council routes. */
+  council?: CouncilService;
   /** Web chat: store, files, SSE fan-out; the bot engine attaches later (`attachChatEngine`). */
   chat: ChatHub;
   /** students with projector mode on (server-side session flag) */

@@ -19,6 +19,7 @@ import { createLogger } from './log';
 import type { Ports } from './ports';
 import { createAuthRoutes } from './routes/auth';
 import { createCallRoutes } from './routes/call';
+import { createCouncilRoutes } from './routes/council';
 import { createDomainRoutes } from './routes/domain';
 import { createInternalRoutes } from './routes/internal';
 import { createMediaRoutes } from './routes/media';
@@ -121,6 +122,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createCallRoutes(deps),
     createMediaRoutes(deps),
     createDomainRoutes(deps),
+    createCouncilRoutes(deps),
     createChatRoutes(deps),
     ...(config.sim ? [createSimRoutes(deps)] : []),
   ])

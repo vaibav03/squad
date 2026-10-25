@@ -16,6 +16,8 @@ import {
   CaptionUnavailableError,
   chapterProviderFromStore,
   createBrain,
+  councilLlmFor,
+  createCouncilService,
   createMasteryStore,
   createOralExaminer,
   loadFixtureCourse,
@@ -102,6 +104,16 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
   const brain = createBrain({ llm: o.llm, db, emit: brainEmit });
   if (o.loadFixture !== false && !brain.store.getCourse(courseId))
     await loadFixtureCourse({ store: brain.store }, courseId);
+
+  const councilDemo = () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : false);
+  deps.council = createCouncilService({
+    llm: councilLlmFor(o.llm, councilDemo),
+    db,
+    emit,
+    brain,
+    courseId: () => courseId,
+    demo: councilDemo,
+  });
 
   const mastery = createMasteryStore({ db, emit: quizEmit });
   const engine = new QuizEngine({

@@ -11,7 +11,12 @@ import type { ChatId } from '@squad/core';
 import { detectMention } from '../mention';
 import { getPersona } from '../persona';
 import type { Transport } from '../types';
-import { extractCitations, parseQuizCard, stripPersonaPrefix } from './web-format';
+import {
+  extractCitations,
+  parseCouncilCard,
+  parseQuizCard,
+  stripPersonaPrefix,
+} from './web-format';
 
 /** What the web host receives for every bot message (structured; the persona prefix is already removed). */
 export interface WebOutbound {
@@ -66,8 +71,9 @@ export class WebTransport implements Transport {
   async send(o: OutboundMessage): Promise<void> {
     const persona = getPersona(o.personaId);
     const raw = o.text ? stripPersonaPrefix(o.personaId, o.text) : '';
-    const quiz = raw ? parseQuizCard(raw) : undefined;
-    const { text, citations } = extractCitations(quiz ? quiz.text : raw);
+    const council = raw ? parseCouncilCard(raw) : undefined;
+    const quiz = raw && !council ? parseQuizCard(raw) : undefined;
+    const { text, citations } = extractCitations(council ? council.text : quiz ? quiz.text : raw);
     await this.opts.onMessage({
       chatId: o.chatId,
       personaId: persona.id,
@@ -76,7 +82,7 @@ export class WebTransport implements Transport {
       text,
       citations: quiz ? [] : citations,
       attachments: o.attachments ?? [],
-      ...(quiz ? { card: quiz.card } : {}),
+      ...(council ? { card: council.card } : quiz ? { card: quiz.card } : {}),
     });
   }
 
