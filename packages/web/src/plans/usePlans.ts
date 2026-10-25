@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { timedFetch } from '../lib/http';
+import { useSquadConfig } from '../shell/context';
+import { healFromTrips } from '../pages/village/trip-cutscene';
 import { parsePlans, type PlanSummary } from './model';
 
 export interface PlansState {
@@ -18,6 +20,7 @@ export function usePlans(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [n, setN] = useState(0);
+  const viewer = useSquadConfig().userId ?? 'anon';
   const reload = useCallback(() => setN((x) => x + 1), []);
   useEffect(() => {
     if (!on || !hub) return;
@@ -33,7 +36,11 @@ export function usePlans(
     setLoading(true);
     setError(false);
     Promise.all([get('/v1/trips'), get('/v1/plans/current').catch(() => null)])
-      .then(([t, c]) => !dead && setPlans(parsePlans(t, c)))
+      .then(([t, c]) => {
+        // a trip confirmed while the Village was closed is remembered, so its cutscene plays on the next visit
+        healFromTrips(viewer, t);
+        if (!dead) setPlans(parsePlans(t, c));
+      })
       .catch(() => !dead && setError(true))
       .finally(() => !dead && setLoading(false));
     return () => {
