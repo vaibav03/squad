@@ -15,21 +15,22 @@ All `/v1/chat/*` routes need `Authorization: Bearer <token>` (from `POST /v1/aut
 | `GET /v1/status` (public) | `HubStatus {llm:'gemini'\|'fake', tts:'elevenlabs'\|'none', demo, notice?}`. `demo` is true when `llm==='fake'`; `notice` is `Demo mode: add GEMINI_API_KEY to .env for real answers`. |
 | `GET /v1/chat/chats` | `{ chats: ChatSummary[] }` the viewer's group first, then their DM. `last` is the newest message the viewer may see. |
 | `GET /v1/chat/history?chatId=&before=<seq>&limit=50` | `{ chatId, messages: ChatMessage[] /* oldest first */, hasMore }`. 403 `forbidden` for a chat the viewer is not in. |
-| `POST /v1/chat/send` `{chatId, text, attachments?: [{id}]}` | `202 { message: ChatMessage }` (the viewer's own message, already persisted and streamed). The bot's replies arrive on the stream. 400 `invalid`, 403 `forbidden`, 404 `unknown_attachment`, 429 `rate_limited` (30/min/student). Needs text or an attachment. |
-| `POST /v1/chat/upload` (multipart `file`; png, jpeg, webp, gif up to 8 MB) | `{ attachment: ChatAttachment }` owned by the uploader; reference it by id in `send`. 415 `unsupported_type`, 413 `too_large`. |
-| `GET /v1/chat/files/:token?st=` | file bytes. Token is 32 hex (128 bit, unguessable); the viewer must be in the chat the file was posted to (uploaders may read their pending uploads). 404 otherwise. `cache-control: private, max-age=3600`. |
-| `GET /v1/chat/citation?file=&page=` | `ChatCitationExcerpt {file, page, chapter?, title?, excerpt}`; the page text the citation was verified against (max 700 chars). 404 `not_found`. |
+| `POST /v1/chat/send` `{chatId, text, attachments?: [{id}], clientId?, confirmTaskId?}` | `202 { message: ChatMessage }` (the viewer's own message, already persisted and streamed). The bot's replies arrive on the stream. `clientId` makes a retry idempotent (the first message comes back). `confirmTaskId` marks a confirm-card answer: only valid in the student's own DM while that card is pending, else 409 `stale_confirm`. Errors: 400 `invalid`, 403 `forbidden`, 404 `unknown_attachment`, 409 `stale_confirm`, 413 `too_large` (64 KB body), 429 `rate_limited` (30/min/student) or `busy` (2 bot runs in flight per student). Needs text or an attachment. |
+| `POST /v1/chat/upload` (multipart `file`; png, jpeg, webp, gif up to 8 MB, magic bytes checked) | `{ attachment: ChatAttachment }` owned by the uploader; reference it by id in `send`. 415 `unsupported_type`, 413 `too_large`, 429 `upload_limit` (10/min, at most 8 unsent files or 32 MB per student; unsent uploads are deleted after 1 h). |
+| `POST /v1/chat/file-token` | `{ ft, expiresAt }` a 2 h token that can read chat files and nothing else; use it as `?ft=` in `<img>`/`<audio>` URLs (never put the bearer token in a URL). |
+| `GET /v1/chat/files/:token?ft=` | file bytes (Range supported, so audio can seek). Token is 32 hex (128 bit, unguessable); the viewer must be in the chat the file was posted to (uploaders may read their pending uploads). 404 otherwise. `cache-control: private, max-age=3600` for group files, `private, no-store` for DM files and pending uploads. |
+| `GET /v1/chat/citation?file=&page=&q=` | `ChatCitationExcerpt {file, page, chapter?, title?, excerpt, highlight?}`; a window of the page the citation was verified against (about 700 chars, cut at a word boundary). With `q` (the answer text) the window opens at the sentence that best matches it and `highlight` names that sentence. 404 `not_found`. |
 | `GET /v1/chat/stream?st=&lastEventId=` | SSE, per-viewer filtered (below). |
 
 ## Stream (SSE)
-Same framing as `/v1/squad/stream` (`retry: 2000`, `: ping` every 15 s). The `Last-Event-ID` header (or `?lastEventId=`) is a chat `seq`; the hub replays everything after it that this viewer may see, then goes live, no gaps or duplicates. Gaps in ids are normal.
+At most 3 live streams per student (the oldest is closed). Same framing as `/v1/squad/stream` (`retry: 2000`, `: ping` every 15 s). The `Last-Event-ID` header (or `?lastEventId=`) is a chat `seq`; the hub replays everything after it that this viewer may see, then goes live, no gaps or duplicates. Gaps in ids are normal.
 
 | `event:` | `data:` | Delivered to |
 |---|---|---|
 | `chat.message` (id = seq) | `ChatMessage` | group: squad members; dm: that student only |
 | `chat.update` | `ChatUpdate` (a confirm card became `answered`/`timeout`) | same audience as the message |
 | `chat.typing` | `ChatTyping` (`on:true` while the bot works on a mention or DM, `on:false` when done or after 45 s) | same audience as the chat |
-| `chat.resync` | `{ seq }` when `lastEventId` is older than retained history; refetch history | the subscriber |
+| `chat.resync` | `{ seq }` when `lastEventId` is ahead of the hub or the catch-up is longer than 200 messages; refetch history | the subscriber |
 
 ## Cards (structured, no text parsing in the client)
 - `confirm`: `{type:'confirm', taskId, question, options[], status, answer?}` in the student's DM. To answer, `POST /v1/chat/send {chatId: 'dm:<me>', text: '<1-based option number>'}`; the router's confirm manager consumes it (nothing is booked without it). The hub later streams `chat.update` with `status:'answered'` + `answer` or `'timeout'`.
