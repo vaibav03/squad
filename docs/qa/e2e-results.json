@@ -435,12 +435,6 @@
     "ms": 8322
    },
    {
-    "title": "J16 clicking the ground never moves the player; clicking a character opens the inspector",
-    "status": "pass",
-    "note": "",
-    "ms": 10501
-   },
-   {
     "title": "J11 mastery: no tab, redirect opens the in-village panel",
     "status": "pass",
     "note": "",

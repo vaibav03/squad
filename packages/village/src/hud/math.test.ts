@@ -50,3 +50,21 @@ describe('closePopovers (Escape)', () => {
     expect(closePopovers([mk('false'), mk('')])).toBe(false);
   });
 });
+
+describe('hud chips: portraits and status words', () => {
+  it('every state has a status word (Resting, Thinking, Speaking, Waiting), never a letter or dot', async () => {
+    const { STATUS_WORD, portraitKeyFor, portraitPath } = await import('./math');
+    expect(Object.values(STATUS_WORD).sort()).toEqual(['Idle', 'On a call', 'Waiting on you', 'Working']);
+    const { chipName, KIND_BLURB } = await import('./math');
+    expect(chipName('Tutor', 'idle')).toBe('Tutor, idle: open');
+    expect(chipName('Planner', 'waiting_for_student')).toBe('Planner, waiting on you: open');
+    for (const s of Object.values(KIND_BLURB)) expect(s.split('.').length).toBe(2); // one sentence
+    for (const w of Object.values(STATUS_WORD)) expect(w.length).toBeGreaterThan(3);
+    expect(portraitKeyFor({ id: 'council:ask-chair', kind: 'council' })).toBe('chairman');
+    expect(portraitKeyFor({ id: 'council:planner-chill', kind: 'council' })).toBe('council-chill');
+    expect(portraitKeyFor({ id: 'student:s_ana', kind: 'student' }, 's_ana')).toBe('student');
+    expect(portraitKeyFor({ id: 'student:s_ben', kind: 'student' }, 's_ana')).toBe('freshman');
+    expect(portraitKeyFor({ id: 'dean', kind: 'dean' })).toBe('dean');
+    expect(portraitPath('dean')).toBe('assets/pixel/composed/characters/dean/portrait.png');
+  });
+});

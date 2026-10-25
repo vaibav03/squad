@@ -1,5 +1,6 @@
 import type {
   AgentInfo,
+  AgentState,
   CameraApi,
   CameraMode,
   Interactable,
@@ -10,7 +11,19 @@ import type {
   AgentRegistry,
 } from '../world/api';
 import { nearestInteractable } from '../world/interact';
-import { STATE_GLYPH, STATE_LABEL, chipOrder, closePopovers, formatClock, initialOf } from './math';
+import {
+  KIND_ROLE,
+  STATE_LABEL,
+  STATUS_WORD,
+  KIND_BLURB,
+  chipName,
+  chipOrder,
+  closePopovers,
+  formatClock,
+  initialOf,
+  portraitKeyFor,
+  portraitPath,
+} from './math';
 import { HUD_CSS } from './style';
 import type { InspectorStore } from '../inspector/store';
 import {
@@ -35,8 +48,32 @@ export interface HudDeps {
   assetUrl(repoPath: string): string;
   /** Agent Inspector: chips carry the live current-activity line and open the inspector. */
   inspector?: InspectorStore;
+  /** The viewer's student id (their own chip uses the red-hood portrait). */
+  me?: string;
 }
 
+const SVG = 'http://www.w3.org/2000/svg';
+const ICON_PATH: Record<AgentState, string> = {
+  idle: 'M9 2a5 5 0 1 0 1 8A4 4 0 0 1 9 2z', // moon
+  studying: 'M6 1a3.5 3.5 0 0 0-1 6.8V10h2V7.8A3.5 3.5 0 0 0 6 1z', // bulb
+  in_call: 'M6 1.5a2 2 0 0 0-2 2v2.5a2 2 0 0 0 4 0V3.5a2 2 0 0 0-2-2zM3 6a3 3 0 0 0 6 0M6 9v2', // mic
+  waiting_for_student: 'M3 1h6M3 11h6M4 1c0 3 4 3 4 5s-4 2-4 5', // hourglass
+};
+function statusIcon(): SVGElement {
+  const svg = document.createElementNS(SVG, 'svg');
+  svg.setAttribute('viewBox', '0 0 12 12');
+  svg.setAttribute('width', '10');
+  svg.setAttribute('height', '10');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '1.4');
+  svg.appendChild(document.createElementNS(SVG, 'path'));
+  return svg;
+}
+function setStatusIcon(svg: Element, state: AgentState): void {
+  svg.firstElementChild?.setAttribute('d', ICON_PATH[state]);
+}
 const FONT_PATH = 'assets/fonts/jersey-10/Jersey10-latin.woff2';
 const FONT_MICRO = 'assets/fonts/silkscreen/Silkscreen-latin.woff2';
 const MODES: Array<[CameraMode, string]> = [
@@ -147,7 +184,18 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
   });
 
   // chips
-  const chips = el('div', 'sqv-panel sqv-chips', { role: 'list', 'aria-label': 'Agents' });
+  const rail = el('div', 'sqv-rail');
+  const railTitle = el('p', 'sqv-rail__title', {}, 'Your study agents');
+  const HINT = "Tap an agent to see what it's doing.";
+  const railHint = el('p', 'sqv-rail__hint', { id: 'sqv-rail-hint' }, HINT);
+  const chips = el('div', 'sqv-panel sqv-chips', {
+    role: 'group',
+    'aria-label': 'Your study agents',
+    'aria-describedby': 'sqv-rail-hint',
+  });
+  const railHead = el('div', 'sqv-rail__head');
+  railHead.append(railTitle, railHint);
+  rail.append(railHead, chips);
 
   // roving focus: arrows move between the agent chips, Enter/Space activates (native button)
   chips.addEventListener('keydown', (e) => {
@@ -212,7 +260,7 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
   };
   document.addEventListener('keydown', onEsc, true);
 
-  root.append(chips, clockWrap, ctrl, menuWrap, mid, bottom);
+  root.append(rail, clockWrap, ctrl, menuWrap, mid, bottom);
   d.parent.appendChild(root);
   mid.appendChild(pop);
 
@@ -236,10 +284,10 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
     root.style.setProperty('--bottom-h', narrow ? (outBottom ? '80px' : 'auto') : 'auto');
     if (narrow) {
       pop.append(seg, calmWrap, helpWrap);
-      bottom.appendChild(chips);
+      bottom.appendChild(rail);
     } else {
       ctrl.append(seg, calmWrap, helpWrap);
-      root.insertBefore(chips, clockWrap);
+      root.insertBefore(rail, clockWrap);
     }
   };
   const ro = new ResizeObserver(relayout);
@@ -265,26 +313,45 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
       seen.add(a.id);
       let c = chipEls.get(a.id);
       if (!c) {
-        c = el('button', 'sqv-chip', { type: 'button', role: 'listitem' });
-        const tex = a.portraitKey;
-        if (tex) {
-          const img = el('img', undefined, { alt: '', src: d.assetUrl(tex) });
-          c.appendChild(img);
-        } else c.appendChild(el('span', 'sqv-initial', {}, initialOf(a.name)));
-        c.appendChild(el('span', 'sqv-glyph', { 'aria-hidden': 'true' }));
+        c = el('button', 'sqv-chip', { type: 'button' });
+        // a distinct portrait per agent (cast busts for the council, the village cast for everyone else), never initials
+        const img = el('img', undefined, {
+          alt: '',
+          src: d.assetUrl(a.portraitKey ?? portraitPath(portraitKeyFor(a, d.me))),
+        });
+        img.addEventListener('error', () => {
+          img.replaceWith(el('span', 'sqv-initial', { 'aria-hidden': 'true' }, initialOf(a.name)));
+        });
+        c.appendChild(img);
+        c.appendChild(el('span', 'sqv-name'));
+        const st = el('span', 'sqv-status');
+        st.appendChild(statusIcon());
+        st.appendChild(el('span', 'sqv-status__w'));
+        c.appendChild(st);
+        // the hint line doubles as the focus/hover tooltip (a native title does not show on keyboard focus)
+        const tip = () => {
+          railHint.textContent = `${a.name}: ${KIND_BLURB[a.kind]}`;
+        };
+        const untip = () => {
+          railHint.textContent = HINT;
+        };
+        c.addEventListener('mouseenter', tip);
+        c.addEventListener('focus', tip);
+        c.addEventListener('mouseleave', untip);
+        c.addEventListener('blur', untip);
         c.addEventListener('click', () => d.focusAgent(a.id));
         chipEls.set(a.id, c);
       }
       c.dataset.state = a.state;
       const act = d.inspector?.view(a.id)?.headline;
-      c.setAttribute(
-        'aria-label',
-        `${a.name}, ${STATE_LABEL[a.state]}${act ? `. ${act}` : ''}. Open inspector`,
-      );
-      c.title = act ? `${a.name}: ${act}` : `${a.name}: ${STATE_LABEL[a.state]}`;
+      const word = STATUS_WORD[a.state];
+      c.setAttribute('aria-label', chipName(a.name, a.state));
+      c.title = `${a.name}, ${KIND_ROLE[a.kind]}: ${KIND_BLURB[a.kind]} ${word}${act ? `: ${act}` : ''}.`;
+      c.querySelector('.sqv-name')!.textContent = a.name;
+      c.querySelector('.sqv-status__w')!.textContent = word;
+      setStatusIcon(c.querySelector('.sqv-status svg')!, a.state);
       c.dataset.selected = String(d.inspector?.selected === a.id);
       c.setAttribute('aria-pressed', String(d.inspector?.selected === a.id));
-      (c.querySelector('.sqv-glyph') as HTMLElement).textContent = STATE_GLYPH[a.state];
       if (chips.children[i] !== c) chips.insertBefore(c, chips.children[i] ?? null);
     });
     for (const [id, c] of chipEls)
@@ -292,7 +359,7 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
         c.remove();
         chipEls.delete(id);
       }
-    chips.style.display = list.length ? '' : 'none';
+    rail.style.display = list.length ? '' : 'none';
   };
   const unsubs = [
     d.bus.on('agentState', () => {

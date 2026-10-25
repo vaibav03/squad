@@ -16,7 +16,7 @@ async function snap(page: Page, name: string): Promise<void> {
   }
 }
 
-const board = (page: Page) => page.getByRole('dialog', { name: /Council|Ask council/ });
+const board = (page: Page) => page.locator('[aria-labelledby="cb-title"]');
 
 test('J20 council board on the track4 replay: org chart, feed filters, verdict with dissent, Demo badge', async ({
   browser,
@@ -27,6 +27,8 @@ test('J20 council board on the track4 replay: org chart, feed filters, verdict w
   await page.goto('/squad/village?replay=track4&board=1');
   const dlg = board(page);
   await expect(dlg).toBeVisible({ timeout: 30_000 });
+  // the board opens on the handoff timeline; the feed is one click away
+  await dlg.getByRole('button', { name: 'Message feed' }).click();
 
   // honest mode on every council surface: the replay is scripted, so the header says Demo
   await expect(dlg.locator('.cb-head .cb-mode')).toContainText('Demo');
@@ -147,6 +149,7 @@ test('J20 Calm: the board is static and still complete', async ({ browser }) => 
   const dlg = board(page);
   await expect(dlg).toBeVisible({ timeout: 30_000 });
   await expect(dlg.getByTestId('cb-verdict')).toBeVisible({ timeout: 30_000 });
+  await dlg.getByRole('button', { name: 'Message feed' }).click();
   const anim = await dlg
     .locator('.cb-row')
     .first()
@@ -260,7 +263,7 @@ test('J20 Hierarchy tab in the Agent Inspector shows position, delegations and o
   // open the inspector on anyone, then walk the roster to the Chair
   await page.locator('.sqv-stage').focus();
   await page.keyboard.press('i');
-  const panel = page.getByRole('complementary');
+  const panel = page.getByTestId('agent-focus-panel');
   await expect(panel).toBeVisible();
   const next = panel.getByRole('button', { name: 'Next agent' });
   const heading = panel.getByRole('heading', { level: 2 });
@@ -269,7 +272,7 @@ test('J20 Hierarchy tab in the Agent Inspector shows position, delegations and o
       break;
     await next.click();
   }
-  await panel.getByRole('tab', { name: 'Hierarchy' }).click();
+  await panel.getByRole('tab', { name: /^Structure/ }).click();
   const h = panel.getByTestId('hierarchy');
   await expect(h.locator('.cb-mode')).toContainText('Demo');
   await expect(h).toContainText('Chair');

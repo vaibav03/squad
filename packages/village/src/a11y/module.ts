@@ -29,6 +29,9 @@ const mod: SceneModule = {
         .filter((a) => !a.hidden)
         .map((a) => ({ id: a.id, name: a.name, kind: a.kind })),
       places,
+      // the inspector's selection is the single source of truth for who the live region may talk about
+      focusAgent: () =>
+        (ctx.registry.get('inspector') as { selected?: string | null } | undefined)?.selected,
     });
     ctx.registry.set('a11yFeed', feed);
     // The world has one polite live region ('announce'). Assertive text goes there too and is

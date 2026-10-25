@@ -25,3 +25,5 @@ export * from './provenance';
 export * from './imessage-status';
 export * from './trip';
 export * from './truth-labels';
+export * from './outbound-links';
+export * from './council-status';

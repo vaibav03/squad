@@ -116,6 +116,11 @@ export const P = {
     files: [{ path: 'packages/village/src/council/module.ts' }],
     why: 'agent activity (typing, thinking, offline) surfaced on the board',
   },
+  focusPanel: {
+    owner: 'feature/agent-focus-panel',
+    files: [{ path: 'packages/web/src/overlays/inspector/focus/FocusShell.tsx' }],
+    why: 'focused agent panel: Conversation, Activity, Decisions, handoff timeline, reasoning summaries',
+  },
   trip: {
     owner: 'feature/trip-collab',
     files: [{ path: 'apps/hub/src/routes/trips.ts' }],

@@ -7,7 +7,8 @@ import { runStep, type StepDef } from './lib/runner';
 import { disposeCtx, makeCtx } from './lib/world';
 import type { GateCtx } from './lib/ctx';
 import { S1, S2, S3 } from './steps/s01-s03';
-import { S4, S5, S6, S7 } from './steps/s04-s07';
+import { S4, S5, S5b, S6, S7 } from './steps/s04-s07';
+import { S5b } from './steps/s05b-focus';
 import { S8, S9, S10 } from './steps/s08-s10';
 import { S3e, S9b, S10b } from './steps/provplan';
 

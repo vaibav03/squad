@@ -35,3 +35,15 @@ export {
   useCouncilTruthVersion,
   councilTruthOf,
 } from './truth-store';
+export * from './live';
+export { CouncilStage } from './stage/CouncilStage';
+export { deriveSeats, SEAT_WORDS, SEAT_GLYPH } from './stage/seat-state';
+export type { SeatState, SeatView } from './stage/seat-state';
+export {
+  announceCouncilStarted,
+  setRoomOpener,
+  openRoom,
+  COUNCIL_STARTED_EVENT,
+  takePendingCouncilStart,
+} from './stage/room-opener';
+export type { CouncilStartedDetail } from './stage/room-opener';

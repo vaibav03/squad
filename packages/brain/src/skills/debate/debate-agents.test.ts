@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 import {
   LlmError,
   agentId,
+  councilRunActions,
   validateA2aTrace,
   type A2aMessage,
   type VillageEvent,
 } from '@squad/core';
 import { createCouncilAgents } from '../../agents/factory';
 import { FakeTransport, submit } from '../../agents/test-kit';
-import { runDebateV2 } from './debate-agents';
+import { debateActions, runDebateV2 } from './debate-agents';
 
 const ID = (k: string) => agentId.council(`debate-${k}`);
 const MATERIAL = {
@@ -86,6 +87,20 @@ describe('runDebateV2 (live, FakeTransport)', () => {
     expect(v.mode).toBe('live');
     expect(v.source).toBe('model');
     expect(v.dissentRefs?.length).toBe(1); // the losing side is recorded
+    // action items: same envelope convention as Ask (status, stage actions, from the judge, parent = verdict, code)
+    const acts = s.msgs().filter((m) => m.stage === 'actions');
+    expect(acts.length).toBeGreaterThanOrEqual(2);
+    expect(acts.length).toBeLessThanOrEqual(4);
+    for (const a of acts) {
+      expect(a.kind).toBe('status');
+      expect(a.from).toBe(ID('judge'));
+      expect(a.to).toBe('room');
+      expect(a.parentMessageId).toBe(v.id);
+      expect(a.source).toBe('code');
+      expect(a.summary!.length).toBeLessThanOrEqual(120);
+    }
+    expect(acts[0]!.summary).toBe('Review ch2 p.1 before the exam');
+    expect(councilRunActions(v.correlationId).map((a) => a.id)).toEqual(acts.map((a) => a.id));
     // three separate system instructions
     expect(new Set(t.opened.map((o) => o.system)).size).toBe(3);
   });
@@ -177,5 +192,27 @@ describe('runDebateV2 (demo)', () => {
     expect(ms.length).toBeGreaterThan(3);
     expect(ms.every((m) => m.source === 'script' && m.mode.startsWith('demo'))).toBe(true);
     expect(validateA2aTrace(ms)).toEqual([]);
+  });
+});
+
+describe('debateActions', () => {
+  const pos = { pro: 'Use the median', con: 'Use the mean' };
+  it('reviews cited pages, then the losing side; caps at 4; ungrounded adds a notes check', () => {
+    const a = debateActions('pro', pos, [{ file: 'ch6.pdf', page: 3 }], true);
+    expect(a[0]).toBe('Review ch6 p.3 before the exam');
+    expect(a[1]).toContain('Use the mean');
+    const many = debateActions(
+      'con',
+      pos,
+      [1, 2, 3, 4].map((page) => ({ file: 'ch1.pdf', page })),
+      false,
+      'pro',
+    );
+    expect(many.length).toBeGreaterThan(3);
+    expect(many.filter((x) => x.startsWith('Review')).length).toBe(2);
+    expect(many).toContain('Check this debate against your course notes');
+    expect(debateActions('draw', pos, [], true)).toEqual([
+      'Pick a side and write one line defending it',
+    ]);
   });
 });

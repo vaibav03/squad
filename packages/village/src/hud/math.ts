@@ -6,6 +6,55 @@ export const STATE_LABEL: Record<AgentState, string> = {
   in_call: 'on a call',
   waiting_for_student: 'waiting for you',
 };
+/** The status word on a HUD chip (always shown with an icon, never colour, a dot or a letter alone). */
+export const STATUS_WORD: Record<AgentState, string> = {
+  idle: 'Idle',
+  studying: 'Working',
+  in_call: 'On a call',
+  waiting_for_student: 'Waiting on you',
+};
+/** One plain sentence on what each kind of agent does (tooltip and the hint line under the rail title). */
+export const KIND_BLURB: Record<AgentInfo['kind'], string> = {
+  student: 'Studies for a classmate and shares only its public activity.',
+  expert: 'Knows one chapter by heart and answers questions about it.',
+  dean: 'Keeps the squad organised and knows everyone.',
+  mediator: 'Keeps trades between study agents fair and private.',
+  council: 'Sits on the council: weighs answers, ranks them and helps decide.',
+};
+/** Accessible name of a rail button: 'Tutor, idle: open'. */
+export const chipName = (name: string, state: AgentState): string =>
+  `${name}, ${STATUS_WORD[state].toLowerCase()}: open`;
+export const KIND_ROLE: Record<AgentInfo['kind'], string> = {
+  student: 'Student',
+  dean: 'Dean',
+  council: 'Council member',
+  expert: 'Chapter expert',
+  mediator: 'Mediator',
+};
+
+/** Cast portrait file (assets/pixel/composed/characters/<key>/portrait.png) for an agent: distinct per role, never initials. */
+export function portraitKeyFor(a: Pick<AgentInfo, 'id' | 'kind'>, me?: string): string {
+  switch (a.kind) {
+    case 'student':
+      return me && a.id === `student:${me}` ? 'student' : 'freshman';
+    case 'dean':
+      return 'dean';
+    case 'mediator':
+      return 'mediator';
+    case 'expert':
+      return 'expert';
+    default: {
+      const id = a.id.toLowerCase();
+      if (/chair/.test(id)) return 'chairman';
+      if (/chill|skeptic/.test(id)) return 'council-chill';
+      if (/grind|practitioner|solver/.test(id)) return 'council-hard';
+      return 'council-balance';
+    }
+  }
+}
+export const portraitPath = (key: string): string =>
+  `assets/pixel/composed/characters/${key}/portrait.png`;
+
 /** Glyph that carries the state without colour (never colour alone). */
 export const STATE_GLYPH: Record<AgentState, string> = {
   idle: 'z',

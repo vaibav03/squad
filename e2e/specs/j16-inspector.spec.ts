@@ -60,16 +60,17 @@ test('J16 clicking the ground never moves the player; clicking a character opens
   await page.mouse.click(300, 400);
   await page.waitForTimeout(800);
   expect(await playerX()).toBe(x0);
-  await expect(page.getByRole('complementary')).toHaveCount(0);
+  await expect(page.getByTestId('agent-focus-panel')).toHaveCount(0);
 
   // click the player's character: the inspector opens with a live headline and the Thinking tab
   const p = await where(page, 'player');
   expect(p).not.toBeNull();
   await page.mouse.click(p!.x, p!.y);
-  const panel = page.getByRole('complementary');
+  const panel = page.getByTestId('agent-focus-panel');
   await expect(panel).toBeVisible();
+  await panel.getByRole('tab', { name: /^Activity/ }).click();
   await expect(panel.locator('.ai-headline')).not.toBeEmpty();
-  await panel.getByRole('tab', { name: /Thinking/ }).click();
+  await panel.getByRole('tab', { name: /^Reasoning summary/ }).click();
   await expect(panel.locator('.ai-bubble')).not.toBeEmpty();
   await shot(page, J, 'thinking');
 
