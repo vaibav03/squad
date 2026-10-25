@@ -9,6 +9,7 @@ export type Transport = z.infer<typeof TransportSchema>;
  * queued     handed to the outbound queue, not yet confirmed by the transport (also: waiting to retry)
  * sent       the transport confirmed the send (never set before that)
  * delivered  the transport reported a delivery receipt (only transports that have receipts)
+ * read       the transport reported a read receipt (Sendblue status callbacks; only when the provider sends one)
  * failed     gave up; `reason` says why; the web offers a retry
  * dry_run    dry-run mode: parsed and routed, nothing was sent
  * web_only   a message in a bound squad that the mirroring rule keeps on the web
@@ -17,6 +18,7 @@ export const DeliveryStateNameSchema = z.enum([
   'queued',
   'sent',
   'delivered',
+  'read',
   'failed',
   'dry_run',
   'web_only',
@@ -46,6 +48,8 @@ export type SkippedAttachment = z.infer<typeof SkippedAttachmentSchema>;
 
 export const ChatSyncFieldsSchema = z.strictObject({
   transport: TransportSchema.optional(),
+  /** Which iMessage provider carried it (`sendblue`), for the "via iMessage (Sendblue)" label. */
+  provider: z.enum(['sendblue', 'photon', 'fixture']).optional(),
   /** The transport's own message id (an iMessage message GUID). Never a chat guid, phone number or email. */
   externalId: z.string().optional(),
   deliveryState: DeliveryStateSchema.optional(),
@@ -72,6 +76,7 @@ export const DELIVERY_LABELS = {
   queued: 'Sending to iMessage',
   sent: 'Sent to iMessage',
   delivered: 'Delivered',
+  read: 'Read',
   dry_run: 'Dry run, not sent',
   web_only: 'Web only, not sent to iMessage',
 } as const;

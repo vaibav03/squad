@@ -91,6 +91,8 @@ export function runStack(opts: StackOptions): void {
     HUB_BASE_URL: hubUrl,
     HUB_PORT: String(HUB_PORT),
     HUB_CORS_ORIGINS: cors,
+    // The web origin actually served (never the 5173 default that may lead the CORS list): fallback for OAuth returns, invite and iMessage links.
+    HUB_WEB_URL: get('HUB_WEB_URL') ?? get('PUBLIC_WEB_URL') ?? webUrl,
     VITE_HUB_URL: hubUrl,
     // Provider keys from .env reach the children (the hub and core read .env themselves too).
     ...(get('GEMINI_API_KEY') ? { GEMINI_API_KEY: get('GEMINI_API_KEY') } : {}),

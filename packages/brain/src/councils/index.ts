@@ -18,3 +18,4 @@ export * from './service';
 export { createDemoCouncilLlm, councilLlmFor } from './demo';
 export type { AskViewerData } from './ask-v2';
 export * from './quizkey-agents';
+export { askRoster } from './ask-agents';

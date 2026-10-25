@@ -21,7 +21,7 @@ export const HUD_CSS = `
 .sqv-ctrl{grid-area:1/3;justify-self:end;align-self:start;display:flex;gap:8px;align-items:center}
 .sqv-mid{grid-area:2/1/3/4;position:relative}
 .sqv-bottom{grid-area:3/1/4/4}
-.sqv-chip{position:relative;flex:none;width:44px;height:44px;border-radius:10px;border:0;background:var(--secondary);color:var(--fg);font:inherit;font-size:28px;display:grid;place-items:center;cursor:pointer;padding:0;
+.sqv-chip{position:relative;flex:none;width:64px;min-height:56px;border-radius:10px;border:0;background:var(--secondary);color:var(--fg);font:inherit;font-size:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:4px 2px;
  box-shadow:0 0 0 2px var(--ink);transition:opacity .15s ease,transform .16s var(--ease-out),box-shadow .15s ease}
 .sqv-chip:active{transform:scale(.97)}
 .sqv-chip .sqv-initial{transform:translateY(-1px)}
@@ -33,8 +33,8 @@ export const HUD_CSS = `
 .sqv-chip[data-state=waiting_for_student]{box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--ember)}
 .sqv-chip[data-state=waiting_for_student]::before{content:'';position:absolute;inset:-7px;border-radius:14px;border:2px solid var(--ember);opacity:.6;animation:sqv-ring 1.6s var(--ease-out) infinite}
 .sqv-calm .sqv-chip::before{animation:none!important;opacity:.55}
-.sqv-glyph{position:absolute;right:-6px;bottom:-6px;min-width:18px;height:18px;padding:0 3px;border-radius:9px;background:var(--ink);border:2px solid var(--secondary);font-size:18.667px;display:grid;place-items:center;color:var(--idle)}
-.sqv-chip[data-state=studying] .sqv-glyph{color:var(--glow)}.sqv-chip[data-state=in_call] .sqv-glyph{color:var(--ok)}.sqv-chip[data-state=waiting_for_student] .sqv-glyph{color:var(--ember)}
+.sqv-status{display:inline-flex;align-items:center;gap:3px;font:600 11px/1 var(--font-sans,system-ui);color:var(--idle);white-space:nowrap}
+.sqv-chip[data-state=studying] .sqv-status{color:var(--glow)}.sqv-chip[data-state=in_call] .sqv-status{color:var(--ok)}.sqv-chip[data-state=waiting_for_student] .sqv-status{color:var(--ember)}
 .sqv-chip img{width:32px;height:32px;object-fit:none;object-position:center top;image-rendering:pixelated}
 @keyframes sqv-ring{from{transform:scale(1);opacity:.6}to{transform:scale(1.15);opacity:0}}
 .sqv-seg{display:flex;padding:3px;gap:3px}

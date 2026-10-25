@@ -54,7 +54,6 @@ async function clean(token: string) {
   }
 }
 
-const FEED = `https://canvas.fixture.invalid/feeds/user_fixture_${Date.now().toString(36)}/calendar.ics`;
 const exam = new Date(Date.now() + 9 * 86_400_000).toISOString().slice(0, 10);
 let ana: Actor;
 let ben: Actor;
@@ -93,7 +92,7 @@ test('1 empty state: disconnected is honest, health says what is missing', async
   });
 });
 
-test('2 connect Canvas by calendar feed (no password/token asked)', async () => {
+test('2 connect the Canvas demo workspace (no password/token asked; extension not detected)', async () => {
   await step('canvas', async () => {
     const page = ana.page;
     await page.goto('/squad/connections');
@@ -101,12 +100,11 @@ test('2 connect Canvas by calendar feed (no password/token asked)', async () => 
     await expect(canvas.getByText('Extension not detected')).toBeVisible({ timeout: 15_000 });
     await expect(canvas).toContainText('No Canvas password or API token is given to Squad');
     await expect(canvas.getByLabel(/password/i)).toHaveCount(0);
-    await canvas.getByLabel('Canvas calendar feed URL').fill(FEED);
-    await canvas.getByRole('button', { name: 'Connect feed' }).click();
+    // no extension in headless Chrome: the honest route is the labelled demo workspace (the .ics feed is covered by j28)
+    await canvas.getByTestId('use-canvas-demo').click();
     const card = page.getByRole('article', { name: 'canvas connection' }).filter({ hasNotText: /revoked/i });
     await expect(card).toBeVisible({ timeout: 20_000 });
     await expect(card).toContainText('Fixture (simulated, not your account)');
-    expect(await page.content()).not.toContain('user_fixture_');
   });
 });
 
@@ -115,7 +113,7 @@ test('3 connect Google (fixture consent) and return to the served origin', async
     const page = ana.page;
     await page.goto('/squad/connections');
     const start = new URL(page.url()).origin;
-    await page.getByRole('button', { name: 'Continue to Google' }).click();
+    await page.getByRole('button', { name: 'Connect Google' }).click();
     await page.waitForURL(/sim-consent/, { timeout: 20_000 });
     await page.getByRole('link', { name: 'Allow (demo)' }).click();
     await page.waitForURL(/\/squad\/connections\?/, { timeout: 20_000 });
@@ -132,6 +130,7 @@ test('4 imported items are visible with timestamps, type and sharing state', asy
   await step('items', async () => {
     const page = ana.page;
     await page.goto('/squad/connections');
+    await page.getByTestId('review-imported-context').first().click();
     await expect(page.getByTestId('item-imported-at').first()).toContainText(/imported|just now|ago/i, { timeout: 20_000 });
     await expect(page.getByTestId('item-sharing').first()).toContainText('Private');
     const items = (await (await api(ana.token, '/v1/connections/items')).json()) as {
@@ -148,7 +147,9 @@ test('5 Ask Cubbie: group chat opens with a removable context chip, prompt prefi
   await step('ask-cubbie', async () => {
     const page = ana.page;
     const before = (await history(ana.token, GROUP)).length;
-    await page.getByTestId('ask-cubbie').first().click();
+    // a non-calendar item: an unshared calendar event is (correctly) redacted in the group chat
+    const row = () => page.locator('[data-testid="imported-item"]:not([data-kind$="_event"])').first();
+    await row().getByTestId('ask-cubbie').click();
     await page.waitForURL(/\/squad\/chat/, { timeout: 20_000 });
     const chip = page.getByTestId('composer-context-chip');
     await expect(chip).toBeVisible({ timeout: 20_000 });
@@ -160,7 +161,7 @@ test('5 Ask Cubbie: group chat opens with a removable context chip, prompt prefi
     await page.getByTestId('composer-context-chip-remove').click();
     await expect(chip).toHaveCount(0);
     await page.goto('/squad/connections');
-    await page.getByTestId('ask-cubbie').first().click();
+    await row().getByTestId('ask-cubbie').click();
     await expect(page.getByTestId('composer-context-chip')).toBeVisible({ timeout: 20_000 });
   });
 });
@@ -176,7 +177,8 @@ test('6 @cubbie answers from the attached context with provenance + the source v
     await expect(page.getByTestId('chat-citation-location').first()).toBeVisible();
     await snap(ana, '4-cited-answer');
     await cite.click();
-    await expect(page.getByTestId('chat-citation-excerpt').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId('source-fixture').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Verified quote').first()).toBeVisible();
     const msgs = await history(ben.token, GROUP);
     expect(msgs.filter(isBot).length).toBeGreaterThan(0);
   });
@@ -202,7 +204,7 @@ test('7 shared study plan seeded from imports persists across reload; trip avail
     const mode = plan.plan!.generator?.mode;
     expect(['live', 'degraded', 'demo', 'fixture']).toContain(mode);
     // survives reload, mode badge shown honestly
-    await ana.page.goto('/squad/home');
+    await ana.page.goto('/squad');
     await ana.page.reload();
     await expect(ana.page.getByTestId('plan-mode-badge')).toBeVisible({ timeout: 20_000 });
     await expect(ana.page.getByTestId('home-plan-saved')).toBeVisible();
@@ -251,6 +253,6 @@ test('9 disconnect purges and flips the chain; reconnect works', async () => {
     const items = (await (await api(ana.token, '/v1/connections/items')).json()) as { items: { provider: string }[] };
     expect(items.items.some((i) => i.provider === 'google')).toBe(false);
     await ana.page.goto('/squad/connections');
-    await expect(ana.page.getByTestId('google-not-connected')).toBeVisible({ timeout: 20_000 });
+    await expect(ana.page.getByTestId('connect-google')).toBeVisible({ timeout: 20_000 }); // the connect panel returns after disconnect
   });
 });

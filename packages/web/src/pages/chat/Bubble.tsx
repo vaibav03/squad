@@ -110,6 +110,7 @@ export function MessageBubble(p: BubbleProps) {
           ...(title ? { title } : {}),
           ...(url ? { url } : {}),
         } as NonNullable<Parameters<typeof openSource>[0]['source']>,
+        ...(c.quote ? { quote: c.quote } : {}),
       });
     } else p.onCite(c, m.text);
   };
@@ -150,7 +151,7 @@ export function MessageBubble(p: BubbleProps) {
         {row.head ? (
           <div className="sqc-msg__head">
             {!row.own ? (
-              <span className="sqc-msg__name" aria-hidden="true">
+              <span className="sqc-msg__name" data-user-content aria-hidden="true">
                 {sender.name}
               </span>
             ) : null}
@@ -168,15 +169,6 @@ export function MessageBubble(p: BubbleProps) {
                 Demo
               </span>
             ) : null}
-            {sender.kind === 'student' ? (
-              <span
-                className="sqs__src"
-                data-testid="chat-source-label"
-                data-source={m.transport === 'imessage' ? 'imessage' : 'web'}
-              >
-                {m.transport === 'imessage' ? 'via iMessage' : 'via web'}
-              </span>
-            ) : null}
             {m.repeat ? (
               <span
                 className="sqc-pixtag"
@@ -184,6 +176,15 @@ export function MessageBubble(p: BubbleProps) {
                 title={`The same message was sent ${m.repeat} times; shown once`}
               >
                 ×{m.repeat}
+              </span>
+            ) : null}
+            {sender.kind === 'student' ? (
+              <span
+                className="sqs__src"
+                data-testid="chat-source-label"
+                data-source={m.transport === 'imessage' ? 'imessage' : 'web'}
+              >
+                {m.transport === 'imessage' ? 'via iMessage' : 'via web'}
               </span>
             ) : null}
             <time className="sqc-msg__time" dateTime={new Date(m.ts).toISOString()}>
@@ -197,6 +198,8 @@ export function MessageBubble(p: BubbleProps) {
           <div
             ref={bubbleRef}
             className="sqc-bubble"
+            data-testid="chat-message-body"
+            data-user-content
             title={timeLabel(m.ts)}
             onClick={cites.length ? onBubbleClick : undefined}
           >
