@@ -60,12 +60,6 @@ export function createCampfire(ctx: VillageContext): Campfire {
   );
   add(
     sc.add
-      .image(x - 54, g + 1, 'mv-bench')
-      .setOrigin(0.5, 1)
-      .setDepth(ctx.depth.props - 1),
-  );
-  add(
-    sc.add
       .image(x + 46, g + 1, 'mv-stump')
       .setOrigin(0.5, 1)
       .setDepth(ctx.depth.props - 1),

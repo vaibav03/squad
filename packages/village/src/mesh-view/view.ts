@@ -14,6 +14,8 @@ import { createBoard, createCampfire } from './props';
 const BUBBLE_LANE_COMMONS = 'commons';
 const BUBBLE_LANE_BOARD = 'board';
 const RETURN_DELAY_MS = 900;
+/** The stage: campfire, board and the viewer's house share one 427 px view when centred here. */
+const STAGE_DX = 40;
 
 /**
  * The mesh view: neighbour houses with locked doors, campfire commons, envelopes carried and handed
@@ -38,16 +40,19 @@ export function createMeshView(
   let lastPan = -Infinity;
 
   /**
-   * Mesh activity can happen off-screen. Pan there (400 ms ease-in-out, owned by the world camera) when the
-   * focus is outside the view, the student is not walking, and at most once per 6 s.
+   * Mesh activity can happen off-screen. When the focus is outside the view and the student is not walking
+   * (never fights keyboard input, spec 08 row 3), bring it into view at most once per 6 s: the stage (campfire,
+   * board, the viewer's house) is the world's Right preset, which holds until the student walks again; a single
+   * door gets a 400 ms ease-in-out pan.
    */
-  const focus = (x: number): void => {
+  const focus = (x: number, stage = false): void => {
     const cam = ctx.scene.cameras.main;
     const now = ctx.scene.time.now;
     if (ctx.player.isWalking || now - lastPan < 6000) return;
     if (x > cam.scrollX + 40 && x < cam.scrollX + cam.width - 40) return;
     lastPan = now;
-    void ctx.camera.panTo(Math.round(x), { holdMs: 5000 });
+    if (stage) ctx.camera.setMode('right');
+    else void ctx.camera.panTo(Math.round(x), { holdMs: 6000 });
   };
 
   const actorFor = (agentId: string): Actor | undefined => {
@@ -105,7 +110,7 @@ export function createMeshView(
       case 'spawnEnvelope': {
         const carrier = actorFor(cmd.from);
         const at = { x: places.doorX(cmd.from), y: g - 33 };
-        focus((places.doorX(cmd.from) + camp.x) / 2);
+        focus(camp.x + STAGE_DX, true);
         envs.spawn(
           cmd.id,
           cmd.to,
@@ -172,7 +177,7 @@ export function createMeshView(
         break;
 
       case 'ledgerCard': {
-        focus((board.x + camp.x) / 2);
+        focus(camp.x + STAGE_DX, true);
         board.pin(cmd.card);
         const who = studentName(cmd.student);
         const c = cmd.card;

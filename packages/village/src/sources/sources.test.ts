@@ -348,3 +348,31 @@ describe('LiveSource', () => {
     expect(got).toEqual(['agent.state', 'confirm.pending', 'call.start', 'quiz.question']);
   });
 });
+
+import { tripCutsceneFromQuery, withTripCutscene } from './index';
+
+describe('withTripCutscene', () => {
+  it('delivers one synthetic trip.confirmed first, then the wrapped source', () => {
+    const inner = {
+      subscribe: (fn: (e: VillageEvent) => void) => {
+        fn(ev('dean'));
+        return () => {};
+      },
+    };
+    const got: string[] = [];
+    withTripCutscene(inner, { taskId: 't1', squadId: 's1' }).subscribe((e) => got.push(e.t));
+    expect(got).toEqual(['trip.confirmed', 'agent.state']);
+  });
+  it('parses the query only when cutscene=trip and a task id are present', () => {
+    expect(tripCutsceneFromQuery('?cutscene=trip&task=t9&squad=sq')).toEqual({
+      taskId: 't9',
+      squadId: 'sq',
+    });
+    expect(tripCutsceneFromQuery('?cutscene=trip')).toBeUndefined();
+    expect(tripCutsceneFromQuery('?cutscene=other&task=t')).toBeUndefined();
+    expect(tripCutsceneFromQuery('?cutscene=trip&task=t')).toEqual({
+      taskId: 't',
+      squadId: 'squad',
+    });
+  });
+});
