@@ -4,12 +4,7 @@ import { FakeLlm, VillageEventSchema } from '@squad/core';
 import { canTransition, nextPhase, type QuizTransition } from './state';
 import { gradeChoice, gradeFreeExact, normaliseAnswer } from './grading';
 import { toDraft } from './generate';
-import {
-  AnswerPayloadSchema,
-  QuizPayloadSchema,
-  type QuestionDraft,
-  type QuizPhase,
-} from './types';
+import { AnswerPayloadSchema, QuizPayloadSchema, type QuizPhase } from './types';
 import { makeEngine, QUESTIONS } from './testkit';
 
 const PHASES: QuizPhase[] = ['asking', 'collecting', 'reveal', 'next', 'done'];
