@@ -64,8 +64,12 @@ export function createPlaceResolver(
           return x === undefined ? undefined : { x, y: g };
         }
         case 'house': {
+          // the scenes module assigns chapters to houses at runtime (ch5 and up take the next free house)
+          const assigned = (
+            ctx.registry.get('chapterSlots') as Record<string, string> | undefined
+          )?.[p.chapter];
           const m = /(\d+)/.exec(p.chapter);
-          const x = m ? slotDoor(`chapter-${m[1]}`) : undefined;
+          const x = assigned ? slotDoor(assigned) : m ? slotDoor(`chapter-${m[1]}`) : undefined;
           return x === undefined ? undefined : { x, y: g };
         }
       }

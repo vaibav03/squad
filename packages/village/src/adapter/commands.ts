@@ -30,7 +30,7 @@ export type OverlayRequest =
   | { readonly overlay: 'openConfirm'; readonly taskId: string; readonly question: string }
   | {
       readonly overlay: 'close';
-      readonly which: 'call' | 'confirm';
+      readonly which: 'call' | 'confirm' | 'quiz';
       readonly callId?: string;
       readonly taskId?: string;
     };

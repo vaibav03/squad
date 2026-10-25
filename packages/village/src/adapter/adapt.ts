@@ -271,7 +271,7 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       const mine = event.student !== undefined && event.student === ctx.me;
       const mark =
         mine && event.correct !== undefined ? (event.correct ? 'tick' : 'cross') : 'none';
-      return [
+      const out: SceneCommand[] = [
         { type: 'chalkboard', chapter: event.chapter, mark, mine },
         {
           type: 'announce',
@@ -282,6 +282,10 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
           politeness: 'polite',
         },
       ];
+      // The round is over: the viewer's quiz card (opened by quiz.question) must not keep covering the village.
+      if (event.t === 'quiz.result' && mine)
+        out.push({ type: 'openOverlay', request: { overlay: 'close', which: 'quiz' } });
+      return out;
     }
 
     case 'call.start': {

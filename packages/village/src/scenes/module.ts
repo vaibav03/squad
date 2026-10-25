@@ -318,6 +318,7 @@ const mod = {
         const live = lives.find((l) => l.p.slotId === slotId);
         if (slotId && live) {
           chapterSlots.set(chapter, slotId);
+          ctx.registry.set('chapterSlots', Object.fromEntries(chapterSlots)); // read by the mesh view and the camera director
           live.state = live.def.init({ instance: chapter, title: chapterTitle(chapter) });
         }
       }

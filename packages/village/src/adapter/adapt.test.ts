@@ -237,6 +237,18 @@ describe('quiz', () => {
       expect(find(adapt(mine, ctx), 'chalkboard')).toMatchObject({ mark: 'cross', mine: true });
     }
   });
+  it('my quiz result closes my quiz card; other results and answers do not', () => {
+    const closes = (ev: VillageEvent) =>
+      adapt(ev, ctx).some(
+        (c) =>
+          c.type === 'openOverlay' &&
+          c.request.overlay === 'close' &&
+          (c.request as { which?: string }).which === 'quiz',
+      );
+    expect(closes({ ...SAMPLES['quiz.result'], student: 's_ana' } as VillageEvent)).toBe(true);
+    expect(closes({ ...SAMPLES['quiz.result'], student: 's_ben' } as VillageEvent)).toBe(false);
+    expect(closes({ ...SAMPLES['quiz.answer'], student: 's_ana' } as VillageEvent)).toBe(false);
+  });
   it('question carries mine when I am the target', () => {
     expect(find(adapt(SAMPLES['quiz.question'], ctx), 'chalkboard')?.mine).toBe(true);
     const other = adapt({ ...SAMPLES['quiz.question'], target: 's_ben' } as VillageEvent, ctx);
