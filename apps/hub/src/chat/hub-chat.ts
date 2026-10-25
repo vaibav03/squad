@@ -2,7 +2,9 @@
 // The bot engine (router + skills over the web Transport) attaches through `setEngine`, see engine.ts.
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { composeProvenance, findLeak, SENTINELS } from '@squad/core';
+import { buildContextRef, publicView } from './context-ref';
 import type {
+  ChatContextRef,
   ChatAttachment,
   ChatCard,
   ChatCitation,
@@ -41,6 +43,7 @@ export interface ChatEngine {
     from: string;
     text: string;
     attachments: { path: string; mime: string }[];
+    context?: ChatContextRef[];
   }): Promise<void>;
   /** Would this message get an answer (mention or DM)? Used for the typing indicator. */
   mentions(text: string, chatId: string): boolean;
@@ -363,6 +366,19 @@ export function createChatHub(
         attachments = c.attachments;
         paths = c.paths;
       }
+      // "Ask Cubbie" context: every field is re-derived from the store through the viewer's read gate.
+      const ctxFull: ChatContextRef[] = [];
+      if (body.context?.length) {
+        const cv = { studentId: viewer.studentId, squadIds: [viewer.squadId] };
+        for (const c of body.context) {
+          const r = deps.context
+            ? buildContextRef(deps.context.store, cv, c.sourceId, c.location?.anchor)
+            : undefined;
+          if (!r?.ok) return { ok: false, status: 404, code: 'context_unreadable' };
+          ctxFull.push(r.ref);
+        }
+      }
+      const ctxShown = ctxFull.map((c) => publicView(c, !body.chatId.startsWith('dm:')));
       const { ts: originTs, ...originFields } = o?.origin ?? {};
       const message = store.append({
         chatId: body.chatId,
@@ -373,6 +389,7 @@ export function createChatHub(
         attachments,
         citations: [],
         demo: false,
+        ...(ctxShown.length ? { context: ctxShown } : {}),
         ...(body.clientId ? { clientId: body.clientId } : {}),
         ...originFields,
       });
@@ -408,6 +425,7 @@ export function createChatHub(
                 from: viewer.studentId,
                 text,
                 attachments: paths,
+                ...(ctxFull.length ? { context: ctxFull } : {}),
               }),
             );
           } catch (e) {

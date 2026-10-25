@@ -127,7 +127,6 @@ test('Canvas: the extension route is honest and the calendar feed (.ics) route c
   await expect(canvas).toContainText('No Canvas password or API token is given to Squad');
   await snap(ana, 'oauth-3-canvas-extension-not-detected');
 
-  await canvas.getByText('No extension? Paste your Canvas calendar feed URL').click();
   await canvas.getByLabel('Canvas calendar feed URL').fill(FEED);
   await canvas.getByRole('button', { name: 'Connect feed' }).click();
   const card = page
