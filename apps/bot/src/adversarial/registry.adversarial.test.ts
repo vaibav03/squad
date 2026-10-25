@@ -39,6 +39,7 @@ describe('full registry on banter', () => {
     expect(skills.map((s) => s.name).sort()).toEqual(
       [
         'behind',
+        'catchUp',
         'chat',
         'council',
         'coursePlan',
@@ -48,8 +49,10 @@ describe('full registry on banter', () => {
         'explainer',
         'feynman',
         'hwpolicy',
+        'nudges',
         'oracle',
         'oral',
+        'pact',
         'podcast',
         'quiz',
         'rubric',

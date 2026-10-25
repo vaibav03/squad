@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "dev": "pnpm -r --parallel --if-present run dev",
     "bot:chat": "pnpm --filter @squad/bot chat",
+    "bot:scheduler": "pnpm --filter @squad/bot scheduler",
     "demo:seed": "tsx scripts/demo/seed.ts",
     "demo:reset": "tsx scripts/demo/reset.ts",
     "demo:replay": "tsx scripts/demo/replay.ts",

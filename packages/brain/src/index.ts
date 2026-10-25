@@ -20,6 +20,7 @@ export * from './studyplan';
 export * from './councils';
 export * from './skills/courseplan';
 export * from './library';
+export * from './skills/nudges';
 export * from './skills/debate';
 export * from './skills/devilta';
 export * from './skills/oracle';
