@@ -13,6 +13,7 @@ if (real) {
 } else {
   hub.deps.log.info('ports: stubs (GEMINI_API_KEY is not set)');
 }
+hub.deps.confirms.setAgentUrls(agentUrlsFromEnv());
 hub.deps.runtime = {
   llm: () => llm.status(),
   tts: () => real && Boolean(process.env.ELEVENLABS_API_KEY),

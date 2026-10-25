@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { FakeLlm, findLeak } from '@squad/core';
 import { demoProfiles, RecordingEmitter } from '@squad/mesh';
 import { createAgentApp } from './server';
-import { scriptedConfirm } from './confirm';
+import { scriptedConfirm, webConfirm } from './confirm';
 import { parseIcs } from './ics';
 import { parseProfile } from './profile';
 
@@ -78,6 +78,44 @@ describe('agent server', () => {
       (await post(app, '/internal/start/study', { nope: 1 }, { 'X-Nook-Internal': 's3cret' }))
         .status,
     ).toBe(400);
+  });
+});
+
+describe('web confirm bridge', () => {
+  it('waits for /internal/confirm/answer, 404s when nothing waits, and times out to timeout', async () => {
+    const emitter = new RecordingEmitter();
+    const web = webConfirm({ emitter, timeoutMs: 50 });
+    const { app } = createAgentApp({
+      profile,
+      net: {
+        send: async () => {
+          throw new Error('offline');
+        },
+      },
+      emitter,
+      askConfirm: web.ask,
+      resolveConfirm: web.resolve,
+      llm: new FakeLlm(),
+      url: 'http://localhost:4101',
+      secret: 's3cret',
+    });
+    const h = { 'X-Nook-Internal': 's3cret' };
+    expect(
+      (await post(app, '/internal/confirm/answer', { taskId: 't1', answer: 'yes' }, h)).status,
+    ).toBe(404);
+    const pending = web.ask('s_ana', 'Meet Tuesday?', ['Yes', 'No'], 't1');
+    await new Promise((r) => setTimeout(r, 5));
+    expect(
+      (await post(app, '/internal/confirm/answer', { taskId: 't1', answer: 'no' }, h)).status,
+    ).toBe(200);
+    expect(await pending).toBe('No');
+    expect(await web.ask('s_ana', 'again?', ['Yes', 'No'], 't2')).toBe('timeout');
+    expect(
+      (await post(app, '/internal/confirm/answer', { taskId: 't1', answer: 'maybe' }, h)).status,
+    ).toBe(400);
+    expect(
+      (await post(app, '/internal/confirm/answer', { taskId: 't1', answer: 'yes' })).status,
+    ).toBe(403);
   });
 });
 

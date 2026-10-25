@@ -62,6 +62,50 @@ export function botConfirm(o: ConfirmOptions & { botUrl: string }): AskConfirm {
   });
 }
 
+/**
+ * Web confirm: the question waits for POST /internal/confirm/answer (the hub forwards a student's tap on the
+ * village confirm card). Times out to 'timeout' like the other bridges.
+ */
+export function webConfirm(o: ConfirmOptions): {
+  ask: AskConfirm;
+  resolve(taskId: string, answer: string): boolean;
+} {
+  const waiting = new Map<string, { options: string[]; settle(a: string): void }>();
+  const ask = wrap(
+    o.emitter,
+    (student, _q, options, taskId) =>
+      new Promise<string>((resolve) => {
+        const key = `${student}|${taskId}`;
+        const timer = setTimeout(() => {
+          waiting.delete(key);
+          resolve('timeout');
+        }, o.timeoutMs ?? 600_000);
+        timer.unref?.();
+        waiting.set(key, {
+          options,
+          settle: (a) => {
+            clearTimeout(timer);
+            waiting.delete(key);
+            resolve(a);
+          },
+        });
+      }),
+  );
+  return {
+    ask,
+    resolve(taskId, answer) {
+      const hit = [...waiting.entries()].find(([k]) => k.endsWith(`|${taskId}`));
+      if (!hit) return false;
+      const [, w] = hit;
+      w.settle(
+        w.options.find((x) => x.toLowerCase() === answer.toLowerCase()) ??
+          (answer.toLowerCase() === 'yes' ? 'Yes' : 'No'),
+      );
+      return true;
+    },
+  };
+}
+
 export function cliConfirm(o: ConfirmOptions): AskConfirm {
   return wrap(o.emitter, async (_s, question, options) => {
     const rl = createInterface({ input: process.stdin, output: process.stdout });

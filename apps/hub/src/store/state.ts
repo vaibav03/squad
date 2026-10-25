@@ -21,6 +21,11 @@ export function createSquadState(deps: HubDeps): SquadState {
       else if (ev.t === 'confirm.done') pending.delete(`${ev.student}|${ev.taskId}`);
     },
 
+    pendingConfirm(student, taskId) {
+      const p = pending.get(`${student}|${taskId}`);
+      return p ? { question: p.question } : undefined;
+    },
+
     async snapshot(viewer: Viewer): Promise<Snapshot> {
       // Capture seq and every piece of in-memory state synchronously, before any await, so that
       // resuming the stream from `seq` loses nothing.

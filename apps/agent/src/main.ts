@@ -6,7 +6,7 @@ import { serve } from '@hono/node-server';
 import { GeminiLlm, loadConfig, openDb } from '@squad/core/node';
 import { FakeLlm, createResilientLlm, type Llm } from '@squad/core';
 import { createSqliteLedger } from '@squad/mesh';
-import { confirmFromEnv } from './confirm';
+import { confirmFromEnv, webConfirm } from './confirm';
 import { createHubPort } from './hub';
 import { createHttpNet, createHubEmitter } from './net';
 import { loadProfile } from './profile';
@@ -43,11 +43,16 @@ if (process.env.FAKE_LLM === '0') {
   });
 }
 
+// CONFIRM_MODE=web: confirm cards in the village answer through the hub (POST /v1/confirms/:taskId).
+const web =
+  process.env.CONFIRM_MODE === 'web' && !process.env.BOT_URL ? webConfirm({ emitter }) : undefined;
+
 const { app } = createAgentApp({
   profile,
   net: createHttpNet(peers),
   emitter,
-  askConfirm: confirmFromEnv(emitter),
+  askConfirm: web?.ask ?? confirmFromEnv(emitter),
+  ...(web ? { resolveConfirm: web.resolve } : {}),
   llm,
   url: `http://localhost:${port}`,
   secret: process.env.INTERNAL_EVENTS_SECRET ?? '',

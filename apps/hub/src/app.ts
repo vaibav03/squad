@@ -8,6 +8,7 @@ import { createStubPorts } from './adapters';
 import { createBroker } from './broker';
 import { createCallRegistry } from './calls';
 import { loadHubConfig, type HubConfig } from './config';
+import { createConfirmRouter } from './confirms';
 import { createIngestor } from './ingest';
 import { createLogger } from './log';
 import type { Ports } from './ports';
@@ -71,6 +72,7 @@ export function createHub(opts: HubOptions = {}): Hub {
   deps.state = createSquadState(deps);
   deps.state.rebuild(); // agent states and pending confirms come back from the persisted log
   deps.ingest = createIngestor(deps);
+  deps.confirms = createConfirmRouter(deps);
   deps.ports = { ...createStubPorts(deps), ...opts.ports };
   if (config.seed) seedDemo(deps);
 

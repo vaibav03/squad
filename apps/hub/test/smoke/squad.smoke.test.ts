@@ -417,3 +417,51 @@ describe('GET /v1/status', () => {
     hub.deps.runtime = undefined;
   });
 });
+
+describe('POST /v1/confirms/:taskId', () => {
+  it('fails closed for unknown tasks and bad bodies, needs auth, and confirms a trip task', async () => {
+    expect((await post(url, '/v1/confirms/task_nope', { yes: true })).status).toBe(401);
+    expect((await post(url, '/v1/confirms/task_nope', { yes: true }, ana)).status).toBe(404);
+    expect((await post(url, '/v1/confirms/task_trip_cabo', { nope: 1 }, ana)).status).toBe(400);
+    // a trip task needs the option being confirmed
+    expect((await post(url, '/v1/confirms/task_trip_cabo', { yes: true }, ana)).status).toBe(400);
+  });
+
+  it('answers an open confirm card through the owner agent, and 422s when no agent is wired', async () => {
+    const calls: { url: string; body: string }[] = [];
+    const secret = hub.deps.config.internalSecret;
+    const { createConfirmRouter } = await import('../../src/confirms');
+    hub.deps.confirms = createConfirmRouter(hub.deps, {
+      fetch: (async (u: string, init: RequestInit) => {
+        calls.push({ url: u, body: String(init.body) });
+        expect(new Headers(init.headers).get('X-Nook-Internal')).toBe(secret);
+        return new Response('{}', { status: 200 });
+      }) as unknown as typeof fetch,
+    });
+    hub.deps.ingest.village({
+      t: 'confirm.pending',
+      student: 's_ana',
+      taskId: 'task_study_x',
+      question: 'Study Tuesday 7pm?',
+    });
+    const none = await post<{ error: { code: string } }>(
+      url,
+      '/v1/confirms/task_study_x',
+      { yes: true },
+      ana,
+    );
+    expect(none.status).toBe(422);
+    expect(none.body.error.code).toBe('unsupported_kind');
+    hub.deps.confirms.setAgentUrls({ s_ana: 'http://agent-ana.test' });
+    // another student cannot answer ana's card
+    expect((await post(url, '/v1/confirms/task_study_x', { yes: true }, ben)).status).toBe(404);
+    const ok = await post(url, '/v1/confirms/task_study_x', { yes: false }, ana);
+    expect(ok.status).toBe(200);
+    expect(calls).toEqual([
+      {
+        url: 'http://agent-ana.test/internal/confirm/answer',
+        body: JSON.stringify({ taskId: 'task_study_x', answer: 'no' }),
+      },
+    ]);
+  });
+});
