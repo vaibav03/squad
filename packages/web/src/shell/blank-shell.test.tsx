@@ -263,8 +263,8 @@ describe('router location drives title, landmark and content', () => {
     const cur = () =>
       Array.from(document.querySelectorAll('[aria-current="page"]')).map((e) => e.textContent);
     expect(cur().some((t) => /Chat/.test(t ?? ''))).toBe(true);
-    await go('/squad/ledger');
-    await expectRoute('/squad/ledger', 'Privacy ledger');
+    await go('/squad/personas');
+    await expectRoute('/squad/personas', 'Study buddies');
     // a secondary destination highlights its parent: the More button
     expect(document.querySelector('.sq-shell__morebtn.is-active')).toBeTruthy();
     expect(cur().some((t) => /Chat/.test(t ?? ''))).toBe(false);

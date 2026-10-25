@@ -96,7 +96,10 @@ export const sourcesWords = (n: number): string => `${n} source${n === 1 ? '' : 
  * explicit label; a reply whose text cites pages that did not verify is downgraded to `ungrounded` (never "grounded
  * without chips").
  */
-export function composeProvenance(i: ComposeInput): { citations: ChatCitation[]; provenance: Provenance } {
+export function composeProvenance(i: ComposeInput): {
+  citations: ChatCitation[];
+  provenance: Provenance;
+} {
   const seen = new Set<string>();
   const verified: ChatCitation[] = [];
   for (const c of i.citations) {
@@ -159,6 +162,8 @@ export function provenanceLine(
 ): string | undefined {
   if (!p) return undefined;
   if (p.kind === 'grounded')
-    return citations.length ? `Sources: ${citations.map((c) => `[${c.label}]`).join(' ')}` : p.label;
+    return citations.length
+      ? `Sources: ${citations.map((c) => `[${c.label}]`).join(' ')}`
+      : p.label;
   return p.label;
 }

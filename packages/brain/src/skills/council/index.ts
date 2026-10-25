@@ -1,4 +1,5 @@
 import {
+  COUNCIL_CONFIDENCE_WORDS,
   councilVerdictText,
   type CouncilResult,
   type InboundMessage,
@@ -34,14 +35,24 @@ export function councilQuestion(text: string): string | null {
   return null;
 }
 
-/** Plain-text reply for chat transports: the verdict, how each member answered, and the run id footer. */
+const clip = (t: string, n: number): string =>
+  t.length <= n ? t : `${t.slice(0, n - 1).trimEnd()}…`;
+
+/**
+ * Plain-text reply for transports that cannot render the card (iMessage, Discord). Short form: the verdict, who
+ * disagreed, and the next step. Member answers live in the card; the web client never shows this text as a bubble.
+ */
 export function formatCouncilReply(r: CouncilResult): string {
-  const lines = [councilVerdictText(r)];
-  if (r.status === 'done') {
-    const said = r.members
-      .filter((m) => m.status === 'answered')
-      .map((m) => `${m.name}: ${m.answer}`);
-    if (said.length) lines.push(`How they answered: ${said.join(' | ')}`);
+  const lines: string[] = [];
+  const v = r.status === 'done' ? r.verdict : undefined;
+  if (!v) lines.push(councilVerdictText(r));
+  else {
+    const full = councilVerdictText(r).split('\n');
+    const label = full[0]!.slice(0, full[0]!.indexOf('Council verdict:'));
+    lines.push(`${label}Council verdict: ${clip(v.text, 280)}`);
+    lines.push(`Confidence: ${COUNCIL_CONFIDENCE_WORDS[v.confidence]}.`);
+    if (v.dissent) lines.push(`Dissent (${v.dissent.member}): ${clip(v.dissent.view, 140)}`);
+    lines.push(`Next: ${clip(v.next, 140)}`);
   }
   lines.push(COUNCIL_FOOTER(r.id));
   return lines.join('\n');

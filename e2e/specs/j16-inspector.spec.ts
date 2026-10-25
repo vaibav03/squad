@@ -68,8 +68,9 @@ test('J16 clicking the ground never moves the player; clicking a character opens
   await page.mouse.click(p!.x, p!.y);
   const panel = page.getByTestId('agent-focus-panel');
   await expect(panel).toBeVisible();
-  await panel.getByRole('tab', { name: /Activity/ }).click();
+  await panel.getByRole('tab', { name: /^Activity/ }).click();
   await expect(panel.locator('.ai-headline')).not.toBeEmpty();
+  await panel.getByRole('tab', { name: /^Reasoning summary/ }).click();
   await expect(panel.locator('.ai-bubble')).not.toBeEmpty();
   await shot(page, J, 'thinking');
 

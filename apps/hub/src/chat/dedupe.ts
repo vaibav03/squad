@@ -9,7 +9,13 @@ import type { ChatMessage } from '@squad/core';
 
 export const COLLAPSE_WINDOW_MS = 7 * 24 * 3_600_000;
 
-const norm = (t: string) => t.trim().replace(/\s+/g, ' ');
+// case, spacing and trailing punctuation never make a different question ("What is a z-score?" == "what is a z-score")
+const norm = (t: string) =>
+  t
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .replace(/[\s.!?]+$/, '');
 
 interface Pair {
   head: ChatMessage;

@@ -136,7 +136,8 @@ export function createTripService(
       chatId: `group:${t.squadId}`,
       personaId: 'cubbie',
       personaName: 'Cubbie',
-      text: `Trip: ${t.collab?.title ?? 'Group trip'}\n${text}\nOpen the Trip page in Squad: /squad/trips/${t.tripId}`,
+      text: `Trip: ${t.collab?.title ?? 'Group trip'}\n${text}\nOpen the plan in Squad: /squad/chat?plan=${t.tripId}`,
+      card: { type: 'trip', tripId: t.tripId, rev: t.collab?.rev ?? 0, status: t.status },
       citations: [],
       attachments: [],
     });

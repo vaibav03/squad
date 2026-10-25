@@ -18,6 +18,9 @@ import type { ChatApi } from './api';
 import { chatErrorText } from './api';
 import { defaultPrefill, provenanceBadge, takePendingAsk } from './ask-cubbie';
 import { parseDiscussTrigger } from '../../live/trigger';
+import { PlusMenu } from '../../plans/PlusMenu';
+import { chipPrefix, type PlanContextRef } from '../../plans/context';
+import type { PlanKind } from '../../plans/registry';
 import {
   ACCEPT_IMAGES,
   COUNTER_FROM,
@@ -32,6 +35,8 @@ import {
 export interface ComposerHandle {
   focus(): void;
   fill(text: string): void;
+  /** Attach a plan as a removable context chip; the next send is prefixed with it. */
+  attachContext(ref: PlanContextRef): void;
   /**
    * Runs the composer's key handling for a native keydown aimed at its textarea (the village dock stops keys at the
    * window in the capture phase, so React never sees them). Returns true when the key was used up (it closed the
@@ -72,12 +77,16 @@ export interface ComposerProps {
   compact?: boolean;
   /** `discuss: <topic>` was typed: offer to watch it live in the Live panel instead of sending. */
   onDiscuss?: (topic: string) => void;
+  /** Group chats: the '+' menu starts a plan wizard. */
+  onPlan?: (kind: PlanKind) => void;
+  /** left-side slot in the row (the '+' action menu); never affects the textarea's min width */
+  leading?: React.ReactNode;
 }
 
 const MAX_H = 144;
 
 export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
-  { api, chatKind, chatId, onSend, paused, compact, onDiscuss },
+  { api, chatKind, chatId, onSend, paused, compact, onDiscuss, onPlan, leading },
   ref,
 ) {
   const [text, setText] = useState('');
@@ -89,6 +98,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   const [problem, setProblem] = useState<string | null>(null);
   const [ctx, setCtx] = useState<ChatContextRef[]>([]);
   const askRef = useRef<ReturnType<typeof takePendingAsk>>(null);
+  const [chips, setChips] = useState<PlanContextRef[]>([]);
   const area = useRef<HTMLTextAreaElement>(null);
   const file = useRef<HTMLInputElement>(null);
   const draftsRef = useRef(drafts);
@@ -112,6 +122,10 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
       return used;
     },
     focus: () => area.current?.focus(),
+    attachContext: (c) => {
+      setChips((x) => (x.some((y) => y.id === c.id) ? x : [...x, c]));
+      requestAnimationFrame(() => area.current?.focus());
+    },
     fill: (t) => {
       setText(t);
       setPickerOff(true);
@@ -234,7 +248,8 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   const submit = () => {
     if (blocked) return;
     const files = ready.map((d) => d.att!);
-    const body = text.trim();
+    const body = chips.map(chipPrefix).join('') + text.trim();
+    setChips([]);
     // clear first: the send is optimistic and a failure keeps the message in the thread with Retry
     setText('');
     setPickerOff(false);
@@ -402,6 +417,22 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           ))}
         </ul>
       ) : null}
+      {chips.length ? (
+        <ul className="sqc-ctxchips" aria-label="Attached plans" data-testid="composer-chips">
+          {chips.map((c) => (
+            <li key={c.id} className="sqc-ctxchip" data-testid="composer-chip">
+              <span>Plan: {c.label}</span>
+              <button
+                type="button"
+                aria-label={`Remove plan ${c.label}`}
+                onClick={() => setChips((x) => x.filter((y) => y.id !== c.id))}
+              >
+                <Icon name="x" size={12} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {problem ? (
         <p className="sqc-composer__problem" role="alert">
           <Icon name="alert" size={14} />
@@ -409,6 +440,11 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
         </p>
       ) : null}
       <div className="sqc-composer__row">
+        {leading ? (
+          <div className="sqc-composer__lead" data-slot="composer-leading">
+            {leading}
+          </div>
+        ) : null}
         <input
           ref={file}
           type="file"
@@ -421,6 +457,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             e.target.value = '';
           }}
         />
+        {onPlan && chatKind === 'group' ? <PlusMenu onPick={onPlan} /> : null}
         <button
           type="button"
           className="sqc-iconbtn"
