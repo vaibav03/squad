@@ -7,6 +7,8 @@ export interface PlanContextRef {
 export interface PlanActions {
   /** Attach a plan to the composer as a removable context chip. */
   askCubbie(ref: PlanContextRef): void;
+  /** Open a plan inline in this chat (panel above the composer). Never navigates away. */
+  openPlan(ref: { kind: 'trip' | 'study'; id: string }): void;
 }
 export const PlanActionsContext = createContext<PlanActions | null>(null);
 export const usePlanActions = () => useContext(PlanActionsContext);

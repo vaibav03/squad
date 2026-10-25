@@ -56,7 +56,11 @@ export function HomePlanCard({ primary = false }: { primary?: boolean } = {}) {
         )}
         <a
           className={primary ? 'lv-btn lv-btn--primary' : 'lv-btn'}
-          href={plan ? '/squad/village?panel=plan' : '/squad/chat?wizard=study'}
+          href={
+            plan
+              ? `/squad/chat?plan=${encodeURIComponent(plan.id)}&notice=plans`
+              : '/squad/chat?wizard=study'
+          }
           data-testid="home-plan-open"
         >
           {plan ? 'Open the plan' : 'Create a study plan'}

@@ -281,3 +281,9 @@
     animation: none;
   }
 }
+.sqp-panel {
+  max-height: 60%;
+}
+.sqp-panel .lv-trip {
+  padding: 0;
+}

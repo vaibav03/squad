@@ -45,6 +45,7 @@ import { LivePanel } from '../../live/LivePanel';
 import { useSquadConfig } from '../../shell/context';
 import { PlansDrawer } from '../../plans/PlansDrawer';
 import { WizardDrawer } from '../../plans/WizardDrawer';
+import { PlanPanel } from '../../plans/PlanPanel';
 import { usePlans } from '../../plans/usePlans';
 import { collapsePlanCards } from '../../plans/dedupe';
 import { PlanActionsContext } from '../../plans/context';
@@ -624,7 +625,16 @@ export function ThreadPane({
       return null;
     }
   }, []);
-  const [wizard, setWizard] = useState<PlanKind | null>(null);
+  const wizardParam = useMemo(() => {
+    try {
+      const w = new URLSearchParams(window.location.search).get('wizard');
+      return w === 'trip' || w === 'study' ? (w as PlanKind) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+  const [wizard, setWizard] = useState<PlanKind | null>(isGroup ? wizardParam : null);
+  const [panel, setPanel] = useState<{ kind: PlanKind; id: string } | null>(null);
   const [plansOpen, setPlansOpen] = useState(false);
   const noticeKind = useMemo(() => {
     try {
@@ -649,7 +659,10 @@ export function ThreadPane({
         el.scrollIntoView?.({ block: 'center' });
         el.classList.add('is-highlight');
         el.setAttribute('data-highlighted', 'true');
-      } else if (++tries > 40) clearInterval(t);
+      } else if (++tries > 40) {
+        clearInterval(t);
+        setPlansOpen(true); // the card is not in the loaded history: list the plans instead
+      }
     }, 250);
     return () => clearInterval(t);
   }, [isGroup, planParam, chat.id]);
@@ -658,6 +671,11 @@ export function ThreadPane({
   const planActions = useMemo(
     () => ({
       askCubbie: (r: { id: string; label: string }) => composerRef.current?.attachContext(r),
+      openPlan: (r: { kind: PlanKind; id: string }) => {
+        setWizard(null);
+        setPlansOpen(false);
+        setPanel(r);
+      },
     }),
     [composerRef],
   );
@@ -726,6 +744,7 @@ export function ThreadPane({
               setPlansOpen(false);
               setWizard(k);
             }}
+            onOpen={(p) => planActions.openPlan({ kind: p.kind, id: p.id })}
             onClose={() => setPlansOpen(false)}
           />
         ) : null}
@@ -749,6 +768,9 @@ export function ThreadPane({
           onPrompt={(t) => composerRef.current?.fill(t)}
           onOpenChat={onOpenChat}
         />
+        {isGroup && panel ? (
+          <PlanPanel kind={panel.kind} id={panel.id} hub={liveHub} onClose={() => setPanel(null)} />
+        ) : null}
         {isGroup && wizard ? (
           <WizardDrawer
             kind={wizard}
@@ -756,6 +778,7 @@ export function ThreadPane({
             hub={liveHub}
             onClose={() => setWizard(null)}
             onCreated={() => plansState.reload()}
+            onOpenPlan={planActions.openPlan}
           />
         ) : null}
         {drawer ? (

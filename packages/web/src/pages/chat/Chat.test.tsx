@@ -465,7 +465,7 @@ describe('citations', () => {
     });
   });
 
-  it('renders a study plan card with an Open plan link', async () => {
+  it('renders a study plan card whose Open plan stays in the chat', async () => {
     const { api } = setup();
     api.pushMessage({
       chatId: GROUP_ID,
@@ -479,7 +479,9 @@ describe('citations', () => {
       demo: true,
     });
     const card = await screen.findByTestId('chat-plan-card');
-    expect(card.querySelector('a')?.getAttribute('href')).toBe('/squad/village?plan=1');
+    // Open plan stays in the chat: an inline button, never a link to the village overlay
+    expect(card.querySelector('a[href*="/squad/village"]')).toBeNull();
+    expect(card.querySelector('[data-testid="plan-open"]')?.tagName).toBe('BUTTON');
   });
 
   it('shows an error with retry when the excerpt is missing', async () => {

@@ -53,7 +53,7 @@ export function TripChatCard({
         agents: trip.members.map((m) => m.agent),
       })
     : null;
-  const href = `/squad/trips/${encodeURIComponent(card.tripId)}?full=1`;
+  const open = () => actions?.openPlan({ kind: 'trip', id: card.tripId });
   const organizer = trip?.members.find((m) => m.isOrganizer)?.name;
   const chosen = trip?.chosen
     ? trip.options.find((o) => o.id === trip.chosen!.optionId)
@@ -71,16 +71,21 @@ export function TripChatCard({
       revisions={revisionsOf(card)}
       actions={{
         edit: (
-          <a className="sqp-btn" href={href} data-testid="plan-edit">
+          <button type="button" className="sqp-btn" data-testid="plan-edit" onClick={open}>
             Edit
-          </a>
+          </button>
         ),
         ...(trip?.can.vote || trip?.can.confirm
           ? {
               vote: (
-                <a className="sqp-btn sqp-btn--primary" href={href} data-testid="plan-vote">
+                <button
+                  type="button"
+                  className="sqp-btn sqp-btn--primary"
+                  data-testid="plan-vote"
+                  onClick={open}
+                >
                   {trip.can.confirm ? 'Confirm' : 'Vote'}
-                </a>
+                </button>
               ),
             }
           : {}),

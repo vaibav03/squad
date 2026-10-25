@@ -12,8 +12,8 @@ const FILTERS: { id: PlanFilter; label: string }[] = [
   { id: 'completed', label: 'Completed' },
 ];
 
-export const planHref = (p: PlanSummary) =>
-  p.kind === 'trip' ? `/squad/trips/${encodeURIComponent(p.id)}?full=1` : '/squad/village?plan=1';
+/** In-chat target for a plan: the group chat with `plan=<id>`; never a trip or village page. */
+export const planHref = (p: PlanSummary) => `/squad/chat?plan=${encodeURIComponent(p.id)}`;
 
 export interface PlansDrawerProps {
   plans: PlanSummary[];
@@ -93,7 +93,12 @@ export function PlansDrawer(props: PlansDrawerProps) {
                 className="sqp-row"
                 href={planHref(p)}
                 data-testid={`plans-row-${p.id}`}
-                onClick={() => props.onOpen?.(p)}
+                onClick={(e) => {
+                  if (props.onOpen) {
+                    e.preventDefault();
+                    props.onOpen(p);
+                  }
+                }}
               >
                 <Icon name={p.kind === 'trip' ? 'plane' : 'book'} size={16} />
                 <span className="sqp-row__text">

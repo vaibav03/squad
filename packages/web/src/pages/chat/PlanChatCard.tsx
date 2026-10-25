@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { planBadge, type PlanView } from '@squad/core';
-import { PLAN_OPEN_EVENT } from '@squad/village/rooms';
+import { usePlanActions } from '../../plans/context';
 import { planApi, type PlanHub } from '../../overlays/plan/model';
 import '../../overlays/plan/plan.css';
 import { openSource } from '../../components/source-viewer';
@@ -14,6 +14,7 @@ export interface PlanChatCardProps {
 
 /** Chat card for a shared study plan: who built it (agent or fallback), the mode badge and the sources it used. */
 export function PlanChatCard({ hub, planId, status, rev }: PlanChatCardProps) {
+  const actions = usePlanActions();
   const [plan, setPlan] = useState<PlanView | null>(null);
   useEffect(() => {
     let dead = false;
@@ -69,18 +70,24 @@ export function PlanChatCard({ hub, planId, status, rev }: PlanChatCardProps) {
           )}
         </p>
       ) : null}
-      <a
-        className="lv-btn"
-        href="/squad/village?plan=1"
-        onClick={(e) => {
-          if (location.pathname.includes('/village')) {
-            e.preventDefault();
-            globalThis.dispatchEvent(new Event(PLAN_OPEN_EVENT));
-          }
-        }}
-      >
-        Open plan
-      </a>
+      {actions ? (
+        <button
+          type="button"
+          className="lv-btn"
+          data-testid="plan-open"
+          onClick={() => actions.openPlan({ kind: 'study', id: planId })}
+        >
+          Open plan
+        </button>
+      ) : (
+        <a
+          className="lv-btn"
+          data-testid="plan-open"
+          href={`/squad/chat?plan=${encodeURIComponent(planId)}`}
+        >
+          Open plan
+        </a>
+      )}
     </div>
   );
 }
