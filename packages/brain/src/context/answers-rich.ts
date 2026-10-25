@@ -2,7 +2,7 @@ import type { ChatCitation } from '@squad/core';
 import { fmtDue } from './answers';
 import { bestQuote } from './retrieve';
 import type { ContextStore } from './store';
-import type { ContextSource } from './types';
+import { courseLabel, type ContextSource } from './types';
 
 /**
  * Deterministic answers about the viewer's imported schedule, with source citations (no model involved).
@@ -54,6 +54,8 @@ export function chatCitationFor(
 
 /** First `Course:` line of a source's evidence (Canvas / Classroom payloads write it), else empty (a raw id is never shown). */
 function courseOf(store: ContextStore, s: ContextSource, names: ReadonlyMap<string, string>): string {
+  const labelled = courseLabel({ courseName: s.courseName, courseCode: s.courseCode });
+  if (labelled) return labelled; // "HIST 140: Modern World History" from the stored course record
   const named = s.courseId ? names.get(s.courseId) : undefined;
   if (named) return named;
   const line = /^Course:\s*(.+)$/m.exec(store.chunks(s.id)[0]?.text ?? '')?.[1]?.trim();
@@ -182,7 +184,11 @@ export function dueReply(
   }
   const top = inWin.slice(0, 8);
   const title = win.kind === 'all' ? `Next ${top.length} due` : `Due ${win.label} (${top.length})`;
-  return { text: `${title}:\n${top.map(line).join('\n')}`, citations: top.map(cite) };
+  const later = win.kind === 'week' ? dated.filter((a) => a.dueAt! >= win.to).length : 0;
+  const followUp = later
+    ? `\nNext after this week: ${later} more due later. Ask "@cubbie what is due after this week?" to list them.`
+    : '';
+  return { text: `${title}:\n${top.map(line).join('\n')}${followUp}`, citations: top.map(cite) };
 }
 
 const range = (q: string, now: number): { from: number; to: number; label: string } => {
