@@ -25,7 +25,7 @@ export interface BridgeState {
   queued: number;
 }
 
-export type CheckStatus = 'pass' | 'warn' | 'fail';
+export type CheckStatus = 'pass' | 'warn' | 'fail' | 'blocked';
 export interface HealthCheck {
   id: string;
   label: string;
@@ -35,6 +35,8 @@ export interface HealthCheck {
   /** What to do about it. */
   fix: string;
   blocked?: boolean;
+  /** For a blocked check: the exact env names that are missing. */
+  missingEnv?: string[];
 }
 export interface HealthReport {
   provider: ImessageProvider;
@@ -146,10 +148,11 @@ export async function healthReport(deps: HubDeps, envIn?: Env): Promise<HealthRe
   const blocked = (id: string, label: string, fix: string): HealthCheck => ({
     id,
     label,
-    status: 'warn',
+    status: 'blocked',
     reason: blockedReason!,
     fix,
     blocked: true,
+    ...(missing.length ? { missingEnv: missing } : {}),
   });
 
   add(
