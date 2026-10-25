@@ -66,7 +66,7 @@ export function createSquadState(deps: HubDeps): SquadState {
       return {
         seq,
         now,
-        me: me ? pub(me) : { id: viewer.studentId, name: viewer.studentId },
+        me: me ? pub(me) : { id: viewer.studentId, name: 'You' },
         squad: { id: viewer.squadId, name: squad?.name ?? viewer.squadId, members, memberCount },
         agents: agentMap,
         pendingConfirms,
