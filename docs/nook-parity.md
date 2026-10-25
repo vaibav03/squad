@@ -150,8 +150,14 @@ Wiring targets and gates:
 
 ## 4. Parity checklist (asserted by tests)
 
-Tests live in `packages/brain/src/context/parity/` and `apps/hub/src/routes/nook-parity.test.ts`; fixtures are
-synthetic and shaped like the real APIs (fake Canvas and fake Google servers, `packages/brain/fixtures/nook/`).
+Tests live in `packages/brain/src/context/parity/nook-parity.test.ts` (REST client, normalized sources, states, cursors,
+OAuth, Google ingestion), `apps/hub/src/routes/nook-parity.test.ts` (pairing, register, sync, reads, privacy, Google OAuth
+through the hub, sentinel scan of responses, logs and every table), `apps/hub/src/context/secret-scan.test.ts`
+(credential-shaped strings in tracked files), `apps/extension/test/*` (bridge protocol) and
+`packages/web/src/pages/connections/connections.test.tsx` (honest labels). Fixtures are synthetic and shaped like the real
+APIs: the fake Canvas and fake Google servers are `packages/brain/src/context/parity/fake-servers.ts` (exported as
+`@squad/brain/fake-servers`). Nook's own tests were ported where they exist (`apps/extension/test`: canvas, protocol, relay,
+wire; the Nook mock-server route tests have no equivalent in Squad because Squad's hub implements the same routes).
 
 | # | Observable Nook behaviour | Test |
 |---|---|---|
@@ -165,7 +171,7 @@ synthetic and shaped like the real APIs (fake Canvas and fake Google servers, `p
 | P8 | register: already_bound (+owner hint), conflict, reactivation | hub bridge |
 | P9 | sync 404 not yours / 422 invalid / 409 `canvas_session_mismatch` | hub bridge |
 | P10 | assignments sorted by `due_at` nulls last; `type=ppt|pdf` filter; invalid type 422 | hub bridge |
-| P11 | answers: due list, slides list, "not synced", "No slides found", "Nothing due" | canvas-answers |
+| P11 | answers: due list, slides list, "not synced", "No slides found", "Nothing due" | `packages/brain/src/context/wiring.test.ts`, `skills/canvas/canvas.test.ts` |
 | P12 | disconnect is soft and reconnect works; purge deletes derived data | hub bridge |
 | P13 | Google authorize URL: PKCE S256, offline, consent, state, minimal scopes, login_hint | google |
 | P14 | callback: invalid/consumed/expired state gives `oauth_state_invalid`; denial redirects with `status=error` | google |
@@ -197,6 +203,15 @@ synthetic and shaped like the real APIs (fake Canvas and fake Google servers, `p
 8. Event titles are not stored for planning: trip planning receives derived busy intervals only.
 9. A fixture/simulator mode is labelled in the UI ("Demo data, not a real account"); Nook's simulator is unlabelled.
 10. Nook keeps state in memory; Squad persists in the hub database with encrypted tokens.
+11. `DELETE` on a Canvas connection purges the imported data and revokes (Nook soft-disconnects and keeps rows so the
+    account can be reactivated). Re-registering the same login afterwards creates a fresh connection.
+12. A refused registration never names the other owner (Nook returns `ownerEmail` with `canvas_account_already_bound`).
+13. The token route's full pass lists all assignments (`bucket=all`); the extension route keeps Nook's `bucket=upcoming`.
+    Squad does not store course names as sources, so there is no `/canvas/courses` read; course names ride inside each
+    source's text.
+14. Canvas expiry is reported by the extension (`canvas-report`) as honest state instead of a silent empty sync.
+15. Squad has no `/__sim` mock server: the simulator is a labelled consent page inside the hub, only active while no
+    Google client is configured.
 
 ## 6. BLOCKED items and runbooks
 
@@ -210,6 +225,19 @@ synthetic and shaped like the real APIs (fake Canvas and fake Google servers, `p
 | File text extraction (pdf/pptx/docx) | needs a parsing dependency and real binaries | out of scope, same as Nook; metadata only |
 | Secrets provisioning | `CONTEXT_TOKEN_KEY` rotation and `EXTENSION_PAIR_SECRET` | set in the deployment environment |
 
-## 7. Test and verification log
+## 7. What was ported and verified
 
-Updated as the work lands; see the final report of the workstream for results.
+Ported from Nook (behaviour and shapes, no secrets): the Canvas session-cookie REST client (`canvas-rest.ts`, also in
+`apps/extension/src/canvas.ts`), the extension bridge and its message types and error codes (`apps/extension`, namespace
+`squad`), the register and sync routes with Nook's status codes (`/v1/connections/canvas/register`,
+`/v1/connections/:id/canvas-sync`), Nook's account rules, the Google OAuth start, state record, PKCE, callback, refresh
+and revoke (`/v1/connections/google/authorize`, `/oauth/google/callback`), the simulator fallback, Nook's file-type
+filter and "what's due / send me the slides" answers. Added on top: sync state machine (cursor, backfill, daily full pass,
+`rate_limited`), citations over every source kind, privacy gates and per-squad sharing, encrypted tokens, honest states in
+the API and the connections UI (`/squad/connections`), derived busy blocks without titles, wiring into `Brain.ask`, live
+council grounding, `@cubbie` chat, trip constraints and study seeds (see `docs/nook-parity-wiring.md`).
+
+Verification (`pnpm check`, exit status 0, on `feature/nook-parity`): brain parity 21 tests, hub parity 13, secret scan 2,
+extension 21, connections UI 20, plus the existing context-store suites (19 brain, 11 hub). The only network used by any
+test is the in-process fake servers. No real Canvas or Google account, token or cookie was used, read or stored. Not done:
+a real-account end-to-end run (BLOCKED, see section 6) and a browser smoke of the connections page against a running hub.

@@ -4,7 +4,7 @@ import { signToken } from '../auth';
 import { createLogger } from '../log';
 import { createContextService, contextServiceFor } from '../context/service';
 import { GOOGLE_SCOPES } from '@squad/brain';
-import { CANVAS_ORIGIN, defaultCanvasData, fakeGoogle } from '@squad/brain/fake-servers';
+import { CANVAS_ORIGIN, fakeGoogle } from '@squad/brain/fake-servers';
 import { createCanvasClient } from '@squad/brain';
 import { fakeCanvas } from '@squad/brain/fake-servers';
 
