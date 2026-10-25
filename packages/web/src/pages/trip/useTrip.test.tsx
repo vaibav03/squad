@@ -72,6 +72,23 @@ describe('useTrip (live, stubbed fetch)', () => {
     expect((calls[0]!.init?.headers as Record<string, string>).Authorization).toBe('Bearer t');
   });
 
+  it('re-reads the trip on a timer so changes by others and agents show up, and a failed poll keeps the view', async () => {
+    let n = 0;
+    stub(() => {
+      n += 1;
+      if (n === 1) return json(200, { trip: null });
+      if (n === 2) return json(200, { trip: tripPlanning });
+      throw new TypeError('hub blinked');
+    });
+    const { result } = renderHook(() => useTrip(), { wrapper });
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    expect(result.current.view).toBeNull();
+    await waitFor(() => expect(result.current.view?.tripId).toBe('trip_cabo'), { timeout: 6000 });
+    await waitFor(() => expect(n).toBeGreaterThanOrEqual(3), { timeout: 6000 });
+    expect(result.current.view?.tripId).toBe('trip_cabo');
+    expect(result.current.status).toBe('ready');
+  }, 15000);
+
   it('404 on a trip id is not-found, not the hub-down error', async () => {
     stub(() => json(404, { error: { code: 'not_found', message: 'x' } }));
     const { result } = renderHook(() => useTrip('trip_zzz'), { wrapper });

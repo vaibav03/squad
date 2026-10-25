@@ -44,6 +44,13 @@ const history = async (id: string, chatId: string) =>
       await api(tok[id]!, `/v1/chat/history?chatId=${encodeURIComponent(chatId)}`),
     )
   ).messages.map((m) => m.text);
+interface Card { type: string; question: string; options: string[]; status: string }
+const dmCards = async (id: string) =>
+  (
+    await j<{ messages: { card?: Card }[] }>(
+      await api(tok[id]!, `/v1/chat/history?chatId=${encodeURIComponent(`dm:${id}`)}`),
+    )
+  ).messages.flatMap((m) => (m.card?.type === 'confirm' ? [m.card] : []));
 const say = (id: string, chatId: string, text: string) =>
   api(tok[id]!, '/v1/chat/send', { method: 'POST', json: { chatId, text } });
 const until = async <T>(fn: () => Promise<T | undefined | false>, what: string, ms = 60_000): Promise<T> => {
@@ -188,8 +195,11 @@ test('J21.5 secret ballot: counts hidden below 3, votes by page, "I vote 1" and 
   await expect(pc.getByTestId('trip-vote-note')).toContainText('Counts appear once 3 members have voted');
   await shot(pc, J, '5-ballot-hidden');
   // Chi answers the numbered vote card Cubbie put in the DM
-  const card = await until(async () => (await history(CHI, `dm:${CHI}`)).find((x) => /Trip vote: where to\?/.test(x)), 'vote card in Chi DM');
-  expect(card).toMatch(/1\./);
+  const card = await until(
+    async () => (await dmCards(CHI)).find((c) => /Trip vote: where to\?/.test(c.question) && c.status === 'pending'),
+    'vote card in Chi DM',
+  );
+  expect(card.options.length).toBeGreaterThanOrEqual(2); // answered by number below
   await say(CHI, `dm:${CHI}`, '1');
   await until(async () => (await current(ANA))?.voteProgress, 'counts appear at 3 voters');
   expect((await current(ANA))!.voteProgress).toMatchObject({ voted: 3, of: 4 });
@@ -226,10 +236,12 @@ test('J21.6 confirm in chat and on the page; trip.confirmed fires exactly once; 
   expect(confirmed, 'trip.confirmed exactly once on the stream').toHaveLength(1);
   sse.stop();
   expect((await history(DEV, GROUP)).join('\n')).toContain('Trip confirmed by all 4');
-  await pb.waitForTimeout(1500);
-  const onTrip = pb.url().includes('/trips');
-  if (onTrip) await expect(pb.getByTestId('trip-cutscene-link')).toBeVisible();
-  else expect(pb.url(), 'handed off to the village cutscene').toMatch(/village|cutscene/);
+  // Ben had the page open: it hands off to the village cutscene once; otherwise the page shows the link.
+  await expect
+    .poll(async () => pb.url().includes('cutscene=trip') || (await pb.getByTestId('trip-cutscene-link').isVisible().catch(() => false)), {
+      timeout: 20_000,
+    })
+    .toBe(true);
   await shot(pb, J, '6-confirmed');
 });
 

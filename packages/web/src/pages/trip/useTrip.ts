@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useEventFeed, useLiveConfig, type Connection } from '../../overlays/kit';
 import type { z } from 'zod';
 import type {
@@ -20,6 +20,7 @@ import {
 } from './model';
 import { recordedScript, tripPlanning } from './fixtures';
 
+const POLL_MS = 3000;
 export type TripStatus = 'loading' | 'ready' | 'error' | 'offline';
 export type TripAction = 'close-voting' | 'retry' | 'continue' | 'reopen' | 'cancel';
 export type OptionPatch = Omit<z.infer<typeof TripOptionEditBodySchema>, 'baseRev' | 'replace'>;
@@ -92,6 +93,33 @@ export function useTrip(tripId?: string) {
       setErrorMessage('The hub answered, but the trip could not be read. Try again.');
     }
   }, [live, cfg.hubUrl, base, headers, tripId, netFail]);
+
+  // The hub streams named SSE events that the shared feed's onmessage never sees, and agents, chat replies and other
+  // members change the trip too, so the page also re-reads it every few seconds (quietly: a failed poll keeps what is shown).
+  const busyRef = useRef<string | null>(null);
+  busyRef.current = busy;
+  useEffect(() => {
+    if (!live) return;
+    const tick = async () => {
+      if (
+        busyRef.current ||
+        (typeof document !== 'undefined' && document.visibilityState === 'hidden')
+      )
+        return;
+      try {
+        const res = await fetch(`${cfg.hubUrl}${base}`, { headers });
+        if (!res.ok || busyRef.current) return;
+        const raw: unknown = await res.json();
+        const v = tripId ? parseTripView(raw) : parseCurrent(raw)?.trip;
+        if (v === undefined) return;
+        setView((prev) => (JSON.stringify(prev) === JSON.stringify(v) ? prev : v));
+      } catch {
+        /* keep the last good view */
+      }
+    };
+    const id = setInterval(() => void tick(), POLL_MS);
+    return () => clearInterval(id);
+  }, [live, cfg.hubUrl, base, headers, tripId]);
 
   const script = useMemo(() => recordedScript, []);
   const { connection, retry } = useEventFeed<TripEvent>(
