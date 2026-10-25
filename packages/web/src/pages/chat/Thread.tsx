@@ -131,7 +131,7 @@ function visibleCouncils(ctl: ChatController, chatId: string): CouncilTruth[] {
 export function useHeaderTruth(ctl: ChatController, chatId: string) {
   const v = useCouncilTruthVersion();
   const items = ctl.thread(chatId);
-  const councils = useMemo(() => visibleCouncils(ctl, chatId), [items, v, chatId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const councils = useMemo(() => visibleCouncils(ctl, chatId), [items, v, chatId]);
   const t = headerTruth({
     conn:
       ctl.conn === 'expired'

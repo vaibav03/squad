@@ -120,6 +120,21 @@ test('J37 chat truth: header badge, single council card, layout, dedupe, pending
     await page.unroute('**/v1/council/cn_*');
   }
 
+  // 4b. a fixture council on a live provider: the header names BOTH, never plain "Live"
+  await page.route('**/v1/council/cn_*', async (route) => {
+    const res = await route.fetch();
+    const j = (await res.json()) as Record<string, unknown>;
+    await route.fulfill({ response: res, json: { ...j, demo: true, mode: 'demo' } });
+  });
+  await page.reload();
+  await expect(page.getByTestId('council-chat-card').last()).toHaveAttribute('data-mode', 'demo', {
+    timeout: 30_000,
+  });
+  const fixtureLabel = ((await page.getByTestId('chat-header-badge').textContent()) ?? '').trim();
+  expect(fixtureLabel).toMatch(/^(Live chat · Example council|Fixture council)$/);
+  await snap(page, '03b-fixture-council-header');
+  await page.unroute('**/v1/council/cn_*');
+
   // 5. auto-scroll to newest, and "jump to latest" when scrolled up
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.reload();

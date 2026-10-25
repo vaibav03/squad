@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T15:32:23.791Z",
+  "at": "2026-10-25T15:33:33.136Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -468,7 +468,7 @@
     "title": "J37 chat truth: header badge, single council card, layout, dedupe, pending/retry",
     "status": "pass",
     "note": "",
-    "ms": 40740
+    "ms": 44795
    }
   ]
  }

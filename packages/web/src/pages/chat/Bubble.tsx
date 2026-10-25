@@ -73,7 +73,7 @@ function useLinkHosts(ref: React.RefObject<HTMLElement | null>, text: string) {
 }
 
 export function MessageBubble(p: BubbleProps) {
-  const { row, api, status } = p;
+  const { row, api } = p;
   const cfg = useSquadConfig();
   const hub = cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token ?? null } : null;
   const m = row.message;

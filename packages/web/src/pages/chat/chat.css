@@ -1589,7 +1589,7 @@
   mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent);
 }
 .sqc-card--council[data-expanded] .sqc-card__body {
-  max-height: calc(70dvh - 44px);
+  max-height: calc(var(--sqc-card-max) * 1.6 - 44px);
 }
 .sqc-card__h {
   margin: 0 0 var(--space-1);

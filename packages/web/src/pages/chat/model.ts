@@ -126,9 +126,17 @@ export interface ThreadItem {
  */
 export function dropRedelivered(items: readonly ThreadItem[]): ThreadItem[] {
   const seen = new Set<string>();
+  // triggers that already got a real, cited answer: a trailing "Not in the materials" fallback for the same
+  // trigger (two skills answering one z-score question) is noise, not a second answer
+  const answered = new Set<string>();
   let lastBot: string | undefined;
   return items.filter((it) => {
     const m = it.message;
+    if (m.sender.kind === 'persona' && m.replyTo) {
+      if (m.citations.length > 0) answered.add(m.replyTo);
+      else if (answered.has(m.replyTo) && /^not in the materials\b/i.test(m.text.trim()))
+        return false;
+    }
     if (m.sender.kind !== 'persona') {
       lastBot = undefined;
       return true;

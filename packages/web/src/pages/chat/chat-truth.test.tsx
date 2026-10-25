@@ -106,6 +106,20 @@ describe('redelivery and waiting', () => {
     ]);
     expect(out.map((i) => i.message.text)).toEqual(['q', 'same', 'different']);
   });
+  it('drops a "Not in the materials" fallback that trails a cited answer for the same trigger', () => {
+    const q = msg('student', '@cubbie what is a z-score?', 1000);
+    const real = msg('persona', 'A z-score is a distance in standard deviations.', 1100, {
+      replyTo: q.message.id,
+      citations: [{ file: 'ch6.pdf', page: 2, label: 'ch6.pdf p.2' }],
+    });
+    const fb = msg('persona', 'Not in the materials. Ask the TA.', 1200, { replyTo: q.message.id });
+    expect(dropRedelivered([q, real, fb]).map((i) => i.message.text)).toEqual([
+      q.message.text,
+      real.message.text,
+    ]);
+    // alone it is a legitimate answer
+    expect(dropRedelivered([q, fb])).toHaveLength(2);
+  });
   it('one waiting entry per unanswered trigger, none once answered', () => {
     const q1 = msg('student', '@cubbie one', Date.now() - 1000, { clientId: 'c1' });
     const q2 = msg('student', '@cubbie two', Date.now() - 500, { clientId: 'c2' });
