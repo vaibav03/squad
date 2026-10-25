@@ -192,7 +192,14 @@ describe('library pipeline', () => {
     });
     await k.pipe.idle();
     expect([a.name, b.name]).toEqual(['n.txt', 'n (2).txt']);
-    expect(k.courses.listChapters(c.courseId).map((x) => x.id)).toEqual(['n', 'n-2']);
+    // both files become chapters, the second with a suffixed id; the pipeline finishes them concurrently, so the
+    // listing order is not part of the contract
+    expect(
+      k.courses
+        .listChapters(c.courseId)
+        .map((x) => x.id)
+        .sort(),
+    ).toEqual(['n', 'n-2']);
     // whitespace-only text has no readable content
     const w = await k.pipe
       .submit({
