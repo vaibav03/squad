@@ -7,6 +7,8 @@ Click any character in the village (the viewer's own character and every agent s
 2. Open `/squad/village?replay=track2` or `?replay=track3`, or the live village.
 3. Click a character, or press `I` on the village to cycle agents, or Tab to the agent chips at the top-left and press Enter. `Esc` closes and returns focus to the village. Clicking empty ground closes it too.
 
+> The inspector is now the focused agent panel with the tabs Activity, Reasoning summary, Conversation, Team and Structure. See `docs/agent-focus-panel.md`. The older tab descriptions below map: Doing = Activity, Thinking = Reasoning summary (shared notes), Chat = Conversation, Agents = Team, Hierarchy = Structure.
+
 ## What it shows (tabs)
 - **Doing**: the current-activity line (never blank), state, where the agent is, where it is heading, what it waits on, the skill involved, the model tier (fast, main, chair) and Demo mode, and the last ten events with relative times.
 - **Thinking**: a thought bubble built only from what the stream carries: the optional `thought` text on events, or public event text (the quiz question, a council member's stance, a dissent, a dropped option, a source being weighed). A live indicator shows while a model call is in flight (`work.thinking`). Earlier thoughts sit in a collapsed list. With nothing shared it says `Working on it: no reasoning shared yet`. Hidden chain of thought is never requested or shown.
