@@ -47,30 +47,62 @@ const mod: SceneModule = {
       };
     };
 
+    /** Starts the cutscene. `force` (host replay / pending hand-off) ignores the played guards. Returns true if it started. */
+    const play = (taskId: string, squadId: string, force: boolean): boolean => {
+      const key = `${squadId}:${taskId}`;
+      // once per trip: replays, loops and seeks never replay it, they only make sure the door is there
+      if (!force && (played.has(key) || ctx.registry.get(`tripPlayed:${key}`) || wasPlayed(taskId))) {
+        door ??= createTripDoor(ctx, taskId);
+        door.show({ pop: false });
+        return false;
+      }
+      played.add(key);
+      ctx.registry.set(`tripPlayed:${key}`, true);
+      markPlayed(taskId);
+      door ??= createTripDoor(ctx, taskId);
+      running?.destroy();
+      detach?.();
+      detach = undefined;
+      setFlag('playing');
+      running = createTripCutscene(ctx, {
+        onDoor: () => door?.show({ pop: true }),
+        onEnd: () => {
+          detach?.();
+          detach = undefined;
+          setFlag(undefined);
+        },
+      });
+      attachSkip();
+      return true;
+    };
+    /** Observable for hosts and tests: `data-cutscene="playing"` on <html> while it runs. */
+    const setFlag = (v: 'playing' | undefined) => {
+      if (typeof document === 'undefined') return;
+      if (v) document.documentElement.dataset.cutscene = v;
+      else delete document.documentElement.dataset.cutscene;
+    };
+    // Host hand-off: the web page dispatches `squad:play-trip` once the world is ready and nothing blocks it.
+    const onHost = (e: Event) => {
+      const d = (e as CustomEvent<{ taskId: string; squadId?: string; force?: boolean; started?: boolean }>)
+        .detail;
+      if (!d?.taskId) return;
+      d.started = play(d.taskId, d.squadId ?? 'squad', d.force !== false);
+    };
+    if (typeof window !== 'undefined') window.addEventListener('squad:play-trip', onHost);
+
     return {
       onCommand(raw: WorldCommand) {
         const cmd = raw as unknown as SceneCommand;
         if (cmd.type !== 'playTrip') return;
-        const key = `${cmd.squadId}:${cmd.taskId}`;
-        // once per trip: replays, loops and seeks never replay it, they only make sure the door is there
-        if (played.has(key) || ctx.registry.get(`tripPlayed:${key}`) || wasPlayed(cmd.taskId)) {
-          door ??= createTripDoor(ctx, cmd.taskId);
-          door.show({ pop: false });
+        // a host that gates the cutscene (web: world ready, nothing modal) plays it itself via `squad:play-trip`
+        if (typeof document !== 'undefined' && document.documentElement.dataset.cutsceneHost === 'gate') {
+          if (wasPlayed(cmd.taskId)) {
+            door ??= createTripDoor(ctx, cmd.taskId);
+            door.show({ pop: false });
+          }
           return;
         }
-        played.add(key);
-        ctx.registry.set(`tripPlayed:${key}`, true);
-        markPlayed(cmd.taskId);
-        door ??= createTripDoor(ctx, cmd.taskId);
-        running?.destroy();
-        running = createTripCutscene(ctx, {
-          onDoor: () => door?.show({ pop: true }),
-          onEnd: () => {
-            detach?.();
-            detach = undefined;
-          },
-        });
-        attachSkip();
+        play(cmd.taskId, cmd.squadId, false);
       },
       update(_t, dt) {
         running?.update(dt);
@@ -80,6 +112,8 @@ const mod: SceneModule = {
         }
       },
       destroy() {
+        if (typeof window !== 'undefined') window.removeEventListener('squad:play-trip', onHost);
+        setFlag(undefined);
         detach?.();
         running?.destroy();
         door?.destroy();

@@ -344,6 +344,10 @@ function QuizController(
 
 // ---------------------------------------------------------------- confirm
 
+/** True when the hub already closed the question (expired / answered) or its expiry time has passed. */
+export const isStaleConfirm = (t: ConfirmTarget, now = Date.now()): boolean =>
+  !!t.closed || (typeof t.expiresAt === 'number' && t.expiresAt <= now);
+
 function ConfirmController(
   props: Common & {
     ev: Extract<Active, { type: 'openConfirm' }>;
@@ -355,6 +359,9 @@ function ConfirmController(
   const [phase, setPhase] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState<string>();
   const [target, setTarget] = useState<ConfirmTarget>();
+  // Live: the sheet opens only once the hub has said the question is still open. An expired or already answered
+  // one is dropped silently (a stale prompt must never cover the village or block the trip cutscene).
+  const [previewed, setPreviewed] = useState(mode !== 'live' || !hub);
   const [askPhase, setAskPhase] = useState<'idle' | 'busy' | 'done'>('idle');
   const closer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(closer.current), []);
@@ -367,8 +374,13 @@ function ConfirmController(
       question: ev.question,
       options: (ev as { options?: string[] }).options,
     }).then(
-      (t) => !dead && setTarget(t),
-      () => {},
+      (t) => {
+        if (dead) return;
+        if (isStaleConfirm(t)) return onDone();
+        setTarget(t);
+        setPreviewed(true);
+      },
+      () => !dead && setPreviewed(true),
     );
     return () => {
       dead = true;
@@ -429,7 +441,7 @@ function ConfirmController(
   };
   return (
     <ConfirmSheet
-      open={open}
+      open={open && previewed}
       onClose={onDone}
       returnFocusTo={returnFocusTo}
       calm={calm}

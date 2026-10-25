@@ -21,7 +21,7 @@ export interface PlanCardProps {
   sources?: string | undefined;
   privacy: string;
   revisions?: PlanRevision[];
-  actions?: { edit?: ReactNode; vote?: ReactNode; ask?: () => void };
+  actions?: { edit?: ReactNode; vote?: ReactNode; watch?: ReactNode; ask?: () => void };
   children?: ReactNode;
 }
 
@@ -80,6 +80,7 @@ export function PlanCard(p: PlanCardProps) {
       <div className="sqp-card__actions">
         {p.actions?.edit}
         {p.actions?.vote}
+        {p.actions?.watch}
         {p.actions?.ask ? (
           <button
             type="button"

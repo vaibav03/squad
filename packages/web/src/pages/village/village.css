@@ -79,3 +79,18 @@
     max-height: 56dvh;
   }
 }
+
+.sq-world__replay {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  z-index: calc(var(--sq-z-stage) + 2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hud-border);
+  background: var(--hud-bg);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}

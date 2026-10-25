@@ -62,7 +62,13 @@ export interface TripService {
   /** Runs before each constraint check so connection-derived busy blocks (Canvas/Google, titles never stored) are current. */
   setBeforeConstraints(fn: ((members: string[]) => Promise<void> | void) | undefined): void;
   current(v: Viewer): TripViewV2 | null;
-  list(v: Viewer): { tripId: string; title: string; status: string }[];
+  list(v: Viewer): {
+    tripId: string;
+    taskId: string;
+    title: string;
+    status: string;
+    confirmedAt?: number;
+  }[];
   get(v: Viewer, id: string): TripViewV2 | null;
   create(v: Viewer, body: CreateBody, source: 'chat' | 'page'): Promise<Res>;
   addOption(v: Viewer, id: string, body: { label: string; days?: number; perPerson?: number }): Res;
@@ -571,7 +577,10 @@ export function createTripService(
     row.optionId = optionId;
     deps.ingest.village({ t: 'confirm.done', student, taskId: t.taskId, question: 'Confirm trip' });
     const all = t.confirmations.every((r) => r.confirmed);
-    if (all) t.status = 'confirmed';
+    if (all) {
+      t.status = 'confirmed';
+      c.confirmedAt = now();
+    }
     if (all) dropCards(t, 'confirm');
     save(t);
     if (all) {
@@ -654,8 +663,12 @@ export function createTripService(
     list(v) {
       return deps.trips.list(v.squadId).map((t) => ({
         tripId: t.tripId,
+        taskId: t.taskId,
         title: t.collab?.title ?? 'Group trip',
         status: t.status,
+        ...(t.status === 'confirmed' && t.collab
+          ? { confirmedAt: t.collab.confirmedAt ?? t.collab.createdAt }
+          : {}),
       }));
     },
     get(v, id) {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { TripViewV2 } from '@squad/core';
 import { timedFetch } from '../lib/http';
 import { tripCardStatus, tripTruth } from '../lib/truth-labels';
-import { parseTripView } from '../pages/trip/model';
+import { cutsceneHref, parseTripView } from '../pages/trip/model';
 import { PlanCard } from './PlanCard';
 import { revisionsOf } from './dedupe';
 import { usePlanActions } from './context';
@@ -86,6 +86,19 @@ export function TripChatCard({
                 >
                   {trip.can.confirm ? 'Confirm' : 'Vote'}
                 </button>
+              ),
+            }
+          : {}),
+        ...(trip?.status === 'confirmed'
+          ? {
+              watch: (
+                <a
+                  className="sqp-btn"
+                  data-testid="plan-watch-trip"
+                  href={cutsceneHref(trip.taskId)}
+                >
+                  Watch the trip
+                </a>
               ),
             }
           : {}),

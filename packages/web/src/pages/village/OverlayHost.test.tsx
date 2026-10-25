@@ -133,33 +133,26 @@ describe('OverlayHost', () => {
     };
     afterEach(() => vi.unstubAllGlobals());
 
-    it('expired preview: buttons removed, state line, and Ask again re-sends the original question with a fresh clientId', async () => {
-      const sends: { body: Record<string, unknown> }[] = [];
-      await mount(
-        () => Response.json({ error: { code: 'expired' }, reask }, { status: 404 }),
-        sends,
+    it('a stale expired confirm is dropped silently on load: no sheet, the world is told it closed', async () => {
+      const onClosed = vi.fn();
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ error: { code: 'expired' }, reask }, { status: 404 })),
       );
-      expect(screen.getByTestId('confirm-closed').textContent).toMatch(/This question expired\./);
+      render(<OverlayHost event={ev} mode="live" hub={hub} onClosed={onClosed} />);
+      await wait(80);
+      expect(screen.queryByTestId('confirm-closed')).toBeNull();
       expect(screen.queryByRole('button', { name: 'Yes' })).toBeNull();
-      expect(screen.queryByRole('button', { name: 'No' })).toBeNull();
-      fireEvent.click(screen.getByRole('button', { name: 'Ask again' }));
-      await wait(50);
-      expect(sends).toHaveLength(1);
-      expect(sends[0]!.body).toMatchObject({ chatId: reask.chatId, text: reask.text });
-      expect(String(sends[0]!.body.clientId)).toMatch(/^reask_/);
-      expect(screen.getByText(/Asked again/)).toBeTruthy();
+      expect(onClosed).toHaveBeenCalledWith('confirm');
     });
-    it('already answered preview (409): shows the chosen option and no buttons', async () => {
+    it('an already answered confirm (409) is dropped silently on load', async () => {
       await mount(() =>
         Response.json(
           { error: { code: 'already_answered' }, answer: 'For: open book' },
           { status: 409 },
         ),
       );
-      const t = screen.getByTestId('confirm-closed').textContent ?? '';
-      expect(t).toMatch(/Already answered/);
-      expect(t).toMatch(/For: open book/);
-      expect(screen.queryByRole('button', { name: 'Yes' })).toBeNull();
+      expect(screen.queryByTestId('confirm-closed')).toBeNull();
       expect(screen.queryByRole('button', { name: 'Ask again' })).toBeNull();
     });
     it('a pending preview whose own expiresAt has passed closes as expired', async () => {

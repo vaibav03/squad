@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Icon } from '../primitives/Icon';
 import { filterPlans, planStatusLabel, type PlanFilter, type PlanSummary } from './model';
 import type { PlanKind } from './registry';
+import { cutsceneHref } from '../pages/trip/model';
 import './plans.css';
 
 const FILTERS: { id: PlanFilter; label: string }[] = [
@@ -109,6 +110,16 @@ export function PlansDrawer(props: PlansDrawerProps) {
                   {planStatusLabel(p.status)}
                 </span>
               </a>
+              {p.kind === 'trip' && p.status === 'confirmed' && p.taskId ? (
+                <button
+                  type="button"
+                  className="sqp-btn"
+                  data-testid={`plans-watch-${p.id}`}
+                  onClick={() => window.location.assign(cutsceneHref(p.taskId!))}
+                >
+                  Watch the trip
+                </button>
+              ) : null}
             </li>
           ))}
         </ul>

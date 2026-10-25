@@ -4,7 +4,6 @@ import {
   createLiveSource,
   loadReplay,
   tripCutsceneFromQuery,
-  withTripCutscene,
   type VillageSource,
 } from '@squad/village/sources';
 import { Button } from '../../primitives/Button';
@@ -29,6 +28,17 @@ import { CouncilHall, CouncilBoardHost, setBoardStore, setRoomOpener } from '../
 import { useToast } from '../../primitives/Toast';
 import { createPhraseRunner } from './chat-send';
 import { OverlayHost } from './OverlayHost';
+import { timedFetch } from '../../lib/http';
+import {
+  addPending,
+  confirmedTrips,
+  healFromTrips,
+  isBlockingUi,
+  markPlayed,
+  nextPending,
+  playInWorld,
+  runGate,
+} from './trip-cutscene';
 import { DEFAULT_WORLD, loadWorld, type WorldHandle } from './worlds';
 import './village.css';
 
@@ -82,6 +92,67 @@ export default function VillagePage({ world }: { world?: string }) {
   );
 
   useEffect(() => setTitle('Village'), [setTitle]);
+
+  // ---- trip cutscene: durable pending + gate (world ready, no modal, tab visible) ----
+  const viewer = cfg.userId ?? 'anon';
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const readyAt = useRef(0);
+  const refreshTrips = useRef<() => void>(() => {});
+  const [replayTask, setReplayTask] = useState<string | undefined>();
+  useEffect(() => {
+    if (!live || replayName || !hub) return;
+    let dead = false;
+    document.documentElement.dataset.cutsceneHost = 'gate';
+    // `?cutscene=trip&task=<id>` stays as an override: it queues a forced play through the same gate.
+    const q0 = tripCutsceneFromQuery(location.search);
+    if (q0) {
+      addPending(viewer, { taskId: q0.taskId, confirmedAt: Date.now(), force: true });
+      setReplayTask(q0.taskId);
+    }
+    const load = () =>
+      timedFetch(`${hub.hubUrl}/v1/trips`, {
+        headers: hub.token ? { Authorization: `Bearer ${hub.token}` } : {},
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((body) => {
+          if (dead || !body) return;
+          healFromTrips(viewer, body);
+          const latest = confirmedTrips(body).sort((a, b) => b.confirmedAt - a.confirmedAt)[0];
+          if (latest) setReplayTask((cur) => cur ?? latest.taskId);
+        })
+        .catch(() => undefined);
+    refreshTrips.current = () => void load();
+    void load();
+    const poll = setInterval(() => document.visibilityState === 'visible' && void load(), 5000);
+    const tick = setInterval(() => {
+      runGate({
+        next: () => nextPending(viewer),
+        ready: () => stateRef.current === 'ready' && Date.now() - readyAt.current > 600,
+        blocking: () =>
+          isBlockingUi() || !!document.querySelector('.sq-dock-root[data-dock-large]'),
+        visible: () => document.visibilityState === 'visible',
+        start: (p) => playInWorld(p),
+        onStarted: (p) => {
+          markPlayed(viewer, p.taskId);
+          if (new URLSearchParams(location.search).get('cutscene')) {
+            const u = new URL(location.href);
+            u.searchParams.delete('cutscene');
+            u.searchParams.delete('task');
+            u.searchParams.delete('squad');
+            history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+          }
+        },
+      });
+    }, 300);
+    return () => {
+      dead = true;
+      delete document.documentElement.dataset.cutsceneHost;
+      clearInterval(poll);
+      clearInterval(tick);
+      refreshTrips.current = () => {};
+    };
+  }, [live, replayName, hub, viewer]);
   // Dev/test hook: lets screenshots and Playwright raise an overlay without a world. Not present in production builds.
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -152,12 +223,18 @@ export default function VillagePage({ world }: { world?: string }) {
         const mount = await loadWorld(worldId);
         if (dead || !stage.current) return feed.close();
         setPhase('art');
-        // `?cutscene=trip&task=<id>`: the world plays the cutscene once per task (any key skips it).
-        const trip = tripCutsceneFromQuery(location.search);
-        const source = trip ? withTripCutscene(feed.source, trip) : feed.source;
+        // A confirmed trip's cutscene is played by the gate below (world ready, nothing modal, tab visible), not here.
+        const offTrip = feed.source.subscribe((e) => {
+          if ((e as { t?: string }).t === 'trip.confirmed') refreshTrips.current();
+        });
+        const prevClose3 = feed.close;
+        feed.close = () => {
+          offTrip();
+          prevClose3();
+        };
         const h = mount({
           parent: stage.current,
-          source,
+          source: feed.source,
           me: feed.me,
           calm,
           onOverlay: setEvent,
@@ -170,7 +247,10 @@ export default function VillagePage({ world }: { world?: string }) {
         if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__world = h;
         await h.ready;
         h.setCalm?.(calmRef.current);
-        if (!dead) setState('ready');
+        if (!dead) {
+          readyAt.current = Date.now();
+          setState('ready');
+        }
       } catch {
         feed?.close();
         if (!dead) setState({ error: 'The world could not start. Reload to try again.' });
@@ -297,6 +377,16 @@ export default function VillagePage({ world }: { world?: string }) {
         initialOpen={q.get('mastery') === '1' || q.get('panel') === 'mastery'}
         returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
       />
+      {replayTask && state === 'ready' && (
+        <button
+          type="button"
+          className="sq-world__replay"
+          data-testid="replay-trip"
+          onClick={() => playInWorld({ taskId: replayTask })}
+        >
+          Replay trip
+        </button>
+      )}
       {live && !replayName && <PlanPill />}
       <PlanLayer
         hub={hub}

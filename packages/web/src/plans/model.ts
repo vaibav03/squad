@@ -8,6 +8,8 @@ export interface PlanSummary {
   active: boolean;
   /** `/squad/chat?group=…&plan=…` target is built by the caller; this is the hub id. */
   updatedAt?: number;
+  /** Confirmed trips only: the task the Village cutscene is keyed on. */
+  taskId?: string;
 }
 
 const DONE = new Set(['confirmed', 'agreed', 'cancelled', 'failed', 'expired', 'done']);
@@ -48,7 +50,7 @@ export function parsePlans(trips: unknown, current: unknown): PlanSummary[] {
   const list = (trips as { trips?: unknown } | null)?.trips;
   if (Array.isArray(list))
     for (const t of list) {
-      const r = t as { tripId?: unknown; title?: unknown; status?: unknown };
+      const r = t as { tripId?: unknown; taskId?: unknown; title?: unknown; status?: unknown };
       if (typeof r.tripId === 'string' && typeof r.status === 'string')
         out.push({
           id: r.tripId,
@@ -56,6 +58,9 @@ export function parsePlans(trips: unknown, current: unknown): PlanSummary[] {
           title: typeof r.title === 'string' ? r.title : 'Group trip',
           status: r.status,
           active: !isCompleted(r.status),
+          ...(r.status === 'confirmed'
+            ? { taskId: typeof r.taskId === 'string' ? r.taskId : `task_${r.tripId}` }
+            : {}),
         });
     }
   const p = (current as { plan?: unknown } | null)?.plan as
