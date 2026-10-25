@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { arr, getJson, obj, type HubCtx, type ItemState } from './setup-state';
+import { hub } from '../connections/api';
+import { phaseHasData, phaseOf } from '../../lib/connection-phase';
 
 /**
  * The customer journey as ONE ordered list, each step answered by the server (never by a local flag):
@@ -60,14 +62,18 @@ export const JOURNEY: readonly JourneyDef[] = [
   },
 ];
 
-async function connectDone(ctx: HubCtx): Promise<boolean> {
-  const conns = arr(obj(await getJson(ctx, '/v1/connections')).connections).map(obj);
-  return conns.some(
-    (c) =>
-      c.mode === 'live' &&
-      (c.state ?? c.status) === 'live' &&
-      (c.provider === 'google' || c.provider === 'canvas'),
-  );
+/**
+ * Connect is done when ANY Google or Canvas connection holds data: a real one, or a demo one. A demo-only answer
+ * ('demo') still counts as done, but is labelled Demo-connected instead of "Live". Same client + phases as Connections.
+ */
+async function connectDone(ctx: HubCtx): Promise<boolean | 'demo'> {
+  const conns = await hub({
+    hubUrl: (ctx.hubUrl ?? '').replace(/\/+$/, ''),
+    token: ctx.token,
+  }).list();
+  const phases = conns.map(phaseOf).filter(phaseHasData);
+  if (phases.length === 0) return false;
+  return phases.every((p) => p === 'demo') ? 'demo' : true;
 }
 async function askDone(ctx: HubCtx): Promise<boolean> {
   const chats = arr(obj(await getJson(ctx, '/v1/chat/chats')).chats)
@@ -97,7 +103,7 @@ async function planDone(ctx: HubCtx): Promise<boolean> {
   return false;
 }
 
-const READERS: Record<Exclude<JourneyKey, 'squad'>, (c: HubCtx) => Promise<boolean>> = {
+const READERS: Record<Exclude<JourneyKey, 'squad'>, (c: HubCtx) => Promise<boolean | 'demo'>> = {
   connect: connectDone,
   ask: askDone,
   council: councilDone,
@@ -109,6 +115,8 @@ export type JourneyStates = Record<JourneyKey, ItemState>;
 
 export interface Journey {
   states: JourneyStates;
+  /** Steps that are done only with demo data (shown as Demo-connected, never as live). */
+  demo: Partial<Record<JourneyKey, boolean>>;
   done: number;
   total: number;
   /** The first step that is not done, or null when all are done or still being checked. */
@@ -141,6 +149,7 @@ export function useJourney(ctx: HubCtx, waiting = false): Journey {
   const [states, setStates] = useState<JourneyStates>(() =>
     init(live || waiting ? 'loading' : 'todo'),
   );
+  const [demo, setDemo] = useState<Partial<Record<JourneyKey, boolean>>>({});
   const gen = useRef(0);
   const { hubUrl, token } = ctx;
   const load = useCallback(
@@ -154,7 +163,11 @@ export function useJourney(ctx: HubCtx, waiting = false): Journey {
       });
       for (const k of keys)
         READERS[k]({ hubUrl, token }).then(
-          (ok) => gen.current === id && setStates((p) => ({ ...p, [k]: ok ? 'done' : 'todo' })),
+          (ok) => {
+            if (gen.current !== id) return;
+            setStates((p) => ({ ...p, [k]: ok ? 'done' : 'todo' }));
+            setDemo((p) => ({ ...p, [k]: ok === 'demo' }));
+          },
           () => gen.current === id && setStates((p) => ({ ...p, [k]: 'error' })),
         );
     },
@@ -169,6 +182,7 @@ export function useJourney(ctx: HubCtx, waiting = false): Journey {
   const loading = JOURNEY.some((j) => states[j.key] === 'loading');
   return {
     states,
+    demo,
     done,
     total: JOURNEY.length,
     next: loading ? null : next,

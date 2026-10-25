@@ -11,7 +11,14 @@ let replies: Record<string, Reply | Reply[]> = {};
 const sent: { path: string; body: unknown }[] = [];
 
 beforeEach(() => {
-  replies = { 'GET /v1/imessage/link': { body: { links: [] } } };
+  replies = {
+    'GET /v1/imessage/link': { body: { links: [] } },
+    'GET /v1/connections': { body: { connections: [] } },
+    'GET /v1/imessage/status': { body: { enabled: false, mode: 'off', squads: [] } },
+    'GET /v1/imessage/setup': { body: { missingEnv: [] } },
+    'GET /v1/library/courses': { body: { courses: [] } },
+    'GET /health': { body: { ok: true } },
+  };
   sent.length = 0;
   vi.stubGlobal('localStorage', {
     getItem: () => null,
@@ -38,7 +45,7 @@ afterEach(() => {
 
 function mount(mode: 'live' | 'mock' = 'live') {
   return render(
-    <MemoryRouter initialEntries={['/squad/setup/phone']}>
+    <MemoryRouter initialEntries={['/squad/setup/messaging?phone=1']}>
       <SquadProvider
         hubUrl={HUB}
         mode={mode}
@@ -52,12 +59,14 @@ function mount(mode: 'live' | 'mock' = 'live') {
   );
 }
 
-const enterPhone = () => {
-  fireEvent.change(screen.getByLabelText('Mobile number'), { target: { value: '4155550134' } });
+const enterPhone = async () => {
+  fireEvent.change(await screen.findByLabelText('Mobile number'), {
+    target: { value: '4155550134' },
+  });
   fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
 };
 
-describe('phone step (real linking)', () => {
+describe('Link your phone number (Messaging sub-option)', () => {
   it('dev delivery: shows the labelled dev code and links only after verify', async () => {
     replies['POST /v1/me/phone/start'] = {
       body: {
@@ -74,8 +83,7 @@ describe('phone step (real linking)', () => {
       body: { ok: true, verified: true, hint: '•••• 0134' },
     };
     mount();
-    expect(screen.queryByText(/Demo step/)).toBeNull();
-    enterPhone();
+    await enterPhone();
     await waitFor(() => expect(screen.getByText('Code shown here (dev)')).toBeTruthy());
     expect(screen.getByTestId('phone-dev-code').textContent).toBe('123456');
     expect(sent[0]).toEqual({ path: '/v1/me/phone/start', body: { phone: '+14155550134' } });
@@ -104,7 +112,7 @@ describe('phone step (real linking)', () => {
       body: { error: { code: 'code_invalid', triesLeft: 4 } },
     };
     mount();
-    enterPhone();
+    await enterPhone();
     await waitFor(() => expect(screen.getByText('Code sent by iMessage')).toBeTruthy());
     expect(screen.queryByTestId('phone-dev-code')).toBeNull();
     fireEvent.change(screen.getByLabelText('6-digit code'), { target: { value: '999999' } });
@@ -126,15 +134,13 @@ describe('phone step (real linking)', () => {
       },
     };
     mount();
-    enterPhone();
+    await enterPhone();
     await waitFor(() =>
       expect(screen.getAllByText(/Code delivery unavailable/i).length).toBeGreaterThan(0),
     );
     expect(screen.getByText(/bridge is not configured/)).toBeTruthy();
     expect(screen.queryByLabelText('6-digit code')).toBeNull();
     expect(screen.queryByText('Phone linked')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Continue' }).hasAttribute('disabled')).toBe(true);
-    expect(screen.getByRole('button', { name: 'Skip for now' })).toBeTruthy();
   });
 
   it('an already linked phone shows as linked from server state', async () => {
@@ -145,7 +151,7 @@ describe('phone step (real linking)', () => {
 
   it('without a live hub it does not pretend to link', () => {
     mount('mock');
-    expect(screen.getByText('Live hub needed')).toBeTruthy();
+    expect(screen.getByText('Nothing is connected')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Send code' })).toBeNull();
   });
 });

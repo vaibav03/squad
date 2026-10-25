@@ -1,40 +1,18 @@
+import type { StepKey } from '../setup/steps';
+
 export interface ChecklistItem {
-  key: 'phone' | 'courses' | 'calendar' | 'persona';
+  key: StepKey;
   title: string;
-  body: string;
-  /** The exact next step this row opens. */
+  /** The Setup step this row opens. */
   to: string;
-  /** The other way to do the same thing (after the lead way). */
-  alt?: { label: string; to: string };
 }
 
+/** The four Home rows are the four Setup steps: same names, same order, same answers (see pages/setup/steps.ts). */
 export const HOME_CHECKLIST: readonly ChecklistItem[] = [
-  {
-    key: 'courses',
-    title: 'Connect Canvas or Google Classroom',
-    body: 'Your agents learn from your real courses.',
-    to: '/squad/connections#canvas',
-    alt: { label: 'or upload course PDFs', to: '/squad/setup/courses' },
-  },
-  {
-    key: 'calendar',
-    title: 'Connect Google Calendar',
-    body: 'Only free or busy leaves your account, never event titles.',
-    to: '/squad/connections#google',
-    alt: { label: 'or import a calendar file', to: '/squad/setup/calendar' },
-  },
-  {
-    key: 'phone',
-    title: 'Connect iMessage via Sendblue',
-    body: 'So your agent can text you.',
-    to: '/squad/setup/phone',
-  },
-  {
-    key: 'persona',
-    title: 'Pick your study buddy',
-    body: 'Choose a voice and a face you like.',
-    to: '/squad/personas',
-  },
+  { key: 'context', title: 'Learning context', to: '/squad/setup/context' },
+  { key: 'availability', title: 'Availability', to: '/squad/setup/availability' },
+  { key: 'messaging', title: 'Messaging', to: '/squad/setup/messaging' },
+  { key: 'agent', title: 'Agent', to: '/squad/setup/agent' },
 ];
 
 /**

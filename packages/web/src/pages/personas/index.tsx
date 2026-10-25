@@ -80,7 +80,13 @@ export default function PersonasPage() {
   }, [cfg.mode, cfg.hubUrl, cfg.token, attempt]);
 
   return (
-    <Page title="Study buddies" eyebrow="Studio" className="sq-pz">
+    <Page
+      title="Study buddies"
+      eyebrow="Studio"
+      lede="Pick the voice and face of the helper that studies with you. It changes how your agent sounds, not what it knows."
+      next="Choose a buddy and press Use this one; you can change it any time."
+      className="sq-pz"
+    >
       {load.status === 'loading' ? <Loading /> : null}
       {load.status === 'error' ? (
         load.offline ? (

@@ -19,7 +19,9 @@ export default function LedgerPage() {
     <LedgerView
       status={status}
       connection={connection}
-      title={taskId === TASK_ID ? TASK_TITLE : 'Group task'}
+      title={
+        taskId === TASK_ID && connection === 'replaying' ? TASK_TITLE : 'your squad’s latest task'
+      }
       rows={state.rows}
       roster={roster}
       me={cfg.userId}

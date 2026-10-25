@@ -111,7 +111,7 @@ export function LedgerView(props: LedgerViewProps) {
         <StateBlock
           kind="error"
           title="The board did not load"
-          body="The hub did not answer. Nothing here is lost; try again in a moment."
+          body="Squad did not answer. Nothing here is lost; try again in a moment."
           onRetry={onRetry}
         />
       )}

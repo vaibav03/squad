@@ -10,14 +10,14 @@ import { Skeleton } from '../../primitives/Skeleton';
 import { HomeHero } from './HomeHero';
 import { JourneyProvider, useSharedJourney } from '../../shell/journey-context';
 import { JOURNEY } from './journey';
-import { bridgeNote, usePhoneBridge } from './phone-state';
 import { useAuth, useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
 import { HOME_CHECKLIST as CHECKLIST } from './fixtures';
 import { resolveHomeLinks, useCurrentTrip } from './home-links';
 import { useHubReady } from './bootstrap';
 import { OfflineState } from '../../primitives/EmptyState';
-import { useSetupChecklist } from './setup-state';
+import { useSetupSteps } from '../setup/use-setup-steps';
+import { StatusStrip } from './StatusStrip';
 import { HomePlanCard } from './PlanCard';
 import { HealthBanner } from '../health/HealthBanner';
 import './home.css';
@@ -50,13 +50,18 @@ function HomeBody() {
     () => ({ hubUrl: ready ? cfg.hubUrl : null, token: ready ? cfg.token : null }),
     [ready, cfg.hubUrl, cfg.token],
   );
-  const { states, retry, anyError } = useSetupChecklist(gated, live && !ready);
-  const bridge = usePhoneBridge(gated);
+  const {
+    steps,
+    connections,
+    loading: stepsLoading,
+    retry,
+    anyError,
+  } = useSetupSteps(gated, live && !ready);
   const journey = useSharedJourney()!.journey;
   const trip = useCurrentTrip(cfg.hubUrl, cfg.token, live && ready);
   const links = resolveHomeLinks(trip);
-  const done = CHECKLIST.filter((c) => states[c.key] === 'done').length;
-  const loading = CHECKLIST.some((c) => states[c.key] === 'loading');
+  const done = CHECKLIST.filter((c) => steps[c.key].complete).length;
+  const loading = stepsLoading;
   const description = loading ? 'Checking…' : `${done} of ${CHECKLIST.length} done`;
   const started = journey.done > 1 || done > 0; // the squad step is always done, so >1 means a real step is done
   const next = journey.next;
@@ -110,12 +115,24 @@ function HomeBody() {
                 <li key={j.key} data-state={journey.states[j.key]}>
                   {journey.states[j.key] === 'done' ? <Icon name="check" size={12} /> : null}
                   {j.title}
+                  {journey.demo[j.key] ? ' (Demo-connected)' : ''}
                 </li>
               ))}
             </ol>
           </div>
         </Card>
       </section>
+
+      <StatusStrip
+        ctx={gated}
+        waiting={hub.state === 'connecting'}
+        offline={hub.state === 'offline'}
+        onRetry={hub.retry}
+        connections={connections}
+        connectionsLoading={
+          steps.context.status === 'loading' && steps.availability.status === 'loading'
+        }
+      />
 
       <div className="sq-home__grid">
         <PageSection
@@ -138,40 +155,47 @@ function HomeBody() {
             <Card padding="none">
               <ul className="sq-home__list">
                 {CHECKLIST.map((c) => {
-                  const st = states[c.key];
-                  const note = c.key === 'phone' ? bridgeNote(bridge, st === 'done') : c.body;
+                  const st = steps[c.key];
                   return (
-                    <li key={c.key} data-state={st}>
+                    <li key={c.key} data-state={st.status}>
                       <Link to={c.to} className="sq-home__row">
                         <span
-                          className={`sq-home__check${st === 'done' ? ' is-done' : ''}`}
+                          className={`sq-home__check${st.complete ? ' is-done' : ''}`}
                           aria-hidden="true"
                         >
-                          {st === 'done' ? <Icon name="check" size={14} /> : null}
+                          {st.complete ? <Icon name="check" size={14} /> : null}
                         </span>
                         <span className="sq-home__rowtext">
                           <strong>{c.title}</strong>
-                          <span>{note}</span>
+                          <span>{st.status === 'loading' ? 'Checking…' : st.summary}</span>
                         </span>
-                        {st === 'done' ? (
-                          <span className="sq-home__done">Done</span>
-                        ) : st === 'todo' ? (
-                          <span className="sq-home__todo">To do</span>
-                        ) : st === 'error' ? (
-                          <span className="sq-home__todo">Could not check</span>
-                        ) : (
+                        {st.status === 'loading' ? (
                           <span className="sq-home__checking" role="status">
                             <Skeleton width={56} height={18} />
                             <span className="sq-home__sr">Checking…</span>
                           </span>
+                        ) : st.status === 'done' ? (
+                          <span className="sq-home__done sq-home__badge">
+                            <Icon name="check" size={12} />
+                            {st.badge}
+                          </span>
+                        ) : (
+                          <span className="sq-home__todo sq-home__badge">
+                            <Icon
+                              name={
+                                st.status === 'demo'
+                                  ? 'info'
+                                  : st.status === 'attention' || st.status === 'error'
+                                    ? 'alert'
+                                    : 'lock'
+                              }
+                              size={12}
+                            />
+                            {st.badge}
+                          </span>
                         )}
                         <Icon name="chevron-right" size={18} />
                       </Link>
-                      {c.alt && st !== 'done' ? (
-                        <Link to={c.alt.to} className="sq-home__alt">
-                          {c.alt.label}
-                        </Link>
-                      ) : null}
                     </li>
                   );
                 })}

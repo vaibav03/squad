@@ -92,7 +92,7 @@ describe('Home bootstrap', () => {
     });
     await waitFor(() => expect(screen.queryByText('Connecting to Squad...')).toBeNull());
     expect(screen.queryByText('You are offline')).toBeNull();
-    expect(screen.getByText('Connect iMessage via Sendblue')).toBeTruthy();
+    expect(screen.getByText('Learning context')).toBeTruthy();
   });
 
   it('a hub that never answers ends in a true offline state with Retry, then recovers', async () => {
@@ -107,7 +107,7 @@ describe('Home bootstrap', () => {
       screen.getByRole('button', { name: /retry/i }).click();
       await vi.advanceTimersByTimeAsync(300);
     });
-    await waitFor(() => expect(screen.getByText('Connect iMessage via Sendblue')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Learning context')).toBeTruthy());
   });
 });
 
