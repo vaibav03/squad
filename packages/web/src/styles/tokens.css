@@ -1,0 +1,85 @@
+/* Semantic token bridge. Component CSS uses ONLY --sq-* names defined here.
+   Raw values come from docs/design/palette.json (and, once landed, docs/design/tokens.css).
+   When DESIGN.md/tokens.css land, remap the right-hand sides here; nothing else changes. */
+:root {
+  /* palette (master, docs/design/palette.json) */
+  --p-ink: #070f1f; --p-sky-deep: #0b1d38; --p-sky-mid: #0a3a63; --p-sky-low: #0c6e9e;
+  --p-cloud-lo: #6fa3b8; --p-cloud-hi: #b4d6da; --p-moon: #fff2c4;
+  --p-hill-far: #4a7695; --p-hill-mid: #2f5f84; --p-hill-near: #1c4466; --p-ground: #122b3f;
+  --p-leaf-dark: #0d3a4f; --p-leaf-lit: #22808a;
+  --p-wall-lit: #c9d4e4; --p-wall-mid: #8c9bb8; --p-wall-shade: #56648a;
+  --p-roof-wine: #7a3552; --p-roof-shade: #4a2440;
+  --p-wood-lit: #b07a52; --p-wood: #6e4a3c; --p-wood-dark: #3a2634;
+  --p-glow-core: #fff0a8; --p-glow: #ffc857; --p-ember: #f08a3a;
+  --p-alert: #e0485a; --p-ok: #5fcf8a; --p-skin: #f3cfae; --p-violet: #8f7bff;
+
+  /* type */
+  --sq-font-display: 'Pixelify Sans', 'Silkscreen', ui-monospace, monospace;
+  --sq-font-body: 'Figtree', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --sq-font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --sq-text-xs: 0.75rem; --sq-text-sm: 0.875rem; --sq-text-md: 1rem; --sq-text-lg: 1.125rem;
+  --sq-text-xl: 1.375rem; --sq-text-2xl: 1.75rem; --sq-text-3xl: 2.25rem;
+  --sq-leading-tight: 1.2; --sq-leading-body: 1.5;
+
+  /* space (4px grid), radius, borders */
+  --sq-space-1: 4px; --sq-space-2: 8px; --sq-space-3: 12px; --sq-space-4: 16px; --sq-space-5: 24px;
+  --sq-space-6: 32px; --sq-space-7: 48px; --sq-space-8: 64px;
+  --sq-radius-sm: 4px; --sq-radius-md: 8px; --sq-radius-lg: 12px; --sq-radius-pill: 999px;
+  --sq-border-w: 2px;
+  --sq-tap: 44px; --sq-container: 72rem; --sq-container-narrow: 34rem; --sq-header-h: 56px;
+
+  /* motion (08-village-motion.md: three curves only) */
+  --sq-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --sq-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --sq-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --sq-dur-press: 120ms; --sq-dur-fast: 150ms; --sq-dur-panel: 240ms;
+}
+
+/* dark chrome (default): night sky */
+:root, :root[data-theme='dark'] {
+  color-scheme: dark;
+  --sq-bg: var(--p-ink);
+  --sq-bg-sunken: #050b17;
+  --sq-bg-raised: var(--p-sky-deep);
+  --sq-bg-raised-2: #10284a;
+  --sq-bg-inset: #081428;
+  --sq-border: #1b3556;
+  --sq-border-strong: #2c5078;
+  --sq-text: #eaf1f6;
+  --sq-text-dim: #a4b8c8;
+  --sq-text-faint: #7189a0;
+  --sq-accent: var(--p-glow);
+  --sq-accent-hover: var(--p-glow-core);
+  --sq-accent-ink: #2a1a08;
+  --sq-accent-soft: rgb(255 200 87 / 0.14);
+  --sq-ok: var(--p-ok); --sq-alert: #ff6b7c; --sq-warn: var(--p-ember); --sq-info: var(--p-sky-low);
+  --sq-violet: var(--p-violet);
+  --sq-focus: var(--p-glow-core);
+  --sq-scrim: rgb(3 8 18 / 0.66);
+  --sq-shadow-hard: 0 3px 0 0 #02060f;
+  --sq-shadow-float: 0 12px 32px -8px rgb(0 0 0 / 0.55);
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+  --sq-bg: #e9eef3; --sq-bg-sunken: #dde5ec; --sq-bg-raised: #f8fafc; --sq-bg-raised-2: #ffffff;
+  --sq-bg-inset: #dfe7ee;
+  --sq-border: #c3d0dc; --sq-border-strong: #9bb0c4;
+  --sq-text: #0b1d38; --sq-text-dim: #34506d; --sq-text-faint: #5a7490;
+  --sq-accent: #b9690f; --sq-accent-hover: #9d570a; --sq-accent-ink: #fff8e8; --sq-accent-soft: rgb(185 105 15 / 0.12);
+  --sq-ok: #167a45; --sq-alert: #c02a40; --sq-warn: #b8560f; --sq-info: #0a5f8c; --sq-violet: #5b49d6;
+  --sq-focus: #0a3a63; --sq-scrim: rgb(11 29 56 / 0.4);
+  --sq-shadow-hard: 0 3px 0 0 #b3c2d1; --sq-shadow-float: 0 12px 32px -8px rgb(11 29 56 / 0.25);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --sq-bg: #e9eef3; --sq-bg-sunken: #dde5ec; --sq-bg-raised: #f8fafc; --sq-bg-raised-2: #ffffff;
+    --sq-bg-inset: #dfe7ee;
+    --sq-border: #c3d0dc; --sq-border-strong: #9bb0c4;
+    --sq-text: #0b1d38; --sq-text-dim: #34506d; --sq-text-faint: #5a7490;
+    --sq-accent: #b9690f; --sq-accent-hover: #9d570a; --sq-accent-ink: #fff8e8; --sq-accent-soft: rgb(185 105 15 / 0.12);
+    --sq-ok: #167a45; --sq-alert: #c02a40; --sq-warn: #b8560f; --sq-info: #0a5f8c; --sq-violet: #5b49d6;
+    --sq-focus: #0a3a63; --sq-scrim: rgb(11 29 56 / 0.4);
+    --sq-shadow-hard: 0 3px 0 0 #b3c2d1; --sq-shadow-float: 0 12px 32px -8px rgb(11 29 56 / 0.25);
+  }
+}

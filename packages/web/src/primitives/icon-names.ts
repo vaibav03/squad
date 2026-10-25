@@ -1,0 +1,7 @@
+export const ICON_NAMES = [
+  'check', 'x', 'plus', 'play', 'pause', 'volume', 'mic', 'mute', 'phone', 'calendar', 'file',
+  'lock', 'eye', 'eye-off', 'chevron-right', 'chevron-left', 'arrow-right', 'upload', 'info',
+  'alert', 'sparkle', 'trash', 'link', 'home', 'map', 'book', 'users', 'plane', 'ledger', 'user',
+  'sun', 'moon', 'menu',
+] as const;
+export type IconName = (typeof ICON_NAMES)[number];
