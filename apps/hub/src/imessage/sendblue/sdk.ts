@@ -8,6 +8,7 @@ import { inboundAllowed, type IMessageConfig, type IMessageSdkLike, type Logger 
 import type { SendblueClient } from './client';
 import { SendblueError } from './client';
 import { redact, type SendblueConfig } from './config';
+import { newSendId, signStatusToken } from './status-token';
 import type { MediaSigner } from './media';
 import type { SbMessage } from './webhook-schema';
 
@@ -74,6 +75,8 @@ export interface SendblueSdk extends IMessageSdkLike {
   /** A status callback, as a gateway receipt. */
   receipt(guid: string, state: 'sent' | 'delivered' | 'read' | 'failed', reason?: string): void;
   readonly watching: boolean;
+  /** The Sendblue message handle a status-callback send id produced (undefined if unknown / not yet recorded). */
+  statusHandleFor(sendId: string): string | undefined;
 }
 
 export function createSendblueSdk(o: SendblueSdkOptions): SendblueSdk {
@@ -82,10 +85,13 @@ export function createSendblueSdk(o: SendblueSdkOptions): SendblueSdk {
   let events: Parameters<IMessageSdkLike['startWatching']>[0] = {};
   let watching = false;
   let receiptCb: Parameters<NonNullable<IMessageSdkLike['watchReceipts']>>[0] | undefined;
-  const statusUrl = () =>
-    cfg.publicUrl && (cfg.publicUrl.startsWith('https://') || cfg.loopback)
-      ? `${cfg.publicUrl}/v1/webhooks/sendblue/status`
-      : undefined;
+  const sendHandles = new Map<string, string>();
+  const statusUrl = () => {
+    if (!cfg.publicUrl || !(cfg.publicUrl.startsWith('https://') || cfg.loopback)) return undefined;
+    const sendId = newSendId();
+    const t = signStatusToken(cfg.webhookSecret, sendId, Date.now());
+    return { sendId, url: `${cfg.publicUrl}/v1/webhooks/sendblue/status?t=${t}` };
+  };
 
   async function fetchMedia(url: string): Promise<{ path: string; dir: string } | undefined> {
     try {
@@ -135,7 +141,6 @@ export function createSendblueSdk(o: SendblueSdkOptions): SendblueSdk {
     },
     async send(r) {
       const t = target(r.to);
-      const cb = statusUrl();
       const paths = r.attachments ?? [];
       const urls = paths.map((p) => {
         const u = media.urlFor(p, cfg.publicUrl);
@@ -149,6 +154,8 @@ export function createSendblueSdk(o: SendblueSdkOptions): SendblueSdk {
         : [{ content: r.text ?? '' }];
       let first: string | undefined;
       for (const s of sends) {
+        const sc = statusUrl();
+        const cb = sc?.url;
         const res =
           'group' in t
             ? await client.sendGroupMessage({
@@ -161,9 +168,16 @@ export function createSendblueSdk(o: SendblueSdkOptions): SendblueSdk {
                 ...s,
                 ...(cb ? { statusCallback: cb } : {}),
               });
+        if (sc) {
+          sendHandles.set(sc.sendId, res.handle);
+          if (sendHandles.size > 1000) sendHandles.delete(sendHandles.keys().next().value as string);
+        }
         first ??= res.handle;
       }
       return { guid: first as string };
+    },
+    statusHandleFor(sendId) {
+      return sendHandles.get(sendId);
     },
     watchReceipts(cb) {
       receiptCb = cb;

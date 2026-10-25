@@ -12,6 +12,7 @@ import type { HubApp, HubDeps, HubEnv } from '../../types';
 import type { SendblueConfig } from './config';
 import { mapStatus, SbMessageSchema, type SbMessage } from './webhook-schema';
 import type { SendblueRuntime } from './runtime';
+import { verifyStatusToken } from './status-token';
 
 export const WEBHOOK_MAX_BYTES = 256 * 1024;
 const RATE_PER_MIN = 240;
@@ -76,7 +77,10 @@ export function createSendblueWebhookRoutes(deps: HubDeps): HubApp {
     const rt = deps.sendblue;
     if (!rt) return c.json(failBody('sendblue_not_configured'), 503);
     const hdr = (n: string) => c.req.header(n);
-    const v1 = verifySecretHeader(hdr, rt.cfg);
+    // The per-message status callback carries no account header; it proves itself with a signed URL token that is
+    // accepted ONLY on the status route (never inbound) and is bound to the send it was minted for.
+    const tok = statusPath ? verifyStatusToken(rt.cfg.webhookSecret, c.req.query('t'), now()) : undefined;
+    const v1 = tok?.ok ? ({ ok: true } as const) : verifySecretHeader(hdr, rt.cfg);
     if (!v1.ok) {
       rt.noteRejected(v1.code);
       return c.json(failBody(v1.code), v1.status);
@@ -99,6 +103,14 @@ export function createSendblueWebhookRoutes(deps: HubDeps): HubApp {
     const parsed = SbMessageSchema.safeParse(json);
     if (!parsed.success) return c.json(failBody('invalid_payload'), 400);
     const p = parsed.data;
+    if (tok?.ok) {
+      const bound = rt.sdk.statusHandleFor(tok.sendId);
+      if (bound !== undefined && bound !== p.message_handle) {
+        rt.noteRejected('bad_status_token_handle');
+        return c.json(failBody('bad_status_token'), 401);
+      }
+      return onStatus(rt, p); // a token never authorizes anything but a status update
+    }
     const isStatus =
       p.is_outbound === true ||
       (statusPath && p.is_outbound !== false && mapStatus(p.status, p.error_code) !== undefined);
