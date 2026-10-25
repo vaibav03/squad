@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { IntegrationStateSchema } from './integration-state';
 
 /** One link of the integration chain. `blocked` = cannot run here because named env/credentials are missing (never faked). */
 export const HealthStatusSchema = z.enum(['pass', 'warn', 'fail', 'blocked']);
@@ -22,6 +23,8 @@ export const HealthCheckSchema = z.strictObject({
     .optional(),
   /** For `blocked`: the exact env var names that are missing. */
   missingEnv: z.array(z.string().max(80)).max(10).optional(),
+  /** The shared integration state of the provider this check is about (see integration-state.ts). */
+  integrationState: IntegrationStateSchema.optional(),
   /** `real` | `fixture` | `extension` | `feed` | `degraded` ... what the check observed (display only). */
   mode: z.string().max(40).optional(),
   /** Small display facts (counts, timestamps). Numbers/short strings only. */

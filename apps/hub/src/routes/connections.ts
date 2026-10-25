@@ -16,15 +16,23 @@ import {
 } from '@squad/brain';
 import { requireUser } from '../auth';
 import { FIXTURE_ACCOUNT_LABEL } from '../context/account';
+import { applySharingChoice } from '../context/onboarding';
+import { importCounts, integrationStateOf } from '../context/state';
 import { TokenKeyError } from '../context/tokens';
 import { mergeContextBusy, purgeContextBusy } from '../context/busy';
 import { contextServiceFor, type ContextService } from '../context/service';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 import { pickWebOrigin } from '../web-origin';
 
+/** After any import: derive busy blocks (free/busy only) and apply the viewer's onboarding sharing choice. */
+function afterImport(deps: HubDeps, userId: string): void {
+  mergeContextBusy(deps, userId);
+  applySharingChoice(deps, userId);
+}
+
 const Connect = z.strictObject({
   provider: z.enum(['canvas', 'google']),
-  variant: z.enum(['feed', 'token']).optional(),
+  variant: z.enum(['feed', 'token', 'demo']).optional(),
   scopes: z.array(z.string().max(120)).min(1).max(6),
   feedUrl: z.string().max(2000).optional(),
   token: z.string().max(2000).optional(),
@@ -130,13 +138,14 @@ function view(svc: ContextService, c: ContextConnection) {
   const sync = svc.store.syncState(c.id);
   const state = connectionState(c);
   const viaExtension = c.variant === 'session';
+  const istate = integrationStateOf(c, sync);
   return {
     id: c.id,
     provider: c.provider,
     variant: c.variant,
     mode: c.mode,
     modeLabel: fixture
-      ? `Demo data from repo fixtures. No real ${providerName(c.provider)} account is connected.`
+      ? `Demo data: simulated, not your ${providerName(c.provider)} account. No real ${providerName(c.provider)} account is connected.`
       : viaExtension
         ? 'Synced from your own browser session by the Squad extension'
         : `Live ${providerName(c.provider)} connection`,
@@ -186,6 +195,12 @@ function view(svc: ContextService, c: ContextConnection) {
     grantedScopes: c.scopes.map(shortScope),
     /** When this connection was first made (first import). */
     importedAt: c.createdAt,
+    /** The ONE shared state: not_connected | connecting | syncing | live | demo | degraded | reauth_required. */
+    integrationState: istate.state,
+    /** `disconnected` when not_connected because the person disconnected (imports deleted). */
+    integrationSub: istate.sub,
+    /** Stable per-type counts (courses, modules, assignments, pages, files, announcements, calendarEvents, driveDocs, classroomItems). */
+    counts: importCounts(sources),
   };
 }
 
@@ -264,7 +279,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
         res.code,
         res.message,
       );
-    mergeContextBusy(deps, c.get('user').id);
+    afterImport(deps, c.get('user').id);
     deps.log.info('context.connected', {
       connectionId: res.connection.id,
       provider: res.connection.provider,
@@ -346,7 +361,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     if (conn.status === 'expired')
       return err(c, 409, 'connection_expired', 'Credential expired. Reconnect to resume syncing.');
     const sync = await svc.sync(c.get('user').id, conn.id);
-    mergeContextBusy(deps, c.get('user').id);
+    afterImport(deps, c.get('user').id);
     return c.json({ connection: view(svc, svc.store.connection(conn.id)!), sync });
   });
 
@@ -527,7 +542,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
       return err(c, 404, 'not_found');
     if (!p.success) return err(c, 422, 'invalid_request');
     const out = await svc.syncCanvasPayload(c.get('user').id, conn.id, p.data);
-    mergeContextBusy(deps, c.get('user').id);
+    afterImport(deps, c.get('user').id);
     if ('error' in out) {
       if (out.error === 'canvas_session_mismatch')
         return err(c, 409, 'canvas_session_mismatch', 'Payload does not match this Canvas account');
@@ -654,7 +669,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     });
     if ('error' in out)
       return err(c, 400, 'oauth_state_invalid', 'OAuth state is invalid or expired');
-    mergeContextBusy(deps, out.userId);
+    afterImport(deps, out.userId);
     if (out.redirect) return c.redirect(out.redirect);
     // No allowed web origin was recorded and none is configured: say so plainly instead of guessing a port.
     c.header('Cache-Control', 'no-store');
