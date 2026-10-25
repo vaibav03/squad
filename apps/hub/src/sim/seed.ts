@@ -20,6 +20,8 @@ const SEED_TS = 1_700_000_000_000; // fixed so the seed is deterministic
 /** Demo cast: 4 students, one squad, a study task, a trip, private ledger rows holding the sentinels. Idempotent. */
 export function seedDemo(deps: HubDeps): void {
   const { directory, ledger, trips, ingest } = deps;
+  // A persisted hub keeps its state across restarts: seeding again would reset trip confirmations.
+  if (directory.squad(SQUAD_ID) && trips.get(TRIP_ID)) return;
   for (const id of STUDENT_IDS)
     directory.upsertStudent({
       id,

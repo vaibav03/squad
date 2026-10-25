@@ -1,9 +1,23 @@
+import type { Db } from '@squad/core';
 import type { Directory, TripRecord, TripStore, TripView, Viewer } from '../types';
+import { ensureHubSchema } from './schema';
 
 const clone = <T>(v: T): T => structuredClone(v);
 
-export function createTripStore(): TripStore {
+/** Trips in memory, written through to the shared sqlite on every change when `db` is given. */
+export function createTripStore(db?: Db): TripStore {
   const trips = new Map<string, TripRecord>();
+  const put = db?.prepare(
+    'INSERT INTO hub_trips(trip_id, json) VALUES(?, ?) ON CONFLICT(trip_id) DO UPDATE SET json=excluded.json',
+  );
+  const persist = (t: TripRecord) => void put?.run(t.tripId, JSON.stringify(t));
+  if (db) {
+    ensureHubSchema(db);
+    for (const r of db.prepare('SELECT json FROM hub_trips').all() as { json: string }[]) {
+      const t = JSON.parse(r.json) as TripRecord;
+      trips.set(t.tripId, t);
+    }
+  }
 
   /** Members of a trip = union of limits keys, confirmation rows and voters. */
   const members = (t: TripRecord): string[] => [
@@ -37,6 +51,7 @@ export function createTripStore(): TripStore {
       const c = clone(t);
       ensureRows(c);
       trips.set(c.tripId, c);
+      persist(c);
     },
     get: (id) => (trips.has(id) ? clone(trips.get(id)!) : undefined),
     byTask(taskId) {
@@ -56,6 +71,7 @@ export function createTripStore(): TripStore {
       ];
       ensureRows(t);
       if (t.status === 'planning') t.status = 'voting';
+      persist(t);
       return clone(t);
     },
     confirm(tripId, student, optionId, yes) {
@@ -68,6 +84,7 @@ export function createTripStore(): TripStore {
       } else t.confirmations.push({ student, confirmed: yes, optionId });
       if (t.status !== 'confirmed') t.status = 'confirming';
       recompute(t);
+      persist(t);
       return clone(t);
     },
     allConfirmed(tripId) {
@@ -107,6 +124,9 @@ export function createTripStore(): TripStore {
         myLimits: mine && !viewer.projector ? { ...mine } : null,
       };
     },
-    clear: () => trips.clear(),
+    clear() {
+      trips.clear();
+      db?.exec('DELETE FROM hub_trips');
+    },
   };
 }

@@ -73,6 +73,13 @@ export function createSquadState(deps: HubDeps): SquadState {
       };
     },
 
+    rebuild() {
+      agents.clear();
+      pending.clear();
+      const log = deps.events.since(0);
+      if (log !== 'too_old') for (const e of log) this.apply(e);
+    },
+
     reset() {
       agents.clear();
       pending.clear();

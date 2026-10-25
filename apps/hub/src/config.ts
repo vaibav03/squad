@@ -1,4 +1,4 @@
-import { resolve } from 'node:path';
+import { isAbsolute, resolve } from 'node:path';
 import { findRepoRoot } from '@squad/core/node';
 import type { LogLevel } from './log';
 
@@ -45,7 +45,7 @@ export function loadHubConfig(env: Record<string, string | undefined> = process.
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
-    dbPath: env.DB_PATH || 'data/squad.db',
+    dbPath: resolveDbPath(env.DB_PATH, root, env),
     replayDir: env.HUB_REPLAY_DIR
       ? resolve(env.HUB_REPLAY_DIR)
       : resolve(root, 'apps/hub/sim/replays'),
@@ -55,6 +55,17 @@ export function loadHubConfig(env: Record<string, string | undefined> = process.
     logLevel: (env.HUB_LOG as LogLevel) || 'info',
     sse: { bufferSize: 5000, maxQueue: 256, pingMs: 15_000 },
   };
+}
+
+/** `:memory:` stays as is; relative file paths are anchored at the repo root; unit tests default to memory. */
+function resolveDbPath(
+  raw: string | undefined,
+  root: string,
+  env: Record<string, string | undefined>,
+): string {
+  if (!raw) return env.VITEST ? ':memory:' : resolve(root, 'data/squad.db');
+  if (raw === ':memory:' || isAbsolute(raw)) return raw;
+  return resolve(root, raw);
 }
 
 /** Safe to log: never includes secret values. */

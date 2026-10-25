@@ -1,5 +1,6 @@
-import type { LedgerEntry } from '@squad/core';
+import type { Db, LedgerEntry } from '@squad/core';
 import type { Directory, LedgerStore, Viewer } from '../types';
+import { ensureHubSchema } from './schema';
 
 interface Row {
   taskId: string;
@@ -11,13 +12,46 @@ interface Row {
   ts: number;
 }
 
-export function createLedgerStore(): LedgerStore {
+/** Rows plus the owner-only raw values, written through to the shared sqlite when `db` is given. */
+export function createLedgerStore(db?: Db): LedgerStore {
   const rows: Row[] = [];
   /** PRIVATE raw values by `${taskId}|${student}|${field}`; never leave except to the owner. */
   const priv = new Map<string, string>();
   const key = (t: string, s: string, f: string) => `${t}|${s}|${f}`;
+  const putRow = db?.prepare(
+    `INSERT OR REPLACE INTO hub_ledger_rows(task_id, student, field, ts, shared, has_withheld) VALUES(?,?,?,?,?,?)`,
+  );
+  const putPriv = db?.prepare(
+    `INSERT OR REPLACE INTO hub_ledger_private(task_id, student, field, raw) VALUES(?,?,?,?)`,
+  );
+  if (db) {
+    ensureHubSchema(db);
+    for (const r of db
+      .prepare('SELECT task_id, student, field, ts, shared, has_withheld FROM hub_ledger_rows')
+      .all() as {
+      task_id: string;
+      student: string;
+      field: string;
+      ts: number;
+      shared: string;
+      has_withheld: number;
+    }[])
+      rows.push({
+        taskId: r.task_id,
+        student: r.student,
+        field: r.field,
+        shared: r.shared,
+        hasWithheld: r.has_withheld === 1,
+        ts: r.ts,
+      });
+    for (const r of db
+      .prepare('SELECT task_id, student, field, raw FROM hub_ledger_private')
+      .all() as { task_id: string; student: string; field: string; raw: string }[])
+      priv.set(key(r.task_id, r.student, r.field), r.raw);
+  }
 
   const upsert = (row: Row) => {
+    putRow?.run(row.taskId, row.student, row.field, row.ts, row.shared, row.hasWithheld ? 1 : 0);
     const i = rows.findIndex(
       (r) =>
         r.taskId === row.taskId &&
@@ -41,7 +75,10 @@ export function createLedgerStore(): LedgerStore {
       });
     },
     addPrivate(e: LedgerEntry) {
-      if (e.withheld !== undefined) priv.set(key(e.taskId, e.student, e.field), e.withheld);
+      if (e.withheld !== undefined) {
+        priv.set(key(e.taskId, e.student, e.field), e.withheld);
+        putPriv?.run(e.taskId, e.student, e.field, e.withheld);
+      }
       upsert({
         taskId: e.taskId,
         student: e.student,
@@ -77,6 +114,7 @@ export function createLedgerStore(): LedgerStore {
     clear() {
       rows.length = 0;
       priv.clear();
+      db?.exec('DELETE FROM hub_ledger_rows; DELETE FROM hub_ledger_private;');
     },
   };
 }

@@ -1,3 +1,7 @@
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { openDb } from '@squad/core/node';
+import type { Db } from '@squad/core';
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { createStubPorts } from './adapters';
@@ -30,6 +34,8 @@ export interface HubOptions {
   /** Override any subset of ports (brain/media plug in here). Missing ports use the in-memory stubs. */
   ports?: Partial<Ports>;
   now?: () => number;
+  /** Shared sqlite (core `openDb`). Default: open `config.dbPath` (`:memory:` under vitest). */
+  db?: Db;
 }
 export interface Hub {
   app: HubApp;
@@ -47,14 +53,22 @@ export function createHub(opts: HubOptions = {}): Hub {
 
   // Components reference `deps` lazily, so the container is filled in dependency order below.
   const deps = { config, log, now, projector: new Set<string>() } as unknown as HubDeps;
-  deps.directory = createDirectory();
-  deps.events = createEventLog({ max: config.sse.bufferSize });
-  deps.ledger = createLedgerStore();
-  deps.trips = createTripStore();
+  let ownDb = false;
+  if (opts.db) deps.db = opts.db;
+  else {
+    if (config.dbPath !== ':memory:') mkdirSync(dirname(config.dbPath), { recursive: true });
+    deps.db = openDb(config.dbPath);
+    ownDb = true;
+  }
+  deps.directory = createDirectory(deps.db);
+  deps.events = createEventLog({ max: config.sse.bufferSize, db: deps.db });
+  deps.ledger = createLedgerStore(deps.db);
+  deps.trips = createTripStore(deps.db);
   deps.calls = createCallRegistry(now);
   deps.filterCtx = { directory: deps.directory, calls: deps.calls, trips: deps.trips };
   deps.broker = createBroker(deps);
   deps.state = createSquadState(deps);
+  deps.state.rebuild(); // agent states and pending confirms come back from the persisted log
   deps.ingest = createIngestor(deps);
   deps.ports = { ...createStubPorts(deps), ...opts.ports };
   if (config.seed) seedDemo(deps);
@@ -107,6 +121,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     deps,
     async close() {
       deps.broker.closeAll();
+      if (ownDb) deps.db.close();
     },
   };
 }

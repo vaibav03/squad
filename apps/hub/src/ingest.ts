@@ -1,5 +1,6 @@
 import { VillageEventSchema, parseAgentId, type LedgerEntry, type VillageEvent } from '@squad/core';
 import { z } from 'zod';
+import { ensureHubSchema } from './store/schema';
 import type { HubDeps, IngestResult, Ingestor, TripRecord } from './types';
 
 const Str = z.string().min(1);
@@ -50,7 +51,17 @@ function issues(err: z.ZodError): { path: string; code: string }[] {
 const bad = (path: string, code: string): IngestResult => ({ ok: false, issues: [{ path, code }] });
 
 export function createIngestor(deps: HubDeps): Ingestor {
-  const confirmedTasks = new Set<string>();
+  // trip.confirmed is published at most once per task, also across restarts (persisted).
+  ensureHubSchema(deps.db);
+  const confirmedTasks = new Set<string>(
+    (deps.db.prepare('SELECT task_id FROM hub_confirmed_tasks').all() as { task_id: string }[]).map(
+      (r) => r.task_id,
+    ),
+  );
+  const markConfirmed = (taskId: string) => {
+    confirmedTasks.add(taskId);
+    deps.db.prepare('INSERT OR IGNORE INTO hub_confirmed_tasks(task_id) VALUES(?)').run(taskId);
+  };
 
   const studentOf = (id: string | undefined): string | undefined => {
     if (!id) return undefined;
@@ -88,7 +99,10 @@ export function createIngestor(deps: HubDeps): Ingestor {
   }
 
   return {
-    reset: () => confirmedTasks.clear(),
+    reset() {
+      confirmedTasks.clear();
+      deps.db.exec('DELETE FROM hub_confirmed_tasks');
+    },
     village(input) {
       const parsed = VillageEventSchema.safeParse(input);
       if (!parsed.success) return { ok: false, issues: issues(parsed.error) };
@@ -99,7 +113,7 @@ export function createIngestor(deps: HubDeps): Ingestor {
         const trip = deps.trips.byTask(e.taskId);
         if (trip && !deps.trips.allConfirmed(trip.tripId))
           return { ok: true, seq: null, dropped: 'trip_not_complete' };
-        confirmedTasks.add(e.taskId);
+        markConfirmed(e.taskId);
       }
       if (e.t === 'call.start') deps.calls.noteOwner(e.callId, e.student ?? null);
       const squadId = routeSquad(e);

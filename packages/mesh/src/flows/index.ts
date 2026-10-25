@@ -12,3 +12,4 @@ export {
   type TestMesh,
   type MeshOptions,
 } from './testkit';
+export * from './scheduler';

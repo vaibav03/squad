@@ -3,6 +3,7 @@ import type { Hono } from 'hono';
 import type {
   AgentId,
   Citation,
+  Db,
   LedgerEntry,
   Persona,
   Student,
@@ -146,6 +147,8 @@ export interface Snapshot {
 export interface SquadState {
   /** Called by the ingestor for every accepted event, in seq order. */
   apply(e: LoggedEvent): void;
+  /** Re-derive agent states and pending confirms from the (persisted) event log; used at boot. */
+  rebuild(): void;
   snapshot(viewer: Viewer): Promise<Snapshot>;
   reset(): void;
 }
@@ -230,6 +233,8 @@ export interface LedgerStore {
 // ---------- dependency container ----------
 export interface HubDeps {
   config: HubConfig;
+  /** Shared sqlite: event log, trips, ledger and directory live here. */
+  db: Db;
   log: Logger;
   directory: Directory;
   events: EventLog;
