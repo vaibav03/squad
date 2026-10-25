@@ -1,0 +1,19 @@
+{
+ "cell": [
+  32,
+  32
+ ],
+ "crests": {
+  "debate-con": "mediator",
+  "debate-pro": "council-chill",
+  "examiner": "examiner",
+  "judge": "dean",
+  "practitioner": "expert",
+  "skeptic": "council-hard",
+  "solver-a": "student",
+  "solver-b": "freshman",
+  "solver-c": "council-balance",
+  "teacher": "ta"
+ },
+ "derivedFrom": "assets/pixel/composed/characters/<sprite>/idle.png frame 0"
+}
