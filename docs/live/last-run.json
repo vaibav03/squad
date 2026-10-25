@@ -1,0 +1,194 @@
+{
+  "startedAt": "2026-10-25T07:18:11.210Z",
+  "finishedAt": "2026-10-25T07:18:11.544Z",
+  "mode": "real",
+  "exitCode": 3,
+  "outcome": "aborted",
+  "aborted": {
+    "kind": "credits_depleted",
+    "provider": "gemini",
+    "status": 402,
+    "message": "gemini credits_depleted (HTTP 402): {\"error\":{\"code\":402,\"message\":\"Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay. \",\"status\":\"RESOURCE_EXHAUSTED\"}}",
+    "fix": "Gemini prepay credits are depleted (HTTP 402 RESOURCE_EXHAUSTED). Top up at https://ai.studio/projects (open the project, Billing, add prepay credits). Wait about a minute for it to apply, then rerun `SQUAD_LIVE=1 pnpm live:verify`.",
+    "atCheck": 0
+  },
+  "models": {
+    "fast": "gemini-3.5-flash-lite",
+    "main": "gemini-3.8-flash",
+    "chair": "gemini-3.8-flash"
+  },
+  "limits": {
+    "maxCalls": 150,
+    "maxTokens": 120000,
+    "maxChars": 800,
+    "maxUsd": 0.5,
+    "maxOutPerCall": 3000,
+    "priceInPerM": 0.5,
+    "priceOutPerM": 3,
+    "priceCharsPer1k": 0.3
+  },
+  "spend": {
+    "calls": 1,
+    "inputTokens": 0,
+    "outputTokens": 0,
+    "cachedTokens": 0,
+    "billedTokens": 0,
+    "chars": 0,
+    "usd": 0
+  },
+  "latency": {
+    "p50": 0,
+    "p95": 0,
+    "n": 0
+  },
+  "checks": [
+    {
+      "id": 0,
+      "name": "preflight probe",
+      "status": "FAIL",
+      "steps": [
+        {
+          "name": "probe: one tiny Gemini call",
+          "status": "FAIL",
+          "evidence": [
+            "threw: gemini credits_depleted (HTTP 402): {\"error\":{\"code\":402,\"message\":\"Your prepayment credits are depleted. Please go to AI Studio at https://ai.studio/projects to manage your project and billing. Learn more at https://ai.google.dev/gemini-api/docs/billing#prepay. \",\"status\":\"RESOURCE_EXHAUSTED\"}}"
+          ],
+          "ms": 293
+        }
+      ],
+      "metrics": {},
+      "ms": 294,
+      "spend": {
+        "calls": 1,
+        "billedTokens": 0,
+        "chars": 0,
+        "usd": 0
+      }
+    },
+    {
+      "id": 1,
+      "name": "model ids, tiers, structured JSON per skill family",
+      "status": "SKIP",
+      "steps": [],
+      "metrics": {},
+      "ms": 0,
+      "spend": {
+        "calls": 0,
+        "billedTokens": 0,
+        "chars": 0,
+        "usd": 0
+      },
+      "note": "aborted earlier: credits_depleted"
+    },
+    {
+      "id": 2,
+      "name": "grounding: golden answers, refusals, injection, citation strike rate, latency",
+      "status": "SKIP",
+      "steps": [],
+      "metrics": {},
+      "ms": 0,
+      "spend": {
+        "calls": 0,
+        "billedTokens": 0,
+        "chars": 0,
+        "usd": 0
+      },
+      "note": "aborted earlier: credits_depleted"
+    },
+    {
+      "id": 3,
+      "name": "vision: step diff on handwritten images, scanned PDF page ingest",
+      "status": "SKIP",
+      "steps": [],
+      "metrics": {},
+      "ms": 0,
+      "spend": {
+        "calls": 0,
+        "billedTokens": 0,
+        "chars": 0,
+        "usd": 0
+      },
+      "note": "aborted earlier: credits_depleted"
+    },
+    {
+      "id": 4,
+      "name": "quiz: generation, quiz-key council verification, key never leaks",
+      "status": "SKIP",
+      "steps": [],
+      "metrics": {},
+      "ms": 0,
+      "spend": {
+        "calls": 0,
+        "billedTokens": 0,
+        "chars": 0,
+        "usd": 0
+      },
+      "note": "aborted earlier: credits_depleted"
+    },
+    {
+      "id": 6,
+      "name": "gemini: context cache, tool loop + thought signatures, rate-limit retry",
+      "status": "SKIP",
+      "steps": [],
+      "metrics": {},
+      "ms": 0,
+      "spend": {
+        "calls": 0,
+        "billedTokens": 0,
+        "chars": 0,
+        "usd": 0
+      },
+      "note": "aborted earlier: credits_depleted"
+    },
+    {
+      "id": 5,
+      "name": "councils and room flows: council, course plan, debate, oracle, rubric, devil TA, oral",
+      "status": "SKIP",
+      "steps": [],
+      "metrics": {},
+      "ms": 0,
+      "spend": {
+        "calls": 0,
+        "billedTokens": 0,
+        "chars": 0,
+        "usd": 0
+      },
+      "note": "aborted earlier: credits_depleted"
+    },
+    {
+      "id": 7,
+      "name": "elevenlabs: voices, design, tts + timestamps, dialogue, loudness",
+      "status": "SKIP",
+      "steps": [],
+      "metrics": {},
+      "ms": 0,
+      "spend": {
+        "calls": 0,
+        "billedTokens": 0,
+        "chars": 0,
+        "usd": 0
+      },
+      "note": "aborted earlier: credits_depleted"
+    },
+    {
+      "id": 8,
+      "name": "end to end: hub + bot + web chat, demo-off, cited answer",
+      "status": "SKIP",
+      "steps": [],
+      "metrics": {},
+      "ms": 0,
+      "spend": {
+        "calls": 0,
+        "billedTokens": 0,
+        "chars": 0,
+        "usd": 0
+      },
+      "note": "aborted earlier: credits_depleted"
+    }
+  ],
+  "summary": {
+    "pass": 0,
+    "fail": 1,
+    "skip": 8
+  }
+}
