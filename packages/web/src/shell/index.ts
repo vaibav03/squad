@@ -11,3 +11,4 @@ export * from './NightScene';
 export * from './dev-login';
 export * from './RenderWatchdog';
 export * from './BuildMarker';
+export * from './panel-dock';

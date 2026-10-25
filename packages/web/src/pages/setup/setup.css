@@ -56,7 +56,7 @@
 .sq-setup__bar {
   position: fixed;
   inset: auto 0 calc(64px + var(--safe-bottom)) 0;
-  z-index: calc(var(--z-dock) - 1);
+  z-index: calc(var(--sq-z-nav) - 1);
   background: color-mix(in oklab, var(--background) 92%, transparent);
   backdrop-filter: blur(8px);
   border-top: 1px solid var(--border);

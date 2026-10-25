@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { useDockPanel } from '../../shell/panel-dock';
 import { useFocusTrap, usePresence, usePrefersReducedMotion } from './hooks';
 import './bridge.css';
 import './overlay.css';
@@ -21,6 +22,8 @@ export interface OverlayFrameProps {
   /** Cover the viewport (pages) instead of the nearest positioned ancestor (village stage). */
   fixed?: boolean;
   className?: string;
+  /** Registers this panel as a large panel of the village dock (see shell/panel-dock): one at a time, chat folds. */
+  dock?: string;
   children: ReactNode;
 }
 
@@ -40,6 +43,7 @@ export function OverlayFrame(props: OverlayFrameProps) {
     initialFocus,
     className,
     fixed,
+    dock,
     children,
   } = props;
   const reduced = usePrefersReducedMotion(calm);
@@ -51,6 +55,7 @@ export function OverlayFrame(props: OverlayFrameProps) {
     initialFocus,
   });
   const uid = useId();
+  useDockPanel(dock ?? uid, 'large', !!dock && open, onClose);
   if (!mounted) return null;
   return (
     <div
@@ -59,6 +64,7 @@ export function OverlayFrame(props: OverlayFrameProps) {
       data-reduced={reduced ? 'true' : undefined}
       data-placement={placement}
       data-fixed={fixed ? 'true' : undefined}
+      data-dock-panel={dock}
     >
       <div
         className="lv-ovl__scrim"

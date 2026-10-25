@@ -6,7 +6,7 @@
 .sq-g__bar {
   position: sticky;
   top: 0;
-  z-index: var(--z-hud);
+  z-index: var(--sq-z-hud);
   display: flex;
   flex-wrap: wrap;
   align-items: center;

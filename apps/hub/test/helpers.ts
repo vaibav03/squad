@@ -2,6 +2,7 @@ import { cpSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { startHub, type RunningHub } from '../src/server';
+import type { HubOptions } from '../src/app';
 import type { HubConfig } from '../src/config';
 
 export const SECRET = 'test-secret';
@@ -10,10 +11,14 @@ export const FIXTURE = new URL(
   import.meta.url,
 ).pathname;
 
-export async function boot(over: Partial<HubConfig> = {}): Promise<RunningHub> {
+export async function boot(
+  over: Partial<HubConfig> = {},
+  extra: Omit<HubOptions, 'config'> = {},
+): Promise<RunningHub> {
   const replayDir = mkdtempSync(join(tmpdir(), 'hub-replays-'));
   cpSync(FIXTURE, join(replayDir, 'sample.json'));
   return startHub({
+    ...extra,
     config: {
       port: 0,
       baseUrl: 'http://localhost:0',
