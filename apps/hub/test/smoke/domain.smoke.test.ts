@@ -60,6 +60,8 @@ describe('ledger and trips', () => {
     expect(me.body.projector).toBe(true);
     const trip = await get<{ myLimits: unknown }>(url, '/v1/trips/trip_cabo', t.s_ana);
     expect(trip.body.myLimits).toBeNull();
+    const byTask = await get<{ tripId: string }>(url, '/v1/trips/task_trip_cabo', t.s_ana);
+    expect(byTask.body.tripId).toBe('trip_cabo');
     await post(url, '/v1/session/projector', { on: false }, t.s_ana);
   });
 
