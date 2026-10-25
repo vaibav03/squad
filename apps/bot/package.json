@@ -4,13 +4,15 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --dir src --passWithNoTests",
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
-    "dev": "echo \"@squad/bot: dev not implemented yet\""
+    "dev": "tsx src/main.ts",
+    "chat": "TRANSPORT=cli tsx src/main.ts"
   },
   "dependencies": {
     "@photon-ai/imessage-kit": "^3.0.0",
