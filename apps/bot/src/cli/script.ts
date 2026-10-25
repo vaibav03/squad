@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
-import type { Skill, VillageEvent } from '@squad/core';
+import type { Db, Skill, VillageEvent } from '@squad/core';
 import { createTestBot, TEST_ROSTER, type TestBot } from '../testing';
 import type { Decision, EventPublisher, Roster } from '../types';
 import { STUB_SKILLS } from './stub-skills';
@@ -49,7 +49,7 @@ const settle = () => new Promise((r) => setTimeout(r, 5));
 /** Drive a Bot through a session on a virtual clock (no real sleeping). */
 export async function runScript(
   script: SessionScript,
-  opts: { skills?: Skill[]; tap?: EventPublisher; chat?: boolean } = {},
+  opts: { skills?: Skill[]; tap?: EventPublisher; chat?: boolean; db?: Db; drainMs?: number } = {},
 ): Promise<ScriptResult & { bot: TestBot }> {
   const stubs = (script.stubSkills ?? []).map((n) => {
     const s = STUB_SKILLS[n];
@@ -71,6 +71,7 @@ export async function runScript(
     roster,
     tap: opts.tap,
     chat: opts.chat,
+    db: opts.db,
   });
   const pending: Promise<unknown>[] = [];
   for (const step of script.steps) {
@@ -85,7 +86,7 @@ export async function runScript(
   let done = 0;
   await Promise.race([
     Promise.all(pending.map((p) => p.then(() => done++))),
-    new Promise((r) => setTimeout(r, 100)),
+    new Promise((r) => setTimeout(r, opts.drainMs ?? 100)),
   ]);
   return {
     bot,

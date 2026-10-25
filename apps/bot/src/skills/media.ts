@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import type { Ctx, InboundMessage, OutboundMessage, Skill, StudentId } from '@squad/core';
+import type { InboundMessage, OutboundMessage, Skill, StudentId } from '@squad/core';
 import { MIN_GROUP_SIZE } from '@squad/core';
 import type { CourseStore, MasteryStore } from '@squad/brain';
 import {
