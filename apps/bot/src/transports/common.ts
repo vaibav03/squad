@@ -14,8 +14,9 @@ export function resolveStudent(roster: Roster, handle: string): StudentId {
   const n = normalizeHandle(handle);
   const hit = roster.students.find((s) => normalizeHandle(s.handle) === n);
   if (hit) return hit.id;
-  const digits = n.replace(/\D/g, '');
-  return `s_${digits.slice(-4) || n.replace(/[^a-z0-9]/g, '').slice(0, 4) || 'anon'}`;
+  const digits = handle.replace(/\D/g, '');
+  const alnum = handle.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return `s_${digits.slice(-4) || alnum.slice(-4) || 'anon'}`;
 }
 
 export function studentById(roster: Roster, id: StudentId): Student | undefined {
@@ -25,7 +26,7 @@ export function studentById(roster: Roster, id: StudentId): Student | undefined 
 /** Serialises sends and spaces them at least `minGapMs` apart (default 1000 = 1 msg/s). */
 export class SendLimiter {
   private tail: Promise<void> = Promise.resolve();
-  private last = 0;
+  private last = Number.NEGATIVE_INFINITY;
   constructor(
     private readonly minGapMs = 1000,
     private readonly now: () => number = Date.now,
