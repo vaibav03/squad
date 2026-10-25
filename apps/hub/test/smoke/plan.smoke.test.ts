@@ -135,3 +135,12 @@ describe('shared study plan', () => {
   });
 });
 void post;
+
+describe('plan failures are said in the group', () => {
+  it('a rejected proposal posts a plain-text reason to the group thread', async () => {
+    const r = await call('POST', '/v1/plans', 's_ana', { examDate: '2020-01-01' });
+    expect(r.status).toBe(422);
+    const texts = hub.deps.chat.store.history('group:sq_demo', { limit: 200 }).messages.map((m) => m.text);
+    expect(texts.some((t) => /could not be made/i.test(t))).toBe(true);
+  });
+});

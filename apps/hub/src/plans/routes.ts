@@ -54,7 +54,10 @@ export function createPlanRoutes(deps: HubDeps): HubApp {
     const v = c.get('viewer');
     const body = PlanProposeBodySchema.safeParse((await json(c)) ?? {});
     if (!body.success) return c.json(err('invalid_request'), 400);
-    return reply(c, await plans().propose(v, body.data), v.squadId);
+    const res = await plans().propose(v, body.data);
+    // a failed proposal is also said in the group, so nobody waits for a plan that is not coming
+    if (!res.ok && !res.say) plans().post(v.squadId, { text: `The study plan could not be made: ${res.message}` });
+    return reply(c, res, v.squadId);
   });
 
   r.post('/v1/plans/:id/respond', need, async (c) => {
