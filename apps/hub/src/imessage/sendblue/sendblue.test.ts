@@ -157,7 +157,7 @@ describe('webhook signature (shared secret in sb-signing-secret, constant time, 
   it('401 when the header is missing', async () => {
     const r = await c.fake.inbound({ from: ANA, content: 'hi', groupId: GID1, secret: null });
     expect(r.status).toBe(401);
-    expect(((await r.json()) as any).error.code).toBe('missing_signature');
+    expect(((await r.json()) as { error: { code: string } }).error.code).toBe('missing_signature');
   });
   it('401 for a wrong secret (and a prefix or longer secret)', async () => {
     for (const s of ['nope', WH.slice(0, -1), `${WH}x`, '']) {

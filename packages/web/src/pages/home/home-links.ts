@@ -30,16 +30,16 @@ export function resolveHomeLinks(trip: TripTarget): HomeLink[] {
         }
       : trip.kind === 'none'
         ? {
-            to: '/squad/trips',
+            to: '/squad/chat?wizard=trip',
             icon: 'plane',
-            title: 'Plan a trip',
-            body: 'No trip planned yet. Start one and let your squad vote.',
+            title: 'Plan a trip with your group',
+            body: 'No trip planned yet. Start one in the group chat and let everyone vote.',
           }
         : {
-            to: '/squad/trips',
+            to: '/squad/chat?wizard=trip',
             icon: 'plane',
-            title: 'Trip',
-            body: 'Your squad trip lives here.',
+            title: 'Plan a trip with your group',
+            body: 'Start a trip in the group chat and let everyone vote.',
           };
   const [glass, ...rest] = HOME_STATIC_LINKS as readonly HomeLink[];
   return [glass!, tripCard, ...rest];

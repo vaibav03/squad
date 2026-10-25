@@ -72,18 +72,14 @@ function props(over: Partial<ViewProps> = {}, client: Partial<HubClient> = {}): 
     ...over,
   };
 }
-const ui = (p: ViewProps) =>
-  render(
-    <MemoryRouter>
-      <ConnectionsView {...p} />
-    </MemoryRouter>,
-  );
+const ui = (p: ViewProps) => render(<MemoryRouter><ConnectionsView {...p} /></MemoryRouter>);
+const review = async () => fireEvent.click(await screen.findByTestId('review-imported-context'));
 
 describe('journey: connections', () => {
   it('shows the chosen account (masked e-mail + name) and granted scopes', async () => {
     ui(props());
     expect(screen.getByTestId('conn-account').textContent).toBe('Ana Reyes · a***@gmail.com');
-    expect(screen.getByText('Real account')).toBeTruthy();
+    expect(screen.getByTestId('conn-state').textContent).toBe('Live');
     expect(screen.getByText(/Your calendar events/)).toBeTruthy();
   });
   it('a Canvas session account shows host + signed-in user name', () => {
@@ -103,10 +99,11 @@ describe('journey: connections', () => {
   });
   it('a fixture connection never claims an account', () => {
     ui(props({ connections: [conn({ mode: 'fixture', state: 'fixture' })] }));
-    expect(screen.getByTestId('conn-account').textContent).toMatch(
-      /simulated data, not your account/,
-    );
-    expect(screen.getAllByText('Fixture (simulated, not your account)').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('conn-account').textContent).toBe('None');
+    expect(screen.getByTestId('conn-fixture-note').textContent).toMatch(/sample data from the repo/);
+    expect(screen.getByTestId('conn-state').textContent).toBe('Demo data');
+    expect(screen.getByTestId('conn-fixture-note').textContent).toContain('Fixture (simulated, not your account)');
+    expect(screen.getAllByText('Demo data')).toHaveLength(1);
   });
   it('disconnected: no connection means an explicit Disconnected line', () => {
     ui(props({ connections: [] }));
@@ -115,6 +112,7 @@ describe('journey: connections', () => {
   });
   it('lists imported items with type, course, imported-at, sharing state and labels', async () => {
     ui(props());
+    await review();
     const items = await screen.findAllByTestId('imported-item');
     expect(items).toHaveLength(2);
     expect(items[0]!.textContent).toContain('Classroom coursework');
@@ -124,12 +122,13 @@ describe('journey: connections', () => {
       'Private',
       'Shared with Stats 101 Study Squad',
     ]);
-    expect(items[1]!.textContent).toContain('Fixture (simulated, not your account)');
+    expect(items[1]!.textContent).toContain('Shared with');
     expect(screen.getAllByTestId('ask-cubbie')).toHaveLength(2);
   });
   it('share toggle calls the hub for that one item', async () => {
     const share = vi.fn().mockResolvedValue(undefined);
     ui(props({}, { share }));
+    await review();
     fireEvent.click((await screen.findAllByTestId('item-share-toggle'))[0]!);
     await waitFor(() =>
       expect(share).toHaveBeenCalledWith('conn_g', {
@@ -142,6 +141,7 @@ describe('journey: connections', () => {
   it('Ask Cubbie queues structured context for the group chat and opens it, prefilled, not sent', async () => {
     const go = vi.fn();
     ui(props({ navigate: go }));
+    await review();
     fireEvent.click((await screen.findAllByTestId('ask-cubbie'))[0]!);
     const q = JSON.parse(sessionStorage.getItem(PENDING_CONTEXT_KEY)!);
     expect(q.chatId).toBe('group:sq_1');
@@ -155,7 +155,7 @@ describe('journey: connections', () => {
       .mockResolvedValue({ authorization_url: 'https://x', mode: 'live' });
     const go = vi.fn();
     ui(props({ connections: [], navigate: go }, { googleAuthorize }));
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to Google' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Connect Google' }));
     await waitFor(() => expect(go).toHaveBeenCalledWith('https://x'));
   });
   it('maps account and granted scopes from the hub payload and drops unknown fields', () => {
@@ -175,5 +175,70 @@ describe('journey: connections', () => {
     expect(c.account).toEqual({ label: 'a***@x.com', name: null, host: null });
     expect(c.grantedScopes).toEqual(['g']);
     expect(JSON.stringify(c)).not.toContain('secretToken');
+  });
+});
+
+describe('journey: panels follow the state machine', () => {
+  const Harness = ({ list, client = {} }: { list: Connection[]; client?: Partial<HubClient> }) => (
+    <MemoryRouter><ConnectionsView {...props({ connections: list }, client)} /></MemoryRouter>
+  );
+  it('connect panel disappears after connect and returns after disconnect', () => {
+    const { rerender } = render(<Harness list={[]} />);
+    expect(screen.getByTestId('connect-google')).toBeTruthy();
+    rerender(<Harness list={[conn()]} />);
+    expect(screen.queryByTestId('connect-google')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Connect Google' })).toBeNull();
+    rerender(<Harness list={[conn({ state: 'revoked', sources: { total: 0, byKind: {} } })]} />);
+    expect(screen.getByTestId('connect-google')).toBeTruthy();
+    expect(screen.getByTestId('conn-state').textContent).toBe('Disconnected');
+  });
+  it('reauth and degraded show Reconnect + Disconnect, not the connect panel', () => {
+    for (const o of [{ state: 'expired' as const, needsReconnect: true }, { state: 'error' as const }]) {
+      const { unmount } = render(<Harness list={[conn(o)]} />);
+      expect(screen.getByTestId('reconnect-cta')).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Disconnect' })).toBeTruthy();
+      expect(screen.queryByTestId('connect-google')).toBeNull();
+      unmount();
+    }
+  });
+  it('CTA: review first, then Ask Cubbie with this opens the group chat with chips', async () => {
+    const go = vi.fn();
+    render(<MemoryRouter><ConnectionsView {...props({ navigate: go })} /></MemoryRouter>);
+    expect(screen.queryByTestId('ask-cubbie-primary')).toBeNull();
+    fireEvent.click(await screen.findByTestId('review-imported-context'));
+    fireEvent.click(await screen.findByTestId('ask-cubbie-primary'));
+    const q = JSON.parse(sessionStorage.getItem(PENDING_CONTEXT_KEY)!);
+    expect(q.sourceIds.length).toBeGreaterThan(0);
+    expect(go).toHaveBeenCalledWith('/squad/chat?c=group%3Asq_1');
+    expect(screen.getAllByTestId('ask-cubbie').length).toBe(2);
+  });
+  it('banner never says first sync next to a recent last sync', () => {
+    const search = '?provider=google&status=connected';
+    render(<MemoryRouter><ConnectionsView {...props({ search })} /></MemoryRouter>);
+    const t = screen.getByTestId('oauth-return-text').textContent!;
+    expect(t).toContain('Last synced 4 min ago');
+    expect(t).not.toMatch(/first sync/i);
+  });
+  it('banner says first sync is running only while syncing with no successful sync', () => {
+    const search = '?provider=google&status=connected';
+    render(<MemoryRouter><ConnectionsView {...props({ search, connections: [conn({ syncPhase: 'syncing', lastSyncAt: null, sources: { total: 0, byKind: {} } })] })} /></MemoryRouter>);
+    expect(screen.getByTestId('oauth-return-text').textContent).toMatch(/first sync is running/);
+  });
+  it('demo workspace buttons: Canvas without the extension, Google without an OAuth client', async () => {
+    const connectDemo = vi.fn().mockResolvedValue(conn());
+    render(<MemoryRouter><ConnectionsView {...props({ connections: [], googleLive: false }, { connectDemo })} /></MemoryRouter>);
+    expect(screen.getByTestId('google-no-client').textContent).toContain('GOOGLE_OAUTH_CLIENT_ID');
+    fireEvent.click(screen.getByTestId('use-google-demo'));
+    fireEvent.click(screen.getByTestId('use-canvas-demo'));
+    await waitFor(() => expect(connectDemo).toHaveBeenCalledWith('google'));
+    expect(connectDemo).toHaveBeenCalledWith('canvas');
+  });
+  it('no Google demo button when a real OAuth client exists', () => {
+    render(<MemoryRouter><ConnectionsView {...props({ connections: [], googleLive: true })} /></MemoryRouter>);
+    expect(screen.queryByTestId('use-google-demo')).toBeNull();
+  });
+  it('counts use correct plurals', () => {
+    render(<MemoryRouter><ConnectionsView {...props({ connections: [conn({ sources: { total: 3, byKind: { classroom_coursework: 1, gcal_event: 2 } } })] })} /></MemoryRouter>);
+    expect(screen.getByText('1 Classroom item, 2 calendar events')).toBeTruthy();
   });
 });

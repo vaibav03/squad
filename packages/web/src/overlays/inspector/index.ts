@@ -4,3 +4,4 @@ export { useEntries, useNow, useSelectedView, useStoreVersion } from './useInspe
 export type { InspectorHub } from './useDmHistory';
 export { openVoice, useCanInspect, setInspectorStore, noteCouncilResult } from './bridge';
 export { InspectableVoice } from './InspectableVoice';
+export { openAgentPanel } from './openAgentPanel';

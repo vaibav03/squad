@@ -53,6 +53,10 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
 
   // Generic confirm: any task with an owning handler (trip store, an agent's open confirm card, or a
   // registered kind). Unknown tasks fail closed with 404; handlers without wiring answer 422.
+  r.get('/v1/confirms/:taskId', need, (c) => {
+    const p = deps.confirms.preview(c.get('viewer'), c.req.param('taskId'));
+    return p ? c.json(p) : c.json(err('unknown_task'), 404);
+  });
   r.post('/v1/confirms/:taskId', need, async (c) => {
     const body = ConfirmGeneric.safeParse(await c.req.json().catch(() => null));
     if (!body.success) return c.json(err('invalid_request'), 400);
@@ -66,8 +70,9 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
       unsupported_kind: 422,
       invalid_request: 400,
       upstream_failed: 502,
+      already_answered: 409,
     }[out.code];
-    return c.json(err(out.code, out.message), status as 404 | 422 | 400 | 502);
+    return c.json(err(out.code, out.message), status as 404 | 422 | 400 | 502 | 409);
   });
 
   r.get('/v1/mastery/:courseId', need, async (c) => {

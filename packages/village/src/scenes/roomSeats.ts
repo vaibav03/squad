@@ -1,6 +1,7 @@
 import type { TranscriptEntry } from './roomTypes';
 import type { Raster } from './pixel/raster';
 import { drawText, textWidth } from './pixel/font';
+import type { SkinLayout } from './skins/types';
 
 /**
  * Who stands or sits where inside each room interior (224x128 art px, feet position), so a click, a
@@ -68,7 +69,13 @@ const SOLO: Record<string, { x: number; y: number }> = {
  * The characters in `slot`, left to right. `agent` is the room's agent id (council id or expert id);
  * `state` is the scene state (council seats, debaters). Chapter houses have the expert at the desk.
  */
-export function roomSeats(slot: string, agent: string, state: unknown): RoomSeat[] {
+export function roomSeats(
+  slot: string,
+  agent: string,
+  state: unknown,
+  /** Anchors of the active art skin for this room, when one is on (data, so no per-skin code). */
+  skin?: Pick<SkinLayout, 'seats' | 'chair'>,
+): RoomSeat[] {
   const st = (state ?? {}) as SeatState;
   const mk = (who: string, p: { x: number; y: number }, label = seatLabel(who)): RoomSeat => ({
     agent,
@@ -81,8 +88,8 @@ export function roomSeats(slot: string, agent: string, state: unknown): RoomSeat
   if (slot === 'council-hall') {
     const names = ['solver-a', 'solver-b', 'solver-c'];
     out = [
-      ...COUNCIL_FEET.map((p, i) => mk(memberAt(st, i, names), p)),
-      mk('chair', { x: 112, y: 89 }, 'Chair'),
+      ...(skin?.seats ?? COUNCIL_FEET).map((p, i) => mk(memberAt(st, i, names), p)),
+      mk('chair', skin?.chair ?? { x: 112, y: 89 }, 'Chair'),
     ];
   } else if (slot === 'round-table') {
     const names = ['chill', 'grind', 'advisor'];

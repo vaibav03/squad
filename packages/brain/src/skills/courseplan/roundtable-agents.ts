@@ -7,6 +7,7 @@ import { anonymise } from '../../councils/ask-run';
 import type { Opinion, Ranking } from '../../councils/council';
 import { aggregateRankings } from '../../councils/pure';
 import type { EmitEvent } from '../../mastery/types';
+import { publishActionTitles } from '../../councils/action-items';
 import {
   PERSONAS,
   SAMPLE_DISCLOSURE,
@@ -192,6 +193,7 @@ export async function runCoursePlanAgents(
     run = deps.agents.runtime.startRun({
       correlationId: (deps.newRunId ?? randomRunId)(),
       councilKey: ROUNDTABLE_KEY,
+      question: `Plan my ${input.term} courses`,
       mode,
       visibility: 'squad',
       ...(deps.askedBy ? { owner: { askedBy: deps.askedBy } } : {}),
@@ -434,17 +436,12 @@ export async function runCoursePlanAgents(
       }
       // ---- actions: the course-plan action items (code)
       await R.stage('actions');
-      await R.publishCode({
-        from: chair.id,
-        to: 'room',
-        kind: 'status',
-        stage: 'actions',
-        summary: clip(
-          `Next: ${courses.length ? `register for ${courses.join(', ')}` : 'ask your advisor what is open'}, then confirm with your real advisor.`,
-          280,
-        ),
-        parentMessageId: verdictMessageId ?? R.rootMessageId(),
-      });
+      await publishActionTitles(
+        R,
+        chair.id,
+        roundTableActions(courses, termName, dissenter),
+        verdictMessageId ?? R.rootMessageId(),
+      );
     }
 
     const rem = remainingRequirements(ctx.catalog, ctx.degree, ctx.completed);
@@ -553,4 +550,29 @@ export async function runCoursePlanAgents(
   } finally {
     finishRun();
   }
+}
+
+/**
+ * Round Table action items, derived in code from the checked plan (no model call): the courses in pairs ("Take MAT 111
+ * and CSL 110 first semester"), the advisor check on a dissent, and the human advisor sign-off. At most 4.
+ */
+const andList = (xs: readonly string[]): string =>
+  xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
+
+export function roundTableActions(
+  courses: readonly string[],
+  term: string,
+  dissenter?: string,
+): string[] {
+  const out: string[] = [];
+  const size = courses.length > 4 ? 3 : 2;
+  for (let i = 0; i < courses.length && out.length < 2; i += size)
+    out.push(`Take ${andList(courses.slice(i, i + size))} in ${term || 'the next term'}`);
+  if (!courses.length) out.push('Ask your advisor which courses are open to you');
+  if (dissenter)
+    out.push(
+      `Ask your advisor about ${dissenter.charAt(0).toUpperCase()}${dissenter.slice(1)}'s different pick`,
+    );
+  out.push('Confirm the plan with your real advisor before registering');
+  return out;
 }

@@ -3,6 +3,8 @@ import {
   CouncilAskResponseSchema,
   CouncilResultSchema,
   SENTINELS,
+  recordCouncilAction,
+  registerCouncilRun,
   type CouncilResult,
 } from '@squad/core';
 import { describe, expect, it } from 'vitest';
@@ -409,5 +411,38 @@ describe('council action items: plan + chat', () => {
       actionId: ACTION.id,
     });
     expect(r.status).toBe(404);
+  });
+
+  it('Round Table / Debate runs (not CouncilService runs): items resolve by id from the run record, same scoping', async () => {
+    const s = setup();
+    const squad = s.hub.deps.directory.squadOf('s_ana')!;
+    const seen: string[] = [];
+    s.hub.deps.chat.onBotPost((m) => void seen.push(`${m.chatId}|${m.text}`));
+    registerCouncilRun('cn_rt0000000001', { askedBy: 's_ana', private: false });
+    recordCouncilAction('cn_rt0000000001', {
+      id: 'am_rt0000000001',
+      title: 'Take MAT 111 in Fall',
+    });
+    const path = '/v1/council/cn_rt0000000001/actions/chat';
+    const ok = await s.call(path, 's_ben', { actionId: 'am_rt0000000001' });
+    expect(ok.status).toBe(200);
+    expect(seen.some((x) => x.startsWith(`group:${squad}|`) && x.includes('Take MAT 111'))).toBe(
+      true,
+    );
+    // client text is never trusted, unknown item and other squad are 404
+    expect(
+      (await s.call(path, 's_ben', { actionId: 'am_rt0000000001', text: 'evil' })).status,
+    ).toBe(400);
+    expect((await s.call(path, 's_ben', { actionId: 'am_nope00000000' })).status).toBe(404);
+    expect((await s.call(path, 's_zed', { actionId: 'am_rt0000000001' })).status).toBe(404);
+    registerCouncilRun('cn_rt0000000002', { askedBy: 's_ana', private: true });
+    recordCouncilAction('cn_rt0000000002', { id: 'am_rt0000000002', title: 'Private thing' });
+    expect(
+      (
+        await s.call('/v1/council/cn_rt0000000002/actions/chat', 's_ben', {
+          actionId: 'am_rt0000000002',
+        })
+      ).status,
+    ).toBe(404);
   });
 });

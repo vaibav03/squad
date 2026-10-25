@@ -126,6 +126,7 @@ export function createIngestor(deps: HubDeps): Ingestor {
       if (e.t === 'call.start') deps.calls.noteOwner(e.callId, e.student ?? null);
       const squadId = routeSquad(e);
       const res = commit('village', e.t, e, squadId);
+      if (e.t === 'a2a.message' || e.t === 'council.stage') deps.councilRuns?.observe(e);
       if (e.t === 'ledger.entry') deps.ledger.recordPublic(e, deps.now());
       return res;
     },

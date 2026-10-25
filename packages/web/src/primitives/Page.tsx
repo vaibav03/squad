@@ -4,6 +4,10 @@ import './page.css';
 export interface PageProps {
   title: string;
   eyebrow?: string;
+  /** What this page is, in one plain sentence. */
+  lede?: string;
+  /** What happens next / what to do here, in one plain sentence (rendered as "Next: ..."). */
+  next?: string;
   actions?: ReactNode;
   width?: 'narrow' | 'default' | 'wide';
   children?: ReactNode;
@@ -13,6 +17,8 @@ export interface PageProps {
 export function Page({
   title,
   eyebrow,
+  lede,
+  next,
   actions,
   width = 'default',
   children,
@@ -26,6 +32,16 @@ export function Page({
           <h1 className="sq-page__title" tabIndex={-1} data-page-title>
             {title}
           </h1>
+          {lede ? (
+            <p className="sq-page__lede" data-testid="page-lede">
+              {lede}
+            </p>
+          ) : null}
+          {next ? (
+            <p className="sq-page__next" data-testid="page-next">
+              <strong>Next:</strong> {next}
+            </p>
+          ) : null}
         </div>
         {actions ? <div className="sq-page__actions">{actions}</div> : null}
       </header>

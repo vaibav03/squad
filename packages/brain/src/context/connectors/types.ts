@@ -125,6 +125,8 @@ export const CANVAS_SCOPES = {
   token: 'canvas.api_token.read',
   /** The student's own logged-in browser session, read by the Squad extension (no OAuth, no developer key). */
   session: 'canvas.browser_session.read',
+  /** The labelled demo workspace (synthetic content, not any real account). */
+  demo: 'canvas.demo_workspace',
 } as const;
 
 /** The ONLY scopes the hub will accept; anything broader (drive, gmail, calendar write) is rejected. */

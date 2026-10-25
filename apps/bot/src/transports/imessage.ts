@@ -1,6 +1,12 @@
 import { existsSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
-import type { ChatId, InboundMessage, OutboundMessage, StudentId } from '@squad/core';
+import {
+  absolutizeLinks,
+  type ChatId,
+  type InboundMessage,
+  type OutboundMessage,
+  type StudentId,
+} from '@squad/core';
 import { detectMention } from '../mention';
 import { nullLogger } from '../log';
 import type { Logger, Roster, Transport } from '../types';
@@ -68,6 +74,8 @@ export interface IMessageTransportOptions {
   sendLimiter?: SendLimiter;
   now?: () => number;
   fileExists?: (p: string) => boolean;
+  /** Public web URL (HUB_WEB_URL / PUBLIC_WEB_URL): relative app links in replies are sent absolute, else as the page name. */
+  webUrl?: string | null;
 }
 
 const ECHO_WINDOW_MS = 60_000;
@@ -180,7 +188,11 @@ export function createIMessageTransport(opts: IMessageTransportOptions): IMessag
       await sdk.close().catch(() => undefined);
       sdkP = undefined;
     },
-    async send(o: OutboundMessage) {
+    async send(msg: OutboundMessage) {
+      // plain text with absolute links: a phone cannot open `/squad/connections` or `[x](/squad/...)`
+      const o: OutboundMessage = msg.text
+        ? { ...msg, text: absolutizeLinks(msg.text, opts.webUrl) }
+        : msg;
       const paths = (o.attachments ?? []).map((a) => a.path);
       for (const p of paths) {
         if (!isAbsolute(p)) throw new Error(`attachment path must be absolute: ${p}`);
