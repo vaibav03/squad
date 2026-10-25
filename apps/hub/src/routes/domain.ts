@@ -114,6 +114,14 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
     return c.json({ courseId, file: file.name, status: 'queued' as const }, 202);
   });
 
+  /** Booleans only: whether this viewer has ingested a real .ics file (never the events themselves). */
+  r.get('/v1/squad/calendar', need, (c) => {
+    const row = deps.db
+      .prepare('SELECT 1 AS x FROM hub_calendar_ics WHERE student=?')
+      .get(c.get('viewer').studentId);
+    return c.json({ ics: row !== undefined });
+  });
+
   r.post('/v1/squad/calendar', need, async (c) => {
     const v = c.get('viewer');
     const ct = c.req.header('content-type') ?? '';
@@ -123,7 +131,13 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
       if (!(file instanceof File) || !file.name.toLowerCase().endsWith('.ics'))
         return c.json(err('invalid_request', '.ics file required'), 400);
       if (file.size > 5 * 1024 * 1024) return c.json(err('invalid_request', 'file too large'), 413);
-      return c.json(await deps.ports.brain.loadCalendar(v.studentId, { ics: await file.text() }));
+      const out = await deps.ports.brain.loadCalendar(v.studentId, { ics: await file.text() });
+      // remember that a real .ics (not the demo calendar) was ingested, so setup can show it as done
+      if (out.busyBlocks > 0)
+        deps.db
+          .prepare('INSERT OR REPLACE INTO hub_calendar_ics(student, at) VALUES(?,?)')
+          .run(v.studentId, deps.now());
+      return c.json(out);
     }
     const body = Calendar.safeParse(await c.req.json().catch(() => null));
     if (!body.success) return c.json(err('invalid_request'), 400);

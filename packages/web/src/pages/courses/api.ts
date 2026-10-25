@@ -1,5 +1,5 @@
 import { timedFetch } from '../../lib/http';
-import { normalizeLimits } from './model';
+import { catalogueRowFrom, normalizeLimits } from './model';
 import type {
   CatalogueRow,
   CatalogueState,
@@ -258,7 +258,7 @@ function readCatalogue(raw: unknown): CatalogueState | null {
   >;
   const rows = (
     Array.isArray(inner.rows) ? inner.rows : Array.isArray(inner.courses) ? inner.courses : []
-  ) as CatalogueRow[];
+  ).map(catalogueRowFrom);
   return { sample: inner.sample === true, rows };
 }
 

@@ -216,6 +216,24 @@ export const hub = (ctx: Ctx) => ({
     );
     return toConnection(r.connection);
   },
+  /** Optional advanced fallback: a student-generated Canvas API token (some schools do not allow tokens). */
+  async connectToken(baseUrl: string, token: string): Promise<Connection> {
+    const r = await call(
+      ctx,
+      'POST',
+      '/v1/connections',
+      z.looseObject({ connection: RawConnection }),
+      {
+        provider: 'canvas',
+        variant: 'token',
+        mode: 'live',
+        scopes: ['canvas.api_token.read'],
+        baseUrl,
+        token,
+      },
+    );
+    return toConnection(r.connection);
+  },
   async pair() {
     return call(ctx, 'POST', '/v1/connections/extension/pair', Pair, {});
   },

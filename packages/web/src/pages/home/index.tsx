@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Button } from '../../primitives/Button';
 import { Card } from '../../primitives/Card';
 import { Icon } from '../../primitives/Icon';
@@ -7,26 +7,38 @@ import type { IconName } from '../../primitives/icon-names';
 import { Page, PageSection } from '../../primitives/Page';
 import { Skeleton } from '../../primitives/Skeleton';
 import { NightScene } from '../../shell/NightScene';
-import { useAuth } from '../../shell/context';
+import { useAuth, useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
-import { HOME_CHECKLIST as CHECKLIST, HOME_LINKS } from './fixtures';
-import { loadSetupDone } from '../setup/progress';
+import { HOME_CHECKLIST as CHECKLIST } from './fixtures';
+import { resolveHomeLinks, useCurrentTrip } from './home-links';
+import { useHubReady } from './bootstrap';
+import { OfflineState } from '../../primitives/EmptyState';
+import { useSetupChecklist } from './setup-state';
 import { HomePlanCard } from './PlanCard';
 import './home.css';
 
 export default function HomePage() {
   const { session } = useAuth();
   const { setTitle } = useShell();
-  const [ready, setReady] = useState(false);
+  const cfg = useSquadConfig();
   useEffect(() => {
     setTitle('Home');
-    const t = setTimeout(() => setReady(true), 120);
-    return () => clearTimeout(t);
   }, [setTitle]);
   const name = session?.name ?? 'there';
-  const finished = loadSetupDone();
-  const HOME_CHECKLIST = CHECKLIST.map((c) => ({ ...c, done: finished.includes(c.key) }));
-  const done = HOME_CHECKLIST.filter((c) => c.done).length;
+  const live = cfg.mode === 'live' && !!cfg.hubUrl;
+  const hub = useHubReady(live ? cfg.hubUrl : null);
+  const ready = hub.state === 'ready';
+  // Nothing below reads the hub until the shared bootstrap says it is reachable (no false OFFLINE on a cold load).
+  const gated = useMemo(
+    () => ({ hubUrl: ready ? cfg.hubUrl : null, token: ready ? cfg.token : null }),
+    [ready, cfg.hubUrl, cfg.token],
+  );
+  const { states, retry, anyError } = useSetupChecklist(gated, live && !ready);
+  const trip = useCurrentTrip(cfg.hubUrl, cfg.token, live && ready);
+  const links = resolveHomeLinks(trip);
+  const done = CHECKLIST.filter((c) => states[c.key] === 'done').length;
+  const loading = CHECKLIST.some((c) => states[c.key] === 'loading');
+  const description = loading ? 'Checking…' : `${done} of ${CHECKLIST.length} done`;
 
   return (
     <Page title={`Good evening, ${name}`} eyebrow="Your squad">
@@ -48,42 +60,66 @@ export default function HomePage() {
       </section>
 
       <div className="sq-home__grid">
-        <PageSection title="Get set up" description={`${done} of ${HOME_CHECKLIST.length} done`}>
-          {ready ? (
-            <Card padding="none">
-              <ul className="sq-home__list">
-                {HOME_CHECKLIST.map((c) => (
-                  <li key={c.key}>
-                    <Link to={c.to} className="sq-home__row">
-                      <span
-                        className={`sq-home__check${c.done ? ' is-done' : ''}`}
-                        aria-hidden="true"
-                      >
-                        {c.done ? <Icon name="check" size={14} /> : null}
-                      </span>
-                      <span className="sq-home__rowtext">
-                        <strong>{c.title}</strong>
-                        <span>{c.body}</span>
-                      </span>
-                      {c.done ? (
-                        <span className="sq-home__done">Done</span>
-                      ) : (
-                        <span className="sq-home__todo">To do</span>
-                      )}
-                      <Icon name="chevron-right" size={18} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          ) : (
+        <PageSection
+          title="Get set up"
+          description={hub.state === 'ready' ? description : undefined}
+        >
+          {hub.state === 'connecting' ? (
             <Card padding="md">
-              <div className="sq-home__skel">
-                <Skeleton height={20} />
-                <Skeleton height={20} />
+              <div className="sq-home__connecting" role="status" aria-live="polite">
+                <p>Connecting to Squad...</p>
                 <Skeleton height={20} />
                 <Skeleton height={20} />
               </div>
+            </Card>
+          ) : hub.state === 'offline' ? (
+            <Card padding="md">
+              <OfflineState onRetry={hub.retry} />
+            </Card>
+          ) : (
+            <Card padding="none">
+              <ul className="sq-home__list">
+                {CHECKLIST.map((c) => {
+                  const st = states[c.key];
+                  return (
+                    <li key={c.key} data-state={st}>
+                      <Link to={c.to} className="sq-home__row">
+                        <span
+                          className={`sq-home__check${st === 'done' ? ' is-done' : ''}`}
+                          aria-hidden="true"
+                        >
+                          {st === 'done' ? <Icon name="check" size={14} /> : null}
+                        </span>
+                        <span className="sq-home__rowtext">
+                          <strong>{c.title}</strong>
+                          <span>{c.body}</span>
+                        </span>
+                        {st === 'done' ? (
+                          <span className="sq-home__done">Done</span>
+                        ) : st === 'todo' ? (
+                          <span className="sq-home__todo">To do</span>
+                        ) : st === 'error' ? (
+                          <span className="sq-home__todo">Could not check</span>
+                        ) : (
+                          <span className="sq-home__checking" role="status">
+                            <Skeleton width={56} height={18} />
+                            <span className="sq-home__sr">Checking…</span>
+                          </span>
+                        )}
+                        <Icon name="chevron-right" size={18} />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+              {anyError ? (
+                <div className="sq-home__retry" role="alert">
+                  <span>Some setup steps could not be checked.</span>
+                  <Button variant="secondary" size="sm" onClick={retry}>
+                    Retry
+                  </Button>
+                </div>
+              ) : null}
             </Card>
           )}
         </PageSection>
@@ -94,8 +130,8 @@ export default function HomePage() {
 
         <PageSection title="Around the village">
           <div className="sq-home__links">
-            {HOME_LINKS.map((l) => (
-              <Link key={l.to} to={l.to} className="sq-home__link">
+            {links.map((l) => (
+              <Link key={l.title} to={l.to} className="sq-home__link">
                 <span className="sq-home__linkicon">
                   <Icon name={l.icon as IconName} size={20} />
                 </span>

@@ -4,32 +4,32 @@ export const HOME_CHECKLIST = [
     title: 'Link your phone',
     body: 'So your agent can text you in iMessage.',
     to: '/squad/setup/phone',
-    done: false,
   },
   {
     key: 'courses',
     title: 'Add your course PDFs',
     body: 'Your experts learn from these chapters.',
     to: '/squad/setup/courses',
-    done: false,
   },
   {
     key: 'calendar',
     title: 'Share your busy times',
     body: 'Only free or busy leaves your device.',
     to: '/squad/setup/calendar',
-    done: false,
   },
   {
     key: 'persona',
     title: 'Pick your study buddy',
     body: 'Choose a voice and a face you like.',
     to: '/squad/personas',
-    done: false,
   },
 ] as const;
 
-export const HOME_LINKS = [
+/**
+ * Static Home cards. The trip card is NOT here: its target is resolved at render time from the squad's real
+ * current trip (see home-links.ts), never from a hard-coded trip id.
+ */
+export const HOME_STATIC_LINKS = [
   {
     to: '/squad/ledger',
     icon: 'ledger',
@@ -37,15 +37,21 @@ export const HOME_LINKS = [
     body: 'See exactly what each agent shared, and what it kept private.',
   },
   {
-    to: '/squad/trips/spring-break',
-    icon: 'plane',
-    title: 'Spring break trip',
-    body: 'Vote on options and confirm when you are in.',
-  },
-  {
     to: '/squad/mastery',
     icon: 'book',
     title: 'Mastery map',
     body: 'Your progress by chapter, next to the squad average.',
+  },
+  {
+    to: '/squad/village?plan=1',
+    icon: 'calendar',
+    title: 'Study plan',
+    body: 'The plan your squad is working from, and what is next.',
+  },
+  {
+    to: '/squad/courses',
+    icon: 'book',
+    title: 'Courses',
+    body: 'Your course library and the chapters your experts learn from.',
   },
 ] as const;

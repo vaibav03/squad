@@ -72,6 +72,10 @@ the same number needs no code. `GET /v1/imessage/link` lists linked numbers (mas
 them. Deleting the account removes the links. The web UI for entering the code is not part of this change: use the API
 (or add a field to the Welcome page).
 
+### 2.1 Linking from the web (phone first)
+
+The other direction: a signed-in student enters their number in Setup (`POST /v1/me/phone/start`, then `/verify`, see docs/accounts-api.md "Phone linking"). The code is delivered by iMessage only when the bridge is configured (`CODE_SENDER=imessage`, `IMESSAGE_SEND_URL`) and the handle is on `IMESSAGE_ALLOWED_HANDLES` (or `IMESSAGE_ALLOW_ALL=1`); with `HUB_DEV_LOGIN=1` and no bridge the code is shown in the web UI and labelled as a dev code; otherwise the UI says "code delivery unavailable". Verification links the handle hash to the current account, so the bot treats that sender as the student from then on (no code text needed).
+
 ## 3. Binding a group
 
 In an iMessage group that has the bot (see limitations) a member sends `join ABCD-EFGH` or `@cubbie join ABCD-EFGH` (a

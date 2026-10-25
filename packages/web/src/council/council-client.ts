@@ -1,3 +1,4 @@
+import { permitRunStream } from '@squad/village/sources';
 import { timedFetch } from '../lib/http';
 import {
   CouncilAskResponseSchema,
@@ -121,7 +122,9 @@ export interface EventSourceLike {
 export type EventSourceFactory = (url: string) => EventSourceLike;
 
 const defaultFactory: EventSourceFactory | undefined =
-  typeof EventSource === 'undefined' ? undefined : (url) => new EventSource(url);
+  typeof EventSource === 'undefined'
+    ? undefined
+    : (url) => permitRunStream(() => new EventSource(url));
 
 /** `streamUrl` is hub-relative; the stream token rides as `?st=` because EventSource cannot set headers. */
 export function councilStreamUrl(hub: HubCtx, streamUrl: string, st?: string): string {

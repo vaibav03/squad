@@ -1,19 +1,22 @@
 # Release gate report
 
-Generated 2026-10-25T13:33:15.594Z by `pnpm gate` (tree fix/gate-findings@d86d6a86, origin/main@29bb0842).
+Generated 2026-10-25T14:20:19.270Z by `pnpm gate` (tree fix/home-onboarding-catalogue@d0b9a169, origin/main@344db094).
 Mode: LLM fake model, labelled **Demo**; real integrations not requested.
 
-## Verdict: FIXTURE-GREEN / REAL-BLOCKED
+## Verdict: RED (a BUILT step failed)
 
-Fixture steps: 22 PASS, 0 FAIL, 0 NOT_BUILT, 0 not run, of 22. A NOT_BUILT step is never a PASS: its owner branch is not on origin/main.
+Fixture steps: 24 PASS, 2 FAIL, 0 NOT_BUILT, 0 not run, of 26. A NOT_BUILT step is never a PASS: its owner branch is not on origin/main.
 
 ## Journey (one world, one chain)
 
 | Step | What | Fixture | Real | Evidence |
 |---|---|---|---|---|
+| S0 | Home cards resolve and bootstrap without false offline | PASS (fixture) | SKIPPED(real_not_requested) | `docs/design/shots/gate/s0-01-s0-home.png` |
 | S1 | Connect Canvas and Google Workspace with minimal permissions | PASS (fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)) | BLOCKED(no_google_client, [runbook](RELEASE-GATE.md#google-oauth-client-and-consent-screen)) | `docs/design/shots/gate/s1-01-connections.png` |
+| S1b | phone link verified (dev code / iMessage allowlist) | FAIL: before linking the phone is not verified | BLOCKED(apple_unverified, [runbook](RELEASE-GATE.md#apple-behaviour-and-permissions)) | `docs/design/shots/gate/s1b-01-phone-done.png` |
+| S1c | catalogue rows complete | PASS (fixture) | SKIPPED(real_not_requested) | `docs/design/shots/gate/s1c-01-catalogue.png` |
 | S2 | Ingest and normalize permitted context | PASS (fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)) | BLOCKED(no_google_client, [runbook](RELEASE-GATE.md#google-oauth-client-and-consent-screen)) | `docs/design/shots/gate/s2-01-connections-shared.png` |
-| S3 | Agents retrieve permitted context with verified citations | PASS (fixture (retrieval and source viewer asserted at the API; chat answers use the demo model unless LIVE=1)) | SKIPPED(real_not_requested) | `docs/design/shots/gate/s3-01-citation-excerpt.png`<br>`docs/design/shots/gate/s3-02-cubbie-answers.png` |
+| S3 | Agents retrieve permitted context with verified citations | FAIL: step threw | SKIPPED(real_not_requested) |  |
 | S4 | Group iMessage tagging @cubbie / @cubbi | PASS (fixture) | BLOCKED(apple_unverified, [runbook](RELEASE-GATE.md#apple-behaviour-and-permissions)) |  |
 | S5 | Route to the correct live agent with the same grounded context | PASS (fixture) | BLOCKED(llm_credits, [runbook](RELEASE-GATE.md#gemini-credits-live-and-elevenlabs-plan)) |  |
 | S6 | Reply delivered into the same iMessage group | PASS (fixture) | BLOCKED(apple_unverified, [runbook](RELEASE-GATE.md#apple-behaviour-and-permissions)) | `docs/design/shots/gate/s6-01-delivery-state.png` |
@@ -38,6 +41,19 @@ Fixture steps: 22 PASS, 0 FAIL, 0 NOT_BUILT, 0 not run, of 22. A NOT_BUILT step 
 | V10 | Multiple group threads | PASS (fixture) | SKIPPED(real_not_requested) |  |
 | V11 | Degraded model is labelled Demo everywhere | PASS (fixture/degraded) | BLOCKED(llm_credits, [runbook](RELEASE-GATE.md#gemini-credits-live-and-elevenlabs-plan)) |  |
 | V12 | Wrong person tags @cubbie | PASS (fixture) | BLOCKED(needs_second_person, [runbook](RELEASE-GATE.md#real-multi-person-imessage-group)) |  |
+| V13 | Home late hub | PASS (fixture) | SKIPPED(real_not_requested) |  |
+
+## Failures
+
+### S1b (fixture) phone link verified (dev code / iMessage allowlist)
+
+- before linking the phone is not verified: expected false, got true
+- still not verified after the wrong code: expected false, got true
+
+### S3 (fixture) Agents retrieve permitted context with verified citations
+
+- step threw: fetch failed
+
 
 ## External blockers (code cannot fix these)
 
@@ -54,7 +70,6 @@ Fixture steps: 22 PASS, 0 FAIL, 0 NOT_BUILT, 0 not run, of 22. A NOT_BUILT step 
 ## Notes
 
 - S10 (fixture): live typing/thinking is transient with the scripted model; only "not stuck" is asserted
-- S3 (fixture): demo model: the context-claims prompt is not served by the demo LLM, so a context-grounded chat answer cannot be produced without LIVE=1; retrieval and the viewer are asserted above
 - S5 (fixture): @tutor: the demo model cannot ground a content answer; citations are asserted with LIVE=1
 - S5 (fixture): @planner: the demo model cannot ground a content answer; citations are asserted with LIVE=1
 - S9 (fixture): mastery hidden for squads under 3 members is not exercised: the world squad has 3 members
@@ -66,7 +81,6 @@ Fixture steps: 22 PASS, 0 FAIL, 0 NOT_BUILT, 0 not run, of 22. A NOT_BUILT step 
 
 ## Key screenshots
 
-- `docs/design/shots/gate/key-s3-01-citation-excerpt.png`
 - `docs/design/shots/gate/key-s6-01-delivery-state.png`
 - `docs/design/shots/gate/key-s7-01-web-mirror-rhea.png`
 - `docs/design/shots/gate/key-s8-01-trip-voting.png`

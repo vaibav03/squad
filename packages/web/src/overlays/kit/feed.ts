@@ -1,3 +1,4 @@
+import { SharedEventSource } from '@squad/village/sources';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { notifyUnauthorized, REQUEST_TIMEOUT_MS, timedFetch, withTimeout } from '../../lib/http';
 import { useLiveConfig } from './live-config';
@@ -143,7 +144,9 @@ export function useEventFeed<E>(opts: FeedOptions<E>, onEvent: (e: E) => void) {
         const { st } = (await res.json()) as { st: string };
         if (closed || paused) return;
         const q = new URLSearchParams({ st, ...(live.query ?? {}) });
-        const src = new EventSource(`${cfg.hubUrl}/v1/squad/stream?${q}`);
+        const src = new (SharedEventSource as unknown as typeof EventSource)(
+          `${cfg.hubUrl}/v1/squad/stream?${q}`,
+        );
         es = src;
         // no open within the timeout: treat as a failed attempt instead of "connecting" forever
         timer = setTimeout(() => es === src && fail(), REQUEST_TIMEOUT_MS);
