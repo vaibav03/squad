@@ -2,6 +2,10 @@
   "_doc": "Allowed exceptions for scripts/audit-chrome.mjs. path is a regex on the repo-relative file; kind is emoji|marker|dot (optional); match is a substring of the offending line (optional). 'pending' entries are known violations in surfaces being redesigned (council deliberation work); the script counts them and prints a reminder, delete them as each surface is converted.",
   "entries": [
     {
+      "path": "^packages/web/src/audit/",
+      "reason": "the detector's own character classes (regex definitions), not rendered text"
+    },
+    {
       "path": "^apps/hub/src/(plans/service|routes/council|routes/live)\\.ts$",
       "reason": "persona 'emoji' data field: an authored avatar value in API payloads, not rendered chrome"
     },
@@ -12,21 +16,6 @@
     {
       "path": "^apps/hub/src/store/accounts\\.ts$",
       "reason": "masked contact hint (bullets stand for hidden digits; user-authored contact data display)"
-    },
-    {
-      "path": "^packages/village/src/council/(mode|model)\\.ts$",
-      "pending": true,
-      "reason": "KIND_GLYPH / mode glyph tables feed the council board; replaced by icon names with the deliberation surface"
-    },
-    {
-      "path": "^packages/web/src/council/",
-      "pending": true,
-      "reason": "council board, stage and status strip are being rebuilt as the deliberation surface"
-    },
-    {
-      "path": "^packages/web/src/overlays/room-info/",
-      "pending": true,
-      "reason": "room transcript speaker dot is replaced by portraits in the deliberation redesign"
     }
   ]
 }

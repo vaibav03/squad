@@ -50,7 +50,7 @@ export function CouncilStatusStrip({
     >
       {v.badge.tier !== 'none' ? (
         <p className="cs-banner" data-tier={v.badge.tier} role="status" data-testid="cs-banner">
-          <span aria-hidden="true">{v.badge.glyph}</span> {v.badge.text}
+          <Glyph name={v.badge.glyph} /> {v.badge.text}
         </p>
       ) : null}
       <ul className="cs-row">
@@ -62,13 +62,11 @@ export function CouncilStatusStrip({
         </li>
         {v.mode ? (
           <li data-testid="cs-mode" data-tier={v.mode.tier}>
-            <span className="cs-k">Mode</span> <span aria-hidden="true">{v.mode.glyph}</span>{' '}
-            {v.mode.word}
+            <span className="cs-k">Mode</span> <Glyph name={v.mode.glyph} size={12} /> {v.mode.word}
           </li>
         ) : null}
         <li data-testid="cs-key" data-state={v.key.state}>
-          <span className="cs-k">Key</span> <span aria-hidden="true">{v.key.glyph}</span>{' '}
-          {v.key.word}
+          <span className="cs-k">Key</span> <Glyph name={v.key.glyph} size={12} /> {v.key.word}
         </li>
         <li data-testid="cs-models">
           <span className="cs-k">Models</span>{' '}
@@ -76,13 +74,13 @@ export function CouncilStatusStrip({
           {v.models.length && v.modelsNote ? ` (${v.modelsNote.toLowerCase()})` : ''}
         </li>
         <li data-testid="cs-mic" data-state={v.mic}>
-          <span aria-hidden="true">{m.glyph}</span> {m.word}
+          <Glyph name={m.glyph} size={12} /> {m.word}
         </li>
         <li data-testid="cs-audio" data-state={v.audio}>
-          <span aria-hidden="true">{a.glyph}</span> {a.word}
+          <Glyph name={a.glyph} size={12} /> {a.word}
         </li>
         <li data-testid="cs-transcript" data-state={v.transcript}>
-          <span aria-hidden="true">{t.glyph}</span> {t.word}
+          <Glyph name={t.glyph} size={12} /> {t.word}
         </li>
         {v.counters ? (
           <li data-testid="cs-a2a">
@@ -93,7 +91,7 @@ export function CouncilStatusStrip({
       </ul>
       {v.fallback ? (
         <p className="cs-note" data-testid="cs-fallback">
-          <span aria-hidden="true">▲</span> {v.fallback}
+          <Glyph name="alert" size={12} /> {v.fallback}
         </p>
       ) : null}
       {keyBad || variant === 'full' ? (
@@ -109,6 +107,7 @@ import type { CouncilResult } from '@squad/core';
 import type { HubCtx } from '../../pages/village/hub';
 import { runFromResult } from './derive';
 import { useCouncilStatus } from './useCouncilStatus';
+import { Glyph } from '../deliberation/Glyph';
 
 /** The strip for a council result card or panel run (loads the hub status itself; fixtures without a hub stay honest). */
 export function ResultStatusStrip({

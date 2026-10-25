@@ -276,11 +276,11 @@ describe('CouncilPanel: verdict variants', () => {
 
   it('demo: shows the demo badge', () => {
     render(<CouncilCard result={f.demo} />);
-    expect(screen.getAllByText('Demo').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Fixture').length).toBeGreaterThan(0);
     expect(screen.getByTestId('cs-banner').textContent).toContain('DEMO: scripted, not Gemini');
     cleanup();
     render(<CouncilCard result={f.done} />);
-    expect(screen.queryByText('Demo')).toBeNull();
+    expect(screen.queryByText('Fixture')).toBeNull();
     expect(screen.getAllByText('Live').length).toBeGreaterThan(0);
   });
 

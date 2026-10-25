@@ -10,6 +10,7 @@ import {
   type CouncilFixture,
 } from '@squad/village/council';
 import { CouncilBoard } from './CouncilBoard';
+import { registerAgentPanel } from '../deliberation/agent-panel';
 import { resultMode } from './mode-of';
 
 const RAW = /council:[a-z]+-[a-z-]+|\bam_[a-z0-9]{6,}\b|\bcn_[a-z0-9]{6,}\b|\b[us]_[0-9a-f]{6,}\b/i;
@@ -52,28 +53,47 @@ function scan(): string[] {
 }
 
 describe('Council board', () => {
-  it('opens as a labelled modal dialog with the org chart, stepper, feed and verdict', async () => {
+  it('opens as a labelled modal dialog with phases, roster, ballot, decision and turn feed', async () => {
     const { dlg } = await open(loaded());
     expect(dlg.getAttribute('aria-modal')).toBe('true');
     expect(dlg.getAttribute('aria-labelledby')).toBe('cb-title');
-    expect(within(dlg).getByRole('navigation', { name: 'Decision flow' })).toBeTruthy();
-    expect(within(dlg).getByRole('region', { name: 'Council org chart' })).toBeTruthy();
-    expect(within(dlg).getByRole('region', { name: 'Message feed' })).toBeTruthy();
-    expect(within(dlg).getByTestId('cb-verdict')).toBeTruthy();
-    const nodes = dlg.querySelectorAll('.cb-node');
-    expect(nodes.length).toBeGreaterThanOrEqual(4);
+    const phases = within(dlg).getByRole('navigation', { name: 'Deliberation phases' });
+    expect(within(phases).getByText('Gather evidence')).toBeTruthy();
+    expect(within(phases).getByText('Debate')).toBeTruthy();
+    expect(within(phases).getByText('Vote')).toBeTruthy();
+    expect(within(phases).getByText('Synthesis')).toBeTruthy();
+    expect(within(dlg).getByRole('region', { name: 'Who is on the council' })).toBeTruthy();
+    expect(within(dlg).getByRole('region', { name: 'What they are saying' })).toBeTruthy();
+    expect(within(dlg).getByTestId('dl-decision')).toBeTruthy();
+    expect(within(dlg).getByTestId('dl-ballot')).toBeTruthy();
+    expect(dlg.querySelectorAll('[data-testid=dl-member]').length).toBeGreaterThanOrEqual(4);
     expect(within(dlg).getAllByText('Chair').length).toBeGreaterThan(0);
   });
 
-  it('scripted fixtures always say Demo, on the header, the cards and the verdict', async () => {
+  it('the phase header marks the current phase by icon, word and aria-current; done runs finish all four', async () => {
+    const store = createCouncilBoardStore();
+    const evs = ASK_FIXTURE.events.map((e) => e.event);
+    for (const e of evs.slice(0, 5)) store.apply(e);
+    await open(store);
+    const now = document.querySelector('.dl-phase[aria-current=step]')!;
+    expect(now.getAttribute('data-phase')).toBe('gather');
+    expect(now.textContent).toContain('Now');
+    cleanup();
+    const { dlg } = await open(loaded());
+    expect(dlg.querySelectorAll('.dl-phase[data-state=done]').length).toBe(4);
+  });
+
+  it('scripted fixtures always say Fixture, on the header, the roster and the decision', async () => {
     const { dlg } = await open(loaded());
     const head = dlg.querySelector('.cb-head .cb-mode')!;
-    expect(head.textContent).toContain('Demo');
+    expect(head.textContent).toContain('Fixture');
     expect(head.textContent).not.toContain('Live');
-    expect(dlg.querySelector('.cb-node .cb-mode')!.textContent).toContain('Demo');
-    expect(within(screen.getByTestId('cb-verdict')).getByText('Demo')).toBeTruthy();
-    // glyph and word, never colour alone
-    expect(head.querySelector('.cb-mode__glyph')!.textContent).not.toBe('');
+    expect(dlg.querySelector('[data-testid=dl-member] .sq-schip')!.textContent).toContain(
+      'Fixture',
+    );
+    expect(within(screen.getByTestId('dl-decision')).getByLabelText(/^Fixture/)).toBeTruthy();
+    // icon and word, never colour alone
+    expect(head.querySelector('.cb-mode__glyph svg')).toBeTruthy();
   });
 
   it('an empty store offers a labelled sample instead of a blank dialog', async () => {
@@ -83,7 +103,7 @@ describe('Council board', () => {
     // no hub here: Convene plays the scripted sample, and the strip says so out loud
     fireEvent.click(screen.getByRole('button', { name: 'Convene the council' }));
     await settle();
-    expect(screen.getByTestId('cb-verdict')).toBeTruthy();
+    expect(screen.getByTestId('dl-decision')).toBeTruthy();
   });
 
   it('Esc closes, and Tab never leaves the dialog', async () => {
@@ -96,20 +116,48 @@ describe('Council board', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('feed rows read "Skeptic to Chair: Kind" and filter by agent and by kind', async () => {
+  it('turn cards: portrait, speaker, type badge, reply-to, turn number; rankings and the verdict are not turns', async () => {
+    const { dlg } = await open(loaded());
+    const feed = within(dlg).getByRole('feed');
+    const cards = [...feed.querySelectorAll<HTMLElement>('article.dl-turn')];
+    expect(cards.length).toBeGreaterThan(8);
+    for (const c of cards) {
+      expect(c.querySelector('.dl-portrait')).toBeTruthy();
+      expect(c.querySelector('[data-testid=dl-turn-badge]')!.textContent).toMatch(
+        /^(Proposal|Evidence|Challenge|Revision)$/,
+      );
+      expect(c.getAttribute('data-kind')).not.toMatch(/^(rank|vote|verdict|status)$/);
+    }
+    const ask = within(feed).getByRole('article', {
+      name: /^Turn \d+\. Skeptic to Teacher: Evidence$/,
+    });
+    expect(ask.querySelector('[data-testid=dl-reply-to]')!.textContent).toContain(
+      'Replying to Chair',
+    );
+    expect(ask.textContent).toMatch(/Turn \d+/);
+    // a critique is a Challenge, and an answer to a critique would be a Revision
+    expect(cards.some((c) => c.getAttribute('data-type') === 'challenge')).toBe(true);
+    // the Teacher's answer cites a source: Evidence, with a citation chip
+    expect(
+      cards.some(
+        (c) =>
+          c.getAttribute('data-type') === 'evidence' &&
+          c.querySelector('.sv-chip, [data-testid=citation-chip], button'),
+      ),
+    ).toBe(true);
+  });
+
+  it('feed filters by speaker and by turn type', async () => {
     const { dlg } = await open(loaded());
     const feed = within(dlg).getByRole('feed');
     const total = feed.querySelectorAll('article').length;
-    expect(total).toBeGreaterThan(8);
-    expect(
-      within(feed).getAllByRole('article', { name: /^Skeptic to Teacher: Asks$/ }).length,
-    ).toBe(1);
-    fireEvent.change(within(dlg).getByLabelText('Kind'), { target: { value: 'delegate' } });
-    const del = feed.querySelectorAll('article');
-    expect(del.length).toBe(3);
-    for (const r of del) expect(r.getAttribute('data-kind')).toBe('delegate');
-    fireEvent.change(within(dlg).getByLabelText('Kind'), { target: { value: '' } });
-    fireEvent.change(within(dlg).getByLabelText('Agent'), {
+    fireEvent.change(within(dlg).getByLabelText('Type'), { target: { value: 'proposal' } });
+    const props = feed.querySelectorAll('article');
+    expect(props.length).toBeGreaterThan(0);
+    expect(props.length).toBeLessThan(total);
+    for (const r of props) expect(r.getAttribute('data-type')).toBe('proposal');
+    fireEvent.change(within(dlg).getByLabelText('Type'), { target: { value: '' } });
+    fireEvent.change(within(dlg).getByLabelText('Speaker'), {
       target: {
         value: [...dlg.querySelectorAll('select option')]
           .find((o) => o.textContent === 'Teacher')!
@@ -120,25 +168,14 @@ describe('Council board', () => {
     expect(mine.length).toBeGreaterThan(0);
     expect(mine.length).toBeLessThan(total);
     for (const r of mine) expect(r.textContent).toContain('Teacher');
-    expect(
-      screen.getByText(new RegExp(`Showing ${mine.length} of ${total} messages`)),
-    ).toBeTruthy();
+    expect(screen.getByText(new RegExp(`Showing ${mine.length} of ${total} turns`))).toBeTruthy();
     fireEvent.click(within(dlg).getByRole('button', { name: 'Clear filters' }));
     expect(feed.querySelectorAll('article').length).toBe(total);
   });
 
-  it('indents replies under the message they answer', async () => {
+  it('arrow keys move focus through turn cards (roving tabindex)', async () => {
     const { dlg } = await open(loaded());
-    const depths = [...dlg.querySelectorAll('article.cb-row')].map((r) =>
-      Number(r.getAttribute('data-depth')),
-    );
-    expect(Math.max(...depths)).toBeGreaterThanOrEqual(2);
-    expect(depths[0]).toBe(0);
-  });
-
-  it('arrow keys move focus through feed rows (roving tabindex)', async () => {
-    const { dlg } = await open(loaded());
-    const rows = [...dlg.querySelectorAll<HTMLElement>('article.cb-row')];
+    const rows = [...dlg.querySelectorAll<HTMLElement>('article.dl-turn')];
     expect(rows.filter((r) => r.tabIndex === 0)).toHaveLength(1);
     rows[0]!.focus();
     fireEvent.keyDown(rows[0]!, { key: 'ArrowDown' });
@@ -148,62 +185,162 @@ describe('Council board', () => {
     fireEvent.keyDown(rows[rows.length - 1]!, { key: 'Home' });
     expect(document.activeElement).toBe(rows[0]);
     fireEvent.keyDown(rows[0]!, { key: 'Enter' });
-    expect(rows[0]!.classList.contains('is-hl')).toBe(true);
+    expect(rows[0]!.getAttribute('data-hl')).toBe('true');
   });
 
-  it('org chart: selecting an agent filters the feed, with arrow-key movement between agents', async () => {
+  it('the ballot matrix: voters as columns, options as rows, numeric rank cells, legend in words', async () => {
     const { dlg } = await open(loaded());
-    const nodes = [...dlg.querySelectorAll<HTMLElement>('.cb-node')];
-    const skeptic = nodes.find((n) => n.textContent?.includes('Skeptic'))!;
-    fireEvent.click(skeptic);
-    expect(skeptic.getAttribute('aria-pressed')).toBe('true');
-    for (const r of dlg.querySelectorAll('article.cb-row'))
-      expect(r.textContent).toContain('Skeptic');
-    nodes[0]!.focus();
-    fireEvent.keyDown(nodes[0]!, { key: 'ArrowRight' });
-    expect(document.activeElement).toBe(nodes[1]);
+    const b = within(dlg).getByTestId('dl-ballot');
+    const table = within(b).getByRole('table');
+    expect(within(table).getAllByRole('columnheader').length).toBeGreaterThanOrEqual(3);
+    expect(within(table).getAllByRole('row').length).toBeGreaterThanOrEqual(3);
+    const ranks = [...table.querySelectorAll('.dl-rank')].map((r) => r.textContent);
+    expect(ranks.length).toBeGreaterThan(0);
+    for (const r of ranks) expect(r).toMatch(/^\d+$/);
+    expect(table.querySelector('.dl-rank svg')).toBeNull(); // icon-free numeric badges
+    expect(b.textContent).toContain('Outlined: this voter ranked it differently');
+    // rankings are not chat lines
+    expect(dlg.querySelector('article.dl-turn[data-kind=rank]')).toBeNull();
   });
 
-  it('verdict: confidence in words, dissent linked to the dissenting message', async () => {
+  it('the decision card: outcome, consensus, confidence in words, provenance, missing evidence, dissent, CTAs', async () => {
     const { dlg } = await open(loaded());
-    const v = screen.getByTestId('cb-verdict');
-    expect(v.querySelector('.cb-conf')!.textContent).toMatch(
-      /Confidence\s+(Sure|Fairly sure|Unsure)/,
+    const v = screen.getByTestId('dl-decision');
+    expect(within(v).getByTestId('dl-outcome').textContent).toBeTruthy();
+    expect(within(v).getByTestId('dl-consensus').textContent).toMatch(
+      /Majority|Unanimous|Split|Not recorded/,
+    );
+    expect(within(v).getByTestId('dl-confidence').textContent).toMatch(
+      /Sure|Fairly sure|Unsure|Not stated/,
     );
     expect(v.textContent).not.toMatch(/\d+\s*%/);
+    expect(within(v).getByTestId('dl-provenance').textContent).toMatch(/Scripted fixture/);
+    expect(within(v).getByRole('group', { name: 'Missing evidence' })).toBeTruthy();
+    for (const name of ['Add proof text', 'Ask follow-up', 'Send to chat', 'Add to plan'])
+      expect(within(v).getByRole('button', { name })).toBeTruthy();
     const dissent = within(v).getByRole('group', { name: 'Dissent' });
-    fireEvent.click(within(dissent).getByRole('button', { name: 'See their message' }));
+    fireEvent.click(within(dissent).getByRole('button', { name: 'See their turn' }));
     await settle();
-    const hl = dlg.querySelector('article.cb-row.is-hl')!;
+    const hl = dlg.querySelector('article.dl-turn[data-hl=true]')!;
     expect(hl).toBeTruthy();
     expect(hl.getAttribute('data-kind')).toBe('answer');
     expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
   });
 
-  it('dissent jump clears a filter that hides the target row', async () => {
+  it('dissent jump clears a filter that hides the target turn', async () => {
     const { dlg } = await open(loaded());
-    fireEvent.change(within(dlg).getByLabelText('Kind'), { target: { value: 'delegate' } });
-    const v = screen.getByTestId('cb-verdict');
-    fireEvent.click(within(v).getByRole('button', { name: 'See their message' }));
+    fireEvent.change(within(dlg).getByLabelText('Type'), { target: { value: 'challenge' } });
+    const v = screen.getByTestId('dl-decision');
+    fireEvent.click(within(v).getByRole('button', { name: 'See their turn' }));
     await settle();
-    expect((within(dlg).getByLabelText('Kind') as HTMLSelectElement).value).toBe('');
-    expect(dlg.querySelector('article.cb-row.is-hl')).toBeTruthy();
+    expect((within(dlg).getByLabelText('Type') as HTMLSelectElement).value).toBe('');
+    expect(dlg.querySelector('article.dl-turn[data-hl=true]')).toBeTruthy();
+  });
+
+  it('Ask follow-up drafts a message mentioning @cubbie and the run id in the group chat composer', async () => {
+    const store = loaded();
+    const drafts: string[] = [];
+    const on = (e: Event) => drafts.push((e as CustomEvent<{ text: string }>).detail.text);
+    window.addEventListener('squad:chat-prefill', on);
+    const { onClose } = await open(store);
+    fireEvent.click(
+      within(screen.getByTestId('dl-decision')).getByRole('button', { name: 'Ask follow-up' }),
+    );
+    window.removeEventListener('squad:chat-prefill', on);
+    expect(drafts).toHaveLength(1);
+    expect(drafts[0]).toContain('@cubbie');
+    expect(drafts[0]).toContain(store.run()!.runId);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('Add proof text opens a composer; asking again goes through the ask API with the proof attached', async () => {
+    const calls: Array<{ url: string; body?: string }> = [];
+    vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
+      calls.push({ url: String(url), ...(init?.body ? { body: String(init.body) } : {}) });
+      return new Response(
+        JSON.stringify({
+          id: 'cn_proof0000001',
+          status: 'running',
+          streamUrl: '/s',
+          resultUrl: '/r',
+        }),
+        { status: 200 },
+      );
+    });
+    await open(loaded(), { hub: { hubUrl: 'http://hub.test', token: 'tok' } });
+    const v = screen.getByTestId('dl-decision');
+    fireEvent.click(within(v).getByRole('button', { name: 'Add proof text' }));
+    const box = within(v).getByRole('textbox') as HTMLTextAreaElement;
+    const ask = within(v).getByRole('button', {
+      name: 'Ask again with this proof',
+    }) as HTMLButtonElement;
+    expect(ask.disabled).toBe(true);
+    fireEvent.change(box, { target: { value: 'Ch6 p.4: E0 = 1 + E0/2 + E1/2.' } });
+    expect(ask.disabled).toBe(false);
+    await act(async () => {
+      fireEvent.click(ask);
+    });
+    await settle();
+    const post = calls.find((c) => c.url.endsWith('/v1/council/ask'))!;
+    const sent = JSON.parse(post.body!) as { question: string };
+    expect(sent.question).toContain('Proof I am adding');
+    expect(sent.question).toContain('Ch6 p.4');
+    expect(screen.getByTestId('dl-decision-status').textContent).toContain(
+      'Asked the council again',
+    );
+  });
+
+  it('proof text over the ask limit is blocked with the count in words', async () => {
+    await open(loaded(), { hub: { hubUrl: 'http://hub.test', token: 'tok' } });
+    const v = screen.getByTestId('dl-decision');
+    fireEvent.click(within(v).getByRole('button', { name: 'Add proof text' }));
+    fireEvent.change(within(v).getByRole('textbox'), { target: { value: 'x'.repeat(700) } });
+    expect(v.textContent).toMatch(/\d+ characters over the 600 limit/);
+    expect(
+      (within(v).getByRole('button', { name: 'Ask again with this proof' }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it('portraits are buttons that open the selected-agent panel through the seam', async () => {
+    const seen: string[] = [];
+    const off = registerAgentPanel((id) => seen.push(id));
+    const { dlg } = await open(loaded());
+    const btn = dlg.querySelector<HTMLElement>(
+      '[data-testid=dl-member] [data-testid=dl-portrait-btn]',
+    )!;
+    expect(btn.tagName).toBe('BUTTON');
+    expect(btn.getAttribute('aria-label')).toMatch(/^Open .+’s panel$/);
+    fireEvent.click(btn);
+    off();
+    expect(seen).toHaveLength(1);
+    expect(seen[0]).toMatch(/^council:/);
+  });
+
+  it('without the panel registered, a portrait narrows the feed to that member (fallback)', async () => {
+    const { dlg } = await open(loaded());
+    const member = [...dlg.querySelectorAll<HTMLElement>('[data-testid=dl-member]')].find((m) =>
+      m.textContent?.includes('Skeptic'),
+    )!;
+    fireEvent.click(member.querySelector('[data-testid=dl-portrait-btn]')!);
+    for (const r of dlg.querySelectorAll('article.dl-turn'))
+      expect(r.textContent).toContain('Skeptic');
   });
 
   it('action items: sending needs a hub; without one the buttons are off and say why', async () => {
     await open(loaded());
-    const v = screen.getByTestId('cb-verdict');
-    const send = within(v).getAllByRole('button', { name: /^Send to chat/ });
-    expect(send.length).toBeGreaterThan(0);
-    expect((send[0] as HTMLButtonElement).disabled).toBe(true);
+    const v = screen.getByTestId('dl-decision');
+    expect(
+      (within(v).getByRole('button', { name: 'Send to chat' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
     expect(v.textContent).toContain('Sign in to a hub');
   });
 
   it('action items: replays never send', async () => {
     await open(loaded(), { hub: { hubUrl: 'http://x', token: 't' }, replay: true });
-    const v = screen.getByTestId('cb-verdict');
+    const v = screen.getByTestId('dl-decision');
     expect(
-      (within(v).getAllByRole('button', { name: /^Add to plan/ })[0] as HTMLButtonElement).disabled,
+      (within(v).getByRole('button', { name: 'Add to plan' }) as HTMLButtonElement).disabled,
     ).toBe(true);
     expect(v.textContent).toContain('recorded replay');
   });
@@ -216,32 +353,30 @@ describe('Council board', () => {
     });
     const store = loaded();
     await open(store, { hub: { hubUrl: 'http://hub.test', token: 'tok' } });
-    const v = screen.getByTestId('cb-verdict');
-    const first = store.run()!.verdict!.actionItems[0]!;
+    const v = screen.getByTestId('dl-decision');
+    const items = store.run()!.verdict!.actionItems;
     await act(async () => {
-      fireEvent.click(within(v).getAllByRole('button', { name: /^Send to chat/ })[0]!);
+      fireEvent.click(within(v).getByRole('button', { name: 'Send to chat' }));
     });
     await settle();
-    expect(within(v).getByRole('status').textContent).toBe('Sent to the squad chat.');
-    expect(within(v).getAllByRole('button', { name: /^Send to chat/ })[0]!.textContent).toBe(
-      'Sent',
+    expect(within(v).getByTestId('dl-decision-status').textContent).toMatch(
+      /Sent to the squad chat|Sent 2 of 2/,
     );
     await act(async () => {
-      fireEvent.click(within(v).getAllByRole('button', { name: /^Add to plan/ })[0]!);
+      fireEvent.click(within(v).getByRole('button', { name: 'Add to plan' }));
     });
     await settle();
-    expect(within(v).getByRole('status').textContent).toBe('Added to the study plan.');
     const acts = calls.filter((c) => c.url.includes('/actions/'));
+    const run = store.run()!.runId;
     expect(acts.map((c) => c.url)).toEqual([
-      `http://hub.test/v1/council/${store.run()!.runId}/actions/chat`,
-      `http://hub.test/v1/council/${store.run()!.runId}/actions/plan`,
+      ...items.map(() => `http://hub.test/v1/council/${run}/actions/chat`),
+      ...items.map(() => `http://hub.test/v1/council/${run}/actions/plan`),
     ]);
-    expect(JSON.parse(acts[1]!.body!)).toEqual({ actionId: first.id });
-    // the old chat-phrase workaround is gone: nothing goes through /v1/chat/send
+    expect(JSON.parse(acts[items.length]!.body!)).toEqual({ actionId: items[0]!.id });
     expect(calls.some((c) => c.url.includes('/v1/chat/'))).toBe(false);
   });
 
-  it('action items: failure shows a plain message and allows a retry; pending disables the button', async () => {
+  it('action items: a failure shows a plain message; pending disables the button', async () => {
     let release!: (r: Response) => void;
     vi.stubGlobal(
       'fetch',
@@ -251,9 +386,9 @@ describe('Council board', () => {
         }),
     );
     await open(loaded(), { hub: { hubUrl: 'http://hub.test', token: 'tok' } });
-    const v = screen.getByTestId('cb-verdict');
+    const v = screen.getByTestId('dl-decision');
     const btn = () =>
-      within(v).getAllByRole('button', { name: /^Add to plan/ })[0] as HTMLButtonElement;
+      within(v).getByRole('button', { name: /^(Add to plan|Adding)/ }) as HTMLButtonElement;
     await act(async () => {
       fireEvent.click(btn());
     });
@@ -267,16 +402,14 @@ describe('Council board', () => {
       );
     });
     await settle();
-    expect(within(v).getByRole('status').textContent).toContain('no study plan yet');
+    expect(within(v).getByTestId('dl-decision-status').textContent).toMatch(/no study plan yet/);
     expect(btn().disabled).toBe(false);
-    expect(btn().textContent).toBe('Try again');
-    expect(btn().getAttribute('data-state')).toBe('failure');
   });
 
   it('auto-scroll pauses on user scroll and offers Jump to latest with a count', async () => {
     const store = loaded();
     const { dlg } = await open(store);
-    const scroller = dlg.querySelector<HTMLElement>('.cb-feed__scroll')!;
+    const scroller = dlg.querySelector<HTMLElement>('.dl-feed__scroll')!;
     expect(screen.queryByRole('button', { name: /Jump to latest/ })).toBeNull();
     // user scrolls up: jsdom has zero layout, so fake the metrics
     Object.defineProperty(scroller, 'scrollHeight', { configurable: true, value: 1000 });
@@ -284,7 +417,7 @@ describe('Council board', () => {
     scroller.scrollTop = 100;
     fireEvent.scroll(scroller);
     await settle();
-    // a new message arrives while paused
+    // a new spoken turn arrives while paused
     act(() => {
       const run = store.run()!;
       store.apply({
@@ -294,8 +427,8 @@ describe('Council board', () => {
           correlationId: run.runId,
           seq: 999,
           from: run.agents.find((a) => a.role === 'chair')!.id,
-          to: 'room',
-          kind: 'status',
+          to: run.agents.find((a) => a.role !== 'chair')!.id,
+          kind: 'ask',
           stage: 'done',
           summary: 'One more thing.',
           status: 'done',
@@ -328,9 +461,9 @@ describe('Council board', () => {
     expect(live.textContent).not.toMatch(RAW);
   });
 
-  it('shows the round table council too, with a Demo badge', async () => {
+  it('shows the round table council too, with a Fixture badge', async () => {
     await open(loaded(ROUND_TABLE_FIXTURE));
-    expect(document.querySelector('.cb-head .cb-mode')!.textContent).toContain('Demo');
+    expect(document.querySelector('.cb-head .cb-mode')!.textContent).toContain('Fixture');
   });
 
   it('a mixed-mode run is as honest as its worst agent', async () => {
@@ -359,27 +492,29 @@ describe('Council board', () => {
     );
     await open(store);
     const head = document.querySelector('.cb-head .cb-mode')!;
-    expect(head.textContent).toBe('▲Degraded: rate limited');
+    expect(head.textContent).toBe('Degraded: rate limited');
   });
 
   it('no raw ids reach the screen on any board surface', async () => {
     for (const fx of [ASK_FIXTURE, ROUND_TABLE_FIXTURE]) {
       cleanup();
       const { dlg } = await open(loaded(fx), { focusAgent: loaded(fx).run()!.agents[0]!.id });
-      for (const step of ['all', 'critique', 'delegate', 'verdict'] as const) {
-        fireEvent.change(within(dlg).getByLabelText('Kind'), {
-          target: { value: step === 'all' ? '' : step },
-        });
+      for (const step of ['all', 'challenge', 'proposal', 'evidence'] as const) {
+        const sel = within(dlg).getByLabelText('Type') as HTMLSelectElement;
+        const has = [...sel.options].some((o) => o.value === step);
+        fireEvent.change(sel, { target: { value: step === 'all' || !has ? '' : step } });
         for (const t of scan()) expect(t, `${fx.name} ${step}`).not.toMatch(RAW);
       }
-      for (const node of dlg.querySelectorAll<HTMLElement>('.cb-node')) {
-        fireEvent.click(node);
+      for (const btn of dlg.querySelectorAll<HTMLElement>(
+        '[data-testid=dl-member] [data-testid=dl-portrait-btn]',
+      )) {
+        fireEvent.click(btn);
         for (const t of scan()) expect(t).not.toMatch(RAW);
       }
     }
   });
 
-  it('feed rows never carry thinking text: only public summary, stance and position', async () => {
+  it('turn cards never carry thinking text: only public summary, stance and position', async () => {
     const store = loaded();
     const run = store.run()!;
     for (const m of run.messages)
@@ -389,7 +524,7 @@ describe('Council board', () => {
 });
 
 describe('resultMode', () => {
-  it('demo is always Demo, a missing member is Degraded, otherwise Live', () => {
+  it('demo is always Fixture, a missing member is Degraded, otherwise Live', () => {
     expect(resultMode({ demo: true, members: [] })).toBe('demo');
     expect(resultMode({ demo: false, members: [{ status: 'failed' } as never] })).toMatch(
       /^degraded:/,

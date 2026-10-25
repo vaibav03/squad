@@ -82,44 +82,18 @@
   font-weight: 500;
   opacity: 0.9;
 }
-.cn-dots {
+.cn-seat__icon {
   display: inline-flex;
-  gap: 3px;
 }
-.cn-dots i {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: cn-dot 900ms cubic-bezier(0.23, 1, 0.32, 1) infinite;
+.cn-seat__icon[data-seat-icon='thinking'] svg {
+  animation: cn-think 900ms cubic-bezier(0.23, 1, 0.32, 1) infinite alternate;
 }
-.cn-dots i:nth-child(2) {
-  animation-delay: 150ms;
-}
-.cn-dots i:nth-child(3) {
-  animation-delay: 300ms;
-}
-@keyframes cn-dot {
-  0%,
-  100% {
-    opacity: 0.25;
-    transform: translateY(0);
+@keyframes cn-think {
+  from {
+    opacity: 0.45;
   }
-  40% {
-    opacity: 1;
-    transform: translateY(-2px);
-  }
-}
-.cn-mouth {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: cn-mouth 380ms cubic-bezier(0.23, 1, 0.32, 1) infinite alternate;
-}
-@keyframes cn-mouth {
   to {
-    transform: scaleY(0.35);
+    opacity: 1;
   }
 }
 .cn-arrows {
@@ -162,9 +136,8 @@
   .cn-arrow {
     animation: none;
   }
-  .cn-dots i,
-  .cn-mouth {
-    animation: none;
+  .cn-seat__icon svg {
+    animation: none !important;
     opacity: 1;
   }
   .cn-seat {
@@ -173,8 +146,7 @@
 }
 [data-calm='true'] .cn-stage,
 [data-calm='true'] .cn-arrow,
-[data-calm='true'] .cn-dots i,
-[data-calm='true'] .cn-mouth {
+[data-calm='true'] .cn-seat__icon svg {
   animation: none;
   opacity: 1;
 }

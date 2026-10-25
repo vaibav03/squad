@@ -145,24 +145,28 @@ export function Roster({
               data-testid="dl-lines"
             >
               <defs>
-                <marker
-                  id="dl-arrow"
-                  viewBox="0 0 8 8"
-                  refX="6"
-                  refY="4"
-                  markerWidth="7"
-                  markerHeight="7"
-                  orient="auto"
-                >
-                  <path
-                    d="M1 1 L6 4 L1 7"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </marker>
+                {(['dl-arrow', 'dl-arrow-amber'] as const).map((id) => (
+                  <marker
+                    key={id}
+                    id={id}
+                    className={id}
+                    viewBox="0 0 8 8"
+                    refX="6"
+                    refY="4"
+                    markerWidth="7"
+                    markerHeight="7"
+                    orient="auto"
+                  >
+                    <path
+                      d="M1 1 L6 4 L1 7"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </marker>
+                ))}
               </defs>
               {railTop !== undefined && lastY !== undefined && lastY > railTop ? (
                 <line className="dl-rail" x1={GUTTER - 3} y1={railTop} x2={GUTTER - 3} y2={lastY} />
@@ -174,7 +178,7 @@ export function Roster({
                   d={p.d}
                   pathLength={1}
                   data-authority={p.authority || undefined}
-                  markerEnd="url(#dl-arrow)"
+                  markerEnd={p.authority ? 'url(#dl-arrow-amber)' : 'url(#dl-arrow)'}
                   data-testid="dl-handoff"
                 />
               ))}

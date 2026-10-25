@@ -86,7 +86,7 @@ describe('labels', () => {
       'Last council, 4 min ago, Live',
     );
     expect(lastRunLabel({ startedAt: now - 4 * 60_000, mode: 'demo' }, now)).toBe(
-      'Last council, 4 min ago, Demo',
+      'Last council, 4 min ago, Fixture',
     );
     expect(lastRunLabel({ startedAt: now - 4 * 60_000, mode: 'degraded:rate_limited' }, now)).toBe(
       'Last council, 4 min ago, Degraded: rate limited',
@@ -217,7 +217,7 @@ describe('empty state', () => {
 });
 
 describe('board and rooms with a stored run', () => {
-  it('board with no run shows the empty state (no "Demo / No council session yet"); with history it shows the last run, labelled', async () => {
+  it('board with no run shows the empty state (no "Fixture / No council session yet"); with history it shows the last run, labelled', async () => {
     const calls = fakeHub({ runs: [storedRunFixture()] });
     const store = createCouncilBoardStore();
     setBoardStore(store);
@@ -234,7 +234,7 @@ describe('board and rooms with a stored run', () => {
     expect(screen.getByTestId('last-run-label').textContent).toMatch(
       /^Last council, 4 min ago, Live$/,
     );
-    expect(screen.getByTestId('cb-verdict')).toBeTruthy();
+    expect(screen.getByTestId('dl-decision')).toBeTruthy();
     // strip on the board header shows the stored run's honest transport and models
     expect(screen.getByTestId('cs-transport').textContent).toContain('Gemini streaming text');
     expect(screen.getByTestId('cs-models').textContent).toContain('gemini-3.8-flash');
@@ -252,7 +252,7 @@ describe('board and rooms with a stored run', () => {
     await settle();
     await settle();
     expect(screen.getByTestId('cs-banner').textContent).toContain('DEMO: scripted, not Gemini');
-    expect(screen.getByTestId('last-run-label').textContent).toContain('Demo');
+    expect(screen.getByTestId('last-run-label').textContent).toContain('Fixture');
   });
   it('room status: last-council label, or the empty state with Convene when none ever ran', async () => {
     fakeHub({ runs: [] });

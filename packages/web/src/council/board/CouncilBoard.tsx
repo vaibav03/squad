@@ -11,12 +11,15 @@ import { postCouncilAction, type ActionKind } from './actions-api';
 import { OverlayFrame } from '../../overlays/kit/OverlayFrame';
 import { LvIcon } from '../../overlays/kit/icons';
 import { DelegationCards } from './DelegationCards';
-import { Feed, NO_FILTER, type FeedFilter } from './Feed';
 import { ModeBadge } from './ModeBadge';
-import { OrgChart } from './OrgChart';
-import { Stepper } from './Stepper';
-import { VerdictCard } from './VerdictCard';
 import { useBoardVersion } from './bridge';
+import { BallotMatrix } from '../deliberation/BallotMatrix';
+import { DecisionCard } from '../deliberation/DecisionCard';
+import { PhaseStepper } from '../deliberation/PhaseStepper';
+import { Roster } from '../deliberation/Roster';
+import { NO_FILTER, TurnFeed, type FeedFilter } from '../deliberation/TurnFeed';
+import { registerAgentPanel } from '../deliberation/agent-panel';
+import '../deliberation/deliberation.css';
 import { CouncilStatusStrip } from '../status/CouncilStatusStrip';
 import { useCouncilStatus } from '../status/useCouncilStatus';
 import { EmptyCouncilState, LastRunLabel } from '../last-run/components';
@@ -89,6 +92,20 @@ export function CouncilBoard({
   useEffect(() => {
     if (open) setFilter(NO_FILTER);
   }, [open, run?.runId]);
+
+  // Until the selected-agent panel (feature/agent-focus-panel) registers itself, a portrait narrows the feed to that seat.
+  useEffect(
+    () =>
+      open
+        ? registerAgentPanel(
+            (id) => setFilter((f) => ({ ...f, agent: f.agent === id ? '' : id })),
+            {
+              fallback: true,
+            },
+          )
+        : undefined,
+    [open],
+  );
 
   const onJump = useCallback((id: string) => {
     setSelectedMsg(id);
@@ -186,21 +203,31 @@ export function CouncilBoard({
       </div>
       {run ? (
         <>
-          <Stepper stage={run.stage} />
-          <div className="cb-body">
-            <div className="cb-col cb-col--left">
-              <OrgChart
+          <PhaseStepper run={run} />
+          <div className="cb-body dl-body">
+            <div className="cb-col cb-col--left dl-col dl-col--side">
+              <Roster
                 store={store}
                 run={run}
-                {...(calm ? { calm: true } : {})}
+                calm={calm}
+                councilStatus={hubStatus}
                 selected={filter.agent || focusAgent || ''}
-                onSelect={(id) => setFilter((f) => ({ ...f, agent: id }))}
               />
-              <VerdictCard run={run} onJump={onJump} act={act} sendOffReason={sendOff} />
+              <BallotMatrix run={run} />
               <DelegationCards delegations={run.delegations} onSeeAnswer={onJump} />
             </div>
-            <div className="cb-col cb-col--right">
-              <Feed
+            <div className="cb-col cb-col--right dl-col dl-col--main">
+              <DecisionCard
+                run={run}
+                onJump={onJump}
+                act={act}
+                sendOffReason={sendOff}
+                hub={hub}
+                councilStatus={hubStatus}
+                replay={replay}
+                onClose={onClose}
+              />
+              <TurnFeed
                 run={run}
                 filter={filter}
                 onFilter={setFilter}

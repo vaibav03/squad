@@ -115,6 +115,7 @@ export function DecisionCard(props: DecisionCardProps) {
       const out = await act(a.id!, kind);
       if (out.ok) ok++;
       last = out.message;
+      if (!out.ok) break; // the same reason (no plan, signed out) would repeat for every item
     }
     setBusy(null);
     setNote(

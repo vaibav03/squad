@@ -48,7 +48,7 @@ describe('Hierarchy tab', () => {
     await settle();
     fireEvent.click(screen.getByRole('tab', { name: 'Hierarchy' }));
     expect(screen.getByText('Chair, top of the tree')).toBeTruthy();
-    expect(screen.getByText('Demo')).toBeTruthy();
+    expect(screen.getByText('Fixture')).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Delegations out' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Delegations in' })).toBeTruthy();
     // child chip selects that agent

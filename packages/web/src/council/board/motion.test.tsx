@@ -22,42 +22,62 @@ afterEach(() => {
   closeBoard();
 });
 
+const dcss = readFileSync(resolve(__dirname, '../deliberation/deliberation.css'), 'utf8');
+const tokens = readFileSync(resolve(__dirname, '../../../../../docs/design/tokens.css'), 'utf8');
+
 describe('board motion (docs/specs/08-village-motion.md)', () => {
-  it('every transition animates only opacity and transform, 160-200 ms, ease-out', () => {
-    const decls = [...css.matchAll(/transition:\s*([^;]+);/g)].map((m) => m[1]!);
-    expect(decls.length).toBeGreaterThan(0);
-    for (const d of decls) {
-      if (/^none$/.test(d.trim())) continue;
-      for (const part of d.split(',').map((x) => x.trim())) {
-        expect(part).toMatch(/^(opacity|transform)\s+(160|180|200)ms var\(--ease-out\)$/);
+  it('every transition animates only opacity, transform or stroke-dashoffset, 100-240 ms, ease-out', () => {
+    for (const sheet of [css, dcss]) {
+      const decls = [...sheet.matchAll(/transition:\s*([^;]+);/g)].map((m) => m[1]!);
+      for (const d of decls) {
+        if (/^none$/.test(d.trim())) continue;
+        for (const part of d.split(',').map((x) => x.trim())) {
+          expect(part).toMatch(
+            /^(opacity|transform|stroke-dashoffset)\s+(100|160|180|200|240)ms var\(--ease-out\)$/,
+          );
+        }
       }
+      expect(sheet).not.toMatch(/transition:\s*all/);
     }
-    expect(css).not.toMatch(/transition:\s*all/);
+    expect(dcss.match(/transition:/g)!.length).toBeGreaterThan(0);
   });
 
-  it('every keyframe animation is opacity/transform, 160-200 ms ease-out, and Calm switches them off', () => {
-    const anims = [...css.matchAll(/animation:\s*([^;]+);/g)]
+  it('every keyframe animation is opacity/transform/stroke-dashoffset, 160-240 ms ease-out, and Calm switches them off', () => {
+    const anims = [...(css + dcss).matchAll(/animation:\s*([^;]+);/g)]
       .map((m) => m[1]!)
-      .filter((a) => a !== 'none');
+      .filter((a) => a !== 'none' && a !== 'none !important');
     expect(anims.length).toBeGreaterThan(0);
-    for (const a of anims) expect(a).toMatch(/^cb-in (160|180|200)ms var\(--ease-out\) both$/);
-    const frames = /@keyframes cb-in\s*\{([\s\S]*?)\n\}/.exec(css)![1]!;
+    for (const a of anims)
+      expect(a).toMatch(
+        /^(cb-in (160|180|200)ms var\(--ease-out\) both|dl-in 200ms var\(--ease-out\) both|dl-draw var\(--cc-handoff-ms\) var\(--ease-out\) both)$/,
+      );
+    const draw = /@keyframes dl-draw\s*\{([\s\S]*?)\n\}/.exec(dcss)![1]!;
+    expect(draw.replace(/opacity|stroke-dashoffset|from|to|[\d.]+|[{}:;\s]/g, '')).toBe('');
+    const inn = /@keyframes dl-in\s*\{([\s\S]*?)\n\}/.exec(dcss)![1]!;
     expect(
-      frames.replace(/opacity|transform|from|to|translateY\([^)]*\)|none|[\d.]+|[{}:;\s]/g, ''),
+      inn.replace(/opacity|transform|from|to|translateY\([^)]*\)|none|[\d.]+|[{}:;\s]/g, ''),
     ).toBe('');
-    expect(css).toMatch(/\.lv-ovl\[data-reduced='true'\] \.cb-row/);
-    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
-    expect(css).toMatch(
-      /\.lv-ovl\[data-reduced='true'\] \.cb-edge__lit\s*\{[^}]*transition:\s*none/,
+    expect(dcss).toMatch(
+      /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.dl-handoff[\s\S]*animation: none/,
     );
+    expect(dcss).toMatch(/:root\[data-calm='true'\] \.dl-handoff/);
+    expect(dcss).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
   });
 
-  it('uses tokens, not hex colours, outside the dark-theme override', () => {
-    const body = css.replace(/\/\*[\s\S]*?\*\//g, '');
-    expect(body.match(/#[0-9a-f]{3,8}\b/gi) ?? []).toEqual(['#b9adff', '#b9adff']);
+  it('the A2A handoff focus time is a token inside 160-240 ms', () => {
+    const ms = Number(/--cc-handoff-ms:\s*(\d+)ms/.exec(tokens)![1]);
+    expect(ms).toBeGreaterThanOrEqual(160);
+    expect(ms).toBeLessThanOrEqual(240);
   });
 
-  it('Calm: the board marks itself reduced, the lit edge stays drawn and no row animates', async () => {
+  it('uses tokens, not hex colours', () => {
+    for (const sheet of [css, dcss]) {
+      const body = sheet.replace(/\/\*[\s\S]*?\*\//g, '');
+      expect(body.match(/#[0-9a-f]{3,8}\b/gi) ?? []).toEqual([]);
+    }
+  });
+
+  it('Calm: the board marks itself reduced, handoff lines stay drawn and no card animates', async () => {
     const store = createCouncilBoardStore();
     playCouncilFixture(ASK_FIXTURE, (e) => store.apply(e), { instant: true });
     render(<CouncilBoard store={store} open onClose={() => {}} calm />);
@@ -95,7 +115,7 @@ describe('launchers', () => {
         <Probe />
       </>,
     );
-    expect(screen.getByText('Demo')).toBeTruthy();
+    expect(screen.getByText('Fixture')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Open Council board' }));
     expect(screen.getByTestId('open').textContent).toBe('open');
   });
@@ -103,7 +123,7 @@ describe('launchers', () => {
   it('a room with no session yet offers the board but no mode', () => {
     setBoardStore(withRuns());
     render(<RoomExtras councilId="council:planner" />);
-    expect(screen.queryByText('Demo')).toBeNull();
+    expect(screen.queryByText('Fixture')).toBeNull();
     expect(screen.getByRole('button', { name: 'Open Council board' })).toBeTruthy();
   });
 
@@ -115,7 +135,7 @@ describe('launchers', () => {
     setBoardStore(withRuns());
     render(<HudButton />);
     const b = screen.getByRole('button', { name: /Council board/ });
-    expect(b.textContent).toContain('Demo');
+    expect(b.textContent).toContain('Fixture');
     expect(document.body.textContent).not.toMatch(RAW);
   });
 });
