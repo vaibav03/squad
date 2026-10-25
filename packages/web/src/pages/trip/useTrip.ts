@@ -207,7 +207,14 @@ export function useTrip(tripId?: string) {
           rev: v.rev + 1,
           options: [
             ...v.options,
-            { id: `o_${v.options.length + 1}`, label: body.label, ...(body.days ? { days: body.days } : {}), proposedBy: cfg.userId, proposedByName: 'You', rev: v.rev + 1 },
+            {
+              id: `o_${v.options.length + 1}`,
+              label: body.label,
+              ...(body.days ? { days: body.days } : {}),
+              proposedBy: cfg.userId,
+              proposedByName: 'You',
+              rev: v.rev + 1,
+            },
           ],
         }));
         return;
@@ -249,7 +256,11 @@ export function useTrip(tripId?: string) {
   const removeOption = useCallback(
     async (optionId: string, baseRev: number) => {
       if (!live) {
-        local((v) => ({ ...v, rev: v.rev + 1, options: v.options.filter((o) => o.id !== optionId) }));
+        local((v) => ({
+          ...v,
+          rev: v.rev + 1,
+          options: v.options.filter((o) => o.id !== optionId),
+        }));
         return;
       }
       const attempt = (rev: number) =>
@@ -314,11 +325,20 @@ export function useTrip(tripId?: string) {
   const act = useCallback(
     async (name: TripAction) => {
       if (!live) {
-        if (name === 'close-voting') local((v) => ({ ...v, status: 'confirming', can: { ...v.can, closeVoting: false, confirm: true } }));
+        if (name === 'close-voting')
+          local((v) => ({
+            ...v,
+            status: 'confirming',
+            can: { ...v.can, closeVoting: false, confirm: true },
+          }));
         if (name === 'reopen') local((v) => ({ ...tripPlanning, tripId: v.tripId }));
         if (name === 'retry' || name === 'continue')
-          local((v) => ({ ...v, constraints: { ...v.constraints, state: 'running' as const, waitingFor: [] } }));
-        if (name === 'cancel') local((v) => ({ ...v, status: 'cancelled', can: { ...v.can, cancel: false } }));
+          local((v) => ({
+            ...v,
+            constraints: { ...v.constraints, state: 'running' as const, waitingFor: [] },
+          }));
+        if (name === 'cancel')
+          local((v) => ({ ...v, status: 'cancelled', can: { ...v.can, cancel: false } }));
         return;
       }
       await send(name, 'POST', `${tripPath}/${name}`, undefined);

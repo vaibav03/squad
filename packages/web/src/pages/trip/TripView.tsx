@@ -245,8 +245,11 @@ function TripBody({
   conflict,
   onWatchCutscene,
 }: TripViewProps & { trip: TripViewV2; actions: TripActions }) {
-  const ended = trip.status === 'failed' || trip.status === 'expired' || trip.status === 'cancelled';
-  const chosenOpt = trip.chosen ? trip.options.find((o) => o.id === trip.chosen!.optionId) : undefined;
+  const ended =
+    trip.status === 'failed' || trip.status === 'expired' || trip.status === 'cancelled';
+  const chosenOpt = trip.chosen
+    ? trip.options.find((o) => o.id === trip.chosen!.optionId)
+    : undefined;
   return (
     <div data-testid={`trip-state-${trip.status}`} data-status={trip.status}>
       <p className="lv-trip__status" data-testid="trip-status">
@@ -438,7 +441,11 @@ function OptionsCard({
               key={o.id}
               className="lv-opt lv-opt--plain"
               data-vetoed={!!o.droppedReason || undefined}
-              data-leading={trip.chosen?.optionId === o.id || trip.recommendation?.optionId === o.id || undefined}
+              data-leading={
+                trip.chosen?.optionId === o.id ||
+                trip.recommendation?.optionId === o.id ||
+                undefined
+              }
               data-testid={`trip-option-${o.id}`}
             >
               <div className="lv-opt__main">
@@ -529,11 +536,22 @@ function EditOption({
     >
       <label className="lv-field">
         <span>Name</span>
-        <input value={label} minLength={2} maxLength={60} onChange={(e) => setLabel(e.target.value)} />
+        <input
+          value={label}
+          minLength={2}
+          maxLength={60}
+          onChange={(e) => setLabel(e.target.value)}
+        />
       </label>
       <label className="lv-field">
         <span>Days</span>
-        <input type="number" min={1} max={14} value={days} onChange={(e) => setDays(e.target.value)} />
+        <input
+          type="number"
+          min={1}
+          max={14}
+          value={days}
+          onChange={(e) => setDays(e.target.value)}
+        />
       </label>
       <label className="lv-field">
         <span>Per person</span>
@@ -549,13 +567,7 @@ function EditOption({
   );
 }
 
-function ProposeForm({
-  busy,
-  onPropose,
-}: {
-  busy: boolean;
-  onPropose: TripActions['propose'];
-}) {
+function ProposeForm({ busy, onPropose }: { busy: boolean; onPropose: TripActions['propose'] }) {
   const [label, setLabel] = useState('');
   const [days, setDays] = useState('');
   const [pp, setPp] = useState('');
@@ -584,11 +596,22 @@ function ProposeForm({
       </h2>
       <label className="lv-field">
         <span>Where</span>
-        <input value={label} maxLength={60} onChange={(e) => setLabel(e.target.value)} placeholder="Austin weekend" />
+        <input
+          value={label}
+          maxLength={60}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder="Austin weekend"
+        />
       </label>
       <label className="lv-field">
         <span>Days (optional)</span>
-        <input type="number" min={1} max={14} value={days} onChange={(e) => setDays(e.target.value)} />
+        <input
+          type="number"
+          min={1}
+          max={14}
+          value={days}
+          onChange={(e) => setDays(e.target.value)}
+        />
       </label>
       <label className="lv-field">
         <span>Cost per person (optional)</span>
@@ -751,11 +774,7 @@ function Recommendation({ trip }: { trip: TripViewV2 }) {
   const r = trip.recommendation!;
   const label = r.optionId ? trip.options.find((o) => o.id === r.optionId)?.label : undefined;
   return (
-    <section
-      className="lv-card"
-      aria-labelledby="rec-h"
-      data-testid="trip-recommendation"
-    >
+    <section className="lv-card" aria-labelledby="rec-h" data-testid="trip-recommendation">
       <h2 id="rec-h" className="lv-card__title">
         <LvIcon name="sparkle" size={16} /> Council recommendation
         <span
@@ -817,12 +836,12 @@ function Constraints({
               <p className="lv-card__line" data-testid={`trip-waiting-${w.id}`}>
                 {noAgent
                   ? `${w.name} has no agent connected yet`
-                  : `${w.name}’s agent is offline, trip waits for ${w.name}`}
+                  : `${w.name}'s agent is offline, trip waits for ${w.name}`}
               </p>
               <p className="lv-card__foot">
                 {noAgent
                   ? `Ask ${w.name} to connect an agent, or the organizer can continue without it.`
-                  : `Open Squad on ${w.name}’s device to bring their agent back, or the organizer can continue without their agent.`}
+                  : `Open Squad on ${w.name}'s device to bring their agent back, or the organizer can continue without their agent.`}
               </p>
             </div>
           );
@@ -881,11 +900,18 @@ function Constraints({
       </h2>
       {body}
       {c.overlapDays !== null && (
-        <p className="lv-card__line" data-testid="trip-overlap">
-          {c.overlapDays.length > 0
-            ? `Free days overlap: ${c.overlapDays.join(', ')}`
-            : 'No days overlap yet'}
-        </p>
+        <div data-testid="trip-overlap">
+          <h3 className="lv-card__sub">Free days for everyone</h3>
+          {c.overlapDays.length > 0 ? (
+            <ul className="lv-limits__notes" data-testid="trip-overlap-days">
+              {c.overlapDays.map((d) => (
+                <li key={d}>{d}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="lv-card__line">No days overlap yet</p>
+          )}
+        </div>
       )}
     </section>
   );

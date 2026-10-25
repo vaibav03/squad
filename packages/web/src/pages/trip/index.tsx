@@ -24,7 +24,12 @@ export default function TripPage() {
     if (!view) return;
     const prev = seen.current;
     seen.current = { id: view.tripId, status: view.status };
-    if (view.status === 'confirmed' && prev && prev.id === view.tripId && prev.status !== 'confirmed') {
+    if (
+      view.status === 'confirmed' &&
+      prev &&
+      prev.id === view.tripId &&
+      prev.status !== 'confirmed'
+    ) {
       if (claimCutscene(view.tripId)) navigate(cutsceneHref(view.taskId));
     }
   }, [view, navigate]);

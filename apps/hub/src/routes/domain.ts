@@ -4,8 +4,6 @@ import { requireViewer } from '../auth';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 
 const MAX_PDF = 50 * 1024 * 1024;
-const Vote = z.strictObject({ ranking: z.array(z.string().min(1)).min(1).max(20) });
-const Confirm = z.strictObject({ optionId: z.string().min(1), yes: z.boolean() });
 const ConfirmGeneric = z.strictObject({ yes: z.boolean(), optionId: z.string().min(1).optional() });
 const Calendar = z.strictObject({ demo: z.literal(true) });
 
@@ -51,51 +49,6 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
       taskId: c.req.param('taskId'),
       entries: deps.ledger.entries(c.req.param('taskId'), v).filter((e) => members.has(e.student)),
     });
-  });
-
-  // A trip is addressable by its trip id or by its task id (`trip_cabo` or `task_trip_cabo`).
-  const resolveTrip = (id: string) =>
-    deps.trips.get(id) ? id : (deps.trips.byTask(id)?.tripId ?? id);
-
-  r.get('/v1/trips/:tripId', need, (c) => {
-    const view = deps.trips.view(resolveTrip(c.req.param('tripId')), c.get('viewer'), {
-      directory: deps.directory,
-    });
-    return view ? c.json(view) : c.json(err('not_found'), 404);
-  });
-
-  r.post('/v1/trips/:tripId/vote', need, async (c) => {
-    const v = c.get('viewer');
-    const tripId = resolveTrip(c.req.param('tripId'));
-    if (!deps.trips.view(tripId, v, { directory: deps.directory }))
-      return c.json(err('not_found'), 404);
-    const body = Vote.safeParse(await c.req.json().catch(() => null));
-    if (!body.success) return c.json(err('invalid_request'), 400);
-    if (!deps.trips.vote(tripId, v.studentId, body.data.ranking))
-      return c.json(err('invalid_request', 'unknown option'), 400);
-    deps.ingest.x('x.trip.touch', { tripId });
-    return c.json({ ok: true });
-  });
-
-  r.post('/v1/trips/:tripId/confirm', need, async (c) => {
-    const v = c.get('viewer');
-    const tripId = resolveTrip(c.req.param('tripId'));
-    const before = deps.trips.view(tripId, v, { directory: deps.directory });
-    if (!before) return c.json(err('not_found'), 404);
-    const body = Confirm.safeParse(await c.req.json().catch(() => null));
-    if (!body.success) return c.json(err('invalid_request'), 400);
-    const rec = deps.trips.confirm(tripId, v.studentId, body.data.optionId, body.data.yes);
-    if (!rec) return c.json(err('not_found'), 404);
-    deps.ingest.village({
-      t: 'confirm.done',
-      student: v.studentId,
-      taskId: rec.taskId,
-      question: 'Confirm trip',
-    });
-    deps.ingest.x('x.trip.touch', { tripId });
-    if (deps.trips.allConfirmed(tripId))
-      deps.ingest.village({ t: 'trip.confirmed', taskId: rec.taskId, squadId: rec.squadId });
-    return c.json({ ok: true, status: rec.status });
   });
 
   // Generic confirm: any task with an owning handler (trip store, an agent's open confirm card, or a

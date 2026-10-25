@@ -16,7 +16,12 @@ import {
 
 afterEach(cleanup);
 
-const base: TripViewProps = { status: 'ready', connection: 'live', trip: tripPlanning, me: 's_ana' };
+const base: TripViewProps = {
+  status: 'ready',
+  connection: 'live',
+  trip: tripPlanning,
+  me: 's_ana',
+};
 function view(p: Partial<TripViewProps> = {}, a: Partial<TripActions> = {}) {
   return render(<TripView {...base} {...p} actions={{ ...noActions, ...a }} />);
 }
@@ -46,7 +51,10 @@ describe('TripView states', () => {
     expect(id('trip-state-planning')).toBeTruthy();
     expect(id('trip-option-cabo').textContent).toContain('Cabo San Lucas');
     expect(id('trip-option-vegas').textContent).toContain('Dropped');
-    expect(id('trip-overlap').textContent).toBe('Free days overlap: Mar 14, Mar 15, Mar 16, Mar 17');
+    expect(id('trip-overlap').textContent).toContain('Free days for everyone');
+    expect(
+      Array.from(id('trip-overlap-days').querySelectorAll('li')).map((l) => l.textContent),
+    ).toEqual(['Mar 14', 'Mar 15', 'Mar 16', 'Mar 17']);
     expect(id('trip-limits').textContent).toContain('Only you can see this');
     fireEvent.change(within(id('trip-propose-form')).getByLabelText('Where'), {
       target: { value: 'Tahoe' },
@@ -59,7 +67,7 @@ describe('TripView states', () => {
   it('shows "No days overlap yet" for an empty overlap and nothing for null', () => {
     const t = { ...tripPlanning, constraints: { ...tripPlanning.constraints, overlapDays: [] } };
     const { unmount } = view({ trip: t });
-    expect(id('trip-overlap').textContent).toBe('No days overlap yet');
+    expect(id('trip-overlap').textContent).toContain('No days overlap yet');
     unmount();
     view({ trip: { ...t, constraints: { ...t.constraints, overlapDays: null } } });
     expect(q('trip-overlap')).toBeNull();
@@ -72,7 +80,9 @@ describe('TripView states', () => {
     expect(id('trip-waiting').textContent).toContain(
       "Open Squad on Dev's device to bring their agent back, or the organizer can continue without their agent.",
     );
-    expect(id('trip-continue-warning').textContent).toMatch(/Calendars and budgets will not be checked/);
+    expect(id('trip-continue-warning').textContent).toMatch(
+      /Calendars and budgets will not be checked/,
+    );
     fireEvent.click(id('trip-retry'));
     fireEvent.click(id('trip-continue'));
     expect(act.mock.calls).toEqual([['retry'], ['continue']]);
@@ -81,7 +91,9 @@ describe('TripView states', () => {
   it('waiting on a member with no agent, and hides buttons the viewer cannot use', () => {
     const t = {
       ...tripWaiting,
-      members: tripWaiting.members.map((m) => (m.id === 's_dev' ? { ...m, agent: 'no_agent' as const } : m)),
+      members: tripWaiting.members.map((m) =>
+        m.id === 's_dev' ? { ...m, agent: 'no_agent' as const } : m,
+      ),
       can: { ...tripWaiting.can, retry: false, continueWithout: false },
     };
     view({ trip: t });
@@ -96,6 +108,27 @@ describe('TripView states', () => {
     expect(id('trip-member-s_ben').textContent).toContain('Agent online');
     expect(id('trip-member-s_ben').textContent).toContain('Confirmed');
     expect(id('trip-member-s_ana').textContent).not.toContain('Confirmed');
+  });
+
+  it('member chips show Voted only when voted is true, never a vote for null', () => {
+    const members = tripVoting.members.map((m) =>
+      m.id === 's_ben' ? { ...m, voted: true } : m.id === 's_chi' ? { ...m, voted: false } : m,
+    );
+    view({ trip: { ...tripVoting, members } });
+    expect(id('trip-member-s_ben').textContent).toContain('Voted');
+    expect(id('trip-member-s_chi').textContent).not.toContain('Voted');
+    expect(id('trip-member-s_ana').textContent).not.toContain('Voted');
+  });
+
+  it('empty with a not-found trip id names it, still no hub-did-not-answer copy', () => {
+    view({ trip: null, notFound: true });
+    expect(screen.getByRole('heading', { name: 'We could not find that trip' })).toBeTruthy();
+    expect(screen.queryByText(/hub did not answer/)).toBeNull();
+  });
+
+  it('shows the cutscene link only when confirmed', () => {
+    view({ trip: tripConfirming });
+    expect(q('trip-cutscene-link')).toBeNull();
   });
 
   it('voting: secret note, no counts when voteProgress is null, submit sends ranking and opened rev', () => {
@@ -189,7 +222,13 @@ describe('TripView states', () => {
           conflict: {
             rev: 9,
             option: null,
-            change: { rev: 9, by: 's_dev', byName: 'Dev', at: 1, summary: 'changed Cabo to 6 days' },
+            change: {
+              rev: 9,
+              by: 's_dev',
+              byName: 'Dev',
+              at: 1,
+              summary: 'changed Cabo to 6 days',
+            },
           },
           resend: async () => {},
         },

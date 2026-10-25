@@ -119,7 +119,9 @@ describe('useTrip (live, stubbed fetch)', () => {
     const calls = stub((url, init) => {
       if (init?.method === 'PATCH') {
         patches += 1;
-        return patches === 1 ? json(409, conflictBody) : json(200, { trip: { ...tripPlanning, rev: 10 } });
+        return patches === 1
+          ? json(409, conflictBody)
+          : json(200, { trip: { ...tripPlanning, rev: 10 } });
       }
       return json(200, tripPlanning);
     });
@@ -169,7 +171,10 @@ describe('useTrip (live, stubbed fetch)', () => {
     expect(result.current.conflict).not.toBeNull();
     await act(() => result.current.replaceWithMine());
     const v = calls.filter((c) => c.url.endsWith('/vote'));
-    expect(JSON.parse(v[1]!.init!.body as string)).toEqual({ ranking: ['cabo', 'austin'], baseRev: 9 });
+    expect(JSON.parse(v[1]!.init!.body as string)).toEqual({
+      ranking: ['cabo', 'austin'],
+      baseRev: 9,
+    });
     await act(() => result.current.removeOption('austin', 3));
     expect(calls.find((c) => c.init?.method === 'DELETE')!.url).toBe(
       'http://hub/v1/trips/trip_cabo/options/austin?baseRev=3',

@@ -9,6 +9,7 @@ const obs = getObs(hub.deps)!;
 obs.installProcessHandlers();
 const agentUrls = agentUrlsFromEnv();
 hub.deps.confirms.setAgentUrls(agentUrls);
+hub.deps.tripSvc.setAgentUrls(agentUrls);
 // carry the correlation id to the agents and the bot's internal server
 obs.propagateTo([...Object.values(agentUrls), process.env.BOT_URL]);
 // One process serves the village and the chat: one resilient model (Gemini, or the demo model when there is no key

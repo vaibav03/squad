@@ -3,11 +3,12 @@ import {
   TripViewV2Schema,
   type AgentState,
   type TripConflict,
+  type TripMember,
   type TripOptionV2,
   type TripViewV2,
 } from '@squad/core';
 
-export type { TripConflict, TripOptionV2, TripViewV2 };
+export type { TripConflict, TripMember, TripOptionV2, TripViewV2 };
 
 /** Page-level events: the hub only ever says "something changed, refetch"; mock mode replays whole views. */
 export type TripEvent =
@@ -31,7 +32,8 @@ export function parseCurrent(raw: unknown): { trip: TripViewV2 | null } | undefi
 
 /** `{trip}` envelope returned by every mutation. */
 export function parseTripEnvelope(raw: unknown): TripViewV2 | undefined {
-  if (raw && typeof raw === 'object' && 'trip' in raw) return parseTripView((raw as { trip: unknown }).trip);
+  if (raw && typeof raw === 'object' && 'trip' in raw)
+    return parseTripView((raw as { trip: unknown }).trip);
   return parseTripView(raw);
 }
 
@@ -110,7 +112,11 @@ export const MONTHS = [
 ];
 
 export function optionMeta(o: TripOptionV2): string {
-  return [o.estCost, o.days ? `${o.days} days` : undefined, o.perPerson !== undefined && !o.estCost ? `${money(o.perPerson)} each` : undefined]
+  return [
+    o.estCost,
+    o.days ? `${o.days} days` : undefined,
+    o.perPerson !== undefined && !o.estCost ? `${money(o.perPerson)} each` : undefined,
+  ]
     .filter(Boolean)
     .join(' · ');
 }
@@ -124,7 +130,8 @@ export function createBodyFromForm(f: {
 }) {
   const destination = f.destination.trim();
   if (destination.length < 2) return undefined;
-  const num = (s: string) => (s.trim() === '' || !Number.isFinite(Number(s)) ? undefined : Math.round(Number(s)));
+  const num = (s: string) =>
+    s.trim() === '' || !Number.isFinite(Number(s)) ? undefined : Math.round(Number(s));
   const month = num(f.month);
   const days = num(f.days);
   const perPerson = num(f.perPerson);

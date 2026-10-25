@@ -48,6 +48,8 @@ import { createEventLog } from './store/eventlog';
 import { createLedgerStore } from './store/ledger';
 import { createSquadState } from './store/state';
 import { createTripStore } from './store/trips';
+import { createTripService } from './trips/service';
+import { createTripRoutes } from './routes/trips';
 import type { HubApp, HubDeps, HubEnv } from './types';
 
 export interface HubOptions {
@@ -130,6 +132,7 @@ export function createHub(opts: HubOptions = {}): Hub {
       ? mkdtempSync(join(tmpdir(), 'squad-chat-files-'))
       : join(dirname(config.dbPath), 'chat-files'),
   );
+  deps.tripSvc = createTripService(deps);
   if (config.seed) {
     seedDemo(deps);
     // The seeded demo squad becomes a real one (owner = its first member) so Members, invites and roles work.
@@ -184,6 +187,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createLibraryRoutes(deps),
     createCallRoutes(deps),
     createMediaRoutes(deps),
+    createTripRoutes(deps),
     createDomainRoutes(deps),
     createCouncilRoutes(deps),
     createLiveRoutes(deps),
@@ -205,6 +209,7 @@ export function createHub(opts: HubOptions = {}): Hub {
       obs.stop();
       deps.broker.closeAll();
       deps.chat.close();
+      deps.tripSvc.stop();
       if (ownDb) deps.db.close();
     },
   };

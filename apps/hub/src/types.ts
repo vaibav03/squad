@@ -306,6 +306,8 @@ export interface HubDeps {
   events: EventLog;
   ledger: LedgerStore;
   trips: TripStore;
+  /** Collaborative trip service (routes, chat intents, mesh constraint runs). */
+  tripSvc: import('./trips/service').TripService;
   calls: CallRegistry;
   broker: Broker;
   state: SquadState;

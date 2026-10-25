@@ -5,10 +5,42 @@ import type { TripEvent, TripViewV2 } from './model';
 export const TRIP_ID = 'trip_cabo';
 
 const members: TripViewV2['members'] = [
-  { id: 's_ana', name: 'Ana', isOrganizer: true, agent: 'online', confirmed: false, declined: false, voted: null },
-  { id: 's_ben', name: 'Ben', isOrganizer: false, agent: 'online', confirmed: false, declined: false, voted: null },
-  { id: 's_chi', name: 'Chi', isOrganizer: false, agent: 'online', confirmed: false, declined: false, voted: null },
-  { id: 's_dev', name: 'Dev', isOrganizer: false, agent: 'online', confirmed: false, declined: false, voted: null },
+  {
+    id: 's_ana',
+    name: 'Ana',
+    isOrganizer: true,
+    agent: 'online',
+    confirmed: false,
+    declined: false,
+    voted: null,
+  },
+  {
+    id: 's_ben',
+    name: 'Ben',
+    isOrganizer: false,
+    agent: 'online',
+    confirmed: false,
+    declined: false,
+    voted: null,
+  },
+  {
+    id: 's_chi',
+    name: 'Chi',
+    isOrganizer: false,
+    agent: 'online',
+    confirmed: false,
+    declined: false,
+    voted: null,
+  },
+  {
+    id: 's_dev',
+    name: 'Dev',
+    isOrganizer: false,
+    agent: 'online',
+    confirmed: false,
+    declined: false,
+    voted: null,
+  },
 ];
 
 const none: TripViewV2['can'] = {
@@ -33,9 +65,36 @@ export const tripPlanning: TripViewV2 = {
   window: { from: '2027-03-01', to: '2027-03-31' },
   deadline: null,
   options: [
-    { id: 'cabo', label: 'Cabo San Lucas', estCost: '$650', days: 5, perPerson: 650, proposedBy: 's_ana', proposedByName: 'Ana', rev: 1 },
-    { id: 'austin', label: 'Austin weekend', estCost: '$380', days: 3, perPerson: 380, proposedBy: 's_ben', proposedByName: 'Ben', rev: 2 },
-    { id: 'vegas', label: 'Las Vegas', estCost: '$520', days: 3, proposedBy: 'council', proposedByName: 'Council', droppedReason: 'Over the budget of at least one member', rev: 1 },
+    {
+      id: 'cabo',
+      label: 'Cabo San Lucas',
+      estCost: '$650',
+      days: 5,
+      perPerson: 650,
+      proposedBy: 's_ana',
+      proposedByName: 'Ana',
+      rev: 1,
+    },
+    {
+      id: 'austin',
+      label: 'Austin weekend',
+      estCost: '$380',
+      days: 3,
+      perPerson: 380,
+      proposedBy: 's_ben',
+      proposedByName: 'Ben',
+      rev: 2,
+    },
+    {
+      id: 'vegas',
+      label: 'Las Vegas',
+      estCost: '$520',
+      days: 3,
+      proposedBy: 'council',
+      proposedByName: 'Council',
+      droppedReason: 'Over the budget of at least one member',
+      rev: 1,
+    },
   ],
   dates: null,
   chosen: null,
@@ -45,7 +104,13 @@ export const tripPlanning: TripViewV2 = {
   confirmations: [],
   vetoed: [],
   myLimits: { budget: '$700', notes: 'Back by Mar 19' },
-  constraints: { state: 'done', waitingFor: [], overlapDays: ['Mar 14', 'Mar 15', 'Mar 16', 'Mar 17'], note: null, checkedAt: 1 },
+  constraints: {
+    state: 'done',
+    waitingFor: [],
+    overlapDays: ['Mar 14', 'Mar 15', 'Mar 16', 'Mar 17'],
+    note: null,
+    checkedAt: 1,
+  },
   recommendation: {
     optionId: 'austin',
     mode: 'demo',
@@ -54,7 +119,16 @@ export const tripPlanning: TripViewV2 = {
     dissent: ['Skeptic says: Cabo is the only option that feels like a real break.'],
     at: 1,
   },
-  changes: [{ rev: 3, by: 's_dev', byName: 'Dev', at: 1, summary: 'Dev changed Cabo to 5 days', optionId: 'cabo' }],
+  changes: [
+    {
+      rev: 3,
+      by: 's_dev',
+      byName: 'Dev',
+      at: 1,
+      summary: 'Dev changed Cabo to 5 days',
+      optionId: 'cabo',
+    },
+  ],
   failure: null,
   can: { ...none, propose: true, closeVoting: true, cancel: true },
 };
@@ -126,7 +200,10 @@ export const recordedScript: RecordedScript<TripEvent> = [
     at: 11000,
     event: {
       t: 'trip.updated',
-      trip: { ...tripConfirming, members: members.map((m) => ({ ...m, confirmed: m.id !== 's_ana' })) },
+      trip: {
+        ...tripConfirming,
+        members: members.map((m) => ({ ...m, confirmed: m.id !== 's_ana' })),
+      },
     },
   },
   { at: 13500, event: { t: 'trip.updated', trip: { ...tripConfirmed, can: none } } },
