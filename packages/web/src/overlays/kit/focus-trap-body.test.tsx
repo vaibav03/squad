@@ -45,3 +45,32 @@ describe('useFocusTrap focus containment', () => {
     outside.remove();
   });
 });
+
+describe('nested focus traps (council board over the room panel)', () => {
+  afterEach(cleanup);
+  function Nested({ outerEsc, innerEsc }: { outerEsc: () => void; innerEsc: () => void }) {
+    const outer = useFocusTrap<HTMLDivElement>({ active: true, onEscape: outerEsc });
+    const inner = useFocusTrap<HTMLDivElement>({ active: true, onEscape: innerEsc });
+    return (
+      <>
+        <div ref={outer} tabIndex={-1}>
+          <button>outer</button>
+        </div>
+        <div ref={inner} tabIndex={-1}>
+          <button>inner</button>
+        </div>
+      </>
+    );
+  }
+  it('does not recurse forever when focus moves between them, and only the top trap answers Esc', () => {
+    const outerEsc = vi.fn();
+    const innerEsc = vi.fn();
+    const { getByText } = render(<Nested outerEsc={outerEsc} innerEsc={innerEsc} />);
+    // used to throw "Maximum call stack size exceeded" (each trap pulled focus back from the other)
+    expect(() => getByText('outer').focus()).not.toThrow();
+    expect(document.activeElement).toBe(getByText('inner').parentElement); // jsdom has no layout: the trap root
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(innerEsc).toHaveBeenCalledTimes(1);
+    expect(outerEsc).not.toHaveBeenCalled();
+  });
+});

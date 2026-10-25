@@ -75,6 +75,10 @@ export interface FocusTrapOptions {
  * Focus trap for an overlay panel: Tab cycles inside, Esc calls onEscape, focus returns to
  * `returnFocusTo` (else the previously focused element) when `active` turns false or on unmount.
  */
+// Open traps, oldest first. Dialogs can nest (the council board opens over the room panel); only the top-most trap may
+// pull focus or answer the document-level keys, otherwise two traps keep stealing focus from each other forever.
+const trapStack: symbol[] = [];
+
 export function useFocusTrap<T extends HTMLElement>(opts: FocusTrapOptions) {
   const ref = useRef<T | null>(null);
   const { active, onEscape, returnFocusTo, initialFocus } = opts;
@@ -90,6 +94,9 @@ export function useFocusTrap<T extends HTMLElement>(opts: FocusTrapOptions) {
     const root = ref.current;
     if (!root) return;
     const previous = document.activeElement as HTMLElement | null;
+    const token = Symbol('focus-trap');
+    trapStack.push(token);
+    const isTop = () => trapStack[trapStack.length - 1] === token;
     const first = initRef.current?.() ?? focusableIn(root)[0] ?? root;
     first.focus({ preventScroll: true });
 
@@ -121,6 +128,7 @@ export function useFocusTrap<T extends HTMLElement>(opts: FocusTrapOptions) {
     // Focus can fall to <body> while the panel is open (a focused control got disabled or unmounted mid-run); the
     // trap must still answer Esc, and Tab must pull focus back in rather than walk the page behind the panel.
     const onDocKey = (e: KeyboardEvent) => {
+      if (!isTop()) return;
       if (e.key === 'Escape') {
         escRef.current?.();
         return;
@@ -136,12 +144,15 @@ export function useFocusTrap<T extends HTMLElement>(opts: FocusTrapOptions) {
     document.addEventListener('keydown', onDocKey);
     // Focus that lands outside the panel (nav behind the scrim) is returned to the first control.
     const onFocusIn = (e: FocusEvent) => {
+      if (!isTop()) return;
       if (e.target instanceof Node && !root.contains(e.target)) {
         (focusableIn(root)[0] ?? root).focus({ preventScroll: true });
       }
     };
     document.addEventListener('focusin', onFocusIn);
     return () => {
+      const at = trapStack.indexOf(token);
+      if (at >= 0) trapStack.splice(at, 1);
       document.removeEventListener('focusin', onFocusIn);
       root.removeEventListener('keydown', onKey);
       document.removeEventListener('keydown', onDocKey);

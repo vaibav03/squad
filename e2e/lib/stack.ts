@@ -48,6 +48,14 @@ export const baseEnv = (): NodeJS.ProcessEnv => ({
   AGENT_PEERS: peers(),
   FORCE_COLOR: '0',
   ...(LIVE ? {} : { FORCE_FAKE_LLM: '1' }),
+  // LIVE=1 hard budget: a few tiny council runs at most (override by exporting the variables yourself)
+  ...(LIVE
+    ? {
+        COUNCIL_MAX_RUNS_HOUR: process.env.COUNCIL_MAX_RUNS_HOUR ?? '4',
+        COUNCIL_MAX_TOKENS: process.env.COUNCIL_MAX_TOKENS ?? '60000',
+        COUNCIL_MAX_TURNS: process.env.COUNCIL_MAX_TURNS ?? '24',
+      }
+    : {}),
 });
 
 export async function waitFor(url: string, ms = 60_000): Promise<boolean> {

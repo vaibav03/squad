@@ -87,6 +87,7 @@ describe('round table on the agent runtime', () => {
         'done',
       ].filter((s) => stagesOf(events).includes(s)),
     );
+    expect(stagesOf(events).at(-1)).toBe('done');
     for (const s of ['delegation', 'opinions', 'critiques', 'verdict', 'actions'])
       expect(stagesOf(events)).toContain(s);
     const m = msgsOf(events);

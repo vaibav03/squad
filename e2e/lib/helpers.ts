@@ -89,7 +89,11 @@ export async function actor(
   page.on('console', (m) => {
     if (m.type() === 'error') a.consoleErrors.push(m.text());
   });
-  page.on('pageerror', (e) => a.pageErrors.push(e.message));
+  page.on('pageerror', (e) =>
+    a.pageErrors.push(
+      process.env.E2E_ERR_STACK ? (e.stack ?? e.message).slice(0, 1500) : e.message,
+    ),
+  );
   ctx.on('response', async (r) => {
     try {
       const ct = r.headers()['content-type'] ?? '';

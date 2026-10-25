@@ -507,6 +507,7 @@ export async function runCoursePlanAgents(
       mode: degradedNow,
     } as VillageEvent);
 
+    if (R) await R.stage('done');
     finishRun();
     const usedFallback = have.length < names.length;
     const label = finalMode.startsWith('demo')

@@ -165,6 +165,25 @@ describe('panels and the shared board', () => {
     expect(run.agents[0]!.cast).toBe('chair');
   });
 
+  it('Round Table room panel shows the step and the four cast portraits with their state', () => {
+    const store = createCouncilBoardStore();
+    setBoardStore(store);
+    const ids = ['chairman', 'chill', 'grind', 'advisor'].map((k) => `council:roundtable-${k}`);
+    store.apply({ t: 'a2a.message', msg: msg('am_a', 0, 'question', ids[0]!, 'room', 'status') });
+    ids.slice(1).forEach((id, i) =>
+      store.apply({
+        t: 'a2a.message',
+        msg: msg(`am_b${i}`, i + 1, 'delegation', ids[0]!, id, 'delegate'),
+      }),
+    );
+    render(<RoomExtras councilId={['council:roundtable', 'council:planner']} />);
+    expect(screen.getByRole('status').textContent).toMatch(/^Step \d of 7: /);
+    const list = screen.getByRole('list', { name: 'Who is on this council' });
+    for (const n of ['Chairman', 'Chill', 'Grind', 'Advisor'])
+      expect(within(list).getByRole('img', { name: new RegExp(`^${n}`) })).toBeTruthy();
+    expect(within(list).getAllByRole('listitem')).toHaveLength(4);
+  });
+
   it('the board header shows the verdict (not the opening line) after a replay finishes', async () => {
     const store = createCouncilBoardStore();
     playCouncilFixture(ASK_FIXTURE, (e) => store.apply(e), { instant: true });

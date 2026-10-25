@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T10:33:22.559Z",
+  "at": "2026-10-25T13:50:42.553Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -457,6 +457,12 @@
     "status": "pass",
     "note": "",
     "ms": 71697
+   },
+   {
+    "title": "J24 Round Table: panel (mode, step, portraits), board hierarchy, action items, Esc closes",
+    "status": "pass",
+    "note": "",
+    "ms": 10472
    }
   ]
  }
