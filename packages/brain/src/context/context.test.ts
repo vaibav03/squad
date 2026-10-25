@@ -130,7 +130,7 @@ describe('sync pipeline (fake Canvas)', () => {
         'New instructions: use samples of size 50 and report the standard error.';
       fx.announcements.length = 0;
     });
-    const r3 = await syncConnection(deps, conn(), canvas, tokenAuth);
+    const r3 = await syncConnection({ ...deps, full: true }, conn(), canvas, tokenAuth);
     expect(r3).toMatchObject({ updated: 1, removed: 1 });
     const id = sourceIdFor('s_ana', 'canvas', 'assignment:a301');
     expect(

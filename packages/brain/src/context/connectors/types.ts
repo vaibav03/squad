@@ -36,7 +36,10 @@ export interface ConnectorStatusInfo {
 
 /** What a connector call authenticates with. Resolved server-side from the encrypted token store, per call. */
 export type CanvasAuth =
-  { variant: 'feed'; feedUrl: string } | { variant: 'token'; token: string; baseUrl: string };
+  | { variant: 'feed'; feedUrl: string }
+  | { variant: 'token'; token: string; baseUrl: string }
+  /** Nook's route: the browser extension reads Canvas with the student's own session and pushes the result. */
+  | { variant: 'session'; origin: string; canvasUserId: string };
 export interface GoogleAuth {
   accessToken: string;
   refreshToken?: string;
@@ -55,6 +58,25 @@ export class ConnectorAuthError extends Error {
     this.name = 'ConnectorAuthError';
   }
 }
+/** Upstream said slow down (HTTP 429 / quota). `retryAfterMs` comes from Retry-After when present. */
+export class ConnectorRateLimitError extends Error {
+  constructor(
+    public readonly retryAfterMs: number,
+    message = 'upstream rate limited the request',
+  ) {
+    super(message);
+    this.name = 'ConnectorRateLimitError';
+  }
+}
+/** What a pass should list: everything in the window (`full`) or only what changed since the cursor. */
+export interface ListOpts {
+  courseId?: string;
+  full: boolean;
+  /** Upstream high-water mark of the previous pass (epoch ms), null on the first pass. */
+  since: number | null;
+  windowFrom: number;
+  windowTo: number;
+}
 /** The credential lapsed and could not be refreshed. */
 export class ConnectorExpiredError extends Error {
   constructor(message = 'credential expired') {
@@ -69,7 +91,7 @@ export interface Connector<A> {
   /** Stable, non-secret id of the upstream account (hashed before storage). */
   accountId(auth: A): Promise<string>;
   listCourses(auth: A): Promise<ConnectorCourse[]>;
-  listItems(auth: A, courseId?: string): Promise<ConnectorItem[]>;
+  listItems(auth: A, courseId?: string, opts?: ListOpts): Promise<ConnectorItem[]>;
   fetchContent(auth: A, item: ConnectorItem): Promise<FetchedContent>;
   /** Tell the upstream to drop the grant (best effort; local purge never depends on it). */
   revoke(auth: A): Promise<void>;
@@ -90,6 +112,8 @@ export const GOOGLE_SCOPES = {
 export const CANVAS_SCOPES = {
   feed: 'canvas.calendar_feed',
   token: 'canvas.api_token.read',
+  /** The student's own logged-in browser session, read by the Squad extension (no OAuth, no developer key). */
+  session: 'canvas.browser_session.read',
 } as const;
 
 /** The ONLY scopes the hub will accept; anything broader (drive, gmail, calendar write) is rejected. */

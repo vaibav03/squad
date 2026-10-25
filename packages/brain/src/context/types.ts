@@ -3,7 +3,37 @@ import type { SourceKind } from '@squad/core';
 export type Provider = 'canvas' | 'google';
 /** `fixture` = synthetic repo data; no real account is connected. The UI must say so. */
 export type ConnectionMode = 'fixture' | 'live';
-export type ConnectionStatus = 'live' | 'expired' | 'revoked' | 'error';
+export type ConnectionStatus = 'live' | 'expired' | 'revoked' | 'error' | 'rate_limited';
+/** The one state every UI and API shows (Nook-style honest states). `fixture` = live status on synthetic data. */
+export type ConnectionState = 'live' | 'fixture' | 'expired' | 'revoked' | 'rate_limited' | 'error';
+
+export const connectionState = (c: Pick<ContextConnection, 'mode' | 'status'>): ConnectionState =>
+  c.status === 'live' ? (c.mode === 'fixture' ? 'fixture' : 'live') : c.status;
+
+/** Incremental sync position. `updatedAt` is the upstream high-water mark; the window bounds the backfill. */
+export interface SyncCursor {
+  updatedAt: number | null;
+  windowFrom: number;
+  windowTo: number;
+}
+export type SyncOutcomeLabel = 'ok' | 'expired' | 'revoked' | 'rate_limited' | 'degraded' | 'error';
+export interface ContextSyncState {
+  connectionId: string;
+  cursor: SyncCursor | null;
+  /** Last time every upstream item was listed (deletions are only detected on a full pass). */
+  lastFullAt: number | null;
+  lastOutcome: SyncOutcomeLabel | null;
+  /** Epoch ms: no upstream call before this (rate limit). */
+  retryAfter: number | null;
+  /** Epoch ms while a sync is running (cleared when it ends). */
+  startedAt: number | null;
+  /** Hash of the Canvas origin (session variant), for the one-login-per-origin rule. Never the raw origin. */
+  originHash: string | null;
+}
+
+export const BACKFILL_PAST_MS = 120 * 24 * 3_600_000;
+export const BACKFILL_FUTURE_MS = 180 * 24 * 3_600_000;
+export const FULL_PASS_EVERY_MS = 24 * 3_600_000;
 export type ContextVisibility = 'private' | 'squad';
 
 export interface ContextConnection {
@@ -11,7 +41,7 @@ export interface ContextConnection {
   ownerId: string;
   provider: Provider;
   mode: ConnectionMode;
-  /** Variant of the provider auth: canvas `feed` | `token`; google `oauth`. */
+  /** Variant of the provider auth: canvas `session` (browser extension) | `token` | `feed`; google `oauth`. */
   variant: string;
   /** Salted hash of the external account id; the raw id is never stored. */
   accountHash: string;

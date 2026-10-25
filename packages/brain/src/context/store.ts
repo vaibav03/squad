@@ -10,6 +10,7 @@ import {
   type ContextSource,
   type ContextViewer,
   type ConnectionStatus,
+  type ContextSyncState,
 } from './types';
 import type { TextPiece } from './chunk';
 
@@ -31,6 +32,10 @@ CREATE TABLE IF NOT EXISTS ctx_chunks(
   id TEXT PRIMARY KEY, source_id TEXT NOT NULL, ord INTEGER NOT NULL, anchor TEXT NOT NULL, page INTEGER,
   section TEXT, text TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS ctx_chunks_source ON ctx_chunks(source_id);
+CREATE TABLE IF NOT EXISTS ctx_sync_state(
+  connection_id TEXT PRIMARY KEY, cursor_json TEXT, last_full_at INTEGER, last_outcome TEXT, retry_after INTEGER,
+  started_at INTEGER, origin_hash TEXT);
+CREATE INDEX IF NOT EXISTS ctx_connections_account ON ctx_connections(provider, account_hash);
 CREATE TABLE IF NOT EXISTS ctx_tombstones(
   source_id TEXT NOT NULL, owner_id TEXT NOT NULL, reason TEXT NOT NULL, at INTEGER NOT NULL,
   PRIMARY KEY(source_id, owner_id));
@@ -50,6 +55,16 @@ export interface ContextStore {
   upsertConnection(c: ContextConnection): void;
   connection(id: string): ContextConnection | undefined;
   connectionsOf(ownerId: string): ContextConnection[];
+  /** Every owner's non-revoked connection to the same external account (for the one-owner-per-account rule). */
+  connectionsByAccount(
+    provider: ContextConnection['provider'],
+    accountHash: string,
+  ): ContextConnection[];
+  syncState(connectionId: string): ContextSyncState;
+  patchSyncState(
+    connectionId: string,
+    patch: Partial<Omit<ContextSyncState, 'connectionId'>>,
+  ): void;
   patchConnection(
     id: string,
     patch: Partial<
@@ -223,6 +238,53 @@ export function createContextStore(db: Db, opts: { retentionMs?: number } = {}):
           .all(ownerId) as ConnRow[]
       ).map(toConn);
     },
+    connectionsByAccount(provider, accountHash) {
+      return (
+        db
+          .prepare(
+            "SELECT * FROM ctx_connections WHERE provider=? AND account_hash=? AND status<>'revoked' ORDER BY created_at, id",
+          )
+          .all(provider, accountHash) as ConnRow[]
+      ).map(toConn);
+    },
+    syncState(connectionId) {
+      const r = db
+        .prepare('SELECT * FROM ctx_sync_state WHERE connection_id=?')
+        .get(connectionId) as
+        | {
+            cursor_json: string | null;
+            last_full_at: number | null;
+            last_outcome: ContextSyncState['lastOutcome'];
+            retry_after: number | null;
+            started_at: number | null;
+            origin_hash: string | null;
+          }
+        | undefined;
+      return {
+        connectionId,
+        cursor: r?.cursor_json ? (JSON.parse(r.cursor_json) as ContextSyncState['cursor']) : null,
+        lastFullAt: r?.last_full_at ?? null,
+        lastOutcome: r?.last_outcome ?? null,
+        retryAfter: r?.retry_after ?? null,
+        startedAt: r?.started_at ?? null,
+        originHash: r?.origin_hash ?? null,
+      };
+    },
+    patchSyncState(connectionId, p) {
+      const n = { ...store.syncState(connectionId), ...p };
+      db.prepare(
+        `INSERT OR REPLACE INTO ctx_sync_state(connection_id, cursor_json, last_full_at, last_outcome, retry_after, started_at, origin_hash)
+         VALUES(?,?,?,?,?,?,?)`,
+      ).run(
+        connectionId,
+        n.cursor ? JSON.stringify(n.cursor) : null,
+        n.lastFullAt,
+        n.lastOutcome,
+        n.retryAfter,
+        n.startedAt,
+        n.originHash,
+      );
+    },
     patchConnection(id, p) {
       const cur = store.connection(id);
       if (!cur) return;
@@ -248,9 +310,18 @@ export function createContextStore(db: Db, opts: { retentionMs?: number } = {}):
         statusNote: 'Disconnected. All imported data was deleted.',
         expiresAt: null,
       });
+      store.patchSyncState(id, {
+        cursor: null,
+        lastFullAt: null,
+        lastOutcome: 'revoked',
+        retryAfter: null,
+        startedAt: null,
+        originHash: null,
+      });
       return { sources: rows.length, chunks };
     },
     deleteConnection(id) {
+      db.prepare('DELETE FROM ctx_sync_state WHERE connection_id=?').run(id);
       db.prepare('DELETE FROM ctx_connections WHERE id=?').run(id);
     },
 

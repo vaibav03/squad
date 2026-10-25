@@ -3,6 +3,8 @@ import { GOOGLE_SCOPES } from './types';
 import {
   ConnectorAuthError,
   ConnectorExpiredError,
+  ConnectorRateLimitError,
+  type ListOpts,
   type CanvasAuth,
   type CanvasConnector,
   type ConnectorCourse,
@@ -26,7 +28,7 @@ export const slug = (s: string): string =>
     .replace(/^-|-$/g, '');
 
 /** What the fake upstream does to the credential. */
-export type FakeBehavior = 'ok' | 'expired' | 'revoked' | 'unauthorized';
+export type FakeBehavior = 'ok' | 'expired' | 'revoked' | 'unauthorized' | 'rate_limited';
 
 export interface FakeControls {
   /** Set the upstream behaviour for every credential, or only for the one whose secret is `key`. */
@@ -35,6 +37,8 @@ export interface FakeControls {
   refreshFails: boolean;
   /** Names of the connector methods called, in order (no secrets). */
   readonly calls: string[];
+  /** Options of the most recent listItems call (cursor / window assertions). */
+  lastOpts: ListOpts | undefined;
   /** Number of upstream revoke() calls. */
   revoked: number;
   /** Bump the fixture, e.g. to simulate an upstream edit or deletion between syncs. */
@@ -57,6 +61,7 @@ function controls() {
       }
     },
     refreshFails: false,
+    lastOpts: undefined,
     calls: [],
     revoked: 0,
     mutate(fn) {
@@ -76,6 +81,7 @@ function guard(ctl: Ctl, key: string, method: string): void {
   if (b === 'expired') throw new ConnectorExpiredError();
   if (b === 'revoked') throw new ConnectorAuthError(401, 'grant revoked upstream');
   if (b === 'unauthorized') throw new ConnectorAuthError(401);
+  if (b === 'rate_limited') throw new ConnectorRateLimitError(60_000);
 }
 function statusFor(ctl: Ctl, key: string): ConnectorStatusInfo {
   ctl.calls.push('status');
@@ -84,6 +90,8 @@ function statusFor(ctl: Ctl, key: string): ConnectorStatusInfo {
       return { state: 'expired', note: 'The access token expired and could not be renewed.' };
     case 'revoked':
       return { state: 'revoked', note: 'Access was revoked on the provider side.' };
+    case 'rate_limited':
+      return { state: 'rate_limited', note: 'The provider asked us to slow down (429).' };
     case 'unauthorized':
       return {
         state: 'error',
@@ -126,7 +134,12 @@ interface CanvasFixture {
   }[];
 }
 
-const authKey = (a: CanvasAuth): string => (a.variant === 'feed' ? a.feedUrl : a.token);
+const authKey = (a: CanvasAuth): string =>
+  a.variant === 'feed'
+    ? a.feedUrl
+    : a.variant === 'token'
+      ? a.token
+      : `${a.origin}#${a.canvasUserId}`;
 
 export function createFakeCanvasConnector(): CanvasConnector & { controls: FakeControls } {
   const ctl = controls();
@@ -174,7 +187,8 @@ export function createFakeCanvasConnector(): CanvasConnector & { controls: FakeC
       }
       return fx.courses.map((c) => ({ id: slug(c.code), name: c.name, code: c.code }));
     },
-    async listItems(auth, courseId) {
+    async listItems(auth, courseId, opts) {
+      ctl.lastOpts = opts;
       guard(ctl, authKey(auth), 'listItems');
       apply();
       let items: ConnectorItem[];
@@ -297,7 +311,8 @@ export function createFakeGoogleConnector(): GoogleConnector & { controls: FakeC
       if (!has(a, GOOGLE_SCOPES.classroomCourses)) return [];
       return fx.classroom.courses.map((c) => ({ id: `classroom-${c.id}`, name: c.name }));
     },
-    async listItems(a, courseId) {
+    async listItems(a, courseId, opts) {
+      ctl.lastOpts = opts;
       guard(ctl, key(a), 'listItems');
       apply();
       const out: ConnectorItem[] = [];
