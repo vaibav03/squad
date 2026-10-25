@@ -126,6 +126,16 @@ export const P = {
     files: [{ path: 'packages/web/src/overlays/inspector/focus/FocusShell.tsx' }],
     why: 'focused agent panel: Conversation, Activity, Decisions, handoff timeline, reasoning summaries',
   },
+  designSystem: {
+    owner: 'feature/design-system-deliberation',
+    files: [{ path: 'scripts/audit-chrome.mjs' }, { path: 'packages/web/src/primitives/StatusChip.tsx' }],
+    why: 'one icon family, StatusChip (icon + word), chrome audit with no decorative emoji or dot markers',
+  },
+  deliberation: {
+    owner: 'feature/design-system-deliberation',
+    files: [{ path: 'packages/web/src/council/deliberation/BallotMatrix.tsx' }],
+    why: 'deliberation surface: phases, turn cards, ballot matrix, pinned decision card',
+  },
   trip: {
     owner: 'feature/trip-collab',
     files: [{ path: 'apps/hub/src/routes/trips.ts' }],
