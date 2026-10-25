@@ -54,16 +54,29 @@ const finish = (t: LiveTakeaways): LiveTakeaways =>
 export function heuristicTakeaways(i: TakeawayInput): LiveTakeaways {
   const agent = i.turns.filter((t) => t.speaker !== 'user');
   const by = (id: string) => agent.filter((t) => t.speaker === id);
-  const decisions: LiveTakeaways['decisions'] = [];
-  for (const t of [...by('chair')].reverse()) {
-    const s = sentences(t.text).find((x) => /\b(agree|decid|settle|conclude)/i.test(x));
-    if (s && decisions.length < 3)
-      decisions.unshift({ id: `d${decisions.length + 1}`, text: clip(s, 240), turnId: t.id });
-  }
+  const seen = new Set<string>();
+  const fresh = (x: string): boolean => {
+    const k = x
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
+      .trim();
+    if (!k || seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  };
   const tutor = by('tutor')[0];
-  if (tutor && decisions.length < 8) {
+  const decisions: LiveTakeaways['decisions'] = [];
+  const pushD = (text: string, turnId: string) => {
+    if (decisions.length < 3 && fresh(text))
+      decisions.push({ id: `d${decisions.length + 1}`, text: clip(text, 240), turnId });
+  };
+  for (const t of by('chair')) {
+    const s = sentences(t.text).find((x) => /\b(agree|decid|settle|conclude)/i.test(x));
+    if (s) pushD(s, t.id);
+  }
+  if (tutor) {
     const s = sentences(tutor.text)[0];
-    if (s) decisions.push({ id: `d${decisions.length + 1}`, text: clip(s, 240), turnId: tutor.id });
+    if (s) pushD(s, tutor.id);
   }
   const disagreements: LiveTakeaways['disagreements'] = [];
   const sk = by('skeptic')[0];
@@ -71,7 +84,7 @@ export function heuristicTakeaways(i: TakeawayInput): LiveTakeaways {
     const [view, why] = sentences(sk.text);
     disagreements.push({
       id: 'x1',
-      topic: clip(i.topic, 160),
+      topic: clip(i.topic.replace(/[\s.?!…]+$/, ''), 160),
       stances: [
         ...(tutor
           ? [{ who: 'Tutor', view: clip(sentences(tutor.text)[0] ?? tutor.text, 240) }]
@@ -83,15 +96,20 @@ export function heuristicTakeaways(i: TakeawayInput): LiveTakeaways {
     });
   }
   const nextSteps: LiveTakeaways['nextSteps'] = [];
-  const pl = by('planner')[0];
-  if (pl) {
-    const s = sentences(pl.text).find((x) => /\b(first|then|next|plan)\b/i.test(x));
-    if (s) nextSteps.push({ id: 'n1', text: clip(s, 200), owner: 'You', turnId: pl.id });
+  for (const t of by('planner')) {
+    const s = sentences(t.text).find((x) => /\b(first|then|next|plan|schedule|book)\b/i.test(x));
+    if (s && nextSteps.length < 3 && fresh(s))
+      nextSteps.push({
+        id: `n${nextSteps.length + 1}`,
+        text: clip(s, 200),
+        owner: 'You',
+        turnId: t.id,
+      });
   }
   const quiz: LiveTakeaways['quiz'] = [];
   for (const t of by('examiner')) {
     const q = sentences(t.text).find((x) => x.includes('?'));
-    if (q && quiz.length < 4)
+    if (q && quiz.length < 3 && fresh(q))
       quiz.push({
         id: `q${quiz.length + 1}`,
         question: clip(q.replace(/^A test would ask:\s*/i, ''), 240),

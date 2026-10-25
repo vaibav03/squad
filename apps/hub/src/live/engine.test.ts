@@ -328,3 +328,36 @@ describe('budget guard', () => {
     await c.settled();
   });
 });
+
+import { tidyTopic } from './fake-client';
+
+describe('demo polish', () => {
+  it('tidyTopic strips trailing punctuation and lower-cases a leading plain word', () => {
+    expect(tidyTopic('How do I study for Friday?')).toBe('how do I study for Friday');
+    expect(tidyTopic('CLT and sampling...')).toBe('CLT and sampling');
+    expect(tidyTopic('  z-scores?! ')).toBe('z-scores');
+  });
+
+  it('a full demo fills the takeaways with distinct items and no punctuation glitches', async () => {
+    const { run } = await runToEnd({ topic: 'How do I prepare before Friday?' });
+    const s = run.snapshot();
+    const t = s.takeaways;
+    const norm = (x: string) => x.toLowerCase();
+    for (const list of [
+      t.decisions.map((d) => d.text),
+      t.nextSteps.map((d) => d.text),
+      t.quiz.map((d) => d.question),
+    ])
+      expect(new Set(list.map(norm)).size).toBe(list.length);
+    expect(t.decisions.length).toBeGreaterThanOrEqual(2);
+    expect(t.decisions.length).toBeLessThanOrEqual(3);
+    expect(t.nextSteps.length).toBeGreaterThanOrEqual(2);
+    expect(t.quiz.length).toBe(2);
+    expect(t.disagreements.length).toBe(1);
+    for (const turn of s.turns) expect(turn.text).not.toMatch(/\?\.|\.\.|!\./);
+    expect(s.turns.map((x) => x.text).join(' ')).toContain(
+      'discussing how do I prepare before Friday.',
+    );
+    expect(s.turns.at(-1)?.text).toMatch(/^To wrap up, we settled/);
+  });
+});

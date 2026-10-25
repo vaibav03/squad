@@ -18,17 +18,29 @@ function phraseOf(p: ParsedRelay): { phrase: string; marker: string } | undefine
   return { phrase: words.join(' ').replace(/[.,;:]+$/, ''), marker: `[${s.file} p.${s.page}]` };
 }
 
+/** Topic for interpolation mid-sentence: no trailing punctuation, first word lower-cased unless it looks like a name/acronym. */
+export function tidyTopic(raw: string): string {
+  let t = raw.trim().replace(/[\s.?!…,;:]+$/, '');
+  if (t.length > 70) t = `${t.slice(0, 67).replace(/\s+\S*$/, '')}…`;
+  return t.replace(
+    /^([A-Z])([a-z]+)(?=\s|$)/,
+    (_m, a: string, b: string) => `${a.toLowerCase()}${b}`,
+  );
+}
+
 export function scriptFor(persona: LivePersonaId, p: ParsedRelay): string {
   const next = p.next ?? 'Chair';
   const src = phraseOf(p);
   const cite = src ? ` ${src.marker}` : '';
-  const topic = p.topic.length > 70 ? `${p.topic.slice(0, 67)}...` : p.topic;
+  const topic = tidyTopic(p.topic);
+  const v = Math.floor((Math.max(p.turn, 1) - 1) / 5);
+  const pick = (xs: string[]): string => xs[v % xs.length]!;
   const ack = p.user ? `You said "${quote(p.user.text)}". ` : '';
   const hand = ` ${next}, over to you.`;
 
   if (p.close) {
     return persona === 'chair'
-      ? `To wrap up: we agreed that the core idea behind ${topic} matters most${src ? ' and it is in the course notes' : ''}. The Skeptic wants more evidence before we trust it. Next steps: re-read the source, do three practice problems, then quiz yourself. Thanks for listening.`
+      ? `To wrap up, we settled on starting from the core idea of ${topic}${src ? ', which is in the course notes' : ''}. The Skeptic still wants more evidence. Thanks for listening.`
       : `Closing thought on ${topic}: stay curious and check the source.`;
   }
   if (p.user) {
@@ -49,15 +61,32 @@ export function scriptFor(persona: LivePersonaId, p: ParsedRelay): string {
     case 'chair':
       return p.turn <= 1
         ? `Welcome. Today we are discussing ${topic}. Let us start with the core idea.${hand}`
-        : `Let us pull this together. We agree on the basics, and one doubt is still open.${hand}`;
+        : `${pick([
+            'Let us pull this together. We agree the basic definition is clear, and one doubt is still open.',
+            'Pausing here. We decided to check every claim against the source before we trust it.',
+            'Quick steer. We settled on working through one example before moving on.',
+          ])}${hand}`;
     case 'tutor':
-      return `The core idea of ${topic} is this: ${src ? `${src.phrase}${cite}` : 'begin with the plain definition'}. That is the anchor to remember.${hand}`;
+      return v === 0
+        ? `The core idea of ${topic} is this: ${src ? `${src.phrase}${cite}` : 'begin with the plain definition'}. That is the anchor to remember.${hand}`
+        : `Another angle on ${topic}: picture a concrete case and ask what changes if one number moves.${hand}`;
     case 'skeptic':
-      return `I am not fully convinced yet. What is the evidence, and when does this break down?${hand}`;
+      return `${pick([
+        'I am not fully convinced yet. What is the evidence, and when does this break down?',
+        'Still skeptical about the edge cases. Who checked this on messy data?',
+      ])}${hand}`;
     case 'planner':
-      return `Here is a plan: first re-read the source${cite}, then try three practice problems, then check yourself.${hand}`;
+      return `${pick([
+        `Here is a plan: first re-read the source${cite}, then try three practice problems.`,
+        'Next, schedule a short review tomorrow and write a one-line summary in your own words.',
+        'Then book a mock quiz at the end of the week to check what stuck.',
+      ])}${hand}`;
     case 'examiner':
-      return `A test would ask: in your own words, what does ${topic} mean, and when does it apply?${hand}`;
+      return `${pick([
+        `A test would ask: in your own words, what does ${topic} mean and when does it apply?`,
+        'A test would ask: what changes in the answer if the data has one extreme outlier?',
+        'A test would ask: how would you check this claim against the course notes?',
+      ])}${hand}`;
   }
 }
 
