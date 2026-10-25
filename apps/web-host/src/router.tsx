@@ -249,6 +249,8 @@ export const routes: RouteObject[] = [
       ...labRoutes,
       ...(HUB_URL ? accountPublicRoutes : []),
       { element: HUB_URL ? <LiveShellLayout /> : <ShellLayout />, children: squadRoutes },
+      // legacy /trips/<slug> links (old Home card) land on the real Trip page, never not-found
+      { path: '/trips/*', element: <Navigate to="/squad/trips" replace /> },
       { path: '*', element: <NotFound /> },
     ],
   },

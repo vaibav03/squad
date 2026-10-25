@@ -5,6 +5,7 @@
 import type { Page } from '@playwright/test';
 import { HUB, WEB } from '../lib/config';
 import { api } from '../lib/hub';
+import type { Asserts } from '../lib/asserts';
 import type { Probe } from '../lib/types';
 import type { StepDef } from '../lib/runner';
 import type { GateCtx } from '../lib/ctx';
@@ -49,7 +50,7 @@ async function waitHome(page: Page) {
   }
 }
 
-async function homeCards(c: GateCtx, a: import('../lib/asserts').Asserts, label: string) {
+async function homeCards(c: GateCtx, a: Asserts, label: string) {
   const { rhea } = c.world.users;
   const ctx = await coldContext(c.browser, rhea.token, WEB);
   const page = await ctx.newPage();
@@ -77,6 +78,18 @@ async function homeCards(c: GateCtx, a: import('../lib/asserts').Asserts, label:
           : trip.href.startsWith('/squad/trips/')),
       JSON.stringify(trip),
     );
+    for (const legacy of ['/trips/spring-break', '/squad/trips/spring-break']) {
+      await page.goto(`${WEB}${legacy}`);
+      await sleep(2500);
+      const b = await page.locator('body').innerText();
+      a.ok(
+        `legacy ${legacy} lands on the Trip page, not not-found`,
+        /\/squad\/trips$/.test(page.url()) && !NOT_FOUND.test(b),
+        page.url(),
+      );
+    }
+    await page.goto(`${WEB}/squad`);
+    await waitHome(page);
     await a.shot(page, `${label}-home`);
     await desktopShot(page, `${label}-cards`);
     for (const l of links) {
@@ -144,7 +157,22 @@ export const S1B: StepDef<GateCtx> = {
   needs: [P_PHONE],
   realNeeds: ['apple'],
   fixture: async (c, a) => {
-    const { rhea } = c.world.users;
+    // a brand-new email account: world users signed up with a phone, so they are already verified
+    const email = `s1b.${Date.now().toString(36)}@example.com`;
+    const st = (
+      await api(null, '/v1/auth/start', { method: 'POST', json: { name: 'Phone Tester', email } })
+    ).json;
+    const ver = (
+      await api(null, '/v1/auth/verify', {
+        method: 'POST',
+        json: { challengeId: st.challengeId, code: st.devCode },
+      })
+    ).json;
+    const rhea = { token: ver.token as string };
+    await api(rhea.token, '/v1/squads', {
+      method: 'POST',
+      json: { name: `Phone Squad ${Date.now().toString(36).slice(-4)}` },
+    });
     const phone = '+1 415 555 0142';
     const before = (await api(rhea.token, '/v1/me')).json;
     a.eq('before linking the phone is not verified', before.phoneVerified, false);
@@ -191,14 +219,17 @@ export const S1B: StepDef<GateCtx> = {
     a.eq('the session was not swapped (same account)', after.user?.id, before.user?.id);
     const link = (await api(rhea.token, '/v1/imessage/link')).json;
     a.eq('the iMessage handle mapping is linked to this account', link.links?.length, 1);
-    const page = c.actors.rhea?.page;
-    if (page) {
+    const ctx = await coldContext(c.browser, rhea.token, WEB);
+    const page = await ctx.newPage();
+    try {
       await page.goto(`${WEB}/squad`);
       await waitHome(page);
       const row = page.locator('li', { hasText: 'Link your phone' });
       a.ok('Home marks the phone done only after verification', /Done/.test(await row.innerText()));
       await a.shot(page, 'phone-done');
       await desktopShot(page, 'phone-done');
+    } finally {
+      await ctx.close();
     }
   },
 };

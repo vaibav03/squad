@@ -65,6 +65,11 @@ for (const who of ['new account', 'seeded student'] as const) {
         `${l.href} is not a not-found page`,
       ).not.toMatch(NOT_FOUND);
     }
+    for (const legacy of ['/trips/spring-break', '/squad/trips/spring-break']) {
+      await page.goto(legacy);
+      await expect(page).toHaveURL(/\/squad\/trips$/, { timeout: 20_000 });
+      await expect(page.locator('body')).not.toContainText(NOT_FOUND);
+    }
     if (who === 'new account') {
       await page.goto('/squad/trips');
       await expect(page.getByText('No trip planned yet')).toBeVisible({ timeout: 20_000 });
