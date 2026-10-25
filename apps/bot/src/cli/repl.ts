@@ -3,6 +3,7 @@ import type { Readable, Writable } from 'node:stream';
 import type { Db } from '@squad/core';
 import { formatPersonaText } from '../persona';
 import { decisions } from '../store';
+import type { Scheduler } from '../scheduler/scheduler';
 import type { CliTransport } from '../transports/cli';
 import type { Bot, EventPublisher } from '../types';
 import { createRecorder, type Recorder } from './recorder';
@@ -18,6 +19,7 @@ export interface ReplDeps {
   tap: { current?: EventPublisher };
   students: string[];
   now?: () => number;
+  scheduler?: Scheduler;
 }
 
 const HELP = [
@@ -29,6 +31,7 @@ const HELP = [
   '/record <file>  start recording VillageEvents; /record stop writes + validates the replay',
   '/checkpoint <name>   add a replay checkpoint while recording',
   '/decisions [n]  show the last n speaking-policy decisions (scores, chosen skill, reason)',
+  '/jobs [student]   list scheduled proactive jobs; /tick runs the ones that are due',
   '/help  /quit',
 ];
 
@@ -92,6 +95,28 @@ export class ChatRepl {
         this.chat = 'dm';
         out(`now in a DM with ${formatPersonaText(undefined, '').trim().replace(/:$/, '')}`);
         break;
+      case '/jobs': {
+        const sch = this.d.scheduler;
+        if (!sch) return out('  (no scheduler in this session)');
+        const jobs = sch.list(args[0] ? { student: args[0] } : {});
+        if (!jobs.length) out('  no jobs');
+        for (const j of jobs) {
+          const when = new Date(j.runAt).toISOString().slice(0, 16).replace('T', ' ');
+          out(
+            `  #${j.id} ${j.status.padEnd(9)} ${when}Z ${j.kind} ${j.student ?? j.chatId ?? ''} ${j.cron ? `cron "${j.cron}" ` : ''}[${j.key}]`,
+          );
+        }
+        break;
+      }
+      case '/tick': {
+        const sch = this.d.scheduler;
+        if (!sch) return out('  (no scheduler in this session)');
+        const r = await sch.tick();
+        out(
+          `  ran ${r.length} job(s)${r.length ? `: ${r.map((x) => `${x.kind}=${x.outcome}`).join(', ')}` : ''}`,
+        );
+        break;
+      }
       case '/decisions': {
         const n = Number(args[0] ?? 5) || 5;
         for (const r of decisions(this.d.db, n)) {

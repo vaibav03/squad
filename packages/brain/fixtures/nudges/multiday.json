@@ -1,0 +1,83 @@
+{
+  "name": "multi-day proactive session",
+  "startsAt": "2026-10-26T12:00:00Z (Monday, virtual clock)",
+  "syllabus": "Homework 3 due Oct 27 11:59pm\nMidterm exam: Nov 2 9:00am",
+  "steps": [
+    {
+      "afterMin": 0,
+      "as": "s_ana",
+      "chat": "group:test",
+      "say": "@cubbie my timezone is ET"
+    },
+    {
+      "afterMin": 1,
+      "as": "s_ana",
+      "chat": "group:test",
+      "say": "@cubbie start nudges"
+    },
+    {
+      "afterMin": 2,
+      "as": "s_ben",
+      "chat": "group:test",
+      "say": "lol anyone want pizza"
+    },
+    {
+      "afterMin": 5,
+      "as": "s_cam",
+      "chat": "group:test",
+      "say": "@cubbie pinky promise: I will finish ch6 by Wednesday"
+    },
+    {
+      "afterMin": 6,
+      "as": "s_cam",
+      "chat": "dm",
+      "say": "1",
+      "note": "confirms the promise"
+    },
+    {
+      "afterMin": 600,
+      "as": "s_ana",
+      "chat": "dm",
+      "say": "snooze 1h",
+      "note": "Tue 02:00Z = Mon 22:00 ET, nudge already sent at 21:00"
+    }
+  ],
+  "afterAll": {
+    "advanceDays": 8,
+    "stepMin": 30
+  },
+  "expect": [
+    {
+      "to": "s_ana",
+      "match": "Due tomorrow:",
+      "times": 2,
+      "note": "Mon 9 pm ET (Homework 3) and Sun Nov 1 9 pm ET (Midterm)"
+    },
+    {
+      "to": "s_ana",
+      "match": "Midterm exam is in 3 days",
+      "times": 1,
+      "note": "T-3d countdown (Fri Oct 30 9am ET)"
+    },
+    {
+      "to": "s_ana",
+      "match": "Midterm exam is tomorrow",
+      "times": 1,
+      "note": "T-1d countdown (Sun Nov 1 9am ET)"
+    },
+    {
+      "to": "s_ben",
+      "none": true,
+      "note": "never opted in"
+    },
+    {
+      "to": "s_cam",
+      "match": "Reminder",
+      "min": 1
+    },
+    {
+      "group": true,
+      "noneMatch": "ch6|miss"
+    }
+  ]
+}
