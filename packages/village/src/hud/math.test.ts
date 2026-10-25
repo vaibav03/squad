@@ -1,6 +1,6 @@
-import { portraitFor, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { AgentInfo } from '../world/api';
-import { chipOrder, formatClock, initialOf } from './math';
+import { chipOrder, formatClock, initialOf, portraitFor } from './math';
 
 const a = (
   id: string,
