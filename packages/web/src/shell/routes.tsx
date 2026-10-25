@@ -20,6 +20,16 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     nav: { label: 'Village', icon: 'map', order: 1, primary: true },
   },
   {
+    key: 'squad-create',
+    path: '/squad/new',
+    title: 'Create a squad',
+  },
+  {
+    key: 'squad-members',
+    path: '/squad/members',
+    title: 'Members',
+  },
+  {
     key: 'setup',
     path: '/squad/setup/:step?',
     title: 'Setup',
@@ -96,4 +106,13 @@ export function loadPage(meta: SquadRouteMeta): ComponentType {
 export const squadRoutes: RouteObject[] = squadRouteMeta.map((meta) => {
   const Page = loadPage(meta);
   return { path: meta.path, element: createElement(Page), handle: meta } satisfies RouteObject;
+});
+
+/** Reachable before sign-in (accounts). Hosts mount these outside the shell. */
+export const accountPublicRoutes: RouteObject[] = [
+  { key: 'welcome', path: '/welcome/:step?', title: 'Welcome' },
+  { key: 'squad-join', path: '/join/:code?', title: 'Join a squad' },
+].map((meta) => {
+  const Page = loadPage({ ...meta, public: true });
+  return { path: meta.path, element: createElement(Page) } satisfies RouteObject;
 });

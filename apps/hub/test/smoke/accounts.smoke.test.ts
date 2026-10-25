@@ -647,7 +647,7 @@ describe('privacy basics: export, deletion, logs', () => {
     const api = await boot({ logLevel: 'debug' });
     // capture hub logs written to stderr during the test
     const orig = process.stderr.write.bind(process.stderr);
-    (process.stderr as any).write = (c: any, ...r: any[]) => (lines.push(String(c)), true);
+    (process.stderr as any).write = (c: any) => (lines.push(String(c)), true);
     try {
       const u = api.hub.url;
       const a = await signUp(api, 'Ana', '+1 415 555 0801');

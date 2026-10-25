@@ -1,0 +1,33 @@
+.sq-create__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.sq-create__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.sq-create__h {
+  font: 600 var(--text-lg) / var(--lh-lg) var(--font-sans);
+}
+.sq-create__p {
+  color: var(--muted-foreground);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+}
+.sq-create__lead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.sq-create__note {
+  color: var(--muted-foreground);
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+}
+.sq-create__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

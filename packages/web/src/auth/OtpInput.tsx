@@ -35,7 +35,6 @@ export function OtpInput({
   useEffect(() => {
     if (autoFocus) refs.current[Math.min(value.length, length - 1)]?.focus();
     // only on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const focusAt = (i: number) => {
