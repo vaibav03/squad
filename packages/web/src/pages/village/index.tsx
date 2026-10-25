@@ -15,6 +15,8 @@ import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
 import { RoomLayer } from '../../overlays/room-info';
 import { CouncilHall } from '../../council';
+import { useToast } from '../../primitives/Toast';
+import { sendPhraseToChat } from './chat-send';
 import { OverlayHost } from './OverlayHost';
 import { DEFAULT_WORLD, loadWorld, type WorldHandle } from './worlds';
 import './village.css';
@@ -117,8 +119,32 @@ export default function VillagePage({ world }: { world?: string }) {
     if (!st || !t.closest('.rr-layer') || t.closest('[role="dialog"]')) return;
     e.preventDefault();
     st.focus({ preventScroll: true });
-    st.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
+    st.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }),
+    );
   }, []);
+
+  // A room's "say this in chat" button sends the phrase to the squad group chat. Not offered in replays.
+  const { toast } = useToast();
+  const runPhrase = useMemo(
+    () =>
+      hub?.token && !replayName
+        ? (phrase: string) => {
+            void sendPhraseToChat(hub, phrase).then((ok) =>
+              toast(
+                ok
+                  ? { title: 'Sent to the squad chat', body: phrase, tone: 'ok' }
+                  : {
+                      title: 'Could not send that',
+                      body: 'Open Chat and say it there.',
+                      tone: 'warn',
+                    },
+              ),
+            );
+          }
+        : undefined,
+    [hub, replayName, toast],
+  );
 
   const onClosed = useCallback(() => handle.current?.overlayClosed(), []);
 
@@ -155,7 +181,7 @@ export default function VillagePage({ world }: { world?: string }) {
           Replay
         </span>
       )}
-      <RoomLayer calm={calm} />
+      <RoomLayer calm={calm} onRun={runPhrase} />
       <OverlayHost
         event={event}
         mode={mode}
