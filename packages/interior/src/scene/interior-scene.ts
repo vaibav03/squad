@@ -14,12 +14,7 @@ import type { OverlayBridge } from '../shared/overlay-bridge';
 import { CollisionGrid, boxBlocked, moveAndSlide } from '../tilemap/collision';
 import type { InteriorMap, PropsDef, DoorDef, TileLayerName } from '../tilemap/types';
 import { TILE } from '../tilemap/types';
-import {
-  buildingFrame,
-  lerpScroll,
-  roomFrame,
-  roomScroll,
-} from '../world/camera-math';
+import { buildingFrame, lerpScroll, roomFrame, roomScroll } from '../world/camera-math';
 import { DUR, easeInOut } from '../world/motion';
 import { createRng } from '../world/rng';
 import { RoomRegistry } from '../world/rooms';
