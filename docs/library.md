@@ -42,3 +42,14 @@ Mastery words (no grades): box 0 new, 1-2 learning, 3-4 steady, 5 strong.
 
 ## Limits (all returned in `limits` so the UI never hardcodes them)
 25 MB per file, 400 pages per file, 2000 pages per course, 40 files per course, 30 s parse timeout, PDFs with `/JS`, `/JavaScript`, `/Launch`, `/EmbeddedFile` actions are rejected (`unsafe_pdf`); the parser never executes anything.
+
+## Source viewer API
+
+`import { SourceViewerHost, openSource, useOpenSource, CitationChip, parseCitationString, SourceExcerptView } from '@squad/web'` (code: `packages/web/src/components/source-viewer`).
+
+- `<SourceViewerHost />` mount once per page (courses page; chat, council card and room transcripts may mount their own). Sheet: bottom on phones, right at >= 768px. Reads `useLiveConfig()`: live mode calls `GET {hubUrl}/v1/library/source` with the Bearer token, any other mode uses built-in fixtures (`openstax-biology.pdf` verified/unverified quote; file names containing `removed` or `missing` give the removed / not_found states).
+- `openSource({ file, page, quote?, courseId?, returnFocusTo? })` module-level; queues (dev warning) if no host is mounted yet. Focus returns to `returnFocusTo`, else the element focused at call time. `useOpenSource()` returns the same function.
+- `<CitationChip citation={{file,page,quote?,courseId?}} onOpen? />` renders `slides.pdf p.12` and calls `openSource`.
+- `parseCitationString('[file p.N]' | '(file p.N)') -> { file, page } | null`.
+- `<SourceExcerptView excerpt state='loading'|'ready'|'error'|'offline' />` pure view for tests/gallery.
+- Results are cached per (course, file, page, quote) for the session, in-flight requests are deduped and aborted when the viewer closes. "Open in file" fetches the raw file with the token and opens an object URL at `#page=N` (plain href fallback).
