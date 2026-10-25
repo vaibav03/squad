@@ -102,13 +102,21 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
                   style={{ '--i': i } as CSSProperties}
                 >
                   {id ? (
-                    <CastAvatar name={id} state={state} size={2} calm={calm} className="rr-who__avatar" />
+                    <CastAvatar
+                      name={id}
+                      state={state}
+                      size={2}
+                      calm={calm}
+                      className="rr-who__avatar"
+                    />
                   ) : (
                     <SpeakerDot who={w.name} />
                   )}
                   <span>
                     <strong>{w.name}</strong>
-                    {id ? <span className="rr-who__state">{CAST_STATE_LABEL[state]}</span> : null}{' '}
+                    {id ? (
+                      <span className="rr-who__state">{CAST_STATE_LABEL[state]}</span>
+                    ) : null}{' '}
                     <span className="rr-dim">{w.does}</span>
                   </span>
                 </li>

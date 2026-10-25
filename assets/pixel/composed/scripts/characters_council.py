@@ -47,16 +47,14 @@ def grind_torso(c, g):
     c.R(cx - 3, top, cx + 2, top, 'glow'); c.R(cx - 3, g['hip'] - 3, cx + 2, g['hip'] - 3, 'roof-shade')
 def grind_front(c, g):
     cx, hip, f = g['cx'], g['hip'], g['pose'].get('f', 0)
-    b = 1 if f % 4 == 1 else 0
-    x0, x1 = cx - 1, cx + 6
-    c.R(x0, hip - 3 - b, x1, hip - 1 - b, 'roof-wine'); c.R(x0 + 1, hip - 2 - b, x1 - 1, hip - 2 - b, 'glow')
-    c.R(x0 + 1, hip - 5 - b, x1 - 1, hip - 4 - b, 'wall-lit'); c.R(x0 + 1, hip - 4 - b, x1 - 1, hip - 4 - b, 'wall-mid')
-    c.R(x0 + 2, hip - 7 - b, x1 - 2, hip - 6 - b, 'ember'); c.R(x0 + 2, hip - 6 - b, x1 - 2, hip - 6 - b, 'roof-wine')
-    # coffee cup on top
-    cxx = x0 + 3
-    c.R(cxx, hip - 11 - b, cxx + 2, hip - 8 - b, 'wood-lit'); c.R(cxx, hip - 11 - b, cxx + 2, hip - 11 - b, 'cloud-hi'); c.P(cxx + 3, hip - 10 - b, 'wood-lit')
-    c.R(cxx, hip - 9 - b, cxx + 2, hip - 9 - b, 'wood')
-    steam(c, cxx, hip - 13 - b, f)
+    b = 1 if f % 4 == 1 else 0                                               # stack hops on frame 1
+    c.R(cx - 1, hip - 3 - b, cx + 9, hip - 1 - b, 'roof-wine'); c.R(cx, hip - 2 - b, cx + 8, hip - 2 - b, 'glow')
+    c.R(cx, hip - 5 - b, cx + 8, hip - 4 - b, 'wall-lit'); c.R(cx, hip - 4 - b, cx + 8, hip - 4 - b, 'wall-mid')
+    c.R(cx + 3, hip - 7 - b, cx + 9, hip - 6 - b, 'ember'); c.R(cx + 3, hip - 6 - b, cx + 9, hip - 6 - b, 'roof-wine')
+    k = cx + 6                                                               # coffee cup on top, out past the face
+    c.R(k, hip - 11 - b, k + 2, hip - 8 - b, 'cloud-hi'); c.R(k, hip - 10 - b, k + 2, hip - 10 - b, 'wood-lit'); c.R(k, hip - 9 - b, k + 2, hip - 8 - b, 'wood-lit')
+    c.P(k + 3, hip - 10 - b, 'cloud-hi'); c.P(k + 3, hip - 9 - b, 'cloud-hi')
+    steam(c, k, hip - 13 - b, f)
 
 # ---------------- Advisor: glasses, clipboard checklist
 def adv_head(c, g):
@@ -82,12 +80,11 @@ def chair_torso(c, g):
     c.R(fx - 1, top, fx, top + 1, 'cloud-hi'); c.P(fx, top + 2, 'violet'); c.P(fx, top + 3, 'violet')
     c.R(cx - 3, hip - 2, cx + 2, hip - 2, 'wall-shade')
 def chair_hand(c, g):
-    x, y = g['hand']; up = g['pose'].get('f', 0) % 2 == 0 and g['pose'].get('strike')
-    c.R(x, y - 4, x, y, 'wood'); c.R(x - 1, y - 6, x + 2, y - 4, 'wood-lit'); c.R(x - 1, y - 4, x + 2, y - 4, 'wood'); c.P(x - 1, y - 6, 'wood-dark') if False else None
+    x, y = g['hand']
+    c.R(x, y - 5, x + 1, y, 'wood'); c.R(x - 2, y - 8, x + 3, y - 5, 'wood-lit'); c.R(x - 2, y - 5, x + 3, y - 5, 'wood'); c.R(x + 3, y - 8, x + 3, y - 5, 'wood-dark'); c.R(x - 2, y - 8, x, y - 8, 'glow')
 def chair_head(c, g):
     hx, hy = g['hx'], g['hy']
-    for x in range(3, 7): c.P(hx + x, hy + 1, 'wall-mid') if False else None
-    c.R(hx + 2, hy + 1, hx + 3, hy + 2, 'wall-mid')                           # silver temple
+    pass
 
 def specs():
     return {
@@ -100,9 +97,9 @@ def specs():
      'cast-advisor': dict(LL=8, TH=9, TW=6, SK=3, flare=1, skin=SK_LT, hair_style='bun', hair=hair('wood', 'wood-dark', 'wood-lit'),
         coat=('violet', 'wall-shade', 'cloud-hi'), hem='wall-shade', pants=('wall-shade', 'hill-near'), boots='wood-dark', boots_sh='ink', eye='dot', blink=True,
         armN_fixed=(3, 3), acc=dict(torso=adv_torso, head=adv_head, hand=adv_hand)),
-     'cast-chair': dict(LL=8, TH=10, TW=6, SK=4, flare=2, seam=True, skin=SK_MD, hair_style='slick', hair=hair('wood-dark', 'ink', 'wood'),
+     'cast-chair': dict(LL=8, TH=10, TW=6, SK=4, flare=2, seam=True, skin=SK_MD, hair_style='slick', hair=hair('wood-dark', 'ink', 'wall-mid'),
         coat=('wall-lit', 'wall-mid', 'cloud-hi'), hem='wall-shade', pants=('sky-deep', 'ink'), boots='ink', boots_sh='ink', eye='dot', brow='stern', blink=True,
-        armN_fixed=(3, 3), acc=dict(torso=chair_torso, head=chair_head, hand=chair_hand)),
+        armN_fixed=(5, 2), acc=dict(torso=chair_torso, head=chair_head, hand=chair_hand)),
     }
 
 def council_poses(S):

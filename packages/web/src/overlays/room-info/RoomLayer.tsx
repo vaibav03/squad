@@ -81,7 +81,10 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
   useEffect(() => {
     if (!last) return;
     setSpeaking(last.who);
-    const t = setTimeout(() => setSpeaking(null), Math.min(Math.max(last.holdMs || 1500, 1200), 4000));
+    const t = setTimeout(
+      () => setSpeaking(null),
+      Math.min(Math.max(last.holdMs || 1500, 1200), 4000),
+    );
     return () => clearTimeout(t);
   }, [lastId, slot]);
 
