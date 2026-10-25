@@ -8,13 +8,16 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `fix/` | 1 | 4 | 43 | Claude Sonnet 5.5 (3) |
+| `feature/` | 1 | 4 | 23 | Claude Sonnet 5.5 (4) |
+| `fix/` | 2 | 12 | 81 | Claude Sonnet 5.5 (10) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
+| `feature/imessage-binding` | 4 | 23 | 2026-10-25 03:08 | 2026-10-25 03:09 | Vaibav |
+| `fix/e2e-round2` | 8 | 38 | 2026-10-25 02:27 | 2026-10-25 03:06 | Vaibav |
 | `fix/names-council-inspect` | 4 | 43 | 2026-10-25 02:41 | 2026-10-25 03:00 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
@@ -22,9 +25,9 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 182 |
+| (no trailer) | 183 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 463 |
+| Claude Sonnet 5.5 | 474 |
 
 ## Commits landed on main by area (subject prefix)
 
@@ -112,5 +115,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Author | Commits |
 |---|---:|
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 363 |
+| Vaibav | 375 |
 | vaibav03 | 26 |
