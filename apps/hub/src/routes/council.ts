@@ -7,12 +7,15 @@ import {
   type CouncilAction,
   type CouncilAskResponse,
   type CouncilResult,
+  councilRunActions,
+  councilRunOwner,
   type VillageEvent,
 } from '@squad/core';
 import { Hono, type Context } from 'hono';
 import { z } from 'zod';
 import { requireViewer } from '../auth';
 import { COURSE_ID } from '../cast';
+import { createCouncilViewerData } from '../council/viewer-data';
 import type { HubApp, HubDeps, HubEnv, Viewer } from '../types';
 
 const enc = new TextEncoder();
@@ -106,13 +109,24 @@ export function createCouncilRoutes(deps: HubDeps): HubApp {
   type Got = { res: Response } | { action: CouncilAction };
   const actionFor = async (c: Context<HubEnv>): Promise<Got> => {
     const id = c.req.param('id') ?? '';
-    if (!RUN_ID.test(id)) return { res: c.json(err('not_found'), 404) as unknown as Response };
+    const notFound = { res: c.json(err('not_found'), 404) as unknown as Response };
+    if (!RUN_ID.test(id)) return notFound;
+    const viewer = c.get('viewer');
     const run = (await service()).get(id);
-    if (!run || !canSee(run, c.get('viewer')))
-      return { res: c.json(err('not_found'), 404) as unknown as Response };
+    // Runs that are not CouncilService runs (Round Table, Debate) are known by their A2A owner record only.
+    const owner = run ? undefined : councilRunOwner(id);
+    if (run ? !canSee(run, viewer) : !owner) return notFound;
+    if (owner) {
+      const seen = owner.private
+        ? owner.askedBy === viewer.studentId
+        : deps.directory.squadOf(owner.askedBy) === viewer.squadId;
+      if (!seen) return notFound;
+    }
     const body = ActionBodySchema.safeParse(await c.req.json().catch(() => null));
     if (!body.success) return { res: c.json(err('invalid_request'), 400) as unknown as Response };
-    const action = run.actions?.find((a) => a.id === body.data.actionId);
+    const action = (run ? run.actions : councilRunActions(id))?.find(
+      (a) => a.id === body.data.actionId,
+    );
     if (!action) return { res: c.json(err('action_not_found'), 404) as unknown as Response };
     return { action };
   };
@@ -265,6 +279,7 @@ async function buildDemoService(deps: HubDeps): Promise<CouncilService> {
     emit,
     ...(brain ? { brain, courseId: () => COURSE_ID } : {}),
     demo: true,
+    viewer: createCouncilViewerData(deps, { courseId: () => COURSE_ID }),
     // no real model here: every run is an honestly labelled scripted demo run
     agents: createCouncilAgents({ env: process.env, emit }),
   });

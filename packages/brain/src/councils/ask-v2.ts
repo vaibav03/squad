@@ -15,6 +15,7 @@ import type { AgentRun } from '../agents/runtime';
 import type { AgentTurn, CouncilDataPorts } from '../agents/types';
 import { isGradedGrab, stripMention } from '../experts/intent';
 import type { Brain } from '../experts/types';
+import { publishActionTitles } from './action-items';
 import { askRoster } from './ask-agents';
 import { CHAIR_NAME, RANK_TASK, TRIAGE_SYSTEM, TriageSchema } from './ask-prompts';
 import {
@@ -549,22 +550,5 @@ async function publishActionItems(
   if (v.dissent) items.push(`Ask your TA about ${v.dissent.member}'s different view.`);
   const page = cites[0]?.label;
   if (page) items.push(`Re-read ${page} and check it against the answer.`);
-  const out: CouncilAction[] = [];
-  for (const raw of [...new Set(items)].slice(0, COUNCIL_ACTIONS_MAX)) {
-    const title = cut(raw, 120);
-    try {
-      const m = await R.publishCode({
-        from: chairId,
-        to: 'room',
-        kind: 'status',
-        stage: 'actions',
-        summary: title,
-        ...(verdictMsgId ? { parentMessageId: verdictMsgId } : {}),
-      });
-      out.push({ id: m.id, title });
-    } catch {
-      // an action item that cannot be published is skipped; the verdict stands
-    }
-  }
-  return out;
+  return publishActionTitles(R, chairId, items, verdictMsgId);
 }

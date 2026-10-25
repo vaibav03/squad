@@ -1,6 +1,7 @@
 // Mounts the bot in-process: the SAME router, speaking policy, confirm flow and skills as iMessage, over the web
 // Transport. One process serves chat: shared db, one emit (the hub's own ingest), one brain and mastery store.
 import { contextServiceFor } from '../context/service';
+import { createCouncilViewerData } from '../council/viewer-data';
 import { liveServiceFor } from '../live/wire';
 import {
   createResilientLlm,

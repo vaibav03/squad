@@ -33,6 +33,7 @@ import {
 } from '@squad/brain';
 import { contextServiceFor } from '../context/service';
 import { contextBusyBlocks } from '../context/busy';
+import { createCouncilViewerData } from '../council/viewer-data';
 import {
   createAudioServices,
   createCallPort,
@@ -128,7 +129,13 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     emit,
   });
   const councilDemo = () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : false);
+  const mastery = createMasteryStore({ db, emit: quizEmit });
   deps.council = createCouncilService({
+    viewer: createCouncilViewerData(deps, {
+      courseId: () => courseId,
+      mastery,
+      chapters: (id) => brain.store.listChapters(id).map((c) => ({ id: c.id, title: c.title })),
+    }),
     llm: councilLlmFor(o.llm, councilDemo),
     db,
     emit,
@@ -141,7 +148,6 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
 
   deps.liveWiring = { brain, courseId: () => courseId, llm: o.llm };
 
-  const mastery = createMasteryStore({ db, emit: quizEmit });
   const engine = new QuizEngine({
     db,
     llm: o.llm,
