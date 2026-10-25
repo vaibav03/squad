@@ -8,4 +8,8 @@ dist/
 .worktrees/
 data/
 logs/
+<<<<<<< HEAD
 docs/design/shots/integration/video/
+=======
+assets/vendor/
+>>>>>>> origin/main
