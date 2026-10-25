@@ -23,7 +23,9 @@ export interface Kit {
   clock: { t: number };
 }
 
-export function makeKit(over: Partial<EngineDeps> & { limits?: Partial<LiveLimits> } = {}): Kit {
+export function makeKit(
+  over: Partial<Omit<EngineDeps, 'limits'>> & { limits?: Partial<LiveLimits> } = {},
+): Kit {
   const village: DiscussionEventT[] = [];
   const timers: Kit['timers'] = [];
   const clock = { t: 1_700_000_000_000 };

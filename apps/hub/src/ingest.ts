@@ -76,6 +76,9 @@ export function createIngestor(deps: HubDeps): Ingestor {
 
   function routeSquad(e: VillageEvent): string | null {
     if (e.t === 'trip.confirmed') return e.squadId;
+    // live discussion events belong to the run's squad (never broadcast to every squad)
+    if (e.t.startsWith('discussion.'))
+      return deps.live?.get((e as { discussionId: string }).discussionId)?.squadId ?? '__none__';
     const cand: (string | undefined)[] = [];
     if ('student' in e) cand.push(e.student);
     if ('target' in e) cand.push(e.target);

@@ -291,6 +291,10 @@ export interface HubDeps {
   /** Squads, memberships, invites, audit log. */
   squads: SquadsStore;
   codeSender: CodeSender;
+  /** Live agent discussions; built lazily by `liveServiceFor` (live/wire.ts). */
+  live?: import('./live/service').LiveService;
+  /** Real-ports wiring for live grounding/takeaways (set by adapters/real.ts). */
+  liveWiring?: import('./live/wire').LiveWiring;
 }
 
 import type { CodeSender } from './code-sender';

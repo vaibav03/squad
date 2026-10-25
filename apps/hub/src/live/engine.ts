@@ -236,6 +236,7 @@ export class LiveRun {
   }
 
   private async run(): Promise<void> {
+    await Promise.resolve(); // let the service register the run before the first village event
     this.cancelHard = this.d.setTimer(
       () => this.hardStop(),
       (this.d.limits.maxSeconds + 10) * 1000,

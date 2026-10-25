@@ -206,3 +206,121 @@ describe('village events', () => {
     );
   });
 });
+
+import { createLiveService, LiveBusyError } from './service';
+import { FakeLive } from './fake-client';
+import { LiveClientError, type LiveAgentClient, type LiveConnectOptions } from './types';
+
+/** A client that never answers (stalls) or fails in a chosen way. */
+class Scripted implements LiveAgentClient {
+  h: LiveConnectOptions['handlers'] = {};
+  constructor(
+    private readonly mode: 'stall' | 'connect-fails' | 'error-on-send' | 'close-on-send',
+    private readonly kind: 'credits' | 'auth' | 'rate_limited' | 'unavailable' = 'credits',
+  ) {}
+  connect(o: LiveConnectOptions) {
+    this.h = o.handlers;
+    return this.mode === 'connect-fails'
+      ? Promise.reject(new LiveClientError(this.kind, 'x'))
+      : Promise.resolve();
+  }
+  sendText() {
+    if (this.mode === 'error-on-send') this.h.error?.(this.kind, 'boom');
+    if (this.mode === 'close-on-send') {
+      this.h.error?.(this.kind, 'Your prepayment credits are depleted');
+      this.h.close?.();
+    }
+  }
+  interrupt() {}
+  close() {}
+}
+
+describe('demo fallback', () => {
+  for (const kind of ['credits', 'auth', 'rate_limited', 'unavailable'] as const) {
+    for (const mode of ['connect-fails', 'error-on-send', 'close-on-send'] as const) {
+      it(`${kind} via ${mode} restarts on FakeLive with demo=true`, async () => {
+        const kit = makeKit({
+          limits: { maxTurns: 3 },
+          clients: (k) =>
+            k === 'gemini' ? new Scripted(mode, kind) : new FakeLive({ speedMs: 0 }),
+        });
+        const { run, events } = await runToEnd({}, kit);
+        const s = run.snapshot();
+        expect(s.demo).toBe(true);
+        expect(s.note).toBeTruthy();
+        expect(s.status).toBe('ended');
+        expect(s.endReason).toBe('max_turns');
+        expect(s.turns.length).toBeGreaterThan(3);
+        expect(s.turns.map((t) => t.n)).toEqual(s.turns.map((_, i) => i + 1));
+        // a fresh snapshot tells the UI the run restarted in demo mode
+        expect(events.filter((e) => e.k === 'snapshot').length).toBe(1);
+        for (const e of events) expect(LiveStreamEventSchema.safeParse(e).success).toBe(true);
+      });
+    }
+  }
+
+  it('no key and FORCE_FAKE_LIVE go straight to demo', async () => {
+    const a = await runToEnd({}, makeKit({ hasKey: false, limits: { maxTurns: 2 } }));
+    expect(a.run.snapshot()).toMatchObject({ demo: true, note: 'no key' });
+    const b = await runToEnd({}, makeKit({ forceFake: true, limits: { maxTurns: 2 } }));
+    expect(b.run.snapshot().demo).toBe(true);
+    const c = await runToEnd({}, makeKit({ limits: { maxTurns: 2 } }));
+    expect(c.run.snapshot().demo).toBe(false);
+  });
+});
+
+describe('budget guard', () => {
+  it('hard stop timer closes every session and ends with budget', async () => {
+    const kit = makeKit({ clients: () => new Scripted('stall') });
+    const run = new LiveRun(kit.deps, init());
+    const events = collect(run);
+    await new Promise((r) => setTimeout(r, 5));
+    const hard = kit.timers.find((t) => t.label === 'hard' && !t.cancelled)!;
+    expect(hard.ms).toBe((240 + 10) * 1000);
+    hard.fn();
+    await run.settled();
+    expect(run.snapshot()).toMatchObject({ status: 'ended', endReason: 'budget' });
+    expect(events.at(-1)?.k).toBe('ended');
+  });
+
+  it('a stalled turn times out instead of hanging (after turns exist)', async () => {
+    const kit = makeKit({ limits: { maxTurns: 3 } });
+    const base = kit.deps.clients;
+    let n = 0;
+    kit.deps.clients = (k, p) => (p === 'skeptic' ? (n++, new Scripted('stall')) : base(k, p));
+    const run = new LiveRun(kit.deps, init());
+    await new Promise((r) => setTimeout(r, 20));
+    kit.timers.filter((t) => t.label === 'turn' && !t.cancelled).forEach((t) => t.fn());
+    await run.settled();
+    expect(run.snapshot().status).toBe('ended');
+  });
+
+  it('service: one active run per viewer, N starts per hour', async () => {
+    const kit = makeKit({ clients: () => new Scripted('stall'), limits: { startsPerHour: 2 } });
+    let n = 0;
+    const svc = createLiveService({
+      ...kit.deps,
+      newId: () => `ld_${String(++n).padStart(12, 'a')}`,
+    });
+    const input = {
+      topic: 'topic here',
+      askedBy: 'u1',
+      squadId: 's',
+      visibility: 'squad' as const,
+    };
+    const a = svc.start(input);
+    expect(() => svc.start(input)).toThrow(LiveBusyError);
+    a.hardStop();
+    await a.settled();
+    await new Promise((r) => setTimeout(r, 5));
+    const b = svc.start(input);
+    b.hardStop();
+    await b.settled();
+    await new Promise((r) => setTimeout(r, 5));
+    expect(() => svc.start(input)).toThrow(/rate_limited/);
+    // another viewer is unaffected
+    const c = svc.start({ ...input, askedBy: 'u2' });
+    c.hardStop();
+    await c.settled();
+  });
+});
