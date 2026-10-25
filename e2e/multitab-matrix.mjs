@@ -184,7 +184,10 @@ async function browserPids(root) {
   }
   const out = new Set([root]);
   const q = [root];
-  while (q.length) for (const c of kids.get(q.shift()) ?? []) if (!out.has(c)) (out.add(c), q.push(c));
+  while (q.length) for (const c of kids.get(q.shift()) ?? []) if (!out.has(c)) {
+      out.add(c);
+      q.push(c);
+    }
   return out;
 }
 /** ESTABLISHED sockets owned by the browser tree whose REMOTE side is the hub port */
