@@ -4,12 +4,14 @@ import { Icon } from '../../primitives/Icon';
 import { Markdown } from '../../primitives/Markdown';
 import { ConfirmMessageCard, QuizMessageCard } from './cards';
 import { CouncilChatCard } from '../../council';
-import { PLAN_OPEN_EVENT } from '@squad/village/rooms';
 import { LiveChatCard } from '../../live/LiveChatCard';
 import { useSquadConfig } from '../../shell/context';
 import { AudioPlayer, ImageAttachment } from './media';
 import { ChatAvatar } from './parts';
 import { SyncBadge } from './sync/SyncBadge';
+import { ProvenanceRow } from './provenance/ProvenanceRow';
+import { PlanChatCard } from './PlanChatCard';
+import { openSource } from '../../components/source-viewer';
 import {
   attachmentLabel,
   citationSpeech,
@@ -96,12 +98,27 @@ export function MessageBubble(p: BubbleProps) {
   const showDemo = bot && !!status?.demo;
   // Only the bot's replies carry verified sources: a student typing `[x.pdf p.3]` stays plain text.
   const cites = bot ? resolveCitations(m.text, m.citations) : [];
+  // Non-PDF sources (Canvas, Drive, Calendar) have no page: they open the source viewer instead of the page sheet.
+  const cite = (c: ChatCitation) => {
+    if (c.source) {
+      const { title, url, ...ref } = c.source;
+      openSource({
+        file: c.file,
+        page: 1,
+        source: {
+          ...ref,
+          ...(title ? { title } : {}),
+          ...(url ? { url } : {}),
+        } as NonNullable<Parameters<typeof openSource>[0]['source']>,
+      });
+    } else p.onCite(c, m.text);
+  };
   const onBubbleClick = (e: React.MouseEvent) => {
     const el = (e.target as HTMLElement).closest('.sq-md__cite');
     if (!el) return;
     const n = Number(el.textContent?.trim());
     const c = cites[n - 1];
-    if (c) p.onCite(c, m.text);
+    if (c) cite(c);
   };
   const text = m.card && textRepeatsCard(m.text, m.card) ? '' : m.text.trim();
   const attachments = m.attachments;
@@ -218,22 +235,7 @@ export function MessageBubble(p: BubbleProps) {
           </div>
         ) : null}
         {m.card?.type === 'plan' ? (
-          <div className="sqc-plancard" data-testid="chat-plan-card">
-            <strong>Study plan</strong>
-            <span className="rr-dim"> {m.card.status ? `(${m.card.status})` : ''}</span>
-            <a
-              className="lv-btn"
-              href="/squad/village?plan=1"
-              onClick={(e) => {
-                if (location.pathname.includes('/village')) {
-                  e.preventDefault();
-                  globalThis.dispatchEvent(new Event(PLAN_OPEN_EVENT));
-                }
-              }}
-            >
-              Open plan
-            </a>
-          </div>
+          <PlanChatCard hub={hub} planId={m.card.planId} status={m.card.status} rev={m.card.rev} />
         ) : null}
         {m.card?.type === 'live' ? (
           <div data-testid="chat-live-card">
@@ -263,7 +265,7 @@ export function MessageBubble(p: BubbleProps) {
                 data-testid="chat-citation-chip"
                 aria-haspopup="dialog"
                 aria-label={citationSpeech(c)}
-                onClick={() => p.onCite(c, m.text)}
+                onClick={() => cite(c)}
               >
                 <span className="sqc-cite__n" aria-hidden="true">
                   {i + 1}
