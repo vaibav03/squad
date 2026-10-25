@@ -1,3 +1,4 @@
+import { defaultTab } from './defaultTab';
 import { useEffect, useId, useRef, useState } from 'react';
 import {
   relTime,
@@ -69,8 +70,8 @@ export function InspectorPanel({
     ? roomSeats.find((x) => x.agent === store.selected && x.who === room.who)
     : undefined;
   const roomKey = room ? `${store.selected}|${room.slot}|${room.who}` : null;
-  // A council agent (member, chair, advisor, persona, or the council itself) opens on Thinking when it is thinking
-  // right now or has a thought on record, otherwise on Chat. Other room characters open on the room chat.
+  // See defaultTab: inside a room the Chat tab; a council agent clicked outside a room opens on Thinking when it is
+  // thinking now or has a thought on record, otherwise on Chat.
   const sel = store.selected;
   const councilWho =
     sel && sel.startsWith('council:')
@@ -82,11 +83,7 @@ export function InspectorPanel({
       : null;
   const voice = sel && councilWho !== null ? store.voice(councilWho, sel) : null;
   const openKey = sel ? `${sel}|${room?.slot ?? ''}|${room?.who ?? ''}` : null;
-  const openTab: Tab | null = voice
-    ? voice.thinking || voice.hasThought
-      ? 'thinking'
-      : 'chat'
-    : null;
+  const openTab: Tab | null = defaultTab(room?.initialTab, voice);
   const openTabRef = useRef(openTab);
   openTabRef.current = openTab;
   useEffect(() => {
@@ -165,7 +162,11 @@ export function InspectorPanel({
     if (room && roomSeats.length > 1) {
       const i = roomSeats.findIndex((s) => s.agent === v.id && s.who === room.who);
       const n = roomSeats[(i < 0 ? 0 : i + dir + roomSeats.length) % roomSeats.length]!;
-      store.select(n.agent, { slot: room.slot, who: n.who });
+      store.select(n.agent, {
+        slot: room.slot,
+        who: n.who,
+        ...(room.initialTab ? { initialTab: room.initialTab } : {}),
+      });
       return;
     }
     const next = store.cycle(v.id, dir);
