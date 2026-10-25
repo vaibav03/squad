@@ -116,6 +116,7 @@ describe('discord transport', () => {
         ],
       }),
     );
+    await vi.waitFor(() => expect(got).toHaveLength(1)); // disk writes outlast the fake emit's 5 ms pause
     expect(got[0]!.attachments).toHaveLength(1);
     expect(got[0]!.attachments[0]).toMatchObject({ mime: 'image/png' });
     expect(got[0]!.attachments[0]!.path.startsWith('/')).toBe(true);
