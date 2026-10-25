@@ -1,4 +1,4 @@
-import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
+import { test as base, expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { HUB, LIVE, SHOTS, WEB, type StudentId } from './env';
@@ -179,4 +179,14 @@ export function sseEvents(raw: string): { id?: string; event: string; data: stri
 export const FAIL_PATTERNS = {
   secrets: [/AIza[0-9A-Za-z_-]{20,}/, /sk_[0-9a-f]{20,}/, /xi-api-key/i, /GEMINI_API_KEY\s*[=:]\s*["']?[A-Za-z0-9_-]{12,}/, /ELEVENLABS_API_KEY\s*[=:]\s*["']?[A-Za-z0-9_-]{12,}/, /INTERNAL_EVENTS_SECRET\s*[=:]\s*["']?[A-Za-z0-9_-]{8,}/],
 };
-export { test, expect };
+/** `test` with the LIVE=1 guard applied to every test: skip with a clear message when Gemini cannot answer. */
+export const test = base.extend<{ _liveGuard: void }>({
+  _liveGuard: [
+    async ({}, use) => {
+      await liveGuard();
+      await use();
+    },
+    { auto: true },
+  ],
+});
+export { expect };

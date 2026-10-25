@@ -9,8 +9,24 @@ import { AGENT_IDS, AGENT_PORT, AGENT_URL, HUB, HUB_PORT, LIVE, REPO, SECRET, TM
  */
 const peers = () => AGENT_IDS.map((id) => `${id}=${AGENT_URL(id)}`).join(',');
 
+/** Provider keys from .env for LIVE=1 (never printed, never logged). */
+function dotenvKeys(): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!LIVE) return out;
+  try {
+    for (const l of fs.readFileSync(path.join(REPO, '.env'), 'utf8').split(/\r?\n/)) {
+      const m = /^(?:export\s+)?(GEMINI_API_KEY|ELEVENLABS_API_KEY)\s*=\s*["']?([^"'\s#]+)/.exec(l);
+      if (m) out[m[1]!] = m[2]!;
+    }
+  } catch {
+    /* no .env */
+  }
+  return out;
+}
+
 export const baseEnv = (): NodeJS.ProcessEnv => ({
   ...process.env,
+  ...dotenvKeys(),
   HUB_PORT: String(HUB_PORT),
   HUB_BASE_URL: HUB,
   DB_PATH: path.join(TMP, 'hub.db'),
