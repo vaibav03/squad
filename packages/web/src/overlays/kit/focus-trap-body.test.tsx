@@ -37,7 +37,7 @@ describe('useFocusTrap focus containment', () => {
     const esc = vi.fn();
     const outside = document.createElement('button');
     document.body.appendChild(outside);
-    const { getByText } = render(<Trap onEscape={esc} />);
+    render(<Trap onEscape={esc} />);
     outside.focus();
     expect(document.activeElement).not.toBe(outside);
     outside.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
