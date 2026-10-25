@@ -145,6 +145,7 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     courseId: () => courseId,
     demo: councilDemo,
     agents: councilAgents,
+    defaultTransport: () => deps.councilLive?.defaultTransport ?? 'stream',
     live: createLiveCouncilFactory({
       hub: (deps.councilLive ??= createCouncilLiveHub(o.env ?? process.env, () => deps.now())),
       env: o.env ?? process.env,

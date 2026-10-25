@@ -60,6 +60,7 @@ export interface AskV2Deps {
   triageLlm?: Llm;
   /** Per-run Gemini Live council (hub). */
   live?: LiveCouncilFactory;
+  defaultTransport?: () => 'stream' | 'live';
 }
 
 const cut = (s: string, n: number): string =>
@@ -186,7 +187,7 @@ export async function runAskV2(
     // ---- transport: Gemini Live when asked for AND every participant's session opens; otherwise the streaming
     // transport with a label that says why (never a silent swap, never scripted under a live label)
     let agents = d.agents;
-    const requested = input.transport ?? 'stream';
+    const requested = input.transport ?? d.defaultTransport?.() ?? 'stream';
     let tlabel: { label: string; requested?: 'stream' | 'live'; why?: string } | undefined;
     let models: { who: string; model: string }[] | undefined;
     if (!demo && requested === 'live') {

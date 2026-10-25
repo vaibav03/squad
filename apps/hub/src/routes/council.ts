@@ -114,7 +114,7 @@ export function createCouncilRoutes(deps: HubDeps): HubApp {
         askedBy: viewer.studentId,
         ...(chatId !== undefined ? { chatId } : {}),
         visibility: chatId?.startsWith('dm:') ? 'private' : 'squad',
-        transport: transport ?? liveHub().defaultTransport,
+        ...(transport ? { transport } : {}),
       });
     } catch (e) {
       const code = busyCode(e);

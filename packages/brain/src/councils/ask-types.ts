@@ -73,6 +73,8 @@ export interface CouncilServiceDeps {
   agents?: CouncilAgents;
   /** Builds the per-run Gemini Live council (hub only). Without it a `live` request falls back to streaming, labelled. */
   live?: LiveCouncilFactory;
+  /** Transport of a run whose caller named none (chat, board launchers); hub env COUNCIL_TRANSPORT. Default `stream`. */
+  defaultTransport?: () => 'stream' | 'live';
   /** Viewer-scoped data for the asker through the privacy gate (calendar/mastery summaries). */
   viewer?: (askedBy: string, visibility: 'squad' | 'private') => AskViewerData | undefined;
   /** Specialist keys to seat in v2 runs (default all three). */

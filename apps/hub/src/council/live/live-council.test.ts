@@ -152,6 +152,7 @@ function setup(
     liveOff?: boolean;
     demo?: boolean;
     members?: string[];
+    defaultTransport?: 'stream' | 'live';
   } = {},
 ): Setup {
   const events: VillageEvent[] = [];
@@ -188,6 +189,7 @@ function setup(
     emit,
     agents,
     live,
+    ...(o.defaultTransport ? { defaultTransport: () => o.defaultTransport! } : {}),
     members: o.members ?? ['skeptic', 'teacher'],
   });
   Object.assign(s, {
@@ -202,7 +204,7 @@ function setup(
         question: a.q ?? 'Does a higher yield always mean a lower bond price?',
         askedBy: 's_ana',
         chatId: 'group:sq',
-        transport: a.transport ?? 'live',
+        ...(a.transport === 'none' ? {} : { transport: a.transport ?? 'live' }),
       });
       return h.done;
     },
@@ -453,6 +455,14 @@ describe('Gemini Live council transport', () => {
         (m) => (m.mode.startsWith('demo') && m.source === 'script') || m.source === 'code',
       ),
     ).toBe(true);
+  });
+
+  it('a run that names no transport follows the hub default (COUNCIL_TRANSPORT)', async () => {
+    const t = setup({ defaultTransport: 'live' });
+    const res = (await t.ask({ transport: 'none' }))!;
+    expect(res.transport?.kind).toBe('live-audio');
+    const s = setup();
+    expect((await s.ask({ transport: 'none' }))!.transport?.kind).toBe('stream-text');
   });
 
   it('streaming stays the default', async () => {
