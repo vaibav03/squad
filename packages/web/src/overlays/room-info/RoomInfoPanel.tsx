@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type CSSProperties } from 'react';
+import { useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { RoomInfo } from '@squad/village/rooms';
 import { OverlayFrame, LvIcon } from '../kit';
 import { SpeakerDot } from './RoomTranscript';
@@ -19,6 +19,8 @@ export interface RoomInfoPanelProps {
   speaking?: string | null;
   /** Optional extra button under the room header (e.g. "Ask the council"). */
   extraAction?: { label: string; onClick: () => void };
+  /** Optional node under the header actions (e.g. the council mode badge and board button). */
+  headerExtra?: ReactNode;
 }
 
 /** Copy to the clipboard; falls back to a hidden textarea. Never throws. Resolves true on success. */
@@ -48,7 +50,8 @@ export async function copyText(text: string): Promise<boolean> {
 }
 
 export function RoomInfoPanel(props: RoomInfoPanelProps) {
-  const { info, open, onClose, onRun, returnFocusTo, calm, extraAction, speaking } = props;
+  const { info, open, onClose, onRun, returnFocusTo, calm, extraAction, speaking, headerExtra } =
+    props;
   const speakingId = speaking ? castName(speaking) : undefined;
   const titleId = useId();
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
@@ -95,6 +98,7 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
               {extraAction.label}
             </button>
           ) : null}
+          {headerExtra}
         </header>
 
         <section className="rr-sec">

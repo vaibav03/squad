@@ -600,3 +600,16 @@ Branch `merge/batch22` (worktree `squad-wt/merge22`), landed as a true `--no-ff`
 
 - Landing merge commit: `1b90bb305f422a6faee2696a0cfd1bad6801fc2a` (parents `7437d77c545d8bf66986250cda161258fc03f054` = tag `pre-merge-batch22`, `66c4bb2aa19c579283903ea9edf0115134207276` = merge/batch22; only tracker docs differ).
 - Rollback: `git revert -m 1 1b90bb305f422a6faee2696a0cfd1bad6801fc2a`.
+
+## Batch 23 (D/E): feature/w1-council-runtime + feature/w5-council-board into main
+
+Branch `merge/batch23` (worktree `squad-wt/merge23`), one `--no-ff` merge per branch (w1 `d72c1831`, then w5 `ef0495cc`), landed as one true merge.
+
+- w1 conflicts, kept both sides: `packages/core/src/index.ts` (`council-registry` export + `stripBusyTitles`/`BUSY_TITLE`) and `apps/hub/src/adapters/real.ts` (`createAudioPorts` now takes both `squadsOf` from main and the council `mode()` from w1). `pnpm check` exit 0 after w1.
+- w5 merged cleanly. Review of `apps/hub/src/routes/replay.ts`: replays register the run ids found in the replay itself (owner = the replay viewer, squad-visible) and fall back to the live registry (`deps.filterCtx.councils`, backed by W1's `councilRunOwner` / `registerCouncilRun`), so the two do not conflict. The final tree has no generated artifacts (only `docs/*.md`, `e2e/specs/j20-council-board.spec.ts`, `scripts/live/council-*.ts`, `package.json` scripts and source); the e2e reporter's `docs/qa/*` rewrite from my own j20 run was discarded, not committed.
+- Checks: `pnpm check` exit 0 (after w1 and on the final tree); `pnpm demo:live` OK; hub smoke 138/138; e2e `j20-council-board.spec.ts` 6/6 on own ports (hub :8980 / web :5380 / agents 4851+): the `?replay=track4&board=1` board opens with a Demo badge (and Degraded replay, Calm, arrows, Hierarchy tab all pass). Live browser run (hub :8990 / web :5390 / agents 4861+, real Gemini, new squad `summa`): `@cubbie ask the council: should I study chapter 5 or chapter 6 first?` returned a council verdict in the chat after about 65 s, honestly labelled `(Degraded: no turn)` (the Teacher did not answer, 2 members voted), not an unlabelled scripted run; 0 page errors; hub log shows a real run (council.stage x4, council.verdict). `COUNCIL_AGENTS` unset resolves to `v2` (`councilAgentsFlag`). Not verified by me: a raw capture of every SSE event for thinking text (my capture hit the wrong endpoint); W1's own sentinel/filter tests (in `pnpm check`) cover it.
+
+### Landing (batch 23)
+
+- Landing merge commit: `b2db4393eb0e8a438cfd15a275f5606f412f101b` (parents `42eeeb8e61768bb10c6275a10329d2b5f0d3fa97` = tag `pre-merge-batch23`, `363350a1d2337631c522c996d71ed039e193d7e8` = merge/batch23; only tracker docs differ).
+- Rollback: `git revert -m 1 b2db4393eb0e8a438cfd15a275f5606f412f101b`.

@@ -21,6 +21,7 @@ import type {
 import { normalizeMessages } from './types';
 import { completeWithTools } from './tools';
 import { classifyGeminiError } from './errors';
+import { dropThoughtParts, visibleText } from './thoughts';
 
 export const DEFAULT_GEMINI_MODELS: Record<ModelTier, string> = {
   fast: 'gemini-3.5-flash-lite',
@@ -85,7 +86,7 @@ function functionCallsOf(
 ): { call: FunctionCall; signature?: string }[] {
   const parts = res.candidates?.[0]?.content?.parts;
   if (!parts) return (res.functionCalls ?? []).map((call) => ({ call }));
-  return parts.flatMap((p) =>
+  return dropThoughtParts(parts).flatMap((p) =>
     p.functionCall
       ? [{ call: p.functionCall, ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}) }]
       : [],
@@ -166,7 +167,10 @@ export class GeminiLlm implements Llm {
         }),
       );
       return {
-        text: res.text ?? '',
+        // thinking parts never leave the adapter (no-chain-of-thought contract)
+        text: res.candidates?.[0]?.content?.parts
+          ? visibleText(res.candidates[0].content.parts)
+          : (res.text ?? ''),
         toolCalls: functionCallsOf(res).map(({ call: c, signature }, i) => ({
           id: c.id ?? `call_${i}`,
           name: c.name ?? '',
@@ -193,7 +197,8 @@ export class GeminiLlm implements Llm {
         }),
       }),
     );
-    return req.schema.parse(JSON.parse(res.text ?? ''));
+    const parts = res.candidates?.[0]?.content?.parts;
+    return req.schema.parse(JSON.parse(parts ? visibleText(parts) : (res.text ?? '')));
   }
 
   async createCache(req: LlmCacheRequest): Promise<CacheHandle> {

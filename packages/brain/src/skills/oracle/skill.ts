@@ -1,5 +1,14 @@
 import { z } from 'zod';
-import type { Ctx, InboundMessage, Llm, OutboundMessage, Skill } from '@squad/core';
+import {
+  scripted,
+  type AgentMode,
+  type Ctx,
+  type InboundMessage,
+  type Llm,
+  type OutboundMessage,
+  type Skill,
+} from '@squad/core';
+import { fallbackMode, modeLabel, startMode, worse, type ModeDeps } from '../mode-util';
 import { loadPrompt } from '../../experts/prompts';
 import type { CourseStore } from '../../ingest/types';
 import type { EmitEvent, MasteryStore } from '../../mastery/types';
@@ -27,7 +36,7 @@ export const ORACLE_TRIGGERS: readonly RegExp[] = [
 ];
 export const isOracleRequest = (text: string): boolean => ORACLE_TRIGGERS.some((r) => r.test(text));
 
-export interface OracleSkillDeps {
+export interface OracleSkillDeps extends ModeDeps {
   store: CourseStore;
   mastery: MasteryStore;
   emit: EmitEvent;
@@ -71,9 +80,13 @@ export interface OracleTopic {
   why: string;
   question: string;
   usedFallback: boolean;
+  /** `live` unless this topic's text is scripted (then `demo:*` / `degraded:*`). */
+  mode: AgentMode;
 }
 
 export interface OracleRun {
+  /** Worst mode of the run, decided once at the start and only worsened. */
+  mode: AgentMode;
   ranked: RankedChapter[];
   topics: OracleTopic[];
   replyText: string;
@@ -134,11 +147,16 @@ export async function runOracle(
     now,
   );
 
+  const start = startMode(deps); // decided ONCE
+  let runMode: AgentMode = start;
   let llmOk = true;
+  let lastErr: unknown;
   const topics: OracleTopic[] = [];
   for (const r of ranked.slice(0, 3)) {
-    let why = defaultWhy(r);
-    let question = oracleFallbackQuestion(r.title);
+    const fb = fallbackMode(start, lastErr);
+    // code-derived explanation: branded as scripted wherever it stands in for the model
+    let why = scripted(defaultWhy(r), fb).text;
+    let question = scripted(oracleFallbackQuestion(r.title), fb).text;
     let usedFallback = true;
     if (llmOk) {
       try {
@@ -148,16 +166,20 @@ export async function runOracle(
           why = clip(got.why, 220);
           usedFallback = false;
         }
-      } catch {
+      } catch (e) {
+        lastErr = e;
         llmOk = false; // no retries, no further calls after a failure (e.g. HTTP 402)
       }
     }
+    const topicMode: AgentMode = usedFallback ? fallbackMode(start, lastErr) : start;
+    runMode = worse(runMode, topicMode);
     topics.push({
       chapter: r.chapter,
       title: r.title,
       why,
       question: clip(question, 600),
       usedFallback,
+      mode: topicMode,
     });
   }
 
@@ -176,9 +198,16 @@ export async function runOracle(
       student,
       target: student,
       text: t.question,
+      mode: runMode,
     });
   for (const t of topics)
-    await emit({ t: 'council.opinion', councilId: ORACLE_COUNCIL, member: 'oracle', text: t.why });
+    await emit({
+      t: 'council.opinion',
+      councilId: ORACLE_COUNCIL,
+      member: 'oracle',
+      text: t.why,
+      mode: runMode,
+    });
   await emit({
     t: 'council.verdict',
     councilId: ORACLE_COUNCIL,
@@ -193,12 +222,13 @@ export async function runOracle(
       220,
     ),
     outcome,
+    mode: runMode,
   });
   await emit({ t: 'agent.state', agent: ORACLE_AGENT, state: 'idle' });
 
   const byCh = new Map(rows.map((r) => [r.chapter, r.nextDue]));
   const lines = [
-    'Exam Oracle: what to study next',
+    `${modeLabel(runMode)}Exam Oracle: what to study next`,
     '',
     'Ranked chapters:',
     ...ranked.map(
@@ -212,7 +242,7 @@ export async function runOracle(
     `Workload: ${oracleWorkloadWords(pages)}.`,
     NOTE,
   ];
-  return { ranked, topics, replyText: lines.join('\n') };
+  return { mode: runMode, ranked, topics, replyText: lines.join('\n') };
 }
 
 export function createOracleSkill(deps: OracleSkillDeps): Skill {

@@ -1,4 +1,4 @@
-import type { Llm, LlmJsonRequest, RoomOutcome } from '@squad/core';
+import type { A2aMessage, AgentMode, Llm, LlmJsonRequest, RoomOutcome } from '@squad/core';
 import type { EmitEvent } from '../../mastery/types';
 import {
   createCouncilRun,
@@ -65,15 +65,19 @@ export interface CoursePlanResult {
   /** True when the model could not answer and built-in rules wrote the members' notes. */
   usedFallback: boolean;
   replyText: string;
+  /** Agent runtime (v2) only: honest mode of the run (live | degraded:<reason> | demo:<reason>). */
+  mode?: AgentMode;
+  /** Agent runtime (v2) only: the public A2A envelopes of the run. */
+  messages?: A2aMessage[];
 }
 
-interface Persona {
+export interface Persona {
   member: CouncilMember;
   stock: string;
   goals: (base: number, min: number, max: number) => RepairGoals;
 }
 
-const PERSONAS: Persona[] = [
+export const PERSONAS: Persona[] = [
   {
     member: {
       name: 'chill',
@@ -103,19 +107,19 @@ const PERSONAS: Persona[] = [
   },
 ];
 
-const clip = (s: string, n: number): string =>
+export const clip = (s: string, n: number): string =>
   s.length <= n ? s : `${s.slice(0, n - 1).trimEnd()}…`;
-const squash = (s: string): string => s.replace(/\s+/g, ' ').trim();
-const cap1 = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
-const list = (xs: string[]): string =>
+export const squash = (s: string): string => s.replace(/\s+/g, ' ').trim();
+export const cap1 = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+export const list = (xs: string[]): string =>
   xs.length <= 1 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
 
-function baseTarget(goals: CoursePlanGoals, min: number, max: number): number {
+export function baseTarget(goals: CoursePlanGoals, min: number, max: number): number {
   const t = goals.targetCredits ?? (goals.early ? max : goals.light ? min : 15);
   return Math.min(max, Math.max(min, t));
 }
 
-function summaryFor(
+export function summaryFor(
   ctx: PlanContext,
   eligible: CatalogCourse[],
   goals: CoursePlanGoals,
@@ -143,7 +147,7 @@ function summaryFor(
   ].join('\n');
 }
 
-function fitText(reason: string, tail: string, note: string, max = 220): string {
+export function fitText(reason: string, tail: string, note: string, max = 220): string {
   const noteFit = note ? ` ${clip(note, Math.max(40, max - tail.length - 20))}` : '';
   const room = Math.max(0, max - tail.length - noteFit.length - 1);
   const r = room >= 12 ? clip(squash(reason), room) : '';

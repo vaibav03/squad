@@ -9,6 +9,8 @@ import {
 import { InspectableVoice } from '../overlays/inspector/InspectableVoice';
 import { LvIcon, type LvIconName } from '../overlays/kit/icons';
 import { rankingText } from './pacer';
+import { ModeBadge } from './board/ModeBadge';
+import { resultMode } from './board/mode-of';
 import './council.css';
 
 /** The three seats at the table, in speaking order. Used for the "is thinking" placeholders. */
@@ -203,12 +205,7 @@ export function VerdictBlock({
         <span className="cn-pixel" aria-hidden="true">
           Verdict
         </span>
-        {result.demo && (
-          <span className="cn-badge" data-kind="demo" title="Sample answers, not from a live model">
-            <LvIcon name="info" size={12} />
-            Demo mode
-          </span>
-        )}
+        <ModeBadge mode={resultMode(result)} />
       </div>
       <h3 className="cn-verdict__text" tabIndex={-1} ref={headingRef}>
         <span className="lv-vh">Verdict: </span>

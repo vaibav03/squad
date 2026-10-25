@@ -78,6 +78,37 @@ export function studentLabel(studentId: string): string {
   return title(studentId.replace(/^(?:[us]_)+/i, ''));
 }
 
+const ROLE_WORDS: Record<string, string> = {
+  chair: 'Chair',
+  chairman: 'Chairman',
+  qa: 'Q and A',
+};
+
+/** `<council>-<role>` refs of the live council roster (W0 contract). Other refs keep the '<Name> council' form. */
+const COUNCIL_ROLE_REF =
+  /^(ask|planner|roundtable|debate|quizkey|rubric|devilta|oral|oracle)-(.+)$/i;
+
+/**
+ * Display name for the ref of a `council:` agent id. `ask` -> 'Ask council' (the room-level agent),
+ * `ask-skeptic` -> 'Skeptic', `ask-chair` -> 'Chair', `quizkey-solver-a` -> 'Solver A'. Never the raw id.
+ */
+export function councilAgentName(ref: string): string {
+  const m = COUNCIL_ROLE_REF.exec(ref);
+  if (!m) return `${title(ref)} council`;
+  const role = m[2]!.toLowerCase();
+  return ROLE_WORDS[role] ?? (title(role) || 'Council member');
+}
+
+/** Name for either end of an A2A message: an agent id, 'room', or a `tool:<name>` helper. */
+export function a2aPartyName(id: string): string {
+  if (id === 'room') return 'the room';
+  const tool = /^tool:([a-z_]+)$/.exec(id);
+  if (tool) return `${title(tool[1]!)} tool`;
+  const code = /^code:([a-z_]+)$/.exec(id);
+  if (code) return `${title(code[1]!)} (code)`;
+  return agentName(id);
+}
+
 /** Display name for an AgentId, e.g. 'student:s_ana' -> 'Ana', 'expert:ch5' -> 'Chapter 5 expert'. */
 export function agentName(id: string): string {
   const { kind, ref } = parseAgentId(id);
@@ -89,7 +120,7 @@ export function agentName(id: string): string {
       return m ? `Chapter ${m[1]} expert` : `${title(ref ?? 'chapter')} expert`;
     }
     case 'council':
-      return `${title(ref ?? 'council')} council`;
+      return councilAgentName(ref ?? 'council');
     case 'dean':
       return 'Dean';
     case 'mediator':
