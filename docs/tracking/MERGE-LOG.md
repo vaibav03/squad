@@ -207,3 +207,41 @@ Note for testers: with accounts, a dev-login session must also be stored under `
 
 - Landing merge commit: `9bf3216c8a8e54f08ba76dfaf45b620425d90729` (parents `487ee4bddbe34bb699a4246f4b14a664d50e0077` = tag `pre-merge-batch4`, `9df8258f1df581204dcafd7356fccdad8e28571c` = origin/merge/batch4; diff empty).
 - Rollback: `git revert -m 1 9bf3216c8a8e54f08ba76dfaf45b620425d90729`.
+
+## Batch 5 (ops): security/review, deploy/prod, ops/observability into main
+
+Branch `merge/batch5` (worktree `squad-wt/merge5`), landed as a true `--no-ff` merge.
+
+### Manual resolutions
+
+1. Root `package.json`: union of scripts (`security:scan` plus `build`, `build:web`, `bundle:report`, `preflight`).
+2. `apps/hub/src/app.ts`: union. Order is `applySecurity` (security middleware) first, then CORS (accounts: `x-squad-id`, PATCH/DELETE, credentials), then `installObservability` (correlation ids, `/metrics`, `/ready`, `/v1/admin/*`); options `security` and `obs`; `close()` stops obs and the chat hub.
+3. `apps/hub/src/main.ts`: kept main's single-process flow (`attachChatEngine`, one resilient model) and added observability on top: `installProcessHandlers`, `propagateTo` agents and bot, and the model wrapped by `instrumentLlm` through a new `instrument` option on `attachChatEngine` (`chat/engine.ts`). ops' own `main.ts` model/ports wiring was dropped because main's engine already does it.
+4. `packages/core/src/index.ts`: both `accounts` and `telemetry` exports.
+5. Kept deploy's `apps/web-host/vite.config.ts` (assetsDir `static`, source maps only with `SQUAD_SOURCEMAP=1`; no conflict).
+6. Fixes found by the merged tests:
+   - security's body guard returned 415 for the course catalogue CSV import (`PUT /v1/library/catalogue`, text/csv); that path now accepts `text/csv` and `text/plain`.
+   - `security:scan` CORS-2 flagged any `allow-credentials: true`, which product/accounts needs for cookie sessions on the allow-listed origin; it now flags credentials only with a wildcard origin. `pnpm security:scan`: 0 blocking (1 LOW: dev-dependency audit).
+7. Prettier on `docker-compose.yml` and `scripts/deploy/*.ts`.
+8. `webHostHeaders` (CSP and friends for the web host) is NOT applied: it needs the web-host server and a CSP check against the pixel canvas and inline styles, so it is left as the open item HDR-1 in `docs/security/FINDINGS.md`.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check`, `pnpm test:smoke all`, `pnpm demo:live` | pass |
+| `pnpm security:scan` | 0 blocking |
+| Browser (hub :18855, web :15255) | village 1280x800 and 390x844, /squad/courses, /squad/chat: 0 page errors, 0 HTTP >= 400; chat answered; `/health` ok, `/v1/status` returns the fallback status |
+
+Frames: `docs/design/shots/merge5/`.
+
+### Known gaps
+
+- HDR-1 web-host headers (above).
+- `packages/mesh` `gate.test.ts` "does not false-positive on hex payloads" failed once in a full `pnpm check` and passed 3/3 alone and on the rerun (random payloads; mesh is untouched by this batch).
+- `/metrics` and admin routes need the admin token; not exercised in a browser.
+
+### Landing (batch 5)
+
+- Landing merge commit: `52c9a73d794ff74e397ce110a44d7f5fdea6d548` (parents `3e21a141b0ae13eee9e02125dffd949830b66c05` = tag `pre-merge-batch5`, `eaa24679759e4d631f48827c34c92d702e89d4c0` = origin/merge/batch5; the only diff vs the batch tip is tracker docs that moved on main).
+- Rollback: `git revert -m 1 52c9a73d794ff74e397ce110a44d7f5fdea6d548`.
