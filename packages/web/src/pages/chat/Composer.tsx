@@ -16,6 +16,7 @@ import { Icon } from '../../primitives/Icon';
 import { Spinner } from '../../primitives/Spinner';
 import type { ChatApi } from './api';
 import { chatErrorText } from './api';
+import { parseDiscussTrigger } from '../../live/trigger';
 import {
   ACCEPT_IMAGES,
   COUNTER_FROM,
@@ -62,12 +63,14 @@ export interface ComposerProps {
   /** sending is paused (offline, session over); drafting still works */
   paused?: string | null;
   compact?: boolean;
+  /** `discuss: <topic>` was typed: offer to watch it live in the Live panel instead of sending. */
+  onDiscuss?: (topic: string) => void;
 }
 
 const MAX_H = 144;
 
 export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
-  { api, chatKind, onSend, paused, compact },
+  { api, chatKind, onSend, paused, compact, onDiscuss },
   ref,
 ) {
   const [text, setText] = useState('');
@@ -183,6 +186,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   const empty = !text.trim() && ready.length === 0;
   const blocked = !!paused || uploading || over || empty;
 
+  const discussTopic = onDiscuss ? parseDiscussTrigger(text) : null;
   const submit = () => {
     if (blocked) return;
     const files = ready.map((d) => d.att!);
@@ -401,6 +405,22 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           <Icon name="send" size={18} />
         </button>
       </div>
+      {discussTopic && onDiscuss ? (
+        <div className="sqc-composer__discuss" role="group" aria-label="Live discussion">
+          <span>Send it to Cubbie, or watch the table talk it through live.</span>
+          <button
+            type="button"
+            className="sqc-link"
+            data-testid="chat-discuss-live"
+            onClick={() => {
+              onDiscuss(discussTopic);
+              setText('');
+            }}
+          >
+            Watch it live
+          </button>
+        </div>
+      ) : null}
       <span className="sq-sr-only" role="status" aria-live="polite">
         {open ? `${options.length} suggestion${options.length === 1 ? '' : 's'}` : ''}
       </span>

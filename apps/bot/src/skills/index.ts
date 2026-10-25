@@ -34,6 +34,7 @@ import { createProactive } from '../scheduler/wire';
 import type { Scheduler } from '../scheduler/scheduler';
 import { chatSkill } from './chat';
 import { createMediaSkills } from './media';
+import { createLiveSkill, type LiveStarter } from './live';
 
 export interface MediaWiring {
   podcast: Omit<PodcastDeps, 'material' | 'outDir'>;
@@ -60,6 +61,8 @@ export interface SkillDeps {
   onCouncil?: (c: CouncilService) => void;
   /** Share the hub's brain and mastery store so chat, quiz and the village use one instance. */
   shared?: { brain?: Brain; mastery?: MasteryStore; council?: CouncilService };
+  /** Starts a live agent discussion through the hub; omit and `discuss:` is not registered. */
+  live?: LiveStarter;
   /** Shared proactive scheduler (main starts it once the bot exists). A private one is created if omitted. */
   proactive?: Scheduler;
 }
@@ -105,6 +108,7 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
 
   const brainSkills: Skill[] = [
     createCouncilSkill(council, { courseId: courseIdFor }),
+    ...(d.live ? [createLiveSkill(d.live)] : []),
     ...answerSkills(brain, course),
     createQuizSkill({ engine, courseIdFor }),
     createFeynmanSkill({ engine: feynman, courseIdFor }),
@@ -166,3 +170,4 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
 }
 
 export { buildRegistry, chatSkill };
+export { createLiveSkill, liveTopic, LIVE_FOOTER, type LiveStarter } from './live';

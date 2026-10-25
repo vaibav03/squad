@@ -41,6 +41,8 @@ export interface CouncilPanelProps {
   chatId?: string;
   /** Test and fixture seam: replaces the hub. */
   transport?: CouncilTransport;
+  /** Shows a "Start a discussion" entry (live agent discussion) below the ask form. */
+  onStartDiscussion?: () => void;
 }
 
 /**
@@ -48,7 +50,7 @@ export interface CouncilPanelProps {
  * at a time (the pacer holds each for its reading time), then the ranking, then the verdict.
  */
 export function CouncilPanel(props: CouncilPanelProps) {
-  const { hub, onClose, returnFocusTo, calm, chatId, transport } = props;
+  const { hub, onClose, returnFocusTo, calm, chatId, transport, onStartDiscussion } = props;
   const [selfOpen, setSelfOpen] = useState(true);
   const open = props.open ?? selfOpen;
   const close = () => {
@@ -237,6 +239,18 @@ export function CouncilPanel(props: CouncilPanelProps) {
             <p className="cn-fine">
               The council can be wrong. Answers that cite your course show the page they came from.
             </p>
+            {onStartDiscussion && (
+              <div className="cn-discuss">
+                <p className="cn-dim cn-small">
+                  Want to hear the table talk it through instead? Five agents discuss, you can join
+                  in.
+                </p>
+                <button type="button" className="lv-btn" onClick={onStartDiscussion}>
+                  <LvIcon name="users" size={16} />
+                  Start a discussion
+                </button>
+              </div>
+            )}
           </>
         )}
 

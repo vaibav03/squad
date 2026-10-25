@@ -1,5 +1,6 @@
 // Mounts the bot in-process: the SAME router, speaking policy, confirm flow and skills as iMessage, over the web
 // Transport. One process serves chat: shared db, one emit (the hub's own ingest), one brain and mastery store.
+import { liveServiceFor } from '../live/wire';
 import {
   createResilientLlm,
   type Llm,
@@ -137,6 +138,19 @@ export async function attachChatEngine(
     emit: (e) => events.publish(e),
     ...(media ? { media } : {}),
     courseId: () => courseId,
+    live: {
+      start: async ({ topic, askedBy, chatId }) => {
+        const squadId = deps.directory.squadOf(askedBy);
+        if (!squadId) throw new Error('no squad');
+        return liveServiceFor(deps).start({
+          topic,
+          askedBy,
+          squadId,
+          chatId,
+          visibility: chatId.startsWith('dm:') ? 'private' : 'squad',
+        });
+      },
+    },
     demo: () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : true),
     onCouncil: (c) => void (deps.council ??= c),
     ...(shared

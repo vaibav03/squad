@@ -239,6 +239,22 @@ export function exchangesFromEvent(e: VillageEvent, ctx: ExchangeCtx): Omit<Exch
         }),
       ].filter((x) => x.text);
     }
+    case 'discussion.turn':
+    case 'discussion.interrupted': {
+      if (!e.agent) return [];
+      const text =
+        e.t === 'discussion.turn' ? (e.text ? clean(e.text) : '') : 'Yielded to the student';
+      if (!text) return [];
+      return [
+        mk({
+          kind: 'discussion',
+          from: party(e.agent, me),
+          to: e.to ? party(e.to, me) : EVERYONE,
+          text,
+          parts: [e.agent, ...(e.to ? [e.to] : [])],
+        }),
+      ];
+    }
     case 'confirm.pending':
       if (!mine) return [];
       return [
@@ -296,6 +312,9 @@ export function exchangesFromEvent(e: VillageEvent, ctx: ExchangeCtx): Omit<Exch
     case 'call.start':
     case 'call.end':
     case 'mastery.changed':
+    case 'discussion.started':
+    case 'discussion.ended':
+    case 'discussion.takeaway':
       return [];
     default: {
       const _x: never = e;

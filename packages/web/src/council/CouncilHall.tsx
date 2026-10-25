@@ -3,6 +3,8 @@ import { getRoomSession } from '@squad/village/rooms';
 import type { HubCtx } from '../pages/village/hub';
 import { LvIcon } from '../overlays/kit/icons';
 import { CouncilPanel } from './CouncilPanel';
+import { LivePanel } from '../live/LivePanel';
+import { MOCK_TOPIC } from '../live/fixtures';
 import { fixtureTransport, type FixtureState } from './fixtures';
 import './council.css';
 
@@ -62,15 +64,21 @@ export function CouncilHall({
   const mode = q.get('council');
   const fixture = mode === 'fixture';
   const forced = mode === '1' || fixture;
+  const liveForced = q.get('live') === '1' || q.get('livemock') === '1';
   const inside = useInCouncilHall();
-  const present = inside || forced;
+  const present = inside || forced || liveForced;
   const [open, setOpen] = useState(forced);
+  const livemock = q.get('livemock') === '1';
+  const [liveOpen, setLiveOpen] = useState(liveForced);
+  // ?livemock=1 opens straight into the scripted room; ?live=1 opens the entry form
+  const [liveDirect, setLiveDirect] = useState(livemock);
 
   // Walking in shows the room-info panel first (the "Ask the council" button below or in that panel opens
   // this one); walking out closes it.
   useEffect(() => {
     if (!inside && !forced) setOpen(false);
-  }, [inside, forced]);
+    if (!inside && !liveForced) setLiveOpen(false);
+  }, [inside, forced, liveForced]);
   useEffect(() => {
     const onAsk = () => setOpen(true);
     window.addEventListener(COUNCIL_OPEN_EVENT, onAsk);
@@ -84,10 +92,25 @@ export function CouncilHall({
   }, [fixture, q]);
 
   const onClose = useCallback(() => setOpen(false), []);
+  const startDiscussion = useCallback(() => {
+    setOpen(false);
+    setLiveOpen(true);
+  }, []);
   if (!present) return null;
   return (
     <>
-      {!open && (
+      {!open && !liveOpen && (
+        <button
+          type="button"
+          className="lv-btn cn-launch cn-launch--live sq-scene"
+          onClick={() => setLiveOpen(true)}
+          aria-haspopup="dialog"
+        >
+          <LvIcon name="sparkle" size={16} />
+          Start a discussion
+        </button>
+      )}
+      {!open && !liveOpen && (
         <button
           type="button"
           className="lv-btn cn-launch sq-scene"
@@ -98,9 +121,21 @@ export function CouncilHall({
           Ask the council
         </button>
       )}
+      <LivePanel
+        hub={hub}
+        open={liveOpen}
+        onClose={() => {
+          setLiveOpen(false);
+          setLiveDirect(false);
+        }}
+        {...(liveDirect ? { topic: MOCK_TOPIC } : {})}
+        calm={calm}
+        returnFocusTo={returnFocusTo}
+      />
       <CouncilPanel
         hub={hub}
-        open={open}
+        open={open && !liveOpen}
+        onStartDiscussion={startDiscussion}
         onClose={onClose}
         calm={calm}
         returnFocusTo={returnFocusTo}

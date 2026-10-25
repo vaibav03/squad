@@ -64,6 +64,28 @@ const ev: Record<(typeof VILLAGE_EVENT_TYPES)[number], VillageEvent> = {
   'quiz.answer': { t: 'quiz.answer', quizId: 'q', chapter: 'ch6', student: 's_ben' },
   'quiz.result': { t: 'quiz.result', quizId: 'q', chapter: 'ch6', student: 's_ben', correct: true },
   'call.start': { t: 'call.start', agent: 'expert:ch6', callId: 'c1', student: 's_ana' },
+  'discussion.started': { t: 'discussion.started', discussionId: 'ld_abcdefghijkl' },
+  'discussion.turn': {
+    t: 'discussion.turn',
+    discussionId: 'ld_abcdefghijkl',
+    agent: 'council:live-tutor',
+    member: 'tutor',
+    to: 'council:live-skeptic',
+    turnId: 't1',
+    text: 'Start from the definition.',
+  },
+  'discussion.interrupted': {
+    t: 'discussion.interrupted',
+    discussionId: 'ld_abcdefghijkl',
+    agent: 'council:live-tutor',
+  },
+  'discussion.takeaway': {
+    t: 'discussion.takeaway',
+    discussionId: 'ld_abcdefghijkl',
+    kind: 'decision',
+    text: 'Use the definition first.',
+  },
+  'discussion.ended': { t: 'discussion.ended', discussionId: 'ld_abcdefghijkl' },
   'call.caption': {
     t: 'call.caption',
     agent: 'expert:ch6',
@@ -312,6 +334,19 @@ describe('privacy', () => {
   });
   it('redact hides amounts and sentinels', () => {
     expect(redact('pay $180 for Therapy')).toBe('pay hidden for hidden');
+  });
+});
+
+describe('discussion words', () => {
+  it('describes turn, start, end, takeaway and interrupt', () => {
+    expect(eventWords(ev['discussion.turn'], false).now).toBe('Saying: Start from the definition.');
+    expect(
+      eventWords({ ...ev['discussion.turn'], text: undefined } as VillageEvent, false).now,
+    ).toBe('Talking to Live skeptic council');
+    expect(eventWords(ev['discussion.started'], false).now).toBe('Joined the discussion');
+    expect(eventWords(ev['discussion.ended'], false).now).toBe('Left the discussion');
+    expect(eventWords(ev['discussion.takeaway'], false).now).toBe('Noting a decision');
+    expect(eventWords(ev['discussion.interrupted'], false).now).toBe('Yielded to the student');
   });
 });
 

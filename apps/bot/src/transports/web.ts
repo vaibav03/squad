@@ -14,6 +14,7 @@ import type { Transport } from '../types';
 import {
   extractCitations,
   parseCouncilCard,
+  parseLiveCard,
   parseQuizCard,
   stripPersonaPrefix,
 } from './web-format';
@@ -72,8 +73,11 @@ export class WebTransport implements Transport {
     const persona = getPersona(o.personaId);
     const raw = o.text ? stripPersonaPrefix(o.personaId, o.text) : '';
     const council = raw ? parseCouncilCard(raw) : undefined;
-    const quiz = raw && !council ? parseQuizCard(raw) : undefined;
-    const { text, citations } = extractCitations(council ? council.text : quiz ? quiz.text : raw);
+    const live = raw && !council ? parseLiveCard(raw) : undefined;
+    const quiz = raw && !council && !live ? parseQuizCard(raw) : undefined;
+    const { text, citations } = extractCitations(
+      council ? council.text : live ? live.text : quiz ? quiz.text : raw,
+    );
     await this.opts.onMessage({
       chatId: o.chatId,
       personaId: persona.id,
@@ -82,7 +86,13 @@ export class WebTransport implements Transport {
       text,
       citations: quiz ? [] : citations,
       attachments: o.attachments ?? [],
-      ...(council ? { card: council.card } : quiz ? { card: quiz.card } : {}),
+      ...(council
+        ? { card: council.card }
+        : live
+          ? { card: live.card }
+          : quiz
+            ? { card: quiz.card }
+            : {}),
     });
   }
 

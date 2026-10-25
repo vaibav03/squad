@@ -116,6 +116,8 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     demo: councilDemo,
   });
 
+  deps.liveWiring = { brain, courseId: () => courseId, llm: o.llm };
+
   const mastery = createMasteryStore({ db, emit: quizEmit });
   const engine = new QuizEngine({
     db,
