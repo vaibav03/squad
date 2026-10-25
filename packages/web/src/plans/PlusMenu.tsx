@@ -15,7 +15,7 @@ export function PlusMenu({
   const btn = useRef<HTMLButtonElement>(null);
   const items = useRef<(HTMLButtonElement | null)[]>([]);
   const id = useId();
-  const kinds: PlanKind[] = ['trip', 'study'];
+  const kinds: (PlanKind | 'ledger')[] = onLedger ? ['trip', 'study', 'ledger'] : ['trip', 'study'];
 
   useEffect(() => {
     if (open) items.current[0]?.focus();
@@ -91,11 +91,12 @@ export function PlusMenu({
               data-testid={`plus-${k}`}
               onClick={() => {
                 setOpen(false);
-                onPick(k);
+                if (k === 'ledger') onLedger?.();
+                else onPick(k);
               }}
             >
-              <Icon name={k === 'trip' ? 'plane' : 'book'} size={16} />
-              {FLOWS[k].action}
+              <Icon name={k === 'trip' ? 'plane' : k === 'study' ? 'book' : 'ledger'} size={16} />
+              {k === 'ledger' ? 'Group activity & ledger' : FLOWS[k].action}
             </button>
           ))}
         </div>

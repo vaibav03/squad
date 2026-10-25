@@ -61,6 +61,7 @@ export function TripChatCard({
   return (
     <PlanCard
       kind="trip"
+      planId={card.tripId}
       title={title}
       status={status}
       author={organizer ? `Started by ${organizer}` : undefined}
