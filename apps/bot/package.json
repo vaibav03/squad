@@ -12,7 +12,8 @@
     "test": "vitest run --dir src --passWithNoTests",
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
     "dev": "tsx src/main.ts",
-    "chat": "TRANSPORT=cli tsx src/main.ts"
+    "chat": "TRANSPORT=cli tsx src/main.ts",
+    "scheduler": "tsx src/scheduler/cli.ts"
   },
   "dependencies": {
     "@photon-ai/imessage-kit": "^3.0.0",

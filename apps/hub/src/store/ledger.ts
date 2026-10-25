@@ -64,6 +64,13 @@ export function createLedgerStore(db?: Db): LedgerStore {
   };
 
   return {
+    forget(student) {
+      for (let i = rows.length - 1; i >= 0; i--)
+        if (rows[i]?.student === student) rows.splice(i, 1);
+      for (const k of [...priv.keys()]) if (k.split('|')[1] === student) priv.delete(k);
+      db?.prepare('DELETE FROM hub_ledger_rows WHERE student=?').run(student);
+      db?.prepare('DELETE FROM hub_ledger_private WHERE student=?').run(student);
+    },
     recordPublic(e, ts) {
       upsert({
         taskId: e.taskId,
