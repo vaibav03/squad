@@ -82,7 +82,6 @@ export function SourceViewerHost() {
       live = false;
       release();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, attempt]);
 
   const close = useCallback(() => {
