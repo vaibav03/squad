@@ -1,11 +1,11 @@
 # Release gate report
 
-Generated 2026-10-25T13:02:48.550Z by `pnpm gate` (tree feature/release-gate@1f6d310c, origin/main@7b09a9c6).
+Generated 2026-10-25T13:08:56.104Z by `pnpm gate` (tree feature/release-gate@b1fae056, origin/main@2835a43d).
 Mode: LLM fake model, labelled **Demo**; real integrations not requested.
 
 ## Verdict: RED (a BUILT step failed)
 
-Fixture steps: 5 PASS, 4 FAIL, 0 NOT_BUILT, 13 not run, of 22. A NOT_BUILT step is never a PASS: its owner branch is not on origin/main.
+Fixture steps: 5 PASS, 5 FAIL, 0 NOT_BUILT, 12 not run, of 22. A NOT_BUILT step is never a PASS: its owner branch is not on origin/main.
 
 ## Journey (one world, one chain)
 
@@ -20,7 +20,7 @@ Fixture steps: 5 PASS, 4 FAIL, 0 NOT_BUILT, 13 not run, of 22. A NOT_BUILT step 
 | S7 | Web chat shows the complete ordered conversation (and mirrors back) | FAIL: iMessage-origin message carries a "via iMessage" tag | SKIPPED(real_not_requested) | `docs/design/shots/gate/s7-01-web-mirror-rhea.png`<br>`docs/design/shots/gate/s7-02-web-mirror-ben.png` |
 | S8 | Conversation continues into a collaborative trip plan | FAIL: hub chat carries the trip card text | SKIPPED(real_not_requested) | `docs/design/shots/gate/s8-01-trip-voting.png`<br>`docs/design/shots/gate/s8-02-trip-cutscene.png`<br>`docs/design/shots/gate/s8-03-trip-agent-offline.png` |
 | S9 | ... and a shared study plan | FAIL: a plan card reached the group | SKIPPED(real_not_requested) |  |
-| S10 |  | NOT_RUN | NOT_RUN |  |
+| S10 | Decisions, updates, failures and agent activity stay synchronized in web and iMessage | FAIL: S8/S9 recorded a trip.vote decision | SKIPPED(real_not_requested) |  |
 
 ## Variants
 
@@ -40,6 +40,18 @@ Fixture steps: 5 PASS, 4 FAIL, 0 NOT_BUILT, 13 not run, of 22. A NOT_BUILT step 
 | V12 |  | NOT_RUN | NOT_RUN |  |
 
 ## Failures
+
+### S10 (fixture) Decisions, updates, failures and agent activity stay synchronized in web and iMessage
+
+- S8/S9 recorded a trip.vote decision: have: none
+- S8/S9 recorded a trip.confirm decision: have: none
+- S8/S9 recorded a plan.accept decision: have: none
+- S8/S9 recorded a plan.swap decision: have: none
+- a failed plan edit is said in the group
+- no raw ids in web thread: found: phone number
+- trip id is stable and present in the trip card text
+- plan id is stable on the plan card
+- agent offline notice was recorded
 
 ### S2 (fixture) Ingest and normalize permitted context
 
@@ -85,6 +97,7 @@ Fixture steps: 5 PASS, 4 FAIL, 0 NOT_BUILT, 13 not run, of 22. A NOT_BUILT step 
 
 ## Notes
 
+- S10 (fixture): live typing/thinking is transient with the scripted model; only "not stuck" is asserted
 - S3 (fixture): demo model: the context-claims prompt is not served by the demo LLM, so a context-grounded chat answer cannot be produced without LIVE=1; retrieval and the viewer are asserted above
 - S5 (fixture): @tutor: the demo model cannot ground a content answer; citations are asserted with LIVE=1
 - S5 (fixture): @planner: the demo model cannot ground a content answer; citations are asserted with LIVE=1

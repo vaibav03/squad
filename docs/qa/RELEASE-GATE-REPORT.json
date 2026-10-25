@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-10-25T13:02:48.550Z",
+  "generatedAt": "2026-10-25T13:08:56.105Z",
   "tree": {
     "branch": "feature/release-gate",
-    "head": "1f6d310c",
-    "originMain": "7b09a9c6"
+    "head": "b1fae056",
+    "originMain": "2835a43d"
   },
   "mode": {
     "live": false,
@@ -11,7 +11,7 @@
   },
   "verdict": "RED (a BUILT step failed)",
   "summary": {
-    "fixtureFail": 4,
+    "fixtureFail": 5,
     "realFail": 0,
     "notBuilt": 0,
     "blocked": 5,
@@ -371,8 +371,8 @@
       ],
       "notes": [],
       "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
-      "ms": 1265,
-      "at": "2026-10-25T12:57:56.217Z"
+      "ms": 1227,
+      "at": "2026-10-25T13:03:29.608Z"
     },
     {
       "id": "S2",
@@ -631,8 +631,8 @@
       ],
       "notes": [],
       "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
-      "ms": 1243,
-      "at": "2026-10-25T12:57:57.565Z",
+      "ms": 1078,
+      "at": "2026-10-25T13:03:30.895Z",
       "reason": "no raw squad or student ids on the Connections page after sharing"
     },
     {
@@ -842,8 +842,8 @@
         "demo model: the context-claims prompt is not served by the demo LLM, so a context-grounded chat answer cannot be produced without LIVE=1; retrieval and the viewer are asserted above"
       ],
       "label": "fixture (retrieval and source viewer asserted at the API; chat answers use the demo model unless LIVE=1)",
-      "ms": 1397,
-      "at": "2026-10-25T12:57:59.400Z"
+      "ms": 1294,
+      "at": "2026-10-25T13:03:32.498Z"
     },
     {
       "id": "S4",
@@ -947,8 +947,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 2545,
-      "at": "2026-10-25T12:58:00.924Z"
+      "ms": 2507,
+      "at": "2026-10-25T13:03:33.878Z"
     },
     {
       "id": "S5",
@@ -1015,8 +1015,8 @@
         "@planner: the demo model cannot ground a content answer; citations are asserted with LIVE=1"
       ],
       "label": "fixture",
-      "ms": 116,
-      "at": "2026-10-25T12:58:03.577Z"
+      "ms": 82,
+      "at": "2026-10-25T13:03:36.447Z"
     },
     {
       "id": "S6",
@@ -1086,8 +1086,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 2422,
-      "at": "2026-10-25T12:58:03.796Z"
+      "ms": 2877,
+      "at": "2026-10-25T13:03:36.614Z"
     },
     {
       "id": "S7",
@@ -1174,8 +1174,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 7134,
-      "at": "2026-10-25T12:58:06.298Z",
+      "ms": 6951,
+      "at": "2026-10-25T13:03:39.555Z",
       "reason": "iMessage-origin message carries a \"via iMessage\" tag"
     },
     {
@@ -1442,8 +1442,8 @@
       ],
       "notes": [],
       "label": "fixture (demo labelled)",
-      "ms": 211986,
-      "at": "2026-10-25T12:58:14.025Z",
+      "ms": 211074,
+      "at": "2026-10-25T13:03:47.127Z",
       "reason": "hub chat carries the trip card text"
     },
     {
@@ -1461,9 +1461,114 @@
       "evidence": [],
       "notes": [],
       "label": "fixture (demo labelled)",
-      "ms": 60596,
-      "at": "2026-10-25T13:01:46.854Z",
+      "ms": 60378,
+      "at": "2026-10-25T13:07:18.795Z",
       "reason": "a plan card reached the group"
+    },
+    {
+      "id": "S10",
+      "title": "Decisions, updates, failures and agent activity stay synchronized in web and iMessage",
+      "mode": "fixture",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "name": "S8/S9 recorded a trip.vote decision",
+          "pass": false,
+          "detail": "have: none"
+        },
+        {
+          "name": "S8/S9 recorded a trip.confirm decision",
+          "pass": false,
+          "detail": "have: none"
+        },
+        {
+          "name": "S8/S9 recorded a plan.accept decision",
+          "pass": false,
+          "detail": "have: none"
+        },
+        {
+          "name": "S8/S9 recorded a plan.swap decision",
+          "pass": false,
+          "detail": "have: none"
+        },
+        {
+          "name": "a failed plan edit is said in the group",
+          "pass": false
+        },
+        {
+          "name": "hub message ids are unique",
+          "pass": true
+        },
+        {
+          "name": "Rhea opens the group chat",
+          "pass": true
+        },
+        {
+          "name": "DOM message ids are unique",
+          "pass": true
+        },
+        {
+          "name": "no stuck typing/thinking indicator at the end",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in web thread",
+          "pass": true
+        },
+        {
+          "name": "no raw ids in web thread",
+          "pass": false,
+          "detail": "found: phone number"
+        },
+        {
+          "name": "no sentinel in iMessage log",
+          "pass": true
+        },
+        {
+          "name": "no raw ids in iMessage log",
+          "pass": true
+        },
+        {
+          "name": "trip id is stable and present in the trip card text",
+          "pass": false
+        },
+        {
+          "name": "plan id is stable on the plan card",
+          "pass": false
+        },
+        {
+          "name": "trip status agrees: API vs DB",
+          "pass": true
+        },
+        {
+          "name": "plan status agrees: API vs DB",
+          "pass": true
+        },
+        {
+          "name": "plan rev agrees: API vs DB",
+          "pass": true
+        },
+        {
+          "name": "agent offline notice was recorded",
+          "pass": false
+        },
+        {
+          "name": "agent offline notice reads as text in iMessage",
+          "pass": true
+        },
+        {
+          "name": "agent offline notice is on the web thread",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [
+        "live typing/thinking is transient with the scripted model; only \"not stuck\" is asserted"
+      ],
+      "label": "fixture (demo labelled)",
+      "ms": 34386,
+      "at": "2026-10-25T13:08:20.134Z",
+      "reason": "S8/S9 recorded a trip.vote decision"
     }
   ],
   "real": [
@@ -1476,8 +1581,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 70,
-      "at": "2026-10-25T12:57:57.484Z",
+      "ms": 53,
+      "at": "2026-10-25T13:03:30.837Z",
       "reason": "no_google_client",
       "runbook": "#google-oauth-client-and-consent-screen"
     },
@@ -1490,8 +1595,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 60,
-      "at": "2026-10-25T12:57:58.809Z",
+      "ms": 56,
+      "at": "2026-10-25T13:03:31.974Z",
       "reason": "no_google_client",
       "runbook": "#google-oauth-client-and-consent-screen"
     },
@@ -1504,8 +1609,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 120,
-      "at": "2026-10-25T12:58:00.799Z",
+      "ms": 79,
+      "at": "2026-10-25T13:03:33.794Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -1518,8 +1623,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 102,
-      "at": "2026-10-25T12:58:03.470Z",
+      "ms": 57,
+      "at": "2026-10-25T13:03:36.385Z",
       "reason": "apple_unverified",
       "runbook": "#apple-behaviour-and-permissions"
     },
@@ -1532,8 +1637,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 97,
-      "at": "2026-10-25T12:58:03.693Z",
+      "ms": 79,
+      "at": "2026-10-25T13:03:36.529Z",
       "reason": "llm_credits",
       "runbook": "#gemini-credits-live-and-elevenlabs-plan"
     },
@@ -1546,8 +1651,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 67,
-      "at": "2026-10-25T12:58:06.219Z",
+      "ms": 59,
+      "at": "2026-10-25T13:03:39.492Z",
       "reason": "apple_unverified",
       "runbook": "#apple-behaviour-and-permissions"
     },
@@ -1561,7 +1666,7 @@
       "notes": [],
       "label": "real",
       "ms": 106,
-      "at": "2026-10-25T12:58:13.433Z",
+      "at": "2026-10-25T13:03:46.507Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -1574,8 +1679,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 109,
-      "at": "2026-10-25T13:01:46.014Z",
+      "ms": 78,
+      "at": "2026-10-25T13:07:18.205Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -1588,8 +1693,22 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 124,
-      "at": "2026-10-25T13:02:47.458Z",
+      "ms": 230,
+      "at": "2026-10-25T13:08:19.180Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "S10",
+      "title": "Decisions, updates, failures and agent activity stay synchronized in web and iMessage",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 189,
+      "at": "2026-10-25T13:08:54.524Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     }
