@@ -161,6 +161,9 @@ export interface CallRegistry {
   close(callId: string): ActiveCall | undefined;
   get(callId: string): ActiveCall | undefined;
   byStudent(studentId: StudentId): ActiveCall | undefined;
+  /** Remember who a call belongs to (also after it ends, bounded). null = public call, undefined = unknown. */
+  noteOwner(callId: string, student: StudentId | null): void;
+  ownerOf(callId: string): StudentId | null | undefined;
   active(): ActiveCall[];
   clear(): void;
 }
