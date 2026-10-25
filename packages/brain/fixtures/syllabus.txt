@@ -1,0 +1,17 @@
+STAT 101: Introductory Statistics (SYNTHETIC SYLLABUS written for the Squad demo; not an OpenStax document)
+
+Instructor: Dr. Rivera. Teaching assistants hold office hours on Thursdays.
+
+Course materials
+The course follows excerpts of OpenStax Introductory Statistics 2e (chapters 2, 3, 6 and 12).
+
+Grading
+Weekly homework sets are graded for correctness and make up 30% of the final grade. There are two midterms and a final exam.
+
+Homework policy
+Homework sets are graded work. You may discuss concepts with classmates, but you must write up your own solutions.
+Using an AI assistant to produce the final answer to a graded homework problem is not allowed. Asking an AI for hints, explanations of the course readings, or practice problems is allowed.
+Ungraded practice problems and textbook exercises may be worked on with any help you like.
+
+Academic integrity
+Submitting work that is not your own, including answers copied from an AI assistant, is a violation of the academic integrity policy.

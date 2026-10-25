@@ -87,7 +87,11 @@ export interface CaptionPipeline {
 
 export interface Brain {
   readonly store: CourseStore;
-  ingestPdf(courseId: string, path: string, opts?: { title?: string; chapter?: string }): Promise<number>;
+  ingestPdf(
+    courseId: string,
+    path: string,
+    opts?: { title?: string; chapter?: string },
+  ): Promise<number>;
   /** Dean -> expert(s) -> (merge) -> verified answer. */
   ask(courseId: string, question: string): Promise<ExpertAnswer>;
   expert(courseId: string, chapter: string): ChapterExpert;

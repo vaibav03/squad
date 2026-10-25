@@ -17,7 +17,10 @@ export function formatMarker(file: string, page: number): string {
 
 /** Strips every marker (what a student never needs to see in raw form). */
 export function stripMarkers(text: string): string {
-  return text.replace(MARKER, '').replace(/\s{2,}/g, ' ').trim();
+  return text
+    .replace(MARKER, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 /** User-facing suffix: "(file p.N)" instead of brackets. */
