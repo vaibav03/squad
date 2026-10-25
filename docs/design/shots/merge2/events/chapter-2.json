@@ -1,0 +1,55 @@
+[
+  {
+    "t": "agent.state",
+    "agent": "council:quizkey",
+    "state": "studying"
+  },
+  {
+    "t": "agent.state",
+    "agent": "council:quizkey",
+    "state": "idle"
+  },
+  {
+    "t": "quiz.question",
+    "quizId": "q2_1",
+    "chapter": "ch2",
+    "text": "What does MSE average?",
+    "target": "s_ana"
+  },
+  {
+    "t": "agent.state",
+    "agent": "expert:ch2",
+    "state": "waiting_for_student"
+  },
+  {
+    "t": "mastery.changed",
+    "student": "s_ana",
+    "chapter": "ch2",
+    "box": 2
+  },
+  {
+    "t": "quiz.answer",
+    "quizId": "q2_1",
+    "chapter": "ch2",
+    "student": "s_ana",
+    "target": "s_ana"
+  },
+  {
+    "t": "quiz.answer",
+    "quizId": "q2_1",
+    "chapter": "ch2",
+    "student": "s_ben",
+    "target": "s_ana"
+  },
+  {
+    "t": "quiz.result",
+    "quizId": "q2_1",
+    "chapter": "ch2",
+    "target": "s_ana"
+  },
+  {
+    "t": "agent.state",
+    "agent": "expert:ch2",
+    "state": "idle"
+  }
+]

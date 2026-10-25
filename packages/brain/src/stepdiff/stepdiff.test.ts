@@ -198,6 +198,10 @@ describe('step diff skill flow', () => {
     expect(t.sent[0]!.text).toBe(g.expectedFull);
     expect(t.sent[0]!.text).not.toMatch(FORBIDDEN);
     expect(t.events.map((e) => e.t)).toEqual(['agent.state', 'agent.message', 'agent.state']);
+    // the Panic Line booth lights up, not the dean
+    expect(t.events[0]).toMatchObject({ agent: 'expert:stepdiff' });
+    expect(t.events[1]).toMatchObject({ from: 'expert:stepdiff' });
+    expect(t.events[2]).toMatchObject({ agent: 'expert:stepdiff' });
     expect(t.events.find((e) => e.t === 'agent.message')).toMatchObject({
       kind: 'step_diff_split',
       shared: ['step 4'],
