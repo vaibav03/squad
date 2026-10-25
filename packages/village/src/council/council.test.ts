@@ -145,7 +145,14 @@ describe('board from a CouncilResult snapshot and the status line', () => {
     ).toBe('Waiting for Teacher.');
   });
   it('a result snapshot builds the run, is idempotent, and advances the stage on later polls', () => {
-    const msg = (id: string, seq: number, stage: string, from: string, to: string, kind: string) => ({
+    const msg = (
+      id: string,
+      seq: number,
+      stage: string,
+      from: string,
+      to: string,
+      kind: string,
+    ) => ({
       id,
       correlationId: 'cn_1',
       seq,
@@ -168,7 +175,14 @@ describe('board from a CouncilResult snapshot and the status line', () => {
       stage: 'opinions',
       messages: [
         msg('am_1', 0, 'question', 'council:roundtable-chairman', 'room', 'status'),
-        msg('am_2', 1, 'delegation', 'council:roundtable-chairman', 'council:roundtable-chill', 'delegate'),
+        msg(
+          'am_2',
+          1,
+          'delegation',
+          'council:roundtable-chairman',
+          'council:roundtable-chill',
+          'delegate',
+        ),
       ],
     };
     syncResultToBoard(store, r);
