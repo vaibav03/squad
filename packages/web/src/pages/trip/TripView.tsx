@@ -134,13 +134,6 @@ function EmptyTrip({
   error?: string | null;
   onCreate: TripActions['create'];
 }) {
-  const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ destination: '', month: '', days: '', perPerson: '' });
-  const body = createBodyFromForm(f);
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    if (body) onCreate(body);
-  };
   return (
     <section className="lv-card lv-trip__empty" data-testid="trip-empty" aria-labelledby="empty-h">
       <h2 id="empty-h" className="lv-sec__title">
@@ -150,6 +143,36 @@ function EmptyTrip({
         Plan one with your squad. Everyone&rsquo;s agent checks free days and budgets without
         sharing calendars.
       </p>
+      <CreateForm busy={busy} onCreate={onCreate} openLabel="Plan a trip" />
+      {error && (
+        <p role="alert" className="lv-trip__err" data-testid="trip-action-error">
+          {error}
+        </p>
+      )}
+      <p className="lv-card__foot">Or ask in chat: @cubbie plan a trip to Cabo in March</p>
+    </section>
+  );
+}
+
+/** The create form behind 'Plan a trip' (empty state) and 'Plan another trip' (after a trip ended). */
+function CreateForm({
+  busy,
+  onCreate,
+  openLabel,
+}: {
+  busy: boolean;
+  onCreate: TripActions['create'];
+  openLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [f, setF] = useState({ destination: '', month: '', days: '', perPerson: '' });
+  const body = createBodyFromForm(f);
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (body) onCreate(body);
+  };
+  return (
+    <>
       {!open && (
         <Button
           variant="primary"
@@ -157,14 +180,14 @@ function EmptyTrip({
           iconStart="plane"
           onClick={() => setOpen(true)}
         >
-          Plan a trip
+          {openLabel}
         </Button>
       )}
       {open && (
         <form
           className="lv-form"
           data-testid="trip-create-form"
-          aria-label="Plan a trip"
+          aria-label={openLabel}
           onSubmit={submit}
         >
           <label className="lv-field">
@@ -214,13 +237,7 @@ function EmptyTrip({
           </Button>
         </form>
       )}
-      {error && (
-        <p role="alert" className="lv-trip__err" data-testid="trip-action-error">
-          {error}
-        </p>
-      )}
-      <p className="lv-card__foot">Or ask in chat: @cubbie plan a trip to Cabo in March</p>
-    </section>
+    </>
   );
 }
 
@@ -337,7 +354,7 @@ function TripBody({
           )}
           {trip.status === 'voting' && <VoteCard trip={trip} busy={busy} actions={actions} />}
           <OptionsCard trip={trip} busy={busy} actions={actions} />
-          {trip.status === 'planning' && trip.can.propose && (
+          {(trip.status === 'planning' || trip.status === 'voting') && trip.can.propose && (
             <ProposeForm busy={busy === 'propose'} onPropose={actions.propose} />
           )}
           {trip.recommendation && <Recommendation trip={trip} />}
@@ -373,6 +390,16 @@ function TripBody({
           <Activity trip={trip} />
         </aside>
       </div>
+      {(ended || trip.status === 'confirmed' || trip.source === 'seed') && (
+        <section className="lv-card lv-trip__another" data-testid="trip-another">
+          <h2 className="lv-card__title">Another trip?</h2>
+          <CreateForm
+            busy={busy === 'create'}
+            onCreate={actions.create}
+            openLabel="Plan another trip"
+          />
+        </section>
+      )}
     </div>
   );
 }

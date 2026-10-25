@@ -45,6 +45,21 @@ describe('TripView states', () => {
     expect(create).toHaveBeenCalledWith({ destination: 'Cabo', month: 3, days: 5, perPerson: 650 });
   });
 
+  it('an ended or confirmed trip offers Plan another trip; an active one does not', () => {
+    const create = vi.fn();
+    view({ trip: tripCancelled }, { create });
+    fireEvent.click(within(id('trip-another')).getByTestId('trip-create-open'));
+    fireEvent.change(screen.getByLabelText('Destination'), { target: { value: 'Austin' } });
+    fireEvent.submit(id('trip-create-form'));
+    expect(create).toHaveBeenCalledWith({ destination: 'Austin' });
+    cleanup();
+    view({ trip: tripConfirmed });
+    expect(q('trip-another')).not.toBeNull();
+    cleanup();
+    view({ trip: tripVoting });
+    expect(q('trip-another')).toBeNull();
+  });
+
   it('planning: options, propose form, constraints overlap, private limits', () => {
     const propose = vi.fn();
     view({}, { propose });
