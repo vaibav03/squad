@@ -365,3 +365,8 @@ Frames: `docs/design/shots/merge7/` (01-06 happy path, 07/08 status banner attem
 - Doctor was not run against the real Gemini (402) and restricted ElevenLabs keys, per the no-`.env` rule.
 - `/squad/personas` voice play with no key shows the no-key notice, not the plan notice, for the same reason.
 - The browser run used Playwright from another project's `playwright-core` 1.64.1 because the repo's e2e deps are not installed in this worktree; `pnpm e2e` was not run.
+
+### Landing (honest status)
+
+- Landing merge commit: `753b212` (parents `a026ecc` = tag `pre-merge-honest-status`, `0f57097` = origin/merge/honest-status). Main had moved by batch 8 (cast art, agent inspector, 149 files) after the branch was verified on `1cf2c30`; the only merge conflict was this log (both sides appended, both kept), and `pnpm typecheck`, `pnpm lint` and `pnpm test` were re-run on the combined tree: all exit 0. The browser run and smoke/demo/doctor were not repeated on the combined tree.
+- Rollback: `git revert -m 1 753b212`.
