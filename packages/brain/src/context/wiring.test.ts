@@ -3,7 +3,7 @@ import { FakeLlm, sourceUri, type SourceKind } from '@squad/core';
 import { openMemoryDb } from '@squad/core/node';
 import { assembleBrain } from '../experts/brain';
 import { makeKit } from '../experts/testkit';
-import { NOT_IN_MATERIALS, NOTHING_CONNECTED } from '../experts/types';
+import { NOTHING_CONNECTED } from '../experts/types';
 import { canvasAnswer, NOT_SYNCED } from './answers';
 import { deriveTripConstraints } from './constraints';
 import { hashExternalAccount } from './ids';

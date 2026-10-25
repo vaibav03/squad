@@ -497,6 +497,21 @@ describe('Nook parity: Google OAuth through the hub (routes/integrations.ts)', (
       (x: { state: string }) => x.state === 'live',
     );
     expect(live.sources.total).toBe(2);
+    // the access token dies at Google early: one refresh, one retry, no user-visible failure
+    const tlog: string[] = [];
+    const rotated = fakeGoogle({
+      accessToken: 'AT-ROTATED',
+      refreshToken: RT,
+      issue: { access_token: 'AT-ROTATED' },
+      log: tlog,
+    });
+    hub.deps.context = createContextService(hub.deps, { googleOAuth: G_CFG, fetch: rotated });
+    const healed = await call('POST', `/v1/connections/${live.id}/sync`, 's_ana');
+    expect(healed.status).toBe(200);
+    expect(healed.json.sync.outcome).toBe('ok');
+    expect(healed.json.connection).toMatchObject({ state: 'live', needsReconnect: false });
+    expect(tlog.filter((l) => l.includes('oauth2.googleapis.com/token'))).toHaveLength(1);
+
     const gone = fakeGoogle({ accessToken: AT, refreshToken: RT, refreshInvalidGrant: true });
     hub.deps.context = createContextService(hub.deps, { googleOAuth: G_CFG, fetch: gone });
     t += 3_600_000;
