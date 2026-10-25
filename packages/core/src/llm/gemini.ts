@@ -168,7 +168,9 @@ export class GeminiLlm implements Llm {
       );
       return {
         // thinking parts never leave the adapter (no-chain-of-thought contract)
-        text: res.candidates?.[0]?.content?.parts ? visibleText(res.candidates[0].content.parts) : (res.text ?? ''),
+        text: res.candidates?.[0]?.content?.parts
+          ? visibleText(res.candidates[0].content.parts)
+          : (res.text ?? ''),
         toolCalls: functionCallsOf(res).map(({ call: c, signature }, i) => ({
           id: c.id ?? `call_${i}`,
           name: c.name ?? '',

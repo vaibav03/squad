@@ -1,6 +1,9 @@
 import type { Ctx, InboundMessage, Llm, OutboundMessage, Skill, StudentId } from '@squad/core';
 import type { EmitEvent } from '../../mastery/types';
+import type { CouncilAgents } from '../../agents/factory';
+import type { AskViewerData } from '../../councils/ask-v2';
 import { runCoursePlan, type CoursePlanGoals } from './roundtable';
+import { runCoursePlanAgents } from './roundtable-agents';
 import {
   extractCourseIds,
   loadCatalog,
@@ -17,6 +20,13 @@ export interface CoursePlanSkillDeps {
   /** The student's completed course ids; undefined means "use the documented mock default". */
   completedFor?: (student: StudentId, ctx: Ctx) => readonly string[] | undefined;
   now?: () => number;
+  /**
+   * The agent runtime (COUNCIL_AGENTS=v2). When given and its flag is `v2`, Chill/Grind/Advisor/Chairman are real
+   * agents; without it the legacy three-phase prompts run.
+   */
+  agents?: CouncilAgents;
+  /** The asker's own data through the privacy gate (calendar/mastery summaries). */
+  viewerFor?: (student: StudentId, ctx: Ctx) => AskViewerData | undefined;
 }
 
 const VERB = '(?:plan|planning|pick|choose|select|map\\s+out|build|figure\\s+out|sort\\s+out)';
@@ -85,10 +95,15 @@ export function createCoursePlanSkill(deps: CoursePlanSkillDeps): Skill {
       const seeded = deps.completedFor?.(m.from, ctx);
       const completed = typed.length ? typed : [...(seeded ?? MOCK_COMPLETED)];
       const now = deps.now?.() ?? Date.now();
-      const res = await runCoursePlan(
-        { llm: deps.llm ?? ctx.llm, emit: deps.emit, bundle },
-        { completed, term: parseTerm(m.text, now), goals: parseGoals(m.text) },
-      );
+      const planInput = { completed, term: parseTerm(m.text, now), goals: parseGoals(m.text) };
+      const viewer = deps.viewerFor?.(m.from, ctx);
+      const res =
+        deps.agents && deps.agents.flag === 'v2'
+          ? await runCoursePlanAgents(
+              { emit: deps.emit, bundle, agents: deps.agents, ...(viewer ? { viewer } : {}) },
+              planInput,
+            )
+          : await runCoursePlan({ llm: deps.llm ?? ctx.llm, emit: deps.emit, bundle }, planInput);
       const source = typed.length
         ? `Using the ${typed.length} course${typed.length === 1 ? '' : 's'} you listed.`
         : seeded

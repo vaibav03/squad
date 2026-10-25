@@ -47,6 +47,7 @@ export interface AgentSpec {
 export interface AgentLimits {
   /** Model calls for one turn, tool rounds included. */
   maxModelCalls: number;
+  /** Raw model cap. Generous on purpose: hidden thinking tokens count toward it and an empty reply is the failure mode of a tight cap. Public text is capped in code, not here. */
   maxOutputTokens: number;
   /** ask_peer calls per run (plan: 1). */
   maxPeerAsks: number;
@@ -54,7 +55,7 @@ export interface AgentLimits {
 
 export const DEFAULT_AGENT_LIMITS: AgentLimits = {
   maxModelCalls: 5,
-  maxOutputTokens: 900,
+  maxOutputTokens: 3000,
   maxPeerAsks: 1,
 };
 
@@ -103,6 +104,7 @@ export interface OpenSessionOptions {
   tools: ToolDecl[];
   /** Roster keys this agent may delegate to or consult (demo transport and tool enums). */
   children: string[];
+  /** Raw model cap. Generous on purpose: hidden thinking tokens count toward it and an empty reply is the failure mode of a tight cap. Public text is capped in code, not here. */
   maxOutputTokens: number;
   temperature?: number;
 }

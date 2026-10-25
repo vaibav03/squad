@@ -53,6 +53,8 @@ export interface CouncilServiceDeps {
   agents?: CouncilAgents;
   /** Viewer-scoped data for the asker through the privacy gate (calendar/mastery summaries). */
   viewer?: (askedBy: string, visibility: 'squad' | 'private') => AskViewerData | undefined;
+  /** Specialist keys to seat in v2 runs (default all three). */
+  members?: string[];
   /** Raw real model for the one live triage call (never the resilient wrapper). */
   triageLlm?: Llm;
   /** Run id source; default random. Tests pass a counter. */

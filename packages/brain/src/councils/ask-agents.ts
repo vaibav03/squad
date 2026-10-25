@@ -15,8 +15,8 @@ const SPECIALIST_RULES = [
 ].join('\n');
 
 export const CHAIR_V2_SYSTEM = [
-  `You are the Chair of a three-specialist study council (Skeptic, Teacher, Practitioner) helping a university student. You coordinate; the specialists answer.`,
-  'Plan: split the question into the sub-question each specialist should answer from their own angle, then call delegate ONCE FOR EACH of skeptic, teacher and practitioner, all in the same step so they work in parallel. After their answers come back, call submit_turn with a one-sentence plan summary. Do NOT give a verdict in that first turn.',
+  `You are the Chair of a study council of specialists (your roster is listed below; usually Skeptic, Teacher, Practitioner) helping a university student. You coordinate; the specialists answer.`,
+  'Plan: split the question into the sub-question each specialist should answer from their own angle, then call delegate ONCE FOR EACH specialist in your roster, all in the same step so they work in parallel. After their answers come back, call submit_turn with a one-sentence plan summary. Do NOT give a verdict in that first turn.',
   'Verdict (later, when asked): prefer the answer with the best reasoning and the strongest peer ranking, not the majority by default. Name who agrees. If a specialist disagrees, say in dissent.why, fairly and in one sentence, why you did not follow them. State confidence in words only: confident (all agree and the reasoning is sound), fairly_sure (one disagrees or evidence is thin), uncertain (split or the evidence does not settle it). In the verdict turn, `summary` is the verdict text for the student; put what the student should do next into `stance`.',
   'Never invent facts about the course materials.',
   `[prompt ${ASK_PROMPT_VERSION}:chair-v2]`,
@@ -27,6 +27,8 @@ export interface AskRosterOptions {
   /** The asker's calendar / mastery summaries are reachable through the privacy gate. */
   calendar?: boolean;
   mastery?: boolean;
+  /** Specialist keys to seat (default all three). Real smoke runs seat fewer to cap spend. */
+  members?: string[];
 }
 
 export function askRoster(o: AskRosterOptions = {}): AgentSpec[] {
@@ -43,19 +45,25 @@ export function askRoster(o: AskRosterOptions = {}): AgentSpec[] {
     system: CHAIR_V2_SYSTEM,
     tools: ['delegate', 'retrieve_course'],
     tier: 'chair',
-    limits: { maxModelCalls: 6, maxOutputTokens: 900 },
+    limits: { maxModelCalls: 6, maxOutputTokens: 3000 },
   };
-  const specialists = ASK_MEMBERS.map((m): AgentSpec => ({
-    id: agentId.council(`${ASK_COUNCIL_ID}-${m.id}`),
-    key: m.id,
-    role: 'specialist',
-    parent: chair.id,
-    displayName: m.name,
-    stance: m.stance,
-    system: `${m.lens}\n\n${SPECIALIST_RULES}\n[prompt ${ASK_V2_PROMPT_VERSION}:${m.id}]`,
-    tools: ['retrieve_course', 'ask_peer', ...own(m.id as 'teacher' | 'practitioner' | 'skeptic')],
-    tier: 'main',
-    limits: { maxModelCalls: 6, maxOutputTokens: 900, maxPeerAsks: 1 },
-  }));
+  const specialists = ASK_MEMBERS.filter((m) => !o.members?.length || o.members.includes(m.id)).map(
+    (m): AgentSpec => ({
+      id: agentId.council(`${ASK_COUNCIL_ID}-${m.id}`),
+      key: m.id,
+      role: 'specialist',
+      parent: chair.id,
+      displayName: m.name,
+      stance: m.stance,
+      system: `${m.lens}\n\n${SPECIALIST_RULES}\n[prompt ${ASK_V2_PROMPT_VERSION}:${m.id}]`,
+      tools: [
+        'retrieve_course',
+        'ask_peer',
+        ...own(m.id as 'teacher' | 'practitioner' | 'skeptic'),
+      ],
+      tier: 'main',
+      limits: { maxModelCalls: 6, maxOutputTokens: 3000, maxPeerAsks: 1 },
+    }),
+  );
   return [chair, ...specialists];
 }

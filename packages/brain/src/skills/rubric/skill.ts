@@ -1,6 +1,17 @@
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
-import type { Attachment, Ctx, InboundMessage, Llm, OutboundMessage, Skill } from '@squad/core';
+import {
+  scripted,
+  type AgentMode,
+  type Attachment,
+  type Ctx,
+  type InboundMessage,
+  type Llm,
+  type NonLiveMode,
+  type OutboundMessage,
+  type Skill,
+} from '@squad/core';
+import { fallbackMode, modeLabel, startMode, type ModeDeps } from '../mode-util';
 import type { EmitEvent } from '../../mastery/types';
 import type { CourseStore } from '../../ingest/types';
 import { extractPages } from '../../ingest/pdf';
@@ -29,7 +40,7 @@ import {
   type RubricRowFeedback,
 } from './rules';
 
-export interface RubricSkillDeps {
+export interface RubricSkillDeps extends ModeDeps {
   store: CourseStore;
   emit: EmitEvent;
   /** Falls back to `ctx.llm`. */
@@ -157,9 +168,13 @@ export function formatRubricReply(
   return out.join('\n');
 }
 
-export function rubricUnavailableReply(criteria: readonly string[]): string {
+/** Scripted reply when the checker cannot run. Always labelled with its mode (demo or degraded). */
+export function rubricUnavailableReply(
+  criteria: readonly string[],
+  mode: NonLiveMode = 'demo',
+): string {
   return [
-    "The rubric checker is unavailable right now (demo mode), so I can't check your answer.",
+    `${modeLabel(mode)}The rubric checker is unavailable right now, so I can't check your answer.`,
     'You can self-check against the rubric yourself:',
     ...criteria.map((c, i) => `${i + 1}. ${c}`),
   ].join('\n');
@@ -184,6 +199,11 @@ export function createRubricSkill(deps: RubricSkillDeps): Skill {
       const llm = deps.llm ?? ctx.llm;
       const req = parseRubricRequest(m.text);
       const courseId = course(m);
+      const start: AgentMode = startMode(deps); // decided ONCE per request
+      const unavailable = (criteria: readonly string[], err?: unknown): OutboundMessage[] => {
+        const fm = fallbackMode(start, err);
+        return reply(scripted(rubricUnavailableReply(criteria, fm), fm).text);
+      };
 
       let answer = req.answer;
       if (m.attachments.length) {
@@ -193,14 +213,10 @@ export function createRubricSkill(deps: RubricSkillDeps): Skill {
             if (!t) return reply(UNREADABLE_TEXT);
             answer = answer ? `${answer}\n${t}` : t;
           }
-        } catch {
-          return reply(
-            m.attachments.some((a) => a.mime === 'application/pdf')
-              ? UNREADABLE_TEXT
-              : rubricUnavailableReply(
-                  req.pasted.length ? req.pasted : findRubric(deps.store, courseId),
-                ),
-          );
+        } catch (e) {
+          return m.attachments.some((a) => a.mime === 'application/pdf')
+            ? reply(UNREADABLE_TEXT)
+            : unavailable(req.pasted.length ? req.pasted : findRubric(deps.store, courseId), e);
         }
       }
       answer = answer.slice(0, MAX_ANSWER_CHARS).trim();
@@ -220,9 +236,9 @@ export function createRubricSkill(deps: RubricSkillDeps): Skill {
       let rows: RubricRowFeedback[];
       try {
         rows = await grade(llm, mapped, answer);
-      } catch {
+      } catch (e) {
         await emit({ t: 'agent.state', agent: RUBRIC_AGENT, state: 'idle' });
-        return reply(rubricUnavailableReply(criteria));
+        return unavailable(criteria, e);
       }
 
       const slug = rubricSlug(req.name);
@@ -232,6 +248,7 @@ export function createRubricSkill(deps: RubricSkillDeps): Skill {
           councilId: RUBRIC_COUNCIL_ID,
           member: r.key,
           text: rubricClip(`${r.met ? 'Met' : 'Not yet'}. ${r.comment}`, 220),
+          mode: start,
         });
         await emit({
           t: 'quiz.result',
@@ -239,6 +256,7 @@ export function createRubricSkill(deps: RubricSkillDeps): Skill {
           chapter: `rubric:${slug}`,
           student,
           correct: r.met,
+          mode: start,
         });
       }
       const n = rows.filter((r) => r.met).length;
@@ -251,9 +269,10 @@ export function createRubricSkill(deps: RubricSkillDeps): Skill {
           220,
         ),
         outcome: buildRubricOutcome(rows, req.name),
+        mode: start,
       });
       await emit({ t: 'agent.state', agent: RUBRIC_AGENT, state: 'idle' });
-      return reply(formatRubricReply(rows, req.name, policyLine, grab));
+      return reply(`${modeLabel(start)}${formatRubricReply(rows, req.name, policyLine, grab)}`);
     },
   };
 }

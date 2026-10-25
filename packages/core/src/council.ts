@@ -166,12 +166,11 @@ export function councilVerdictText(r: CouncilResult): string {
   const v = r.verdict;
   if (!v) return 'The council is still thinking.';
   // honest label in plain text too (iMessage, Discord, clipboard)
-  const label =
-    r.mode?.startsWith('degraded')
-      ? `(Degraded: ${r.mode.slice(9).replace(/_/g, ' ')}) `
-      : r.demo || r.mode?.startsWith('demo')
-        ? '(Demo, scripted, not Gemini) '
-        : '';
+  const label = r.mode?.startsWith('degraded')
+    ? `(Degraded: ${r.mode.slice(9).replace(/_/g, ' ')}) `
+    : r.demo || r.mode?.startsWith('demo')
+      ? '(Demo, scripted, not Gemini) '
+      : '';
   const lines = [
     `${label}Council verdict: ${v.text}`,
     `Confidence: ${COUNCIL_CONFIDENCE_WORDS[v.confidence]}. ${v.confidenceNote}`,

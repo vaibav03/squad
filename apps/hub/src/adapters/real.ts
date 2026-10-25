@@ -20,6 +20,7 @@ import {
   councilLlmFor,
   createCouncilAgents,
   createCouncilService,
+  createQuizKeyVerifier,
   createMasteryStore,
   createOralExaminer,
   loadFixtureCourse,
@@ -111,6 +112,12 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
   if (o.loadFixture !== false && !brain.store.getCourse(courseId))
     await loadFixtureCourse({ store: brain.store }, courseId);
 
+  const councilAgents = createCouncilAgents({
+    ...(o.rawLlm ? { real: o.rawLlm } : {}),
+    env: o.env ?? process.env,
+    health: () => (deps.runtime ? deps.runtime.llm() : undefined),
+    emit,
+  });
   const councilDemo = () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : false);
   deps.council = createCouncilService({
     llm: councilLlmFor(o.llm, councilDemo),
@@ -119,12 +126,7 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     brain,
     courseId: () => courseId,
     demo: councilDemo,
-    agents: createCouncilAgents({
-      ...(o.rawLlm ? { real: o.rawLlm } : {}),
-      env: o.env ?? process.env,
-      health: () => (deps.runtime ? deps.runtime.llm() : undefined),
-      emit,
-    }),
+    agents: councilAgents,
     ...(o.rawLlm ? { triageLlm: o.rawLlm } : {}),
   });
 
@@ -137,7 +139,12 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     emit: quizEmit,
     mastery,
     chapters: chapterProviderFromStore(brain.store),
-    ...(o.verifier ? { verifier: o.verifier } : {}),
+    // blind quiz-key council on real agents when a real model exists (never added to demo/stub runs)
+    ...(o.verifier
+      ? { verifier: o.verifier }
+      : o.rawLlm
+        ? { verifier: createQuizKeyVerifier({ llm: o.llm, emit: quizEmit, agents: councilAgents }) }
+        : {}),
   });
 
   const quiz = createRealQuizPort(deps, engine, courseId);

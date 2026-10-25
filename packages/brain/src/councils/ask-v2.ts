@@ -45,6 +45,8 @@ export interface AskV2Deps {
   publish(r: CouncilResult): void;
   /** Viewer-scoped data ports for the asker. */
   viewer?: (askedBy: string, visibility: 'squad' | 'private') => AskViewerData | undefined;
+  /** Specialist keys to seat (default all; env COUNCIL_ASK_MEMBERS=skeptic,teacher caps real-run spend). */
+  members?: string[];
   /** The raw real model, only used for the one cheap live triage call. */
   triageLlm?: Llm;
 }
@@ -156,6 +158,7 @@ export async function runAskV2(
     const roster = askRoster({
       calendar: !!ports.calendarSummary,
       mastery: !!ports.masterySummary,
+      ...(d.members?.length ? { members: d.members } : {}),
     });
     const chair = roster.find((s) => s.role === 'chair')!;
     const members = roster.filter((s) => s.role === 'specialist');
@@ -399,7 +402,10 @@ export async function runAskV2(
       cap = 'fairly_sure';
       note = `Both members who answered agreed (${list(failedMembers.map((m) => m.displayName))} did not answer).`;
     } else {
-      note = 'All three members agreed.';
+      note =
+        members.length === 3
+          ? 'All three members agreed.'
+          : `All ${members.length} members agreed.`;
     }
     const chairWord = out?.confidence ?? 'uncertain';
     const confidence = rank[Math.min(rank.indexOf(cap), rank.indexOf(chairWord))]!;
