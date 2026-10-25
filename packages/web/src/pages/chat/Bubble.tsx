@@ -1,5 +1,5 @@
 import { displayAssistantName, displayAssistantText, displayLegacyMentions } from './legacy-brand';
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import {
   messageTruth,
   TRUTH_LABELS,
@@ -36,6 +36,9 @@ import type { ConfirmResult } from './useChat';
 import type { ChatApi } from './api';
 
 type MsgRow = Extract<ThreadRow, { kind: 'msg' }>;
+
+/** Sources shown before 'Show all': the answer text already lists every item, so the card stays compact. */
+const SOURCES_PREVIEW = 4;
 
 export interface BubbleProps {
   row: MsgRow;
@@ -87,6 +90,7 @@ export function MessageBubble(p: BubbleProps) {
   const m = row.message;
   const sender = m.sender;
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const [srcOpen, setSrcOpen] = useState(false);
   useLinkHosts(bubbleRef, m.text);
 
   if (sender.kind === 'system')
@@ -286,42 +290,71 @@ export function MessageBubble(p: BubbleProps) {
         ) : null}
 
         {cites.length ? (
-          <div className="sqc-sources" role="group" aria-label="Sources">
-            {cites.map((c, i) => (
-              <button
-                key={`${c.source ? `${c.source.kind}/${c.source.id}#${c.source.anchor ?? ''}` : c.file}-${c.page}`}
-                type="button"
-                className="sqc-cite"
-                data-testid="chat-citation-chip"
-                aria-haspopup="dialog"
-                aria-label={citationSpeech(c)}
-                onClick={() => cite(c)}
-              >
-                <span className="sqc-cite__n" aria-hidden="true">
-                  {i + 1}
-                </span>
-                {c.label}
-                {c.source?.relation === 'related' ? (
-                  <span className="sqc-cite__prov is-related" data-testid="chat-citation-related">
-                    Related, not about this
-                  </span>
-                ) : null}
-                {c.source?.provenance ? (
-                  <span
-                    className={`sqc-cite__prov is-${c.source.provenance}`}
-                    data-testid="chat-citation-provenance"
-                    data-provenance={c.source.provenance}
+          <div
+            className={`sqc-sources${srcOpen ? ' is-open' : ''}`}
+            role="group"
+            aria-label="Sources"
+            data-count={cites.length}
+          >
+            <div className="sqc-sources__head">
+              <span className="sqc-sources__title">Sources</span>
+              <span className="sqc-sources__count">{cites.length}</span>
+              {cites.length > SOURCES_PREVIEW ? (
+                <button
+                  type="button"
+                  className="sqc-sources__toggle"
+                  aria-expanded={srcOpen}
+                  onClick={() => setSrcOpen((o) => !o)}
+                >
+                  {srcOpen ? 'Show fewer' : `Show all ${cites.length}`}
+                </button>
+              ) : null}
+            </div>
+            <div className="sqc-sources__list">
+              {cites.map((c, i) => {
+                const title = c.label.replace(/,\s*due\s.+$/i, '');
+                const meta = c.source
+                  ? [c.source.courseName, c.source.locationLabel].filter(Boolean).join(' · ')
+                  : '';
+                return (
+                  <button
+                    key={`${c.source ? `${c.source.kind}/${c.source.id}#${c.source.anchor ?? ''}` : c.file}-${c.page}`}
+                    type="button"
+                    className={`sqc-cite${i >= SOURCES_PREVIEW ? ' is-extra' : ''}`}
+                    data-testid="chat-citation-chip"
+                    aria-haspopup="dialog"
+                    aria-label={citationSpeech(c)}
+                    onClick={() => cite(c)}
                   >
-                    {provenanceBadge(c.source.provenance, c.source.kind)}
-                  </span>
-                ) : null}
-                {c.source && (c.source.courseName || c.source.locationLabel) ? (
-                  <span className="sqc-cite__loc" data-testid="chat-citation-location">
-                    {[c.source.courseName, c.source.locationLabel].filter(Boolean).join(' · ')}
-                  </span>
-                ) : null}
-              </button>
-            ))}
+                    <span className="sqc-cite__n" aria-hidden="true">
+                      {i + 1}
+                    </span>
+                    <span className="sqc-cite__body">
+                      <span className="sqc-cite__title">{title}</span>
+                      {meta ? (
+                        <span className="sqc-cite__loc" data-testid="chat-citation-location">
+                          {meta}
+                        </span>
+                      ) : null}
+                    </span>
+                    {c.source?.relation === 'related' ? (
+                      <span className="sqc-cite__prov is-related" data-testid="chat-citation-related">
+                        Related, not about this
+                      </span>
+                    ) : null}
+                    {c.source?.provenance ? (
+                      <span
+                        className={`sqc-cite__prov is-${c.source.provenance}`}
+                        data-testid="chat-citation-provenance"
+                        data-provenance={c.source.provenance}
+                      >
+                        {provenanceBadge(c.source.provenance, c.source.kind)}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         ) : null}
 
