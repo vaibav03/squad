@@ -32,6 +32,8 @@ export function createCouncilService(deps: CouncilServiceDeps): CouncilService {
   const now = deps.now ?? Date.now;
   const limits: CouncilLimits = { ...DEFAULT_LIMITS, ...deps.limits };
   const newId = deps.newId ?? randomId;
+  const isDemo = (): boolean =>
+    typeof deps.demo === 'function' ? deps.demo() : (deps.demo ?? false);
   const course = deps.courseId ?? (() => 'demo');
   const runs = new Map<string, CouncilResult>();
   const subs = new Map<string, Set<(r: CouncilResult) => void>>();
@@ -68,7 +70,7 @@ export function createCouncilService(deps: CouncilServiceDeps): CouncilService {
 
     const visibility = input.visibility ?? (input.chatId?.startsWith('dm:') ? 'private' : 'squad');
     const id = newId();
-    const r = emptyResult(id, input, t, deps.demo ?? false, visibility);
+    const r = emptyResult(id, input, t, isDemo(), visibility);
     runs.set(id, r);
     if (runs.size > KEEP) runs.delete(runs.keys().next().value as string);
 
@@ -134,7 +136,9 @@ export function createCouncilService(deps: CouncilServiceDeps): CouncilService {
   }
 
   return {
-    demo: deps.demo ?? false,
+    get demo() {
+      return isDemo();
+    },
     ask,
     get,
     subscribe(id, fn) {

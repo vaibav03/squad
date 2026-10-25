@@ -323,7 +323,6 @@ describe('council hall: ask run', () => {
     script.push({
       at: 4500,
       event: vd({
-        outcome: { title: `Plan ${a}`, items: [{ label: `${b}` }], facts: [], why: [] },
       }),
     });
     script.push({ at: 4600, event: rk('Teacher', [`${a}`, `${b}`, 'Skeptic']) });

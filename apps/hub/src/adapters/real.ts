@@ -108,7 +108,7 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     emit,
     brain,
     courseId: () => courseId,
-    demo: false,
+    demo: () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : false),
   });
 
   const mastery = createMasteryStore({ db, emit: quizEmit });

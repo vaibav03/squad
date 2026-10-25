@@ -42,7 +42,7 @@ export interface CouncilServiceDeps {
   courseId?: () => string;
   now?: () => number;
   /** true when the llm is the deterministic demo model: stamped on every result. */
-  demo?: boolean;
+  demo?: boolean | (() => boolean);
   limits?: Partial<CouncilLimits>;
   /** Run id source; default random. Tests pass a counter. */
   newId?: () => string;

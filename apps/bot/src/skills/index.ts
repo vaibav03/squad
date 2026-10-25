@@ -46,6 +46,10 @@ export interface SkillDeps {
   /** Load the committed OpenStax sample course when the store is empty (offline, no LLM). Default true. */
   seedFixtureCourse?: boolean;
   now?: () => number;
+  /** Stamp council results as demo-model output (true, or a getter when the model can fall back). */
+  demo?: boolean | (() => boolean);
+  /** Receives the council service the skills use, so the hub's HTTP routes can share it. */
+  onCouncil?: (c: CouncilService) => void;
   /** Share the hub's brain and mastery store so chat, quiz and the village use one instance. */
   shared?: { brain?: Brain; mastery?: MasteryStore; council?: CouncilService };
 }
@@ -75,7 +79,16 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
   const courseIdFor = () => course();
   const council =
     d.shared?.council ??
-    createCouncilService({ llm: d.llm, db: d.db, emit, brain, courseId: course, ...now });
+    createCouncilService({
+      llm: d.llm,
+      db: d.db,
+      emit,
+      brain,
+      courseId: course,
+      ...(d.demo !== undefined ? { demo: d.demo } : {}),
+      ...now,
+    });
+  d.onCouncil?.(council);
 
   const brainSkills: Skill[] = [
     createCouncilSkill(council, { courseId: courseIdFor }),
