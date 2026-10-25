@@ -8,7 +8,7 @@ import type {
   ProvenanceHint,
   StudentId,
 } from '@squad/core';
-import type { ChatId } from '@squad/core';
+import type { ChatContextRef, ChatId } from '@squad/core';
 import { detectMention } from '../mention';
 import { getPersona } from '../persona';
 import type { Transport } from '../types';
@@ -53,6 +53,7 @@ export interface WebTransportOptions {
 
 export type WebInbound = Pick<InboundMessage, 'chatId' | 'from' | 'text'> & {
   attachments?: Attachment[];
+  context?: ChatContextRef[];
 };
 
 /**
@@ -147,6 +148,7 @@ export class WebTransport implements Transport {
       from: m.from,
       text: m.text,
       attachments: m.attachments ?? [],
+      ...(m.context?.length ? { context: m.context } : {}),
       mentionsBot: detectMention(m.text, isGroup),
       ts: this.now(),
     });
