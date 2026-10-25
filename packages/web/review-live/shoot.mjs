@@ -23,12 +23,20 @@ let n = 0;
 for (const id of ids.filter((i) => i && i.includes(filter))) {
   for (const sz of sizes) {
     for (const theme of themes) {
-      const ctx = await browser.newContext({ viewport: { width: sz.width, height: sz.height }, deviceScaleFactor: sz.deviceScaleFactor, reducedMotion: 'reduce' });
+      const ctx = await browser.newContext({
+        viewport: { width: sz.width, height: sz.height },
+        deviceScaleFactor: sz.deviceScaleFactor,
+        reducedMotion: 'reduce',
+      });
       const page = await ctx.newPage();
       page.on('pageerror', (e) => console.error('pageerror', id, e.message));
       await page.goto(`${base}?story=${id}&theme=${theme}`);
       await page.waitForTimeout(900);
-      await page.screenshot({ path: path.join(out, `${id}-${sz.name}-${theme}.png`), fullPage: id.startsWith('call') || id.startsWith('quiz') || id.startsWith('confirm') ? false : true });
+      await page.screenshot({
+        path: path.join(out, `${id}-${sz.name}-${theme}.png`),
+        fullPage:
+          id.startsWith('call') || id.startsWith('quiz') || id.startsWith('confirm') ? false : true,
+      });
       await ctx.close();
       n++;
     }

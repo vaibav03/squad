@@ -160,7 +160,9 @@
   border-radius: var(--lv-r3);
   border: 1px solid var(--lv-line);
   background: var(--lv-surface-2);
-  transition: border-color var(--dur-fast) var(--lv-ease-out), color var(--dur-fast) var(--lv-ease-out);
+  transition:
+    border-color var(--dur-fast) var(--lv-ease-out),
+    color var(--dur-fast) var(--lv-ease-out);
 }
 .lv-quiz__verdict {
   display: flex;
