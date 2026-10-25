@@ -24,8 +24,15 @@ export interface Viewer {
   projector: boolean;
 }
 
+/** An authenticated account, with or without a squad (set by `requireUser`). */
+export interface AuthedUser {
+  id: StudentId;
+  /** session id when the credential was a stateful session token */
+  sessionId?: string;
+}
+
 export interface HubEnv {
-  Variables: { viewer: Viewer };
+  Variables: { viewer: Viewer; user: AuthedUser };
 }
 export type HubApp = Hono<HubEnv>;
 
@@ -44,7 +51,13 @@ export interface Directory {
   student(id: StudentId): Student | undefined;
   students(): Student[];
   squad(id: string): SquadRec | undefined;
+  /** The student's active squad (the one their events and default views use), or their first. */
   squadOf(studentId: StudentId): string | undefined;
+  /** Every squad the student belongs to, oldest first. */
+  squadsOf(studentId: StudentId): string[];
+  setActiveSquad(studentId: StudentId, squadId: string | null): void;
+  removeStudent(id: StudentId): void;
+  removeSquad(id: string): void;
   members(squadId: string): Student[];
   /** Number of members, or null when below the minimum group size (counts must be hidden). */
   visibleMemberCount(squadId: string): number | null;
@@ -221,6 +234,8 @@ export interface TripStore {
     yes: boolean,
   ): TripRecord | undefined;
   allConfirmed(tripId: string): boolean;
+  /** Account deletion: remove one student's limits, votes and confirmation rows everywhere. */
+  forget(student: StudentId): void;
   /** The one place trips are filtered for a viewer (REST and `x.trip.updated`). */
   view(tripId: string, viewer: Viewer, ctx: { directory: Directory }): TripView | null;
   clear(): void;
@@ -261,9 +276,17 @@ export interface HubDeps {
   runtime?: HubRuntime;
   /** Generic confirm answers (POST /v1/confirms/:taskId). */
   confirms: ConfirmRouter;
+  /** Users, sessions, verification codes (docs/accounts-api.md). */
+  accounts: AccountsStore;
+  /** Squads, memberships, invites, audit log. */
+  squads: SquadsStore;
+  codeSender: CodeSender;
 }
 
+import type { CodeSender } from './code-sender';
 import type { ConfirmRouter } from './confirms';
+import type { AccountsStore } from './store/accounts';
+import type { SquadsStore } from './store/squads';
 
 /** Which providers are live right now; read lazily so a mid-run credits switch shows up. */
 export interface HubRuntime {

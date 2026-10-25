@@ -47,6 +47,19 @@ export function createTripStore(db?: Db): TripStore {
   };
 
   return {
+    forget(student) {
+      for (const t of trips.values()) {
+        const had =
+          student in t.limits ||
+          t.votes.some((v) => v.student === student) ||
+          t.confirmations.some((c) => c.student === student);
+        if (!had) continue;
+        delete t.limits[student];
+        t.votes = t.votes.filter((v) => v.student !== student);
+        t.confirmations = t.confirmations.filter((c) => c.student !== student);
+        persist(t);
+      }
+    },
     upsert(t) {
       const prev = trips.get(t.tripId);
       const c = clone(t) as TripRecord;

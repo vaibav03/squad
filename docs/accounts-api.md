@@ -31,7 +31,7 @@ Which squad a request acts in: the user's active squad (server side, changed by 
 
 ## 3. Me and privacy
 
-- `GET /v1/me` -> existing `{ student, squadId, projector }` plus `user` (AccountUser), `squads` (SquadSummary[]), `activeSquadId`. `squadId` is `""` for a user with no squad yet (the web app then shows Welcome -> Create or Join).
+- `GET /v1/me` -> existing `{ student, squadId, projector }` plus `user` (AccountUser), `squads` (SquadSummary[]), `activeSquadId`. Squad-scoped routes (state, stream, ledger, trips, quiz, calls) answer 409 `no_squad` for an account with no squad yet. `squadId` here is `""` for such a user (the web app then shows Welcome -> Create or Join).
 - `PATCH /v1/me` `{ name }` -> `{ user }`.
 - `GET /v1/me/export` -> `application/json` attachment with only the caller's own data: profile (no hashes), memberships, audit rows about them, calendar busy blocks, their own ledger rows (their own raw withheld values), memory rows scoped to them.
 - `DELETE /v1/me` `{ confirm: "delete my account" }` -> `{ ok: true }`. Cascades: sessions, codes, memberships (ownership of a squad with other members passes to the longest member; a squad left empty is disbanded and its events, trips and settings purged), calendar, ledger rows, memory, directory entry. Audit rows keep the squad action but lose the user id. Cookie cleared.
@@ -54,11 +54,11 @@ All need auth. `SquadSummary` and `SquadDetail` are in core. Counts are `null` u
 
 ### Invites
 
-- `POST /v1/squads/:id/invites` owner only, `{ maxUses?: number|null, expiresInHours? }` -> `201 { invite: Invite }`. `maxUses: 1` single use, `null`/omitted multi-use. Code `ABCD-EFGH` (alphabet without 0 O 1 I L, 40 bits of CSPRNG, stored hashed; shown once in the create response and again in list for members while active).
+- `POST /v1/squads/:id/invites` owner only, `{ maxUses?: number|null, expiresInHours? }` -> `201 { invite: Invite }`. `maxUses: 1` single use, `null`/omitted multi-use. Code `ABCD-EFGH` (alphabet without 0 O 1 I L, 40 bits of CSPRNG, stored as is because members can list active invites; revoke or expiry kills it).
 - `GET /v1/squads/:id/invites` any member -> `{ invites: Invite[] }` (active ones first)
 - `DELETE /v1/squads/:id/invites/:inviteId` owner only -> revoke, `{ ok }`
 - `GET /v1/invites/:code` (no auth; rate limited) -> `InvitePreview`. 404 `invite_invalid` / 410 `invite_expired` / `invite_revoked` / `invite_used_up`.
-- `POST /v1/invites/join` `{ code }` (auth) -> `{ squad: SquadDetail, activeSquadId }` and the squad becomes active. 409 `already_member` (body carries the squad id so the UI can switch), 409 `squad_full`, plus the invite errors above. Single use: consumed atomically (two people racing one code: one wins, one gets `invite_used_up`). 10 wrong codes per user per hour -> 429.
+- `POST /v1/invites/join` `{ code }` (auth) -> `{ squad: SquadDetail, activeSquadId }` and the squad becomes active. 409 `already_member` (body carries the squad id so the UI can switch), 409 `squad_full`, plus the invite errors above. Single use: consumed atomically (two people racing one code: one wins, one gets `invite_used_up`). 10 join attempts per user per hour -> 429.
 - Joining and leaving write the audit log (`squad_audit`).
 
 ## 5. Data model (hub sqlite, migrations in `acct_migrations`)

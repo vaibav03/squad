@@ -29,7 +29,7 @@ export function seedDemo(deps: HubDeps): void {
       handle: `${id.slice(2)}@demo.test`,
       personaId: `persona_${id.slice(2)}`,
     });
-  directory.upsertSquad({ id: SQUAD_ID, name: 'Study squad', members: [...STUDENT_IDS] });
+  directory.upsertSquad({ id: SQUAD_ID, name: 'Demo squad', members: [...STUDENT_IDS] });
   directory.setSettings(SQUAD_ID, { revealQuizCorrectness: false });
 
   const trip: TripRecord = {
