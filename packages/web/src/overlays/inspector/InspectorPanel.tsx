@@ -233,7 +233,9 @@ export function InspectorPanel({
     : undefined;
   const name = resolved?.agent?.name ?? shown_name;
   const roleWords = resolved?.agent
-    ? ROLE_LABEL[resolved.agent.role]
+    ? resolved.agent.role === 'chair'
+      ? 'Council chair'
+      : ROLE_LABEL[resolved.agent.role]
     : voice && voice.who
       ? voice.role
       : v.role;
