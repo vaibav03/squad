@@ -78,12 +78,47 @@ export async function savePersona(c: Ctx, p: PersonaDraft): Promise<void> {
   });
   if (!res.ok) throw new Error(`save ${res.status}`);
 }
+/** The hub's own words about speech: shown instead of an error when voices are off or still being checked. */
+export interface VoiceStatus {
+  /** true while the hub's first provider probe is in flight */
+  probing: boolean;
+  /** true when previews and calls can really speak */
+  available: boolean;
+  /** why not, in the hub's words (absent when available) */
+  notice?: string;
+}
+const VoiceStatusBody = z.object({
+  tts: z.string(),
+  probing: z.boolean().optional(),
+  ttsNotice: z.string().optional(),
+});
+export async function fetchVoiceStatus(c: Ctx): Promise<VoiceStatus | null> {
+  try {
+    const res = await fetch(`${c.hubUrl}/v1/status`);
+    if (!res.ok) return null;
+    const b = VoiceStatusBody.parse(await res.json());
+    return {
+      probing: !!b.probing,
+      available: b.tts === 'elevenlabs',
+      ...(b.ttsNotice ? { notice: b.ttsNotice } : {}),
+    };
+  } catch {
+    return null;
+  }
+}
+/** A preview refused because voices are off (HTTP 503 `voices_unavailable`); `message` is user-safe. */
+export class VoicesUnavailable extends Error {}
 export async function fetchPreviewBlob(c: Ctx, voiceId: string, text: string): Promise<Blob> {
   const res = await fetch(`${c.hubUrl}/v1/voices/preview`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...headers(c) },
     body: JSON.stringify({ voiceId, text }),
   });
+  if (res.status === 503) {
+    const b = (await res.json().catch(() => null)) as { error?: { message?: unknown } } | null;
+    const m = b?.error?.message;
+    if (typeof m === 'string' && m) throw new VoicesUnavailable(m);
+  }
   if (!res.ok) throw new Error(`preview ${res.status}`);
   return res.blob();
 }

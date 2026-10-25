@@ -131,19 +131,60 @@ export const ChatCitationExcerptSchema = z.strictObject({
 });
 export type ChatCitationExcerpt = z.infer<typeof ChatCitationExcerptSchema>;
 
+/** Why speech is on or off. `ok` means a voice this key can use was proven by a 1-character synthesis. */
+export const TTS_REASONS = [
+  'no_key',
+  'key_restricted',
+  'paid_plan_required',
+  'rate_limited',
+  'unavailable',
+  'ok',
+] as const;
+export type TtsReason = (typeof TTS_REASONS)[number];
+
+/** The one sentence every audio feature shows when the plan blocks API voices (call turns, podcast, previews). */
+export const VOICES_NEED_PLAN = 'Voices need an ElevenLabs plan that allows API voices';
+
+/** Honest copy per reason; `ok` has none. */
+export const TTS_NOTICES: Record<Exclude<TtsReason, 'ok'>, string> = {
+  no_key: 'Voices are off: no ElevenLabs key is set, so calls show captions only',
+  key_restricted:
+    'Voices are off: the ElevenLabs key was rejected or lacks the text_to_speech permission, so calls show captions only',
+  paid_plan_required: VOICES_NEED_PLAN,
+  rate_limited:
+    'Voices are paused: ElevenLabs is rate limiting or out of quota, rechecked every 10 minutes',
+  unavailable: 'Voices are paused: ElevenLabs could not be reached, rechecked every 10 minutes',
+};
+
+/** Thrown by audio features when speech is known to be unavailable; `message` is safe to show to a user. */
+export class VoicesUnavailableError extends Error {
+  override readonly name = 'VoicesUnavailableError';
+  constructor(readonly reason: Exclude<TtsReason, 'ok'>) {
+    super(TTS_NOTICES[reason]);
+  }
+}
+
 /** `GET /v1/status` (served by routes/status.ts): how honest the UI must be about answers. Tolerates additions. */
 export const HubStatusSchema = z.object({
   llm: z.enum(['gemini', 'fake']),
   tts: z.enum(['elevenlabs', 'none']),
   demo: z.boolean(),
+  /** True while the first provider probe is in flight: show "Checking services..." and claim nothing. */
+  probing: z.boolean().optional(),
   /** Copy to show when demo is true. */
   notice: z.string().optional(),
   /** Why the demo model is answering. */
-  reason: z.enum(['no_key', 'credits_depleted', 'auth', 'forced_fake']).optional(),
+  reason: z.string().optional(),
+  /** Why speech is on or off. */
+  ttsReason: z.string().optional(),
+  /** Copy to show when tts is none. */
+  ttsNotice: z.string().optional(),
   ports: z.enum(['real', 'stub']).optional(),
   since: z.number().optional(),
 });
 export type HubStatus = z.infer<typeof HubStatusSchema>;
+
+export const CHECKING_SERVICES = 'Checking services...';
 
 export const DEMO_NOTICE = 'Demo mode: add GEMINI_API_KEY to .env for real answers';
 export const DEMO_NOTICE_CREDITS =
