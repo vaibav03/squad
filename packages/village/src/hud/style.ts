@@ -26,6 +26,8 @@ export const HUD_CSS = `
 .sqv-chip:active{transform:scale(.97)}
 .sqv-chip .sqv-initial{transform:translateY(-1px)}
 .sqv-chip[data-state=idle]{opacity:.82}
+.sqv-chip[data-selected=true]{outline:2px solid var(--ring,#b4d6da);outline-offset:2px}
+.sqv-chip:focus-visible{outline:2px solid var(--ring,#b4d6da);outline-offset:2px}
 .sqv-chip[data-state=studying]{box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--glow)}
 .sqv-chip[data-state=in_call]{box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--ok)}
 .sqv-chip[data-state=waiting_for_student]{box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--ember)}

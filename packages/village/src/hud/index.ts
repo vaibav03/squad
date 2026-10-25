@@ -12,6 +12,7 @@ import type {
 import { nearestInteractable } from '../world/interact';
 import { STATE_GLYPH, STATE_LABEL, chipOrder, closePopovers, formatClock, initialOf } from './math';
 import { HUD_CSS } from './style';
+import type { InspectorStore } from '../inspector/store';
 
 export interface HudDeps {
   parent: HTMLElement;
@@ -25,6 +26,8 @@ export interface HudDeps {
   calm: { get(): boolean; set(v: boolean): void };
   focusAgent(agentId: string): void;
   assetUrl(repoPath: string): string;
+  /** Agent Inspector: chips carry the live current-activity line and open the inspector. */
+  inspector?: InspectorStore;
 }
 
 const FONT_PATH = 'assets/fonts/jersey-10/Jersey10-latin.woff2';
@@ -139,6 +142,16 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
   // chips
   const chips = el('div', 'sqv-panel sqv-chips', { role: 'list', 'aria-label': 'Agents' });
 
+  // roving focus: arrows move between the agent chips, Enter/Space activates (native button)
+  chips.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const list = [...chips.querySelectorAll<HTMLButtonElement>('.sqv-chip')];
+    const i = list.indexOf(document.activeElement as HTMLButtonElement);
+    if (i < 0) return;
+    e.preventDefault();
+    list[(i + (e.key === 'ArrowRight' ? 1 : -1) + list.length) % list.length]?.focus();
+  });
+
   // prompt (Enter to open the nearest place) and trip door live over the canvas
   const prompt = el('button', 'sqv-panel sqv-prompt', {
     type: 'button',
@@ -249,8 +262,11 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
         chipEls.set(a.id, c);
       }
       c.dataset.state = a.state;
-      c.setAttribute('aria-label', `${a.name}, ${STATE_LABEL[a.state]}`);
-      c.title = `${a.name}: ${STATE_LABEL[a.state]}`;
+      const act = d.inspector?.view(a.id)?.headline;
+      c.setAttribute('aria-label', `${a.name}, ${STATE_LABEL[a.state]}${act ? `. ${act}` : ''}. Open inspector`);
+      c.title = act ? `${a.name}: ${act}` : `${a.name}: ${STATE_LABEL[a.state]}`;
+      c.dataset.selected = String(d.inspector?.selected === a.id);
+      c.setAttribute('aria-pressed', String(d.inspector?.selected === a.id));
       (c.querySelector('.sqv-glyph') as HTMLElement).textContent = STATE_GLYPH[a.state];
       if (chips.children[i] !== c) chips.insertBefore(c, chips.children[i] ?? null);
     });
@@ -271,6 +287,9 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
       trip.dataset.show = String(t.visible);
     }),
     d.agents.onChange?.(() => {
+      dirty = true;
+    }) ?? (() => {}),
+    d.inspector?.subscribe(() => {
       dirty = true;
     }) ?? (() => {}),
   ];
