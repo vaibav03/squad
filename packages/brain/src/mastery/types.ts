@@ -25,6 +25,11 @@ export interface MasteryStore {
     now?: number,
   ): Promise<MasteryRow & { moved: boolean }>;
   /** Queue a concept for review (Step Diff): drops the box to 1 and marks due now. */
-  queueReview(student: StudentId, courseId: string, chapter: string, now?: number): Promise<MasteryRow & { moved: boolean }>;
+  queueReview(
+    student: StudentId,
+    courseId: string,
+    chapter: string,
+    now?: number,
+  ): Promise<MasteryRow & { moved: boolean }>;
   forStudent(student: StudentId, courseId: string): MasteryRow[];
 }

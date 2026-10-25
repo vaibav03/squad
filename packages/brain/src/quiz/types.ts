@@ -57,7 +57,10 @@ export interface KeyVerdict {
 
 /** Implemented by councils/; the engine only depends on this. */
 export interface KeyVerifier {
-  verify(draft: QuestionDraft, ctx: { courseId: string; chapter: string; chapterContext: string }): Promise<KeyVerdict>;
+  verify(
+    draft: QuestionDraft,
+    ctx: { courseId: string; chapter: string; chapterContext: string },
+  ): Promise<KeyVerdict>;
 }
 
 export type { StudentId };
