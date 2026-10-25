@@ -208,6 +208,7 @@ export class WorldScene extends Phaser.Scene {
               },
             },
             assetUrl: assets.url,
+            ...(I.opts.me ? { me: I.opts.me } : {}),
             inspector,
             focusAgent: (id) => {
               if (I.opts.inspector) {

@@ -5,6 +5,14 @@ import { citationLabel, formatElapsed } from './call-state';
 import type { CallPanelProps, CallCaption } from './types';
 import './CallPanel.css';
 
+const STATUS_ICON = {
+  connecting: 'loader',
+  live: 'radio',
+  reconnecting: 'refresh',
+  ended: 'phone-off',
+  error: 'alert',
+} as const;
+
 const STATUS_LABEL = {
   connecting: 'Connecting',
   live: 'Live',
@@ -106,7 +114,7 @@ export function CallPanel(props: CallPanelProps) {
           </h2>
           <p className="lv-call__role">{agent.role}</p>
           <p className="lv-call__status" data-status={status}>
-            <span className="lv-call__dot" aria-hidden="true" />
+            <LvIcon name={STATUS_ICON[status]} size={14} />
             <span>{STATUS_LABEL[status]}</span>
             {live && elapsedMs !== undefined && (
               <span className="lv-call__time">{formatElapsed(elapsedMs)}</span>

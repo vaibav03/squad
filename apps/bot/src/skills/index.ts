@@ -70,6 +70,8 @@ export interface SkillDeps {
   env?: Record<string, string | undefined>;
   /** The asker's own data (calendar/mastery summaries) through the privacy gate, for council agents' tools. */
   viewer?: (askedBy: string, visibility: 'squad' | 'private') => AskViewerData | undefined;
+  /** The asker's imported planner catalogue (stored JSON) for `semester plan`; undefined means the labelled sample fallback. */
+  catalogueFor?: (student: string) => unknown | undefined;
   /** Hub-level model health at run start (ResilientLlm.status()). */
   health?: () => { llm: 'real' | 'fake'; reason?: string } | undefined;
   /** Receives the council service the skills use, so the hub's HTTP routes can share it. */
@@ -185,6 +187,7 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
       emit,
       llm: d.llm,
       agents,
+      ...(d.catalogueFor ? { catalogueFor: d.catalogueFor } : {}),
       ...(d.viewer ? { viewerFor: (student) => d.viewer!(student, 'squad') } : {}),
       ...now,
     }),

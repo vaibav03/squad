@@ -273,6 +273,8 @@ export interface VillageHandle {
   setCalm(v: boolean): void;
   /** Host calls this when a React overlay closed (unlocks input, refocuses canvas). */
   overlayClosed(): void;
+  /** Walk to a room's door and enter it (at once in Calm); false when the room is missing or locked. */
+  openRoom(slot: string, o: { calm: boolean }): Promise<boolean>;
   /** Resolves when the first frame has rendered; rejects if boot failed. */
   ready: Promise<void>;
   /** Test/screenshot hooks. */

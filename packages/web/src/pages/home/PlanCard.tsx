@@ -6,7 +6,7 @@ import { planApi } from '../../overlays/plan/model';
 import '../../overlays/plan/plan.css';
 
 /** Home entry point for the shared study plan: state, mode badge, countdown and a link to the village panel. */
-export function HomePlanCard() {
+export function HomePlanCard({ primary = false }: { primary?: boolean } = {}) {
   const cfg = useSquadConfig();
   const hub = cfg.hubUrl && cfg.token ? { hubUrl: cfg.hubUrl, token: cfg.token } : null;
   const [plan, setPlan] = useState<PlanView | null | undefined>(undefined);
@@ -30,9 +30,7 @@ export function HomePlanCard() {
             Loading the plan...
           </p>
         ) : !plan ? (
-          <p>
-            No study plan yet. Propose one for your next exam; the whole squad gets it to accept.
-          </p>
+          <p>No study plan yet. Create one in your group chat; everyone gets it to accept.</p>
         ) : (
           <>
             {badge && (
@@ -57,11 +55,11 @@ export function HomePlanCard() {
           </>
         )}
         <a
-          className="lv-btn lv-btn--primary"
-          href="/squad/village?plan=1"
+          className={primary ? 'lv-btn lv-btn--primary' : 'lv-btn'}
+          href={plan ? '/squad/village?panel=plan' : '/squad/chat?wizard=study'}
           data-testid="home-plan-open"
         >
-          {plan ? 'Open the plan' : 'Propose a plan'}
+          {plan ? 'Open the plan' : 'Create a study plan'}
         </a>
       </div>
     </Card>

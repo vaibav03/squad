@@ -8,6 +8,8 @@ import {
   extractCourseIds,
   loadCatalog,
   MOCK_COMPLETED,
+  assertCoherent,
+  CatalogSchema,
   type CatalogBundle,
   type TermName,
 } from './schema';
@@ -17,6 +19,11 @@ export interface CoursePlanSkillDeps {
   /** Falls back to `ctx.llm`. */
   llm?: Llm;
   bundle?: CatalogBundle;
+  /**
+   * The asker's own imported catalogue (stored JSON), or undefined when they have none. When present the plan runs
+   * on it (with the degree rules of the sample bundle); otherwise the reply is labelled 'Fallback: sample catalogue'.
+   */
+  catalogueFor?: (student: StudentId) => unknown | undefined;
   /** The student's completed course ids; undefined means "use the documented mock default". */
   completedFor?: (student: StudentId, ctx: Ctx) => readonly string[] | undefined;
   now?: () => number;
@@ -80,6 +87,21 @@ export function parseCompleted(text: string, known: Set<string>): string[] {
   return extractCourseIds(text).filter((id) => known.has(id));
 }
 
+/** The student's imported catalogue as a bundle, only when it is coherent with the degree rules; else undefined. */
+function ownBundle(deps: CoursePlanSkillDeps, student: StudentId): CatalogBundle | undefined {
+  const raw = deps.catalogueFor?.(student);
+  if (!raw) return undefined;
+  try {
+    const catalog = CatalogSchema.parse(raw);
+    if (catalog.courses.length === 0) return undefined;
+    const degree = loadCatalog().degree;
+    assertCoherent(catalog, degree);
+    return { catalog, degree };
+  } catch {
+    return undefined; // unusable import: say so via the fallback label instead of failing the chat turn
+  }
+}
+
 export function createCoursePlanSkill(deps: CoursePlanSkillDeps): Skill {
   return {
     name: 'coursePlan',
@@ -89,7 +111,8 @@ export function createCoursePlanSkill(deps: CoursePlanSkillDeps): Skill {
       return m.mentionsBot && isCoursePlanRequest(m.text) ? 0.95 : 0;
     },
     async handle(m: InboundMessage, ctx: Ctx): Promise<OutboundMessage[]> {
-      const bundle = deps.bundle ?? loadCatalog();
+      const own = ownBundle(deps, m.from);
+      const bundle = own ?? deps.bundle ?? loadCatalog();
       const known = new Set(bundle.catalog.courses.map((c) => c.id));
       const typed = parseCompleted(m.text, known);
       const seeded = deps.completedFor?.(m.from, ctx);
@@ -115,7 +138,20 @@ export function createCoursePlanSkill(deps: CoursePlanSkillDeps): Skill {
         : seeded
           ? 'Using the course record I have for you.'
           : 'No record yet, so I used a sample end-of-year-2 record. Tell me what you finished ("I finished CSL 101, CSL 102") to change it.';
-      return [{ chatId: m.chatId, text: `${res.replyText}\n${source}` }];
+      const fallback = !own && !deps.bundle;
+      const label = own
+        ? `Using your imported catalogue (${own.catalog.courses.length} courses).`
+        : deps.bundle
+          ? ''
+          : 'Fallback: sample catalogue (you have not imported one, so this is not your real catalogue).';
+      // The catalogue is invented sample data, so the reply says so in its provenance row (never "grounded").
+      return [
+        {
+          chatId: m.chatId,
+          text: `${res.replyText}\n${source}${label ? `\n${label}` : ''}`,
+          ...(fallback ? { provenance: { kind: 'sample' as const, label: 'Fallback: sample catalogue' } } : {}),
+        },
+      ];
     },
   };
 }

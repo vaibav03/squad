@@ -181,7 +181,7 @@ says the model is unusable at start). Single-agent judges' fallbacks (oracle/rub
   production yet (needs the nook-parity context retrieval); the tools are only offered to agents when a port exists.
 * Round Table and Debate do not emit action items yet (Ask does); the Debate chair plan still costs one model call (it frames the positions).
 * A real quiz-key run was not made; its owner registration is covered by tests only.
-* Live transport is probe-only (TEXT modality unsupported on `gemini-3.8-live`, AUDIO setup gave 1011).
+* ~~Live transport is probe-only~~ Superseded: the Gemini Live council transport exists and ran for real, see "Gemini Live council transport (council-live-ux)" below. Tool calling over Live is still unverified (the Live transport uses none).
 * Gemini latency has a long tail (one of ten runs took 50 s with the same 6 calls); the median target holds, the maximum does not.
 
 ## Transport probe
@@ -213,3 +213,69 @@ Conclusions (measured, not assumed):
   `stream-text` with `submit_turn`.
 * Decision: council text agents stay on streaming `generateContent` with function calling. Revisit Live only for the voice
   opt-in, after one more probe with a variant declaration format.
+
+## Gemini Live council transport (council-live-ux)
+
+Status: built on `feature/council-live-ux` (docs/council-live-ux.md for the UX side). The streaming transport stays the default
+and the real provider path; Live is opt-in per run.
+
+### How it works
+
+* **Selection**: `POST /v1/council/ask { transport: 'stream' | 'live' }`, default from env `COUNCIL_TRANSPORT` (`stream`).
+  `COUNCIL_TRANSPORT_LIVE=0` is the feature flag that switches Live off hub-wide (a `live` request then falls back, labelled).
+  The decision is in `runAskV2`: demo runs stay demo (label `Demo (scripted, not Gemini)`); a `live` request on a live run builds a
+  per-run Live council (`apps/hub/src/council/live/factory.ts`), PRE-FLIGHTS every participant's session
+  (`transport.prepare`: connect all, then a short grace window because a bad key or credits close the socket right after
+  open), and only then starts the run on it. If the pre-flight fails the run uses the streaming transport and its label reads
+  `Gemini streaming (Live unavailable: <reason in words>)` with `transport.why` set (`credits_depleted`, `invalid_key`,
+  `rate_limited`, `live_unavailable`, `timeout`, `live_disabled`). `CouncilResult.transport` carries `{ kind, label, requested, why, models }`.
+* **Participants**: each seat is its OWN Gemini Live session (`apps/hub/src/council/live/transport.ts`, an `AgentTransport` of kind
+  `live-audio`): own system instruction (the seat's persona plus a speech contract) and own voice (Chair Fenrir, Skeptic Puck,
+  Teacher Kore, Practitioner Aoede), `responseModalities: AUDIO` with `outputAudioTranscription` (the Live Discussion client,
+  `apps/hub/src/live/gemini-client.ts`, is reused unchanged). No tools over Live (unverified): retrieval is done by code (`prefetchQuery`)
+  and the verified pages arrive inside each specialist's prompt as untrusted DATA.
+* **Turn-taking**: a floor lock allows ONE speaker at a time. The Chair opens (one or two sentences naming who it asks), the
+  specialists speak in the order the Chair delegated (a gate per seat, whatever order the parallel runtime calls arrive in), the
+  Chair closes with the verdict (answer, why, `Confidence:`, `Dissent: <Name> | none`, `Next step:`). Those tag sentences are parsed by
+  code into the envelope's `confidence`, the dissenter (so `dissentRefs` and the board's dissent link work) and the next step; they
+  are removed from the public summary. Spoken Live councils have no anonymous ranking stage (ranks need structured output).
+* **Same envelopes**: each finished turn becomes the same `submit_turn` the streaming runtime gets, so the runtime publishes the SAME
+  `a2a.message` / `council.stage` / `council.opinion` / `council.verdict` events and `CouncilResult` (events and results now also carry
+  `transport`). The public text of a turn is the output transcription, never anything else; there are no thinking parts on this path.
+* **Captions and audio**: `GET /v1/council/:id/live[?audio=1]` (SSE of `CouncilLiveEvent`: `speaker`, `caption` (cumulative text of the
+  turn), `audio` (base64 24 kHz PCM, only with `audio=1`, never replayed), `turn_end`, `interrupted`, `transcript`). Same visibility as the run.
+  The browser plays the chunks with the Live Discussion Web Audio player (muted until the user clicks).
+* **Interruption**: `POST /v1/council/:id/say { text }` (the asker only; typed text or a push-to-talk transcript). The current speaker is cut
+  off (`interrupted`, the turn is partial) and the student's words are prefixed to the next speaker's input. Gap: the Ask orchestration
+  is a fixed sequence, so the Chair does not get an extra reply turn just for the interjection (the next speaker does).
+* **Degradation during a run** (never scripted): the participant's turn fails with `reason:<why>`, so the runtime marks that seat
+  `degraded:credits_depleted | rate_limited | invalid_key | timeout | session_closed | no_turn | budget`, the run mode is the worst of its
+  seats, and the Ask logic continues or fails honestly (quorum) exactly as for streaming.
+* **Budget guard**: `COUNCIL_LIVE_MAX_TURNS` (8), `COUNCIL_LIVE_MAX_USD` (0.25, audio estimate at $0.018/min), `COUNCIL_LIVE_TURN_TIMEOUT_MS`
+  (40 s), `COUNCIL_LIVE_CONNECT_TIMEOUT_MS` (15 s), `COUNCIL_LIVE_GRACE_MS` (1.5 s), `COUNCIL_LIVE_MAX_TURN_CHARS` (600), plus the
+  council's own `COUNCIL_MAX_RUNS_HOUR`. The Live runtime gets a longer per-call limit (120 s) because speakers queue for the floor.
+* **Status**: `GET /v1/council/status` reports the Live state (`untested | ok | unavailable` with `why`) from the last pre-flight.
+
+### Real proof (2026-10-25, key from .env through the runtime only)
+
+`LIVE=1 pnpm live:council-live` (`scripts/live/council-live-proof.ts`; refuses without `LIVE=1`; caps 4 spoken turns and $0.10 of audio;
+Chair + Skeptic + Teacher over the committed OpenStax statistics fixture; model `gemini-3.8-live` for all three; the course lookup used
+the normal Gemini text models).
+
+| Item | Result |
+|---|---|
+| Outcome | `status=done mode=live`, transport `live-audio`, label `Gemini Live (audio + transcript)` |
+| Connection setup | all three sessions open + grace window: 1,704 ms |
+| Turn 1 Chair (opening) | 180 chars, 32 audio chunks, 10.3 s of audio, 11.2 s latency |
+| Turn 2 Skeptic | 140 chars, 23 chunks, 7.2 s, 8.3 s latency |
+| Turn 3 Teacher | 204 chars, 31 chunks, 11.4 s, 12.6 s latency |
+| Turn 4 Chair (verdict) | 342 chars, 59 chunks, 20.0 s, 21.2 s latency, `Confidence: confident`, `Dissent: none`, next step parsed |
+| Whole run | 61.1 s wall, 48.9 s of audio in 145 chunks |
+| A2A envelopes | 9 (3 status, 2 delegate, 1 ask (course lookup by code), 2 answer, 1 verdict), sources `code` + `model`, all `live`, none `script` |
+| Stages | question > delegation > opinions > verdict > actions > done (no critiques: no ranks in a spoken council; no dissent stage: none was spoken) |
+| Per participant | Chair, Skeptic, Teacher: `live-audio / live / done` |
+| Cost | audio ~ $0.015 (estimate at the documented $0.018/min output) plus the course lookup's text calls (about 2 small Gemini text calls); well under $0.05 for the run, under $0.10 for everything done while building |
+| No thinking text | result JSON scan clean |
+| Not verified | citations: the specialists got verified pages but speak free text, so the run shows "gave no verified citation" notes (spoken `[file p.N]` markers are not quote-verified); tool calling over Live; GoAway after 10 min (runs are about 1 minute) |
+
+The transcript of each participant is what the envelopes carry; the proof script prints the exact text per turn.

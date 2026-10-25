@@ -6,6 +6,7 @@ export * from './IconButton';
 export * from './Chip';
 export * from './Badge';
 export * from './StatusDot';
+export * from './StatusChip';
 export * from './Spinner';
 export * from './Skeleton';
 export * from './ProgressBar';

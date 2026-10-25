@@ -525,8 +525,8 @@ export function createChatHub(
         citations,
         ...(card ? { card } : {}),
         demo: isDemo(),
-        provenance: composed.provenance,
         ...(replyTo ? { replyTo } : {}),
+        provenance: composed.provenance,
       });
       publish(m);
       notify(botListeners, m);

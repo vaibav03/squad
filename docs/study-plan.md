@@ -97,7 +97,23 @@ Every decision, update and failure becomes a plain-text bot message in the squad
 
 ## Known gaps
 
-- Plan generation is deterministic (chapter assignment plus busy-day avoidance); the LLM does not write the plan. The `live` badge reflects the stack state, not model authorship.
+- The fallback generator is deterministic (chapter assignment plus busy-day avoidance). It is only used when no real model answers or the planner agent fails, and it is always labelled `Fallback sample plan`.
 - Study times are whole days, not hourly slots from mesh agents.
 - One open plan per squad; a new proposal by the organizer replaces it.
 - Declining members' items are shared out evenly, with no negotiation step.
+
+## Planner agent, badge and surface (fix/provenance-plan-sync)
+
+**Who writes the plan.** When a real Gemini key works, `POST /v1/plans` and `@cubbie study plan ...` call the planner agent (`apps/hub/src/plans/planner.ts`): ONE grounded call on the RAW real model (never the resilient demo wrapper) with the viewer-scoped context the hub already gated: chapters with the text of each chapter's first page, course due items, the organizer's own Canvas/Google items from the context store (`deriveStudySeeds`), and PRIVATE per-member hints (weak/strong chapters, busy days, as ids only). The model proposes items with owners, dates, a one-line `why`, a verbatim `quote` and `page`, and a written `rationale`. Code disposes: unknown chapters dropped, owners must be members, dates clamped to tomorrow..exam-1 and moved off the owner's busy day, a quote that is not verbatim on the cited page loses its source (never shown as verified), private words (mastery, weak, busy, calendar...) are stripped from `why` and `rationale`, and a plan that covers fewer than two chapters throws so the fallback runs.
+
+**Badge.** `plan.generator = {kind: 'agent'|'fallback', mode: live|degraded|demo, reason?, model?, usage?}`; `planBadge()` in core gives the words: `Live`, `Degraded: <reason>`, `Demo: sample data, scripted`, plus `Planner agent` or `Fallback sample plan`. The chat card, the panel and the chat text all use it. The fallback is never presented as agent output; its chat message carries the provenance label `Fallback sample plan: scripted, not written by an agent (...)`; an agent plan's message carries chips for the verified pages.
+
+**Persistence surface.** `PlanView.saved = {rev, lastEditedBy, lastEditedAt}` and `PlanView.sync = {posted, imessage}` (the last plan message in the squad chat and its iMessage delivery state). Entry points: a Study plan card on Home, a `Study plan` pill in the village HUD, and `/squad/village?plan=1`. The panel reloads the plan from the hub, so `Saved, version N, last edited by <name> <time ago>` is the same after a reload. Empty state: `Propose a plan` (exam date input) starts the real flow.
+
+### One real run (2026-10-25)
+
+Dev stack on hub 9020, Gemini key working, `POST /v1/plans {examDate: +12 days}` as Ana: 6.7 s, `generator = {kind: agent, mode: live, source: planner}`, 1092 input tokens, 692 output tokens, estimated cost **0.0021 USD** (flash-class price table in `planner.ts`: 0.30 / 2.50 USD per million tokens). Plan produced (exam 2026-11-06): Oct 27 Ben teach Measures of Center and Spread (ch2 p.1), Oct 29 Chi teach Probability Rules and Events (ch3 p.1), Oct 31 Dev teach The Normal Distribution (ch6 p.1), Nov 2 Ana review Normal Distribution (ch6 p.1), Nov 4 Ben teach Linear Regression and Correlation (ch12 p.1), Nov 5 Ana group practice. Every item carried a one-sentence `why` and a verified source except the practice item; the rationale said the plan covers all topics, gives each core topic dedicated time and ends with a group review before the exam.
+
+### Tests
+
+`apps/hub/test/smoke/plan-agent.smoke.test.ts` (FakeLlm as the real model: agent plan, Live/Degraded badge, verified quotes only, private words stripped, failing agent -> labelled fallback, no key -> Demo fallback, persistence and sync block), `packages/core/src/provenance.test.ts` (`planBadge`), web `plan.test.tsx`, gate step S9b, `e2e/specs/j30-provenance-plan.spec.ts`.

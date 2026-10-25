@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CouncilResult } from '@squad/core';
 import { councilErrorCopy, councilErrorKind, type CouncilTransport } from './council-client';
+import { announceCouncilStarted } from './stage/room-opener';
 import { createPacer, type Pacer, type PacerView } from './pacer';
 
 export type RunStatus = 'idle' | 'running' | 'finished' | 'error' | 'offline';
@@ -87,6 +88,7 @@ export function useCouncilRun(transport: CouncilTransport | null): CouncilRun {
           const resp = await t.ask(q, chatId);
           if (!alive()) return;
           last.current = { ...last.current!, runId: resp.id };
+          if (resp.status === 'running') announceCouncilStarted({ id: resp.id, councilKey: 'ask' });
           if (resp.status !== 'running') {
             push(await t.get(resp.id));
             return;

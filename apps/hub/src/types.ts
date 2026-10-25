@@ -323,6 +323,10 @@ export interface HubDeps {
   ports: Ports;
   /** Ask-the-council service. Built with the real ports, or lazily (demo model) by the council routes. */
   council?: CouncilService;
+  /** Persisted council runs per squad (last 20), fed by the ingestor (docs/council-live-ux.md). */
+  councilRuns?: CouncilRunStore;
+  /** Live-transport state: availability of Gemini Live on this hub, per-run caption/audio channel. */
+  councilLive?: CouncilLiveHub;
   /** Web chat: store, files, SSE fan-out; the bot engine attaches later (`attachChatEngine`). */
   chat: ChatHub;
   /** students with projector mode on (server-side session flag) */
@@ -341,6 +345,10 @@ export interface HubDeps {
   imessage: ImessageStore;
   /** The iMessage sync engine while the bridge runs (queue, delivery state, backfill); undefined when iMessage is off. */
   imessageSync?: ImessageSync | undefined;
+  /** The Sendblue provider runtime while it runs (webhook routes, status, health read it); undefined otherwise. */
+  sendblue?: SendblueRuntime | undefined;
+  /** Which iMessage provider the running bridge uses, for the header state and health. */
+  imessageInfo?: BridgeInfo | undefined;
   codeSender: CodeSender;
   /** Shared study plans (docs/study-plan.md). */
   plans: PlanService;
@@ -354,6 +362,8 @@ export interface HubDeps {
 
 import type { CodeSender } from './code-sender';
 import type { LiveService } from './live/service';
+import type { CouncilRunStore } from './council/run-store';
+import type { CouncilLiveHub } from './council/live/hub';
 import type { ContextService } from './context/service';
 import type { LiveWiring } from './live/wire';
 import type { ConfirmRouter } from './confirms';
@@ -361,6 +371,8 @@ import type { AccountsStore } from './store/accounts';
 import type { SquadsStore } from './store/squads';
 import type { ImessageStore } from './imessage/store';
 import type { ImessageSync } from './imessage/sync';
+import type { BridgeInfo } from './imessage/sendblue/health';
+import type { SendblueRuntime } from './imessage/sendblue/runtime';
 
 /** Which providers are live right now; read lazily so a mid-run credits switch shows up. */
 export interface HubRuntime {

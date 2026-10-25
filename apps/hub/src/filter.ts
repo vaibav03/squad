@@ -57,6 +57,7 @@ const filterVillageEventRaw: FilterVillageFn = (event, viewer, ctx) => {
       if (run.private && !asker) {
         return {
           ...(rest.mode !== undefined ? { mode: rest.mode } : {}),
+          ...(rest.transport !== undefined ? { transport: rest.transport } : {}),
           t: 'a2a.message',
           msg: a2aSkeleton(event.msg),
         };
@@ -77,6 +78,7 @@ const filterVillageEventRaw: FilterVillageFn = (event, viewer, ctx) => {
         correlationId: event.correlationId,
         stage: event.stage,
         mode: event.mode,
+        ...(event.transport !== undefined ? { transport: event.transport } : {}),
       };
     }
     case 'call.start':

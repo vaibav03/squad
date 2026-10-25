@@ -187,4 +187,19 @@ describe('chunkText', () => {
     expect(parts.join('')).toBe('\u{1F43B}'.repeat(1500));
     expect(parts.every((p) => p.length <= 2000)).toBe(true);
   });
+
+  it('relative app links go out as plain text with an absolute URL (page name without a public URL)', async () => {
+    const reply =
+      'Nothing is connected yet: connect Canvas or Google in [Connections](/squad/connections).';
+    const a = await setup({ webUrl: 'https://squad.example.org' });
+    await a.t.send({ chatId: 'chan1', text: reply });
+    expect(a.sent[0]!.o.content).toBe(
+      'Nothing is connected yet: connect Canvas or Google in Connections https://squad.example.org/squad/connections.',
+    );
+    const b = await setup({ webUrl: null });
+    await b.t.send({ chatId: 'chan1', text: reply });
+    expect(b.sent[0]!.o.content).toBe(
+      'Nothing is connected yet: connect Canvas or Google in Connections.',
+    );
+  });
 });

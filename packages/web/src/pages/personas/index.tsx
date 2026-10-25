@@ -42,7 +42,7 @@ export default function PersonasPage() {
   const [load, setLoad] = useState<Load>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    setTitle('Personas');
+    setTitle('Study buddies');
   }, [setTitle]);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ export default function PersonasPage() {
   }, [cfg.mode, cfg.hubUrl, cfg.token, attempt]);
 
   return (
-    <Page title="Personas" eyebrow="Studio" className="sq-pz">
+    <Page title="Study buddies" eyebrow="Studio" className="sq-pz">
       {load.status === 'loading' ? <Loading /> : null}
       {load.status === 'error' ? (
         load.offline ? (
