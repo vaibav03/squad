@@ -1,0 +1,180 @@
+/* The Council Hall / Round Table live stage dock. Over the interior, under the HUD. */
+.cn-stage {
+  position: absolute;
+  left: 50%;
+  bottom: var(--lv-s4, 16px);
+  z-index: var(--z-hud, 10);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(760px, calc(100% - 32px));
+  padding: 10px 12px;
+  transform: translateX(-50%);
+  border: 2px solid var(--sq-ink, #0b1d38);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--sq-sky-deep, #0b1d38) 94%, transparent);
+  color: var(--sq-cloud-hi, #f4f1e8);
+  box-shadow: var(--lv-shadow-2, 0 8px 28px rgba(11, 29, 56, 0.4));
+  animation: cn-stage-in 200ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@keyframes cn-stage-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+.cn-stage__demo {
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #ffd36e;
+  color: #1b1405;
+  font: 800 0.8125rem/1.4 var(--font-sans, system-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.cn-stage__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font: 700 0.875rem/1.4 var(--font-sans, system-ui);
+}
+.cn-stage__transport {
+  font: 500 0.75rem/1.4 var(--font-sans, system-ui);
+  opacity: 0.9;
+}
+.cn-stage__spacer {
+  flex: 1;
+}
+.cn-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cn-seat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--sq-cloud-hi, #f4f1e8) 40%, transparent);
+  border-radius: 999px;
+  font: 600 0.8125rem/1.4 var(--font-sans, system-ui);
+  transition:
+    opacity 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.cn-seat[data-seat-state='waiting'] {
+  opacity: 0.6;
+}
+.cn-seat[data-seat-state='speaking'] {
+  border-color: var(--sq-amber, #ffd36e);
+  border-width: 2px;
+  transform: translateY(-2px);
+}
+.cn-seat[data-seat-state='failed'] {
+  border-style: dashed;
+}
+.cn-seat__word {
+  font-weight: 500;
+  opacity: 0.9;
+}
+.cn-dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.cn-dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: cn-dot 900ms cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+.cn-dots i:nth-child(2) {
+  animation-delay: 150ms;
+}
+.cn-dots i:nth-child(3) {
+  animation-delay: 300ms;
+}
+@keyframes cn-dot {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+.cn-mouth {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: cn-mouth 380ms cubic-bezier(0.23, 1, 0.32, 1) infinite alternate;
+}
+@keyframes cn-mouth {
+  to {
+    transform: scaleY(0.35);
+  }
+}
+.cn-arrows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 500 0.75rem/1.4 var(--font-sans, system-ui);
+}
+.cn-arrow {
+  padding: 1px 8px;
+  border: 1px solid var(--sq-violet, #9d8cff);
+  border-radius: 999px;
+  animation: cn-arrow-in 160ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@keyframes cn-arrow-in {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+}
+.cn-stage__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cn-open-hall {
+  position: absolute;
+  left: 50%;
+  bottom: var(--lv-s4, 16px);
+  z-index: var(--z-hud, 10);
+  transform: translateX(-50%);
+  border: 2px solid var(--sq-ink, #0b1d38);
+  background: var(--lv-surface-2, #fbf9f3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cn-stage,
+  .cn-arrow {
+    animation: none;
+  }
+  .cn-dots i,
+  .cn-mouth {
+    animation: none;
+    opacity: 1;
+  }
+  .cn-seat {
+    transition: none;
+  }
+}
+[data-calm='true'] .cn-stage,
+[data-calm='true'] .cn-arrow,
+[data-calm='true'] .cn-dots i,
+[data-calm='true'] .cn-mouth {
+  animation: none;
+  opacity: 1;
+}

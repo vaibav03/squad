@@ -254,6 +254,16 @@ export function mountVillage(
     overlayClosed() {
       scene?.ctx?.bus.emit('overlayClosed', undefined);
     },
+    async openRoom(slot, o) {
+      const ctx = scene?.ctx;
+      const door = ctx?.interactables.list().find((i) => i.id === `enter-${slot}`);
+      if (!ctx || !door || door.enabled?.() === false) return false;
+      // walk to the door (Calm and reduced motion: enter at once), but never wait more than 6 s
+      if (!o.calm && !calm.value)
+        await Promise.race([ctx.player.walkTo(door.x), new Promise((r) => setTimeout(r, 6000))]);
+      door.onActivate();
+      return true;
+    },
     debug: { game: () => game, ctx: () => scene?.ctx, fps: () => game?.loop.actualFps ?? 0 },
   };
 }

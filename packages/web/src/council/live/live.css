@@ -1,0 +1,85 @@
+/* Council live stage: captions, say bar, seat chips. Tokens only; transform/opacity motion, ease-out curve. */
+.cn-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.cn-captions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sq-sky-deep, #0b1d38) 88%, transparent);
+  color: var(--sq-cloud-hi, #f4f1e8);
+}
+.cn-captions__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.cn-captions__chip {
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: var(--sq-cloud-hi, #f4f1e8);
+  color: var(--sq-ink, #0b1d38);
+  font: 700 0.75rem/1.5 var(--font-sans, system-ui);
+}
+.cn-captions__tag {
+  font: 600 0.6875rem/1.4 var(--font-sans, system-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.cn-captions__text {
+  margin: 0;
+  min-height: 2.8em;
+  font: 500 1rem/1.4 var(--font-sans, system-ui);
+  text-wrap: pretty;
+}
+.cn-captions[data-state='streaming'] .cn-captions__text::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  animation: cn-caret 900ms steps(2, jump-none) infinite;
+}
+@keyframes cn-caret {
+  50% {
+    opacity: 0;
+  }
+}
+.cn-say {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.cn-say__input {
+  flex: 1 1 200px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border, #d6d3c6);
+  border-radius: 10px;
+  background: var(--card, #fbf9f3);
+  color: var(--foreground, #0b1d38);
+  font: 400 1rem/1.4 var(--font-sans, system-ui);
+}
+.cn-say__note {
+  flex-basis: 100%;
+  font: 400 0.75rem/1.4 var(--font-sans, system-ui);
+  color: var(--sq-cloud-hi, #f4f1e8);
+  opacity: 0.85;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cn-captions[data-state='streaming'] .cn-captions__text::after {
+    animation: none;
+  }
+}

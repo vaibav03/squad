@@ -5,6 +5,7 @@ import { noteCouncilResult } from '../overlays/inspector/bridge';
 import { LvIcon } from '../overlays/kit/icons';
 import { usePrefersReducedMotion } from '../overlays/kit/hooks';
 import { councilErrorCopy, getCouncil } from './council-client';
+import { announceCouncilStarted } from './stage/room-opener';
 import { ResultBoardButton, RunStrip } from './RunStrip';
 import { ErrorBlock, MemberCard, MessageBlock, RankingBlock, VerdictBlock } from './parts';
 
@@ -111,6 +112,13 @@ export function CouncilChatCard({
         const r = await getCouncil(hub, runId, ac.signal);
         if (ac.signal.aborted) return;
         setLoad({ s: 'ready', r });
+        // a run that is going right now opens the Council Hall once (`@cubbie ask the council`)
+        if (r.status === 'running' && polls === 0 && Date.now() - r.startedAt < 30_000)
+          announceCouncilStarted({
+            id: r.id,
+            councilKey: 'ask',
+            ...(r.transport ? { transport: r.transport.kind } : {}),
+          });
         // A run that is still going is polled gently until it is done.
         if (r.status === 'running' && polls < 150)
           timer = setTimeout(() => void run(polls + 1), 1500);
