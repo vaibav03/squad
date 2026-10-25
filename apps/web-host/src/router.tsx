@@ -7,6 +7,12 @@ import {
   type RouteObject,
 } from 'react-router-dom';
 import {
+  AuthProvider,
+  Skeleton,
+  SquadSwitcher,
+  accountPublicRoutes,
+  createAccountsClient,
+  useAccount,
   EmptyState,
   Button,
   Gallery,
@@ -17,7 +23,7 @@ import {
   type SquadRouteMeta,
   type SquadSession,
 } from '@squad/web';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { labRoutes } from './lab';
 import { loadSession, saveSession } from './session';
 import { SignInStub } from './SignInStub';
@@ -35,7 +41,24 @@ function useSession() {
   return [session, update] as const;
 }
 
+function LiveSignInRoute() {
+  const account = useAccount();
+  const navigate = useNavigate();
+  if (account.status === 'signed-in') return <Navigate to="/squad" replace />;
+  return (
+    <SignInStub
+      hubUrl={HUB_URL}
+      onSignIn={(s) => void account.adoptToken(s.token).then(() => navigate('/squad'))}
+    />
+  );
+}
+
 function SignInRoute() {
+  if (HUB_URL) return <LiveSignInRoute />;
+  return <DemoSignInRoute />;
+}
+
+function DemoSignInRoute() {
   const [session, setSession] = useSession();
   const navigate = useNavigate();
   if (session) return <Navigate to="/squad" replace />;
@@ -47,6 +70,57 @@ function SignInRoute() {
         navigate('/squad');
       }}
     />
+  );
+}
+
+/** Live hub: real accounts (cookie + bearer). Falls back to the demo sign-in only without a hub. */
+function LiveShellLayout() {
+  const account = useAccount();
+  const navigate = useNavigate();
+  const matches = useMatches();
+  const meta = [...matches].reverse().find((m) => (m.handle as SquadRouteMeta | undefined)?.key)
+    ?.handle as SquadRouteMeta | undefined;
+  if (account.status === 'loading')
+    return (
+      <div style={{ padding: 24 }}>
+        <Skeleton shape="block" height={240} />
+      </div>
+    );
+  if (account.status === 'signed-out' || !account.user)
+    return (
+      <Navigate
+        to={`/welcome?next=${encodeURIComponent(location.pathname + location.search)}`}
+        replace
+      />
+    );
+  if (account.squads.length === 0 && !location.pathname.startsWith('/squad/new'))
+    return <Navigate to="/welcome/choose" replace />;
+  const session: SquadSession = {
+    userId: account.user.id,
+    name: account.user.name,
+    token: account.token ?? '',
+    ...(account.user.avatarUrl ? { avatarUrl: account.user.avatarUrl } : {}),
+    live: true,
+  };
+  const onSignOut = () => void account.logout().then(() => navigate('/welcome'));
+  return (
+    <SquadProvider hubUrl={HUB_URL} session={session} onSignOut={onSignOut}>
+      <RouterAppShell
+        user={{ id: session.userId, name: session.name, avatarUrl: session.avatarUrl }}
+        status={{ connection: 'live', label: 'Live' }}
+        onSignOut={onSignOut}
+        fullBleed={meta?.fullBleed}
+        accountExtra={
+          <SquadSwitcher
+            squads={account.squads}
+            activeSquadId={account.activeSquadId}
+            onSwitch={(id) => account.switchSquad(id).then(() => navigate(0))}
+          />
+        }
+      >
+        <Outlet />
+      </RouterAppShell>
+    </SquadProvider>
   );
 }
 
@@ -105,11 +179,13 @@ function GalleryRoute() {
 }
 
 function Providers() {
-  return (
+  const client = useMemo(() => (HUB_URL ? createAccountsClient({ hubUrl: HUB_URL }) : null), []);
+  const body = (
     <ToastProvider>
       <Outlet />
     </ToastProvider>
   );
+  return client ? <AuthProvider client={client}>{body}</AuthProvider> : body;
 }
 
 export const routes: RouteObject[] = [
@@ -120,7 +196,8 @@ export const routes: RouteObject[] = [
       { path: '/signin', element: <SignInRoute /> },
       { path: '/__gallery', element: <GalleryRoute /> },
       ...labRoutes,
-      { element: <ShellLayout />, children: squadRoutes },
+      ...(HUB_URL ? accountPublicRoutes : []),
+      { element: HUB_URL ? <LiveShellLayout /> : <ShellLayout />, children: squadRoutes },
       { path: '*', element: <NotFound /> },
     ],
   },

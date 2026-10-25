@@ -7,3 +7,4 @@ export * from './council';
 export { default as Gallery } from './gallery';
 export * from './pixel/portraits';
 export * from './components/source-viewer';
+export * from './auth';

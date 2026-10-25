@@ -35,7 +35,14 @@ export function createDirectory(db?: Db): Directory {
       settings.set(r.squad_id, JSON.parse(r.json) as SquadSettings);
   }
 
-  const squadOf = (id: string) => [...squads.values()].find((s) => s.members.includes(id))?.id;
+  const active = new Map<string, string>();
+  const squadsOf = (id: string) =>
+    [...squads.values()].filter((s) => s.members.includes(id)).map((s) => s.id);
+  const squadOf = (id: string) => {
+    const a = active.get(id);
+    if (a && squads.get(a)?.members.includes(id)) return a;
+    return squadsOf(id)[0];
+  };
 
   return {
     upsertStudent(s) {
@@ -50,6 +57,22 @@ export function createDirectory(db?: Db): Directory {
     students: () => [...students.values()],
     squad: (id) => squads.get(id),
     squadOf,
+    squadsOf,
+    setActiveSquad(studentId, squadId) {
+      if (squadId) active.set(studentId, squadId);
+      else active.delete(studentId);
+    },
+    removeStudent(id) {
+      students.delete(id);
+      active.delete(id);
+      db?.prepare('DELETE FROM hub_students WHERE id=?').run(id);
+    },
+    removeSquad(id) {
+      squads.delete(id);
+      settings.delete(id);
+      db?.prepare('DELETE FROM hub_squads WHERE id=?').run(id);
+      db?.prepare('DELETE FROM hub_squad_settings WHERE squad_id=?').run(id);
+    },
     members(squadId) {
       const sq = squads.get(squadId);
       return sq ? sq.members.flatMap((m) => students.get(m) ?? []) : [];
@@ -70,6 +93,7 @@ export function createDirectory(db?: Db): Directory {
       students.clear();
       squads.clear();
       settings.clear();
+      active.clear();
       db?.exec('DELETE FROM hub_students; DELETE FROM hub_squads; DELETE FROM hub_squad_settings;');
     },
   };
