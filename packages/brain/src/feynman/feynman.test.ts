@@ -91,7 +91,13 @@ describe('feynman engine', () => {
     expect(t.mastery.get('s_a', 'c', 'ch3').nextDue).toBe(5); // queued for review
     expect(t.engine.active('chat', 's_a')).toBeUndefined();
     for (const e of t.events) expect(VillageEventSchema.safeParse(e).success).toBe(true);
-    expect(t.events.at(-1)).toMatchObject({ agent: 'expert:ch3', state: 'idle' });
+    expect(t.events.at(-1)).toMatchObject({ agent: 'expert:feynman', state: 'idle' });
+    // the porch lights up, the chapter house does not
+    const agents = t.events
+      .filter((e) => e.t === 'agent.state')
+      .map((e) => (e as { agent: string }).agent);
+    expect(agents.length).toBeGreaterThan(0);
+    expect(new Set(agents)).toEqual(new Set(['expert:feynman']));
     await expect(t.engine.submit(id, 'more')).rejects.toThrow(/finished/);
   });
 

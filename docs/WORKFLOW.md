@@ -47,8 +47,8 @@ Ordering follows 00: foundation (spine, hub, village scaffold), then brain/mesh/
 - Commit small, one ticket step at a time. Format: `<ws>: <ticket> <imperative summary>` (for example `brain: B2 add citation check`). End every commit with:
   `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`
 - Push the branch at least every 20 minutes: `git push -u origin ws/<workstream>`. Run it from a loop (`/loop 20m` pushing if there are commits) or a `post-commit` hook running `git push origin HEAD`. Unpushed work does not exist.
-- Only the orchestrator merges to `main`, and only after on that branch: rebased on current `main`, `pnpm check` green, and the workstream's smoke tests green.
-- Policy: squash-merge each ws branch per ticket group (PR titled `<ws>: tickets A-C`), so `main` reads as one commit per delivered step. Contract PRs are squash-merged immediately. After a merge the agent rebases and continues on the same branch.
+- Only the orchestrator merges to `main`, and only after on that branch: current `main` merged into it (`git merge origin/main`, never rebase), `pnpm check` green, and the workstream's smoke tests green.
+- Policy: NO squash, NO rebase-and-merge, NO fast-forward of `main`. Land every branch with `git merge --no-ff` (a true merge commit, e.g. `Merge batch N: ...`), so history is preserved and `git revert -m 1 <sha>` rolls a batch back. Never force-push `main`. After a merge the agent merges `main` back into its branch and continues.
 - Keep PRs against `main` small enough to review; if a branch grows past roughly one day of work, merge a green slice first.
 
 ## 5. Secrets

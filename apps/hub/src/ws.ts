@@ -93,6 +93,8 @@ export function attachCallWs(
             base64: Buffer.from(t.audio.data).toString('base64'),
           });
       }
+      // a scripted agent (oral examiner) that has finished: hang up once its captions went out
+      if (!ended && session?.finished?.()) await end('server');
     };
 
     send({ type: 'ready', callId, agent });
