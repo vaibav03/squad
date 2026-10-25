@@ -245,15 +245,15 @@ describe('RoomLayer', () => {
   it('streams the transcript and shows the outcome card with Hide / Show plan', async () => {
     const s = createRoomSession();
     mount(s);
-    await act(async () => s.enter('round-table'));
+    await act(async () => s.enter('feynman-porch'));
     await act(async () => {
       s.record(
-        'round-table',
+        'feynman-porch',
         { t: 'council.opinion', councilId: 'c', member: 'chill', text: 'Keep it light.' },
         1,
       );
       s.record(
-        'round-table',
+        'feynman-porch',
         {
           t: 'council.verdict',
           councilId: 'c',
