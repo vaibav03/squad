@@ -30,6 +30,7 @@ export function createCamera(scene: Phaser.Scene, d: CameraDeps): CameraImpl {
   let mode: CameraMode = (d.registry.get('cameraMode') as CameraMode | undefined) ?? 'follow';
   let fixedCenter: number | null = null; // preset / panTo target
   let returnMode: CameraMode = 'follow';
+  let returnFixed: number | null = null; // preset centre to restore after a pan (null = follow the player)
   let from = 0,
     elapsed = BLEND_MS,
     started = false;
@@ -64,8 +65,12 @@ export function createCamera(scene: Phaser.Scene, d: CameraDeps): CameraImpl {
       started = true;
     },
     panTo(x, opts) {
+      const wasPanning = panDone !== null; // a pan interrupting a pan keeps the ORIGINAL restore target
       finishPan();
-      returnMode = mode;
+      if (!wasPanning) {
+        returnMode = mode;
+        returnFixed = fixedCenter;
+      }
       fixedCenter = x;
       begin();
       started = true;
@@ -96,7 +101,7 @@ export function createCamera(scene: Phaser.Scene, d: CameraDeps): CameraImpl {
           if (holdLeft <= 0) {
             const r = panDone;
             panDone = null;
-            fixedCenter = null;
+            fixedCenter = returnFixed;
             mode = returnMode;
             r();
             begin();

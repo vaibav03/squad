@@ -43,25 +43,3 @@ export function formatClock(hours: number): string {
 }
 export const initialOf = (name: string) =>
   (name.replace(/^(the|chapter)\s+/i, '').trim()[0] ?? '?').toUpperCase();
-
-const PORTRAIT_DIR = 'assets/pixel/composed/characters';
-const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
-/**
- * Pixel portrait (32x32 tile from the design-foundation cast) for an agent chip, by kind. Students alternate between
- * the two student sprites by a stable hash so neighbours read as different people; councils cycle the three seats.
- */
-export function portraitFor(a: Pick<AgentInfo, 'id' | 'kind'>): string {
-  const dir = (d: string) => `${PORTRAIT_DIR}/${d}/portrait.png`;
-  switch (a.kind) {
-    case 'student':
-      return dir(hash(a.id) % 2 ? 'freshman' : 'student');
-    case 'dean':
-      return dir('dean');
-    case 'mediator':
-      return dir('mediator');
-    case 'expert':
-      return dir('expert');
-    case 'council':
-      return dir(['council-balance', 'council-chill', 'council-hard'][hash(a.id) % 3]!);
-  }
-}

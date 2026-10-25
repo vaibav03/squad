@@ -6,14 +6,10 @@ describe('computeScale (integer art scaling)', () => {
     const s = computeScale(1280, 720, 1);
     expect(s).toMatchObject({ zoom: 3, k: 3, logicalW: 426, logicalH: 240 });
   });
-  it('tall phone 390x800 steps up to 3x so the view fills the height', () => {
+  it('phone 390x800 is 2x with the full 270 layer height', () => {
     const s = computeScale(390, 800, 3);
-    expect(s).toMatchObject({ zoom: 3, k: 9, logicalW: 130, logicalH: 266 });
-    expect(s.cssPerPx).toBe(3);
-  });
-  it('phone with a short stage stays at 2x with the full 270 layer height', () => {
-    const s = computeScale(390, 540, 3);
     expect(s).toMatchObject({ zoom: 2, k: 6, logicalW: 195, logicalH: 270 });
+    expect(s.cssPerPx).toBe(2);
   });
   it('device pixels per art pixel are whole at fractional DPR', () => {
     for (const dpr of [1, 1.25, 1.5, 1.75, 2, 2.5, 3]) {

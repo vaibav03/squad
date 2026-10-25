@@ -26,3 +26,28 @@ describe('parallax math', () => {
     expect(flicker(2000)).toBeCloseTo(1);
   });
 });
+
+import { millAlpha, parallaxWorldX } from './math';
+describe('windmill clearance', () => {
+  const slots = [
+    { x: 2600, w: 128, kind: 'student-home' },
+    { x: 1412, w: 139, kind: 'council-hall' },
+  ];
+  it('hides over a house and shows in the open', () => {
+    expect(millAlpha(2600, slots)).toBe(0);
+    expect(millAlpha(2600 + 64 + 36, slots)).toBe(0);
+    expect(millAlpha(2600 + 64 + 36 + 48, slots)).toBe(1);
+    expect(millAlpha(2000, slots)).toBe(1);
+  });
+});
+
+describe('windmill placement over the real layout', () => {
+  it('is hidden when its apparent world x is over home-3 (camera near x 2700) and visible in a gap', async () => {
+    const { createLayout } = await import('../world/layout');
+    const slots = createLayout().slots;
+    // layer x 1650 at scrollX 2250 -> world 1650 + 0.4 * 2250 = 2550: over home-3 (2600, w128)
+    expect(parallaxWorldX(1650, 2250, 0.6)).toBeCloseTo(2550);
+    expect(millAlpha(parallaxWorldX(1650, 2250, 0.6), slots)).toBe(0);
+    expect(millAlpha(parallaxWorldX(2800, 0, 0.6), slots)).toBe(1);
+  });
+});
