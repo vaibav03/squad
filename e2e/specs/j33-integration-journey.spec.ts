@@ -54,7 +54,6 @@ async function clean(token: string) {
   }
 }
 
-const FEED = `https://canvas.fixture.invalid/feeds/user_fixture_${Date.now().toString(36)}/calendar.ics`;
 const exam = new Date(Date.now() + 9 * 86_400_000).toISOString().slice(0, 10);
 let ana: Actor;
 let ben: Actor;
@@ -93,7 +92,7 @@ test('1 empty state: disconnected is honest, health says what is missing', async
   });
 });
 
-test('2 connect Canvas by calendar feed (no password/token asked)', async () => {
+test('2 connect the Canvas demo workspace (no password/token asked; extension not detected)', async () => {
   await step('canvas', async () => {
     const page = ana.page;
     await page.goto('/squad/connections');
@@ -101,12 +100,11 @@ test('2 connect Canvas by calendar feed (no password/token asked)', async () => 
     await expect(canvas.getByText('Extension not detected')).toBeVisible({ timeout: 15_000 });
     await expect(canvas).toContainText('No Canvas password or API token is given to Squad');
     await expect(canvas.getByLabel(/password/i)).toHaveCount(0);
-    await canvas.getByLabel('Canvas calendar feed URL').fill(FEED);
-    await canvas.getByRole('button', { name: 'Connect feed' }).click();
+    // no extension in headless Chrome: the honest route is the labelled demo workspace (the .ics feed is covered by j28)
+    await canvas.getByTestId('use-canvas-demo').click();
     const card = page.getByRole('article', { name: 'canvas connection' }).filter({ hasNotText: /revoked/i });
     await expect(card).toBeVisible({ timeout: 20_000 });
     await expect(card).toContainText('Fixture (simulated, not your account)');
-    expect(await page.content()).not.toContain('user_fixture_');
   });
 });
 
@@ -115,7 +113,7 @@ test('3 connect Google (fixture consent) and return to the served origin', async
     const page = ana.page;
     await page.goto('/squad/connections');
     const start = new URL(page.url()).origin;
-    await page.getByRole('button', { name: 'Continue to Google' }).click();
+    await page.getByRole('button', { name: 'Connect Google' }).click();
     await page.waitForURL(/sim-consent/, { timeout: 20_000 });
     await page.getByRole('link', { name: 'Allow (demo)' }).click();
     await page.waitForURL(/\/squad\/connections\?/, { timeout: 20_000 });
@@ -132,6 +130,7 @@ test('4 imported items are visible with timestamps, type and sharing state', asy
   await step('items', async () => {
     const page = ana.page;
     await page.goto('/squad/connections');
+    await page.getByTestId('review-imported-context').first().click();
     await expect(page.getByTestId('item-imported-at').first()).toContainText(/imported|just now|ago/i, { timeout: 20_000 });
     await expect(page.getByTestId('item-sharing').first()).toContainText('Private');
     const items = (await (await api(ana.token, '/v1/connections/items')).json()) as {
