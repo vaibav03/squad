@@ -391,3 +391,15 @@ Frames: `docs/design/shots/merge9/`.
 
 - Landing merge commit: `0eb62bcfcb7b3ea20b0a31dc8e3722b38a441261` (parents `148b909fd8f7dd00a7b66ce2683d653caf0119cc` = tag `pre-merge-batch9`, `fa3da9ac624bd1705eff44647039da20b738c7e4` = origin/merge/batch9; diff empty).
 - Rollback: `git revert -m 1 0eb62bcfcb7b3ea20b0a31dc8e3722b38a441261`.
+
+## Batch 10: fix/live-verify-findings into main
+
+Branch `merge/batch10` (worktree `squad-wt/merge10`), landed as a true `--no-ff` merge. Not merged (leads still running): e2e/acceptance, feature/live-discussion, fix/room-inspector.
+
+- Merged cleanly (no conflicts): `packages/brain/src/stepdiff/vision.ts` (`cleanSteps`, prompt `stepdiff-v2`), the oral examiner no-grade detector `hasGrade`, `scripts/live` (harness fixes, `make_images.py`, `LIVE_STEP`), `apps/bot/src/routing-doubt.test.ts`, `docs/live/FINDINGS.md`.
+- Verification: `pnpm install --frozen-lockfile`, `pnpm check`, `pnpm demo:live` (OK) and hub smoke (102 tests) all pass. The live verifier itself (`pnpm live:verify`) needs real keys and was not run.
+
+### Landing (batch 10)
+
+- Landing merge commit: `4287ad7273e36626d8a96309fabb7d898bb59516` (parents `8a571f2005ec812e16db03ae7d50f680c4b8146b` = tag `pre-merge-batch10`, `7a5b2a3806efe84416e516b6b04510c2c855306c` = origin/merge/batch10; diff empty).
+- Rollback: `git revert -m 1 4287ad7273e36626d8a96309fabb7d898bb59516`.
