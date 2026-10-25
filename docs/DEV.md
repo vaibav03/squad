@@ -36,8 +36,15 @@ the Build panel.
 
 ## If a page is blank anyway
 
-- `index.html` shows "Starting Squad..." until React mounts. If the app bundle never starts it turns into "Squad did
-  not start" with Retry after 8 s (after one automatic reload), and logs `Squad boot guard` to the console.
+- `index.html` shows "Starting Squad..." until React mounts. After 8 s it adds "Still loading Squad... this connection
+  is slow." with Retry (it keeps loading: a slow connection is not a failure). After 45 s with no app it turns into
+  "Squad did not start" with Retry, and logs `Squad boot guard` to the console. A failed script or preload reloads once
+  on its own first.
+- The village shows "Opening the village", then after 8 s "Still loading the village..." with Retry (still loading),
+  then after 45 s an error with Retry. The engine chunk is requested in parallel with sign-in on a direct
+  `/squad/village` load; the asset manifest gives up after 8 s and every Phaser file after 30 s.
+- HTTP 429 is never "offline": reads wait `Retry-After` and retry twice, the shell shows "Too many requests, retrying
+  in N s" with Retry now, and the account load shows a rate-limited state with a countdown and Retry.
 - Once React is up, a page that renders nothing for 4 s shows "Something went wrong" with Retry, and logs
   `Squad render watchdog` to the console.
 - Data reads time out after 8 s (`packages/web/src/lib/http.ts`, `timedFetch`) and show an error state with Retry.
@@ -50,5 +57,9 @@ the Build panel.
 HUB=http://localhost:8920 WEB=http://localhost:5320 node e2e/blank-rate.mjs --n 20 --who acct --cond normal --scenario routes
 # --who acct|seed|anon  --cond normal|cpu4|slow|down|401|dataslow|data500  --scenario routes|seq
 ```
+
+Fault conditions without a browser route hack: run `node scripts/dev/fault-proxy.mjs --listen 4815 --target http://localhost:8950`,
+build or start the web with `VITE_HUB_URL=http://localhost:4815`, and use `--cond p-slow|p-down|p-flap|p-401|p-hang|p-500|p-429`
+(`PROXY=http://localhost:4815`). `PW_MODULE` / `CHROME` point at a scratch Playwright install and a Chrome for Testing binary.
 
 The hub allows 20 sign-ups per hour per IP (in memory): restart the hub to reset it when you run many batches.

@@ -18,7 +18,10 @@ const COND = arg('cond', 'normal');
 const WHO = arg('who', 'acct');
 const SCEN = arg('scenario', 'routes');
 const PAR = Number(arg('par', 4));
-const DEADLINE = Number(arg('deadline', COND === 'normal' || COND === 'cpu4' ? 14000 : 26000));
+// p-<mode>: faults injected by scripts/dev/fault-proxy.mjs (HUB must point at the proxy, and so must the web build)
+const PROXY = process.env.PROXY ?? HUB;
+const PCOND = COND.startsWith('p-') ? COND.slice(2) : null;
+const DEADLINE = Number(arg('deadline', COND === 'normal' || COND === 'cpu4' ? 14000 : PCOND ? 34000 : 26000));
 
 const ROUTES = [
   ['/squad', 'Home'],
@@ -56,7 +59,7 @@ async function newAccount() {
   const sq = await j('/v1/squads', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-    body: JSON.stringify({ name: `Rate Squad ${stamp}`, course: 'CS 101' }),
+    body: JSON.stringify({ name: process.env.SQUAD_NAME ?? 'summa', course: 'CS 101' }),
   });
   if (!token || sq.status >= 300) throw new Error(`account setup failed ${v.status} ${sq.status}`);
   return token;
@@ -118,7 +121,9 @@ async function settle(page, expectTitle, deadline = DEADLINE) {
       if (again && (again.textLen > 0 || again.canvas) && !again.loading) {
         const why = [];
         // hub down or session gone: the sign-in / offline-with-Retry screen is the correct, non-blank outcome
-        const signIn = (COND === 'down' || COND === '401') && again.title.startsWith('Welcome');
+        const signIn =
+          (COND === 'down' || COND === '401' || ['down', '401', 'slow', 'flap', '429'].includes(PCOND ?? '')) &&
+          again.title.startsWith('Welcome');
         if (!signIn && expectTitle && !again.title.startsWith(expectTitle))
           why.push(`title=${again.title}`);
         if (
@@ -298,17 +303,33 @@ async function pool(items, par, fn) {
   return out;
 }
 
+const ctl = (q) => fetch(`${PROXY}/__ctl?${q}`).then((r) => r.json());
+const PMODES = {
+  slow: 'mode=slow&ms=12000',
+  down: 'mode=down',
+  flap: 'mode=flap&up=9000&down=7000',
+  401: 'mode=401',
+  hang: 'mode=hang',
+  500: 'mode=500',
+  429: 'mode=429&n=8&retry=3',
+};
 const browser = await chromium.launch(
   process.env.CHROME ? { executablePath: process.env.CHROME } : {},
 );
 try {
   const token = WHO === 'anon' ? null : WHO === 'seed' ? await seededToken() : await newAccount();
+  let rearm;
+  if (PCOND) {
+    await ctl(PMODES[PCOND]);
+    if (PCOND === '429') rearm = setInterval(() => void ctl(PMODES[429]), 12000);
+  }
   const jobs = [];
   if (SCEN === 'routes')
     for (let i = 0; i < N; i++)
       for (const r of ROUTES) jobs.push(() => runRoute(browser, token, r));
   else for (let i = 0; i < N; i++) jobs.push(() => runSeq(browser, token));
   const res = await pool(jobs, PAR, (f) => f());
+  if (rearm) clearInterval(rearm);
   const by = {};
   for (const r of res) {
     const b = (by[r.name] ??= { n: 0, ok: 0, blank: 0, stuck: 0, other: 0, maxMs: 0, sample: '' });
@@ -343,5 +364,6 @@ try {
   if (process.argv.includes('--verbose'))
     for (const [k, v] of Object.entries(by)) console.log(' ', k, JSON.stringify(v));
 } finally {
+  if (PCOND) await ctl('mode=pass').catch(() => undefined);
   await browser.close();
 }

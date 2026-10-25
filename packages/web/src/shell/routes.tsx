@@ -127,7 +127,14 @@ export function PageHost({ meta, loader }: { meta: SquadRouteMeta; loader: Loade
   const Lazy = useMemo(() => lazy(() => importWithRetry(loader)), [loader, attempt]);
   const again = () => setAttempt((n) => n + 1);
   const loading =
-    meta.key === 'village' ? <WorldLoading /> : <Skeleton shape="block" height={240} />;
+    meta.key === 'village' ? (
+      <WorldLoading />
+    ) : (
+      <div role="status" aria-live="polite" style={{ padding: 24 }}>
+        <p style={{ margin: '0 0 16px' }}>Loading {meta.title}...</p>
+        <Skeleton shape="block" height={240} />
+      </div>
+    );
   return (
     <ErrorBoundary resetKey={attempt} onRetry={again} title={`${meta.title} could not load`}>
       <Suspense
