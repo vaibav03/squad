@@ -322,3 +322,7 @@ Own account and own chats only; never a third party; never read the real Message
    "Failed: ..." and Retry works.
 4. Send yourself a PNG and a `.mov`: the PNG shows, the `.mov` shows an "Attachment not shown" placeholder.
 5. Kill switch: unset `IMESSAGE_ENABLED`, restart: nothing is read or sent. Remove the binding afterwards.
+
+## 9. Sendblue provider
+
+The hosted Sendblue iMessage API is a second provider behind the same transport interface (`IMESSAGE_PROVIDER=sendblue`). See [docs/sendblue.md](sendblue.md).

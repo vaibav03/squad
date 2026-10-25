@@ -255,7 +255,7 @@ describe('connection view, account identity and items', () => {
     const list = (await call('GET', '/v1/connections', 's_ana')).json;
     for (const c of list.connections) {
       expect(c.fixture).toBe(true);
-      expect(c.account.label).toBe('Fixture (simulated, not your account)');
+      expect(c.account.label).toBe('Demo workspace (simulated)');
       expect(c.importedAt).toBeGreaterThan(0);
     }
     const g = list.connections.find((c: any) => c.provider === 'google');

@@ -77,8 +77,8 @@ test('Google fixture consent lands back on the origin the browser started on', a
   await expect(card).toContainText('1 Classroom item');
   await expect(card).toContainText('2 calendar events');
   await expect(card).toContainText('nobody (private to you)'); // sharing default is private
-  await expect(card).toContainText('Your own Classroom coursework. No grades.');
-  await expect(card).toContainText('Your squad sees only busy times unless you share an event.');
+  await expect(card).toContainText('Read your own Classroom assignments and due dates');
+  await expect(card).toContainText('Read your calendar events (cannot edit them)');
   await expect(card).not.toContainText(/gmail/i);
   await snap(ana, 'oauth-2-connected-fixture');
 

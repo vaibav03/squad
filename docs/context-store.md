@@ -198,3 +198,25 @@ states.
   sentinel scan of responses, logs and database.
 * `packages/web/src/components/source-viewer/source-viewer.test.tsx`: non-PDF rendering, external link, demo badge,
   revoked state, chip and host.
+
+## Due windows ("what is due this week?")
+
+`dueReply` (packages/brain/src/context/answers-rich.ts) reads a window out of the question and filters BEFORE anything is
+listed or cited. Zone: the asker's IANA zone when the hub knows it (`createCanvasAnswerSkill({ tzFor })`), otherwise UTC
+(the reply says `UTC`).
+
+| words | window |
+| --- | --- |
+| `today` | now until the end of the viewer's local day |
+| `tomorrow` | the next local day |
+| `this week` | now through the next 7 days |
+| `next week` | days 7 to 14 from now |
+| `after this week`, `later` | day 7 to day 37 |
+| none | next items soonest first, no window |
+
+Every listed item shows its course (`CODE: Name`, from the course map, else the item's `Course:` line; a raw course id is never shown) and the
+exact due date (weekday, date, time); each citation chip carries the same course and `Due ...` in `courseName` / `locationLabel`.
+An empty window says `Nothing due this week`, names the next later item with its course and date, and suggests
+`@cubbie what is due after this week?`. Chat answers are also relevance-filtered (`context/relevance.ts`): a retrieved source is cited
+as evidence only if it is about the question (content-word coverage, and a course code such as `HIST 140` must match the source).
+If none is, the reply says the sources do not cover it and the closest one is shown as a `Related, not about this` chip.

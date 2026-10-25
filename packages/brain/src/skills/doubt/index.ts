@@ -46,8 +46,16 @@ export function createDoubtSkill(brain: Brain, opts: DoubtOptions = {}): Skill {
           question,
           viewer ? { viewer, contextCourseId: null } : undefined,
         );
-        text = a.grounded || a.reason === 'nothing_connected' ? a.text : NOT_IN_MATERIALS;
+        text =
+          a.grounded || a.reason === 'nothing_connected' || a.reason === 'unrelated'
+            ? a.text
+            : NOT_IN_MATERIALS;
         if (a.grounded) citations = chatCitationsFromAnswer(a.citations);
+        else if (a.reason === 'unrelated' && a.related)
+          citations = chatCitationsFromAnswer(a.related).map((c) => ({
+            ...c,
+            source: { ...c.source!, relation: 'related' as const },
+          }));
       } catch {
         // Any failure is answered honestly; nothing is invented from model memory.
         text = UNAVAILABLE_TEXT;

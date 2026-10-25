@@ -14,6 +14,8 @@ import { AudioPlayer, ImageAttachment } from './media';
 import { ChatAvatar } from './parts';
 import { SyncBadge } from './sync/SyncBadge';
 import { ProvenanceRow } from './provenance/ProvenanceRow';
+import { provenanceBadge } from './ask-cubbie';
+import { PlanChatCard } from './PlanChatCard';
 import { openSource } from '../../components/source-viewer';
 import {
   attachmentLabel,
@@ -261,7 +263,7 @@ export function MessageBubble(p: BubbleProps) {
                   </span>
                 </span>
                 <span className={`sqc-ctxchip__prov is-${c.provenance}`}>
-                  {c.provenance === 'fixture' ? 'Fixture (simulated)' : 'Real'}
+                  {provenanceBadge(c.provenance, c.kind)}
                 </span>
               </li>
             ))}
@@ -284,13 +286,18 @@ export function MessageBubble(p: BubbleProps) {
                   {i + 1}
                 </span>
                 {c.label}
+                {c.source?.relation === 'related' ? (
+                  <span className="sqc-cite__prov is-related" data-testid="chat-citation-related">
+                    Related, not about this
+                  </span>
+                ) : null}
                 {c.source?.provenance ? (
                   <span
                     className={`sqc-cite__prov is-${c.source.provenance}`}
                     data-testid="chat-citation-provenance"
                     data-provenance={c.source.provenance}
                   >
-                    {c.source.provenance === 'fixture' ? 'Fixture (simulated)' : 'Real'}
+                    {provenanceBadge(c.source.provenance, c.source.kind)}
                   </span>
                 ) : null}
                 {c.source && (c.source.courseName || c.source.locationLabel) ? (

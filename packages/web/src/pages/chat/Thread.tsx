@@ -555,7 +555,6 @@ function MessageList({
             Jump to latest ({newCount} new)
           </button>
         ) : null}
-        {ownSourceHost && <SourceViewerHost />}
         <CitationSheet
           cite={cite}
           context={citeCtx}
@@ -564,6 +563,7 @@ function MessageList({
           onClose={() => setCite(null)}
         />
       </div>
+      {ownSourceHost && <SourceViewerHost />}
     </ChatCardActionsContext.Provider>
   );
 }
@@ -730,6 +730,7 @@ export function ThreadPane({
           key={`c-${chat.id}`}
           api={ctl.api}
           chatKind={chat.kind}
+          chatId={chat.id}
           compact={compact}
           paused={paused}
           onSend={(input) => ctl.send(chat.id, input)}

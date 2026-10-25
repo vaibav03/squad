@@ -10,6 +10,9 @@ export interface RetrievedChunk {
   kind: SourceKind;
   title: string;
   courseId: string | null;
+  /** Resolved course record: label it with `courseLabel(hit)` ("HIST 140: Modern World History"). */
+  courseName?: string;
+  courseCode?: string | null;
   anchor: string;
   page: number | null;
   section: string | null;
@@ -65,6 +68,7 @@ export function createRetrieveContext(
         kind: h.source.kind,
         title: h.source.title,
         courseId: h.source.courseId,
+        ...(h.source.courseName ? { courseName: h.source.courseName, courseCode: h.source.courseCode ?? null } : {}),
         anchor: h.chunk.anchor,
         page: h.chunk.page,
         section: h.chunk.section,

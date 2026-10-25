@@ -24,7 +24,9 @@ export interface ExpertAnswer {
   chapters: string[]; // chapter ids consulted
   struck: number; // claims dropped by the checker (for logs/evals)
   /** Set when the answer is the honest "nothing is connected" reply instead of a not-in-the-materials refusal. */
-  reason?: 'nothing_connected';
+  reason?: 'nothing_connected' | 'unrelated';
+  /** `unrelated`: the closest sources, which are NOT about the question (shown as `Related, not about this`). */
+  related?: Citation[];
 }
 
 export const NOT_IN_MATERIALS = 'Not in the materials. Ask the TA.';

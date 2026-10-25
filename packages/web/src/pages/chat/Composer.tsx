@@ -96,9 +96,9 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   const [active, setActive] = useState(0);
   const [drag, setDrag] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const [chips, setChips] = useState<PlanContextRef[]>([]);
   const [ctx, setCtx] = useState<ChatContextRef[]>([]);
   const askRef = useRef<ReturnType<typeof takePendingAsk>>(null);
+  const [chips, setChips] = useState<PlanContextRef[]>([]);
   const area = useRef<HTMLTextAreaElement>(null);
   const file = useRef<HTMLInputElement>(null);
   const draftsRef = useRef(drafts);
@@ -375,7 +375,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
                     : 'Imported from your own account'
                 }
               >
-                {provenanceBadge(c.provenance)}
+                {provenanceBadge(c.provenance, c.kind)}
               </span>
               <button
                 type="button"
@@ -418,9 +418,9 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
         </ul>
       ) : null}
       {chips.length ? (
-        <ul className="sqp-chips" aria-label="Attached plans" data-testid="composer-chips">
+        <ul className="sqc-ctxchips" aria-label="Attached plans" data-testid="composer-chips">
           {chips.map((c) => (
-            <li key={c.id} className="sqp-chip" data-testid="composer-chip">
+            <li key={c.id} className="sqc-ctxchip" data-testid="composer-chip">
               <span>Plan: {c.label}</span>
               <button
                 type="button"

@@ -421,7 +421,7 @@ export function createChatHub(
         const cv = { studentId: viewer.studentId, squadIds: [viewer.squadId] };
         for (const c of body.context) {
           const r = deps.context
-            ? buildContextRef(deps.context.store, cv, c.sourceId, c.location?.anchor)
+            ? buildContextRef(deps.context.store, cv, c.sourceId, c.location?.anchor, (src) => deps.context!.courses.name(src.connectionId, src.courseId))
             : undefined;
           if (!r?.ok) return { ok: false, status: 404, code: 'context_unreadable' };
           ctxFull.push(r.ref);
@@ -524,12 +524,23 @@ export function createChatHub(
           );
         }
       }
+      // A reply that cites any fixture/demo import is Demo, whatever the model mode: sources decide, never "Live".
+      if (
+        mode !== 'demo' &&
+        citations.some((c) => {
+          const s = c.source ? deps.context?.store.source(c.source.id) : undefined;
+          return !!s && /fixture|demo/i.test(s.provenance);
+        })
+      )
+        mode = 'demo';
       // ONE rule for what a reply may claim: only verified citations survive; the rest is an explicit label.
       const composed = composeProvenance({
         text,
         citations,
         verify: verifyCitation,
         mode,
+        isFixture: (c) =>
+          !!c.source && !!deps.context?.store.source(c.source.id)?.provenance.endsWith(':fixture'),
         hint: p.provenance,
         via: lastVia.get(p.chatId) ?? 'web',
       });

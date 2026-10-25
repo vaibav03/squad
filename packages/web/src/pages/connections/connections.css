@@ -60,3 +60,31 @@
     grid-template-columns: 1fr;
   }
 }
+
+.sq-conn__itemlist {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.sq-conn__item {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.15));
+  border-radius: var(--radius-md, 8px);
+}
+.sq-conn__itemmain,
+.sq-conn__itemside {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.sq-conn__itemtitle {
+  font-weight: 600;
+}
+.sq-conn__h4 {
+  font: 600 var(--text-sm)/var(--lh-sm) var(--font-sans);
+  margin-bottom: var(--space-2);
+}

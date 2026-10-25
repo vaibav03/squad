@@ -70,6 +70,23 @@ export interface ComposeInput {
   mode: ProvenanceMode;
   hint?: ProvenanceHint | undefined;
   via?: 'web' | 'imessage' | undefined;
+  /** True when this (verified) citation points at simulated/fixture data. Falls back to `citation.source.provenance`. */
+  isFixture?: (c: ChatCitation) => boolean;
+}
+
+/** Citation / source chip text: simulated sources never read as real (`Demo: Canvas`, `Demo: Google`). */
+export const CONNECTION_PROVIDER_NAME = { canvas: 'Canvas', google: 'Google' } as const;
+export const providerOfSourceKind = (kind: string): 'canvas' | 'google' | null =>
+  kind.startsWith('canvas_') ? 'canvas' : /^(gcal|gdoc|gdrive|classroom)/.test(kind) ? 'google' : null;
+export const sourceChipLabel = (provider: 'canvas' | 'google', fixture: boolean): string =>
+  fixture ? `Demo: ${CONNECTION_PROVIDER_NAME[provider]}` : CONNECTION_PROVIDER_NAME[provider];
+
+/**
+ * The reply mode after looking at its sources: Live only when the model is live (`mode`) AND no cited source is
+ * simulated. Any fixture/demo source makes the reply `demo`: an answer built on simulated data is never "Live".
+ */
+export function modeForSources(mode: ProvenanceMode, anyFixture: boolean): ProvenanceMode {
+  return anyFixture ? 'demo' : mode;
 }
 
 export const sourcesWords = (n: number): string => `${n} source${n === 1 ? '' : 's'}`;
@@ -91,11 +108,33 @@ export function composeProvenance(i: ComposeInput): {
     seen.add(key);
     if (i.verify(c)) verified.push(c);
   }
-  const base = { sources: verified.length, mode: i.mode, ...(i.via ? { via: i.via } : {}) };
+  // background-only sources (`relation: related`) are shown but never count as grounding
+  const related = verified.filter((c) => c.source?.relation === 'related');
+  if (related.length > 0 && related.length === verified.length)
+    return {
+      citations: related,
+      provenance: {
+        kind: 'no_sources',
+        label: i.hint?.label ?? 'No source covers this: the closest one is shown as related only',
+        sources: 0,
+        mode: i.mode,
+        ...(i.via ? { via: i.via } : {}),
+      },
+    };
+  const fixture = verified.some((c) => (i.isFixture ? i.isFixture(c) : c.source?.provenance === 'fixture'));
+  const base = {
+    sources: verified.length,
+    mode: modeForSources(i.mode, fixture),
+    ...(i.via ? { via: i.via } : {}),
+  };
   if (verified.length > 0)
     return {
       citations: verified,
-      provenance: { kind: 'grounded', label: sourcesWords(verified.length), ...base },
+      provenance: {
+        kind: 'grounded',
+        label: fixture ? `${sourcesWords(verified.length)}, demo data` : sourcesWords(verified.length),
+        ...base,
+      },
     };
   const claimed = i.citations.length > 0 || hasCitationMarkers(i.text);
   if (claimed)

@@ -42,7 +42,7 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     key: 'ledger',
     path: '/squad/ledger/:taskId?',
     title: 'Privacy ledger',
-    nav: { label: 'Privacy ledger', icon: 'ledger', order: 6 },
+    // No nav item: the ledger is a drawer inside each group chat ("Group activity & ledger"); this path only redirects there.
   },
   {
     key: 'personas',
@@ -60,7 +60,7 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     key: 'setup',
     path: '/squad/setup/:step?',
     title: 'Set up',
-    nav: { label: 'Setup guide', icon: 'check', order: 9 },
+    // No nav item: setup is the first-run flow; connected users never see it as a destination.
   },
   {
     key: 'onboarding',
