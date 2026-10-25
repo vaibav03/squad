@@ -25,6 +25,9 @@ export function mountVillage(
   let ro: ResizeObserver | undefined;
   let vis: (() => void) | undefined;
   let mq: MediaQueryList | undefined;
+  let restoreAdd: (() => void) | undefined;
+  const phaserVis: Array<[string, EventListener, boolean]> = [];
+  let onMq: ((e: MediaQueryListEvent) => void) | undefined;
   const calm = {
     value: !!opts.calm || (typeof matchMedia === 'function' && matchMedia(REDUCED).matches),
   };
@@ -138,6 +141,13 @@ export function mountVillage(
           if (pendingCamera) scene?.cameraSet(pendingCamera);
         },
       });
+      // Phaser (3.90) adds a document 'visibilitychange' listener it never removes, which keeps every destroyed game
+      // alive. Record it while the game boots so destroy() can remove it.
+      const nativeAdd = document.addEventListener;
+      document.addEventListener = function (this: Document, t: string, fn: unknown, o?: unknown) {
+        if (/visibilitychange$/i.test(t)) phaserVis.push([t, fn as EventListener, o as boolean]);
+        return (nativeAdd as (...a: unknown[]) => void).call(this, t, fn, o);
+      } as typeof document.addEventListener;
       game = new Phaser.Game({
         type: Phaser.AUTO,
         parent: canvasHost,
@@ -163,6 +173,11 @@ export function mountVillage(
         },
         scene: [scene],
       });
+      restoreAdd = () => {
+        document.addEventListener = nativeAdd;
+        restoreAdd = undefined;
+      };
+      game.events.once('ready', () => restoreAdd?.());
       game.canvas.style.imageRendering = 'pixelated';
       game.canvas.setAttribute('aria-hidden', 'true');
       ro = new ResizeObserver(() => applySize(game));
@@ -175,12 +190,13 @@ export function mountVillage(
       };
       document.addEventListener('visibilitychange', vis);
       mq = matchMedia(REDUCED);
-      mq.addEventListener?.('change', (e) => {
+      onMq = (e) => {
         if (e.matches) {
           calm.value = true;
           scene?.ctx.bus.emit('calm', true);
         }
-      });
+      };
+      mq.addEventListener?.('change', onMq);
     } catch (e) {
       if (!destroyed) fail(e);
     }
@@ -193,10 +209,22 @@ export function mountVillage(
       destroyed = true;
       ro?.disconnect();
       if (vis) document.removeEventListener('visibilitychange', vis);
+      if (mq && onMq) mq.removeEventListener?.('change', onMq);
+      restoreAdd?.();
+      for (const [t, fn, o] of phaserVis) document.removeEventListener(t, fn, o);
+      phaserVis.length = 0;
+      // Phaser frees its GL context only when the canvas is garbage collected. Browsers allow ~16 live contexts, so
+      // ten Village <-> Home round trips used to exhaust them and blank the world. Release it explicitly.
+      const gl = (game?.renderer as { gl?: WebGLRenderingContext } | undefined)?.gl;
       try {
         game?.destroy(true);
       } catch (e) {
         log('destroy', e);
+      }
+      try {
+        gl?.getExtension('WEBGL_lose_context')?.loseContext();
+      } catch {
+        /* context already gone */
       }
       game = undefined;
       root.remove();
