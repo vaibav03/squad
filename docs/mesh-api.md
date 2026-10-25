@@ -66,13 +66,15 @@ QueryAbout   = 'budget'|'calendar'|'hardNo'|'weakTopic'
 
 task.open       { flow:'study'|'trip', window:{from:string,to:string}, members:string[], squadId?:string, options?:TripOption[], topics?:string[], examAt?:string }
                 TripOption = { id, label, dates?:{from,to}, perPerson?: number }  // PUBLIC data
-psi.blind       { round:number, points:HexPoint[], origin:string, hop:number }     // origin = whose set; hop = keys applied so far
+psi.blind       { round:0..3 (0 collect, 1 apply, 2 deliver final, 3 spare), points:HexPoint[], origin:string, hop:number }     // origin = whose set; hop = keys applied so far
 psi.tokens      { tokens:HexPoint[] }                                              // to mediator
 psi.common      { common:HexPoint[] }                                              // mediator -> members
 share.vec       { purpose:SharePurpose, round:number, share:string[] }             // hex shares, to = the share's holder
 share.sum       { purpose:SharePurpose, round:number, sum:string[] }               // to mediator
 confirm.result  { accept:boolean, optionId:string }
-result          { chosen:string|null, counts:Record<string,number>|null, perPerson?:number, rounds?:number }  // counts null if squad < 3
+result          { stage:'candidates'|'proposal'|'final'|'none', chosen:string|null, candidates?:string[] /*top-2 option ids*/, slot?:string, dates?:string[] /*yyyy-mm-dd*/,
+                  perPerson?:number /*equal split only, whole dollars*/, venmo?:string[] /*^https://venmo.com/<payee>?txn=charge&amount=D.CC&note=<pct-encoded>$ only*/,
+                  counts:Record<string,number>|null, rounds?:number }   // counts MUST be null if squad < 3 (gate rejects with 'min_group')
 query           { about:QueryAbout, target:string }
 query.denied    { about:QueryAbout, reason:'private' }
 conflict        { reason:'no_common_slot'|'no_option'|'no_plan', hybrid?:{ slot:string } }
@@ -91,17 +93,19 @@ agentCard(o: { id: string; name: string; url: string }): AgentCard   // /.well-k
 ## gate/ (privacy gate, runs on EVERY outbound send; inbound validation too)
 ```ts
 interface PrivateFields { budget?: number; events?: { title: string }[]; hardNos?: { reason: string }[]; weakTopics?: string[]; secrets?: (string|number)[] }
-createGate(o: { self: string; fields: PrivateFields; ledger: Ledger; queryBudget?: number /*default 8*/; now?: () => number }): Gate
+createGate(o: { self: string /* student id or 'mediator' */; fields: PrivateFields; ledger: Ledger; queryBudget?: number /*default 8*/; now?: () => number }): Gate
 interface Gate {
   send(msg: AgentMessage): GateResult        // validate strict schema, scan against private fields, per-task query budget
-  receive(raw: unknown): ReceiveResult       // strict parse + task membership + ReplayGuard (identical canonical message twice = rejected)
+  receive(raw: unknown): ReceiveResult       // strict parse + to===self + task membership + replay (identical canonical message twice) + inbound query cap
+  readonly self: string; readonly tasks: TaskTracker   // task.open (sent or received) opens the task; members drive the min-group rule
+  closeTask(taskId, state?: 'completed'|'failed'|'canceled'): void
   allowPublic(taskId: string, tokens: (string|number)[]): void   // public values (option prices) exempt from the scan
 }
 type GateResult = { ok: true; msg: AgentMessage; kind: MessageKind; labels: string[]; ledger: LedgerRow[] }
-                | { ok: false; reason: 'schema'|'leak'|'budget'|'unknown_kind'; ledger: LedgerRow[] }   // blocked:true row written
-type ReceiveResult = { ok: true; msg: AgentMessage; kind: MessageKind } | { ok: false; reason: 'schema'|'replay'|'closed_task'|'not_member'|'unknown_kind' }
+                | { ok: false; reason: 'schema'|'leak'|'budget'|'unknown_kind'|'min_group'; ledger: LedgerRow[] }   // blocked:true row written
+type ReceiveResult = { ok: true; msg: AgentMessage; kind: MessageKind } | { ok: false; reason: 'schema'|'replay'|'closed_task'|'not_member'|'unknown_kind'|'budget'|'misrouted' }
 // Scan: text needles are case-insensitive substrings in any non-hex string; numeric needles match number fields (>=3 digits) and word-bounded digits in strings. Hex fields are exempt (schema pins them to hex).
-answerQuery(gate, msg): AgentMessage   // always the query.denied reply + blocked ledger row (no allowlist entry exists for raw private values)
+answerQuery(gate: Gate, ledger: Ledger, msg: AgentMessage): AgentMessage | null   // query.denied reply (null if not a query for gate.self) + blocked ledger row written
 ```
 
 ## ledger/
@@ -111,9 +115,9 @@ interface LedgerRow { taskId: string; student: string; field: string; shared: st
 interface Ledger { record(r: Omit<LedgerRow,'ts'>): LedgerRow; list(taskId?: string): LedgerRow[]; guard(values: (string|number)[]): void }
 createMemoryLedger(now?: () => number): Ledger
 createSqliteLedger(db: Db, now?): Ledger              // table mesh_ledger, created on demand
-toLedgerEvent(row: LedgerRow): Extract<VillageEvent,{t:'ledger.entry'}>        // withheld:'hidden', blocked passes through
+toLedgerEvent(row: LedgerRow)  /* withheld:'hidden' unless the row's withheld label is 'nothing private' */: Extract<VillageEvent,{t:'ledger.entry'}>        // withheld:'hidden', blocked passes through
 toAgentMessageEvent(msg: AgentMessage, labels: string[]): Extract<VillageEvent,{t:'agent.message'}>  // ids via agentId.student(); 'mediator' kept; to:'commons' for psi.blind broadcast
-toQueryDeniedEvent(taskId: string, to: string): Extract<VillageEvent,{t:'agent.message'}>             // from 'mediator', kind 'query_denied'
+toQueryDeniedEvent(taskId: string, to: string, about = 'budget'): Extract<VillageEvent,{t:'agent.message'}>             // from 'mediator', kind 'query_denied'
 toOptionDroppedEvent(taskId, reason) / toConflictEvent(taskId, reason)   // from 'mediator'
 ```
 
