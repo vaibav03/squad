@@ -37,7 +37,7 @@ export const TaskOpenPayload = z.strictObject({
 
 export const PsiBlindPayload = z.strictObject({
   round: z.number().int().min(0).max(3),
-  points: z.array(HexPointSchema).min(1).max(512),
+  points: z.array(HexPointSchema).max(512),
   origin: Label,
   hop: z.number().int().min(0).max(32),
 });
@@ -47,12 +47,12 @@ export const PsiCommonPayload = z.strictObject({ common: z.array(HexPointSchema)
 export const ShareVecPayload = z.strictObject({
   purpose: SharePurposeSchema,
   round: z.number().int().min(0).max(1000),
-  share: z.array(ShareLimb).min(1).max(256),
+  share: z.array(ShareLimb).max(256),
 });
 export const ShareSumPayload = z.strictObject({
   purpose: SharePurposeSchema,
   round: z.number().int().min(0).max(1000),
-  sum: z.array(ShareLimb).min(1).max(256),
+  sum: z.array(ShareLimb).max(256),
 });
 
 export const ConfirmResultPayload = z.strictObject({ accept: z.boolean(), optionId: Label });

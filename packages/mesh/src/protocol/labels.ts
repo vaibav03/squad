@@ -32,7 +32,10 @@ export function labelsFor(kind: MessageKind, payload: unknown): string[] {
       return [`${p.flow} plan opened`, `${p.members.length} members`];
     }
     case 'psi.blind':
-      return [`${(payload as Payload<'psi.blind'>).points.length} blinded tokens (padded)`];
+      {
+      const n = (payload as Payload<'psi.blind'>).points.length;
+      return [n === 0 ? 'request: blinded set' : `${n} blinded tokens (padded)`];
+    }
     case 'psi.tokens':
       return [`${(payload as Payload<'psi.tokens'>).tokens.length} blinded tokens`];
     case 'psi.common':
@@ -41,6 +44,7 @@ export function labelsFor(kind: MessageKind, payload: unknown): string[] {
     case 'share.sum': {
       const p = payload as Payload<'share.vec'> | Payload<'share.sum'>;
       const n = 'share' in p ? p.share.length : p.sum.length;
+      if (n === 0) return ['share' in p ? 'request: share' : 'request: sum'];
       return [`secret share of ${n} values (${p.purpose})`];
     }
     case 'confirm.result':
