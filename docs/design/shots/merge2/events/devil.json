@@ -1,0 +1,45 @@
+[
+  {
+    "t": "agent.state",
+    "agent": "expert:devil",
+    "state": "studying"
+  },
+  {
+    "t": "quiz.question",
+    "quizId": "dv_501ba33b",
+    "chapter": "devil:ch2",
+    "target": "s_ana",
+    "text": "1. The mean is the sum of the values divided by the count.\n2. The median is the middle value of the sorted data.\n3. The standard deviation is the square of the variance.\n4. A larger standard deviation means the data are more spread out."
+  },
+  {
+    "t": "agent.state",
+    "agent": "expert:devil",
+    "state": "waiting_for_student"
+  },
+  {
+    "t": "agent.state",
+    "agent": "expert:devil",
+    "state": "studying"
+  },
+  {
+    "t": "agent.state",
+    "agent": "expert:devil",
+    "state": "waiting_for_student"
+  },
+  {
+    "t": "agent.state",
+    "agent": "expert:devil",
+    "state": "studying"
+  },
+  {
+    "t": "quiz.result",
+    "quizId": "dv_501ba33b",
+    "chapter": "devil:ch2",
+    "target": "s_ana"
+  },
+  {
+    "t": "agent.state",
+    "agent": "expert:devil",
+    "state": "idle"
+  }
+]
