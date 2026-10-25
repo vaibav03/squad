@@ -238,27 +238,23 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
     title: "Devil's TA",
     tagline: 'Spot the mistake hidden in a solution',
     purpose:
-      'Meant to train your eye: find the deliberate mistake the TA hid in a worked solution.',
+      'Train your eye: read a short, convincing explanation from your own chapter and find the one deliberate mistake the TA hid in it.',
     who: [
       {
         name: "Devil's TA",
-        does: 'Hides one sneaky error in a solution and marks whether you caught it.',
+        does: 'Writes an explanation with exactly one planted error, then checks which line you point at.',
       },
     ],
     how: {
-      phrase: null,
+      phrase: "@cubbie devil's TA ch2",
       steps: [
-        'Nothing in chat starts this challenge yet.',
-        'Walking in shows the board, which stays blank until a result arrives.',
+        'Type the phrase with your chapter, or say "@cubbie find my mistake".',
+        'Reply with the line number or the wrong words. You get two tries.',
+        'Cubbie then reveals the error, explains it and cites the page.',
       ],
     },
     outcome:
-      'Once connected: a chalk tick if you caught the mistake or a red underline if you missed it. Today the board stays blank.',
+      'Feedback only, no score: whether you caught it, then the wrong line, the correct statement and the page it comes from. A missed chapter is queued for review.',
     privacy: 'Only you see whether you caught the mistake. Nothing is shared with your squad.',
   },
 };
-
-export const roomInfo = (slot: string): RoomInfo | undefined =>
-  (ROOM_INFO as Record<string, RoomInfo | undefined>)[slot];
-
-export const ROOM_INFO_SLOTS: readonly RoomSlot[] = ROOM_SLOTS;

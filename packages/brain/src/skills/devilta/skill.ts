@@ -18,7 +18,7 @@ import {
   parseDevilTa,
   renderLines,
   REPLY_INSTRUCTION,
-  stripMention,
+  stripDevilMention,
   validateGenerated,
   type DevilPlan,
   type Rejection,
@@ -63,7 +63,7 @@ const WhySchema = z.object({ explanation: z.string() });
 export const chapterEventId = (chapter: string): string => `devil:${chapter}`;
 
 /** A model or quota failure: 402, credits, billing or quota words. Any failure degrades the same way. */
-export function isCreditsError(e: unknown): boolean {
+export function isDevilCreditsError(e: unknown): boolean {
   const msg = e instanceof Error ? `${e.name} ${e.message}` : String(e);
   const status = (e as { status?: unknown; code?: unknown } | null)?.status;
   const code = (e as { code?: unknown } | null)?.code;
@@ -181,7 +181,7 @@ export function createDevilTaSkill(deps: DevilTaSkillDeps): Skill {
       gen = await generatePlan(llm, chapter, parsed.topic, context);
     } catch (e) {
       console.warn(
-        `[devilTa] generation unavailable${isCreditsError(e) ? ' (credits)' : ''}: ${(e as Error).message}`,
+        `[devilTa] generation unavailable${isDevilCreditsError(e) ? ' (credits)' : ''}: ${(e as Error).message}`,
       );
     }
     if (!gen) {
@@ -276,7 +276,7 @@ export function createDevilTaSkill(deps: DevilTaSkillDeps): Skill {
     const llm = deps.llm ?? ctx.llm;
     try {
       await state('studying');
-      const reply = stripMention(m.text);
+      const reply = stripDevilMention(m.text);
       const verdict = judgeAnswer(reply, s.plan);
       const tries = s.tries + 1;
       if (verdict !== 'hit' && tries < MAX_TRIES) {
@@ -334,8 +334,8 @@ export function createDevilTaSkill(deps: DevilTaSkillDeps): Skill {
     name: 'devilTa',
     async match(m, ctx) {
       if (!addressed(m)) return 0;
-      if (isDevilTaRequest(m.text)) return 0.9;
-      if (BANTER.test(stripMention(m.text))) return 0;
+      if (isDevilTaRequest(m.text)) return 0.95;
+      if (BANTER.test(stripDevilMention(m.text))) return 0;
       return activeSession(dbOf(ctx), m.chatId, m.from, now(), ttl) ? 0.85 : 0;
     },
     async handle(m, ctx) {

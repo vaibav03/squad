@@ -29,6 +29,19 @@ async function registry() {
 const byName = (skills: Skill[], n: string) => skills.find((s) => s.name === n)!;
 
 const ROOMS: Record<string, { triggers: string[]; unaddressedBanter: string[] }> = {
+  devilTa: {
+    triggers: [
+      "@cubbie devil's TA ch2",
+      '@cubbie find my mistake',
+      '@cubbie devils ta gradient descent',
+    ],
+    unaddressedBanter: [
+      'my TA is a devil',
+      'the devil is in the details',
+      'can you find my keys',
+      'find my mistake',
+    ],
+  },
   debate: {
     triggers: [
       '@cubbie debate should exams be open book?',

@@ -30,7 +30,7 @@ const MISTAKE_RE =
   /\b(?:find|spot|catch|detect|hunt\s+(?:for|down))\s+(?:me\s+)?(?:the|my|a|an|your|that)?\s*(?:own\s+|hidden\s+|planted\s+)?(?:mistakes?|errors?|bugs?|flaws?)\b/i;
 const CHAPTER_RE = /\b(?:ch\.?|chapter)\s*#?\s*(\d{1,3})\b/i;
 
-export const stripMention = (text: string): string =>
+export const stripDevilMention = (text: string): string =>
   text.replace(/^\s*(?:@\w+[\s,:]*)+/, '').trim();
 
 export function isDevilTaRequest(text: string): boolean {
@@ -172,7 +172,7 @@ export interface Planted {
   errorLine: number; // 0-based
   keywords: string[];
 }
-export type Verdict = 'hit' | 'miss' | 'near';
+export type DevilVerdict = 'hit' | 'miss' | 'near';
 
 const WORD_ORD: Record<string, number> = {
   first: 1,
@@ -184,19 +184,24 @@ const WORD_ORD: Record<string, number> = {
   seventh: 7,
   eighth: 8,
 };
+const NUMS = String.raw`(\d{1,2}(?:\s*(?:,|and|or|&)\s*#?\d{1,2})*)`;
 const REF_PATTERNS = [
-  /(?:\b(?:line|step|sentence|statement|point|item|number|no)\.?\s*#?\s*|#\s*)(\d{1,2})\b/gi,
+  new RegExp(
+    String.raw`(?:\b(?:lines?|steps?|sentences?|statements?|points?|items?|number|no)\.?\s*#?\s*|#\s*)${NUMS}\b`,
+    'gi',
+  ),
   /\b(\d{1,2})(?:st|nd|rd|th)\s+(?:line|step|sentence|statement|one)\b/gi,
 ];
 const WORD_REF =
   /\b(first|second|third|fourth|fifth|sixth|seventh|eighth)\s+(?:line|step|sentence|statement|one)\b/gi;
-const BARE_REF = /^\W*(?:it'?s\s+|its\s+|the\s+)?#?(\d{1,2})(?:st|nd|rd|th)?\W*$/i;
+const BARE_REF = /^\W*(?:[a-z']+\s+){0,4}#?(\d{1,2})(?:st|nd|rd|th)?\W*$/i;
 
 /** 1-based line references in a reply ("line 3", "step 3", "#3", "3", "third line"), within 1..max. */
 export function parseLineRefs(reply: string, max: number): number[] {
-  const text = stripMention(reply);
+  const text = stripDevilMention(reply);
   const found = new Set<number>();
-  for (const re of REF_PATTERNS) for (const m of text.matchAll(re)) found.add(Number(m[1]));
+  for (const re of REF_PATTERNS)
+    for (const m of text.matchAll(re)) for (const n of m[1]!.match(/\d+/g)!) found.add(Number(n));
   for (const m of text.matchAll(WORD_REF)) found.add(WORD_ORD[m[1]!.toLowerCase()]!);
   const bare = BARE_REF.exec(text);
   if (bare) found.add(Number(bare[1]));
@@ -257,8 +262,8 @@ function spanHit(o: Overlap): boolean {
  * miss: only a different valid line number (or text that fits another line better).
  * near: ambiguous, nothing usable.
  */
-export function judgeAnswer(reply: string, p: Planted): Verdict {
-  const text = stripMention(reply);
+export function judgeAnswer(reply: string, p: Planted): DevilVerdict {
+  const text = stripDevilMention(reply);
   const refs = parseLineRefs(text, p.lines.length);
   const target = p.errorLine + 1;
   if (refs.includes(target)) return 'hit';
