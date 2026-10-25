@@ -11,6 +11,7 @@ import { loadHubConfig, type HubConfig } from './config';
 import { createConfirmRouter } from './confirms';
 import { createIngestor } from './ingest';
 import { createLogger } from './log';
+import { installObservability, type ObsOptions } from './observability';
 import type { Ports } from './ports';
 import { createAuthRoutes } from './routes/auth';
 import { createCallRoutes } from './routes/call';
@@ -38,6 +39,8 @@ export interface HubOptions {
   now?: () => number;
   /** Shared sqlite (core `openDb`). Default: open `config.dbPath` (`:memory:` under vitest). */
   db?: Db;
+  /** Observability overrides (admin token, agent probes, sentry). Defaults come from env. */
+  obs?: ObsOptions;
 }
 export interface Hub {
   app: HubApp;
@@ -50,7 +53,7 @@ const VERSION = '0.1.0';
 export function createHub(opts: HubOptions = {}): Hub {
   const config: HubConfig = { ...loadHubConfig(), ...opts.config };
   const now = opts.now ?? Date.now;
-  const log = createLogger(config.logLevel);
+  const log = createLogger(config.logLevel, undefined, config.authSecret);
   const startedAt = now();
 
   // Components reference `deps` lazily, so the container is filled in dependency order below.
@@ -87,6 +90,8 @@ export function createHub(opts: HubOptions = {}): Hub {
       exposeHeaders: ['content-type'],
     }),
   );
+  // ops: correlation ids, metrics, /health, /ready, /metrics, /v1/admin/*; registered before the legacy health below
+  const obs = installObservability(app, deps, { version: VERSION, ...opts.obs });
   const health = (c: Context) =>
     c.json({
       ok: true,
@@ -124,6 +129,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     app,
     deps,
     async close() {
+      obs.stop();
       deps.broker.closeAll();
       if (ownDb) deps.db.close();
     },
