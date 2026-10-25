@@ -97,7 +97,7 @@ export function createHomes(ctx: VillageContext): HomeManager {
   const tex = (h: Home) =>
     h.mine
       ? h.lit
-        ? 'mv-hut-lit'
+        ? 'mv-hut-own-lit'
         : 'mv-hut-dark'
       : h.lit
         ? 'mv-hut-locked-lit'
