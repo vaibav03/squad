@@ -12,3 +12,4 @@ export {
   useBoardVersion,
   useCanOpenBoard,
 } from './bridge';
+export { ModeBadge } from './ModeBadge';
