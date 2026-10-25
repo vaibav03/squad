@@ -178,8 +178,15 @@
 .cn-stage { bottom: 70px; width: calc(100% - 16px); padding: 6px 10px; gap: 4px; animation: none; }
 .cn-stage .cn-seat { padding: 2px 8px; font-size: 13px; }
 .cn-stage .cn-seat__word, .cn-stage .cn-arrows { display: none; }
+@media (max-width: 999px) {
+  /* one row: chips, mode badge and the board button; the latest line lives in the dock's Show discussion */
+  .cn-stage { flex-direction: row; flex-wrap: nowrap; align-items: center; }
+  .cn-stage .cn-seats { order: 1; flex: 1 1 auto; flex-wrap: nowrap; gap: 4px; overflow: hidden; }
+  .cn-stage .cn-stage__head { order: 2; flex: none; flex-wrap: nowrap; }
+  .cn-stage .cn-stage__head > span:first-child, .cn-stage .cn-captions { display: none; }
+}
 @media (min-width: 1000px) {
-  .cn-stage { left: 16px; bottom: 16px; transform: none; width: min(calc(62vw - 40px), 760px); }
+  .cn-stage { left: 16px; bottom: 64px; transform: none; width: min(calc(62vw - 40px), 760px); }
   .cn-stage .cn-seat__word { display: inline; }
   .cn-stage .cn-arrows { display: flex; }
 }

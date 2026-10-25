@@ -77,5 +77,5 @@
 .cd-dock .cb-result__stance { -webkit-line-clamp: 1; }
 .cd-dock .cd-meta .cd-link { margin-left: 0; }
 .cd-dock .cb-result__headline { display: none; } /* the header carries the headline */
-.cd-dock { --cd-body-max: calc(40vh - 52px); }
+.cd-dock { --cd-body-max: calc(28vh - 20px); }
 @media (min-width: 1000px) { .cd-dock { --cd-body-max: calc(100dvh - 160px - 60px - 52px); } }
