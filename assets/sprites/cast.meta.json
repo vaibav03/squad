@@ -1,1167 +1,146 @@
 {
- "version": 1,
+ "version": 2,
  "cell": {
-  "w": 24,
-  "h": 24
+  "w": 32,
+  "h": 32
  },
- "anchors": {
-  "feet": {
-   "x": 12,
-   "y": 23
-  },
-  "head": {
-   "x": 12,
-   "y": 9
-  },
-  "bubble": {
-   "x": 12,
-   "y": 5
-  },
-  "hand": {
-   "x": 17,
-   "y": 17
-  }
+ "anchor": {
+  "x": 16,
+  "y": 31
+ },
+ "anims": {
+  "idle": 2,
+  "walk": 8,
+  "talk": 8,
+  "sit": 2,
+  "wave": 4
  },
  "personas": [
   {
    "id": "cubbie",
-   "name": "Cubbie",
    "role": "cubbie",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "cubbie",
+   "headTop": 4
   },
   {
    "id": "examiner",
-   "name": "The Examiner",
    "role": "examiner",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "examiner",
+   "headTop": 4
   },
   {
    "id": "dean",
-   "name": "The Dean",
    "role": "dean",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "dean",
+   "headTop": 6
   },
   {
    "id": "expert-ada",
-   "name": "Prof. Ada",
    "role": "expert",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "expert",
+   "headTop": 3
   },
   {
    "id": "expert-sage",
-   "name": "Sage",
    "role": "expert",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "expert-sage",
+   "headTop": 6
   },
   {
    "id": "expert-monk",
-   "name": "Brother Bit",
    "role": "expert",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "expert-monk",
+   "headTop": 6
   },
   {
    "id": "expert-mage",
-   "name": "Mage Moda",
    "role": "expert",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "expert-mage",
+   "headTop": 1
   },
   {
    "id": "rival",
-   "name": "The Rival",
    "role": "rival",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "rival",
+   "headTop": 3
   },
   {
    "id": "council-chill",
-   "name": "Chill",
    "role": "council",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "council-chill",
+   "headTop": 5
   },
   {
    "id": "council-grind",
-   "name": "Grind",
    "role": "council",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "council-hard",
+   "headTop": 5
   },
   {
    "id": "council-advisor",
-   "name": "Advisor",
    "role": "council",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "council-balance",
+   "headTop": 5
   },
   {
    "id": "chairman",
-   "name": "The Chairman",
    "role": "council",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "chairman",
+   "headTop": 0
   },
   {
    "id": "feynman",
-   "name": "Feynman Freshman",
    "role": "feynman",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "freshman",
+   "headTop": 9
   },
   {
    "id": "student-01",
-   "name": "Student 1",
    "role": "student",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "student",
+   "headTop": 5
   },
   {
    "id": "student-02",
-   "name": "Student 2",
    "role": "student",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "student-02",
+   "headTop": 5
   },
   {
    "id": "student-03",
-   "name": "Student 3",
    "role": "student",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "student-03",
+   "headTop": 5
   },
   {
    "id": "student-04",
-   "name": "Student 4",
    "role": "student",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "student-04",
+   "headTop": 3
   },
   {
    "id": "student-05",
-   "name": "Student 5",
    "role": "student",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "student-05",
+   "headTop": 5
   },
   {
    "id": "student-06",
-   "name": "Student 6",
    "role": "student",
-   "source": "procedural (squad-art, CC0 pack for portraits)",
-   "anims": {
-    "idle_r": {
-     "frames": [
-      "idle_r_0",
-      "idle_r_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "idle_f": {
-     "frames": [
-      "idle_f_0",
-      "idle_f_1"
-     ],
-     "fps": 2,
-     "loop": true
-    },
-    "walk_r": {
-     "frames": [
-      "walk_r_0",
-      "walk_r_1",
-      "walk_r_2",
-      "walk_r_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "walk_f": {
-     "frames": [
-      "walk_f_0",
-      "walk_f_1",
-      "walk_f_2",
-      "walk_f_3"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_r": {
-     "frames": [
-      "talk_r_0",
-      "talk_r_1"
-     ],
-     "fps": 8,
-     "loop": true
-    },
-    "talk_f": {
-     "frames": [
-      "talk_f_0",
-      "talk_f_1"
-     ],
-     "fps": 8,
-     "loop": true
-    }
-   }
+   "spec": "student-06",
+   "headTop": 3
+  },
+  {
+   "id": "mediator",
+   "role": "mediator",
+   "spec": "mediator",
+   "headTop": 4
+  },
+  {
+   "id": "ta",
+   "role": "ta",
+   "spec": "ta",
+   "headTop": 3
   }
  ]
 }

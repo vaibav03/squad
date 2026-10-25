@@ -1,179 +1,154 @@
 {
-  "version": 1,
+  "version": 2,
   "id": "expert-monk",
   "cell": {
-    "w": 24,
-    "h": 24
+    "w": 32,
+    "h": 32
   },
-  "image": "sheet.png",
+  "facing": "right",
   "anchors": {
     "feet": {
-      "x": 12,
-      "y": 23
+      "x": 16,
+      "y": 31
     },
     "head": {
-      "x": 12,
-      "y": 9
+      "x": 16,
+      "y": 6
     },
     "bubble": {
-      "x": 12,
-      "y": 5
-    },
-    "hand": {
-      "x": 17,
-      "y": 17
+      "x": 16,
+      "y": 3
     }
   },
+  "portrait": "portrait.png",
   "frames": {
-    "idle_r_0": {
+    "idle/0": {
+      "strip": "idle.png",
       "x": 0,
       "y": 0,
-      "w": 24,
-      "h": 24
+      "w": 32,
+      "h": 32
     },
-    "idle_r_1": {
-      "x": 24,
+    "idle/1": {
+      "strip": "idle.png",
+      "x": 32,
       "y": 0,
-      "w": 24,
-      "h": 24
+      "w": 32,
+      "h": 32
     },
-    "idle_f_0": {
-      "x": 48,
+    "walk/0": {
+      "strip": "walk.png",
+      "x": 0,
       "y": 0,
-      "w": 24,
-      "h": 24
+      "w": 32,
+      "h": 32
     },
-    "idle_f_1": {
-      "x": 72,
+    "walk/1": {
+      "strip": "walk.png",
+      "x": 32,
       "y": 0,
-      "w": 24,
-      "h": 24
+      "w": 32,
+      "h": 32
     },
-    "walk_r_0": {
+    "walk/2": {
+      "strip": "walk.png",
+      "x": 64,
+      "y": 0,
+      "w": 32,
+      "h": 32
+    },
+    "walk/3": {
+      "strip": "walk.png",
       "x": 96,
       "y": 0,
-      "w": 24,
-      "h": 24
+      "w": 32,
+      "h": 32
     },
-    "walk_r_1": {
-      "x": 120,
+    "talk/0": {
+      "strip": "talk.png",
+      "x": 0,
       "y": 0,
-      "w": 24,
-      "h": 24
+      "w": 32,
+      "h": 32
     },
-    "walk_r_2": {
-      "x": 144,
+    "talk/1": {
+      "strip": "talk.png",
+      "x": 32,
       "y": 0,
-      "w": 24,
-      "h": 24
+      "w": 32,
+      "h": 32
     },
-    "walk_r_3": {
-      "x": 168,
+    "sit/0": {
+      "strip": "sit.png",
+      "x": 0,
       "y": 0,
-      "w": 24,
-      "h": 24
+      "w": 32,
+      "h": 32
     },
-    "walk_f_0": {
-      "x": 192,
+    "sit/1": {
+      "strip": "sit.png",
+      "x": 32,
       "y": 0,
-      "w": 24,
-      "h": 24
+      "w": 32,
+      "h": 32
     },
-    "walk_f_1": {
-      "x": 216,
+    "wave/0": {
+      "strip": "wave.png",
+      "x": 0,
       "y": 0,
-      "w": 24,
-      "h": 24
+      "w": 32,
+      "h": 32
     },
-    "walk_f_2": {
-      "x": 240,
+    "wave/1": {
+      "strip": "wave.png",
+      "x": 32,
       "y": 0,
-      "w": 24,
-      "h": 24
-    },
-    "walk_f_3": {
-      "x": 264,
-      "y": 0,
-      "w": 24,
-      "h": 24
-    },
-    "talk_r_0": {
-      "x": 288,
-      "y": 0,
-      "w": 24,
-      "h": 24
-    },
-    "talk_r_1": {
-      "x": 312,
-      "y": 0,
-      "w": 24,
-      "h": 24
-    },
-    "talk_f_0": {
-      "x": 336,
-      "y": 0,
-      "w": 24,
-      "h": 24
-    },
-    "talk_f_1": {
-      "x": 360,
-      "y": 0,
-      "w": 24,
-      "h": 24
+      "w": 32,
+      "h": 32
     }
   },
   "anims": {
-    "idle_r": {
+    "idle": {
       "frames": [
-        "idle_r_0",
-        "idle_r_1"
+        "idle/0",
+        "idle/1"
       ],
-      "fps": 2,
-      "loop": true
+      "frameRate": 2,
+      "repeat": -1
     },
-    "idle_f": {
+    "walk": {
       "frames": [
-        "idle_f_0",
-        "idle_f_1"
+        "walk/0",
+        "walk/1",
+        "walk/2",
+        "walk/3"
       ],
-      "fps": 2,
-      "loop": true
+      "frameRate": 8,
+      "repeat": -1
     },
-    "walk_r": {
+    "talk": {
       "frames": [
-        "walk_r_0",
-        "walk_r_1",
-        "walk_r_2",
-        "walk_r_3"
+        "talk/0",
+        "talk/1"
       ],
-      "fps": 8,
-      "loop": true
+      "frameRate": 8,
+      "repeat": -1
     },
-    "walk_f": {
+    "sit": {
       "frames": [
-        "walk_f_0",
-        "walk_f_1",
-        "walk_f_2",
-        "walk_f_3"
+        "sit/0",
+        "sit/1"
       ],
-      "fps": 8,
-      "loop": true
+      "frameRate": 2,
+      "repeat": -1
     },
-    "talk_r": {
+    "wave": {
       "frames": [
-        "talk_r_0",
-        "talk_r_1"
+        "wave/0",
+        "wave/1"
       ],
-      "fps": 8,
-      "loop": true
-    },
-    "talk_f": {
-      "frames": [
-        "talk_f_0",
-        "talk_f_1"
-      ],
-      "fps": 8,
-      "loop": true
+      "frameRate": 4,
+      "repeat": -1
     }
   }
 }
