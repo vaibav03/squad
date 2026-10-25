@@ -71,28 +71,30 @@ test.describe('J7 study modes (demo model)', () => {
     await a.ctx.close();
   });
 
-  test('J7 Step Diff: two uploaded images show where they split, never a verdict', async ({ browser }) => {
+  test('J7 Step Diff: two students each DM a photo, the group sees where the steps split, never a verdict', async ({ browser }) => {
     await needChat();
     const a = await actor(browser, 's_dev');
+    const b = await actor(browser, 's_ana');
     await openChat(a, GROUP);
     await say(a.page, '@cubbie diff');
-    expect(await waitBot(a.token, GROUP, () => true, 30_000)).toBeTruthy();
-    const ids: string[] = [];
-    for (const shade of [180, 90]) {
+    expect(await waitBot(a.token, GROUP, (m) => /Diff is open/i.test(m.text), 30_000)).toBeTruthy();
+    const upload = async (token: string, shade: number) => {
       const fd = new FormData();
       fd.append('file', new Blob([makePng(64, 64, shade)], { type: 'image/png' }), `solution-${shade}.png`);
-      const r = await fetch(`${HUB}/v1/chat/upload`, { method: 'POST', headers: { authorization: `Bearer ${a.token}` }, body: fd });
+      const r = await fetch(`${HUB}/v1/chat/upload`, { method: 'POST', headers: { authorization: `Bearer ${token}` }, body: fd });
       expect(r.status).toBe(200);
-      ids.push(((await r.json()) as { attachment: { id: string } }).attachment.id);
-    }
-    const mine = (await history(a.token, 'dm:s_dev')).filter(isBot).length;
-    await sendApi(a.token, 'dm:s_dev', 'here are the two solutions', ids.map((id) => ({ id })));
-    const m = await waitBot(a.token, 'dm:s_dev', (x) => /step/i.test(x.text), 60_000);
-    note(`bot DMs before ${mine}; step diff reply: ${m ? m.text.slice(0, 200) : 'none'}`);
-    expect.soft(m, 'E2E-008: Step Diff should answer in the DM with the step where the solutions split').toBeTruthy();
-    if (m) expect(m.text).not.toMatch(/\b(correct|incorrect|wrong answer|winner|you are right|better solution)\b/i);
+      return ((await r.json()) as { attachment: { id: string } }).attachment.id;
+    };
+    await sendApi(a.token, 'dm:s_dev', 'my solution', [{ id: await upload(a.token, 180) }]);
+    expect(await waitBot(a.token, 'dm:s_dev', (m) => /Got it/i.test(m.text), 30_000), 'photo acknowledged privately').toBeTruthy();
+    await sendApi(b.token, 'dm:s_ana', 'my solution', [{ id: await upload(b.token, 90) }]);
+    const res = await waitBot(a.token, GROUP, (m) => /step|split|diverge|same/i.test(m.text) && !/Diff is open/i.test(m.text), 60_000);
+    note(`step diff group reply: ${res ? res.text.slice(0, 200) : 'none'}`);
+    expect.soft(res, 'E2E-008: after both photos arrive the group should be told where the steps first split').toBeTruthy();
+    if (res) expect(res.text).not.toMatch(/\b(correct|incorrect|wrong answer|winner|you are right|better solution)\b/i);
     await shot(a.page, J, 'step-diff');
     await a.ctx.close();
+    await b.ctx.close();
   });
 
   test('J7 Oral exam: the Hut opens and states the typed fallback and feedback-only policy', async ({ browser }) => {

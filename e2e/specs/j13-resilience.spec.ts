@@ -80,6 +80,8 @@ test.afterAll(() => kill9());
 
 test('J13 hub killed mid-session: state persists and the stream resumes with Last-Event-ID, no duplicates', async () => {
   test.setTimeout(180_000);
+  kill9(); // a hub left over from an aborted earlier run must not be adopted
+  await new Promise((r) => setTimeout(r, 500));
   fs.rmSync(DB, { force: true });
   await up({ FORCE_FAKE_LLM: '1' });
   const tok = await login('s_ana');
@@ -93,7 +95,12 @@ test('J13 hub killed mid-session: state persists and the stream resumes with Las
   await new Promise((r) => setTimeout(r, 1000));
   await up({ FORCE_FAKE_LLM: '1' });
   const tok2 = await login('s_ana'); // tokens are stateless HMAC: the old one also works
-  const stateAfter = (await (await fetch(`${BASE}/v1/squad/state`, { headers: { authorization: `Bearer ${tok}` } })).json()) as { seq: number };
+  const oldTokenRes = await fetch(`${BASE}/v1/squad/state`, { headers: { authorization: `Bearer ${tok}` } });
+  note(`pre-restart token after restart -> ${oldTokenRes.status}`);
+  expect.soft(oldTokenRes.status, 'E2E-010: a bearer token issued before a hub restart is rejected (401) after it; students would be signed out by every restart').toBe(200);
+  const freshRes = await fetch(`${BASE}/v1/squad/state`, { headers: { authorization: `Bearer ${tok2}` } });
+  expect(freshRes.status).toBe(200);
+  const stateAfter = (await freshRes.json()) as { seq: number };
   note(`seq before ${stateBefore.seq} after restart ${stateAfter.seq}`);
   expect(stateAfter.seq, 'event log must persist across a hub restart').toBeGreaterThanOrEqual(stateBefore.seq);
   const resumed = await sse(tok2, 2500, lastId);
