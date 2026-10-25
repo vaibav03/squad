@@ -4,7 +4,7 @@ import { openMemoryDb } from '@squad/core/node';
 import type { HandlerCtx, JobRecord } from '../nudges/api';
 import { createFakeProactive } from '../nudges/fakeProactive';
 import { formatLocal, zonedParts, zonedToUtc } from '../nudges/time';
-import { createPactSkill, parseDeadline, registerPactHandlers } from './index';
+import { createPactSkill, parseCommitment, parseDeadline, registerPactHandlers } from './index';
 import { ownPacts } from './store';
 
 const NY = 'America/New_York';
