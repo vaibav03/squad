@@ -2,8 +2,7 @@ import type { Context, MiddlewareHandler } from 'hono';
 import { verifyToken } from '../auth';
 import type { HubDeps } from '../types';
 
-const deny = (c: Context, status: 403 | 404, code: string) =>
-  c.json({ error: { code } }, status);
+const deny = (c: Context, status: 403 | 404, code: string) => c.json({ error: { code } }, status);
 
 /**
  * GET /v1/ledger/:taskId must only answer for tasks of the viewer's own squad. The route itself filters
@@ -29,10 +28,7 @@ export function ledgerScope(
 }
 
 /** Caps concurrent SSE connections per student; the slot is released when the stream ends or is cancelled. */
-export function sseCap(
-  max: number,
-  userOf: (c: Context) => string | undefined,
-): MiddlewareHandler {
+export function sseCap(max: number, userOf: (c: Context) => string | undefined): MiddlewareHandler {
   const open = new Map<string, number>();
   return async (c, next) => {
     if (new URL(c.req.url).pathname !== '/v1/squad/stream') return next();
