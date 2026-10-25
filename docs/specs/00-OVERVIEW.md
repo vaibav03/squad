@@ -14,6 +14,7 @@ Each numbered doc below is a workstream spec. The user approves each one before 
 | 07-demo-and-submission.md | Demo scripts, video, READMEs, judging criteria map, submission steps | All |
 | 08-village-motion.md | Village motion plan: the single animation spec (tokens, motion table, reduced motion, tickets M-1..M-9) | Both |
 | 09-game-scenes.md | Squad Village: walkable side-view pixel world (Phaser 3.90.0) where students find agents, councils, calls and quizzes, driven by live events or a replay script (`packages/village`) | Both |
+| 10-interior-campus.md | Squad Campus: top-down indoor world (Modern Interiors style) that replaces the side-view village as the primary world; license-safe asset pipeline | Both |
 
 ## Repo layout
 Own private GitHub repo `squad`, a pnpm monorepo. The end goal is to integrate it into the Nook clone later (see "Later: integrate into Nook"); nothing here depends on the Nook clone to build or run.
