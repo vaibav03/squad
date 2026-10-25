@@ -19,6 +19,8 @@ export interface ResilientLlmOptions {
   now?: () => number;
   /** Called once when the wrapper switches to the fake. */
   onSwitch?: (s: LlmStatus) => void;
+  /** Called when a re-probe brings the real model back. */
+  onRecover?: (s: LlmStatus) => void;
   /**
    * After a credits_depleted/auth switch, try the real adapter again at most once per this many ms (the next
    * call after the interval is the probe). Unset (default): the switch is permanent for this process.
@@ -77,7 +79,10 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
     if (!o.real || (state.llm === 'fake' && !probable())) return f(o.fake, true);
     try {
       const r = await f(o.real, false);
-      if (state.llm === 'fake') state = { llm: 'real' }; // credits are back
+      if (state.llm === 'fake') {
+        state = { llm: 'real' }; // credits are back
+        o.onRecover?.({ ...state });
+      }
       return r;
     } catch (e) {
       const err = classifyGeminiError(e);
