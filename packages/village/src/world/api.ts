@@ -16,8 +16,8 @@ import type { AgentId, StudentId, VillageEvent, VillageSource } from '@squad/cor
 export const LOGICAL_H = 270;
 /** Tile and grid unit. Every sprite position is a whole logical pixel. */
 export const TILE = 16;
-/** World is one horizontal strip, logical px. Left=0..850, Mid=850..1760, Right=1760..2800. */
-export const WORLD_W = 2800;
+/** World is one horizontal strip, logical px. Left=0..950, Mid=950..2000, Right=2000..2950. */
+export const WORLD_W = 2950;
 /** y where actors' feet and building bases sit (walkable path; the grass edge/fence line is y=240). */
 export const GROUND_Y = 250;
 

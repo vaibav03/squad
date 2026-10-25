@@ -2,7 +2,7 @@
  * Pure walking simulation (no Phaser). Spec 08: walking is the game, so it is never eased on the way in:
  * constant speed, instant start, 80 ms ease-out stop, whole pixels at render time.
  */
-export const WALK_SPEED = 42; // art px/s = 3 px stride x 14 fps (provenance.json: no foot sliding); a 426 px screen in ~10 s
+export const WALK_SPEED = 36; // art px/s = 3 px planted-foot stride x 12 fps (design handoff): no foot sliding; Left/Mid/Right and tap-to-walk cover distance
 export const STOP_MS = 80;
 export const STOP_DIST = 2; // px covered by the ease-out stop
 

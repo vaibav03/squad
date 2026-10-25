@@ -1,3 +1,4 @@
+/* global window, console */
 import { chromium } from 'playwright';
 const browser = await chromium.launch({
   args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],

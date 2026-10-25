@@ -1,3 +1,5 @@
+import type Phaser from 'phaser';
+import type { WorldScene } from '../scene-manager/world-scene';
 import { fetchManifest } from './assets';
 import { computeScale } from './scaler';
 import { loadAdapter, loadModules } from '../scene-manager/modules';
@@ -15,8 +17,8 @@ export function mountVillage(
   const assetBase = opts.assetBase ?? '/assets';
   const log = (m: string, e?: unknown) => console.warn(`[village] ${m}`, e ?? '');
   let destroyed = false;
-  let game: import('phaser').Game | undefined;
-  let scene: import('../scene-manager/world-scene').WorldScene | undefined;
+  let game: Phaser.Game | undefined;
+  let scene: WorldScene | undefined;
   let ro: ResizeObserver | undefined;
   let vis: (() => void) | undefined;
   let mq: MediaQueryList | undefined;
@@ -60,7 +62,7 @@ export function mountVillage(
   root.appendChild(stage);
   parent.appendChild(root);
 
-  const applySize = (g?: import('phaser').Game) => {
+  const applySize = (g?: Phaser.Game) => {
     const r = parent.getBoundingClientRect();
     const s = computeScale(
       r.width || 960,
