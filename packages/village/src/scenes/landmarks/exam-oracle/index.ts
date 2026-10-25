@@ -14,10 +14,12 @@ export type ExamOracleState = LbState;
  */
 export function mapOracleQuestion(e: VillageEvent): SceneCommand[] {
   if (e.t !== 'quiz.question') return [];
+  // `oracle:ch5` -> `ch5` (the namespace is routing, not words).
+  const chapter = e.chapter.replace(/^oracle[:-]/i, '');
   return [
     {
       c: 'chalk',
-      text: `${chapterLabel(e.chapter).toLowerCase()} next?`,
+      text: `${chapterLabel(chapter).toLowerCase()} next?`,
       mark: 'none',
       question: (e.text ?? '').trim(),
     },

@@ -31,6 +31,34 @@ describe('exam oracle quiz.question label', () => {
       { c: 'chalk', text: 'thermo d next?', mark: 'none', question: '' },
     ]);
   });
+  it('strips the oracle namespace from the chalk label', () => {
+    const s = { ...def.init(), access: 'open' as const };
+    expect(def.mapEvent(q('oracle:ch5'), s, ctx)).toEqual([
+      { c: 'chalk', text: 'ch5 next?', mark: 'none', question: '' },
+    ]);
+  });
+  it('handles council:oracle opinion and verdict (outcome card), nothing else', () => {
+    const s = def.init();
+    const outcome = { title: 'Study next: ch5', items: [], facts: [], why: [] };
+    const v = {
+      t: 'council.verdict',
+      councilId: 'council:oracle',
+      member: 'oracle',
+      text: 'ch5 first',
+      outcome,
+    } as VillageEvent;
+    expect(def.handles(v, s, ctx)).toBe(true);
+    expect(def.mapEvent(v, s, ctx)).toContainEqual({ c: 'outcome', outcome });
+    const o = {
+      t: 'council.opinion',
+      councilId: 'council:oracle',
+      member: 'oracle',
+      text: 'why',
+    } as VillageEvent;
+    expect(def.handles(o, s, ctx)).toBe(true);
+    const other = { ...o, councilId: 'council:planner' } as VillageEvent;
+    expect(def.handles(other, s, ctx)).toBe(false);
+  });
   it('is handled only for oracle-namespaced questions', () => {
     const s = def.init();
     expect(def.handles(q('oracle', 'x'), s, ctx)).toBe(true);
