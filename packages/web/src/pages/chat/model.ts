@@ -144,6 +144,41 @@ export function dropRedelivered(items: readonly ThreadItem[]): ThreadItem[] {
   });
 }
 
+/** The closing plain-text twin of a council run ("Council verdict: ..."), written for transports without cards. */
+const COUNCIL_PROSE = /council verdict:|^the council (could not|is still)|^\(council run /i;
+
+/**
+ * The structured council card is the canonical answer. The skill's closing text reply (for iMessage/Discord) follows
+ * its card in the same bot turn; on the web it is a duplicate, so it is not shown as a second bubble. Screen readers get
+ * the same words from the card's own accessible text.
+ */
+export function foldCouncilProse(items: readonly ThreadItem[]): ThreadItem[] {
+  const out: ThreadItem[] = [];
+  const cardTriggers = new Set<string>();
+  let prevBot: ThreadItem | undefined;
+  for (const it of items) {
+    const m = it.message;
+    if (m.sender.kind !== 'persona') {
+      prevBot = undefined;
+      out.push(it);
+      continue;
+    }
+    if (m.card?.type === 'council') {
+      if (m.replyTo) cardTriggers.add(m.replyTo);
+      prevBot = it;
+      out.push(it);
+      continue;
+    }
+    const follows = m.replyTo
+      ? cardTriggers.has(m.replyTo)
+      : prevBot?.message.card?.type === 'council';
+    if (!m.card && follows && COUNCIL_PROSE.test(m.text)) continue;
+    prevBot = it;
+    out.push(it);
+  }
+  return out;
+}
+
 /** Date separators plus runs of consecutive messages from one sender (same day, within 5 minutes). */
 export function buildRows(
   items: readonly ThreadItem[],

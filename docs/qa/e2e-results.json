@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T10:33:22.559Z",
+  "at": "2026-10-25T15:17:04.924Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -457,6 +457,12 @@
     "status": "pass",
     "note": "",
     "ms": 71697
+   },
+   {
+    "title": "J37 chat truth: header badge, single council card, layout, dedupe, pending/retry",
+    "status": "fail",
+    "note": "Error: no plain-text council bubble",
+    "ms": 30561
    }
   ]
  }
