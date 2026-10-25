@@ -446,6 +446,72 @@ describe('a ballot needs two live options', () => {
   });
 });
 
+describe('destination relevance and voting copy', () => {
+  const fresh = async () => {
+    const cur = await current('s_ana');
+    if (cur && ['planning', 'voting', 'confirming'].includes(cur.status))
+      await post(url, `/v1/trips/${cur.tripId}/cancel`, {}, tok.s_ana);
+  };
+
+  it('a Cabo brief (4 days, $1200) yields only Cabo options and a count-true instruction', async () => {
+    await fresh();
+    const made = await post<{ trip: TripViewV2 }>(
+      url,
+      '/v1/trips',
+      { destination: 'Cabo', month: 3, days: 4, perPerson: 1200 },
+      tok.s_ana,
+    );
+    expect(made.status).toBe(200);
+    await idle();
+    const t = (await current('s_ana'))!;
+    expect(t.status).toBe('voting');
+    expect(t.options.length).toBeGreaterThanOrEqual(2);
+    expect(t.options.every((o) => o.label.startsWith('Cabo'))).toBe(true);
+    expect(t.options.every((o) => (o.perPerson ?? 0) > 0 && (o.perPerson ?? 0) <= 1200)).toBe(true);
+    expect(JSON.stringify(t)).not.toMatch(/Flagstaff|Austin|Tahoe/);
+    const g = texts(await history('s_ana', GROUP)).join('\n');
+    expect(g).toContain(`Reply with a number from 1 to ${t.options.length}`);
+    expect(g).toContain('demo estimates');
+    expect(g).not.toMatch(/vote 2/);
+    await post(url, `/v1/trips/${t.tripId}/cancel`, {}, tok.s_ana);
+  });
+
+  it('a one-option plan says "Reply 1", never "vote 2"; out-of-range numbers are rejected and not counted', async () => {
+    await fresh();
+    outcome = (b) => ({
+      status: 'constraints',
+      common: ['2027-05-03', '2027-05-04', '2027-05-05', '2027-05-06'],
+      survivors: [(b.options as { id: string }[])[0]!.id],
+      dropped: (b.options as { id: string }[])
+        .slice(1)
+        .map((o) => ({ optionId: o.id, reason: 'budget' })),
+    });
+    const made = await post<{ trip: TripViewV2 }>(
+      url,
+      '/v1/trips',
+      { destination: 'Cabo', month: 5, days: 4, perPerson: 1200 },
+      tok.s_ana,
+    );
+    expect(made.status).toBe(200);
+    await idle();
+    const t = (await current('s_ana'))!;
+    const g = texts(await history('s_ana', GROUP)).join('\n');
+    expect(g).toContain('Reply 1 to confirm this option, or tell me what to change.');
+    expect(g).not.toMatch(/vote 2|from 1 to 1\b/);
+    await say('s_dev', 'dm:s_dev', '2');
+    await idle();
+    expect(texts(await history('s_dev', 'dm:s_dev')).join('\n')).toContain(
+      'Pick a number from 1 to 1',
+    );
+    expect((await current('s_ana'))!.voteProgress).toBeNull();
+    expect(hub.deps.trips.get(t.tripId)!.votes).toHaveLength(0);
+    await say('s_dev', 'dm:s_dev', '1');
+    await waitFor(() => hub.deps.trips.get(t.tripId)!.votes.length === 1);
+    outcome = defaultOutcome;
+    await post(url, `/v1/trips/${t.tripId}/cancel`, {}, tok.s_ana);
+  });
+});
+
 describe('squads are isolated; a squad with no trip says so', () => {
   it("another squad never sees, votes in or confirms this squad's trips", async () => {
     const s = await post<{ challengeId: string }>(url, '/v1/auth/start', {

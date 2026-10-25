@@ -1,7 +1,7 @@
 // The chat core inside the hub: persistence, per-viewer fan-out, typing, rate limit, and the leak guard for bot output.
 // The bot engine (router + skills over the web Transport) attaches through `setEngine`, see engine.ts.
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { composeProvenance, findLeak, SENTINELS } from '@squad/core';
+import { plural, composeProvenance, findLeak, SENTINELS } from '@squad/core';
 import { buildContextRef, publicView } from './context-ref';
 import type {
   ChatContextRef,
@@ -610,7 +610,7 @@ export function createChatHub(
           id: group,
           kind: 'group',
           title: deps.directory.squad(viewer.squadId)?.name ?? 'Squad',
-          ...(count !== null ? { subtitle: `${count} members and Cubbie` } : {}),
+          ...(count !== null ? { subtitle: `${plural(count, 'member')} and Cubbie` } : {}),
           private: false,
           members: members.map((s) => ({ id: s.id, name: s.name })),
           ...(lg ? { last: lg } : {}),
