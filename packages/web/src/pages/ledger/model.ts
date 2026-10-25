@@ -57,8 +57,16 @@ export const LedgerResponseSchema = z.union([
 ]);
 export type SnapshotEntry = SnapshotEntryShape;
 
-function rowKey(e: { student: string; field: string; shared?: string; withheld?: unknown; blocked?: unknown }) {
-  return [e.student, e.field, e.shared ?? '', e.withheld ? 'w' : '', e.blocked ? 'b' : ''].join('␟');
+function rowKey(e: {
+  student: string;
+  field: string;
+  shared?: string;
+  withheld?: unknown;
+  blocked?: unknown;
+}) {
+  return [e.student, e.field, e.shared ?? '', e.withheld ? 'w' : '', e.blocked ? 'b' : ''].join(
+    '␟',
+  );
 }
 
 /**
@@ -135,5 +143,3 @@ export function barWidth(field: string): number {
   for (let i = 0; i < field.length; i++) h = (h * 31 + field.charCodeAt(i)) >>> 0;
   return 38 + (h % 5) * 11;
 }
-
-

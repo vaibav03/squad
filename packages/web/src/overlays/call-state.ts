@@ -25,7 +25,8 @@ export const initialCallState: CallState = {
  */
 export function callReducer(state: CallState, event: VillageEvent, now = 0): CallState {
   if (event.t === 'call.start') {
-    if (state.open && state.callId && state.callId !== event.callId && state.status !== 'ended') return state;
+    if (state.open && state.callId && state.callId !== event.callId && state.status !== 'ended')
+      return state;
     return {
       open: true,
       callId: event.callId,
@@ -91,7 +92,13 @@ export function agentFromId(
               ? 'Mediator'
               : 'Agent';
   }
-  return { id: agentId, name, role, ...(persona?.portrait ? { portrait: persona.portrait } : {}), ...(persona?.emoji ? { emoji: persona.emoji } : {}) };
+  return {
+    id: agentId,
+    name,
+    role,
+    ...(persona?.portrait ? { portrait: persona.portrait } : {}),
+    ...(persona?.emoji ? { emoji: persona.emoji } : {}),
+  };
 }
 
 export function formatElapsed(ms: number): string {

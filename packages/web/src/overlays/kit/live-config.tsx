@@ -20,7 +20,13 @@ export const defaultLiveConfig: LiveConfig = { mode: 'mock', userId: 's_ana' };
 
 const Ctx = createContext<LiveConfig>(defaultLiveConfig);
 
-export function LiveConfigProvider({ value, children }: { value: LiveConfig; children: ReactNode }) {
+export function LiveConfigProvider({
+  value,
+  children,
+}: {
+  value: LiveConfig;
+  children: ReactNode;
+}) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

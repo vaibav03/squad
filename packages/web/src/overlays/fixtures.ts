@@ -30,7 +30,11 @@ const callBase: CallPanelProps = {
 };
 
 const captions: CallPanelProps['captions'] = [
-  { id: 'c:0', speaker: 'agent', text: 'Welcome back. Want to start with where glycolysis happens, or go straight to the electron transport chain?' },
+  {
+    id: 'c:0',
+    speaker: 'agent',
+    text: 'Welcome back. Want to start with where glycolysis happens, or go straight to the electron transport chain?',
+  },
   { id: 'c:1', speaker: 'you', text: 'Start with glycolysis. I keep mixing up what it produces.' },
   {
     id: 'c:2',
@@ -47,15 +51,51 @@ const captions: CallPanelProps['captions'] = [
 ];
 
 export const callPanelFixtures = {
-  connecting: { ...callBase, status: 'connecting', elapsedMs: undefined, muted: false } satisfies CallPanelProps,
-  'live-empty': { ...callBase, captions: [], speaking: 'none', level: 0.1 } satisfies CallPanelProps,
-  'live-agent-speaking': { ...callBase, captions: captions.slice(0, 3), speaking: 'agent', level: 0.78 } satisfies CallPanelProps,
-  'live-you-speaking': { ...callBase, captions: captions.slice(0, 2), speaking: 'you', level: 0.55 } satisfies CallPanelProps,
-  muted: { ...callBase, captions: captions.slice(0, 3), speaking: 'none', muted: true, level: 0.05 } satisfies CallPanelProps,
-  'hand-raised': { ...callBase, captions, speaking: 'none', handRaised: true, level: 0.05 } satisfies CallPanelProps,
+  connecting: {
+    ...callBase,
+    status: 'connecting',
+    elapsedMs: undefined,
+    muted: false,
+  } satisfies CallPanelProps,
+  'live-empty': {
+    ...callBase,
+    captions: [],
+    speaking: 'none',
+    level: 0.1,
+  } satisfies CallPanelProps,
+  'live-agent-speaking': {
+    ...callBase,
+    captions: captions.slice(0, 3),
+    speaking: 'agent',
+    level: 0.78,
+  } satisfies CallPanelProps,
+  'live-you-speaking': {
+    ...callBase,
+    captions: captions.slice(0, 2),
+    speaking: 'you',
+    level: 0.55,
+  } satisfies CallPanelProps,
+  muted: {
+    ...callBase,
+    captions: captions.slice(0, 3),
+    speaking: 'none',
+    muted: true,
+    level: 0.05,
+  } satisfies CallPanelProps,
+  'hand-raised': {
+    ...callBase,
+    captions,
+    speaking: 'none',
+    handRaised: true,
+    level: 0.05,
+  } satisfies CallPanelProps,
   'long-captions': {
     ...callBase,
-    captions: [...captions, ...captions.map((c) => ({ ...c, id: `${c.id}-b` })), ...captions.map((c) => ({ ...c, id: `${c.id}-c` }))],
+    captions: [
+      ...captions,
+      ...captions.map((c) => ({ ...c, id: `${c.id}-b` })),
+      ...captions.map((c) => ({ ...c, id: `${c.id}-c` })),
+    ],
     speaking: 'agent',
     level: 0.6,
   } satisfies CallPanelProps,
@@ -74,13 +114,20 @@ export const callPanelFixtures = {
     onRetry: noop,
     speaking: 'none',
   } satisfies CallPanelProps,
-  ended: { ...callBase, status: 'ended', captions: captions.slice(0, 3), speaking: 'none' } satisfies CallPanelProps,
+  ended: {
+    ...callBase,
+    status: 'ended',
+    captions: captions.slice(0, 3),
+    speaking: 'none',
+  } satisfies CallPanelProps,
 } as const;
 
 const choiceQuiz: QuizPayload = {
   quizId: 'q_ch5_2',
-  chapter: 'Ch5',
+  chapter: 'Ch 5',
   label: 'Q2',
+  index: 2,
+  total: 5,
   question: 'Where in the cell does glycolysis take place?',
   choices: [
     { id: 'a', label: 'The mitochondrial matrix' },
@@ -99,24 +146,56 @@ const quizBase = { ...base, onSubmit: noop, onRetry: noop } as const;
 
 export const quizCardFixtures = {
   loading: { ...quizBase, phase: 'loading' } satisfies QuizCardProps,
-  'answering-choices': { ...quizBase, phase: 'answering', quiz: choiceQuiz } satisfies QuizCardProps,
-  'answering-free-text': { ...quizBase, phase: 'answering', quiz: freeQuiz } satisfies QuizCardProps,
+  'answering-choices': {
+    ...quizBase,
+    phase: 'answering',
+    quiz: choiceQuiz,
+  } satisfies QuizCardProps,
+  'answering-free-text': {
+    ...quizBase,
+    phase: 'answering',
+    quiz: freeQuiz,
+  } satisfies QuizCardProps,
   submitting: { ...quizBase, phase: 'submitting', quiz: choiceQuiz } satisfies QuizCardProps,
-  'done-recorded': { ...quizBase, phase: 'done', quiz: choiceQuiz, result: { recorded: true } } satisfies QuizCardProps,
+  'done-recorded': {
+    ...quizBase,
+    phase: 'done',
+    quiz: choiceQuiz,
+    result: { recorded: true },
+  } satisfies QuizCardProps,
   'done-correct': {
     ...quizBase,
     phase: 'done',
     quiz: choiceQuiz,
-    result: { recorded: true, correct: true, explanation: 'Glycolysis runs in the cytosol. No organelle is needed, which is why it is shared by almost every cell.' },
+    result: {
+      recorded: true,
+      correct: true,
+      explanation:
+        'Glycolysis runs in the cytosol. No organelle is needed, which is why it is shared by almost every cell.',
+    },
   } satisfies QuizCardProps,
   'done-incorrect': {
     ...quizBase,
     phase: 'done',
     quiz: choiceQuiz,
-    result: { recorded: true, correct: false, explanation: 'The matrix hosts the citric acid cycle. Glycolysis happens earlier, in the cytosol.' },
+    result: {
+      recorded: true,
+      correct: false,
+      explanation:
+        'The matrix hosts the citric acid cycle. Glycolysis happens earlier, in the cytosol.',
+    },
   } satisfies QuizCardProps,
-  error: { ...quizBase, phase: 'error', message: 'We could not send your answer. Check your connection and try again.', quiz: choiceQuiz } satisfies QuizCardProps,
-  'load-error': { ...quizBase, phase: 'error', message: 'This question did not load.' } satisfies QuizCardProps,
+  error: {
+    ...quizBase,
+    phase: 'error',
+    message: 'We could not send your answer. Check your connection and try again.',
+    quiz: choiceQuiz,
+  } satisfies QuizCardProps,
+  'load-error': {
+    ...quizBase,
+    phase: 'error',
+    message: 'This question did not load.',
+  } satisfies QuizCardProps,
   'long-question': {
     ...quizBase,
     phase: 'answering',
@@ -127,7 +206,11 @@ export const quizCardFixtures = {
       question:
         'A researcher blocks the final step of the electron transport chain in cultured cells and then watches ATP output, proton gradient strength, and NADH levels over the next ten minutes. Which pattern should she expect to see first?',
       choices: [
-        { id: 'a', label: 'ATP falls, the proton gradient collapses, NADH piles up because it cannot be re-oxidised' },
+        {
+          id: 'a',
+          label:
+            'ATP falls, the proton gradient collapses, NADH piles up because it cannot be re-oxidised',
+        },
         { id: 'b', label: 'ATP rises because electrons no longer leak' },
         { id: 'c', label: 'No change until glycolysis is also blocked' },
       ],
@@ -155,9 +238,22 @@ export const confirmSheetFixtures = {
       { label: 'Keeps private', value: 'Your budget and your class schedule', tone: 'private' },
     ],
   } satisfies ConfirmSheetProps,
-  submitting: { ...confirmBase, question: 'Confirm Cabo for March 14 to 18?', phase: 'submitting' } satisfies ConfirmSheetProps,
-  done: { ...confirmBase, question: 'Confirm Cabo for March 14 to 18?', phase: 'done' } satisfies ConfirmSheetProps,
-  error: { ...confirmBase, question: 'Confirm Cabo for March 14 to 18?', phase: 'error', message: 'Your answer did not go through. Try again.' } satisfies ConfirmSheetProps,
+  submitting: {
+    ...confirmBase,
+    question: 'Confirm Cabo for March 14 to 18?',
+    phase: 'submitting',
+  } satisfies ConfirmSheetProps,
+  done: {
+    ...confirmBase,
+    question: 'Confirm Cabo for March 14 to 18?',
+    phase: 'done',
+  } satisfies ConfirmSheetProps,
+  error: {
+    ...confirmBase,
+    question: 'Confirm Cabo for March 14 to 18?',
+    phase: 'error',
+    message: 'Your answer did not go through. Try again.',
+  } satisfies ConfirmSheetProps,
   'long-question': {
     ...confirmBase,
     question:

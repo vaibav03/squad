@@ -39,34 +39,32 @@ export function useLedger(taskId: string = TASK_ID) {
   }, [cfg.mode, cfg.hubUrl, cfg.token, taskId]);
 
   const script = useMemo(
-    () => recordedScript.slice(MOCK_PRELOADED).map((s, i) => ({ at: 1400 + i * 1500, event: s.event })),
+    () =>
+      recordedScript.slice(MOCK_PRELOADED).map((s, i) => ({ at: 1400 + i * 1500, event: s.event })),
     [],
   );
 
-  const onEvent = useCallback(
-    (e: VillageEvent) => {
-      setState((prev) => {
-        const next = ledgerReducer(prev, e);
-        if (next !== prev && next.rows[0]) {
-          const id = next.rows[0].id;
-          setFresh((f) => new Set(f).add(id));
-          timers.current.push(
-            setTimeout(
-              () =>
-                setFresh((f) => {
-                  const n = new Set(f);
-                  n.delete(id);
-                  return n;
-                }),
-              FRESH_MS,
-            ),
-          );
-        }
-        return next;
-      });
-    },
-    [],
-  );
+  const onEvent = useCallback((e: VillageEvent) => {
+    setState((prev) => {
+      const next = ledgerReducer(prev, e);
+      if (next !== prev && next.rows[0]) {
+        const id = next.rows[0].id;
+        setFresh((f) => new Set(f).add(id));
+        timers.current.push(
+          setTimeout(
+            () =>
+              setFresh((f) => {
+                const n = new Set(f);
+                n.delete(id);
+                return n;
+              }),
+            FRESH_MS,
+          ),
+        );
+      }
+      return next;
+    });
+  }, []);
 
   const { connection, retry } = useEventFeed<VillageEvent>(
     {

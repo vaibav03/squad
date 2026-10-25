@@ -32,7 +32,10 @@ export const recordedScript: RecordedScript<VillageEvent> = [
   { at: 6200, event: e('s_chi', 'Full class schedule', { blocked: true }) },
   { at: 7200, event: e('s_dev', 'Preferred room', { shared: 'Any quiet room in the library' }) },
   { at: 8200, event: e('s_dev', 'Reason for leaving early', { withheld: 'hidden' }) },
-  { at: 9400, event: e('s_ana', 'Meeting slot', { shared: 'Tue 2 to 3:30 pm works for everyone' }) },
+  {
+    at: 9400,
+    event: e('s_ana', 'Meeting slot', { shared: 'Tue 2 to 3:30 pm works for everyone' }),
+  },
 ];
 
 /** Same data as one snapshot (used for the ready, first-paint states). */
@@ -52,8 +55,10 @@ export const longEntries: SnapshotEntry[] = [
   ...snapshot,
   {
     student: 's_ben',
-    field: 'Everything about the week of the exam including the long list of commitments that keep him busy',
-    shared: 'Free every evening after 6 pm except Wednesday, and also available for a Saturday morning review if the group wants one before the exam',
+    field:
+      'Everything about the week of the exam including the long list of commitments that keep him busy',
+    shared:
+      'Free every evening after 6 pm except Wednesday, and also available for a Saturday morning review if the group wants one before the exam',
     ts: 20,
   },
 ];

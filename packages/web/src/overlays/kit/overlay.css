@@ -10,6 +10,9 @@
   font-family: var(--lv-font-ui);
   pointer-events: none;
 }
+.lv-ovl[data-fixed='true'] {
+  position: fixed;
+}
 .lv-ovl > * {
   pointer-events: auto;
 }

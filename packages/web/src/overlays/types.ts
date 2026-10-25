@@ -13,6 +13,8 @@ export interface OverlayBaseProps {
   returnFocusTo?: HTMLElement | null;
   /** Calm mode from the village HUD; forces the reduced-motion variants. */
   calm?: boolean;
+  /** Cover the whole viewport (pages) instead of the nearest positioned ancestor. Default false. */
+  fixed?: boolean;
 }
 
 // ---------------------------------------------------------------- Call panel
@@ -73,6 +75,9 @@ export interface QuizPayload {
   chapter: string;
   /** Optional position text such as "Q2". */
   label?: string;
+  /** 1-based position and quiz length: renders "Q2 of 5" and the progress pills (never a score). */
+  index?: number;
+  total?: number;
   question: string;
   /** Absent means free text. */
   choices?: QuizChoice[];
@@ -106,6 +111,8 @@ export interface QuizCardProps extends OverlayBaseProps {
   message?: string;
   onSubmit: (answer: QuizAnswer) => void;
   onRetry?: () => void;
+  /** When given, the done state shows "Next" (calls this) instead of "Done". */
+  onNext?: () => void;
 }
 
 // ---------------------------------------------------------------- Confirm sheet
