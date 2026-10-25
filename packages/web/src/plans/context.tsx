@@ -4,7 +4,16 @@ export interface PlanContextRef {
   id: string;
   label: string;
 }
+/** "Plan from this answer": what the answer cited. `due` items carry the exact due time; `files` are Drive/Docs titles. */
+export interface PlanSeed {
+  examDate: string;
+  label: string;
+  sourceIds: string[];
+  chips: { id: string; label: string; kind: string }[];
+}
 export interface PlanActions {
+  /** Open the study-plan wizard seeded with the cited items of a chat answer. */
+  planFromAnswer?(seed: PlanSeed): void;
   /** Attach a plan to the composer as a removable context chip. */
   askCubbie(ref: PlanContextRef): void;
   /** Open a plan inline in this chat (panel above the composer). Never navigates away. */

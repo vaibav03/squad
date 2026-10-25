@@ -2,13 +2,14 @@
 // each student's own mastery boxes and busy days. A context store can implement the same interface and replace this.
 import type { Db } from '@squad/core';
 import {
+  courseLabel,
   createCourseStore,
   deriveStudySeeds,
   readOwnMastery,
   type ContextStore,
 } from '@squad/brain';
 import { addDays } from './logic';
-import type { DueLite } from './logic';
+import type { ContextDueLite, DueLite } from './logic';
 import type { PlanContext } from './service';
 import type { PlannerContextItem } from './planner';
 
@@ -62,6 +63,26 @@ export function createDefaultPlanContext(
       return out;
     },
     pageText: (courseId, file, page) => courses.getPage(courseId, file, page)?.text,
+    contextRefs(v, ids): ContextDueLite[] {
+      const store = sources?.store();
+      if (!store) return [];
+      const viewer = { studentId: v.studentId, squadIds: sources!.squadsOf(v.studentId) };
+      const out: ContextDueLite[] = [];
+      for (const id of ids) {
+        const s = store.readable(id, viewer); // the read gate: only the viewer's own (or squad-shared) sources
+        if (!s || s.dueAt === null || !(s.kind === 'canvas_assignment' || s.kind === 'classroom_item')) continue;
+        const course = courseLabel(s);
+        const anchor = store.chunks(s.id)[0]?.anchor;
+        out.push({
+          ownerId: v.studentId,
+          dueAt: s.dueAt,
+          courseId: s.courseId,
+          title: `${s.title}${course ? ` (${course})` : ''}`.slice(0, 100),
+          source: { kind: s.kind, id: s.id, ...(anchor ? { anchor } : {}), title: s.title },
+        });
+      }
+      return out.sort((a, b) => a.dueAt - b.dueAt);
+    },
     contextItems(v): PlannerContextItem[] {
       const store = sources?.store();
       if (!store) return [];

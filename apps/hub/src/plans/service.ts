@@ -54,6 +54,8 @@ export interface PlanContext {
   pageText?(courseId: string, file: string, page: number): string | undefined;
   /** Canvas/Google items the viewer may read (own and squad-shared), through the context store's read gate. */
   contextItems?(v: Viewer, courseId: string): PlannerContextItem[];
+  /** "Plan from this answer": the viewer's own sources named by id, as due items with titles (the answer already showed them to the squad). */
+  contextRefs?(v: Viewer, ids: string[]): ContextDueLite[];
 }
 
 export interface PlanNudgeHook {
@@ -85,7 +87,7 @@ export interface PlanService {
   store: PlanStore;
   propose(
     v: Viewer,
-    body: { courseId?: string; examDate?: string; examLabel?: string; text?: string },
+    body: { courseId?: string; examDate?: string; examLabel?: string; text?: string; contextSourceIds?: string[] },
   ): Promise<PlanResult>;
   respond(v: Viewer, planId: string, r: 'accept' | 'decline'): PlanResult;
   /**
@@ -426,14 +428,21 @@ export function createPlanService(
             boxes,
             busyDays,
             due,
-            contextDue: (
-              ctx.contextDue?.(
-                v.squadId,
-                roster.map((m) => m.id),
-                now,
-                horizon,
-              ) ?? []
-            ).filter((d) => !examDate || ymd(d.dueAt) <= examDate),
+            contextDue: (() => {
+              const base =
+                ctx.contextDue?.(
+                  v.squadId,
+                  roster.map((m) => m.id),
+                  now,
+                  horizon,
+                ) ?? [];
+              const refs = body.contextSourceIds?.length
+                ? (ctx.contextRefs?.(v, body.contextSourceIds) ?? [])
+                : [];
+              return (refs.length ? [...base.filter((d) => d.ownerId !== v.studentId), ...refs] : base).filter(
+                (d) => !examDate || ymd(d.dueAt) <= examDate,
+              );
+            })(),
             examDate,
             newId: id10,
           });

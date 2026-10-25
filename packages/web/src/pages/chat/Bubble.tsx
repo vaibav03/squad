@@ -16,6 +16,8 @@ import { SyncBadge } from './sync/SyncBadge';
 import { ProvenanceRow } from './provenance/ProvenanceRow';
 import { provenanceBadge } from './ask-cubbie';
 import { PlanChatCard } from './PlanChatCard';
+import { usePlanActions } from '../../plans/context';
+import { seedFromCitations } from '../../plans/seed';
 import { openSource } from '../../components/source-viewer';
 import {
   attachmentLabel,
@@ -79,6 +81,7 @@ function useLinkHosts(ref: React.RefObject<HTMLElement | null>, text: string) {
 export function MessageBubble(p: BubbleProps) {
   const { row, api } = p;
   const cfg = useSquadConfig();
+  const planActions = usePlanActions();
   const hub = cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token ?? null } : null;
   const m = row.message;
   const sender = m.sender;
@@ -107,6 +110,7 @@ export function MessageBubble(p: BubbleProps) {
   const showDemo = bot && truth.state !== 'live';
   // Only the bot's replies carry verified sources: a student typing `[x.pdf p.3]` stays plain text.
   const cites = bot && m.card?.type !== 'council' ? resolveCitations(m.text, m.citations) : [];
+  const planSeed = cites.length ? seedFromCitations(cites) : null;
   // Non-PDF sources (Canvas, Drive, Calendar) have no page: they open the source viewer instead of the page sheet.
   const cite = (c: ChatCitation) => {
     if (c.source) {
@@ -312,6 +316,17 @@ export function MessageBubble(p: BubbleProps) {
               </button>
             ))}
           </div>
+        ) : null}
+
+        {bot && planActions?.planFromAnswer && planSeed ? (
+          <button
+            type="button"
+            className="sqc-link"
+            data-testid="plan-from-answer"
+            onClick={() => planActions.planFromAnswer!(planSeed)}
+          >
+            Plan from this answer
+          </button>
         ) : null}
 
         {bot ? <ProvenanceRow message={m} /> : null}

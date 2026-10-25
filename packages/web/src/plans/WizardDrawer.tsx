@@ -5,6 +5,7 @@ import { timedFetch } from '../lib/http';
 import { createBodyFromForm, MONTHS } from '../pages/trip/model';
 import { FLOWS, type PlanKind } from './registry';
 import { StudyFlow } from './StudyFlow';
+import type { PlanSeed } from './context';
 import './plans.css';
 
 export interface WizardDrawerProps {
@@ -13,6 +14,8 @@ export interface WizardDrawerProps {
   groupTitle: string;
   hub: { hubUrl: string; token: string | null } | null;
   onClose: () => void;
+  /** Study wizard seeded from a chat answer ("Plan from this answer"). */
+  seed?: PlanSeed | null;
   /** A plan was created: `{kind, id}`. */
   onCreated?: (r: { kind: PlanKind; id: string }) => void;
   /** open the created plan inline in the chat */
@@ -25,6 +28,7 @@ export function WizardDrawer({
   groupTitle,
   hub,
   onClose,
+  seed,
   onCreated,
   onOpenPlan,
 }: WizardDrawerProps) {
@@ -57,7 +61,7 @@ export function WizardDrawer({
         </button>
       </header>
       {kind === 'study' ? (
-        <StudyFlow hub={hub} />
+        <StudyFlow hub={hub} seed={seed ?? null} />
       ) : (
         <>
           <Stepper

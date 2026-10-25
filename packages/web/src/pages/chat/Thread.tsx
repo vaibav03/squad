@@ -48,7 +48,7 @@ import { WizardDrawer } from '../../plans/WizardDrawer';
 import { PlanPanel } from '../../plans/PlanPanel';
 import { usePlans } from '../../plans/usePlans';
 import { collapsePlanCards } from '../../plans/dedupe';
-import { PlanActionsContext } from '../../plans/context';
+import { PlanActionsContext, type PlanSeed } from '../../plans/context';
 import type { PlanKind } from '../../plans/registry';
 
 // ------------------------------------------------------------------ banners
@@ -640,6 +640,7 @@ export function ThreadPane({
   }, []);
   const [wizard, setWizard] = useState<PlanKind | null>(isGroup ? wizardParam : null);
   const [panel, setPanel] = useState<{ kind: PlanKind; id: string } | null>(null);
+  const [seed, setSeed] = useState<PlanSeed | null>(null);
   const [plansOpen, setPlansOpen] = useState(false);
   const noticeKind = useMemo(() => {
     try {
@@ -676,13 +677,23 @@ export function ThreadPane({
   const planActions = useMemo(
     () => ({
       askCubbie: (r: { id: string; label: string }) => composerRef.current?.attachContext(r),
+      ...(isGroup
+        ? {
+            planFromAnswer: (s: PlanSeed) => {
+              setPanel(null);
+              setPlansOpen(false);
+              setSeed(s);
+              setWizard('study');
+            },
+          }
+        : {}),
       openPlan: (r: { kind: PlanKind; id: string }) => {
         setWizard(null);
         setPlansOpen(false);
         setPanel(r);
       },
     }),
-    [composerRef],
+    [composerRef, isGroup],
   );
   return (
     <PlanActionsContext.Provider value={planActions}>
@@ -781,7 +792,11 @@ export function ThreadPane({
             kind={wizard}
             groupTitle={chat.title}
             hub={liveHub}
-            onClose={() => setWizard(null)}
+            onClose={() => {
+              setWizard(null);
+              setSeed(null);
+            }}
+            seed={seed}
             onCreated={() => plansState.reload()}
             onOpenPlan={planActions.openPlan}
           />

@@ -124,7 +124,7 @@ export function syncWords(plan: PlanView, now: number): string {
 export const planApi = {
   current: (h: PlanHub) => call(h, 'GET', '/v1/plans/current'),
   get: (h: PlanHub, id: string) => call(h, 'GET', `/v1/plans/${encodeURIComponent(id)}`),
-  propose: (h: PlanHub, examDate: string, extra: { courseId?: string; examLabel?: string } = {}) =>
+  propose: (h: PlanHub, examDate: string, extra: { courseId?: string; examLabel?: string; contextSourceIds?: string[] } = {}) =>
     call(h, 'POST', '/v1/plans', { examDate, ...extra }),
   respond: (h: PlanHub, id: string, response: 'accept' | 'decline') =>
     call(h, 'POST', `/v1/plans/${encodeURIComponent(id)}/respond`, { response }),
