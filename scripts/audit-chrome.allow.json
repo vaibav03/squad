@@ -16,6 +16,16 @@
     {
       "path": "^apps/hub/src/store/accounts\\.ts$",
       "reason": "masked contact hint (bullets stand for hidden digits; user-authored contact data display)"
+    },
+    {
+      "path": "^packages/village/src/council/handoffs\\.ts$",
+      "kind": "marker",
+      "match": "label: `${fromName}",
+      "reason": "plain-text row label 'Sender to Recipient' kept for accessible names and tests; never rendered as a status marker"
+    },
+    {
+      "path": "^apps/hub/src/imessage/sendblue/config\\.ts$",
+      "reason": "masking characters for a phone number in a log/status string, not decoration"
     }
   ]
 }

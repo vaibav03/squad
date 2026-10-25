@@ -16,11 +16,12 @@ export const HANDOFF_STATUS_LABEL: Record<HandoffStatus, string> = {
   done: 'Done',
   degraded: 'Degraded',
 };
+/** Icon names (Lucide family), never text glyphs. */
 export const HANDOFF_STATUS_GLYPH: Record<HandoffStatus, string> = {
-  queued: '○',
-  working: '◐',
-  done: '✓',
-  degraded: '▲',
+  queued: 'pending',
+  working: 'busy',
+  done: 'check',
+  degraded: 'alert',
 };
 
 /** The only envelope fields a card or row may read. Anything else on an object is ignored by construction. */
@@ -312,7 +313,7 @@ export function providerState(
   if (demo)
     return {
       tier: 'fixture',
-      glyph: '◆',
+      glyph: 'fixture',
       text: o.fixture ? 'FIXTURE: scripted, not Gemini' : 'DEMO: scripted, not Gemini',
       transport: 'Scripted (not Gemini)',
     };
@@ -325,7 +326,7 @@ export function providerState(
       : 'Gemini streaming';
   if (bad) {
     const why = modeInfo(bad).word.replace(/^Degraded:?\s*/, '');
-    return { tier: 'degraded', glyph: '▲', text: why ? `DEGRADED: ${why}` : 'DEGRADED', transport };
+    return { tier: 'degraded', glyph: 'alert', text: why ? `DEGRADED: ${why}` : 'DEGRADED', transport };
   }
-  return { tier: 'live', glyph: '●', text: 'LIVE: Gemini', transport };
+  return { tier: 'live', glyph: 'radio', text: 'LIVE: Gemini', transport };
 }

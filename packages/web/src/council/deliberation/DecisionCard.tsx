@@ -13,7 +13,7 @@ import type { ActionKind, ActionOutcome } from '../board/actions-api';
 import { confidenceWord } from '../board/common';
 import { consensusOf, missingEvidence, provenanceOf } from './evidence';
 import { PortraitButton } from './Portrait';
-import { resolveParticipant } from './participants';
+import { agentIdFor, resolveParticipant } from './participants';
 
 export interface DecisionCardProps {
   run: BoardRun;
@@ -106,7 +106,8 @@ export function DecisionCard(props: DecisionCardProps) {
   const consensus = consensusOf(run);
   const missing = missingEvidence(run);
   const prov = provenanceOf(run, councilStatus);
-  const chair = resolveParticipant('chair', run.agents.find((a) => a.role === 'chair')?.name);
+  const chairAgent = run.agents.find((a) => a.role === 'chair');
+  const chair = resolveParticipant(chairAgent?.id ?? 'chair', chairAgent?.name);
   const items = v.actionItems.filter((a) => a.id);
   const canSend = !!act && items.length > 0;
   const outcome = v.answer && v.answer !== v.summary ? v.answer : v.summary;
@@ -246,7 +247,7 @@ export function DecisionCard(props: DecisionCardProps) {
             v.dissents.map((d, i) => (
               <div key={d.messageId ?? i} className="dl-dissent">
                 <PortraitButton
-                  who={resolveParticipant(d.whoId ?? d.who, d.who)}
+                  who={resolveParticipant(agentIdFor(run.agents, d.whoId ?? d.who), d.who)}
                   runId={run.runId}
                 />
                 <p>

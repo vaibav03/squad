@@ -77,7 +77,7 @@ function Row({
           {party(r.from, r.fromName)}
           <span className="af-arrow" aria-hidden="true">
             {' '}
-            →{' '}
+            <LvIcon name="arrow-right" size={12} />{' '}
           </span>
           <span className="af-sr"> to </span>
           {party(r.to, r.toName)}

@@ -113,18 +113,10 @@ export function CouncilBoard({
   }, [open, run?.runId]);
   // An agent asked for by the opener (`openBoard({ agent })`) is only highlighted in the chart; a click focuses it.
 
-  // Until the selected-agent panel (feature/agent-focus-panel) registers itself, a portrait narrows the feed to that seat.
+  // Every portrait on the deliberation surface opens the one selected-agent panel (Conversation, Activity, Decisions).
   useEffect(
-    () =>
-      open
-        ? registerAgentPanel(
-            (id) => setFilter((f) => ({ ...f, agent: f.agent === id ? '' : id })),
-            {
-              fallback: true,
-            },
-          )
-        : undefined,
-    [open],
+    () => (open ? registerAgentPanel((id) => openFocus(id)) : undefined),
+    [open, openFocus],
   );
 
   const onJump = useCallback((id: string) => {

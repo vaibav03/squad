@@ -10,7 +10,6 @@ import {
   type CouncilFixture,
 } from '@squad/village/council';
 import { CouncilBoard } from './CouncilBoard';
-import { registerAgentPanel } from '../deliberation/agent-panel';
 import { resultMode } from './mode-of';
 
 const RAW = /council:[a-z]+-[a-z-]+|\bam_[a-z0-9]{6,}\b|\bcn_[a-z0-9]{6,}\b|\b[us]_[0-9a-f]{6,}\b/i;
@@ -351,29 +350,36 @@ describe('Council board', () => {
     ).toBe(true);
   });
 
-  it('portraits are buttons that open the selected-agent panel through the seam', async () => {
+  it('portraits are real buttons, announce the seam event, and open the focused panel for that seat', async () => {
     const seen: string[] = [];
-    const off = registerAgentPanel((id) => seen.push(id));
+    const on = (e: Event) => seen.push((e as CustomEvent<{ agentId: string }>).detail.agentId);
+    window.addEventListener('squad:agent-panel-open', on);
     const { dlg } = await open(loaded());
     const btn = dlg.querySelector<HTMLElement>(
       '[data-testid=dl-member] [data-testid=dl-portrait-btn]',
     )!;
     expect(btn.tagName).toBe('BUTTON');
-    expect(btn.getAttribute('aria-label')).toMatch(/^Open .+’s panel$/);
+    expect(btn.getAttribute('aria-label')).toMatch(/^Open .+\u2019s panel$/);
     fireEvent.click(btn);
-    off();
+    window.removeEventListener('squad:agent-panel-open', on);
     expect(seen).toHaveLength(1);
     expect(seen[0]).toMatch(/^council:/);
+    expect(screen.getAllByTestId('agent-focus-panel')).toHaveLength(1);
   });
 
-  it('without the panel registered, a portrait narrows the feed to that member (fallback)', async () => {
+  it('every portrait on the surface (turn cards, ballot, decision) opens the same single panel', async () => {
     const { dlg } = await open(loaded());
-    const member = [...dlg.querySelectorAll<HTMLElement>('[data-testid=dl-member]')].find((m) =>
-      m.textContent?.includes('Skeptic'),
-    )!;
-    fireEvent.click(member.querySelector('[data-testid=dl-portrait-btn]')!);
-    for (const r of dlg.querySelectorAll('article.dl-turn'))
-      expect(r.textContent).toContain('Skeptic');
+    const sources = [
+      '[data-testid=dl-feed] [data-testid=dl-portrait-btn]',
+      '[data-testid=dl-ballot] [data-testid=dl-portrait-btn]',
+      '[data-testid=dl-decision] [data-testid=dl-portrait-btn]',
+    ];
+    for (const sel of sources) {
+      const b = dlg.querySelector<HTMLElement>(sel);
+      expect(b, sel).toBeTruthy();
+      fireEvent.click(b!);
+      expect(screen.getAllByTestId('agent-focus-panel')).toHaveLength(1);
+    }
   });
 
   it('action items: sending needs a hub; without one the buttons are off and say why', async () => {
