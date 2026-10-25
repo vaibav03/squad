@@ -20,7 +20,12 @@ const ref: ChatContextRef = {
   provider: 'canvas',
   shared: false,
 };
-const priv: ChatContextRef = { ...ref, title: 'Private calendar event', courseName: undefined, eventLabel: null };
+const priv: ChatContextRef = {
+  ...ref,
+  title: 'Private calendar event',
+  courseName: undefined,
+  eventLabel: null,
+};
 const api = (): ChatApi =>
   ({ contextRef: vi.fn(async () => ({ ref, groupView: priv })) }) as unknown as ChatApi;
 
@@ -32,7 +37,9 @@ describe('Ask Cubbie composer handoff', () => {
     const chip = await screen.findByTestId('composer-context-chip');
     expect(chip.textContent).toContain('Essay 2');
     expect(chip.textContent).toContain('Statistics 101');
-    expect(screen.getByTestId('composer-context-provenance').textContent).toBe('Fixture (simulated)');
+    expect(screen.getByTestId('composer-context-provenance').textContent).toBe(
+      'Fixture (simulated)',
+    );
     expect((screen.getByTestId('chat-composer-input') as HTMLTextAreaElement).value).toBe(
       '@cubbie what should I focus on for Essay 2?',
     );
@@ -44,7 +51,11 @@ describe('Ask Cubbie composer handoff', () => {
   });
 
   it('removing the chip sends the message without context', async () => {
-    queueAskCubbie({ chatId: 'dm:s_ana', sourceIds: [{ sourceId: 'src1' }], prefill: '@cubbie hi' });
+    queueAskCubbie({
+      chatId: 'dm:s_ana',
+      sourceIds: [{ sourceId: 'src1' }],
+      prefill: '@cubbie hi',
+    });
     const onSend = vi.fn();
     render(<Composer api={api()} chatKind="dm" chatId="dm:s_ana" onSend={onSend} />);
     await screen.findByTestId('composer-context-chip');
