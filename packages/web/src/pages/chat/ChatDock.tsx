@@ -4,6 +4,7 @@ import { Icon } from '../../primitives/Icon';
 import { Skeleton } from '../../primitives/Skeleton';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { useSquadConfig } from '../../shell/context';
+import { useDockPanel, usePanelDock, useLargePanelOpen } from '../../shell/panel-dock';
 import { hubStudentId } from '../../shell/dev-login';
 import { createChatApi, type ChatApi } from './api';
 import type { ComposerHandle } from './Composer';
@@ -42,6 +43,11 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
   const ctl = useChat(api, { me });
   const reduced = useReducedMotion();
   const [open, setOpen] = useState(false);
+  // A large panel (inspector, room, board...) folds the dock to its pill; `open` is kept so it unfolds afterwards.
+  const dockStore = usePanelDock();
+  const folded = useLargePanelOpen();
+  const shown = open && !folded;
+  useDockPanel('chat', 'small', shown, () => setOpen(false));
   const pill = useRef<HTMLButtonElement>(null);
   const composer = useRef<ComposerHandle>(null);
   const panelId = useId();
@@ -51,13 +57,13 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
 
   const { setActive } = ctl;
   useEffect(() => {
-    setActive(open && group ? group.id : null);
+    setActive(shown && group ? group.id : null);
     return () => setActive(null);
-  }, [open, group?.id, setActive]);
+  }, [shown, group?.id, setActive]);
 
   useEffect(() => {
-    if (open) requestAnimationFrame(() => composer.current?.focus());
-  }, [open, group?.id]);
+    if (shown) requestAnimationFrame(() => composer.current?.focus());
+  }, [shown, group?.id]);
 
   const close = () => {
     setOpen(false);
@@ -99,10 +105,11 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
 
   return (
     <div ref={dock} className="sqd sq-scene" data-testid="chat-dock">
-      {open ? <div className="sqd-scrim" aria-hidden="true" /> : null}
+      {shown ? <div className="sqd-scrim" aria-hidden="true" /> : null}
       {open ? (
         <section
           id={panelId}
+          hidden={folded}
           className={`sqd-panel${reduced ? ' sqc--reduced' : ''}`}
           role="dialog"
           aria-label="Squad chat"
@@ -182,13 +189,20 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
         className="sqd-pill"
         data-testid="chat-dock-open"
         aria-haspopup="dialog"
-        aria-expanded={open}
+        aria-expanded={shown}
         aria-controls={open ? panelId : undefined}
-        onClick={() => (open ? close() : setOpen(true))}
+        onClick={() => {
+          // pressed while folded: the large panel makes way for the chat
+          if (folded) {
+            dockStore?.yieldLarge();
+            setOpen(true);
+          } else if (open) close();
+          else setOpen(true);
+        }}
       >
         <Icon name="message" size={18} />
         <span>Chat</span>
-        {unread > 0 && !open ? (
+        {unread > 0 && !shown ? (
           <span className="sqc-unread" data-testid="chat-dock-unread">
             <span aria-hidden="true">{unread > 9 ? '9+' : unread}</span>
             <span className="sq-sr-only">{unread} unread messages</span>

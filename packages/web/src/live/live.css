@@ -4,13 +4,12 @@
 .lv-ovl__panel.ld-panel[data-size] {
   max-width: min(1240px, calc(100% - var(--lv-s5)));
   width: 100%;
-  max-height: calc(100% - 96px);
+  max-height: 100%;
 }
 @media (min-width: 640px) {
   .lv-ovl[data-placement='dock']:has(> .ld-panel) {
     align-items: center;
     justify-content: center;
-    padding: var(--lv-s4);
   }
 }
 .ld-panel {
@@ -21,8 +20,8 @@
 .lv-ovl__panel.ld-panel--room[data-size] {
   display: flex;
   flex-direction: column;
-  height: calc(100dvh - 100px);
-  max-height: calc(100dvh - 100px);
+  height: 100%;
+  max-height: 100%;
   overflow: hidden;
 }
 .lv-ovl:has(> .ld-panel--room) {

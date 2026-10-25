@@ -99,6 +99,23 @@ describe('RoomInfoPanel', () => {
     expect(onRun).toHaveBeenCalledWith('plan my fall term');
   });
 
+  it('Run it is disabled while the send is pending, then shows Sent', async () => {
+    let done: (v: boolean) => void = () => {};
+    const onRun = vi.fn(() => new Promise<boolean>((r) => (done = r)));
+    render(<RoomInfoPanel info={FIXTURE_INFO} open onClose={() => {}} onRun={onRun} />);
+    await settle();
+    const btn = screen.getByRole('button', { name: /Run it/ });
+    fireEvent.click(btn);
+    fireEvent.click(btn);
+    expect(onRun).toHaveBeenCalledTimes(1);
+    expect((screen.getByRole('button', { name: /Sending/ }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+    done(true);
+    await settle(10);
+    expect(screen.getByRole('button', { name: /Sent/ })).toBeTruthy();
+  });
+
   it('survives a clipboard that throws', async () => {
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: vi.fn().mockRejectedValue(new Error('no')) },

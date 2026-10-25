@@ -772,6 +772,7 @@ export function openSharedEventSource(url: string, env?: SharedEnv): SharedEvent
     if (!e.ES) throw new Error('EventSource unavailable');
     return new e.ES(url) as unknown as SharedEventSourceLike;
   }
+  exposeSharedStreamInfo();
   const ch = LEGACY[key] as Channel;
   const base = `${u.origin}${path.slice(0, path.length - key.length)}`;
   const st = u.searchParams.get('st');

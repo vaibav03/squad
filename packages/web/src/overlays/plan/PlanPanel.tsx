@@ -174,6 +174,7 @@ export function PlanPanel(props: PlanPanelProps) {
   return (
     <OverlayFrame
       open={open}
+      dock="plan"
       onClose={onClose}
       returnFocusTo={returnFocusTo}
       calm={calm}

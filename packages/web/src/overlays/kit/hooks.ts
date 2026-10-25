@@ -63,6 +63,10 @@ export function focusableIn(root: HTMLElement): HTMLElement[] {
   );
 }
 
+/** Open traps, oldest first. Only the newest one enforces focus and Esc, so two open panels never fight (a gallery or a
+ *  stacked sheet used to ping-pong focus between them until the call stack overflowed). */
+const trapStack: HTMLElement[] = [];
+
 export interface FocusTrapOptions {
   active: boolean;
   onEscape?: () => void;
@@ -90,6 +94,7 @@ export function useFocusTrap<T extends HTMLElement>(opts: FocusTrapOptions) {
     const root = ref.current;
     if (!root) return;
     const previous = document.activeElement as HTMLElement | null;
+    trapStack.push(root);
     const first = initRef.current?.() ?? focusableIn(root)[0] ?? root;
     first.focus({ preventScroll: true });
 
@@ -121,6 +126,7 @@ export function useFocusTrap<T extends HTMLElement>(opts: FocusTrapOptions) {
     // Focus can fall to <body> while the panel is open (a focused control got disabled or unmounted mid-run); the
     // trap must still answer Esc, and Tab must pull focus back in rather than walk the page behind the panel.
     const onDocKey = (e: KeyboardEvent) => {
+      if (trapStack[trapStack.length - 1] !== root) return;
       if (e.key === 'Escape') {
         escRef.current?.();
         return;
@@ -136,6 +142,7 @@ export function useFocusTrap<T extends HTMLElement>(opts: FocusTrapOptions) {
     document.addEventListener('keydown', onDocKey);
     // Focus that lands outside the panel (nav behind the scrim) is returned to the first control.
     const onFocusIn = (e: FocusEvent) => {
+      if (trapStack[trapStack.length - 1] !== root) return;
       if (e.target instanceof Node && !root.contains(e.target)) {
         (focusableIn(root)[0] ?? root).focus({ preventScroll: true });
       }
@@ -145,6 +152,8 @@ export function useFocusTrap<T extends HTMLElement>(opts: FocusTrapOptions) {
       document.removeEventListener('focusin', onFocusIn);
       root.removeEventListener('keydown', onKey);
       document.removeEventListener('keydown', onDocKey);
+      const at = trapStack.lastIndexOf(root);
+      if (at >= 0) trapStack.splice(at, 1);
       const target = retRef.current ?? previous;
       if (target && typeof target.focus === 'function') target.focus({ preventScroll: true });
     };
