@@ -1,5 +1,4 @@
 import {
-  COUNCIL_ACTIONS_MAX,
   type AgentId,
   type AgentMode,
   type CouncilAction,
@@ -16,6 +15,7 @@ import type { AgentRun } from '../agents/runtime';
 import type { AgentTurn, CouncilDataPorts } from '../agents/types';
 import { isGradedGrab, stripMention } from '../experts/intent';
 import type { Brain } from '../experts/types';
+import { publishActionTitles } from './action-items';
 import { askRoster } from './ask-agents';
 import { CHAIR_NAME, RANK_TASK, TRIAGE_SYSTEM, TriageSchema } from './ask-prompts';
 import {
@@ -27,7 +27,13 @@ import {
   outcomeOf,
   withTimeout,
 } from './ask-run';
-import type { CouncilAskInput, CouncilEmit, CouncilLimits } from './ask-types';
+import type {
+  CouncilAskInput,
+  CouncilEmit,
+  CouncilLimits,
+  LiveCouncilFactory,
+  LiveCouncilHandle,
+} from './ask-types';
 import { aggregateRankings, normaliseText } from './pure';
 
 /** What the hub can say about the asker, only through the privacy gate (aggregates, words). */
@@ -55,6 +61,9 @@ export interface AskV2Deps {
   members?: string[];
   /** The raw real model, only used for the one cheap live triage call. */
   triageLlm?: Llm;
+  /** Per-run Gemini Live council (hub). */
+  live?: LiveCouncilFactory;
+  defaultTransport?: () => 'stream' | 'live';
 }
 
 const cut = (s: string, n: number): string =>
@@ -103,6 +112,7 @@ export async function runAskV2(
     });
 
   let run: AgentRun | undefined;
+  let liveHandle: LiveCouncilHandle | undefined;
   let studying = false;
   const idle = async (): Promise<void> => {
     if (studying) await safeEmit({ t: 'agent.state', agent: COUNCIL_AGENT, state: 'idle' });
@@ -178,13 +188,58 @@ export async function runAskV2(
         x.stage = run.currentStage();
         x.agents = run.agents();
         x.messages = run.messages();
+        x.transport = resultTransport;
       });
-    run = d.agents.runtime.startRun({
+    // ---- transport: Gemini Live when asked for AND every participant's session opens; otherwise the streaming
+    // transport with a label that says why (never a silent swap, never scripted under a live label)
+    let agents = d.agents;
+    const requested = input.transport ?? d.defaultTransport?.() ?? 'stream';
+    let tlabel: { label: string; requested?: 'stream' | 'live'; why?: string } | undefined;
+    let models: { who: string; model: string }[] | undefined;
+    if (!demo && requested === 'live') {
+      let why = 'live_not_configured';
+      const h = d.live?.({ id: r.id, askedBy: input.askedBy, visibility: r.visibility });
+      if (h && !('unavailable' in h)) {
+        const pre = await h.prepare(roster);
+        if (pre.ok) {
+          liveHandle = h;
+          agents = h.agents;
+          models = pre.models;
+          tlabel = { label: 'Gemini Live (audio + transcript)', requested: 'live' };
+        } else {
+          why = pre.why;
+          h.close();
+        }
+      } else if (h) why = h.unavailable;
+      if (!liveHandle)
+        tlabel = {
+          label: `Gemini streaming (Live unavailable: ${why.replace(/_/g, ' ')})`,
+          requested: 'live',
+          why,
+        };
+    } else if (demo) {
+      tlabel = {
+        label: 'Demo (scripted, not Gemini)',
+        ...(requested === 'live' ? { requested } : {}),
+      };
+    }
+    const liveSpeech = agents.kind === 'live-audio';
+    const resultTransport: CouncilResult['transport'] = {
+      kind: demo ? 'demo' : liveSpeech ? 'live-audio' : 'stream-text',
+      label: tlabel?.label ?? 'Gemini streaming text',
+      ...(tlabel?.requested ? { requested: tlabel.requested } : {}),
+      ...(tlabel?.why ? { why: tlabel.why.slice(0, 80) } : {}),
+      ...(models?.length ? { models } : {}),
+    };
+    change((x) => void (x.transport = resultTransport));
+    run = agents.runtime.startRun({
       correlationId: r.id,
       councilKey: 'ask',
       mode,
       visibility: r.visibility,
       owner: { askedBy: input.askedBy },
+      question: q,
+      ...(tlabel ? { transportLabel: tlabel } : {}),
       ...(course ? { prefetchQuery: q } : {}),
       roster,
       ports,
@@ -301,12 +356,13 @@ export async function runAskV2(
     }
 
     // ---- critiques: each answered specialist ranks the others anonymously (a real turn, only with 3+ answers)
-    await R.stage('critiques');
+    // (a spoken Live council has no anonymous rankings: ranks need structured output, so the stage is skipped)
+    if (!liveSpeech) await R.stage('critiques');
     change((x) => void (x.phase = 'rankings'));
     const names = answered.map((a) => a.name);
     const byName = new Map(answeredTurns.map((t) => [t.agent.displayName, t]));
     const ranked: { member: string; order: string[] }[] = [];
-    if (answered.length >= 3) {
+    if (answered.length >= 3 && !liveSpeech) {
       const rankTurns = await Promise.all(
         answered.map(async (a) => {
           const me = byName.get(a.name)!;
@@ -357,7 +413,10 @@ export async function runAskV2(
     change((x) => void (x.phase = 'verdict'));
     const top = answered.find((a) => a.name === consensus[0]) ?? answered[0]!;
     const topTurn = byName.get(top.name)!;
-    const against = answered.filter((a) => normaliseText(a.answer) !== normaliseText(top.answer));
+    // (a spoken verdict names its dissenter itself: free speech never matches word for word, so no text comparison)
+    const against = liveSpeech
+      ? []
+      : answered.filter((a) => normaliseText(a.answer) !== normaliseText(top.answer));
     if (against.length > 0) await R.stage('dissent');
     const verdictCtx = {
       stage: 'verdict',
@@ -391,8 +450,13 @@ export async function runAskV2(
 
     const nameOf = new Map(answered.map((a) => [nameKey(a.name), a.name]));
     const verdictAnswer = out?.answer?.trim() || top.answer;
+    const spokenDissent = liveSpeech ? nameOf.get(nameKey(out?.dissent?.member ?? '')) : undefined;
     let agreeing = answered
-      .filter((a) => normaliseText(a.answer) === normaliseText(verdictAnswer))
+      .filter((a) =>
+        liveSpeech
+          ? a.name !== spokenDissent
+          : normaliseText(a.answer) === normaliseText(verdictAnswer),
+      )
       .map((a) => a.name);
     if (!out) agreeing = [top.name];
     const dissenters = answered.filter((a) => !agreeing.includes(a.name));
@@ -406,7 +470,7 @@ export async function runAskV2(
     } else if (dissenters.length >= 2) {
       cap = 'uncertain';
       note = 'The council split three ways.';
-    } else if (dis && consensus[0] === dis.name) {
+    } else if (dis && !liveSpeech && consensus[0] === dis.name) {
       cap = 'uncertain';
       note = `${dis.name}, the top-ranked member, disagreed with the verdict.`;
     } else if (dis) {
@@ -459,6 +523,7 @@ export async function runAskV2(
       next: cut(next, 400),
     };
 
+    if (liveSpeech && spokenDissent) await R.stage('dissent');
     await R.stage('verdict');
     const dissentRefs = dissenterTurn?.message ? [dissenterTurn.message.id] : [];
     let verdictMsgId: string | undefined;
@@ -534,6 +599,7 @@ export async function runAskV2(
       });
       final.close();
     }
+    liveHandle?.close();
   }
 }
 
@@ -555,22 +621,5 @@ async function publishActionItems(
   if (v.dissent) items.push(`Ask your TA about ${v.dissent.member}'s different view.`);
   const page = cites[0]?.label;
   if (page) items.push(`Re-read ${page} and check it against the answer.`);
-  const out: CouncilAction[] = [];
-  for (const raw of [...new Set(items)].slice(0, COUNCIL_ACTIONS_MAX)) {
-    const title = cut(raw, 120);
-    try {
-      const m = await R.publishCode({
-        from: chairId,
-        to: 'room',
-        kind: 'status',
-        stage: 'actions',
-        summary: title,
-        ...(verdictMsgId ? { parentMessageId: verdictMsgId } : {}),
-      });
-      out.push({ id: m.id, title });
-    } catch {
-      // an action item that cannot be published is skipped; the verdict stands
-    }
-  }
-  return out;
+  return publishActionTitles(R, chairId, items, verdictMsgId);
 }

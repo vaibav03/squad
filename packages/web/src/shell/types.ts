@@ -8,6 +8,8 @@ export interface NavItem {
   icon: IconName;
   order: number;
   primary?: boolean;
+  /** Other path prefixes that belong to this destination (the item stays highlighted on them). */
+  also?: string[];
 }
 
 export interface LabMeta {
@@ -27,7 +29,7 @@ export interface SquadRouteMeta {
   key: string;
   path: string;
   title: string;
-  nav?: { label: string; icon: IconName; order: number; primary?: boolean };
+  nav?: { label: string; icon: IconName; order: number; primary?: boolean; also?: string[] };
   fullBleed?: boolean;
   public?: boolean;
 }

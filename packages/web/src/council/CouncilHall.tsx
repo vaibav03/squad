@@ -5,6 +5,7 @@ import type { HubCtx } from '../pages/village/hub';
 import { LvIcon } from '../overlays/kit/icons';
 import { CouncilPanel } from './CouncilPanel';
 import { openBoard, useCanOpenBoard } from './board/bridge';
+import { CouncilStage } from './stage/CouncilStage';
 import { LivePanel } from '../live/LivePanel';
 import { MOCK_TOPIC } from '../live/fixtures';
 import { fixtureTransport, type FixtureState } from './fixtures';
@@ -100,9 +101,11 @@ export function CouncilHall({
     setOpen(false);
     setLiveOpen(true);
   }, []);
-  if (!present) return null;
+  const stage = <CouncilStage hub={hub} calm={calm} />;
+  if (!present) return stage;
   return (
     <>
+      {stage}
       {!open && !liveOpen && !busy && (
         <button
           type="button"

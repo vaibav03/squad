@@ -1,29 +1,29 @@
+import { defaultPrefill, queueAskCubbie } from '../chat/ask-cubbie';
 import type { SourceRow } from './api';
 
-/**
- * Hands one imported item to the group chat composer as an attached context chip (prefilled, never auto-sent).
- * Thin adapter: the chat page reads `squad.pendingContext` once on open. Switch this body to `queueAskCubbie`
- * from ../chat/ask-cubbie when that module is the single entry point.
- */
-export const PENDING_CONTEXT_KEY = 'squad.pendingContext';
+export { PENDING_CONTEXT_KEY } from '../chat/ask-cubbie';
 
-export function askCubbiePrefill(item: Pick<SourceRow, 'title' | 'kind'>): string {
-  return `@cubbie what should I know about "${item.title}"?`;
-}
-
+/** Opens the squad group chat with up to 3 imported items attached as context chips (prefilled, never sent). */
 export function askCubbie(
   squadId: string,
-  item: SourceRow,
+  items: SourceRow | SourceRow[],
   go: (url: string) => void = (u) => window.location.assign(u),
 ): void {
+  const list = (Array.isArray(items) ? items : [items]).slice(0, 3);
+  if (list.length === 0) return;
   const chatId = `group:${squadId}`;
-  try {
-    sessionStorage.setItem(
-      PENDING_CONTEXT_KEY,
-      JSON.stringify({ chatId, sourceIds: [{ sourceId: item.id }], prefill: askCubbiePrefill(item) }),
-    );
-  } catch {
-    // storage blocked: the chat still opens, without a chip (the user can attach nothing; no silent fake)
-  }
+  queueAskCubbie({
+    chatId,
+    sourceIds: list.map((r) => ({ sourceId: r.id })),
+    prefill: defaultPrefill(list[0]!.title),
+  });
   go(`/squad/chat?c=${encodeURIComponent(chatId)}`);
+}
+
+/** Soonest upcoming due/start first, then the rest in list order. */
+export function pickAskItems(rows: SourceRow[], now: number): SourceRow[] {
+  const t = (r: SourceRow) => r.dueAt ?? r.startsAt;
+  const upcoming = rows.filter((r) => (t(r) ?? 0) >= now).sort((a, b) => t(a)! - t(b)!);
+  const rest = rows.filter((r) => !upcoming.includes(r));
+  return [...upcoming, ...rest].slice(0, 3);
 }

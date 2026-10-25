@@ -10,6 +10,7 @@ import { relTime } from '../connections/model';
 import { runFixApi } from './api';
 import { countByStatus, groupChecks, GROUP_TITLE, STATUS_TONE, STATUS_WORD } from './model';
 import { useHealth } from './useHealth';
+import { useProviderViews } from './useProviderViews';
 import './health.css';
 
 /** /squad/connections/health: every link of the chain, each backed by a real probe on the hub. */
@@ -17,6 +18,7 @@ export default function HealthRoute() {
   const { setTitle } = useShell();
   const nav = useNavigate();
   const h = useHealth();
+  const providers = useProviderViews(h.report?.generatedAt);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   useEffect(() => setTitle('Integration health'), [setTitle]);
@@ -54,6 +56,15 @@ export default function HealthRoute() {
           </Notice>
         ) : null}
         {note ? <Notice tone="info" onDismiss={() => setNote(null)}>{note}</Notice> : null}
+        {providers ? (
+          <p className="sq-health__meta" data-testid="health-providers">
+            {(['canvas', 'google'] as const).map((k) => (
+              <span key={k} data-testid={`health-provider-${k}`} style={{ marginRight: 16 }}>
+                {k === 'canvas' ? 'Canvas' : 'Google'}: <strong>{providers[k].label}</strong>
+              </span>
+            ))}
+          </p>
+        ) : null}
         {r && counts ? (
           <>
             <div className="sq-health__summary">

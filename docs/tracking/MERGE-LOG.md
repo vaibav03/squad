@@ -654,3 +654,10 @@ Branch `merge/batch26` (worktree `squad-wt/merge26`), `fix/gate-findings` head `
 
 - Landing merge commit: `f9e39a15007c6f31fccedd5675e1a324bb8bb1d3` (parents `92d5fdb3b884b874c01aa54d40117720dc9a7638` = tag `pre-merge-batch26`, `ffb5f6abce4dff20d46d2115774e1af8e2508c3f` = merge/batch26; only tracker docs differ).
 - Rollback: `git revert -m 1 f9e39a15007c6f31fccedd5675e1a324bb8bb1d3`.
+
+## Batch 27: fix/connection-budget into main
+
+Branch `merge/batch27` (worktree `squad-wt/merge27`): fix/connection-budget (one shared SSE per browser, multiplexed `GET /v1/stream`, Home checklist from server state, j25 multi-tab spec) plus its proof tooling (`e2e/multitab-matrix.mjs`, `e2e/multitab-stack.sh`); origin/main merged in. Resolution commits: lint/prettier in multitab-matrix; j25 spec now types into the composer before expecting Send enabled (main's composer enables Send only with text) and polls to the steady-state socket count instead of sampling right after a burst.
+
+- Checks: `pnpm check` typecheck+lint+all packages green EXCEPT one test that also fails on untouched main 344db094: `apps/hub src/routes/nook-parity.test.ts > Google OAuth through the hub > live client ... revoke and purge` (expected state revoked, got live). Pre-existing, not from this batch; unresolved, needs its owner. `pnpm demo:live` OK; hub smoke pass; hub security pass; e2e (hub 9040 / web 5440 / agents 4921): j18, j19, j20, j21 (8/8, trip flow), j25 (4/4, 10 tabs settle, <=2 hub sockets steady) pass; j23 "Council Hall panel" test timed out (3 min) under load average ~150, not re-run (not touched by this branch).
+- Landing merge commit: see git log (parents `344db094` = tag `pre-merge-batch27`, and merge/batch27). Rollback: `git revert -m 1 <merge>`.

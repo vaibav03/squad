@@ -100,6 +100,8 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
     ...(env.STUB_SKILLS === '1' ? Object.values(STUB_SKILLS) : []),
   ];
 
+  // the same public web URL the hub bases invite links on; unset = replies name the page without a link
+  const publicWebUrl = env.HUB_WEB_URL || env.PUBLIC_WEB_URL || null;
   let transport: Transport;
   if (kind === 'imessage') {
     const { createIMessageTransport } = await import('./transports/imessage');
@@ -111,10 +113,15 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
     if (problem) throw new Error(`iMessage transport refused to start: ${problem}`);
     const gateway = createIMessageGateway({ config: imCfg, log });
     console.log(`[bot] iMessage guarded (dryRun=${imCfg.dryRun}); see docs/imessage.md`);
-    transport = createIMessageTransport({ roster, log, sdk: gateway.guardedSdk() });
+    transport = createIMessageTransport({
+      roster,
+      log,
+      sdk: gateway.guardedSdk(),
+      webUrl: publicWebUrl,
+    });
   } else if (kind === 'discord') {
     const { createDiscordTransport } = await import('./transports/discord');
-    transport = createDiscordTransport({ roster, log });
+    transport = createDiscordTransport({ roster, log, webUrl: publicWebUrl });
   } else {
     transport = new CliTransport(roster);
   }

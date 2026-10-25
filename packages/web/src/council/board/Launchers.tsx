@@ -1,5 +1,6 @@
 import { LvIcon } from '../../overlays/kit/icons';
 import { ModeBadge } from './ModeBadge';
+import { CouncilRoomStatus } from '../last-run/components';
 import { useDockBusy } from '../../shell/panel-dock';
 import { openBoard, useBoardOpen, useBoardStoreRef, useBoardVersion } from './bridge';
 
@@ -8,7 +9,18 @@ import { openBoard, useBoardOpen, useBoardStoreRef, useBoardVersion } from './br
  * `RoomExtras` goes under a council room's panel header: the honest mode of that room's latest session (when
  * there is one) and the button. `HudButton` floats in the village while a council session exists.
  */
-export function RoomExtras({ councilId }: { councilId: string | string[] }) {
+export function RoomExtras({
+  councilId,
+  keys,
+  noun,
+  onConvene,
+}: {
+  councilId: string | string[];
+  /** Hub council keys of this room (`ask`; `roundtable`...). Adds the status strip, last-run label and empty state. */
+  keys?: readonly string[];
+  noun?: string;
+  onConvene?: () => void;
+}) {
   const ids = Array.isArray(councilId) ? councilId : [councilId];
   const store = useBoardStoreRef();
   useBoardVersion(store);
@@ -17,7 +29,16 @@ export function RoomExtras({ councilId }: { councilId: string | string[] }) {
   const run = runs[runs.length - 1];
   return (
     <div className="cb-room-extras">
-      {run ? <ModeBadge mode={run.mode} /> : null}
+      {keys ? (
+        <CouncilRoomStatus
+          keys={keys}
+          councilIds={ids}
+          {...(noun ? { noun } : {})}
+          onConvene={onConvene}
+        />
+      ) : run ? (
+        <ModeBadge mode={run.mode} />
+      ) : null}
       <button
         type="button"
         className="lv-btn rr-ask cb-open"

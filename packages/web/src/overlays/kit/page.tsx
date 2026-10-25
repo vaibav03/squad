@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, EmptyState } from '../../primitives';
-import { LvIcon } from './icons';
+import { LvIcon, type LvIconName } from './icons';
 import { propArt, type PropName } from './art';
 import './bridge.css';
 import './page.css';
@@ -20,6 +20,15 @@ export function useMedia(query: string): boolean {
 }
 
 export type Connection = 'live' | 'replaying' | 'connecting' | 'polling' | 'offline' | 'error';
+const CONN_ICON: Record<Connection, LvIconName> = {
+  live: 'radio',
+  replaying: 'history',
+  connecting: 'loader',
+  polling: 'wifi',
+  offline: 'wifi-off',
+  error: 'alert',
+};
+
 const CONN: Record<Connection, { label: string; tone: string }> = {
   live: { label: 'Live', tone: 'ok' },
   replaying: { label: 'Replay', tone: 'info' },
@@ -41,7 +50,7 @@ export function ConnectionBadge({
   const c = CONN[connection];
   return (
     <span className="lv-conn" data-tone={c.tone} role="status">
-      <span className="lv-conn__dot" aria-hidden="true" />
+      <LvIcon name={CONN_ICON[connection]} size={14} />
       {c.label}
       {onRetry && (connection === 'offline' || connection === 'error') ? (
         <button type="button" className="lv-conn__retry" onClick={onRetry}>

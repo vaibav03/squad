@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import type { WorldScene } from '../scene-manager/world-scene';
+import { getRoomSession } from '../scenes/rooms';
 import { fetchManifest } from './assets';
 import { computeScale } from './scaler';
 
@@ -253,6 +254,24 @@ export function mountVillage(
     },
     overlayClosed() {
       scene?.ctx?.bus.emit('overlayClosed', undefined);
+    },
+    async openRoom(slot, o) {
+      // the village may still be loading when a council starts: wait for its door, at most 10 s
+      const find = () => scene?.ctx?.interactables.list().find((i) => i.id === `enter-${slot}`);
+      for (let n = 0; n < 40 && !find(); n++) await new Promise((r) => setTimeout(r, 250));
+      const ctx = scene?.ctx;
+      const door = find();
+      if (!ctx || !door || door.enabled?.() === false) return false;
+      // walk to the door (Calm and reduced motion: enter at once), but never wait more than 6 s
+      if (!o.calm && !calm.value)
+        await Promise.race([ctx.player.walkTo(door.x), new Promise((r) => setTimeout(r, 6000))]);
+      // the interior art may still be loading (enter is then a no-op): retry until we are inside, at most 10 s
+      for (let n = 0; n < 20; n++) {
+        if (getRoomSession()?.snapshot().entered === slot) return true;
+        door.onActivate();
+        await new Promise((r) => setTimeout(r, 500));
+      }
+      return getRoomSession()?.snapshot().entered === slot;
     },
     debug: { game: () => game, ctx: () => scene?.ctx, fps: () => game?.loop.actualFps ?? 0 },
   };

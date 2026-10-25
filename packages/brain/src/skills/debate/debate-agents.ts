@@ -9,6 +9,7 @@ import type { CouncilAgents } from '../../agents/factory';
 import { demoCall, demoText, registerDemoScript } from '../../agents/demo-transport';
 import type { AgentRun } from '../../agents/runtime';
 import type { AgentSpec, AgentTurn, CouncilDataPorts, StepResult } from '../../agents/types';
+import { publishActionTitles } from '../../councils/action-items';
 import { normaliseText } from '../../councils/pure';
 import { splitPages, verifyQuoteOnPage } from '../../feynman/quote';
 import type { EmitEvent } from '../../mastery/types';
@@ -192,6 +193,7 @@ export async function runDebateV2(
   const run: AgentRun = deps.agents.runtime.startRun({
     correlationId: cnId(),
     councilKey: DEBATE_COUNCIL,
+    question: question.slice(0, 600),
     mode,
     visibility: 'squad',
     ...(deps.askedBy ? { owner: { askedBy: deps.askedBy } } : {}),
@@ -382,6 +384,12 @@ export async function runDebateV2(
       });
     }
     await run.stage('actions');
+    await publishActionTitles(
+      run,
+      judge.id,
+      debateActions(winner, positions, verifiedCites, grounded, dissenter),
+      vmsg.id,
+    );
 
     const finalMode = run.mode();
     const mnote = modeNote(finalMode);
@@ -474,4 +482,35 @@ export async function runDebateV2(
   } finally {
     run.close();
   }
+}
+
+/**
+ * Debate action items, derived in code from the verdict and the pages the arguments cited (verified): review the cited
+ * pages ("Review ch6 p.3 before the exam"), look at the losing side once, or check an ungrounded debate against notes.
+ */
+export function debateActions(
+  winner: 'pro' | 'con' | 'draw',
+  positions: { pro: string; con: string },
+  cites: readonly { file: string; page: number }[],
+  grounded: boolean,
+  dissenter?: 'pro' | 'con',
+): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const c of cites) {
+    const name = c.file.replace(/\.[a-z0-9]{2,4}$/i, '');
+    const key = `${name}|${c.page}`;
+    if (seen.has(key) || out.length >= 2) continue;
+    seen.add(key);
+    out.push(`Review ${name} p.${c.page} before the exam`);
+  }
+  if (winner !== 'draw') {
+    const other = winner === 'pro' ? 'con' : 'pro';
+    out.push(`Write one line on why "${positions[other]}" lost, in your own words`);
+  } else {
+    out.push('Pick a side and write one line defending it');
+  }
+  if (dissenter) out.push(`Ask your TA why the room leaned to "${positions[dissenter]}"`);
+  if (!grounded) out.push('Check this debate against your course notes');
+  return out;
 }

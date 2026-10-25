@@ -150,3 +150,18 @@ export function createSafety(o: SafetyOptions): Safety {
     },
   };
 }
+
+/**
+ * Pure allowlist test for an inbound message (no dedupe, no flood state). A transport that must fetch something for a
+ * message (Sendblue media) asks this first, so nothing is fetched for a chat or number that is not allowlisted.
+ */
+export function inboundAllowed(
+  c: IMessageConfig,
+  m: { chatId: string; sender: string; group: boolean },
+): boolean {
+  if (!c.enabled) return false;
+  if (c.allowAll) return true;
+  return m.group
+    ? c.allowedChats.includes(m.chatId)
+    : c.allowedHandles.map(normalizeHandle).includes(normalizeHandle(m.sender));
+}

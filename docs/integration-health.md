@@ -117,3 +117,66 @@ After the callback the hub redirects the browser to the web origin that STARTED 
 production). A hostile origin falls back to `PUBLIC_WEB_URL`. So the app on `:5290` returns to `:5290` while Google
 only ever sees the hub callback. If the customer needs the callback itself on the web origin, the web host must
 proxy `/oauth/google/callback` to the hub and that URL be registered instead (not done: noted as a gap).
+
+## Integration state (one function, one label map)
+
+`apps/hub/src/context/state.ts` (`integrationStateOf`, `rollupState`) computes ONE state per connection record; the
+shared type and label map live in `@squad/core` (`INTEGRATION_STATES`, `INTEGRATION_STATE_LABELS`, `COUNT_LABELS`).
+It is exposed as `integrationState` (+ `integrationSub`) on every `/v1/connections` view, on the `canvas_*` and
+`google_*` health checks, and per provider in `GET /v1/onboarding`.
+
+| state | when |
+| --- | --- |
+| `not_connected` | no connection, or revoked (`integrationSub: "disconnected"`: the person disconnected, imports deleted) |
+| `connecting` | connection exists, never synced yet and no sync running |
+| `syncing` | a sync is running (`sync.startedAt` set) |
+| `live` | real provider data (mode `live`), synced, healthy |
+| `demo` | fixture mode (demo workspace or fixture connector). Fixture can NEVER be `live` |
+| `degraded` | status `error` / `rate_limited` or the provider rejected the credential; data kept |
+| `reauth_required` | status `expired`; data kept, Reconnect |
+
+A provider with several connections rolls up to the one needing attention first
+(reauth_required > degraded > syncing > connecting > live > demo).
+
+## Demo workspaces
+
+`POST /v1/connections {provider:'canvas', variant:'demo', scopes:['canvas.demo_workspace']}` and
+`{provider:'google', variant:'demo', scopes:[the four Google scopes]}`. Original synthetic content generated
+RELATIVE TO TODAY (`packages/brain/src/context/connectors/demo.ts`), mode `fixture`, provenance `canvas:fixture` /
+`google:fixture`, account label `Fixture (simulated, not your account)`. Existing `feed` / `token` / Google fixture
+paths are unchanged.
+
+- Canvas demo: 3 courses (DATA 101, BIO 120, HIST 140), 6 modules, 6 lecture pages (page anchors `p1`, `p2`),
+  3 slide files, 6 assignments due 3 to 14 days ahead, 3 announcements, 3 calendar events.
+- Google demo: a week of classes and events (>= 5 calendar events), 2 Classroom coursework items, 2 Drive docs.
+- Ids are stable across re-syncs; text is citable (source viewer + chips "Demo: Canvas").
+- Modules, pages, announcements are stored as `canvas_file` / `canvas_event` kinds; the human types in `counts` come
+  from the external id prefix.
+
+Connection views carry `counts`: `{courses, modules, assignments, pages, files, announcements, calendarEvents,
+driveDocs, classroomItems}` (all keys always present).
+
+## Onboarding
+
+`GET /v1/onboarding` (viewer-scoped, no-store):
+
+```jsonc
+{ "identityDone": true,
+  "integrations": { "canvas": { "state": "demo", "sub": null, "counts": {...}, "lastSyncAt": 1, "demo": true }, "google": {...} },
+  "sharingChosen": false, "sharing": { "squadId": null, "choice": "private" },
+  "skipped": null | { "at": 1 },
+  "nextStep": "identity" | "connect" | "sharing" | "done" }
+```
+
+`POST /v1/onboarding/skip` marks it skipped (idempotent). `POST /v1/onboarding/sharing {squadId, choice:'private'|'squad'}`
+persists the choice (404 if not a member): `squad` shares the viewer's NON-calendar sources with that squad now and after
+every later import; `private` (the default) shares nothing and unshares what an earlier `squad` choice shared. Calendar
+items (Google events, Canvas events and announcements) are never shared as titles; others only get free/busy.
+`identityDone` is true when the account has a name (or the student exists in the directory).
+
+## Real-mode audit (D)
+
+Extension pairing: `POST /v1/connections/extension/pair` mints a one-time code (10 min), `/extension/token`
+exchanges it once (brute-force capped) for a scoped `sqx_` bearer that can only register/sync/report Canvas.
+Google: state + PKCE S256, least-privilege scopes, refresh tokens AES-GCM encrypted at rest and never returned,
+revoke at Google on disconnect: covered by `nook-parity.test.ts` and `health.test.ts`.
