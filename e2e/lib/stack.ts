@@ -14,6 +14,7 @@ import {
   WEB,
   WEB_PORT,
 } from './env';
+import { sendblueStackEnv } from './sendblue-fixture';
 
 /**
  * The e2e stack is booted here instead of `pnpm dev:all` so that it owns its ports (hub, web host and agents on
@@ -39,6 +40,8 @@ function dotenvKeys(): Record<string, string> {
 export const baseEnv = (): NodeJS.ProcessEnv => ({
   ...process.env,
   ...dotenvKeys(),
+  // j34: the Sendblue provider against a fake Sendblue server (fixture mode, own port)
+  ...(process.env.E2E_SENDBLUE === '1' ? sendblueStackEnv() : {}),
   HUB_PORT: String(HUB_PORT),
   HUB_BASE_URL: HUB,
   DB_PATH: path.join(TMP, 'hub.db'),
