@@ -1,4 +1,4 @@
-import type { Citation, Db, Llm, StudentId, VillageEvent } from '@squad/core';
+import type { CacheHandle, Citation, Db, Llm, StudentId, VillageEvent } from '@squad/core';
 import type { CourseStore } from '../ingest/types';
 
 /** Every event goes through this. Default: `postEvent` from @squad/core. Tests pass a collector. */
@@ -29,6 +29,20 @@ export interface Claim {
   file: string;
   page: number;
   quote: string;
+}
+
+/** Chapter context shared by experts and captions: cached once per chapter. */
+export interface ChapterContext {
+  courseId: string;
+  chapter: string;
+  system: string; // stable system prompt (grounding rules + chapter block), byte-identical per chapter
+  block: string; // chapter text with [file p.N] markers
+  cache?: CacheHandle; // from Llm.createCache; absent for tiny chapters or if caching failed
+  pages: import('../ingest/types').Page[];
+}
+
+export interface ContextProvider {
+  get(courseId: string, chapter: string): Promise<ChapterContext>;
 }
 
 export interface ChapterExpert {
