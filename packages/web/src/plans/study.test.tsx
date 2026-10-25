@@ -48,7 +48,9 @@ describe('StudyFlow', () => {
       examDate: '2027-01-15',
       examLabel: 'Stats midterm',
     });
-    expect(screen.getByTestId('study-truth').textContent).toMatch(/Demo/);
+    expect(screen.getByTestId('study-truth').textContent).toMatch(/^Demo/);
+    expect(screen.getByTestId('study-truth').textContent).not.toMatch(/\b(\w+)\s+\1\b/i);
+    expect(screen.getByTestId('study-mode').textContent).toMatch(/Demo.*Fallback sample plan|Demo/);
     expect(screen.getByTestId('study-aggregate').textContent).toMatch(/hidden below 3/);
     expect(screen.getByTestId('study-sources').textContent).toMatch(/2 sources/);
   });

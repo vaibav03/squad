@@ -48,6 +48,16 @@ test('J22.1 + menu starts the trip wizard in the group chat; Cabo QA brief creat
   await expect(card.getByTestId('plan-card-status')).not.toBeEmpty();
   await expect(card.getByTestId('plan-card-privacy')).toContainText('Private constraints stay private');
   await expect(p.getByTestId('plan-card')).toHaveCount(1);
+  // every trip action stays inline in this chat: no link leaves it, Edit opens the plan in a panel
+  const leaving = 'a[href*="/squad/trips/"], a[href*="/squad/village"]';
+  await expect(p.getByTestId('chat-thread').locator(leaving)).toHaveCount(0);
+  await expect(p.getByTestId('plans-drawer').locator(leaving)).toHaveCount(0);
+  await card.getByTestId('plan-edit').click();
+  await expect(p.getByTestId('plan-panel-trip')).toBeVisible({ timeout: 20_000 });
+  expect(p.url()).toContain('/squad/chat');
+  await expect(p.getByTestId('chat-composer-input')).toBeVisible();
+  await shot(p, J, '2b-inline-trip');
+  await p.getByTestId('plan-panel-close').click();
 });
 
 test('J22.3 Create a study plan from + builds a plan card in the group chat', async () => {
@@ -70,6 +80,10 @@ test('J22.3 Create a study plan from + builds a plan card in the group chat', as
   await expect(p.getByTestId('study-mode')).toContainText(/Live|Demo|Degraded/);
   await expect(p.getByTestId('chat-plan-card')).toBeVisible({ timeout: 30_000 });
   await expect(p.getByTestId('plan-mode-badge')).toContainText(/Live|Demo|Degraded/, { timeout: 30_000 });
+  await p.getByTestId('plan-open').click();
+  await expect(p.getByTestId('plan-panel-study')).toBeVisible();
+  expect(p.url()).toContain('/squad/chat');
+  expect(p.url()).not.toContain('/squad/village');
 });
 
 test('J22.4 /squad/trips redirects into the group chat with the migration notice and highlights the plan card', async () => {

@@ -15,10 +15,19 @@ export interface WizardDrawerProps {
   onClose: () => void;
   /** A plan was created: `{kind, id}`. */
   onCreated?: (r: { kind: PlanKind; id: string }) => void;
+  /** open the created plan inline in the chat */
+  onOpenPlan?: (r: { kind: PlanKind; id: string }) => void;
 }
 
 /** Inline, data-driven wizard docked above the composer. The step list comes from the flow registry. */
-export function WizardDrawer({ kind, groupTitle, hub, onClose, onCreated }: WizardDrawerProps) {
+export function WizardDrawer({
+  kind,
+  groupTitle,
+  hub,
+  onClose,
+  onCreated,
+  onOpenPlan,
+}: WizardDrawerProps) {
   const flow = FLOWS[kind];
   const [stepId, setStepId] = useState(flow.steps[0]!.id);
   const [created, setCreated] = useState<string | null>(null);
@@ -63,7 +72,7 @@ export function WizardDrawer({ kind, groupTitle, hub, onClose, onCreated }: Wiza
               : step.hint}
           </p>
           {created ? (
-            <Created kind={kind} id={created} />
+            <Created kind={kind} id={created} {...(onOpenPlan ? { onOpen: onOpenPlan } : {})} />
           ) : kind === 'trip' && step.id === 'brief' ? (
             <TripBrief
               hub={hub}
@@ -95,20 +104,26 @@ export function WizardDrawer({ kind, groupTitle, hub, onClose, onCreated }: Wiza
   );
 }
 
-function Created({ kind, id }: { kind: PlanKind; id: string }) {
+function Created({
+  kind,
+  id,
+  onOpen,
+}: {
+  kind: PlanKind;
+  id: string;
+  onOpen?: (r: { kind: PlanKind; id: string }) => void;
+}) {
   return (
     <p className="sqp-note" role="status" data-testid="wizard-created">
       <Icon name="check" size={14} /> Plan started.{' '}
-      <a
+      <button
+        type="button"
         className="sqc-link"
-        href={
-          kind === 'trip'
-            ? `/squad/trips/${encodeURIComponent(id)}?full=1`
-            : '/squad/village?plan=1'
-        }
+        data-testid="wizard-open-plan"
+        onClick={() => onOpen?.({ kind, id })}
       >
-        Open full plan
-      </a>
+        Open plan
+      </button>
     </p>
   );
 }

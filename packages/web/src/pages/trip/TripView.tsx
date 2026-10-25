@@ -69,6 +69,8 @@ export interface TripViewProps {
   onRetry?: () => void;
   /** Called when the user follows the cutscene link (so the page can mark it seen). */
   onWatchCutscene?: (view: TripViewV2) => void;
+  /** Shown inside the group chat: no link may leave the chat (the cutscene link is left out). */
+  inline?: boolean;
 }
 
 export function TripView(props: TripViewProps) {
@@ -261,6 +263,7 @@ function TripBody({
   actionError,
   conflict,
   onWatchCutscene,
+  inline,
 }: TripViewProps & { trip: TripViewV2; actions: TripActions }) {
   const ended =
     trip.status === 'failed' || trip.status === 'expired' || trip.status === 'cancelled';
@@ -307,18 +310,20 @@ function TripBody({
               packed.
             </p>
           </div>
-          <div className="lv-trip__donebtns">
-            <Button
-              as="a"
-              variant="primary"
-              iconEnd="arrow-right"
-              href={cutsceneHref(trip.taskId)}
-              data-testid="trip-cutscene-link"
-              onClick={() => onWatchCutscene?.(trip)}
-            >
-              Watch the trip cutscene
-            </Button>
-          </div>
+          {!inline && (
+            <div className="lv-trip__donebtns">
+              <Button
+                as="a"
+                variant="primary"
+                iconEnd="arrow-right"
+                href={cutsceneHref(trip.taskId)}
+                data-testid="trip-cutscene-link"
+                onClick={() => onWatchCutscene?.(trip)}
+              >
+                Watch the trip cutscene
+              </Button>
+            </div>
+          )}
         </section>
       )}
 

@@ -139,6 +139,12 @@ describe('PlansDrawer', () => {
   it('lists plans with type, status and filters', async () => {
     render(<PlansDrawer {...base} plans={plans} />);
     expect(screen.getAllByRole('link')).toHaveLength(3);
+    for (const a of screen.getAllByRole('link')) {
+      const h = a.getAttribute('href') ?? '';
+      expect(h.startsWith('/squad/chat')).toBe(true);
+      expect(h).not.toContain('/squad/village');
+      expect(h).not.toContain('/squad/trips');
+    }
     await userEvent.click(screen.getByTestId('plans-filter-completed'));
     expect(screen.getAllByRole('link')).toHaveLength(1);
     expect(screen.getByText('Agreed')).toBeTruthy();

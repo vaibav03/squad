@@ -12,6 +12,8 @@ export interface PlanLayerProps {
   /** Open on mount (`?plan=1`). */
   initialOpen?: boolean;
   pollMs?: number;
+  /** Planning lives in the group chat: when set, opening the plan (event or `?plan=1`) goes there instead of showing this panel. */
+  onOpenInChat?: (url: string) => void;
 }
 
 const FAIL_WORDS: Record<string, string> = {
@@ -26,8 +28,8 @@ const FAIL_WORDS: Record<string, string> = {
  * table) and on `?plan=1`. Loads on open, then re-fetches every few seconds while open so other members' edits show.
  */
 export function PlanLayer(props: PlanLayerProps) {
-  const { hub, onRun, calm, returnFocusTo, initialOpen, pollMs = 5000 } = props;
-  const [open, setOpen] = useState(!!initialOpen);
+  const { hub, onRun, calm, returnFocusTo, initialOpen, pollMs = 5000, onOpenInChat } = props;
+  const [open, setOpen] = useState(!!initialOpen && !onOpenInChat);
   const [plan, setPlan] = useState<PlanView | null>();
   const [status, setStatus] = useState<PlanStatus>('loading');
   const [notice, setNotice] = useState<string>();
@@ -37,10 +39,23 @@ export function PlanLayer(props: PlanLayerProps) {
   const hubRef = useRef(hub);
   hubRef.current = hub;
 
+  const toChat = useCallback(async () => {
+    const h = hubRef.current;
+    let url = '/squad/chat?wizard=study&notice=plans';
+    if (h?.token) {
+      const r = await planApi.current(h);
+      if (r.ok && r.plan) url = `/squad/chat?plan=${encodeURIComponent(r.plan.id)}&notice=plans`;
+    }
+    onOpenInChat?.(url);
+  }, [onOpenInChat]);
+  useEffect(() => {
+    if (initialOpen && onOpenInChat) void toChat();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const openPanel = useCallback(() => {
+    if (onOpenInChat) return void toChat();
     setFocusEl((returnFocusTo?.() ?? document.activeElement) as HTMLElement | null);
     setOpen(true);
-  }, [returnFocusTo]);
+  }, [returnFocusTo, onOpenInChat, toChat]);
   useEffect(() => {
     globalThis.addEventListener(PLAN_OPEN_EVENT, openPanel);
     return () => globalThis.removeEventListener(PLAN_OPEN_EVENT, openPanel);

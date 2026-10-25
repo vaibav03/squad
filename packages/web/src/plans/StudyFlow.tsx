@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { planBadge, type PlanView } from '@squad/core';
+import type { PlanView } from '@squad/core';
+import { modeTone, planModeLine } from './format';
 import { Icon } from '../primitives/Icon';
 import { Stepper } from '../primitives/Stepper';
 import { dayLabel, minutesWords, planApi, STATUS_WORD, type PlanHub } from '../overlays/plan/model';
@@ -61,22 +62,18 @@ export function StudyFlow({ hub }: { hub: PlanHub | null }) {
         STUDY_FLOW.steps.findIndex((s) => s.id === step),
     );
   const idx = STUDY_FLOW.steps.findIndex((s) => s.id === step);
-  const badge = plan ? planBadge(plan.generator) : null;
 
   return (
     <div data-testid="study-flow" data-step={step}>
-      <p className="sqp-note" data-testid="study-mode-header">
-        {badge ? (
-          <>
-            <span
-              className={`sqp-truth sqp-truth--${modeTone(badge.mode)}`}
-              data-testid="study-mode"
-              data-mode={badge.mode}
-            >
-              {modeWord(badge.mode)}
-            </span>{' '}
-            {badge.kindLabel}
-          </>
+      <p className="sqp-note" data-testid="study-truth">
+        {plan ? (
+          <span
+            className={`sqp-truth sqp-truth--${modeTone(plan.generator.mode)}`}
+            data-testid="study-mode"
+            data-mode={plan.generator.mode}
+          >
+            {planModeLine(plan.generator)}
+          </span>
         ) : (
           <>
             <span className="sqp-truth" data-testid="study-mode" data-mode="none">
@@ -271,16 +268,6 @@ export function StudyFlow({ hub }: { hub: PlanHub | null }) {
         </div>
       ) : null}
 
-      {badge && step !== 'goal' && step !== 'availability' ? (
-        <p className="sqp-note" data-testid="study-truth">
-          <span
-            className={`sqp-truth sqp-truth--${badge.mode === 'live' ? 'live' : badge.mode === 'demo' ? 'practice' : 'partly'}`}
-          >
-            {badge.mode === 'live' ? 'Live' : badge.mode === 'demo' ? 'Demo' : 'Degraded'}
-          </span>{' '}
-          {badge.label} · {badge.kindLabel}
-        </p>
-      ) : null}
       {err ? (
         <p role="alert" className="sqp-err" data-testid="study-error">
           {err}
@@ -289,9 +276,6 @@ export function StudyFlow({ hub }: { hub: PlanHub | null }) {
     </div>
   );
 }
-
-const modeWord = (m: string) => (m === 'live' ? 'Live' : m === 'demo' ? 'Demo' : 'Degraded');
-const modeTone = (m: string) => (m === 'live' ? 'live' : m === 'demo' ? 'practice' : 'partly');
 
 function PlanSummary({ plan }: { plan: PlanView }) {
   const squad = plan.availability.squad;

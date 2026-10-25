@@ -8,6 +8,7 @@ import { TripChatCard, tripPrivacyLine } from './TripChatCard';
 import { PlanActionsContext } from './context';
 import { collapsePlanCards, revisionsOf } from './dedupe';
 import { tripCardStatus, tripTruth } from '../lib/truth-labels';
+import { planModeLine } from './format';
 import {
   tripPlanning,
   tripVoting,
@@ -139,8 +140,9 @@ describe('TripChatCard', () => {
       vi.fn(async () => new Response(JSON.stringify(tripVoting), { status: 200 })),
     );
     const askCubbie = vi.fn();
+    const openPlan = vi.fn();
     render(
-      <PlanActionsContext.Provider value={{ askCubbie }}>
+      <PlanActionsContext.Provider value={{ askCubbie, openPlan }}>
         <TripChatCard
           hub={{ hubUrl: 'http://h', token: 't' }}
           card={{
@@ -159,5 +161,56 @@ describe('TripChatCard', () => {
       label: tripVoting.title,
     });
     vi.unstubAllGlobals();
+  });
+});
+
+describe('plan actions stay inside the group chat', () => {
+  const noLeave = (root: HTMLElement) => {
+    for (const a of root.querySelectorAll('a[href]')) {
+      const h = a.getAttribute('href') ?? '';
+      expect(h).not.toContain('/squad/trips');
+      expect(h).not.toContain('/squad/village');
+    }
+  };
+  it('trip card Edit/Vote are buttons that open the plan inline', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify(tripVoting), { status: 200 })),
+    );
+    const openPlan = vi.fn();
+    const { container } = render(
+      <PlanActionsContext.Provider value={{ askCubbie: vi.fn(), openPlan }}>
+        <TripChatCard
+          hub={{ hubUrl: 'http://h', token: 't' }}
+          card={{ type: 'trip', tripId: 'trip_ab12cd34', rev: 1 }}
+        />
+      </PlanActionsContext.Provider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('plan-card-status').textContent).toBe('Voting'));
+    noLeave(container);
+    expect(container.querySelectorAll('a[href]').length).toBe(0);
+    await userEvent.click(screen.getByTestId('plan-edit'));
+    expect(openPlan).toHaveBeenCalledWith({ kind: 'trip', id: 'trip_ab12cd34' });
+    if (tripVoting.can.vote) {
+      await userEvent.click(screen.getByTestId('plan-vote'));
+      expect(openPlan).toHaveBeenCalledTimes(2);
+    }
+  });
+});
+
+describe('plan mode status text', () => {
+  it('shows the mode once, then the planner, in every mode', () => {
+    const lines = [
+      planModeLine({ mode: 'live', kind: 'agent', source: 'planner' } as never),
+      planModeLine({ mode: 'demo', kind: 'fallback', source: 'scripted' } as never),
+      planModeLine({
+        mode: 'degraded',
+        kind: 'agent',
+        source: 'planner',
+        reason: 'the model fell back',
+      } as never),
+    ];
+    expect(lines[0]).toBe('Live · Planner agent');
+    for (const l of lines) expect(l).not.toMatch(/\b(\w+)\s+\1\b/i);
   });
 });

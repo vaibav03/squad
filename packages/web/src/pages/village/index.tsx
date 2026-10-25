@@ -303,6 +303,7 @@ export default function VillagePage({ world }: { world?: string }) {
         calm={calm}
         onRun={runPhrase}
         initialOpen={q.get('plan') === '1' || q.get('panel') === 'plan'}
+        onOpenInChat={(url) => window.location.assign(url)}
         returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
       />
       <OverlayHost
