@@ -10,6 +10,9 @@ import { Transcript } from './Transcript';
 import { EMPTY_TAKEAWAYS } from './fixtures';
 import { ModeBadge } from '../council/board/ModeBadge';
 import { LIVE_ERROR_COPY } from './live-client';
+import { CouncilStatusStrip } from '../council/status/CouncilStatusStrip';
+import { useCouncilStatus } from '../council/status/useCouncilStatus';
+import { useCouncilHub } from '../council/last-run/hub';
 import type { LiveController } from './useLiveDiscussion';
 
 const SIZE_KEY = 'squad.live.caption-size';
@@ -153,6 +156,8 @@ export function LiveDiscussion({
   const demo = state.demo || demoMock;
   const noAudio = state.audio === false && !demo && ctl.player.enabled && !ended;
   const unavailable = status === 'unavailable';
+  const hub = useCouncilHub();
+  const hubStatus = useCouncilStatus(hub).status;
 
   return (
     <div
@@ -189,6 +194,39 @@ export function LiveDiscussion({
         </p>
       </header>
 
+      <CouncilStatusStrip
+        status={hub ? hubStatus : null}
+        variant="compact"
+        run={{
+          mode: demo ? 'demo' : unavailable ? 'degraded:unavailable' : 'live',
+          transport: {
+            kind: demo ? 'demo' : 'live-audio',
+            label: demo ? 'Demo (scripted, not Gemini)' : 'Gemini Live (audio + transcript)',
+          },
+          counters: {
+            messages: state.turns.length,
+            delegations: 0,
+            stage: ended ? 'Done' : 'Discussing',
+          },
+        }}
+        mic={
+          ctl.talk === 'listening'
+            ? 'listening'
+            : ctl.talk === 'denied'
+              ? 'permission_denied'
+              : ctl.talk === 'unsupported'
+                ? 'unavailable'
+                : 'idle'
+        }
+        audio={
+          demo || state.audio === false || ctl.sound === 'off'
+            ? 'unavailable'
+            : ctl.sound === 'ready'
+              ? 'playing'
+              : 'muted'
+        }
+        transcript={ended ? 'complete' : state.turns.length ? 'streaming' : 'none'}
+      />
       {(status === 'connecting' ||
         status === 'reconnecting' ||
         unavailable ||

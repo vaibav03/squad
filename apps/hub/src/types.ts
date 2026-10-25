@@ -323,6 +323,10 @@ export interface HubDeps {
   ports: Ports;
   /** Ask-the-council service. Built with the real ports, or lazily (demo model) by the council routes. */
   council?: CouncilService;
+  /** Persisted council runs per squad (last 20), fed by the ingestor (docs/council-live-ux.md). */
+  councilRuns?: CouncilRunStore;
+  /** Live-transport state: availability of Gemini Live on this hub, per-run caption/audio channel. */
+  councilLive?: CouncilLiveHub;
   /** Web chat: store, files, SSE fan-out; the bot engine attaches later (`attachChatEngine`). */
   chat: ChatHub;
   /** students with projector mode on (server-side session flag) */
@@ -354,6 +358,8 @@ export interface HubDeps {
 
 import type { CodeSender } from './code-sender';
 import type { LiveService } from './live/service';
+import type { CouncilRunStore } from './council/run-store';
+import type { CouncilLiveHub } from './council/live/hub';
 import type { ContextService } from './context/service';
 import type { LiveWiring } from './live/wire';
 import type { ConfirmRouter } from './confirms';

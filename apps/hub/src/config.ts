@@ -24,6 +24,8 @@ export interface HubConfig {
   sessionDays: number;
   /** Base of invite links (HUB_WEB_URL). */
   webUrl: string;
+  /** The web URL only when someone configured it (HUB_WEB_URL, the same variable that bases invite links); null otherwise. Used for links in outbound iMessage text. */
+  publicWebUrl: string | null;
   codeSender: 'console' | 'imessage';
   imessageSendUrl: string | null;
   /** SSE tuning (overridable in tests) */
@@ -80,6 +82,8 @@ export function loadHubConfig(env: Record<string, string | undefined> = process.
       corsOrigins.find((o) => o !== '*') ||
       'http://localhost:5180'
     ).replace(/\/+$/, ''),
+    publicWebUrl:
+      (env.HUB_WEB_URL || corsOrigins.find((o) => o !== '*') || '').replace(/\/+$/, '') || null,
     codeSender: env.CODE_SENDER === 'imessage' ? 'imessage' : 'console',
     imessageSendUrl: env.IMESSAGE_SEND_URL || null,
     sse: { bufferSize: 5000, maxQueue: 256, pingMs: 15_000 },

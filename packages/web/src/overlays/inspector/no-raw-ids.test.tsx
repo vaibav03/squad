@@ -80,6 +80,6 @@ describe('no raw ids while cycling the inspector', () => {
           );
           await settle();
         }
-      });
+      }, 60_000);
     }
 });

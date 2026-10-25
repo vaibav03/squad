@@ -18,6 +18,7 @@ import { ModeBadge } from '../../council/board/ModeBadge';
 import { openVoice } from './bridge';
 import type { InspectorHub } from './useDmHistory';
 import { useDockPanel } from '../../shell/panel-dock';
+import { NO_COUNCIL_YET, useAgentNote } from '../../council/last-run/agent-note';
 import { MasterySummary, useChapterFor } from '../mastery/MasterySummary';
 import './inspector.css';
 
@@ -89,6 +90,7 @@ export function InspectorPanel({
           : ''
       : null;
   const voice = sel && councilWho !== null ? store.voice(councilWho, sel) : null;
+  const voiceNote = useAgentNote(voice?.who || sel || undefined);
   const openKey = sel ? `${sel}|${room?.slot ?? ''}|${room?.who ?? ''}` : null;
   const openTab: Tab | null = defaultTab(room?.initialTab, voice);
   const openTabRef = useRef(openTab);
@@ -126,6 +128,10 @@ export function InspectorPanel({
   if (view) last.current = view;
   const v = view ?? last.current; // keep the last content while the exit transition runs
   const mastery = useChapterFor(v?.kind === 'expert' ? v.id : undefined);
+  // Council agents: never a dead "Idle" / "no reasoning shared"; say what the last council was, or that none ran.
+  const isCouncil = !!v && v.id.startsWith('council:');
+  const note = useAgentNote(isCouncil ? v!.id : undefined);
+  const councilIdle = isCouncil && v!.state === 'idle' && !v!.thinking;
 
   const close = () => {
     store.select(null);
@@ -239,7 +245,7 @@ export function InspectorPanel({
       <div className="ai-bar">
         <span className="ai-state" data-state={v.state}>
           <LvIcon name={STATE_ICON[v.state]} size={16} aria-hidden="true" />
-          {v.stateLabel}
+          {councilIdle ? (note?.label ?? NO_COUNCIL_YET) : v.stateLabel}
         </span>
         <span className="ai-spacer" />
         <button type="button" className="ai-btn" onClick={() => go(-1)} aria-label="Previous agent">
@@ -295,7 +301,7 @@ export function InspectorPanel({
             <section className="ai-now" aria-label="Right now">
               <h3 className="ai-label">Right now</h3>
               <p className="ai-headline" aria-live="polite" aria-atomic="true">
-                {v.headline}
+                {councilIdle ? (note?.said ?? note?.label ?? NO_COUNCIL_YET) : v.headline}
               </p>
               <dl className="ai-facts">
                 <dt>Where</dt>
@@ -351,6 +357,7 @@ export function InspectorPanel({
         {tab === 'thinking' && voice && (
           <VoiceThinking
             voice={voice}
+            lastNote={voice.thought.source === 'none' ? (voiceNote ?? null) : null}
             onOpen={(who) => openVoice(who, { agent: v.id, slot: room?.slot ?? '' })}
           />
         )}
@@ -362,7 +369,16 @@ export function InspectorPanel({
                 {v.thinking && <span className="ai-live">live</span>}
               </h3>
               <div className="ai-bubble" data-source={v.thought.source}>
-                <p>{v.thought.text}</p>
+                <p>
+                  {isCouncil && v.thought.source === 'none'
+                    ? note
+                      ? `Last said: ${note.said ?? note.stance ?? 'nothing public'}`
+                      : NO_COUNCIL_YET
+                    : v.thought.text}
+                </p>
+                {isCouncil && v.thought.source === 'none' && note && (
+                  <small>{note.label}. Public words only.</small>
+                )}
                 {v.thought.source === 'stream' && (
                   <small>From what the agent shared, not extra reasoning.</small>
                 )}
@@ -426,9 +442,11 @@ const POS_KIND = {
 function VoiceThinking({
   voice,
   onOpen,
+  lastNote,
 }: {
   voice: NonNullable<ReturnType<InspectorStore['voice']>>;
   onOpen(who: string): void;
+  lastNote?: ReturnType<typeof useAgentNote> | null;
 }) {
   return (
     <div className="ai-tabpanel" data-testid="voice-thinking">
@@ -438,7 +456,16 @@ function VoiceThinking({
           {voice.thinking && <span className="ai-live">live</span>}
         </h3>
         <div className="ai-bubble" data-source={voice.thought.source}>
-          <p>{voice.thought.text}</p>
+          <p>
+            {voice.thought.source === 'none'
+              ? lastNote
+                ? `Last said: ${lastNote.said ?? lastNote.stance ?? 'nothing public'}`
+                : NO_COUNCIL_YET
+              : voice.thought.text}
+          </p>
+          {voice.thought.source === 'none' && lastNote && (
+            <small>{lastNote.label}. Public words only.</small>
+          )}
           {voice.thought.source === 'stream' && (
             <small>From what it said in the council, not extra reasoning.</small>
           )}

@@ -771,3 +771,7 @@
   font-size: var(--text-xs, 12px);
   letter-spacing: 0.04em;
 }
+
+.cb-strip-row {
+  padding: 0 16px 8px;
+}

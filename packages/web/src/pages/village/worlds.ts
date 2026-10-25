@@ -26,6 +26,8 @@ export interface WorldHandle {
   overlayClosed(): void;
   ready: Promise<void>;
   setCalm?(v: boolean): void;
+  /** Walk to a room's door and enter it (council surfaces open the Council Hall this way). */
+  openRoom?(slot: string, o: { calm: boolean }): Promise<boolean>;
 }
 export type WorldMount = (o: WorldMountOptions) => WorldHandle;
 /** Loaded lazily so Phaser (or any engine) stays out of the main bundle. */

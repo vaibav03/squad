@@ -87,7 +87,7 @@ export function MemberStack({ chat }: { chat: ChatSummary }) {
   );
 }
 
-/** Three dots by opacity only; reduced motion shows static text. */
+/** Icon plus words (never bare dots); the icon pulses by opacity only, static under reduced motion. */
 export function TypingIndicator({
   names,
   reduced,
@@ -109,18 +109,8 @@ export function TypingIndicator({
         sender={{ kind: 'persona', id: personaId ?? first.personaId, name: first.name }}
       />
       <span className="sqc-typing__bubble">
-        {reduced ? (
-          <span className="sqc-typing__text">{label}</span>
-        ) : (
-          <>
-            <span className="sqc-typing__dots" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className="sq-sr-only">{label}</span>
-          </>
-        )}
+        <Icon name="brain" size={14} className={reduced ? undefined : 'sqc-typing__icon'} />
+        <span className="sqc-typing__text">{label}</span>
       </span>
     </div>
   );

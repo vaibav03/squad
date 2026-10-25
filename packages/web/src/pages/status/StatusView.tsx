@@ -1,6 +1,6 @@
 import { useId, useState, type ReactNode } from 'react';
 import { ConnectionBadge, LvIcon, StateBlock } from '../../overlays/kit';
-import { Button, Page, Skeleton, TextField } from '../../primitives';
+import { Button, Icon, Page, Skeleton, TextField } from '../../primitives';
 import { WEB_BUILD, formatBuiltAt, isStaleBuild } from '../../lib/build';
 import {
   countLabel,
@@ -62,7 +62,10 @@ function Panel({
 function Dot({ tone, label }: { tone: 'ok' | 'warn' | 'bad' | 'idle'; label: string }) {
   return (
     <span className="st-pill" data-tone={tone}>
-      <span className="st-pill__dot" aria-hidden="true" />
+      <Icon
+        name={tone === 'ok' ? 'ok' : tone === 'warn' ? 'alert' : tone === 'bad' ? 'error' : 'moon'}
+        size={12}
+      />
       {label}
     </span>
   );

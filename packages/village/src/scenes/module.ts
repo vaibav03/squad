@@ -1,5 +1,14 @@
 import type { VillageEvent } from '@squad/core';
 import { createAssetLib, type AssetLib, type ManifestAsset } from './assets';
+import {
+  detectedInPage,
+  fetchSkinManifests,
+  layerPath,
+  publishActiveSkins,
+  skinMode,
+  type LoadedSkin,
+} from './skins/runtime';
+import type { LayerName } from './skins/types';
 import { DEFAULT_CTX, sanitizeEvent, step, type SceneCtx, type SceneDef } from './contract';
 import { createRoomSession } from './roomSession';
 import { publishRoomSession } from './rooms';
@@ -177,9 +186,66 @@ async function loadAssets(ctx: HostCtx): Promise<AssetLib> {
     scene.load.once('complete', resolve);
     scene.load.start();
   });
-  return createAssetLib(manifest, atlas, (p) =>
-    toRaster(scene.textures.get(KEY(p)).getSourceImage()),
+  const skins = await loadSkins(ctx);
+  return createAssetLib(
+    manifest,
+    atlas,
+    (p) => toRaster(scene.textures.get(KEY(p)).getSourceImage()),
+    skins,
   );
+}
+
+/** Optional indoor skins from the local, gitignored art. Any problem means "no skin": the classic art stays, silently. */
+async function loadSkins(ctx: HostCtx): Promise<Map<string, LoadedSkin>> {
+  const out = new Map<string, LoadedSkin>();
+  const mode = skinMode(globalThis.location?.search ?? '', detectedInPage());
+  if (mode === 'off' || mode === 'none') return out;
+  try {
+    const manifests = await fetchSkinManifests(ctx.assets.url, async (u) => {
+      const res = await fetch(u);
+      const ct = res.headers.get('content-type') ?? '';
+      return res.ok && !ct.includes('text/html') ? res.json() : undefined;
+    });
+    const { scene } = ctx;
+    const jobs: Array<{ id: string; layer: LayerName; key: string; path: string }> = [];
+    for (const m of manifests)
+      for (const layer of ['bg', 'mid', 'fg'] as const) {
+        const path = layerPath(m, layer);
+        if (path) jobs.push({ id: m.id, layer, key: KEY(path), path });
+      }
+    await new Promise<void>((resolve) => {
+      let queued = 0;
+      for (const j of jobs) {
+        if (scene.textures.exists(j.key)) continue;
+        scene.load.image(j.key, ctx.assets.url(j.path));
+        queued++;
+      }
+      if (queued === 0) return resolve();
+      scene.load.once('complete', resolve);
+      scene.load.start();
+    });
+    for (const m of manifests) {
+      const layers: LoadedSkin['layers'] = {};
+      for (const j of jobs.filter((x) => x.id === m.id))
+        if (scene.textures.exists(j.key))
+          layers[j.layer] = toRaster(scene.textures.get(j.key).getSourceImage());
+      if (!layers.bg) continue;
+      out.set(m.scene, {
+        id: m.id,
+        scene: m.scene,
+        title: m.title,
+        credit: m.credit,
+        layout: m.layout,
+        layers,
+      });
+    }
+    publishActiveSkins(
+      [...out.values()].map((k) => ({ scene: k.scene, id: k.id, title: k.title, credit: k.credit })),
+    );
+  } catch {
+    out.clear();
+  }
+  return out;
 }
 
 /* ---------- the module ---------- */
@@ -402,7 +468,12 @@ const mod = {
     }
     /** Rebuild the hit zones when the cast of the room changes (council seats fill in as members speak). */
     function syncSeats(live: Live): void {
-      const next = roomSeats(live.p.slotId, agentOf(live), live.state);
+      const next = roomSeats(
+        live.p.slotId,
+        agentOf(live),
+        live.state,
+        assets?.skin?.(live.p.slotId)?.layout,
+      );
       const key = next.map((n) => `${n.agent}|${n.who}|${n.x}|${n.y}`).join(';');
       if (key === seatKey) return;
       zones.forEach((z) => z.destroy());
