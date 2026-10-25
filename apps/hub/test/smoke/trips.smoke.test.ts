@@ -67,16 +67,24 @@ function fakeAgent(id: string): Promise<string> {
     res.end();
   });
   servers.push(srv);
-  return new Promise((r) => srv.listen(0, '127.0.0.1', () => r(`http://127.0.0.1:${(srv.address() as AddressInfo).port}`)));
+  return new Promise((r) =>
+    srv.listen(0, '127.0.0.1', () => r(`http://127.0.0.1:${(srv.address() as AddressInfo).port}`)),
+  );
 }
 
 const history = async (as: string, chatId: string) =>
-  (await get<{ messages: unknown[] }>(url, `/v1/chat/history?chatId=${encodeURIComponent(chatId)}`, tok[as])).body.messages.map(
-    (m) => ChatMessageSchema.parse(m),
-  );
+  (
+    await get<{ messages: unknown[] }>(
+      url,
+      `/v1/chat/history?chatId=${encodeURIComponent(chatId)}`,
+      tok[as],
+    )
+  ).body.messages.map((m) => ChatMessageSchema.parse(m));
 const texts = (ms: ChatMessage[]) => ms.map((m) => m.text);
-const say = (as: string, chatId: string, text: string) => post(url, '/v1/chat/send', { chatId, text }, tok[as]);
-const current = async (as: string) => (await get<{ trip: TripViewV2 | null }>(url, '/v1/trips/current', tok[as])).body.trip;
+const say = (as: string, chatId: string, text: string) =>
+  post(url, '/v1/chat/send', { chatId, text }, tok[as]);
+const current = async (as: string) =>
+  (await get<{ trip: TripViewV2 | null }>(url, '/v1/trips/current', tok[as])).body.trip;
 const evs = () => {
   const e = hub.deps.events.since(0);
   return e === 'too_old' ? [] : e;
@@ -135,7 +143,9 @@ describe('no trip, create from the page', () => {
 
   it('rejects malformed create bodies', async () => {
     expect((await post(url, '/v1/trips', { destination: 'x' }, tok.s_ana)).status).toBe(400);
-    expect((await post(url, '/v1/trips', { destination: 'Cabo', evil: 1 }, tok.s_ana)).status).toBe(400);
+    expect((await post(url, '/v1/trips', { destination: 'Cabo', evil: 1 }, tok.s_ana)).status).toBe(
+      400,
+    );
     expect((await post(url, '/v1/trips', { destination: 'Cabo' })).status).toBe(401);
   });
 });
@@ -166,7 +176,12 @@ describe('collaborative flow from group chat', () => {
     const t = (await current('s_dev'))!;
     expect(t.status).toBe('voting');
     expect(t.constraints.state).toBe('done');
-    expect(t.constraints.overlapDays).toEqual(['2027-03-12', '2027-03-13', '2027-03-14', '2027-03-15']);
+    expect(t.constraints.overlapDays).toEqual([
+      '2027-03-12',
+      '2027-03-13',
+      '2027-03-14',
+      '2027-03-15',
+    ]);
   });
 
   it('calendar titles never leak: not in any view, chat message or event', async () => {
@@ -179,7 +194,12 @@ describe('collaborative flow from group chat', () => {
   });
 
   it('a second create while one is active is refused with the active trip', async () => {
-    const r = await post<{ error: { code: string }; tripId: string }>(url, '/v1/trips', { destination: 'Austin' }, tok.s_ben);
+    const r = await post<{ error: { code: string }; tripId: string }>(
+      url,
+      '/v1/trips',
+      { destination: 'Austin' },
+      tok.s_ben,
+    );
     expect(r.status).toBe(409);
     expect(r.body.error.code).toBe('trip_in_progress');
     expect(r.body.tripId).toBe(tripId);
@@ -206,7 +226,12 @@ describe('collaborative flow from group chat', () => {
 
   it('ballot counts stay hidden below 3 voters and nobody sees another ranking', async () => {
     const opts = (await current('s_ana'))!.options.map((o) => o.id);
-    const v1 = await post<{ trip: TripViewV2 }>(url, `/v1/trips/${tripId}/vote`, { ranking: [opts[1], opts[0]] }, tok.s_ana);
+    const v1 = await post<{ trip: TripViewV2 }>(
+      url,
+      `/v1/trips/${tripId}/vote`,
+      { ranking: [opts[1], opts[0]] },
+      tok.s_ana,
+    );
     expect(v1.status).toBe(200);
     await post(url, `/v1/trips/${tripId}/vote`, { ranking: [opts[0]] }, tok.s_ben);
     const view = (await get<TripViewV2>(url, `/v1/trips/${tripId}`, tok.s_chi)).body;
@@ -238,7 +263,9 @@ describe('collaborative flow from group chat', () => {
   it('plain "confirm" in the group confirms; REST confirms; trip.confirmed fires exactly once', async () => {
     const before = evs().filter((e) => e.type === 'trip.confirmed').length;
     await say('s_ana', GROUP, 'confirm');
-    await waitFor(async () => (await current('s_ana'))!.members.find((m) => m.id === 's_ana')!.confirmed);
+    await waitFor(
+      async () => (await current('s_ana'))!.members.find((m) => m.id === 's_ana')!.confirmed,
+    );
     for (const id of ['s_ben', 's_chi', 's_dev']) {
       const r = await post(url, `/v1/trips/${tripId}/confirm`, { yes: true }, tok[id]);
       expect(r.status).toBe(200);
@@ -256,7 +283,12 @@ describe('collaborative flow from group chat', () => {
 describe('conflicts: two members editing at once', () => {
   let tripId = '';
   it('a stale edit gets a 409 with what changed; replacing is explicit and logged', async () => {
-    const t0 = await post<{ trip: TripViewV2 }>(url, '/v1/trips', { destination: 'Austin', days: 3, perPerson: 400 }, tok.s_ben);
+    const t0 = await post<{ trip: TripViewV2 }>(
+      url,
+      '/v1/trips',
+      { destination: 'Austin', days: 3, perPerson: 400 },
+      tok.s_ben,
+    );
     expect(t0.status).toBe(200);
     tripId = t0.body.trip.tripId;
     await idle();
@@ -275,7 +307,10 @@ describe('conflicts: two members editing at once', () => {
       body: JSON.stringify({ baseRev: rev, perPerson: 450 }),
     });
     expect(ana.status).toBe(409);
-    const body = (await ana.json()) as { error: { code: string }; conflict: { change: { byName: string } | null; rev: number } };
+    const body = (await ana.json()) as {
+      error: { code: string };
+      conflict: { change: { byName: string } | null; rev: number };
+    };
     expect(body.error.code).toBe('conflict');
     expect(body.conflict.change?.byName).toBe('Ben');
     // nothing was overwritten
@@ -294,8 +329,13 @@ describe('conflicts: two members editing at once', () => {
     const t = (await current('s_ana'))!;
     if (t.status !== 'voting') return;
     const ids = t.options.map((o) => o.id);
-    expect((await post(url, `/v1/trips/${tripId}/vote`, { ranking: ids }, tok.s_ana)).status).toBe(200);
-    expect((await post(url, `/v1/trips/${tripId}/vote`, { ranking: [...ids].reverse() }, tok.s_ana)).status).toBe(200);
+    expect((await post(url, `/v1/trips/${tripId}/vote`, { ranking: ids }, tok.s_ana)).status).toBe(
+      200,
+    );
+    expect(
+      (await post(url, `/v1/trips/${tripId}/vote`, { ranking: [...ids].reverse() }, tok.s_ana))
+        .status,
+    ).toBe(200);
   });
 });
 
@@ -305,7 +345,12 @@ describe('honest agent states', () => {
     await post(url, `/v1/trips/${cur.tripId}/cancel`, {}, tok.s_ben);
     offline.add('s_chi');
     startCalls = [];
-    const made = await post<{ trip: TripViewV2 }>(url, '/v1/trips', { destination: 'Tokyo', month: 4 }, tok.s_dev);
+    const made = await post<{ trip: TripViewV2 }>(
+      url,
+      '/v1/trips',
+      { destination: 'Tokyo', month: 4 },
+      tok.s_dev,
+    );
     expect(made.status).toBe(200);
     await idle();
     const t = (await current('s_dev'))!;
@@ -317,7 +362,12 @@ describe('honest agent states', () => {
     expect(startCalls).toHaveLength(0); // nothing is checked until everyone is reachable
     expect(texts(await history('s_ana', GROUP)).join('\n')).toMatch(/offline, trip waits for/);
     // voting cannot start early
-    const early = await post(url, `/v1/trips/${t.tripId}/vote`, { ranking: [t.options[0]!.id] }, tok.s_ana);
+    const early = await post(
+      url,
+      `/v1/trips/${t.tripId}/vote`,
+      { ranking: [t.options[0]!.id] },
+      tok.s_ana,
+    );
     expect(early.status).toBe(409);
     offline.delete('s_chi');
     await new Promise((r) => setTimeout(r, 2100)); // retry rate limit
@@ -337,7 +387,12 @@ describe('honest agent states', () => {
     const t = (await current('s_ana'))!;
     expect(t.constraints.state).toBe('waiting');
     expect((await post(url, `/v1/trips/${t.tripId}/continue`, {}, tok.s_chi)).status).toBe(403);
-    const ok = await post<{ trip: TripViewV2 }>(url, `/v1/trips/${t.tripId}/continue`, {}, tok.s_ana);
+    const ok = await post<{ trip: TripViewV2 }>(
+      url,
+      `/v1/trips/${t.tripId}/continue`,
+      {},
+      tok.s_ana,
+    );
     expect(ok.status).toBe(200);
     expect(ok.body.trip.status).toBe('voting');
     expect(ok.body.trip.constraints.state).toBe('skipped');
@@ -354,17 +409,31 @@ describe('a ballot needs two live options', () => {
       status: 'constraints',
       common: ['2027-05-03', '2027-05-04'],
       survivors: [(b.options as { id: string }[])[0]!.id],
-      dropped: (b.options as { id: string }[]).slice(1).map((o) => ({ optionId: o.id, reason: 'budget' })),
+      dropped: (b.options as { id: string }[])
+        .slice(1)
+        .map((o) => ({ optionId: o.id, reason: 'budget' })),
     });
-    const cards = async () => texts(await history('s_dev', 'dm:s_dev')).filter((x) => /Trip vote: where to\?/.test(x)).length;
+    const cards = async () =>
+      texts(await history('s_dev', 'dm:s_dev')).filter((x) => /Trip vote: where to\?/.test(x))
+        .length;
     const before = await cards();
-    const made = await post<{ trip: TripViewV2 }>(url, '/v1/trips', { destination: 'Denver', month: 5 }, tok.s_ben);
+    const made = await post<{ trip: TripViewV2 }>(
+      url,
+      '/v1/trips',
+      { destination: 'Denver', month: 5 },
+      tok.s_ben,
+    );
     expect(made.status).toBe(200);
     await idle();
     const t = (await current('s_ben'))!;
     expect(t.status).toBe('voting');
     expect(await cards()).toBe(before);
-    const add = await post(url, `/v1/trips/${t.tripId}/options`, { label: 'Boulder', days: 2, perPerson: 80 }, tok.s_ana);
+    const add = await post(
+      url,
+      `/v1/trips/${t.tripId}/options`,
+      { label: 'Boulder', days: 2, perPerson: 80 },
+      tok.s_ana,
+    );
     expect(add.status).toBe(200);
     await waitFor(async () => (await cards()) === before + 1);
     outcome = defaultOutcome;
@@ -373,23 +442,41 @@ describe('a ballot needs two live options', () => {
 });
 
 describe('squads are isolated; a squad with no trip says so', () => {
-  it('another squad never sees, votes in or confirms this squad\'s trips', async () => {
-    const s = await post<{ challengeId: string }>(url, '/v1/auth/start', { name: 'Eve', phone: '4155550777' });
+  it("another squad never sees, votes in or confirms this squad's trips", async () => {
+    const s = await post<{ challengeId: string }>(url, '/v1/auth/start', {
+      name: 'Eve',
+      phone: '4155550777',
+    });
     expect(s.status).toBe(200);
-    const sender = (hub.deps as unknown as { codeSender: ReturnType<typeof createMemoryCodeSender> }).codeSender;
+    const sender = (
+      hub.deps as unknown as { codeSender: ReturnType<typeof createMemoryCodeSender> }
+    ).codeSender;
     const code = sender.last()!.code;
-    const v = await post<{ token: string }>(url, '/v1/auth/verify', { challengeId: s.body.challengeId, code });
+    const v = await post<{ token: string }>(url, '/v1/auth/verify', {
+      challengeId: s.body.challengeId,
+      code,
+    });
     expect(v.status).toBe(200);
     const eve = v.body.token;
-    const sq = await post<{ squad: { id: string } }>(url, '/v1/squads', { name: 'Other crew', course: 'BIO 101' }, eve);
+    const sq = await post<{ squad: { id: string } }>(
+      url,
+      '/v1/squads',
+      { name: 'Other crew', course: 'BIO 101' },
+      eve,
+    );
     expect(sq.status).toBe(201);
     const none = await get<{ trip: unknown }>(url, '/v1/trips/current', eve);
     expect(none.status).toBe(200);
     expect(none.body.trip).toBeNull();
     const demo = (await current('s_ana'))!;
     expect((await get(url, `/v1/trips/${demo.tripId}`, eve)).status).toBe(404);
-    expect((await post(url, `/v1/trips/${demo.tripId}/vote`, { ranking: [demo.options[0]!.id] }, eve)).status).toBe(404);
-    expect((await post(url, `/v1/trips/${demo.tripId}/confirm`, { yes: true }, eve)).status).toBe(404);
+    expect(
+      (await post(url, `/v1/trips/${demo.tripId}/vote`, { ranking: [demo.options[0]!.id] }, eve))
+        .status,
+    ).toBe(404);
+    expect((await post(url, `/v1/trips/${demo.tripId}/confirm`, { yes: true }, eve)).status).toBe(
+      404,
+    );
     expect((await post(url, `/v1/trips/${demo.tripId}/cancel`, {}, eve)).status).toBe(404);
     // a one-person real squad can still plan: nothing to compare, so voting opens with a plain note
     const mine = await post<{ trip: TripViewV2 }>(url, '/v1/trips', { destination: 'Cabo' }, eve);
@@ -405,7 +492,11 @@ describe('squads are isolated; a squad with no trip says so', () => {
 
 describe('the seeded demo trip still answers', () => {
   it('trip_cabo resolves by trip id and task id', async () => {
-    expect((await get<{ tripId: string }>(url, '/v1/trips/trip_cabo', tok.s_ana)).body.tripId).toBe('trip_cabo');
-    expect((await get<{ tripId: string }>(url, '/v1/trips/task_trip_cabo', tok.s_ana)).body.tripId).toBe('trip_cabo');
+    expect((await get<{ tripId: string }>(url, '/v1/trips/trip_cabo', tok.s_ana)).body.tripId).toBe(
+      'trip_cabo',
+    );
+    expect(
+      (await get<{ tripId: string }>(url, '/v1/trips/task_trip_cabo', tok.s_ana)).body.tripId,
+    ).toBe('trip_cabo');
   });
 });

@@ -42,7 +42,9 @@ export const MONTHS = [
 export const monthOf = (word: string): number | undefined => {
   const w = word.toLowerCase();
   if (w.length < 3) return undefined;
-  const i = MONTHS.findIndex((m) => m === w || (w.length >= 3 && m.startsWith(w) && w.length <= m.length));
+  const i = MONTHS.findIndex(
+    (m) => m === w || (w.length >= 3 && m.startsWith(w) && w.length <= m.length),
+  );
   return i >= 0 ? i + 1 : undefined;
 };
 
@@ -67,7 +69,8 @@ export function earliestRun(free: readonly string[], days: number): string[] | n
   const f = [...free].sort();
   for (let i = 0; i + days <= f.length; i++) {
     let ok = true;
-    for (let k = 1; k < days; k++) if (parse(f[i + k]!) - parse(f[i + k - 1]!) !== DAY_MS) ok = false;
+    for (let k = 1; k < days; k++)
+      if (parse(f[i + k]!) - parse(f[i + k - 1]!) !== DAY_MS) ok = false;
     if (ok) return f.slice(i, i + days);
   }
   return null;
@@ -134,7 +137,8 @@ export interface RecoText {
 /** The council's deterministic reading of public facts (never limits, never ballots below 3 voters). */
 export function recommend(i: RecoInput): RecoText {
   const live = i.options.filter((o) => !i.droppedIds.includes(o.id));
-  const fits = (o: { days: number }) => i.overlap === null || earliestRun(i.overlap, o.days) !== null;
+  const fits = (o: { days: number }) =>
+    i.overlap === null || earliestRun(i.overlap, o.days) !== null;
   const viable = live.filter(fits);
   const dissent: string[] = [];
   if (live.length === 0)
@@ -155,7 +159,12 @@ export function recommend(i: RecoInput): RecoText {
   const byCost = [...(known.length ? known : viable)].sort((a, b) => a.perPerson - b.perPerson);
   const pick = (i.leader && viable.find((o) => o.id === i.leader)) || byCost[0]!;
   const run = i.overlap ? earliestRun(i.overlap, pick.days) : null;
-  const why = i.leader && pick.id === i.leader ? 'it is ahead on the secret ballots' : known.length ? 'it is the cheapest that fits everyone' : 'it fits the shared days';
+  const why =
+    i.leader && pick.id === i.leader
+      ? 'it is ahead on the secret ballots'
+      : known.length
+        ? 'it is the cheapest that fits everyone'
+        : 'it fits the shared days';
   const chair = `Go with ${pick.label}: ${why}.`;
   const planner = run
     ? `${fmtRange(run)}, ${pick.days} day${pick.days === 1 ? '' : 's'}, ${money(pick.perPerson)} each.`
@@ -163,7 +172,9 @@ export function recommend(i: RecoInput): RecoText {
       ? `${pick.days} days, ${money(pick.perPerson)} each. Dates not checked against calendars.`
       : `${pick.days} days, ${money(pick.perPerson)} each.`;
   if (i.overlap && i.overlap.length - pick.days < 2)
-    dissent.push(`Skeptic: only ${i.overlap.length} shared free day${i.overlap.length === 1 ? '' : 's'}, almost no slack if plans shift.`);
+    dissent.push(
+      `Skeptic: only ${i.overlap.length} shared free day${i.overlap.length === 1 ? '' : 's'}, almost no slack if plans shift.`,
+    );
   if (i.droppedIds.length)
     dissent.push(
       `Skeptic: ${i.droppedIds.length} option${i.droppedIds.length === 1 ? ' was' : 's were'} dropped because a budget or hard no rules ${i.droppedIds.length === 1 ? 'it' : 'them'} out (not saying whose).`,
@@ -172,7 +183,10 @@ export function recommend(i: RecoInput): RecoText {
     dissent.push(`Skeptic: calendars and budgets were not checked for ${i.skippedFor.join(', ')}.`);
   if (pick.perPerson === 0) dissent.push('Skeptic: there is no price quote for this option yet.');
   const other = viable.filter((o) => o.id !== pick.id).sort((a, b) => a.perPerson - b.perPerson)[0];
-  if (other) dissent.push(`Skeptic: ${other.label} also fits${other.perPerson && pick.perPerson && other.perPerson < pick.perPerson ? ` and costs ${money(pick.perPerson - other.perPerson)} less` : ''}; the vote can still change this.`);
+  if (other)
+    dissent.push(
+      `Skeptic: ${other.label} also fits${other.perPerson && pick.perPerson && other.perPerson < pick.perPerson ? ` and costs ${money(pick.perPerson - other.perPerson)} less` : ''}; the vote can still change this.`,
+    );
   else dissent.push('Skeptic: only one option survived. Consider proposing another.');
   return { optionId: pick.id, chair, planner, dissent };
 }

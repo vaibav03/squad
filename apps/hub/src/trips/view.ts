@@ -48,10 +48,20 @@ export function buildTripView(
     return {
       id: o.id,
       label: o.label,
-      ...(o.estCost !== undefined ? { estCost: o.estCost } : perPerson !== undefined ? { estCost: money(perPerson) } : {}),
-      ...(meta?.days ?? o.days ? { days: meta?.days ?? o.days } : {}),
+      ...(o.estCost !== undefined
+        ? { estCost: o.estCost }
+        : perPerson !== undefined
+          ? { estCost: money(perPerson) }
+          : {}),
+      ...((meta?.days ?? o.days) ? { days: meta?.days ?? o.days } : {}),
       ...(perPerson !== undefined ? { perPerson } : {}),
-      ...(meta ? { proposedBy: meta.by, proposedByName: meta.by === 'council' ? 'Council' : nameOf(meta.by), rev: meta.rev } : {}),
+      ...(meta
+        ? {
+            proposedBy: meta.by,
+            proposedByName: meta.by === 'council' ? 'Council' : nameOf(meta.by),
+            rev: meta.rev,
+          }
+        : {}),
       ...(dropped ? { droppedReason: dropped.reason } : {}),
     };
   });
@@ -68,7 +78,11 @@ export function buildTripView(
   const constraints = c
     ? {
         state: c.constraints.state,
-        waitingFor: c.constraints.waitingFor.map((w) => ({ id: w.id, name: nameOf(w.id), reason: w.reason })),
+        waitingFor: c.constraints.waitingFor.map((w) => ({
+          id: w.id,
+          name: nameOf(w.id),
+          reason: w.reason,
+        })),
         overlapDays: c.constraints.overlapDays,
         note: c.constraints.note,
         checkedAt: c.constraints.checkedAt,
@@ -88,7 +102,8 @@ export function buildTripView(
     dates: t.dates,
     chosen,
     myVote: t.votes.find((v) => v.student === me)?.ranking ?? null,
-    voteProgress: !small && voters.size >= MIN_GROUP ? { voted: voters.size, of: ids.length } : null,
+    voteProgress:
+      !small && voters.size >= MIN_GROUP ? { voted: voters.size, of: ids.length } : null,
     members: ids.map((id) => {
       const row = t.confirmations.find((r) => r.student === id);
       const ag = c?.agents[id]?.state ?? 'unknown';
@@ -106,11 +121,17 @@ export function buildTripView(
     vetoed: t.vetoed.map((v) => ({ optionId: v.optionId, by: v.by, reason: v.reason })),
     myLimits: mine && !viewer.projector ? { ...mine } : null,
     constraints,
-    recommendation: c?.recommendation
-      ? { ...c.recommendation, at: c.recommendation.at }
-      : null,
+    recommendation: c?.recommendation ? { ...c.recommendation, at: c.recommendation.at } : null,
     changes: (c?.changes ?? []).slice(-12).map((ch) => ({ ...ch, byName: nameOf(ch.by) })),
-    failure: c?.failure ?? (status === 'expired' ? { code: 'expired', message: 'The voting deadline passed before everyone confirmed. The organizer can reopen it.' } : null),
+    failure:
+      c?.failure ??
+      (status === 'expired'
+        ? {
+            code: 'expired',
+            message:
+              'The voting deadline passed before everyone confirmed. The organizer can reopen it.',
+          }
+        : null),
     can: {
       propose: !!c && open,
       vote: voting && ids.includes(me) && (!c || true),

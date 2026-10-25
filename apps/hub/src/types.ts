@@ -196,13 +196,7 @@ export interface CallRegistry {
 
 // ---------- trips ----------
 export type TripStatus =
-  | 'planning'
-  | 'voting'
-  | 'confirming'
-  | 'confirmed'
-  | 'failed'
-  | 'expired'
-  | 'cancelled';
+  'planning' | 'voting' | 'confirming' | 'confirmed' | 'failed' | 'expired' | 'cancelled';
 /** Collaborative-trip extras. Absent on legacy/seeded trips (mesh-driven), present on trips created through `/v1/trips`. */
 export interface TripCollab {
   organizer: StudentId;
@@ -225,7 +219,10 @@ export interface TripCollab {
   };
   /** Mesh task ids of constraint runs (limits envelopes carry the run id as tripId). */
   runs: string[];
-  agents: Record<StudentId, { state: 'online' | 'offline' | 'no_agent' | 'unknown'; since: number }>;
+  agents: Record<
+    StudentId,
+    { state: 'online' | 'offline' | 'no_agent' | 'unknown'; since: number }
+  >;
   chosen: { optionId: string; dates: string | null } | null;
   recommendation: {
     optionId: string | null;

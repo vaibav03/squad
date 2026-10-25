@@ -299,10 +299,12 @@ export function createChatHub(
       // Trip intents ("plan a trip to Cabo", "I vote 2", "confirm") are applied by the trip service and never reach
       // the bot. It runs for web and iMessage-origin messages alike (the bridge sends through this method).
       if (!body.confirmTaskId && deps.tripSvc) {
-        const handled = await deps.tripSvc.handleChat(viewer, body.chatId, text).catch((e: Error) => {
-          deps.log.error('trip chat failed', { err: e.name });
-          return false;
-        });
+        const handled = await deps.tripSvc
+          .handleChat(viewer, body.chatId, text)
+          .catch((e: Error) => {
+            deps.log.error('trip chat failed', { err: e.name });
+            return false;
+          });
         if (handled) return { ok: true, message };
       }
 

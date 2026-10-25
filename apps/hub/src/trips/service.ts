@@ -649,13 +649,11 @@ export function createTripService(
       return view(pick, v);
     },
     list(v) {
-      return deps.trips
-        .list(v.squadId)
-        .map((t) => ({
-          tripId: t.tripId,
-          title: t.collab?.title ?? 'Group trip',
-          status: t.status,
-        }));
+      return deps.trips.list(v.squadId).map((t) => ({
+        tripId: t.tripId,
+        title: t.collab?.title ?? 'Group trip',
+        status: t.status,
+      }));
     },
     get(v, id) {
       const t = deps.trips.get(id) ?? deps.trips.byTask(id);

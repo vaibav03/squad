@@ -9,7 +9,12 @@ export interface ConstraintsRequest {
   options: { id: string; label: string; days: number; perPerson: number }[];
 }
 export type ConstraintsOutcome =
-  | { status: 'constraints'; common: string[]; survivors: string[]; dropped: { optionId: string; reason: string }[] }
+  | {
+      status: 'constraints';
+      common: string[];
+      survivors: string[];
+      dropped: { optionId: string; reason: string }[];
+    }
   | { status: 'no_plan'; reason: string }
   | { status: 'failed'; reason: string };
 export type StartResult =
@@ -39,7 +44,9 @@ export function createTripAgents(o: {
       const url = base(student);
       if (!url) return 'no_agent';
       try {
-        const r = await f()(`${url}/healthz`, { signal: AbortSignal.timeout(o.healthTimeoutMs ?? 1500) });
+        const r = await f()(`${url}/healthz`, {
+          signal: AbortSignal.timeout(o.healthTimeoutMs ?? 1500),
+        });
         return r.ok ? 'online' : 'offline';
       } catch {
         return 'offline';

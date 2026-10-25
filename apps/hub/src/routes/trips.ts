@@ -23,7 +23,8 @@ export function createTripRoutes(deps: HubDeps): HubApp {
   const need = requireViewer(deps);
   const svc = () => deps.tripSvc;
   const resolve = (id: string) => (deps.trips.get(id) ? id : (deps.trips.byTask(id)?.tripId ?? id));
-  const failure = (c: J, f: Fail) => c.json({ ...err(f.code, f.message), ...(f.extra ?? {}) }, f.status);
+  const failure = (c: J, f: Fail) =>
+    c.json({ ...err(f.code, f.message), ...(f.extra ?? {}) }, f.status);
   const out = (c: J, res: Res) => (res.ok ? c.json({ trip: res.trip }) : failure(c, res));
   const bad = (c: J) => c.json(err('invalid_request'), 400);
 
@@ -52,7 +53,12 @@ export function createTripRoutes(deps: HubDeps): HubApp {
     if (!p.success) return bad(c);
     return out(
       c,
-      svc().editOption(c.get('viewer'), resolve(c.req.param('tripId')), c.req.param('optionId'), p.data),
+      svc().editOption(
+        c.get('viewer'),
+        resolve(c.req.param('tripId')),
+        c.req.param('optionId'),
+        p.data,
+      ),
     );
   });
   r.delete('/v1/trips/:tripId/options/:optionId', need, (c) => {
@@ -98,7 +104,12 @@ export function createTripRoutes(deps: HubDeps): HubApp {
       if (t.squadId !== v.squadId || !p.data.optionId) return c.json(err('not_found'), 404);
       const rec = deps.trips.confirm(id, v.studentId, p.data.optionId, p.data.yes);
       if (!rec) return c.json(err('not_found'), 404);
-      deps.ingest.village({ t: 'confirm.done', student: v.studentId, taskId: rec.taskId, question: 'Confirm trip' });
+      deps.ingest.village({
+        t: 'confirm.done',
+        student: v.studentId,
+        taskId: rec.taskId,
+        question: 'Confirm trip',
+      });
       deps.ingest.x('x.trip.touch', { tripId: id });
       if (deps.trips.allConfirmed(id))
         deps.ingest.village({ t: 'trip.confirmed', taskId: rec.taskId, squadId: rec.squadId });

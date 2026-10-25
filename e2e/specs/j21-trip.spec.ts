@@ -28,12 +28,23 @@ interface Trip {
   status: string;
   title: string;
   rev: number;
-  options: { id: string; label: string; rev?: number; perPerson?: number; droppedReason?: string }[];
+  options: {
+    id: string;
+    label: string;
+    rev?: number;
+    perPerson?: number;
+    droppedReason?: string;
+  }[];
   voteProgress: { voted: number; of: number } | null;
   myVote: string[] | null;
   chosen: { optionId: string } | null;
   members: { id: string; name: string; voted: boolean | null; confirmed: boolean; agent: string }[];
-  constraints: { state: string; note: string | null; overlapDays: string[] | null; waitingFor: { id: string }[] };
+  constraints: {
+    state: string;
+    note: string | null;
+    overlapDays: string[] | null;
+    waitingFor: { id: string }[];
+  };
   recommendation: { mode: string } | null;
 }
 const current = async (id: string) =>
@@ -44,7 +55,12 @@ const history = async (id: string, chatId: string) =>
       await api(tok[id]!, `/v1/chat/history?chatId=${encodeURIComponent(chatId)}`),
     )
   ).messages.map((m) => m.text);
-interface Card { type: string; question: string; options: string[]; status: string }
+interface Card {
+  type: string;
+  question: string;
+  options: string[];
+  status: string;
+}
 const dmCards = async (id: string) =>
   (
     await j<{ messages: { card?: Card }[] }>(
@@ -53,7 +69,11 @@ const dmCards = async (id: string) =>
   ).messages.flatMap((m) => (m.card?.type === 'confirm' ? [m.card] : []));
 const say = (id: string, chatId: string, text: string) =>
   api(tok[id]!, '/v1/chat/send', { method: 'POST', json: { chatId, text } });
-const until = async <T>(fn: () => Promise<T | undefined | false>, what: string, ms = 60_000): Promise<T> => {
+const until = async <T>(
+  fn: () => Promise<T | undefined | false>,
+  what: string,
+  ms = 60_000,
+): Promise<T> => {
   const end = Date.now() + ms;
   for (;;) {
     const v = await fn();
@@ -64,7 +84,14 @@ const until = async <T>(fn: () => Promise<T | undefined | false>, what: string, 
 };
 const open = async (page: Page) => {
   await page.goto('/squad/trips');
-  await expect(page.getByTestId('trip-constraints').or(page.getByTestId('trip-empty')).or(page.getByTestId('trip-another'))).toBeVisible({ timeout: 30_000 }).catch(() => undefined);
+  await expect(
+    page
+      .getByTestId('trip-constraints')
+      .or(page.getByTestId('trip-empty'))
+      .or(page.getByTestId('trip-another')),
+  )
+    .toBeVisible({ timeout: 30_000 })
+    .catch(() => undefined);
 };
 
 /** Long-lived SSE reader for one student (until stop()). */
@@ -76,7 +103,9 @@ async function openStream(id: string) {
   let buf = '';
   void (async () => {
     try {
-      const r = await fetch(`${HUB}/v1/squad/stream?st=${encodeURIComponent(st)}`, { signal: ctl.signal });
+      const r = await fetch(`${HUB}/v1/squad/stream?st=${encodeURIComponent(st)}`, {
+        signal: ctl.signal,
+      });
       const rd = r.body!.getReader();
       const dec = new TextDecoder();
       for (;;) {
@@ -142,7 +171,10 @@ test('J21.3 a teammate proposes an option on the page', async () => {
   await form.getByLabel('Days (optional)').fill('2');
   await form.getByLabel('Cost per person (optional)').fill('90');
   await form.getByRole('button', { name: 'Add option' }).click();
-  await until(async () => (await current(ANA))?.options.some((o) => o.label === 'Tahoe'), 'Tahoe visible to Ana');
+  await until(
+    async () => (await current(ANA))?.options.some((o) => o.label === 'Tahoe'),
+    'Tahoe visible to Ana',
+  );
   expect((await history(ANA, GROUP)).join('\n')).toMatch(/Ben proposed Tahoe/);
 });
 
@@ -159,7 +191,10 @@ test('J21.4 two members edit the same option at once: one wins, the other is tol
   expect(first.status).toBe(200);
   const second = await edit(ANA, 95, rev);
   expect(second.status).toBe(409);
-  const body = await j<{ error: { code: string }; conflict: { rev: number; change: { byName: string } | null } }>(second);
+  const body = await j<{
+    error: { code: string };
+    conflict: { rev: number; change: { byName: string } | null };
+  }>(second);
   expect(body.error.code).toBe('conflict');
   expect(body.conflict.change?.byName).toBe('Ben');
   expect((await current(ANA))!.options.find((o) => o.id === opt.id)!.perPerson).toBe(110);
@@ -192,11 +227,16 @@ test('J21.5 secret ballot: counts hidden below 3, votes by page, "I vote 1" and 
   const pc = A[CHI]!.page;
   await open(pc);
   await expect(pc.getByTestId('trip-vote-progress')).toHaveCount(0);
-  await expect(pc.getByTestId('trip-vote-note')).toContainText('Counts appear once 3 members have voted');
+  await expect(pc.getByTestId('trip-vote-note')).toContainText(
+    'Counts appear once 3 members have voted',
+  );
   await shot(pc, J, '5-ballot-hidden');
   // Chi answers the numbered vote card Cubbie put in the DM
   const card = await until(
-    async () => (await dmCards(CHI)).find((c) => /Trip vote: where to\?/.test(c.question) && c.status === 'pending'),
+    async () =>
+      (await dmCards(CHI)).find(
+        (c) => /Trip vote: where to\?/.test(c.question) && c.status === 'pending',
+      ),
     'vote card in Chi DM',
   );
   expect(card.options.length).toBeGreaterThanOrEqual(2); // answered by number below
@@ -225,22 +265,38 @@ test('J21.6 confirm in chat and on the page; trip.confirmed fires exactly once; 
   const pb = A[BEN]!.page;
   await open(pb);
   await pb.getByTestId('trip-confirm-yes').click();
-  await until(async () => (await current(BEN))?.members.find((m) => m.id === BEN)?.confirmed, 'Ben confirmed');
+  await until(
+    async () => (await current(BEN))?.members.find((m) => m.id === BEN)?.confirmed,
+    'Ben confirmed',
+  );
   expect((await current(ANA))!.status).toBe('confirming'); // two of four is not a trip
   await say(CHI, `dm:${CHI}`, 'confirm');
-  expect((await api(tok[DEV]!, `/v1/trips/${t.tripId}/confirm`, { method: 'POST', json: { yes: true } })).status).toBe(200);
+  expect(
+    (await api(tok[DEV]!, `/v1/trips/${t.tripId}/confirm`, { method: 'POST', json: { yes: true } }))
+      .status,
+  ).toBe(200);
   await api(tok[DEV]!, `/v1/trips/${t.tripId}/confirm`, { method: 'POST', json: { yes: true } }); // repeat is harmless
   await until(async () => (await current(ANA))?.status === 'confirmed', 'trip confirmed');
   await new Promise((r) => setTimeout(r, 1500));
-  const confirmed = sse.events().filter((e) => e.event === 'trip.confirmed' && e.data.includes(t.taskId));
+  const confirmed = sse
+    .events()
+    .filter((e) => e.event === 'trip.confirmed' && e.data.includes(t.taskId));
   expect(confirmed, 'trip.confirmed exactly once on the stream').toHaveLength(1);
   sse.stop();
   expect((await history(DEV, GROUP)).join('\n')).toContain('Trip confirmed by all 4');
   // Ben had the page open: it hands off to the village cutscene once; otherwise the page shows the link.
   await expect
-    .poll(async () => pb.url().includes('cutscene=trip') || (await pb.getByTestId('trip-cutscene-link').isVisible().catch(() => false)), {
-      timeout: 20_000,
-    })
+    .poll(
+      async () =>
+        pb.url().includes('cutscene=trip') ||
+        (await pb
+          .getByTestId('trip-cutscene-link')
+          .isVisible()
+          .catch(() => false)),
+      {
+        timeout: 20_000,
+      },
+    )
     .toBe(true);
   await shot(pb, J, '6-confirmed');
 });
@@ -258,18 +314,34 @@ test('J21.8 an offline agent is named, the trip waits, Retry resumes it once the
   const pids = JSON.parse(fs.readFileSync(pidsFile, 'utf8')) as Record<string, number>;
   const chiPid = pids[CHI]!;
   process.kill(-chiPid, 'SIGTERM'); // exact process group recorded by this stack, never a pattern
-  await until(async () => !(await fetch(`${AGENT_URL(CHI)}/healthz`).then((r) => r.ok).catch(() => false)), 'Chi agent down', 20_000);
-  const made = await api(tok[ANA]!, '/v1/trips', { method: 'POST', json: { destination: 'Tokyo', month: 4 } });
+  await until(
+    async () =>
+      !(await fetch(`${AGENT_URL(CHI)}/healthz`)
+        .then((r) => r.ok)
+        .catch(() => false)),
+    'Chi agent down',
+    20_000,
+  );
+  const made = await api(tok[ANA]!, '/v1/trips', {
+    method: 'POST',
+    json: { destination: 'Tokyo', month: 4 },
+  });
   expect(made.status).toBe(200);
-  const t = await until(async () => {
-    const c = await current(ANA);
-    return c?.constraints.state === 'waiting' ? c : undefined;
-  }, 'waiting on Chi', 40_000);
+  const t = await until(
+    async () => {
+      const c = await current(ANA);
+      return c?.constraints.state === 'waiting' ? c : undefined;
+    },
+    'waiting on Chi',
+    40_000,
+  );
   expect(t.constraints.note).toMatch(/Chi's agent is offline, trip waits for Chi/);
   expect(t.members.find((m) => m.id === CHI)?.agent).toBe('offline');
   const p = A[ANA]!.page;
   await open(p);
-  await expect(p.getByTestId('trip-waiting')).toContainText("Chi's agent is offline, trip waits for Chi");
+  await expect(p.getByTestId('trip-waiting')).toContainText(
+    "Chi's agent is offline, trip waits for Chi",
+  );
   await expect(p.getByTestId('trip-retry')).toBeVisible();
   await shot(p, J, '8-offline');
   expect((await history(DEV, GROUP)).join('\n')).toMatch(/offline, trip waits for Chi/);
@@ -278,7 +350,14 @@ test('J21.8 an offline agent is named, the trip waits, Retry resumes it once the
   const peers = STUDENTS.map((id) => `${id}=${AGENT_URL(id)}`).join(',');
   const child = spawn('pnpm', ['--filter', '@squad/agent', 'start'], {
     cwd: REPO,
-    env: { ...baseEnv(), AGENT_ID: CHI, PORT: String(AGENT_PORT(CHI)), PEERS: peers, FAKE_LLM: '1', CONFIRM_MODE: 'scripted' },
+    env: {
+      ...baseEnv(),
+      AGENT_ID: CHI,
+      PORT: String(AGENT_PORT(CHI)),
+      PEERS: peers,
+      FAKE_LLM: '1',
+      CONFIRM_MODE: 'scripted',
+    },
     stdio: ['ignore', log, log],
     detached: true,
   });
@@ -286,6 +365,10 @@ test('J21.8 an offline agent is named, the trip waits, Retry resumes it once the
   fs.writeFileSync(pidsFile, JSON.stringify({ ...pids, [CHI]: child.pid }));
   expect(await waitFor(`${AGENT_URL(CHI)}/healthz`, 60_000), 'Chi agent is back').toBe(true);
   await p.getByTestId('trip-retry').click();
-  await until(async () => (await current(ANA))?.status === 'voting', 'retry resumed the check', 90_000);
+  await until(
+    async () => (await current(ANA))?.status === 'voting',
+    'retry resumed the check',
+    90_000,
+  );
   expect((await current(ANA))!.constraints.state).toBe('done');
 });

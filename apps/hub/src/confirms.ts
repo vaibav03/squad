@@ -52,9 +52,14 @@ export function createConfirmRouter(
       if (!t) return { ok: false, code: 'unknown_task' };
       if (t.collab) {
         // Collaborative trips: the trip service owns confirmation (rules, chat summary, trip.confirmed once).
-        const r = deps.tripSvc.confirm(v, t.tripId, { yes: a.yes, ...(a.optionId ? { optionId: a.optionId } : {}) });
+        const r = deps.tripSvc.confirm(v, t.tripId, {
+          yes: a.yes,
+          ...(a.optionId ? { optionId: a.optionId } : {}),
+        });
         if (r.ok) return { ok: true, status: r.trip.status };
-        return r.status === 404 ? { ok: false, code: 'unknown_task' } : { ok: false, code: 'invalid_request', message: r.message };
+        return r.status === 404
+          ? { ok: false, code: 'unknown_task' }
+          : { ok: false, code: 'invalid_request', message: r.message };
       }
       if (!a.optionId) return { ok: false, code: 'invalid_request', message: 'optionId required' };
       const rec = deps.trips.confirm(t.tripId, v.studentId, a.optionId, a.yes);
