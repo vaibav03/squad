@@ -20,6 +20,7 @@ import {
   createScheduler,
   createSkills,
   detectMention,
+  registerPlanNudges,
   registerMediaPersonas,
   type Bot,
   type EventPublisher,
@@ -27,6 +28,7 @@ import {
   type Scheduler,
 } from '@squad/bot';
 import { COURSE_ID } from '../cast';
+import { createPlanPort } from '../plans/port';
 import type { HubDeps } from '../types';
 import { wireRealPorts } from '../wire';
 import { dmChatId } from './access';
@@ -146,6 +148,7 @@ export async function attachChatEngine(
   const skills = await createSkills({
     ...(scheduler ? { proactive: scheduler } : {}),
     llm,
+    plans: createPlanPort(deps),
     db: deps.db,
     emit: (e) => events.publish(e),
     ...(media ? { media } : {}),
@@ -213,6 +216,7 @@ export async function attachChatEngine(
   await bot.start();
   if (scheduler) {
     scheduler.bind(bot.ctx);
+    deps.plans.setNudges(registerPlanNudges(scheduler, deps.db));
     scheduler.start();
   }
 
