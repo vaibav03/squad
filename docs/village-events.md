@@ -74,3 +74,12 @@ pnpm -F @squad/village exec vite --config src/mesh-view/dev/vite.config.ts --por
 node packages/village/src/mesh-view/dev/capture.mjs 5230 docs/design/shots/village-mesh/<dir> 1280 720 "x=1235&cam=follow" 1800,3600,... desk
 ```
 Harness query: `cam`, `x` (teleport the player), `calm=1`, `start=<ms>` (seek the story), `paused=1`, `me`. Story: `src/mesh-view/dev/story.ts`.
+
+## 9. World-agnostic contract (the seam for the top-down campus)
+
+The owner will later replace the side-view world with a top-down interior campus. Everything that is not a renderer is therefore world-agnostic and survives that swap unchanged:
+
+- `adapter`, `sources`, `overlay-bridge` and `a11y` never import Phaser, never read a layout (clocks are injectable), and never emit a pixel coordinate. Commands address the world only through `Place` (`door{agent}`, `commons`, `board`, `house{chapter}`, `hall{councilId}`, `tripDoor`), agent ids and slot-style ids. A test greps the pure files of these four folders for coordinate fields and `phaser` imports; the only world-touching files are the thin `module.ts` shims that register with the world bus.
+- Coordinates come from exactly one place: `layout.slot(id)` in the world (`src/mesh-view/places.ts` is the single resolver from `Place` to a point; the cutscene uses the `trip-road` slot). A new world only has to provide the same slot ids (`commons`, `notice-board`, one door slot per house, `trip-road`) and the renderer modules (`mesh-view`, `cutscene`) re-resolve them. Movement style (a side-view walk vs. a top-down path) is the renderer's business; the commands only say who goes where and what they carry.
+- Layout-dependent behaviour (camera preset, bubble lanes, clamping to the view) lives in `mesh-view` only.
+- The a11y feed and overlay requests are expressed in words and ids, so the DOM feed works identically in either world.
