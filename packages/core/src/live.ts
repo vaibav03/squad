@@ -1,5 +1,6 @@
 // Live agent discussion wire contract (docs/live-discussion.md). Browser-safe: hub, web and village share it.
 import { z } from 'zod';
+import { AgentIdSchema } from './agent-id';
 import { ChatIdSchema } from './chat';
 
 export const LiveIdSchema = z.string().regex(/^ld_[a-z0-9]{12}$/);
@@ -251,7 +252,11 @@ export const LIVE_PERSONAS: readonly LivePersona[] = [
   },
 ];
 
-/** Village events (additive VillageEvent kinds): public text only, never a withheld value. */
+/**
+ * Village events (additive VillageEvent kinds): public text only, never a withheld value.
+ * Agent ids follow `council:live-<persona>` (e.g. `council:live-skeptic`) so the village and the inspector can seat
+ * and thread them; `user` turns use `agent: "student:<id>"`.
+ */
 export const DiscussionEvent = z.strictObject({
   t: z.enum([
     'discussion.started',
@@ -261,12 +266,19 @@ export const DiscussionEvent = z.strictObject({
     'discussion.ended',
   ]),
   discussionId: LiveIdSchema,
-  /** Persona id (or `user`); absent on started/ended. */
+  /** Speaker agent id; absent on started/ended. */
+  agent: AgentIdSchema.optional(),
+  /** Persona id (or `user`), for display. */
   member: z.string().max(40).optional(),
+  /** Addressed agent id, drawn as a glance and as an agent-to-agent thread edge. */
+  to: AgentIdSchema.optional(),
+  /** Turn id (`t1`...) so takeaways and the inspector can link back. */
+  turnId: z.string().max(24).optional(),
   /** Caption-sized line; absent for private runs viewed by others. */
   text: z.string().max(400).optional(),
-  /** Addressed persona, drawn as a glance. */
-  to: z.string().max(40).optional(),
+  ts: z.number().optional(),
+  /** Verified citation labels (`ch6.pdf p.3`) for this turn. */
+  cites: z.array(z.string().max(220)).max(4).optional(),
   /** takeaway kind on `discussion.takeaway`. */
   kind: z.enum(['decision', 'disagreement', 'next_step', 'source', 'quiz']).optional(),
   demo: z.boolean().optional(),
