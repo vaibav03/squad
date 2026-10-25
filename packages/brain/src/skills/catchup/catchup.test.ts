@@ -119,12 +119,12 @@ describe('catchUp', () => {
     t.add('group:a', 's_ana', 'my last');
     t.add('group:a', 's_ben', 'only one new');
     const [few] = await t.skill.handle(t.ask('@cubbie catch me up'), t.ctx);
-    expect(few?.text.startsWith('20 messages')).toBe(true);
+    expect(few?.text?.startsWith('20 messages')).toBe(true);
     for (let i = 0; i < 6; i++) t.add('group:a', 's_cam', `new ${i}`);
     const [many] = await t.skill.handle(t.ask('@cubbie catch me up'), t.ctx);
-    expect(many?.text.startsWith('7 messages')).toBe(true);
+    expect(many?.text?.startsWith('7 messages')).toBe(true);
     const [n] = await t.skill.handle(t.ask('@cubbie catch me up last 3 messages'), t.ctx);
-    expect(n?.text.startsWith('3 messages')).toBe(true);
+    expect(n?.text?.startsWith('3 messages')).toBe(true);
     const t2 = setup();
     t2.add('group:a', 's_ana', 'x');
     const [none] = await t2.skill.handle(t2.ask('@cubbie catch me up'), t2.ctx);
