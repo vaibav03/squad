@@ -55,7 +55,7 @@ solution(os.path.join(OUT, "stepdiff-b.png"), ["2x + 6 = 14", "2x = 14 + 6", "2x
 page = Image.new("RGB", (1240, 700), (255, 255, 255))
 d = ImageDraw.Draw(page)
 d.text((90, 80), "Coin flips", font=font(60), fill=(0, 0, 0))
-body = font(44)
+body = font(36)  # the longest line must fit the 1240px page (a clipped line made the OCR check fail)
 for i, line in enumerate([
     "A fair coin lands heads with probability one half.",
     "Two independent flips both land heads with probability one quarter.",
@@ -63,4 +63,10 @@ for i, line in enumerate([
 ]):
     d.text((90, 200 + 90 * i), line, font=body, fill=(0, 0, 0))
 page.save(os.path.join(OUT, "scanned-page.pdf"), "PDF", resolution=150.0)
+longest = max(d.textlength(l, font=body) for l in [
+    "A fair coin lands heads with probability one half.",
+    "Two independent flips both land heads with probability one quarter.",
+    "Independence means one flip does not change the other.",
+])
+assert 90 + longest < 1240 - 40, f"text line overflows the page ({longest}px)"
 print("wrote", sorted(os.listdir(OUT)))
