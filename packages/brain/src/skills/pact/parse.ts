@@ -136,7 +136,7 @@ export function parseCommitment(text: string): { task: string; withDeadline: str
   const m = COMMIT_RE.exec(t);
   const body = (m ? t.slice(m.index + m[0].length) : t)
     .replace(/[,;.]?\s*hold me to it\.?/i, '')
-    .replace(/^to\s+/i, '')
+    .replace(/^(?:promise\s+)?to\s+/i, '')
     .trim();
   if (!body) return undefined;
   return { task: body, withDeadline: body };
