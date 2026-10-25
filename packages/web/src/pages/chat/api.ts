@@ -4,6 +4,7 @@ import {
   ChatCitationExcerptSchema,
   ChatMessageSchema,
   ChatSummarySchema,
+  ChatSyncFieldsSchema,
   ChatTypingSchema,
   ChatUpdateSchema,
   HubStatusSchema,
@@ -39,12 +40,16 @@ export interface ChatApi {
   prepare?(): Promise<void>;
   /** Opens the live stream; returns a closer. `lastEventId` is a chat seq to resume after. */
   subscribe(h: StreamHandlers, lastEventId?: number): () => void;
+  /** Asks the hub to retry a failed iMessage send (POST /v1/imessage/messages/:id/retry). */
+  retryImessage?(messageId: string): Promise<boolean>;
 }
 
 export type StreamState = 'connecting' | 'live' | 'offline' | 'expired';
 export interface StreamHandlers {
   onMessage(m: ChatMessage): void;
   onUpdate(u: ChatUpdate): void;
+  /** A message's iMessage delivery state changed (queued, sent, delivered, failed, dry_run, web_only). */
+  onSync?(e: ChatSyncEvent): void;
   onTyping(t: ChatTyping): void;
   onResync(seq: number): void;
   onState(s: StreamState): void;
@@ -115,6 +120,14 @@ const UploadSchema = z.object({ attachment: ChatAttachmentSchema });
 const StreamTokenSchema = z.object({ st: z.string().min(1) });
 const FileTokenSchema = z.object({ ft: z.string().min(1), expiresAt: z.number() });
 const ResyncSchema = z.object({ seq: z.number() });
+const RetryAck = z.object({ ok: z.boolean() });
+/** `chat.sync`: a message's delivery state (or other sync fields) changed. */
+export const ChatSyncEventSchema = z.object({
+  chatId: z.string(),
+  messageId: z.string(),
+  patch: ChatSyncFieldsSchema.partial(),
+});
+export type ChatSyncEvent = z.infer<typeof ChatSyncEventSchema>;
 
 export interface HttpChatApiOptions {
   hubUrl: string;
@@ -241,6 +254,14 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
       ),
     // <img>/<audio> cannot send headers: files take a file-scoped token (`ft`, 2 h), never the bearer token.
     prepare: refreshFileToken,
+    async retryImessage(messageId) {
+      try {
+        await call(RetryAck, `/v1/imessage/messages/${q(messageId)}/retry`, { method: 'POST' });
+        return true;
+      } catch {
+        return false;
+      }
+    },
     fileUrl: (att) => {
       if (/^(data|blob):/.test(att.url) || /^https?:/.test(att.url)) return att.url;
       if (fileToken && fileToken.exp - Date.now() < 15 * 60_000) void refreshFileToken();
@@ -306,6 +327,10 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
         src.addEventListener('chat.update', (ev) => {
           const u = parse(ChatUpdateSchema, (ev as MessageEvent).data);
           if (u) h.onUpdate(u);
+        });
+        src.addEventListener('chat.sync', (ev) => {
+          const e = parse(ChatSyncEventSchema, (ev as MessageEvent).data);
+          if (e) h.onSync?.(e);
         });
         src.addEventListener('chat.typing', (ev) => {
           const t = parse(ChatTypingSchema, (ev as MessageEvent).data);

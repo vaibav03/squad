@@ -423,6 +423,7 @@ function MessageList({
                       }}
                       onRetry={(id) => void ctl.retry(chat.id, id)}
                       onDiscard={(id) => ctl.discard(chat.id, id)}
+                      onRetryDelivery={(id) => void ctl.retryDelivery(id)}
                       quizAnswer={ctl.quizAnswer}
                       onQuizAnswer={(m, choice) => ctl.answerQuiz(m.chatId, m.id, choice)}
                       onConfirm={(m, n) =>
