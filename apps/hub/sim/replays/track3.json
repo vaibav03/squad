@@ -390,10 +390,7 @@
         "t": "council.rank",
         "councilId": "council:planner",
         "member": "advisor",
-        "order": [
-          "grind",
-          "chill"
-        ]
+        "order": ["grind", "chill"]
       }
     },
     {

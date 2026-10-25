@@ -49,10 +49,7 @@
         "to": "commons",
         "taskId": "task_study_midterm",
         "kind": "task.open",
-        "shared": [
-          "study plan opened",
-          "3 members"
-        ]
+        "shared": ["study plan opened", "3 members"]
       }
     },
     {
@@ -87,9 +84,7 @@
         "to": "commons",
         "taskId": "task_study_midterm",
         "kind": "psi.blind",
-        "shared": [
-          "168 blinded tokens (padded)"
-        ]
+        "shared": ["168 blinded tokens (padded)"]
       }
     },
     {
@@ -111,9 +106,7 @@
         "to": "commons",
         "taskId": "task_study_midterm",
         "kind": "psi.blind",
-        "shared": [
-          "168 blinded tokens (padded)"
-        ]
+        "shared": ["168 blinded tokens (padded)"]
       }
     },
     {
@@ -135,9 +128,7 @@
         "to": "commons",
         "taskId": "task_study_midterm",
         "kind": "psi.blind",
-        "shared": [
-          "168 blinded tokens (padded)"
-        ]
+        "shared": ["168 blinded tokens (padded)"]
       }
     },
     {
@@ -159,9 +150,7 @@
         "to": "mediator",
         "taskId": "task_study_midterm",
         "kind": "psi.tokens",
-        "shared": [
-          "168 blinded tokens"
-        ]
+        "shared": ["168 blinded tokens"]
       }
     },
     {
@@ -172,9 +161,7 @@
         "to": "mediator",
         "taskId": "task_study_midterm",
         "kind": "psi.tokens",
-        "shared": [
-          "168 blinded tokens"
-        ]
+        "shared": ["168 blinded tokens"]
       }
     },
     {
@@ -185,9 +172,7 @@
         "to": "mediator",
         "taskId": "task_study_midterm",
         "kind": "psi.tokens",
-        "shared": [
-          "168 blinded tokens"
-        ]
+        "shared": ["168 blinded tokens"]
       }
     },
     {
@@ -198,9 +183,7 @@
         "to": "commons",
         "taskId": "task_study_midterm",
         "kind": "psi.common",
-        "shared": [
-          "0 common slots"
-        ]
+        "shared": ["0 common slots"]
       }
     },
     {
@@ -211,9 +194,7 @@
         "to": "commons",
         "taskId": "task_study_midterm",
         "kind": "conflict",
-        "shared": [
-          "no slot works for everyone"
-        ]
+        "shared": ["no slot works for everyone"]
       }
     },
     {
@@ -224,9 +205,7 @@
         "to": "commons",
         "taskId": "task_study_midterm",
         "kind": "result",
-        "shared": [
-          "plan proposed"
-        ]
+        "shared": ["plan proposed"]
       }
     },
     {
@@ -271,9 +250,7 @@
         "to": "commons",
         "taskId": "task_study_midterm",
         "kind": "result",
-        "shared": [
-          "plan found"
-        ]
+        "shared": ["plan found"]
       }
     },
     {
@@ -349,9 +326,7 @@
         "to": "student:s_ana",
         "taskId": "task_attack_budget",
         "kind": "query",
-        "shared": [
-          "asks: budget"
-        ]
+        "shared": ["asks: budget"]
       }
     },
     {
@@ -362,9 +337,7 @@
         "to": "student:s_ben",
         "taskId": "task_attack_budget",
         "kind": "query_denied",
-        "shared": [
-          "request denied: budget"
-        ]
+        "shared": ["request denied: budget"]
       }
     },
     {
@@ -395,10 +368,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "task.open",
-        "shared": [
-          "trip plan opened",
-          "3 members"
-        ]
+        "shared": ["trip plan opened", "3 members"]
       }
     },
     {
@@ -433,9 +403,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "psi.blind",
-        "shared": [
-          "64 blinded tokens (padded)"
-        ]
+        "shared": ["64 blinded tokens (padded)"]
       }
     },
     {
@@ -457,9 +425,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "psi.blind",
-        "shared": [
-          "64 blinded tokens (padded)"
-        ]
+        "shared": ["64 blinded tokens (padded)"]
       }
     },
     {
@@ -481,9 +447,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "psi.blind",
-        "shared": [
-          "64 blinded tokens (padded)"
-        ]
+        "shared": ["64 blinded tokens (padded)"]
       }
     },
     {
@@ -505,9 +469,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "psi.common",
-        "shared": [
-          "3 common slots"
-        ]
+        "shared": ["3 common slots"]
       }
     },
     {
@@ -518,9 +480,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -542,9 +502,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -566,9 +524,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -590,9 +546,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (veto)"
-        ]
+        "shared": ["secret share of 3 values (veto)"]
       }
     },
     {
@@ -614,9 +568,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (veto)"
-        ]
+        "shared": ["secret share of 3 values (veto)"]
       }
     },
     {
@@ -638,9 +590,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "share.vec",
-        "shared": [
-          "secret share of 3 values (veto)"
-        ]
+        "shared": ["secret share of 3 values (veto)"]
       }
     },
     {
@@ -662,9 +612,7 @@
         "to": "mediator",
         "taskId": "task_trip_flagstaff",
         "kind": "share.sum",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -675,9 +623,7 @@
         "to": "mediator",
         "taskId": "task_trip_flagstaff",
         "kind": "share.sum",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -688,9 +634,7 @@
         "to": "mediator",
         "taskId": "task_trip_flagstaff",
         "kind": "share.sum",
-        "shared": [
-          "secret share of 3 values (cantAfford)"
-        ]
+        "shared": ["secret share of 3 values (cantAfford)"]
       }
     },
     {
@@ -701,9 +645,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "option_dropped",
-        "shared": [
-          "option dropped: budget"
-        ]
+        "shared": ["option dropped: budget"]
       }
     },
     {
@@ -714,9 +656,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "option_dropped",
-        "shared": [
-          "dropped: veto"
-        ]
+        "shared": ["dropped: veto"]
       }
     },
     {
@@ -727,9 +667,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "result",
-        "shared": [
-          "top options ranked"
-        ]
+        "shared": ["top options ranked"]
       }
     },
     {
@@ -740,9 +678,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "result",
-        "shared": [
-          "plan proposed"
-        ]
+        "shared": ["plan proposed"]
       }
     },
     {
@@ -855,9 +791,7 @@
         "to": "commons",
         "taskId": "task_trip_flagstaff",
         "kind": "result",
-        "shared": [
-          "plan found"
-        ]
+        "shared": ["plan found"]
       }
     },
     {
