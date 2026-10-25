@@ -18,11 +18,16 @@ describe('council voices', () => {
   });
 
   it('folds opinions, ranks, verdict and thoughts per member', () => {
-    let t = 1000;
+    const t = 1000;
     const s = createInspectorStore({ me: 's_ana', now: () => t });
     s.apply(op('chill', 'Start with chapter 5.', { thought: 'Ch5 is the lightest start.' }));
     s.apply(op('grind', 'Do chapters 5 and 6 tonight.', { dissent: true }));
-    s.apply({ t: 'council.rank', councilId: 'planner', member: 'advisor', order: ['chill', 'grind'] });
+    s.apply({
+      t: 'council.rank',
+      councilId: 'planner',
+      member: 'advisor',
+      order: ['chill', 'grind'],
+    });
     s.apply({
       t: 'council.verdict',
       councilId: 'planner',
@@ -61,7 +66,13 @@ describe('council voices', () => {
     const line = { who: 'Skeptic', group: 'd1', kind: 'turn' as const, text: 'Why?', key: 'd1:t1' };
     s.noteVoice(line);
     s.noteVoice(line);
-    s.apply({ t: 'discussion.turn', discussionId: 'd1', agent: 'council:live-tutor', member: 'tutor', text: 'Because.' });
+    s.apply({
+      t: 'discussion.turn',
+      discussionId: 'd1',
+      agent: 'council:live-tutor',
+      member: 'tutor',
+      text: 'Because.',
+    });
     expect(s.voice('skeptic').thread.map((l) => l.who)).toEqual(['skeptic', 'tutor']);
   });
 

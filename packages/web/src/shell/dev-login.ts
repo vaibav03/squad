@@ -1,7 +1,8 @@
 import type { SquadSession } from './types';
 
 /** Hub student ids are `s_<name>`; the sign-in stub's picker uses the bare name. */
-export const hubStudentId = (id: string): string => (id.startsWith('s_') ? id : `s_${id}`);
+/** Demo students are `s_<name>`; real accounts already carry their hub id (`u_<hash>`), which must not be prefixed again. */
+export const hubStudentId = (id: string): string => (/^[su]_/.test(id) ? id : `s_${id}`);
 
 /**
  * Signs a seeded student in through the hub's dev-login stub (`POST /v1/auth/dev-login`) and returns the session with

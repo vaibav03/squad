@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { agentName, clearRoster, looksLikeHash, rememberName, setRoster, studentLabel } from './labels';
+import {
+  agentName,
+  clearRoster,
+  looksLikeHash,
+  rememberName,
+  setRoster,
+  studentLabel,
+} from './labels';
 import { displayName, placeOf, roleOf, wordsFor } from '../inspector/describe';
 
 const IDS = ['u_a193aba6d4e4', 's_9f3c0a7be211', 'u_0123456789ab', 's_ana', 'u_ff00ee11dd22'];
@@ -14,10 +21,16 @@ describe('names never show raw ids', () => {
   });
 
   it('uses roster names, with the viewer first', () => {
-    setRoster([{ id: 'u_a193aba6d4e4', name: 'Maya' }, { id: 'u_ff00ee11dd22', name: 'Ben' }], {
-      id: 'u_a193aba6d4e4',
-      name: 'Maya',
-    });
+    setRoster(
+      [
+        { id: 'u_a193aba6d4e4', name: 'Maya' },
+        { id: 'u_ff00ee11dd22', name: 'Ben' },
+      ],
+      {
+        id: 'u_a193aba6d4e4',
+        name: 'Maya',
+      },
+    );
     expect(agentName('student:u_a193aba6d4e4')).toBe('Maya');
     expect(displayName('student:u_a193aba6d4e4', 'u_a193aba6d4e4')).toBe('Maya (you)');
     expect(roleOf('student:u_a193aba6d4e4', 'u_a193aba6d4e4')).toBe('Your study agent');

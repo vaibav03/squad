@@ -41,10 +41,13 @@
   .ai-panel {
     left: auto;
     right: var(--lv-s4, 16px);
-    top: 76px;
+    top: 148px; /* below the top HUD chips (Left/Mid/Right/Zoom/Calm) */
     bottom: auto;
+    box-sizing: border-box;
     width: 380px;
-    max-height: calc(100% - 92px);
+    max-width: calc(100% - 32px);
+    max-height: calc(100% - 164px);
+    overflow: hidden;
     border: 1px solid var(--lv-line);
     border-radius: var(--lv-r4, 16px);
     padding-bottom: 0;
@@ -659,4 +662,9 @@
     animation: none;
     opacity: 1;
   }
+}
+
+.ai-bar {
+  flex-wrap: wrap;
+  row-gap: 6px;
 }

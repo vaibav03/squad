@@ -111,15 +111,7 @@ const VOICE_KIND: Record<VoiceLine['kind'], string> = {
  * with a `Just <name>` switch. Words come from `council.*` / `discussion.*` events and from council results the
  * panel handed in; public words only.
  */
-export function VoiceChat({
-  voice,
-  title,
-  now,
-}: {
-  voice: VoiceView;
-  title: string;
-  now: number;
-}) {
+export function VoiceChat({ voice, title, now }: { voice: VoiceView; title: string; now: number }) {
   const [only, setOnly] = useState(false);
   const all = voice.thread;
   const mine = voice.said;

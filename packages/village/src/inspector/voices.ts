@@ -83,7 +83,8 @@ const ROLE: Record<string, string> = {
 export const voiceRole = (key: string): string =>
   ROLE[key] ?? 'Council member: argues a view, then the chair decides';
 
-const isCouncilAgent = (a: unknown): a is string => typeof a === 'string' && a.startsWith('council:');
+const isCouncilAgent = (a: unknown): a is string =>
+  typeof a === 'string' && a.startsWith('council:');
 
 type Draft = Omit<VoiceLine, 'seq' | 'at'>;
 
@@ -110,11 +111,14 @@ export function voiceDraftsFromEvent(raw: unknown): Draft[] {
       if (e.t === 'council.rank') {
         kind = 'rank';
         const order = Array.isArray(e.order) ? e.order.filter((o) => typeof o === 'string') : [];
-        text = order.length ? `ranks ${order.map((o) => voiceName(voiceKey(o))).join(', then ')}` : text;
+        text = order.length
+          ? `ranks ${order.map((o) => voiceName(voiceKey(o))).join(', then ')}`
+          : text;
       } else if (e.t === 'council.verdict') {
         kind = 'verdict';
         const d = str(e.dissenter, 40);
-        if (!text) text = d ? `Verdict given. ${voiceName(voiceKey(d))} dissented.` : 'Verdict given.';
+        if (!text)
+          text = d ? `Verdict given. ${voiceName(voiceKey(d))} dissented.` : 'Verdict given.';
       }
       if (!text && !thought) return [];
       return [
@@ -150,7 +154,9 @@ export function voiceDraftsFromEvent(raw: unknown): Draft[] {
     default:
       // any other event a council agent emits with a shared thought (e.g. agent.state with `thought`)
       if (isCouncilAgent(e.agent) && thought)
-        return [{ who: voiceKey(e.agent), group: 'council', kind: 'thought', text: thought, ...base }];
+        return [
+          { who: voiceKey(e.agent), group: 'council', kind: 'thought', text: thought, ...base },
+        ];
       return [];
   }
 }
@@ -189,7 +195,8 @@ export function createVoiceBook(cap = 300): VoiceBook {
       if (
         !d.key &&
         lines.some(
-          (l) => l.who === d.who && l.kind === d.kind && l.text === d.text && Math.abs(l.at - at) < 5000,
+          (l) =>
+            l.who === d.who && l.kind === d.kind && l.text === d.text && Math.abs(l.at - at) < 5000,
         )
       )
         return false;
@@ -224,7 +231,9 @@ export function createVoiceBook(cap = 300): VoiceBook {
       const councilLines = council
         ? lines.filter((l) => l.group === voiceKey(council) || voiceKey(council) === l.group)
         : [];
-      const thread = (who ? lines.filter(inGroup) : councilLines.length ? councilLines : lines).slice();
+      const thread = (
+        who ? lines.filter(inGroup) : councilLines.length ? councilLines : lines
+      ).slice();
       // thoughts: shared `thought` fields first, then the member's own public stance
       const shared = (who ? own : thread).filter((l) => l.thought);
       const stance = (who ? own : thread).filter((l) => l.text && l.kind !== 'thought');
@@ -250,7 +259,9 @@ export function createVoiceBook(cap = 300): VoiceBook {
         text: l.text,
         dissent: l.dissent === true,
       }));
-      const thinking = who ? book.thinking(who, now) : [...latest.keys()].some((k) => book.thinking(k, now));
+      const thinking = who
+        ? book.thinking(who, now)
+        : [...latest.keys()].some((k) => book.thinking(k, now));
       return {
         who,
         name: voiceName(who),

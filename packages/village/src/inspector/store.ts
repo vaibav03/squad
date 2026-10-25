@@ -9,7 +9,13 @@ import {
   type RunState,
   type StampedEvent,
 } from './describe';
-import { createVoiceBook, voiceKey, voiceDraftsFromEvent, type VoiceLine, type VoiceView } from './voices';
+import {
+  createVoiceBook,
+  voiceKey,
+  voiceDraftsFromEvent,
+  type VoiceLine,
+  type VoiceView,
+} from './voices';
 import {
   activeLinks,
   describeConversation,
@@ -253,7 +259,9 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
     voice: (who, council) => voices.view(who ? voiceKey(who) : '', now(), council),
     noteVoice(line) {
       const { at, ...rest } = line;
-      if (voices.add({ ...rest, who: voiceKey(rest.who), group: voiceKey(rest.group) }, at ?? now()))
+      if (
+        voices.add({ ...rest, who: voiceKey(rest.who), group: voiceKey(rest.group) }, at ?? now())
+      )
         notify();
     },
     aliasVoice(seat, to) {

@@ -81,7 +81,11 @@ export function InspectorPanel({
       : null;
   const voice = sel && councilWho !== null ? store.voice(councilWho, sel) : null;
   const openKey = sel ? `${sel}|${room?.slot ?? ''}|${room?.who ?? ''}` : null;
-  const openTab: Tab | null = voice ? (voice.thinking || voice.hasThought ? 'thinking' : 'chat') : null;
+  const openTab: Tab | null = voice
+    ? voice.thinking || voice.hasThought
+      ? 'thinking'
+      : 'chat'
+    : null;
   const openTabRef = useRef(openTab);
   openTabRef.current = openTab;
   useEffect(() => {
@@ -377,7 +381,14 @@ export function InspectorPanel({
 
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-const POS_KIND = { opinion: 'Opinion', rank: 'Ranking', verdict: 'Verdict', turn: 'Said', yield: 'Yielded', thought: 'Thought' } as const;
+const POS_KIND = {
+  opinion: 'Opinion',
+  rank: 'Ranking',
+  verdict: 'Verdict',
+  turn: 'Said',
+  yield: 'Yielded',
+  thought: 'Thought',
+} as const;
 
 /** What a council voice is thinking: its latest thought or stance, earlier thoughts, and where every member stands. */
 function VoiceThinking({
@@ -416,12 +427,21 @@ function VoiceThinking({
           <h3 className="ai-label">Where everyone stands</h3>
           <ul className="ai-thread">
             {voice.positions.map((p) => (
-              <li key={p.who} className="ai-msg" data-dissent={p.dissent || undefined} data-focus={p.who === voice.who || undefined}>
+              <li
+                key={p.who}
+                className="ai-msg"
+                data-dissent={p.dissent || undefined}
+                data-focus={p.who === voice.who || undefined}
+              >
                 <div className="ai-msg__head">
                   {p.who === voice.who ? (
                     <b className="ai-party">{p.name}</b>
                   ) : (
-                    <button type="button" className="ai-party ai-party--btn" onClick={() => onOpen(p.who)}>
+                    <button
+                      type="button"
+                      className="ai-party ai-party--btn"
+                      onClick={() => onOpen(p.who)}
+                    >
                       {p.name}
                     </button>
                   )}

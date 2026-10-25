@@ -115,7 +115,11 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
                   style={{ '--i': i } as CSSProperties}
                 >
                   {id ? (
-                    <InspectableVoice who={id} name={castName(w.name) ? w.name : id} slot={info.slot}>
+                    <InspectableVoice
+                      who={id}
+                      name={castName(w.name) ? w.name : id}
+                      slot={info.slot}
+                    >
                       <CastAvatar
                         name={id}
                         state={state}
