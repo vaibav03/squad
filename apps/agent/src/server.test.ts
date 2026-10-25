@@ -131,7 +131,8 @@ describe('POST /internal/calendar', () => {
     const keep = [...profile.calendar];
     const res = await post(app, '/internal/calendar', { events: [ev, ev] }, h);
     expect(await res.json()).toEqual({ ok: true, blocks: 2 });
-    expect(profile.calendar).toEqual([ev, ev]);
+    // titles never persist: only start/end survive, title is the constant 'busy'
+    expect(profile.calendar).toEqual([{ ...ev, title: 'busy' }, { ...ev, title: 'busy' }]);
     profile.calendar.splice(0, profile.calendar.length, ...keep);
   });
 });

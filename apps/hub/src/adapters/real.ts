@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import {
   parseAgentId,
   parseIcsBusy,
+  stripBusyTitles,
   type BusyBlock,
   type Llm,
   type StudentId,
@@ -327,7 +328,9 @@ function createRealBrainPort(
     // Busy blocks are stored per student (hub_busy_blocks, owner-private: never streamed) and pushed to
     // the owner's mesh agent so the next study/trip flow schedules around them.
     async loadCalendar(student, input) {
-      const blocks = input.demo ? demoBusyBlocks(deps.now()) : parseIcsBusy(input.ics ?? '');
+      const blocks = stripBusyTitles(
+        input.demo ? demoBusyBlocks(deps.now()) : parseIcsBusy(input.ics ?? ''),
+      );
       const tx = deps.db.transaction(() => {
         deps.db.prepare('DELETE FROM hub_busy_blocks WHERE student=?').run(student);
         const ins = deps.db.prepare(
