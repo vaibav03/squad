@@ -17,14 +17,28 @@ const MIN_VIEW_H = 168; // below this we drop a zoom step rather than crop the s
  * every art pixel covers a whole number of device pixels (no shimmering rows at DPR 1.25/1.5/1.75). The canvas buffer
  * is the native size; CSS shows it at k/dpr css px per art pixel with image-rendering: pixelated.
  */
-export function computeScale(containerW: number, containerH: number, dpr = 1): ScaleResult {
+export function computeScale(
+  containerW: number,
+  containerH: number,
+  dpr = 1,
+  extraZoom = 0,
+): ScaleResult {
   const cw = Math.max(1, containerW);
   const ch = Math.max(1, containerH);
   let zoom = cw >= 900 ? 3 : 2;
   while (zoom > 1 && Math.floor(ch / zoom) < MIN_VIEW_H) zoom--;
+  zoom += extraZoom; // the HUD Zoom button: one integer step closer (3x -> 4x), never a fractional camera zoom
   const k = Math.max(zoom, Math.round(zoom * dpr));
   const cssPerPx = k / dpr;
   const logicalW = Math.max(64, Math.floor(cw / cssPerPx));
   const logicalH = Math.max(64, Math.min(LOGICAL_H, Math.floor(ch / cssPerPx)));
-  return { zoom, k, cssPerPx, logicalW, logicalH, cssW: logicalW * cssPerPx, cssH: logicalH * cssPerPx };
+  return {
+    zoom,
+    k,
+    cssPerPx,
+    logicalW,
+    logicalH,
+    cssW: logicalW * cssPerPx,
+    cssH: logicalH * cssPerPx,
+  };
 }

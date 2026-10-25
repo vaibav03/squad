@@ -19,10 +19,20 @@ export function ensureCharacterAnims(scene: Phaser.Scene, atlasKey = CHAR_ATLAS)
     if (scene.anims.exists(key)) continue;
     frames.sort((a, b) => Number(a.split('/').pop()) - Number(b.split('/').pop()));
     const rate = RATES[key.split('-').pop()!] ?? 8;
-    scene.anims.create({ key, frames: frames.map((f) => ({ key: atlasKey, frame: f })), frameRate: rate, repeat: -1 });
+    scene.anims.create({
+      key,
+      frames: frames.map((f) => ({ key: atlasKey, frame: f })),
+      frameRate: rate,
+      repeat: -1,
+    });
   }
   const walk = scene.anims.get('student-walk');
   if (walk && !scene.anims.exists('student-walk-fast')) {
-    scene.anims.create({ key: 'student-walk-fast', frames: walk.frames.map((f) => ({ key: atlasKey, frame: f.textureFrame })), frameRate: WALK_FPS, repeat: -1 });
+    scene.anims.create({
+      key: 'student-walk-fast',
+      frames: walk.frames.map((f) => ({ key: atlasKey, frame: f.textureFrame })),
+      frameRate: WALK_FPS,
+      repeat: -1,
+    });
   }
 }

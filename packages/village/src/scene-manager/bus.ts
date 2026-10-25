@@ -1,4 +1,11 @@
-import type { AgentInfo, AgentRegistry, AgentState, Interactable, VillageBus, VillageBusEvents } from '../world/api';
+import type {
+  AgentInfo,
+  AgentRegistry,
+  AgentState,
+  Interactable,
+  VillageBus,
+  VillageBusEvents,
+} from '../world/api';
 
 export function createBus(): VillageBus {
   const subs = new Map<string, Set<(p: never) => void>>();
@@ -21,7 +28,9 @@ export function createBus(): VillageBus {
   };
 }
 
-export function createAgentRegistry(bus: VillageBus): AgentRegistry & { onChange(fn: () => void): () => void } {
+export function createAgentRegistry(
+  bus: VillageBus,
+): AgentRegistry & { onChange(fn: () => void): () => void } {
   const agents = new Map<string, AgentInfo>();
   const listeners = new Set<() => void>();
   const changed = () => listeners.forEach((f) => f());

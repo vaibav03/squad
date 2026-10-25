@@ -1,5 +1,13 @@
 import type Phaser from 'phaser';
-import type { AssetSpec, Interactable, MotionTokens, PlayerApi, VillageBus, WorldLayout, WorldTime } from '../world/api';
+import type {
+  AssetSpec,
+  Interactable,
+  MotionTokens,
+  PlayerApi,
+  VillageBus,
+  WorldLayout,
+  WorldTime,
+} from '../world/api';
 import { DEPTH, GROUND_Y } from '../world/api';
 import { nearestInteractable, tabOrder } from '../world/interact';
 import { WalkSim } from './walk';
@@ -7,7 +15,12 @@ import { CHAR_ATLAS, ensureCharacterAnims } from './anims';
 export { ensureCharacterAnims } from './anims';
 
 export const ASSETS: AssetSpec[] = [
-  { type: 'atlas', key: CHAR_ATLAS, path: 'assets/pixel/composed/characters/atlas.png', atlasPath: 'assets/pixel/composed/characters/atlas.json' },
+  {
+    type: 'atlas',
+    key: CHAR_ATLAS,
+    path: 'assets/pixel/composed/characters/atlas.png',
+    atlasPath: 'assets/pixel/composed/characters/atlas.json',
+  },
 ];
 
 export interface PlayerDeps {
@@ -34,17 +47,24 @@ export function createPlayer(scene: Phaser.Scene, d: PlayerDeps): PlayerImpl {
   const start = saved ?? d.layout.slot('spawn').x;
   const sim = new WalkSim(start, MARGIN, d.layout.width - MARGIN, d.motion.easeOut);
 
-  const sprite = scene.add.sprite(Math.round(start), GROUND_Y, CHAR_ATLAS, `${cast}/idle/0`).setOrigin(0.5, 31 / 32).setDepth(DEPTH.actors + 1);
+  const sprite = scene.add
+    .sprite(Math.round(start), GROUND_Y, CHAR_ATLAS, `${cast}/idle/0`)
+    .setOrigin(0.5, 31 / 32)
+    .setDepth(DEPTH.actors + 1);
   if (!scene.textures.exists('sqv-shadow')) {
     const t = scene.textures.createCanvas('sqv-shadow', 18, 6);
     if (t) {
       const c = t.getContext();
       c.fillStyle = 'rgba(7,15,31,0.42)';
-      c.fillRect(3, 0, 12, 6); c.fillRect(1, 1, 16, 4);
+      c.fillRect(3, 0, 12, 6);
+      c.fillRect(1, 1, 16, 4);
       t.refresh();
     }
   }
-  const shadow = scene.add.image(Math.round(start), GROUND_Y, 'sqv-shadow').setOrigin(0.5, 0.5).setDepth(DEPTH.actors - 1);
+  const shadow = scene.add
+    .image(Math.round(start), GROUND_Y, 'sqv-shadow')
+    .setOrigin(0.5, 0.5)
+    .setDepth(DEPTH.actors - 1);
 
   let locks = 0;
   let animKey = '';
@@ -52,12 +72,20 @@ export function createPlayer(scene: Phaser.Scene, d: PlayerDeps): PlayerImpl {
   let lastSave = 0;
 
   const api: PlayerImpl = {
-    get x() { return sim.x; },
-    get facing() { return sim.facing; },
-    get isWalking() { return sim.walking; },
+    get x() {
+      return sim.x;
+    },
+    get facing() {
+      return sim.facing;
+    },
+    get isWalking() {
+      return sim.walking;
+    },
     sprite,
     walkTo(x, opts) {
-      const target = opts?.stopWithin ? x - Math.sign(x - sim.x) * Math.min(opts.stopWithin, Math.abs(x - sim.x)) : x;
+      const target = opts?.stopWithin
+        ? x - Math.sign(x - sim.x) * Math.min(opts.stopWithin, Math.abs(x - sim.x))
+        : x;
       if (d.calm()) {
         sim.teleport(target); // reduced motion: teleport with a 120 ms fade
         fade = { t: 0, to: target };
@@ -65,31 +93,54 @@ export function createPlayer(scene: Phaser.Scene, d: PlayerDeps): PlayerImpl {
       }
       return new Promise<boolean>((res) => sim.walkTo(target, res));
     },
-    teleport(x) { sim.teleport(x); },
+    teleport(x) {
+      sim.teleport(x);
+    },
     lockInput() {
       locks++;
       sim.setIntent(0);
       let done = false;
-      return () => { if (!done) { done = true; locks = Math.max(0, locks - 1); } };
+      return () => {
+        if (!done) {
+          done = true;
+          locks = Math.max(0, locks - 1);
+        }
+      };
     },
-    setIntent(dir) { if (locks === 0) sim.setIntent(dir); else sim.setIntent(0); },
+    setIntent(dir) {
+      if (locks === 0) sim.setIntent(dir);
+      else sim.setIntent(0);
+    },
     update(t, dt) {
       sim.step(dt);
       const x = sim.renderX;
       sprite.setPosition(x, GROUND_Y);
       shadow.setPosition(x, GROUND_Y - 1);
       sprite.setFlipX(sim.facing === 'left');
-      const key = sim.walking ? (cast === 'student' ? 'student-walk-fast' : `${cast}-walk`) : `${cast}-idle`;
-      if (key !== animKey) { animKey = key; sprite.play(key, true); }
+      const key = sim.walking
+        ? cast === 'student'
+          ? 'student-walk-fast'
+          : `${cast}-walk`
+        : `${cast}-idle`;
+      if (key !== animKey) {
+        animKey = key;
+        sprite.play(key, true);
+      }
       if (fade) {
         fade.t += dt;
         const k = Math.min(1, fade.t / 120);
         sprite.setAlpha(0.25 + 0.75 * k);
         if (k >= 1) fade = null;
       }
-      if (t - lastSave > 400) { lastSave = t; d.registry.set('playerX', Math.round(sim.x)); }
+      if (t - lastSave > 400) {
+        lastSave = t;
+        d.registry.set('playerX', Math.round(sim.x));
+      }
     },
-    destroy() { sprite.destroy(); shadow.destroy(); },
+    destroy() {
+      sprite.destroy();
+      shadow.destroy();
+    },
   };
   return api;
 }
@@ -103,9 +154,13 @@ export interface InputDeps {
   bus: VillageBus;
   focusEl: HTMLElement;
 }
-export interface InputImpl { update(timeMs: number, deltaMs: number): void; destroy(): void }
+export interface InputImpl {
+  update(timeMs: number, deltaMs: number): void;
+  destroy(): void;
+}
 
-const CONTROLS = 'Arrow keys or A and D walk. Enter opens the nearest place. Tab cycles places. Escape leaves. Tap the world to walk.';
+const CONTROLS =
+  'Arrow keys or A and D walk. Enter opens the nearest place. Tab cycles places. Escape leaves. Tap the world to walk.';
 
 export function createInput(scene: Phaser.Scene, d: InputDeps): InputImpl {
   const down = new Set<string>();
@@ -125,9 +180,17 @@ export function createInput(scene: Phaser.Scene, d: InputDeps): InputImpl {
 
   const goActivate = (it: Interactable) => {
     pendingActivate = null;
-    if (Math.abs(it.x - d.player.x) <= it.radius) { it.onActivate(); return; }
+    if (Math.abs(it.x - d.player.x) <= it.radius) {
+      it.onActivate();
+      return;
+    }
     pendingActivate = it;
-    void d.player.walkTo(it.x).then((ok) => { if (ok && pendingActivate === it) { pendingActivate = null; it.onActivate(); } });
+    void d.player.walkTo(it.x).then((ok) => {
+      if (ok && pendingActivate === it) {
+        pendingActivate = null;
+        it.onActivate();
+      }
+    });
   };
 
   const onKeyDown = (e: KeyboardEvent) => {
@@ -141,11 +204,17 @@ export function createInput(scene: Phaser.Scene, d: InputDeps): InputImpl {
     } else if (e.code === 'Enter' || e.code === 'Space') {
       const list = tabOrder(d.interactables.list());
       const target = tabIdx >= 0 ? list[tabIdx] : nearestInteractable(list, d.player.x);
-      if (target) { e.preventDefault(); goActivate(target); }
+      if (target) {
+        e.preventDefault();
+        goActivate(target);
+      }
     } else if (e.code === 'Tab') {
       const list = tabOrder(d.interactables.list());
       const next = tabIdx + (e.shiftKey ? -1 : 1);
-      if (next < 0 || next >= list.length) { tabIdx = -1; return; } // let focus leave the canvas at the ends
+      if (next < 0 || next >= list.length) {
+        tabIdx = -1;
+        return;
+      } // let focus leave the canvas at the ends
       e.preventDefault();
       tabIdx = next;
       const it = list[next]!;
@@ -156,20 +225,47 @@ export function createInput(scene: Phaser.Scene, d: InputDeps): InputImpl {
       d.bus.emit('announce', CONTROLS);
     }
   };
-  const onKeyUp = (e: KeyboardEvent) => { if (down.delete(e.code)) apply(); };
-  const onBlur = () => { down.clear(); apply(); };
+  const onKeyUp = (e: KeyboardEvent) => {
+    if (down.delete(e.code)) apply();
+  };
+  const onBlur = () => {
+    down.clear();
+    apply();
+  };
   d.focusEl.addEventListener('keydown', onKeyDown);
   d.focusEl.addEventListener('keyup', onKeyUp);
   d.focusEl.addEventListener('blur', onBlur);
 
-  unsubs.push(d.bus.on('overlay', (o) => { if (o.type !== 'closeOverlay') { overlayOpen = true; down.clear(); apply(); } else overlayOpen = false; }));
-  unsubs.push(d.bus.on('overlayClosed', () => { overlayOpen = false; d.focusEl.focus({ preventScroll: true }); }));
-  unsubs.push(d.bus.on('enter', (e) => { inside = e.slotId; }));
-  unsubs.push(d.bus.on('leave', () => { inside = null; }));
+  unsubs.push(
+    d.bus.on('overlay', (o) => {
+      if (o.type !== 'closeOverlay') {
+        overlayOpen = true;
+        down.clear();
+        apply();
+      } else overlayOpen = false;
+    }),
+  );
+  unsubs.push(
+    d.bus.on('overlayClosed', () => {
+      overlayOpen = false;
+      d.focusEl.focus({ preventScroll: true });
+    }),
+  );
+  unsubs.push(
+    d.bus.on('enter', (e) => {
+      inside = e.slotId;
+    }),
+  );
+  unsubs.push(
+    d.bus.on('leave', () => {
+      inside = null;
+    }),
+  );
 
   // Tap / hold to walk (touch + mouse). Continuous while the pointer is held and moving.
   const marker = scene.add.graphics().setDepth(DEPTH.actorFx);
-  let markerT = -1; let markerX = 0;
+  let markerT = -1;
+  let markerX = 0;
   let held = false;
   const toWorld = (p: Phaser.Input.Pointer) => d.camera.getWorldPoint(p.x, p.y).x;
   const onDown = (p: Phaser.Input.Pointer) => {
@@ -177,14 +273,26 @@ export function createInput(scene: Phaser.Scene, d: InputDeps): InputImpl {
     d.focusEl.focus({ preventScroll: true });
     held = true;
     const x = toWorld(p);
-    const hit = nearestInteractable(d.interactables.list().map((i) => ({ ...i, radius: Math.max(i.radius, 18) })), x);
+    const hit = nearestInteractable(
+      d.interactables.list().map((i) => ({ ...i, radius: Math.max(i.radius, 18) })),
+      x,
+    );
     pendingActivate = null;
-    if (hit) { const real = d.interactables.list().find((i) => i.id === hit.id)!; goActivate(real); }
-    else void d.player.walkTo(Math.round(x));
-    markerT = 0; markerX = Math.round(x);
+    if (hit) {
+      const real = d.interactables.list().find((i) => i.id === hit.id)!;
+      goActivate(real);
+    } else void d.player.walkTo(Math.round(x));
+    markerT = 0;
+    markerX = Math.round(x);
   };
-  const onMove = (p: Phaser.Input.Pointer) => { if (held && p.isDown && !overlayOpen && !pendingActivate) { void d.player.walkTo(Math.round(toWorld(p))); } };
-  const onUp = () => { held = false; };
+  const onMove = (p: Phaser.Input.Pointer) => {
+    if (held && p.isDown && !overlayOpen && !pendingActivate) {
+      void d.player.walkTo(Math.round(toWorld(p)));
+    }
+  };
+  const onUp = () => {
+    held = false;
+  };
   scene.input.on('pointerdown', onDown);
   scene.input.on('pointermove', onMove);
   scene.input.on('pointerup', onUp);
@@ -199,16 +307,22 @@ export function createInput(scene: Phaser.Scene, d: InputDeps): InputImpl {
         marker.lineStyle(1, 0xfff2c4, 1 - k);
         const r = 2 + Math.round(k * 5);
         marker.strokeEllipse(markerX, GROUND_Y + 1, r * 2, r);
-        if (k >= 1) { markerT = -1; marker.clear(); }
+        if (k >= 1) {
+          markerT = -1;
+          marker.clear();
+        }
       }
     },
     destroy() {
       d.focusEl.removeEventListener('keydown', onKeyDown);
       d.focusEl.removeEventListener('keyup', onKeyUp);
       d.focusEl.removeEventListener('blur', onBlur);
-      scene.input.off('pointerdown', onDown); scene.input.off('pointermove', onMove);
-      scene.input.off('pointerup', onUp); scene.input.off('pointerupoutside', onUp);
-      unsubs.forEach((u) => u()); marker.destroy();
+      scene.input.off('pointerdown', onDown);
+      scene.input.off('pointermove', onMove);
+      scene.input.off('pointerup', onUp);
+      scene.input.off('pointerupoutside', onUp);
+      unsubs.forEach((u) => u());
+      marker.destroy();
     },
   };
 }
