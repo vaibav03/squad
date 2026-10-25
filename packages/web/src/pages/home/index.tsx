@@ -9,7 +9,8 @@ import { Skeleton } from '../../primitives/Skeleton';
 import { NightScene } from '../../shell/NightScene';
 import { useAuth } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
-import { HOME_CHECKLIST, HOME_LINKS } from './fixtures';
+import { HOME_CHECKLIST as CHECKLIST, HOME_LINKS } from './fixtures';
+import { loadSetupDone } from '../setup/progress';
 import './home.css';
 
 export default function HomePage() {
@@ -22,6 +23,8 @@ export default function HomePage() {
     return () => clearTimeout(t);
   }, [setTitle]);
   const name = session?.name ?? 'there';
+  const finished = loadSetupDone();
+  const HOME_CHECKLIST = CHECKLIST.map((c) => ({ ...c, done: finished.includes(c.key) }));
   const done = HOME_CHECKLIST.filter((c) => c.done).length;
 
   return (

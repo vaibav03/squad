@@ -59,7 +59,17 @@ export const uploadCourse = (ctx: Ctx, file: File) => {
   return call(ctx, '/v1/squad/courses', CourseUpload, { method: 'POST', body });
 };
 export const listCourses = (ctx: Ctx) => call(ctx, '/v1/squad/courses', CourseList);
-export const postCalendar = (ctx: Ctx, input: { demo: true } | { ics: string }) =>
+export const calendarForm = (ics: string, name = 'calendar.ics') => {
+  const body = new FormData();
+  body.append(
+    'file',
+    new File([ics], name.toLowerCase().endsWith('.ics') ? name : `${name}.ics`, {
+      type: 'text/calendar',
+    }),
+  );
+  return body;
+};
+export const postCalendar = (ctx: Ctx, input: { demo: true } | { ics: string; name?: string }) =>
   call(
     ctx,
     '/v1/squad/calendar',
@@ -70,5 +80,5 @@ export const postCalendar = (ctx: Ctx, input: { demo: true } | { ics: string }) 
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(input),
         }
-      : { method: 'POST', headers: { 'content-type': 'text/calendar' }, body: input.ics },
+      : { method: 'POST', body: calendarForm(input.ics, input.name) },
   );

@@ -5,7 +5,7 @@ import { parseSlot } from './time';
 
 vi.setConfig({ testTimeout: 30_000 }); // PSI is CPU bound; the full `pnpm test` runs packages in parallel
 
-const ids = ['s_ana', 's_ben', 's_cam', 's_dev'];
+const ids = ['s_ana', 's_ben', 's_chi', 's_dev'];
 const NOW = Date.parse('2026-11-02T00:30:00Z'); // window 2026-11-02T01 .. 2026-11-05T01
 const WIN = { from: '2026-11-02T01', to: '2026-11-05T01' };
 
@@ -38,7 +38,7 @@ describe('createMeshScheduler', () => {
   });
 
   it('returns [] for fewer than 2 students and for offline peers', async () => {
-    const m = createTestMesh({ offline: ['s_cam'] });
+    const m = createTestMesh({ offline: ['s_chi'] });
     const s = createMeshScheduler({ coordinator: m.agents.s_ana!, now: () => NOW });
     expect(await s.findSlots(['s_ana'], 60)).toEqual([]);
     expect(await s.findSlots(ids, 60)).toEqual([]);

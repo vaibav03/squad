@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { createHubEmitter, startMesh, parseProfile } from '../src';
 
-const profiles = ['s_ana', 's_ben', 's_cam', 's_dev'].map((id) =>
+const profiles = ['s_ana', 's_ben', 's_chi', 's_dev'].map((id) =>
   parseProfile(JSON.parse(readFileSync(`fixtures/${id}.json`, 'utf8'))),
 );
 const answers = Object.fromEntries(

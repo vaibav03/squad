@@ -10,7 +10,7 @@ x-logging: &logging
   driver: json-file
   options: { max-size: '10m', max-file: '5' }
 
-x-peers: &peers s_ana=http://agent-ana:4101,s_ben=http://agent-ben:4102,s_cam=http://agent-cam:4103,s_dev=http://agent-dev:4104
+x-peers: &peers s_ana=http://agent-ana:4101,s_ben=http://agent-ben:4102,s_chi=http://agent-chi:4103,s_dev=http://agent-dev:4104
 
 x-agent: &agent
   build: { context: ., target: agent }
@@ -80,9 +80,9 @@ services:
   agent-ben:
     <<: *agent
     environment: { <<: *agent-env, AGENT_ID: s_ben, PORT: '4102' }
-  agent-cam:
+  agent-chi:
     <<: *agent
-    environment: { <<: *agent-env, AGENT_ID: s_cam, PORT: '4103' }
+    environment: { <<: *agent-env, AGENT_ID: s_chi, PORT: '4103' }
   agent-dev:
     <<: *agent
     environment: { <<: *agent-env, AGENT_ID: s_dev, PORT: '4104' }

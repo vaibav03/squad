@@ -74,10 +74,11 @@ test('J10 enter every room, read it, leave with Esc', async ({ browser }) => {
   note(`demo-run ${run.status}`);
   // the Oracle, Devil's TA, Rubric and Oral landmarks unlock from their own skills: ask for each in the group chat
   const ana = await apiLogin('s_ana');
+  // rubric before Devil's TA: Devil's TA waits for a follow-up answer and would swallow the next message
   for (const text of [
     '@cubbie exam oracle',
+    '@cubbie rubric check: my answer: The mean is the sum of the values divided by how many there are. rubric: states the definition; gives an example',
     "@cubbie devil's TA ch2",
-    '@cubbie rubric check: the mean is the sum of the values divided by how many there are',
     '@cubbie oral exam',
   ]) {
     const r = await api(ana, '/v1/chat/send', {
@@ -98,34 +99,28 @@ test('J10 enter every room, read it, leave with Esc', async ({ browser }) => {
   const entered: string[] = [];
   const skipped: string[] = [];
   const occluded: string[] = [];
-  for (const [idx, room] of ROOMS.entries()) {
-    if (idx === 1) {
-      // measure once: with the first room still open, is the next room's Enter prompt reachable?
-      await page.locator(`[aria-label^="${room}"]`).first().click();
-      const p2 = page.getByText(new RegExp(`^Open .*(${KEY[room]})`, 'i')).first();
-      if (
-        await p2.waitFor({ state: 'visible', timeout: 60_000 }).then(
-          () => true,
-          () => false,
-        )
-      ) {
-        const covered = await p2.evaluate((el) => {
-          const r = el.getBoundingClientRect();
-          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-          return !(hit && (el === hit || el.contains(hit) || hit.contains(el)));
-        });
-        if (covered) occluded.push(room);
-        await shot(page, J, 'prompt-behind-transcript');
-      }
-    }
-    if (idx > 0) {
-      await page.goto('/squad/village'); // Esc does not leave a room interior (E2E-006), so start each room from outside
-      await expect(page.locator('[aria-label^="Council Hall"]').first()).toBeVisible({
-        timeout: 30_000,
-      });
-      await page.waitForTimeout(1500);
-    }
-    await page.locator(`[aria-label^="${room}"]`).first().click();
+  const SLOT: Record<string, string> = {
+    'Council Hall': 'council-hall',
+    'Debate Stage': 'debate-stage',
+    'Round Table': 'round-table',
+    'Feynman Porch': 'feynman-porch',
+    'Panic Line': 'panic-booth',
+    'Exam Oracle': 'exam-oracle',
+    'Oral Exam Hut': 'oral-exam-hut',
+    'Rubric Courthouse': 'rubric-courthouse',
+    "Devil's TA": 'devils-ta',
+  };
+  type World = {
+    interactables: { list(): { id: string; x: number }[] };
+    player: { walkTo(x: number): Promise<boolean> };
+  };
+  for (const room of ROOMS) {
+    // the chips open the inspector (the mouse never moves the player): walk to the door instead
+    await page.evaluate((id) => {
+      const c = (window as unknown as { __world: { debug: { ctx(): World } } }).__world.debug.ctx();
+      const it = c.interactables.list().find((x) => x.id === `enter-${id}`);
+      if (it) void c.player.walkTo(it.x);
+    }, SLOT[room]);
     const prompt = page.getByText(new RegExp(`^Open .*(${KEY[room]})`, 'i')).first();
     if (
       !(await prompt.waitFor({ state: 'visible', timeout: 60_000 }).then(
@@ -137,47 +132,37 @@ test('J10 enter every room, read it, leave with Esc', async ({ browser }) => {
       skipped.push(room);
       continue;
     }
-    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
-    await page.keyboard.press('Enter'); // the prompt advertises the Enter key
-    const inside = page.getByText(new RegExp(`Inside .*(${KEY[room]})`, 'i')).first();
-    if (
-      !(await inside.waitFor({ state: 'attached', timeout: 5000 }).then(
-        () => true,
-        () => false,
-      ))
-    )
-      await prompt.click({ force: true });
+    // reachable: nothing (a transcript panel from the room we just left) sits on top of the prompt
+    const covered = await prompt.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return !(hit && (el === hit || el.contains(hit) || hit.contains(el)));
+    });
+    if (covered) occluded.push(room);
+    await prompt.click({ force: covered });
     await expect(page.getByText(new RegExp(`Inside .*(${KEY[room]})`, 'i')).first()).toBeAttached({
       timeout: 15_000,
     });
     await page.waitForTimeout(1200);
     await shot(page, J, `room-${room.replace(/\W+/g, '-').toLowerCase()}`);
     entered.push(room);
-    // room info panel / transcript / outcome (ux/rooms RoomLayer)
     if (await page.getByText('What they are saying').count()) infoPanelSeen++;
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(1500);
+    // the first Esc closes the room info panel when it is open, the next leaves the room
+    for (let k = 0; k < 2; k++) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(600);
+    }
     await shot(page, J, `after-esc-${room.replace(/\W+/g, '-').toLowerCase()}`);
+    await expect(
+      page.locator('.rr-strip'),
+      `transcript strip must not stay on screen after Esc in ${room}`,
+    ).toHaveCount(0);
   }
   note(`no walk prompt (locked or unreachable): ${skipped.join(', ') || 'none'}`);
-  expect
-    .soft(
-      skipped,
-      'E2E-005: rooms that never offer an Enter prompt even after the demo run and asking for its skill in chat (landmark stays LOCKED)',
-    )
-    .toEqual([]);
-  expect(entered.length).toBeGreaterThanOrEqual(5);
-  note(`rooms entered: ${entered.length}/9 chip rooms (4 chapter houses are walk-only)`);
-  note(`Enter prompt covered by the transcript panel in: ${occluded.join(', ') || 'none'}`);
-  expect
-    .soft(
-      occluded,
-      'E2E-006: with a room open, the transcript panel (What they are saying) covers the Enter prompt of the next room and Esc does not leave the interior',
-    )
-    .toEqual([]);
-  expect
-    .soft(infoPanelSeen, 'E2E-004: no room transcript panel is shown inside rooms')
-    .toBeGreaterThan(0);
+  expect(skipped, 'every room offers an Enter prompt once its skill ran').toEqual([]);
+  expect(entered.length).toBe(ROOMS.length);
+  expect(occluded, 'no Enter prompt is covered by a transcript panel').toEqual([]);
+  expect(infoPanelSeen, 'room transcript panel is shown inside rooms').toBeGreaterThan(0);
   await a.ctx.close();
 });
 

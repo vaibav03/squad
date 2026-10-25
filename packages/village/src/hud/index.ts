@@ -298,7 +298,11 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
   ];
   let lastClock = '';
   let promptFor: Interactable | undefined;
-  prompt.addEventListener('click', () => promptFor?.onActivate());
+  prompt.addEventListener('click', () => {
+    promptFor?.onActivate();
+    // keys (Esc to leave the room, arrows to walk) only reach the world while the stage has focus
+    d.parent.focus?.({ preventScroll: true });
+  });
   syncCamera();
   syncCalm();
 

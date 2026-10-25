@@ -34,7 +34,7 @@ export const sampleStatus: AdminStatus = {
   agents: [
     { id: 's_ana', up: true, checkedAt: NOW - 6000, latencyMs: 14 },
     { id: 's_ben', up: true, checkedAt: NOW - 6000, latencyMs: 22 },
-    { id: 's_cam', up: false, checkedAt: NOW - 6000 },
+    { id: 's_chi', up: false, checkedAt: NOW - 6000 },
   ],
   sse: { subscribers: 7, drops: 1, lastSeq: 18_422 },
   events: { accepted: 18_422, invalid: 4, dropped: 2 },
