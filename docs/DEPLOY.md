@@ -73,7 +73,7 @@ Hub data is `/data/squad.db` in the `squad_hub-data` volume (WAL mode, so use th
 
 ```
 mkdir -p backups
-docker compose exec -T hub node -e "const D=require('better-sqlite3');new D('/data/squad.db').backup('/data/backup.db').then(()=>console.log('ok'))" \
+docker compose exec -T -w /app/packages/core hub node -e "const D=require('better-sqlite3');new D('/data/squad.db').backup('/data/backup.db').then(()=>console.log('ok'))" \
  && docker run --rm -v squad_hub-data:/d -v "$PWD/backups:/b" alpine sh -c 'cp /d/backup.db /b/squad-$(date +%F-%H%M).db && rm /d/backup.db'
 # nightly: 15 3 * * * cd /home/ubuntu/squad && <the two lines above>   (and rsync backups/ off the box)
 ```
@@ -122,7 +122,7 @@ fly secrets set INTERNAL_EVENTS_SECRET=$(openssl rand -hex 32) HUB_AUTH_SECRET=$
 fly deploy
 ```
 
-Repeat per agent with `--build-target agent`, a small volume at `/app/apps/agent/data`, `AGENT_ID`, `PORT`, `PEERS`, `HUB_BASE_URL=http://squad-hub.internal:8788`, and the same `INTERNAL_EVENTS_SECRET` (use `fly secrets import` or the same value). On Render: create a Web Service for the hub with a Docker build target `hub` (Render's UI accepts a `--target` via `DOCKER_BUILD_TARGET`-style settings only on some plans; otherwise add a tiny per-service Dockerfile that is `FROM`-less and copies this one's stage), a 1 GB disk mounted at `/data`, health check `/health`, and Private Services for the agents.
+Repeat per agent with `--build-target agent`, a small volume at `/app/apps/agent/data`, `AGENT_ID`, `PORT`, `PEERS`, `HUB_BASE_URL=http://squad-hub.internal:8788`, and the same `INTERNAL_EVENTS_SECRET` (use `fly secrets import` or the same value). On Render: create one Docker Web Service per container with the Dockerfile target set to `hub` or `agent`, a disk at `/data` for the hub, health check `/health`, and Private Services for the agents (not verified).
 
 Cost: Fly hub (shared-cpu-1x 512 MB) plus 4 agents plus a volume is roughly 15 to 25 USD/month; Render's persistent-disk services start around 7 USD each (so 35+ for hub plus agents); Vercel or Netlify static hosting is free at demo scale. The single VM is cheaper and simpler.
 
