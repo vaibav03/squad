@@ -63,6 +63,9 @@ export function isLandmarkToken(chapter: string): boolean {
   );
 }
 
+/** A caption bubble shows up to 3 lines of 30 characters; the full words live in the RoomSession transcript. */
+export const CAPTION_CHARS = 90;
+
 /** First 60 chars, as call captions show over the agent (the full text lives in the overlay). */
 export function clip(text: string, n = 60): string {
   return text.length <= n ? text : `${text.slice(0, n - 1).trimEnd()}.`;

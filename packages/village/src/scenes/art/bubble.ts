@@ -33,6 +33,12 @@ export function wrap(text: string, maxChars: number): string[] {
   return out;
 }
 
+/** Bubbles wrap to at most 3 short lines; ellipsis only past ~90 characters when there is room. */
+export const BUBBLE_LINES = 3;
+/** Characters per line: wide (30 = 90 chars in 3 lines) for a lone bubble, narrow when neighbours share the row. */
+export const bubbleChars = (visible: number, narrow = 22, wide = 30): number =>
+  visible <= 1 ? wide : narrow;
+
 const cache = new Map<string, BubbleArt>();
 
 /**

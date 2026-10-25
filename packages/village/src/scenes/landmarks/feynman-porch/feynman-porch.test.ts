@@ -78,7 +78,7 @@ describe('feynman-porch mapEvent', () => {
     );
     expect(feynmanPorch.handles(quiz('quiz.question', undefined, 'ch1'), s, ctx)).toBe(false);
   });
-  it('calls: portrait, 60-char caption, end', () => {
+  it('calls: portrait, 90-char caption, end', () => {
     expect(
       feynmanPorch.mapEvent(
         { t: 'call.start', agent: AG, callId: 'c' },
@@ -97,7 +97,7 @@ describe('feynman-porch mapEvent', () => {
       ctx,
     );
     const b = cmds.find((c) => c.c === 'bubble');
-    expect(b && b.c === 'bubble' ? b.bubble.text.length : 0).toBeLessThanOrEqual(60);
+    expect(b && b.c === 'bubble' ? b.bubble.text.length : 0).toBeLessThanOrEqual(90);
     expect(
       feynmanPorch.mapEvent(
         { t: 'call.caption', agent: AG, callId: 'c' },
@@ -132,9 +132,9 @@ describe('feynman-porch motion', () => {
     const a = paintShot(feynmanPorch, shot, 1500).hash();
     const b = paintShot(feynmanPorch, shot, 3300).hash();
     expect(a).not.toBe(b);
-    const s = runScript(feynmanPorch, shot.script, 1900);
-    const c0 = feynmanPorch.paint(s, 'interior', po(1300, true)).hash();
-    const c1 = feynmanPorch.paint(s, 'interior', po(1900, true)).hash();
+    const s = runScript(feynmanPorch, shot.script, 2600);
+    const c0 = feynmanPorch.paint(s, 'interior', po(2000, true)).hash();
+    const c1 = feynmanPorch.paint(s, 'interior', po(2600, true)).hash();
     expect(c0).toBe(c1);
   });
   it('chimney smoke only when open; steady in calm', () => {

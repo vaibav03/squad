@@ -106,7 +106,7 @@ describe('debate-stage mapEvent', () => {
     const cap: VillageEvent = { t: 'call.caption', agent: DB, callId: 'c', text: 'x'.repeat(100) };
     const cmds = debateStage.mapEvent(cap, s, ctx);
     const b = cmds.find((c) => c.c === 'bubble');
-    expect(b && b.c === 'bubble' && b.bubble.text.length).toBe(60);
+    expect(b && b.c === 'bubble' && b.bubble.text.length).toBe(90);
     expect(b && b.c === 'bubble' && b.bubble.style).toBe('caption');
     const msg: VillageEvent = {
       t: 'agent.message',

@@ -1,6 +1,6 @@
 import type { VillageEvent } from '@squad/core';
 import type { SceneCommand, SceneCtx } from '../contract';
-import { eventAgent, eventChapter, clip } from '../model/events';
+import { eventAgent, eventChapter, clip, CAPTION_CHARS } from '../model/events';
 import { routeAgent } from '../routing';
 import type { BaseState } from '../model/base';
 
@@ -101,7 +101,7 @@ export function mapChapterEvent(e: VillageEvent, s: BaseState, ctx: SceneCtx): S
           { c: 'setRing', on: false },
         ];
       case 'call.caption': {
-        const text = typeof e.text === 'string' ? clip(e.text.trim()) : '';
+        const text = typeof e.text === 'string' ? clip(e.text.trim(), CAPTION_CHARS) : '';
         return [
           ...open(s),
           ...(text
@@ -120,7 +120,7 @@ export function mapChapterEvent(e: VillageEvent, s: BaseState, ctx: SceneCtx): S
       case 'quiz.question':
         return [
           ...open(s),
-          { c: 'chalk', text: s.title, mark: 'none' },
+          { c: 'chalk', text: s.title, mark: 'none', question: (e.text ?? '').trim() },
           { c: 'setOccupant', state: 'studying' },
         ];
       case 'quiz.answer':

@@ -3,7 +3,8 @@ import { DIM } from '../pixel/palette';
 import { drawText, textWidth } from '../pixel/font';
 import type { PaintOpts } from '../contract';
 import { put, type AssetInfo } from '../assets';
-import { bubble } from '../art/bubble';
+import { bubble, bubbleChars } from '../art/bubble';
+import { paintPlanSheet } from '../art/planSheet';
 import { easeInOut, easeOut, progress } from '../curves';
 import { frameAt, lanternFrame, triangle, visibleBubbles } from '../model/base';
 import { isChair, seatOf, type CouncilHallState } from './state';
@@ -21,7 +22,8 @@ export const SEATS = [
 ] as const;
 export const CHAIR_AT = { x: 112, y: 89 };
 const ROW_X = [50, 112, 174] as const; // bubble row slots (rank positions)
-const ROW_TIP = 30; // bubble row: tail tip y
+const ROW_TIP = 30; // bubble row: tail tip y (centre seat, upper tier)
+const ROW_TIP_LOW = 64; // flank seats sit one tier lower so wide bubbles never touch
 
 /** Cast persona per member (03: solvers and planners). Unknown members borrow by seat. */
 const PERSONA: Record<string, string> = {
@@ -110,6 +112,7 @@ export function paintInterior(s: CouncilHallState, o: PaintOpts): Raster {
 
   paintBubbles(r, s, o, bubbles);
   paintVerdict(r, s, o);
+  paintPlanSheet(r, s, o.t, o.calm, 32, 4);
   return r;
 }
 
@@ -123,6 +126,7 @@ function paintBubbles(
   o: PaintOpts,
   bubbles: ReturnType<typeof visibleBubbles>,
 ): void {
+  const chars = bubbleChars(bubbles.filter((b) => b.b.style !== 'announce').length);
   for (const v of bubbles) {
     const seat = isChair(v.b.who) ? 1 : (s.seats[v.b.who] ?? seatOf(s.seats, v.b.who));
     const ranked = s.slots !== null && v.b.style !== 'announce';
@@ -135,8 +139,11 @@ function paintBubbles(
       x = Math.round(fx + (tx - fx) * (o.calm ? 1 : easeInOut(progress(o.t, s.slots.since, 320))));
     }
     const style = ranked && v.b.style === 'thought' ? 'speech' : v.b.style;
-    const art = bubble(v.b.text, style, 12, 3, ranked ? null : 0.5);
-    const pos = tip(art, x, ROW_TIP + (ranked ? art.r.h - art.tail.y : 0));
+    const art = bubble(v.b.text, style, chars, 3, ranked ? null : 0.5);
+    const tier = ranked && s.slots ? Math.max(0, s.slots.to.indexOf(v.b.who)) : seat;
+    const rowTip = tier === 1 ? ROW_TIP : ROW_TIP_LOW;
+    const pos = tip(art, x, rowTip + (ranked ? art.r.h - art.tail.y : 0));
+    pos.x = Math.max(2, Math.min(INT_W - art.r.w - 2, pos.x));
     r.blit(art.r, pos.x, pos.y, { alpha: v.alpha });
     if (!ranked) {
       // thought trail: two dots from the bubble down to the member's head
@@ -145,7 +152,7 @@ function paintBubbles(
       const hy = head.y - 31;
       for (let k = 1; k <= 3; k++) {
         const px = Math.round(x + ((hx - x) * k) / 4);
-        const py = Math.round(ROW_TIP + 2 + ((hy - ROW_TIP) * k) / 4);
+        const py = Math.round(rowTip + 2 + ((hy - rowTip) * k) / 4);
         r.px(px, py, 'cloud-hi', v.alpha > 0.5 ? 1 : 0);
         r.px(px, py + 1, 'ink', v.alpha > 0.5 ? 1 : 0);
       }
@@ -167,7 +174,7 @@ function paintVerdict(r: Raster, s: CouncilHallState, o: PaintOpts): void {
   if (age < 0 || age > 8000 + 120) return;
   const enter = o.calm ? 1 : easeOut(Math.min(1, age / 240));
   const exit = age > 8000 ? 1 - (age - 8000) / 120 : 1;
-  const art = bubble(v.text, 'announce', 24, 3, 0.5);
+  const art = bubble(v.text, 'announce', 30, 4, 0.5);
   const headTop = CHAIR_AT.y - 31 - 3;
   r.blit(art.r, 112 - art.tail.x, headTop - art.tail.y, {
     alpha: Math.max(0, Math.min(enter, exit)),

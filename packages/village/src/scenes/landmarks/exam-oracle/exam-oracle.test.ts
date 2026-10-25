@@ -21,14 +21,14 @@ describe('exam oracle quiz.question label', () => {
   it('unlocks, then chalks "<chapter> next?" from the event chapter', () => {
     expect(def.mapEvent(q('ch5'), def.init(), ctx)).toEqual([
       { c: 'setAccess', access: 'open' },
-      { c: 'chalk', text: 'ch5 next?', mark: 'none' },
+      { c: 'chalk', text: 'ch5 next?', mark: 'none', question: '' },
     ]);
     const s = { ...def.init(), access: 'open' as const };
     expect(def.mapEvent(q('chapter-12'), s, ctx)).toEqual([
-      { c: 'chalk', text: 'ch12 next?', mark: 'none' },
+      { c: 'chalk', text: 'ch12 next?', mark: 'none', question: '' },
     ]);
     expect(def.mapEvent(q('thermo dynamics!'), s, ctx)).toEqual([
-      { c: 'chalk', text: 'thermo d next?', mark: 'none' },
+      { c: 'chalk', text: 'thermo d next?', mark: 'none', question: '' },
     ]);
   });
   it('is handled only for oracle-namespaced questions', () => {

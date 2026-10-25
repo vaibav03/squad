@@ -16,3 +16,4 @@ export * from './skills/hwpolicy';
 export * from './create';
 export * from './quiz';
 export * from './studyplan';
+export * from './skills/courseplan';
