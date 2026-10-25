@@ -1,5 +1,7 @@
 import {
+  FunctionCallingConfigMode,
   GoogleGenAI,
+  ThinkingLevel,
   type Content,
   type FunctionCall,
   type GenerateContentConfig,
@@ -152,6 +154,29 @@ export class GeminiLlm implements Llm {
           })),
         },
       ];
+    }
+    if (req.tools?.length && req.toolChoice && req.toolChoice.mode !== 'auto') {
+      cfg.toolConfig = {
+        functionCallingConfig: {
+          mode:
+            req.toolChoice.mode === 'any'
+              ? FunctionCallingConfigMode.ANY
+              : FunctionCallingConfigMode.NONE,
+          ...(req.toolChoice.mode === 'any' && req.toolChoice.allow?.length
+            ? { allowedFunctionNames: req.toolChoice.allow }
+            : {}),
+        },
+      };
+    }
+    if (req.thinking) {
+      cfg.thinkingConfig = {
+        thinkingLevel: {
+          minimal: ThinkingLevel.MINIMAL,
+          low: ThinkingLevel.LOW,
+          medium: ThinkingLevel.MEDIUM,
+          high: ThinkingLevel.HIGH,
+        }[req.thinking],
+      };
     }
     return cfg;
   }

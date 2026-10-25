@@ -530,14 +530,13 @@
 }
 .cb-action {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-2);
   font: 400 var(--text-sm) / var(--lh-sm) var(--font-sans);
 }
 .cb-action__text {
-  flex: 1 1 200px;
+  flex: 0 0 auto;
 }
 .cb-action__btns {
   display: inline-flex;
@@ -750,4 +749,18 @@
   .cn-launch--board {
     bottom: calc(var(--lv-s4) + 116px + 112px);
   }
+}
+
+/* header: the current state of the run (the verdict once decided) */
+.cb-status {
+  margin: var(--space-1) 0 0;
+  max-width: 62ch;
+  font: 500 var(--text-sm) / var(--lh-sm) var(--font-sans);
+}
+.cb-status__k {
+  color: var(--muted-foreground);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: var(--text-xs, 12px);
+  letter-spacing: 0.04em;
 }

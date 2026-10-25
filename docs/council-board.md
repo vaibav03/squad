@@ -41,3 +41,16 @@ A polite live region announces steps and new messages by display name. Raw ids n
 
 `packages/village/src/council` (model, store, arrows, fixtures), `packages/web/src/council/board` (UI), Playwright
 `e2e/specs/j20-council-board.spec.ts`.
+
+## Live runs (council integration)
+
+- The header shows the CURRENT state: `Now` plus the step or who is still working while the run goes, `Result` plus the verdict
+  answer when it is done (never the opening "Question received" line). The question comes from the stage event or the run result.
+- From the chat: `@cubbie ask the council: ...` posts the run card at once (the closing verdict text follows as a plain message).
+  The card polls the run, shows the mode badge, the step words and who is on it, and `Open council board` opens a board that
+  keeps streaming (`RunStrip`, `useResultBoardStore`, `syncResultToBoard`). In the village the same button opens the shared board.
+- Council Hall and Round Table panels show the same strip. A stage never moves backwards on the board, so a late poll cannot undo `done`.
+- Action items: the chair's `actions` stage publishes one envelope per item (`docs/a2a.md`). `Send to chat` calls
+  `POST /v1/council/:id/actions/chat`, `Add to plan` calls `POST /v1/council/:id/actions/plan` (shared study plan, `docs/study-plan.md`),
+  each with pending, success and failure states. Scripted fixtures are not hub runs, so their buttons report "Could not send".
+- Tests: `e2e/specs/j20-council-board.spec.ts`, `e2e/specs/j23-council-live.spec.ts` (fixture stack by default, `LIVE=1` for real Gemini).

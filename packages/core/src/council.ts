@@ -113,6 +113,19 @@ export const COUNCIL_STAGES = [
   'done',
 ] as const;
 
+/**
+ * One action item the chair's `actions` stage produced. `id` is the id of the A2A envelope (`kind: status`,
+ * `stage: actions`) that carries it, so the hub can add exactly that item to the study plan or chat without trusting
+ * client text. Text is plain public words (title <= 120, detail <= 200); no thinking fields.
+ */
+export const CouncilActionSchema = z.strictObject({
+  id: z.string().max(40),
+  title: z.string().min(1).max(120),
+  detail: z.string().max(200).optional(),
+});
+export type CouncilAction = z.infer<typeof CouncilActionSchema>;
+export const COUNCIL_ACTIONS_MAX = 4;
+
 /** The full state of a run; also the final result card (`GET /v1/council/:id`) and every stream step. */
 export const CouncilResultSchema = z.strictObject({
   id: CouncilRunIdSchema,
@@ -142,6 +155,8 @@ export const CouncilResultSchema = z.strictObject({
   stage: z.enum(COUNCIL_STAGES).optional(),
   /** Org chart of the run (agent runtime v2 only). */
   agents: z.array(CouncilAgentInfoSchema).max(8).optional(),
+  /** Action items from the chair's `actions` stage (agent runtime v2 only), at most 4. */
+  actions: z.array(CouncilActionSchema).max(COUNCIL_ACTIONS_MAX).optional(),
   /** Public A2A envelopes so far, newest last, capped (validate with A2aMessageSchema; kept loose here to avoid a cycle). */
   messages: z.array(z.unknown()).max(60).optional(),
   startedAt: z.number(),

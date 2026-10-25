@@ -88,6 +88,8 @@ export interface BoardVerdict {
   citations: A2aCitation[];
   dissents: BoardDissent[];
   actions: string[];
+  /** Same items with the id of the envelope that carries each (hub action endpoints take that id). Legacy items have none. */
+  actionItems: { id?: string; text: string }[];
 }
 
 export interface BoardRun {
@@ -271,6 +273,9 @@ function buildVerdict(run: MutableRun, msg: A2aMessage): BoardVerdict {
     : (msg as A2aMessage & { next?: string }).next
       ? sentences((msg as A2aMessage & { next?: string }).next!)
       : [];
+  const actionItems = actionMsgs.length
+    ? actionMsgs.map((m) => ({ id: m.id, text: m.summary! }))
+    : actions.map((text) => ({ text }));
   return {
     messageId: msg.id,
     summary: msg.summary ?? msg.answer ?? 'The chair has decided.',
@@ -280,6 +285,7 @@ function buildVerdict(run: MutableRun, msg: A2aMessage): BoardVerdict {
     citations: msg.citations ?? [],
     dissents,
     actions,
+    actionItems,
   };
 }
 
@@ -307,4 +313,31 @@ export function depthOf(run: BoardRun, id: string): number {
 /** Plain sentence for a message row: 'Skeptic to Chair: Critique'. Used by the feed and announcements. */
 export function messageHeadline(m: A2aMessage): string {
   return `${a2aPartyName(m.from)} to ${a2aPartyName(m.to)}: ${KIND_LABEL[m.kind]}`;
+}
+
+const STAGE_STATUS: Record<A2aStage, string> = {
+  question: 'Question received. Getting the council together.',
+  delegation: 'The chair is deciding who to ask.',
+  opinions: 'Members are answering.',
+  critiques: 'Members are ranking each other\u2019s answers.',
+  dissent: 'Checking where members disagree.',
+  verdict: 'The chair is writing the verdict.',
+  actions: 'Turning the verdict into action items.',
+  done: 'Done.',
+};
+
+/**
+ * One public sentence for the board header: the CURRENT state of the run. Once there is a verdict it is the verdict
+ * itself (never the opening "Question received" line), otherwise the step the run is in, with who is still working.
+ */
+export function statusLine(run: Pick<BoardRun, 'stage' | 'verdict' | 'agents'>): string {
+  const v = run.verdict;
+  if (v && stageIndex(run.stage) >= stageIndex('verdict'))
+    return (v.answer ?? v.summary).trim() || STAGE_STATUS[run.stage];
+  const base = STAGE_STATUS[run.stage];
+  if (run.stage === 'opinions') {
+    const waiting = run.agents.filter((a) => a.role === 'specialist' && a.status === 'working');
+    if (waiting.length) return `Waiting for ${waiting.map((a) => a.name).join(', ')}.`;
+  }
+  return base;
 }

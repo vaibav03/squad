@@ -3,12 +3,13 @@ import {
   ASK_FIXTURE,
   STEPS,
   messageHeadline,
+  statusLine,
   playCouncilFixture,
   type BoardRun,
   type CouncilBoardStore,
 } from '@squad/village/council';
 import type { HubCtx } from '../../pages/village/hub';
-import { sendPhraseToChat } from '../../pages/village/chat-send';
+import { postCouncilAction, type ActionKind } from './actions-api';
 import { OverlayFrame } from '../../overlays/kit/OverlayFrame';
 import { LvIcon } from '../../overlays/kit/icons';
 import { DelegationCards } from './DelegationCards';
@@ -89,9 +90,13 @@ export function CouncilBoard({
     setJump({ id, n: ++jumpN.current });
   }, []);
 
-  const send = useMemo(
-    () => (hub?.token && !replay ? (text: string) => sendPhraseToChat(hub, text) : undefined),
-    [hub, replay],
+  const runId = run?.runId;
+  const act = useMemo(
+    () =>
+      hub?.token && !replay && runId
+        ? (actionId: string, kind: ActionKind) => postCouncilAction(hub, runId, actionId, kind)
+        : undefined,
+    [hub, replay, runId],
   );
   const sendOff = replay
     ? 'This is a recorded replay, so nothing is sent.'
@@ -120,6 +125,12 @@ export function CouncilBoard({
             {run ? run.councilName : 'Council board'}
           </h2>
           {run?.question ? <p className="cb-question">{run.question}</p> : null}
+          {run ? (
+            <p className="cb-status" data-stage={run.stage} role="status">
+              <span className="cb-status__k">{run.stage === 'done' ? 'Result' : 'Now'}</span>{' '}
+              {statusLine(run)}
+            </p>
+          ) : null}
         </div>
         <div className="cb-head__side">
           {run ? <ModeBadge mode={run.mode} /> : <ModeBadge mode="demo" />}
@@ -159,7 +170,7 @@ export function CouncilBoard({
                 selected={filter.agent || focusAgent || ''}
                 onSelect={(id) => setFilter((f) => ({ ...f, agent: id }))}
               />
-              <VerdictCard run={run} onJump={onJump} send={send} sendOffReason={sendOff} />
+              <VerdictCard run={run} onJump={onJump} act={act} sendOffReason={sendOff} />
               <DelegationCards delegations={run.delegations} onSeeAnswer={onJump} />
             </div>
             <div className="cb-col cb-col--right">

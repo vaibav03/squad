@@ -51,6 +51,10 @@ test('J20 council board on the track4 replay: org chart, feed filters, verdict w
   await expect(dlg.locator('.cb-stepper__count')).toContainText('All 7 steps done', {
     timeout: 30_000,
   });
+  // the header shows where the run ended up, not its opening line
+  await expect(dlg.locator('.cb-head .cb-status')).not.toContainText(
+    'Question received. Planning who to ask.',
+  );
   await expect(verdict.locator('.cb-conf')).toContainText('Fairly sure');
   await expect(verdict.locator('.cb-mode')).toContainText('Demo');
   const dissent = verdict.getByRole('group', { name: 'Dissent' });
@@ -157,7 +161,7 @@ test('J20 Calm: the board is static and still complete', async ({ browser }) => 
   await a.ctx.close();
 });
 
-test('J20 fixture session: action items go to the chat through the chat-send helper', async ({
+test('J20 fixture session: action buttons call the hub and say plainly when it does not know the item', async ({
   browser,
 }) => {
   const a = await actor(browser, 's_ana');
@@ -172,7 +176,9 @@ test('J20 fixture session: action items go to the chat through the chat-send hel
   const send = verdict.getByRole('button', { name: /^Send to chat/ }).first();
   await expect(send).toBeEnabled();
   await send.click();
-  await expect(verdict.getByRole('status')).toContainText('Sent to the squad chat.');
+  // a scripted fixture is not a hub run: the hub refuses its action ids and the board says so, no fake success
+  await expect(verdict.getByRole('status')).toContainText('Could not send that to the squad chat.');
+  await expect(send).toBeEnabled(); // and the button offers a retry
   await snap(page, '5-action-items');
   await a.ctx.close();
 });

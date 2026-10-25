@@ -71,6 +71,13 @@ export interface PlanService {
     body: { courseId?: string; examDate?: string; examLabel?: string; text?: string },
   ): Promise<PlanResult>;
   respond(v: Viewer, planId: string, r: 'accept' | 'decline'): PlanResult;
+  /**
+   * Adds ONE new item (the viewer's own, e.g. a council action item) to the squad's current open plan. A new item
+   * cannot collide with another edit, so it never conflicts; a closed plan or a non-member is refused, and the plan
+   * `rev` bumps like any accepted change. Group acceptance is untouched: the item is the adder's own work, so
+   * nobody's load changes and nobody has to re-accept. An item with the same title on the plan is not added twice.
+   */
+  addItem(v: Viewer, item: { title: string; detail?: string; source?: string }): PlanResult;
   edit(
     v: Viewer,
     planId: string,
@@ -422,6 +429,52 @@ export function createPlanService(
       store.save(p);
       emitChange(p, activated ? 'activated' : r);
       return { ok: true, plan: p, say: { text, card: cardOf(p) } };
+    },
+
+    addItem(v, input) {
+      const p = store.current(v.squadId);
+      if (!p)
+        return fail(
+          409,
+          'no_plan',
+          'There is no study plan yet. Ask Cubbie to make one first, then add this.',
+        );
+      const me = p.members.find((m) => m.id === v.studentId);
+      if (!me || !me.optedIn) return fail(403, 'forbidden', 'You are not part of this plan.');
+      const title = input.title.trim().slice(0, 120);
+      if (!title) return fail(422, 'invalid_item', 'The item has no text.');
+      if (p.items.some((i) => i.title.toLowerCase() === title.toLowerCase()))
+        return { ok: true, plan: p, say: { text: '' } };
+      const today = ymd(deps.now());
+      const last = p.examDate ? addDays(p.examDate, -1) : addDays(today, 14);
+      const date = daysBetween(today, last) >= 1 ? addDays(today, 1) : last;
+      p.rev += 1;
+      const item: PlanItem = {
+        id: id10(),
+        ownerId: v.studentId,
+        ownerName: me.name,
+        kind: 'practice',
+        title,
+        ...(input.detail ? { topic: input.detail.trim().slice(0, 120) } : {}),
+        date,
+        durationMin: 30,
+        status: 'todo',
+        rev: p.rev,
+        updatedBy: v.studentId,
+        sources: [],
+      };
+      p.items.push(item);
+      log(p, v.studentId, `added ${title}${input.source ? ` (${input.source})` : ''}`);
+      store.save(p);
+      emitChange(p, 'add');
+      return {
+        ok: true,
+        plan: p,
+        say: {
+          text: `${me.name} added "${title}" to the study plan (${fmtDate(date)}).`,
+          card: cardOf(p),
+        },
+      };
     },
 
     edit(v, planId, itemId, baseRev, patch) {

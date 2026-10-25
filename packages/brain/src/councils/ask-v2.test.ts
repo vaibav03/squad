@@ -118,6 +118,22 @@ const stagesOf = (events: VillageEvent[]): string[] =>
   events.flatMap((e) => (e.t === 'council.stage' ? [e.stage] : []));
 const dedupe = (xs: string[]): string[] => xs.filter((x, i) => x !== xs[i - 1]);
 
+describe('Ask council v2: the finished snapshot', () => {
+  it('the first snapshot that is no longer running already carries stage done (streams close on it)', async () => {
+    const { svc } = build();
+    const h = svc.ask({
+      question: 'Is B or A right for problem 3?',
+      askedBy: 's_ana',
+      chatId: 'group:sq',
+    });
+    const seen: { status: string; stage?: string }[] = [];
+    svc.subscribe(h.id, (snap) => void seen.push({ status: snap.status, stage: snap.stage }));
+    await h.done;
+    const firstDone = seen.find((s) => s.status !== 'running');
+    expect(firstDone).toEqual({ status: 'done', stage: 'done' });
+  });
+});
+
 describe('Ask council v2: demo run (no key)', () => {
   it('is an honestly labelled scripted run end to end', async () => {
     const { ask, events } = build();
@@ -208,9 +224,19 @@ describe('Ask council v2: live happy path', () => {
       msgs.filter((m) => m.kind === 'ask' && m.from === SKEPTIC && m.to === TEACHER),
     ).toHaveLength(1);
     expect(msgs.filter((m) => m.kind === 'rank')).toHaveLength(3);
-    // the chair delegated all three in ONE model step (first chair input is the prompt, second is tool results)
+    // the chair delegated all three in ONE model step and the plan closed in code (no extra chair model call)
     const chairInputs = t.inputsOf(CHAIR);
-    expect(chairInputs.filter((i) => typeof i !== 'string')[0]).toHaveLength(3);
+    expect(chairInputs.filter((i) => typeof i !== 'string')).toHaveLength(0);
+    expect(
+      msgs.some(
+        (m) =>
+          m.from === CHAIR &&
+          m.stage === 'delegation' &&
+          m.kind === 'status' &&
+          m.source === 'code' &&
+          /^Delegated to/.test(m.summary ?? ''),
+      ),
+    ).toBe(true);
     // the peer answer does not count as the teacher's committed answer
     expect(
       msgs.filter((m) => m.kind === 'answer' && m.from === TEACHER && m.to === CHAIR),
@@ -229,6 +255,20 @@ describe('Ask council v2: live happy path', () => {
     expect(r.rankings).toHaveLength(3);
     expect(events.filter((e) => e.t === 'council.rank')).toHaveLength(3);
     expect(r.stage).toBe('done');
+
+    // action items: one chair `status` envelope per item at stage `actions`, mirrored in result.actions
+    const actionMsgs = msgs.filter((m) => m.stage === 'actions');
+    expect(actionMsgs.length).toBeGreaterThanOrEqual(2);
+    expect(actionMsgs.length).toBeLessThanOrEqual(4);
+    for (const m of actionMsgs) {
+      expect(m.from).toBe(CHAIR);
+      expect(m.kind).toBe('status');
+      expect(m.source).toBe('code');
+      expect(m.parentMessageId).toBe(verdict.id);
+    }
+    expect(r.actions?.map((a) => a.id)).toEqual(actionMsgs.map((m) => m.id));
+    expect(r.actions?.[0]?.title).toContain('Try B on a small example');
+    expect(r.actions?.some((a) => /Ask your TA about Practitioner/.test(a.title))).toBe(true);
   });
 });
 
@@ -319,6 +359,7 @@ describe('Ask council v2: failures stay honest', () => {
     t.script(
       CHAIR,
       new LlmError('other', 'boom', 500),
+      new LlmError('other', 'boom', 500), // the one bounded retry fails too
       ...many(chairStep({ verdict: new Error('x') }), 4),
     );
     for (const id of SPECIALISTS) t.script(id, ...many(specialist(id)));

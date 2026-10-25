@@ -207,31 +207,68 @@ describe('Council board', () => {
     expect(v.textContent).toContain('recorded replay');
   });
 
-  it('action items: Send to chat and Add to plan go through the chat-send helper', async () => {
+  it('action items: Send to chat and Add to plan call the hub action endpoints by id', async () => {
     const calls: Array<{ url: string; body?: string }> = [];
     vi.stubGlobal('fetch', async (url: string, init?: RequestInit) => {
       calls.push({ url: String(url), ...(init?.body ? { body: String(init.body) } : {}) });
-      if (String(url).endsWith('/v1/chat/chats'))
-        return new Response(JSON.stringify({ chats: [{ id: 'c1', kind: 'group' }] }), {
-          status: 200,
-        });
-      return new Response('{}', { status: 200 });
+      return new Response(JSON.stringify({ ok: true, added: true }), { status: 200 });
     });
-    await open(loaded(), { hub: { hubUrl: 'http://hub.test', token: 'tok' } });
+    const store = loaded();
+    await open(store, { hub: { hubUrl: 'http://hub.test', token: 'tok' } });
     const v = screen.getByTestId('cb-verdict');
+    const first = store.run()!.verdict!.actionItems[0]!;
     await act(async () => {
       fireEvent.click(within(v).getAllByRole('button', { name: /^Send to chat/ })[0]!);
     });
     await settle();
     expect(within(v).getByRole('status').textContent).toBe('Sent to the squad chat.');
+    expect(within(v).getAllByRole('button', { name: /^Send to chat/ })[0]!.textContent).toBe(
+      'Sent',
+    );
     await act(async () => {
       fireEvent.click(within(v).getAllByRole('button', { name: /^Add to plan/ })[0]!);
     });
     await settle();
-    expect(within(v).getByRole('status').textContent).toContain('add that to your plan');
-    const sends = calls.filter((c) => c.url.endsWith('/v1/chat/send'));
-    expect(sends).toHaveLength(2);
-    expect(JSON.parse(sends[1]!.body!).text).toMatch(/^@cubbie add to my study plan: /);
+    expect(within(v).getByRole('status').textContent).toBe('Added to the study plan.');
+    expect(calls.map((c) => c.url)).toEqual([
+      `http://hub.test/v1/council/${store.run()!.runId}/actions/chat`,
+      `http://hub.test/v1/council/${store.run()!.runId}/actions/plan`,
+    ]);
+    expect(JSON.parse(calls[1]!.body!)).toEqual({ actionId: first.id });
+    // the old chat-phrase workaround is gone: nothing goes through /v1/chat/send
+    expect(calls.some((c) => c.url.includes('/v1/chat/'))).toBe(false);
+  });
+
+  it('action items: failure shows a plain message and allows a retry; pending disables the button', async () => {
+    let release!: (r: Response) => void;
+    vi.stubGlobal(
+      'fetch',
+      () =>
+        new Promise<Response>((r) => {
+          release = r;
+        }),
+    );
+    await open(loaded(), { hub: { hubUrl: 'http://hub.test', token: 'tok' } });
+    const v = screen.getByTestId('cb-verdict');
+    const btn = () =>
+      within(v).getAllByRole('button', { name: /^Add to plan/ })[0] as HTMLButtonElement;
+    await act(async () => {
+      fireEvent.click(btn());
+    });
+    expect(btn().disabled).toBe(true);
+    expect(btn().textContent).toBe('Adding...');
+    await act(async () => {
+      release(
+        new Response(JSON.stringify({ ok: false, error: { code: 'no_plan', message: 'raw' } }), {
+          status: 409,
+        }),
+      );
+    });
+    await settle();
+    expect(within(v).getByRole('status').textContent).toContain('no study plan yet');
+    expect(btn().disabled).toBe(false);
+    expect(btn().textContent).toBe('Try again');
+    expect(btn().getAttribute('data-state')).toBe('failure');
   });
 
   it('auto-scroll pauses on user scroll and offers Jump to latest with a count', async () => {

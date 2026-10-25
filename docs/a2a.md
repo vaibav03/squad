@@ -71,6 +71,15 @@ There is deliberately **no field** for thinking text, reasoning, raw model outpu
   "mode": "degraded:rate_limited", "source": "code", "redaction": "public", "ts": 1760000005200 } }
 ```
 
+## Action items convention (additive, no new envelope field)
+
+The chair's `actions` stage emits one envelope per action item: `kind: status`, `stage: actions`, `from` the chair,
+`to: room`, `summary` = the item title (plain words, the run caps it at 120), `parentMessageId` = the verdict. Source is
+`code` (derived from the verdict's next step, no extra model call) unless a model wrote it. At most 4 per run. The
+run result mirrors them as `CouncilResult.actions: [{ id, title, detail? }]` where `id` is the envelope id, so the hub
+endpoints `POST /v1/council/:id/actions/plan` and `.../actions/chat` take `{ actionId }` and never trust client text.
+Thinking-like keys are refused as everywhere else (`CouncilActionSchema` is strict).
+
 ## Mapping onto existing events
 
 | Existing | Change |

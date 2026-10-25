@@ -156,7 +156,12 @@ export class QuizEngine {
         if (kept.length >= this.count) break;
         asked.push(d.question);
         if (this.o.verifier) {
-          const v = await this.o.verifier.verify(d, { courseId, chapter, chapterContext: context });
+          const v = await this.o.verifier.verify(d, {
+            courseId,
+            chapter,
+            chapterContext: context,
+            ...(opts.students[0] ? { askedBy: opts.students[0] } : {}),
+          });
           if (!v.ok) continue; // uncertain key: dropped
         }
         kept.push(d);
