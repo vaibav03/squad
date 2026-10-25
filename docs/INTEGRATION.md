@@ -76,3 +76,12 @@ Merge order suggestion: spine, hub, brain-answers, brain-quiz, mesh-crypto, mesh
 - Hub response shapes for `/v1/ledger`, `/v1/trips`, `/v1/mastery` and the `trip.updated` shape are parsed defensively but unverified against the real hub; the projector toggle is client-side until the hub exposes its flag.
 - Ledger is paper cards in columns, not a wood notice board (DESIGN.md forbids fantasy chrome). Not covered: the call panel has no "agent offline" state or group variant; `useMedia` first-paint flash at 1280; keyboard-only flow only unit-tested; confirm-sheet, quiz-done, error and offline screenshots were never read.
 - Personas page and HUD chips still use the Fluent 3D avatars / single letters: switch them to the pixel portraits from the design foundation cast.
+
+## Village scenes (from the village-scenes handoff)
+- Merge ws/village-world first; `scenes/module.ts` is picked up by the world's glob. Only a `capture` script was added to package.json (trivial conflict). `packages/village/.scratch/` is gitignored.
+- apps/web-host must serve repo `assets/` at `/assets` (the scenes module also loads manifest images itself under `sc:<path>` texture keys).
+- Id conventions: council ids `council:quizkey|planner|debate`; experts `expert:feynman|stepdiff|panic|oral|examiner|rubric|oracle|devil|devils-ta`; chapter houses claim `ch<N>` by digit (N<=4), else the next free slot; landmark quiz chapters use tokens like `oracle:ch5`, `rubric`, `devil`.
+- The world's HUD and a11y list should show each building's `describe()` text (the module only feeds the `announce` live region and interactable labels).
+- Canvas uses a 3x5 pixel font for signs, chalk and bubbles, not Jersey 10 (DESIGN.md asks for Jersey): deviation to resolve.
+- Open polish: oral-hut and Feynman chimney smoke are two large circles (should be single 2 px puffs); phone check showed the Enter prompt overlapping feet, HUD dock chips cropped, a doubled moon and cloud edge bands; call captions on one building replace each other before the 1.2 s/20 chars hold (single bubble key); `AssetLib.frame` cannot reach atlas portrait keys (landmark A cut portraits from frames); squad size defaults to 0 and viewer to '' until the world sets `ctx.me` and registry `squadSize` (fail-closed: no mastery or per-student marks until then).
+- No unit test for `scenes/module.ts` (needs a Phaser/DOM fake); verified through a live world run only. The layout/phone, type, colour and motion reviewers did not run.
