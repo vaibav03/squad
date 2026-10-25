@@ -102,7 +102,7 @@ export const squadRouteMeta: SquadRouteMeta[] = [
   {
     key: 'health',
     path: '/squad/connections/health',
-    title: 'Connections',
+    title: 'Integration health',
   },
 ];
 

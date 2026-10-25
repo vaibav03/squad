@@ -124,20 +124,28 @@ describe('slow or failed /v1/me', () => {
       </AuthProvider>,
     );
     expect(screen.getByTestId('status').textContent).toBe('loading');
-    await act(async () => void vi.advanceTimersByTime(8100));
+    // an unreachable hub is retried (BOOT_RETRY_DELAYS_MS) while the status stays `loading`; each hung attempt
+    // aborts at 8 s, so the account layer says offline only after the third attempt (never forever, never early)
+    await act(async () => void (await vi.advanceTimersByTimeAsync(8100)));
+    expect(screen.getByTestId('status').textContent).toBe('loading');
+    await act(async () => void (await vi.advanceTimersByTimeAsync(22_500)));
     expect(screen.getByTestId('status').textContent).toBe('offline');
   });
 
   it('a 500 from /v1/me ends in offline, a 401 with no session ends signed-out', async () => {
     localStorage.setItem('squad.token', 'tok');
     const f500: typeof fetch = async () => new Response('{}', { status: 500 });
+    vi.useFakeTimers();
     render(
       <AuthProvider client={createAccountsClient({ hubUrl: 'http://hub.test', fetch: f500 })}>
         <Probe />
       </AuthProvider>,
     );
-    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('offline'));
+    // three attempts with the boot retry delays in between (2.5 s + 3.5 s), then offline
+    await act(async () => void (await vi.advanceTimersByTimeAsync(6100)));
+    expect(screen.getByTestId('status').textContent).toBe('offline');
     cleanup();
+    vi.useRealTimers();
     const f401: typeof fetch = async () =>
       new Response(JSON.stringify({ error: { code: 'unauthorized' } }), { status: 401 });
     render(
