@@ -58,7 +58,7 @@ def sky_strip(bands, w=16, h=H):
     BAY = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
     for k in range(1, len(bands)):
         b, col = bands[k]
-        L = min(24, b - (bands[k - 1][0] + 2)) if k else 24
+        L = min(10, b - (bands[k - 1][0] + 2)) if k else 24
         for r in range(L, 0, -1):
             y = b - r
             if y < 0: continue
@@ -69,10 +69,10 @@ def sky_strip(bands, w=16, h=H):
     return c
 
 
-SKY_NIGHT = [(0, 'sky-deep'), (64, 'sky-mid'), (116, 'sky-low'), (180, 'cloud-lo')]
-SKY_DUSK = [(0, 'sky-deep'), (58, 'sky-mid'), (106, 'violet'), (112, 'roof-shade'), (150, 'roof-wine'), (190, 'ember'), (232, 'glow')]
-SKY_DAWN = [(0, 'sky-deep'), (40, 'sky-mid'), (92, 'sky-low'), (150, 'cloud-lo'), (186, 'cloud-hi'), (212, 'glow'), (236, 'ember')]
-SKY_DAY = [(0, 'sky-low'), (96, 'cloud-lo'), (170, 'cloud-hi')]
+SKY_NIGHT = [(0, 'sky-deep'), (70, 'sky-mid'), (104, 'sky-low'), (178, 'cloud-lo')]
+SKY_DUSK = [(0, 'sky-deep'), (50, 'sky-mid'), (84, 'violet'), (87, 'roof-shade'), (112, 'roof-wine'), (142, 'ember'), (168, 'glow')]
+SKY_DAWN = [(0, 'sky-deep'), (36, 'sky-mid'), (78, 'sky-low'), (112, 'cloud-lo'), (140, 'cloud-hi'), (162, 'glow'), (180, 'ember')]
+SKY_DAY = [(0, 'sky-low'), (84, 'cloud-lo'), (150, 'cloud-hi')]
 
 
 def fix_violet(c):
@@ -134,8 +134,8 @@ def moon():
     for y in range(S):
         for x in range(S):
             d = math.hypot(x - cx + .5, y - cy + .5)
-            if d <= 33: c.p[y][x] = 'sky-low' if d <= 31 or checker(x, y) else None
-            if d <= 23: c.p[y][x] = 'cloud-lo' if d <= 21 or checker(x, y) else c.p[y][x]
+            if d <= 26: c.p[y][x] = 'sky-mid' if d <= 24 or checker(x, y) else None
+            if d <= 20: c.p[y][x] = 'sky-low' if d <= 18.5 or checker(x, y) else c.p[y][x]
     # dim earthshine on the dark side of the disc
     R = 14.5
     for y in range(S):
@@ -242,26 +242,39 @@ def ridge(base, comps, seed):
 def rr(R, x): return int(round(R[x % W]))
 
 
-def hills_far():
-    R = ridge(176, [(1, 9), (2, 7), (3, 5), (5, 2.5), (8, 1.2)], 5)
-    c = Cv()
+def snow_ridge(c, R, body, lo, hi, seed, thick=1.0, ph=0.0):
     for x in range(W):
         top = rr(R, x); slope = R[(x + 3) % W] - R[(x - 3) % W]
-        lit = slope < -0.6; shadow = slope > 1.2
-        drift = 2.2 * math.sin(TAU * 11 * x / W + 1.3) + 1.6 * math.sin(TAU * 17 * x / W)
-        t_hi = 2 + (3 if lit else 0) - (1 if shadow else 0) + max(0, drift)
+        lit = slope < -0.5; shadow = slope > 1.2
+        drift = 2.4 * math.sin(TAU * 11 * x / W + ph) + 1.8 * math.sin(TAU * 17 * x / W + seed)
+        t_hi = (2.5 + min(5, max(0, -slope * 1.2)) + max(0, drift)) * thick
         for y in range(top, H):
             d = y - top
-            if d < t_hi - 1: col = 'cloud-hi'
-            elif d < t_hi + 1 and checker(x, y): col = 'cloud-hi'
-            elif d < t_hi + 3: col = 'cloud-lo'
-            elif d < t_hi + 5: col = 'cloud-lo' if checker(x, y) else 'hill-far'
-            else:
-                col = 'hill-far'
-                if d > 28 and y > 216: col = 'hill-far' if not checker(x, y) or d < 34 else 'hill-mid'
-                if d > 40: col = 'hill-mid'
+            if d < t_hi - 1: col = hi
+            elif d < t_hi + 1 and checker(x, y): col = hi
+            elif d < t_hi + 4: col = lo
+            elif d < t_hi + 7: col = lo if checker(x, y) else body
+            else: col = body
+            if d > 40 and body == 'hill-far': col = 'hill-mid'
+            elif d > 30 and body == 'hill-far' and checker(x, y): col = 'hill-mid'
             c.p[y][x] = col
-    return c, R
+
+
+def hills_far():
+    R1 = ridge(170, [(1, 7), (2, 6), (3, 4), (6, 2), (9, 1)], 12)    # back ridge, taller peaks
+    R2 = ridge(192, [(1, 6), (2, 6), (3, 4), (5, 2.5), (8, 1.2)], 5)  # front ridge
+    c = Cv()
+    # back ridge: paler, hazier
+    for x in range(W):
+        top = rr(R1, x); slope = R1[(x + 3) % W] - R1[(x - 3) % W]
+        t_hi = 3 + min(5, max(0, -slope * 1.2)) + max(0, 2.0 * math.sin(TAU * 13 * x / W + 2))
+        for y in range(top, H):
+            d = y - top
+            col = 'cloud-hi' if d < t_hi - 1 or (d < t_hi + 1 and checker(x, y)) else 'cloud-lo' if d < t_hi + 5 else 'hill-far'
+            if d >= t_hi + 5 and d < t_hi + 8 and checker(x, y): col = 'cloud-lo'
+            c.p[y][x] = col
+    snow_ridge(c, R2, 'hill-far', 'cloud-lo', 'cloud-hi', 1.7, 1.0, 1.3)
+    return c, R2
 
 
 def pine(c, x, base, h, body, hi=None, sub=None):
@@ -281,7 +294,7 @@ def pine(c, x, base, h, body, hi=None, sub=None):
 
 
 def hills_mid():
-    R = ridge(199, [(1, 5), (2, 6), (4, 3.5), (6, 2), (9, 1)], 21)
+    R = ridge(203, [(3, 5), (4, 3), (7, 3), (10, 1.5), (1, 2)], 21)
     c = Cv()
     for x in range(W):
         top = rr(R, x); slope = R[(x + 3) % W] - R[(x - 3) % W]
@@ -296,7 +309,7 @@ def hills_mid():
             c.p[y][x] = col
     rnd = random.Random(33)
     # pine clusters, irregular rhythm
-    xs = [18, 29, 36, 112, 121, 128, 135, 206, 214, 288, 297, 304, 392, 401, 462, 470]
+    xs = [9, 22, 31, 77, 96, 103, 171, 180, 187, 195, 253, 331, 340, 349, 421, 433, 441]
     for x in xs:
         h = rnd.randrange(18, 32)
         pine(c, x, rr(R, x) + 3, h, 'leaf-dark', None)
@@ -361,7 +374,7 @@ def hills_near():
             if d > 15: col = 'ground'
             c.p[y][x] = col
     rnd = random.Random(55)
-    for x, rad in ((44, 17), (127, 11), (205, 13), (318, 19), (412, 12)):
+    for x, rad in ((30, 16), (112, 10), (189, 14), (251, 9), (338, 19), (433, 12)):
         round_tree(c, x, rr(R, x) + 2, rad, rnd)
     for x, h in ((84, 34), (168, 26), (262, 38), (366, 28), (452, 34)):
         pine(c, x, rr(R, x) + 3, h, 'leaf-dark', 'leaf-lit' if False else None)
@@ -413,66 +426,51 @@ def fence():
 def ground():
     c = Cv(W, 30)
     rnd = random.Random(91)
-    # periodic path edge
-    def edge_top(x): return 7 + 2.0 * math.sin(TAU * 3 * x / W + .5) + 1.3 * math.sin(TAU * 7 * x / W + 2)
-    def edge_bot(x): return 23 + 1.5 * math.sin(TAU * 4 * x / W + 1.1) + 1.0 * math.sin(TAU * 9 * x / W)
+    def et_(x): return 2 + int(round(1.0 * math.sin(TAU * 3 * x / W + .5) + 0.7 * math.sin(TAU * 7 * x / W + 2)))
+    def eb_(x): return 22 + int(round(1.0 * math.sin(TAU * 4 * x / W + 1.1) + 0.6 * math.sin(TAU * 9 * x / W)))
     for x in range(W):
-        et, eb = int(round(edge_top(x))), int(round(edge_bot(x)))
+        et, eb = et_(x), eb_(x)
         for y in range(30):
             if y < et: col = 'leaf-dark'
-            elif y <= eb: col = 'ground'
+            elif y <= eb: col = 'wood-dark'
             else: col = 'leaf-dark'
             c.p[y][x] = col
-        # bright top lip of grass (ground line)
-        c.p[0][x] = 'leaf-lit' if (x * 5 % 7) < 4 else 'leaf-dark'
-        c.p[1][x] = 'leaf-dark' if c.p[0][x] == 'leaf-lit' else c.p[1][x]
-        # path: lit upper edge (wood), dark lower edge
-        c.p[et][x] = 'wood' if (x + et) % 3 else 'wood-dark'
-        if et + 1 < 30: c.p[et + 1][x] = 'wood-dark' if checker(x, et + 1) else 'ground'
+        # grass lip along the ground line
+        c.p[0][x] = 'leaf-lit'
+        c.p[1][x] = 'leaf-lit' if x % 3 == 0 else 'leaf-dark'
+        # path: lit upper edge, shaded lower half, dark bottom edge
+        c.p[et][x] = 'wood-lit'
+        if et + 1 <= eb: c.p[et + 1][x] = 'wood' if checker(x, et) else 'wood-lit'
+        for y in range(et + 2, et + 6):
+            c.p[y][x] = 'wood' if (y == et + 2 or checker(x, y)) else 'wood-dark'
         c.p[eb][x] = 'wood-dark'
-        if eb + 1 < 30: c.p[eb + 1][x] = 'ink' if checker(x, eb) else 'leaf-dark'
-    # dirt speckle (wood/ground tones)
-    for _ in range(90):
-        x = rnd.randrange(W); y = rnd.randrange(9, 23)
-        if c.p[y][x] == 'ground':
-            c.p[y][x] = rnd.choice(('wood-dark', 'wood-dark', 'wood'))
-            if rnd.random() < .3: c.put(x + 1, y, 'wood-dark')
-    # wheel-rut dither
+        for y in range(eb + 1, 30):
+            c.p[y][x] = 'leaf-dark' if y > eb + 1 else 'ink'
+    for _ in range(70):
+        x = rnd.randrange(W); y = rnd.randrange(6, 20)
+        if c.p[y][x] == 'wood-dark':
+            c.p[y][x] = 'wood' if rnd.random() < .7 else 'wood-lit'
+    # wheel ruts
     for x in range(W):
-        for y in (14, 15):
-            if c.p[y][x] == 'ground' and checker(x // 2, y): c.p[y][x] = 'wood-dark'
-    # grass tufts on the lawn above & below path (lit blades)
-    def tuft(x, y, tall=3):
-        for dx, hh in ((-1, tall - 1), (0, tall), (1, tall - 1)):
-            for k in range(hh):
-                c.put(x + dx, y - k, 'leaf-lit' if (k == hh - 1 or dx == -1) else 'leaf-dark')
-    for _ in range(46):
-        x = rnd.randrange(W); y = rnd.randrange(3, 7)
-        tuft(x, y + 1, rnd.choice((2, 3, 3, 4)))
-    for _ in range(26):
-        x = rnd.randrange(W); y = rnd.randrange(26, 30)
-        tuft(x, y, rnd.choice((2, 3)))
-    # grass blades creeping onto the path edge
-    for x in range(0, W, 5):
-        et = int(round(edge_top(x))) + rnd.randrange(0, 2)
-        c.put(x, et, 'leaf-lit'); c.put(x, et - 1, 'leaf-lit')
-    # tiny flowers
-    for i in range(30):
-        x = rnd.randrange(W); y = rnd.choice((3, 4, 5, 26, 27, 28))
-        col = rnd.choice(('moon', 'cloud-hi', 'violet', 'glow', 'cloud-hi'))
-        c.put(x, y, col)
-        if col in ('violet', 'glow') and rnd.random() < .5: c.put(x + 1, y, col)
-        c.put(x, y + 1, 'leaf-lit')
-    # pebbles
-    for _ in range(12):
-        x = rnd.randrange(W); y = rnd.randrange(11, 21)
-        c.put(x, y, 'cloud-lo'); c.put(x + 1, y, 'wall-shade'); c.put(x, y + 1, 'wall-shade'); c.put(x + 1, y + 1, 'ground')
-        if rnd.random() < .4: c.put(x - 1, y, 'wall-mid'); c.put(x, y - 1, 'cloud-lo')
-    pass
-    # fallen leaves, warm accent
-    for _ in range(5):
-        x = rnd.randrange(W); y = rnd.randrange(10, 22)
-        c.put(x, y, 'ember' if rnd.random() < .3 else 'wood-lit'); c.put(x + 1, y, 'wood')
+        for y in (13, 18):
+            if c.p[y][x] == 'wood-dark' and (x // 3) % 4 != 0: c.p[y][x] = 'ground'
+    # sparse grass tufts: top lawn and bottom verge
+    def tuft(x, y, t):
+        for dx, hh in ((-1, t - 1), (0, t), (1, t - 1)):
+            for k in range(hh): c.put(x + dx, y - k, 'leaf-lit' if k == hh - 1 else 'leaf-dark')
+    for x in range(8, W, 31):
+        x += rnd.randrange(-6, 7); tuft(x, 2, 3)
+    for x in range(14, W, 23):
+        x += rnd.randrange(-5, 6); tuft(x, 29, 3) if rnd.random() < .7 else None
+    # flowers (few, readable)
+    for i in range(14):
+        x = rnd.randrange(W); y = rnd.choice((2, 26, 27))
+        col = rnd.choice(('moon', 'cloud-hi', 'violet', 'glow'))
+        c.put(x, y, col); c.put(x, y + 1, 'leaf-lit')
+    # pebbles on the lane
+    for _ in range(9):
+        x = rnd.randrange(W); y = rnd.randrange(8, 19)
+        c.put(x, y, 'cloud-lo'); c.put(x + 1, y, 'wall-shade'); c.put(x, y + 1, 'wall-shade'); c.put(x + 1, y + 1, 'wood-dark')
     return c
 
 

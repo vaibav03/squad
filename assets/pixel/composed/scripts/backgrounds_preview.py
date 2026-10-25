@@ -21,8 +21,8 @@ def compose(out, sky='0_sky', cam=26, vw=427, vh=240, tw=None):
         else: view.alpha_composite(im, (x + ox, y - top))
     strip = L(out, sky)
     for x in range(0, vw, strip.width): view.alpha_composite(strip.crop((0, top, strip.width, 270)), (x, 0))
-    place(L(out, '1_stars'), 0, 0, .02)
-    view.alpha_composite(L(out, '2_moon'), (86 - 40, 56 - 40 - top))
+    if sky != '0_sky_day': place(L(out, '1_stars'), 0, 0, .02)
+    if sky != '0_sky_day': view.alpha_composite(L(out, '2_moon'), (86 - 40, 56 - 40 - top))
     for n, f in (('3_clouds_far', .1), ('4_clouds_near', .2), ('5_hills_far', .3), ('6_hills_mid', .45), ('7_hills_near', .6), ('8_fenceline', .9)):
         place(L(out, n), 0, 0, f)
     place(L(out, '9_ground'), 0, 240, 1.0)
