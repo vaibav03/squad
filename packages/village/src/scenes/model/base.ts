@@ -1,6 +1,9 @@
 import { easeOut, minHoldMs, progress } from '../curves';
 import type { Access, BubbleSpec, ChalkMark, Occupant, PaintOpts, SceneCommand } from '../contract';
 
+/** The clock part of PaintOpts: what time-based helpers need. */
+export type Clock = { t: number; calm: boolean };
+
 export interface LiveBubble extends BubbleSpec {
   since: number;
 }
@@ -121,7 +124,7 @@ export function reduceBase<S extends BaseState>(s: S, cmd: SceneCommand, at: num
 }
 
 /** Mastery glow right now (0..1): eased 600 ms tween, or snapped in calm mode. */
-export function glowNow(s: BaseState, o: PaintOpts): number {
+export function glowNow(s: BaseState, o: Clock): number {
   if (o.calm) return s.glow;
   return s.glowFrom + (s.glow - s.glowFrom) * easeOut(progress(o.t, s.glowSince, 600));
 }
@@ -139,7 +142,7 @@ export interface BubbleView {
  * 20 characters plus 3 s reading time; exit 120 ms. Dissent bubbles stay until cleared; the
  * chairman's announcement holds 8 s. Stagger by `order` * 80 ms (opinions appear independently).
  */
-export function visibleBubbles(s: BaseState, o: PaintOpts): BubbleView[] {
+export function visibleBubbles(s: BaseState, o: Clock): BubbleView[] {
   const out: BubbleView[] = [];
   for (const b of s.bubbles) {
     const delay = (b.order ?? 0) * 80;
@@ -172,7 +175,7 @@ export function triangle(t: number, periodMs: number): number {
 }
 
 /** Deterministic lantern flicker (3 frames over 2 s; never more than 3 flashes per second). */
-export function lanternFrame(s: BaseState, o: PaintOpts): 0 | 1 | 2 {
+export function lanternFrame(s: BaseState, o: Clock): 0 | 1 | 2 {
   if (s.lantern === 'off') return 0;
   if (s.lantern === 'steady' || o.calm) return 2;
   const p = ((o.t - s.lanternSince) % 2000) / 2000;

@@ -10,7 +10,9 @@ let lib: AssetLib | null = null;
 export function nodeAssets(): AssetLib {
   if (lib) return lib;
   const manifest = JSON.parse(readFileSync(resolve(ROOT, 'assets/asset-manifest.json'), 'utf8'));
-  const atlas = JSON.parse(readFileSync(resolve(ROOT, 'assets/pixel/composed/characters/atlas.json'), 'utf8'));
+  const atlas = JSON.parse(
+    readFileSync(resolve(ROOT, 'assets/pixel/composed/characters/atlas.json'), 'utf8'),
+  );
   lib = createAssetLib(manifest, atlas, (p) => decodePng(readFileSync(resolve(ROOT, p))));
   return lib;
 }

@@ -29,7 +29,8 @@ export function decodePng(buf: Uint8Array): Raster {
     else if (type === 'IEND') break;
     p += 12 + len;
   }
-  if (depth !== 8 || interlace !== 0) throw new Error(`unsupported PNG (depth ${depth}, interlace ${interlace})`);
+  if (depth !== 8 || interlace !== 0)
+    throw new Error(`unsupported PNG (depth ${depth}, interlace ${interlace})`);
   const ch = ({ 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 } as Record<number, number>)[ctype];
   if (!ch) throw new Error(`unsupported PNG colour type ${ctype}`);
   const raw = inflateSync(Buffer.concat(idat));
@@ -63,7 +64,8 @@ export function decodePng(buf: Uint8Array): Raster {
     let G = 0;
     let B = 0;
     let A = 255;
-    if (ctype === 6) [R, G, B, A] = [out[i * 4]!, out[i * 4 + 1]!, out[i * 4 + 2]!, out[i * 4 + 3]!];
+    if (ctype === 6)
+      [R, G, B, A] = [out[i * 4]!, out[i * 4 + 1]!, out[i * 4 + 2]!, out[i * 4 + 3]!];
     else if (ctype === 2) [R, G, B] = [out[i * 3]!, out[i * 3 + 1]!, out[i * 3 + 2]!];
     else if (ctype === 0) R = G = B = out[i]!;
     else if (ctype === 4) {

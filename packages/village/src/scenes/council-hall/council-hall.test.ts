@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { VillageEvent } from '@squad/core';
 import { LIGHTS } from '../pixel/raster';
 import { DEFAULT_CTX } from '../contract';
-import { offPalette, paintShot, runScript } from '../testkit';
+import { offPalette, paintShot, po, runScript } from '../testkit';
 import { councilHall as def, councilHallBundle } from './index';
 import { mapCouncilEvent } from './map';
 import { initCouncilHall, reduceCouncil, seatOf } from './state';
@@ -102,7 +102,7 @@ describe('council hall mapEvent', () => {
 });
 
 describe('council hall painting', () => {
-  const t = (tt: number) => ({ t: tt, calm: false });
+  const t = (tt: number) => po(tt, false);
   it('is deterministic and state-sensitive in both views', () => {
     const base = initCouncilHall();
     expect(def.paint(base, 'interior', t(10)).hash()).toBe(
@@ -132,8 +132,8 @@ describe('council hall painting', () => {
   it('calm mode freezes ambient loops', () => {
     const s = { ...initCouncilHall(), access: 'open' as const };
     for (const view of ['exterior', 'interior'] as const) {
-      expect(def.paint(s, view, { t: 0, calm: true }).hash()).toBe(
-        def.paint(s, view, { t: 1000, calm: true }).hash(),
+      expect(def.paint(s, view, po(0, true)).hash()).toBe(
+        def.paint(s, view, po(1000, true)).hash(),
       );
     }
   });

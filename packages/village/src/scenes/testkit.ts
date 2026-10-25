@@ -2,12 +2,14 @@ import type { VillageEvent } from '@squad/core';
 import {
   DEFAULT_CTX,
   step,
+  type PaintOpts,
   type SceneCtx,
   type SceneDef,
   type ShotDef,
   type View,
 } from './contract';
 import { paletteNameOf } from './pixel/palette';
+import { nodeAssets } from './tools/node-assets';
 import type { Raster } from './pixel/raster';
 
 /** Run a script through a scene; returns the state after every event with at <= upTo. */
