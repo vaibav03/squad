@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { MemoryRouter } from 'react-router-dom';
 import HomePage from './index';
 import { SquadProvider } from '../../shell/context';
+import { resetRequestBudget } from '../../lib/request-budget';
 import { calendarDone, coursesDone, personaDone, phoneDone } from './setup-state';
 
 const HUB = 'http://hub.test';
@@ -40,6 +41,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  resetRequestBudget(); // a read left hanging by one test must not hold a slot for the next
   vi.unstubAllGlobals();
 });
 
