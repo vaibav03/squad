@@ -178,7 +178,7 @@ export default function SquadJoinPage() {
         account.squads.find((s) => preview && s.name === preview.squadName)?.id ??
         null;
       if (target) await account.switchSquad(target);
-      navigate('/squad');
+      navigate('/squad/welcome-tour');
     } catch (e) {
       setView({ kind: 'problem', error: e instanceof AccountApiError ? e : err, preview });
     } finally {
@@ -335,7 +335,7 @@ export default function SquadJoinPage() {
             iconEnd="arrow-right"
             onClick={(ev) => {
               ev.preventDefault();
-              navigate('/squad');
+              navigate('/squad/welcome-tour');
             }}
           >
             Go to my squad

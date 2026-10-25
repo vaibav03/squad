@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { requireViewer } from '../auth';
+import { groupLedger } from './group-ledger';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 
 const MAX_PDF = 50 * 1024 * 1024;
@@ -49,6 +50,15 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
       taskId: c.req.param('taskId'),
       entries: deps.ledger.entries(c.req.param('taskId'), v).filter((e) => members.has(e.student)),
     });
+  });
+
+  // Group ledger: decisions, votes, edits and provenance for ONE group chat. `groupId` is `group:<squadId>`;
+  // a viewer sees only their own squad's ledger, anything else is 404 (no existence leak).
+  r.get('/v1/groups/:groupId/ledger', need, (c) => {
+    const v = c.get('viewer');
+    const groupId = c.req.param('groupId');
+    if (groupId !== `group:${v.squadId}`) return c.json(err('not_found'), 404);
+    return c.json({ groupId, entries: groupLedger(deps, v.squadId) });
   });
 
   // Generic confirm: any task with an owning handler (trip store, an agent's open confirm card, or a

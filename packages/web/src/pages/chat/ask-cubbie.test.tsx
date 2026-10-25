@@ -32,7 +32,7 @@ describe('Ask Cubbie composer handoff', () => {
     const chip = await screen.findByTestId('composer-context-chip');
     expect(chip.textContent).toContain('Essay 2');
     expect(chip.textContent).toContain('Statistics 101');
-    expect(screen.getByTestId('composer-context-provenance').textContent).toBe('Fixture (simulated)');
+    expect(screen.getByTestId('composer-context-provenance').textContent).toBe('Demo: Canvas');
     expect((screen.getByTestId('chat-composer-input') as HTMLTextAreaElement).value).toBe(
       '@cubbie what should I focus on for Essay 2?',
     );

@@ -16,7 +16,7 @@ async function snap(page: Page, name: string): Promise<void> {
   }
 }
 
-const board = (page: Page) => page.getByRole('dialog', { name: /Council|Ask council/ });
+const board = (page: Page) => page.locator('[aria-labelledby="cb-title"]');
 
 test('J20 council board on the track4 replay: roster, turn cards and filters, decision with dissent, Fixture badge', async ({
   browser,
@@ -264,7 +264,7 @@ test('J20 Hierarchy tab in the Agent Inspector shows position, delegations and o
       break;
     await next.click();
   }
-  await panel.getByRole('tab', { name: /^Activity/ }).click();
+  await panel.getByRole('tab', { name: /^Structure/ }).click();
   const h = panel.getByTestId('hierarchy');
   await expect(h.locator('.cb-mode')).toContainText('Fixture');
   await expect(h).toContainText('Chair');

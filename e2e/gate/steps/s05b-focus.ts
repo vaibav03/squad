@@ -16,7 +16,7 @@ export const S5b: StepDef<GateCtx> = {
     const { page } = act;
     try {
       await page.goto('/squad/village?replay=track4&board=1');
-      const board = page.getByRole('dialog', { name: /Council|Ask council/ });
+      const board = page.locator('[aria-labelledby="cb-title"]');
       await board.waitFor({ timeout: 30_000 });
       // roster rows carry the portrait buttons that open the one selected-agent panel
       const nodes = board.getByTestId('dl-member');

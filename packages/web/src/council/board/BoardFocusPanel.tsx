@@ -56,7 +56,6 @@ export function BoardFocusPanel({
   const [tab, setTab] = useState<FocusTab>('conversation');
   const titleId = useId();
   const root = useRef<HTMLDivElement>(null);
-  useEffect(() => setTab('conversation'), [agentId]);
   // Esc closes this panel only (not the board behind it); the board hands focus back to the control that opened it.
   const closeRef = useRef(onClose);
   closeRef.current = onClose;

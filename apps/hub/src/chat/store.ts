@@ -36,6 +36,8 @@ export interface ChatStore {
   findByClientId(chatId: string, studentId: string, clientId: string): ChatMessage | undefined;
   /** The bot message already stored as the answer to this trigger message with exactly this text, if any. */
   findReply(chatId: string, replyTo: string, text: string): ChatMessage | undefined;
+  /** True when any bot reply is stored for this trigger message. */
+  hasReplyTo(chatId: string, replyTo: string): boolean;
   /** Newest confirm-card message in this chat for this task. */
   findConfirm(chatId: string, taskId: string): ChatMessage | undefined;
   /** After a restart no confirm can still be pending (the bot drops them): mark those cards `timeout`. Returns how many. */
@@ -130,6 +132,11 @@ export function createChatStore(db: Db): ChatStore {
     findReply(chatId, replyTo, text) {
       return rows(byClient.all(chatId, `"replyTo":${JSON.stringify(replyTo)}`)).find(
         (m) => m.replyTo === replyTo && m.sender.kind === 'persona' && m.text === text,
+      );
+    },
+    hasReplyTo(chatId, replyTo) {
+      return rows(byClient.all(chatId, `"replyTo":${JSON.stringify(replyTo)}`)).some(
+        (m) => m.replyTo === replyTo && m.sender.kind === 'persona',
       );
     },
     findConfirm(chatId, taskId) {

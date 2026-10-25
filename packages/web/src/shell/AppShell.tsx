@@ -144,7 +144,16 @@ export function AppShell({
     <ShellContext.Provider value={api}>
       <JourneyProvider>
         <div className={`sq-shell${fullBleed ? ' is-bleed sq-scene' : ''}`}>
-          <a className="sq-shell__skip" href="#main">
+          <a
+            className="sq-shell__skip"
+            href={`${pathname}#main`}
+            onClick={(e) => {
+              // the skip link always lands on THIS page's main region (never a stale route's hash)
+              e.preventDefault();
+              mainRef.current?.focus({ preventScroll: false });
+              mainRef.current?.scrollIntoView?.();
+            }}
+          >
             Skip to content
           </a>
           <header className="sq-shell__header">

@@ -108,9 +108,10 @@ export function createHwPolicySkill(brain: Brain, opts: HwPolicyOptions = {}): S
       const courseId = course(m);
       const request = stripMention(m.text);
       const policy = brain.store.getCourse(courseId)?.policy?.trim() ?? '';
-      const reply = (text: string, provenance?: OutboundMessage['provenance']): OutboundMessage[] => [
-        { chatId: m.chatId, text, ...(provenance ? { provenance } : {}) },
-      ];
+      const reply = (
+        text: string,
+        provenance?: OutboundMessage['provenance'],
+      ): OutboundMessage[] => [{ chatId: m.chatId, text, ...(provenance ? { provenance } : {}) }];
 
       const cls = policy
         ? await classify(ctx.llm, policy, request)

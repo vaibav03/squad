@@ -166,6 +166,11 @@ describe('collaborative flow from group chat', () => {
     const g = texts(await history('s_ben', GROUP)).join('\n');
     expect(g).toContain('started a trip plan for Cabo');
     expect(g).toContain('Voting is open');
+    // every step carries the same trip card (the web keeps one card per plan), and the text names no dead page
+    const cards = (await history('s_ben', GROUP)).filter((m) => m.card?.type === 'trip');
+    expect(cards.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(cards.map((m) => (m.card as { tripId: string }).tripId))).toEqual(new Set([tripId]));
+    expect(cards.at(-1)!.text).toContain(`/squad/chat?plan=${tripId}`);
   });
 
   it('the mesh was asked once, only with public option facts, and voting opened', async () => {

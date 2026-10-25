@@ -67,3 +67,17 @@ The hub allows 20 sign-ups per hour per IP (in memory): restart the hub to reset
 ## Web origin knobs (OAuth return, invite and iMessage links)
 
 The hub sends the browser back to the web origin that started the flow (Origin header or `return_origin`), never a hard-coded port. Allowed: `HUB_CORS_ORIGINS` entries, `PUBLIC_WEB_URL` / `WEB_URL` / `HUB_WEB_URL`, and localhost / 127.0.0.1 on any port only when not production. Otherwise it falls back to the configured web URL, else a plain "Connected, return to the app" page. `pnpm dev:all` sets `HUB_WEB_URL` to its own `DEV_ALL_WEB_PORT` origin and adds that origin to the CORS list. See `.env.example`. There is no Sendblue code in this repo; the Canvas extension bakes its web origin at build (`SQUAD_WEB_ORIGIN`).
+
+## Fresh-user path for E2E and manual QA
+
+`POST /v1/dev/reset-onboarding` (bearer token of the test student) resets ONLY that student's first-run state: the
+skip marker, the sharing choice, and their own Canvas/Google connections and imports. It never touches another user,
+a squad, or chat history. It answers 404 when `NODE_ENV=production` or `HUB_DEV_LOGIN` is off, so it cannot run on a
+real deployment.
+
+```sh
+curl -X POST "$HUB/v1/dev/reset-onboarding" -H "authorization: Bearer $TOKEN"
+```
+
+After the reset, `/squad/welcome-tour` starts at Connect. For a brand-new student use the normal dev sign-up
+(`POST /v1/auth/start` + `/v1/auth/verify`, then `POST /v1/squads`); see `e2e/lib/home.ts` `newAccountToken`.

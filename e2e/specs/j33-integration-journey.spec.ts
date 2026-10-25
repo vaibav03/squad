@@ -153,7 +153,7 @@ test('5 Ask Cubbie: group chat opens with a removable context chip, prompt prefi
     await page.waitForURL(/\/squad\/chat/, { timeout: 20_000 });
     const chip = page.getByTestId('composer-context-chip');
     await expect(chip).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByTestId('composer-context-provenance')).toContainText(/Fixture/);
+    await expect(page.getByTestId('composer-context-provenance')).toContainText(/Demo:/);
     await expect(page.getByTestId('chat-composer-input')).toHaveValue(/@cubbie/);
     expect((await history(ana.token, GROUP)).length).toBe(before); // never auto-sent
     await snap(ana, '3-ask-cubbie-chip');
@@ -173,7 +173,11 @@ test('6 @cubbie answers from the attached context with provenance + the source v
     await expect(page.getByTestId('message-context-chip').first()).toBeVisible({ timeout: 20_000 });
     const cite = page.getByTestId('chat-citation-chip').first();
     await expect(cite).toBeVisible({ timeout: 60_000 });
-    await expect(page.getByTestId('chat-citation-provenance').first()).toContainText(/fixture/i);
+    await expect(page.getByTestId('chat-citation-provenance').first()).toContainText(/Demo:/);
+    // a fixture-sourced answer is never "Live"
+    const foot = page.getByTestId('chat-provenance').last();
+    await expect(foot.getByTestId('chat-provenance-mode')).not.toHaveText(/Live/i);
+    await expect(foot).toHaveAttribute('data-mode', 'demo');
     await expect(page.getByTestId('chat-citation-location').first()).toBeVisible();
     await snap(ana, '4-cited-answer');
     await cite.click();

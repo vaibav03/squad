@@ -10,6 +10,8 @@ import type { ContextViewer } from '../../context/types';
 export interface CanvasAnswerOptions {
   viewerFor: (m: { from: string }) => ContextViewer | undefined;
   now?: () => number;
+  /** The asker's IANA time zone when the hub knows it; due windows ("today", "this week") are computed in it. Default UTC. */
+  tzFor?: (m: { from: string }) => string | undefined;
 }
 
 const DEADLINE_ONLY = /\b(due|deadlines?|assignments?|homework|hw|upcoming|to-?do)\b/i;
@@ -60,7 +62,7 @@ export function createCanvasAnswerSkill(store: ContextStore, opts: CanvasAnswerO
         DEADLINE_ONLY.test(m.text) &&
         !/\b(slides?|ppts?|pptx|powerpoints?|pdfs?)\b/i.test(m.text)
       ) {
-        const due = dueReply(store, sources, t, new Map(), m.text);
+        const due = dueReply(store, sources, t, new Map(), m.text, opts.tzFor?.(m) ?? 'UTC');
         if (due)
           return [
             {

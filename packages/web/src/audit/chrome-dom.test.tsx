@@ -77,7 +77,7 @@ const CONCRETE: Record<string, string> = {
   '/squad/trips/:tripId?': '/squad/trips',
   '/squad/courses/:courseId?': '/squad/courses',
 };
-const ROUTES = squadRouteMeta.filter((m) => m.key !== 'mastery').map((m) => CONCRETE[m.path] ?? m.path);
+const ROUTES = squadRouteMeta.filter((m) => m.key !== 'mastery' && m.key !== 'ledger').map((m) => CONCRETE[m.path] ?? m.path);
 
 function Routes_({ routes }: { routes: RouteObject[] }) {
   return useRoutes(routes);

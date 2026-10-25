@@ -36,7 +36,8 @@ export function createOnboardingStore(db: Db) {
       n.sharingAt,
     );
   };
-  return { get, put };
+  const reset = (id: string) => void db.prepare('DELETE FROM ctx_onboarding WHERE user_id=?').run(id);
+  return { get, put, reset };
 }
 export type OnboardingStore = ReturnType<typeof createOnboardingStore>;
 

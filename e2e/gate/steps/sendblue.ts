@@ -4,7 +4,8 @@
 //   real column:    BLOCKED(missing env: NAMES) unless every SENDBLUE_* value is set AND an allowlisted own test number
 //                   (GATE_SENDBLUE_TEST_NUMBER) is configured. Only S6s has a real variant: ONE clearly-marked message
 //                   to that number, and only with the explicit confirmation GATE_REAL_SEND=1. This file never runs it.
-import { createSafety, imessageConfigFromEnv } from '@squad/bot';
+import { orderThread } from '../../../packages/core/src';
+import { createSafety, imessageConfigFromEnv } from '../../../apps/bot/src/imessage';
 import type { Asserts } from '../lib/asserts';
 import type { StepDef } from '../lib/runner';
 import type { GateCtx } from '../lib/ctx';
@@ -92,7 +93,7 @@ async function s7s(c: GateCtx, a: Asserts) {
   await w.fake.inbound({ from: SB.ana, content: 'second in time', groupId: SB.group, handle: 'S7S-2', dateSent: new Date(t0) });
   await w.fake.inbound({ from: SB.ben, content: 'first in time (arrived late)', groupId: SB.group, handle: 'S7S-1', dateSent: new Date(t0 - 60_000) });
   await wait(() => hist(w).some((m) => m.externalId === 'S7S-1'));
-  const order = hist(w).filter((m) => m.externalId === 'S7S-1' || m.externalId === 'S7S-2').map((m) => m.externalId);
+  const order = orderThread(hist(w).filter((m) => m.externalId === 'S7S-1' || m.externalId === 'S7S-2')).map((m) => m.externalId);
   a.eq('the thread is ordered by message time, not arrival', order, ['S7S-1', 'S7S-2']);
   const late = hist(w).find((m) => m.externalId === 'S7S-1');
   a.ok('the late one is flagged as arrived late', !!late?.receivedLate);
@@ -115,6 +116,7 @@ export const S7s: StepDef<GateCtx> = {
 
 async function s10s(c: GateCtx, a: Asserts) {
   const w = await world(c);
+  w.hub.deps.imessage.unbind('Sendblue;+;gate-not-allowed'); // S6s left a deliberately non-allowlisted binding
   w.hub.deps.chat.postBot({ chatId: w.chatId, personaId: 'cubbie', personaName: 'Cubbie', text: 'S10s status walk', citations: [], attachments: [] });
   const rec = await wait(() => groupSends(w).find((s) => String(s.body.content).includes('S10s status walk')));
   if (!a.ok('the message left through Sendblue', !!rec)) return;

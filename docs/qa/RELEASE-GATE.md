@@ -254,6 +254,12 @@ consent. Create the group by hand with consenting friends (or a second Apple ID 
 allowlist and set `GATE_REAL_GROUP_HAS_OTHERS=1`. Without it V10 and V12 stay fixture-only and a single-person self-group
 runs a reduced check.
 
+### Sendblue
+Steps S4s, S6s, S7s and S10s run the Sendblue provider against a fake Sendblue server (fixture column). The real column is
+`BLOCKED(missing env: ...)` unless `SENDBLUE_API_KEY`, `SENDBLUE_API_SECRET`, `SENDBLUE_FROM_NUMBER`, `SENDBLUE_WEBHOOK_SECRET`,
+`GATE_SENDBLUE_TEST_NUMBER` and `IMESSAGE_ALLOWED_HANDLES` are set. S6s then has ONE real send, to your own allowlisted number,
+only with the explicit confirmation `GATE_REAL_SEND=1`. See docs/sendblue.md section 9.
+
 ### Gemini credits, Live and ElevenLabs plan
 
 Blocker codes `llm_credits`, `elevenlabs_plan`. The hub probes the providers and says so in `GET /v1/status`. Gemini: top up

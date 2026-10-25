@@ -71,6 +71,9 @@ describe('Council board', () => {
     expect(within(dlg).getByTestId('dl-decision')).toBeTruthy();
     expect(within(dlg).getByTestId('dl-ballot')).toBeTruthy();
     expect(dlg.querySelectorAll('[data-testid=dl-member]').length).toBeGreaterThanOrEqual(4);
+    // every seat has a portrait, never a letter tile
+    expect(dlg.querySelectorAll('[data-testid=dl-member] .dl-portrait').length).toBeGreaterThanOrEqual(4);
+    expect(dlg.querySelectorAll('.cb-tile')).toHaveLength(0);
     expect(within(dlg).getAllByText('Chair').length).toBeGreaterThan(0);
   });
 
