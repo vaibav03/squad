@@ -63,27 +63,55 @@ describe('ledger and trips', () => {
     await post(url, '/v1/session/projector', { on: false }, t.s_ana);
   });
 
-  it('votes are private until confirming, tallies appear after, unknown options are rejected', async () => {
+  it('the ballot is secret: only your own ranking, plus n of m progress', async () => {
     const bad = await post(url, '/v1/trips/trip_cabo/vote', { ranking: ['mars'] }, t.s_ana);
     expect(bad.status).toBe(400);
     await post(url, '/v1/trips/trip_cabo/vote', { ranking: ['vegas', 'cabo'] }, t.s_ana);
     await post(url, '/v1/trips/trip_cabo/vote', { ranking: ['cabo', 'vegas'] }, t.s_ben);
-    const view = await get<{ votes: { student: string }[]; tallies: unknown }>(
+    await post(url, '/v1/trips/trip_cabo/confirm', { optionId: 'vegas', yes: true }, t.s_ana);
+    const v = await get<Record<string, unknown>>(url, '/v1/trips/trip_cabo', t.s_ben);
+    expect(v.body.status).toBe('confirming');
+    expect(v.body.myVote).toEqual(['cabo', 'vegas']);
+    expect(v.body.voteProgress).toEqual({ voted: 2, of: 4 });
+    expect(v.body).not.toHaveProperty('votes');
+    expect(v.body).not.toHaveProperty('tallies');
+  });
+
+  it('x.trip.limits merges one student, x.trip.upsert never drops merged limits', async () => {
+    await emit(url, {
+      type: 'x.trip.limits',
+      data: { tripId: 'trip_cabo', student: 's_ben', limits: { visa: 'none' } },
+    });
+    await emit(url, {
+      type: 'x.trip.upsert',
+      data: {
+        tripId: 'trip_cabo',
+        taskId: 'task_trip_cabo',
+        squadId: 'sq_demo',
+        status: 'voting',
+        options: [
+          { id: 'cabo', label: 'Cabo' },
+          { id: 'vegas', label: 'Vegas' },
+        ],
+        dates: null,
+        votes: [],
+        vetoed: [],
+        confirmations: [],
+      },
+    });
+    const ben = await get<{ myLimits: Record<string, string> }>(
       url,
       '/v1/trips/trip_cabo',
       t.s_ben,
     );
-    expect(view.body.votes.map((v) => v.student)).toEqual(['s_ben']);
-    expect(view.body.tallies).toBeNull();
-    await post(url, '/v1/trips/trip_cabo/confirm', { optionId: 'vegas', yes: true }, t.s_ana);
-    const after = await get<{
-      votes: { student: string }[];
-      tallies: Record<string, number>;
-      status: string;
-    }>(url, '/v1/trips/trip_cabo', t.s_ben);
-    expect(after.body.status).toBe('confirming');
-    expect(after.body.votes).toHaveLength(2);
-    expect(after.body.tallies.vegas).toBeGreaterThan(0);
+    expect(ben.body.myLimits).toMatchObject({ budget: '$700', visa: 'none' });
+    const ana = await get<{ myLimits: Record<string, string> }>(
+      url,
+      '/v1/trips/trip_cabo',
+      t.s_ana,
+    );
+    expect(ana.body.myLimits.budget).toBe('$180');
+    expect(JSON.stringify(ben.body)).not.toMatch(/\$180/);
   });
 
   it('tasks lists the study and trip tasks', async () => {

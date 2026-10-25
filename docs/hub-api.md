@@ -53,7 +53,8 @@ Extension envelopes (`x.*`):
 | `type` | `data` | Effect |
 |---|---|---|
 | `x.ledger.private` | `LedgerEntry` (core, with raw `withheld`) | stored privately for the owner view of `GET /v1/ledger/:taskId`; **never streamed** |
-| `x.trip.upsert` | `TripRecord` (section 9, includes every student's `limits`) | stored; hub streams `x.trip.updated` filtered per viewer |
+| `x.trip.upsert` | public trip state (`TripRecord`, `limits` optional) | MERGES: per-student limits and votes already stored are kept; hub streams `x.trip.updated` filtered per viewer |
+| `x.trip.limits` | `{ tripId, student, limits: Record<string,string> }` | merges one student's own limits (each student's agent posts its own); private, shown only to that student as `myLimits` |
 | `x.ingest.progress` | `{ student, courseId, file, status: 'queued'|'parsing'|'embedding'|'ready'|'failed', pct?: number }` | streamed to that student only |
 | `x.persona.speaking` | `{ agent: AgentId, speaking: boolean, callId?: string }` | streamed to the squad |
 | `x.squad.settings` | `{ squadId, revealQuizCorrectness?: boolean }` | store; streamed as `x.squad.settings` |
@@ -101,7 +102,7 @@ Snapshot shape (`GET /v1/squad/state`):
 | `call.start`, `call.end` | the squad (presence) | n/a |
 | `call.caption` | the student on that call (`call.start.student`); public calls with no student go to the squad | dropped |
 | `x.ingest.progress` | that student | dropped |
-| `x.trip.updated` | the squad, with `myLimits` only for the owner and vote tallies removed when the squad has fewer than 3 members | |
+| `x.trip.updated` | the squad, with `myLimits` only for the owner and `voteProgress` null when the squad has fewer than 3 members | |
 | everything else | the squad | |
 
 Squad routing: events naming a student (`student`, `student:<id>` agents, `target`) go to that student's squad; events with none (dean, experts, councils) go to every squad. Minimum group size: squads under 3 get `memberCount: null`, `squadAvg: null`, no vote tallies, no counts or averages anywhere. Projector mode additionally removes the viewer's own raw `withheld` from `GET /v1/ledger/:taskId`, drops `myLimits`, and blurs nothing else (it only subtracts).
@@ -136,7 +137,7 @@ All bearer-auth, viewer-scoped.
 |---|---|
 | `GET /v1/tasks` | `{ tasks: [{ taskId, kind: 'study'|'trip'|'council', title, status, updatedAt }] }` |
 | `GET /v1/ledger/:taskId` | `{ taskId, entries: LedgerEntry[] }` oldest first. Owner's own rows carry raw `withheld` (unless projector); everyone else's `withheld` is `'hidden'` or absent |
-| `GET /v1/trips/:tripId` | `{ tripId, taskId, status, options: { id, label, estCost?: string }[], dates, votes: { student, ranking: string[] }[] \| null, tallies: Record<optionId, number> \| null, vetoed: { optionId, by: 'mediator', reason: string }[], confirmations: { student, confirmed }[], myLimits: Record<string, string> \| null }`. `myLimits` is the viewer's own only. Other students' ranking is omitted until `status = 'confirming'`; `votes`/`tallies` are `null` for squads under 3 |
+| `GET /v1/trips/:tripId` | `{ tripId, taskId, status, options: { id, label, estCost?: string }[], dates, myVote: string[] \| null, voteProgress: { voted: number, of: number } \| null, vetoed: { optionId, by: 'mediator', reason: string }[], confirmations: { student, confirmed }[], myLimits: Record<string, string> \| null }`. `myLimits` is the viewer's own only. The ballot is secret: the view has `myVote` (own ranking) and `voteProgress: { voted, of }` (null for squads under 3); no one else's ranking and no tallies are ever returned |
 | `POST /v1/trips/:tripId/vote` `{ ranking: string[] }` | `{ ok: true }` (hub records, emits `x.trip.updated`) |
 | `POST /v1/trips/:tripId/confirm` `{ optionId, yes }` | `{ ok: true, status }`. Emits `confirm.done`; when every member said yes the hub emits `trip.confirmed` once |
 | `GET /v1/mastery/:courseId` | `{ courseId, concepts: string[], mine: number[], squadAvg: number[] \| null }` (`squadAvg` null under 3 members) |

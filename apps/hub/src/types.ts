@@ -191,14 +191,19 @@ export interface TripView {
   status: TripStatus;
   options: TripRecord['options'];
   dates: string | null;
-  votes: TripRecord['votes'] | null;
-  tallies: Record<string, number> | null;
+  /** The viewer's own ranking only. The ballot is secret: nobody else's ranking is ever shown. */
+  myVote: string[] | null;
+  /** n of m voted; null for squads under 3 (no counts). */
+  voteProgress: { voted: number; of: number } | null;
   vetoed: TripRecord['vetoed'];
   confirmations: { student: StudentId; confirmed: boolean }[];
   myLimits: Record<string, string> | null;
 }
 export interface TripStore {
-  upsert(t: TripRecord): void;
+  /** Merges: per-student limits already stored are kept (incoming limits are merged in per student). */
+  upsert(t: Omit<TripRecord, 'limits'> & { limits?: TripRecord['limits'] }): void;
+  /** Merge one student's own limits (each student's agent posts its own). */
+  mergeLimits(tripId: string, student: StudentId, limits: Record<string, string>): boolean;
   get(tripId: string): TripRecord | undefined;
   byTask(taskId: string): TripRecord | undefined;
   list(squadId?: string): TripRecord[];

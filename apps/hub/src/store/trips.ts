@@ -34,9 +34,21 @@ export function createTripStore(): TripStore {
 
   return {
     upsert(t) {
-      const c = clone(t);
+      const prev = trips.get(t.tripId);
+      const c = clone(t) as TripRecord;
+      c.limits = { ...(prev?.limits ?? {}) };
+      for (const [s, l] of Object.entries(t.limits ?? {}))
+        c.limits[s] = { ...(c.limits[s] ?? {}), ...l };
+      if (prev && t.votes.length === 0) c.votes = prev.votes;
       ensureRows(c);
       trips.set(c.tripId, c);
+    },
+    mergeLimits(tripId, student, limits) {
+      const t = trips.get(tripId);
+      if (!t) return false;
+      t.limits[student] = { ...(t.limits[student] ?? {}), ...limits };
+      ensureRows(t);
+      return true;
     },
     get: (id) => (trips.has(id) ? clone(trips.get(id)!) : undefined),
     byTask(taskId) {
@@ -79,20 +91,8 @@ export function createTripStore(): TripStore {
       const t = trips.get(tripId);
       if (!t || t.squadId !== viewer.squadId) return null;
       const small = ctx.directory.isSmall(viewer.squadId);
-      const open = t.status === 'confirming' || t.status === 'confirmed';
-      const votes = small
-        ? null
-        : open
-          ? clone(t.votes)
-          : clone(t.votes.filter((v) => v.student === viewer.studentId));
-      let tallies: Record<string, number> | null = null;
-      if (!small && open) {
-        tallies = Object.fromEntries(t.options.map((o) => [o.id, 0]));
-        for (const v of t.votes)
-          v.ranking.forEach(
-            (id, i) => (tallies![id] = (tallies![id] ?? 0) + (t.options.length - i)),
-          );
-      }
+      const voted = new Set(t.votes.map((v) => v.student)).size;
+      const mineVote = t.votes.find((v) => v.student === viewer.studentId)?.ranking;
       const mine = t.limits[viewer.studentId];
       return {
         tripId: t.tripId,
@@ -100,8 +100,8 @@ export function createTripStore(): TripStore {
         status: t.status,
         options: clone(t.options),
         dates: t.dates,
-        votes,
-        tallies,
+        myVote: mineVote ? [...mineVote] : null,
+        voteProgress: small ? null : { voted, of: members(t).length },
         vetoed: clone(t.vetoed),
         confirmations: t.confirmations.map((c) => ({ student: c.student, confirmed: c.confirmed })),
         myLimits: mine && !viewer.projector ? { ...mine } : null,
