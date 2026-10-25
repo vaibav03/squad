@@ -4,9 +4,11 @@ import { DEFAULT_CTX, step, type BubbleSpec, type SceneDef } from './contract';
 import { PLACEMENTS } from './registry';
 import { initBase, reduceBase, visibleBubbles, MAX_QUEUED, type BaseState } from './model/base';
 import { holdMsFor, createRoomSession } from './roomSession';
-import { paintPlanSheet, planSheet, sheetLines, SHEET_H, SHEET_W } from './art/planSheet';
+import { paintPlanSheet, planSheet, sheetHeight, sheetLines, SHEET_W } from './art/planSheet';
 import { Raster } from './pixel/raster';
-import { offPalette, po } from './testkit';
+import { bubbleTrace, rectsOverlap } from './art/bubbleLayout';
+import { BUNDLES } from './registry';
+import { offPalette, paintShot, po } from './testkit';
 
 const ctx = DEFAULT_CTX;
 const defOf = (slot: string): SceneDef<BaseState> =>
@@ -184,7 +186,7 @@ describe('outcome and the plan sheet', () => {
     expect(L.fact).toBe('Credits: 15');
     for (const line of [L.title, ...L.items, L.fact]) expect(line.length).toBeLessThanOrEqual(38);
     const sheet = planSheet(outcome);
-    expect([sheet.w, sheet.h]).toEqual([SHEET_W, SHEET_H]);
+    expect([sheet.w, sheet.h]).toEqual([SHEET_W, sheetHeight(outcome)]);
     expect(offPalette(sheet)).toBe(0);
     for (const [slot] of [['round-table'], ['council-hall']] as const) {
       const def = defOf(slot);
@@ -196,7 +198,7 @@ describe('outcome and the plan sheet', () => {
       const r = new Raster(224, 128);
       paintPlanSheet(r, { verdict: { since: 0 }, outcome }, 9000, false, 24, 34);
       expect(r.isOpaque(24, 34)).toBe(true);
-      expect(r.isOpaque(24 + SHEET_W - 1, 34 + SHEET_H - 1)).toBe(true);
+      expect(r.isOpaque(24 + SHEET_W - 1, 34 + sheetHeight(outcome) - 1)).toBe(true);
       expect(r.isOpaque(24 + SHEET_W, 34)).toBe(false);
     }
   });
@@ -267,5 +269,38 @@ describe('sentinels: withheld values never reach bubbles, transcript, outcome or
     for (const tt of [100, 3000, 12000]) {
       for (const view of ['interior', 'exterior'] as const) def.paint(s, view, po(tt));
     }
+  });
+});
+
+describe('bubble layout: no two bubbles ever overlap in the council rooms', () => {
+  it.each(['round-table', 'council-hall', 'debate-stage'])('%s shots', (id) => {
+    const b = BUNDLES.find((x) => x.def.id === id)!;
+    let checked = 0;
+    for (const shot of b.shots.filter((x) => x.view === 'interior')) {
+      for (const t of shot.sample) {
+        bubbleTrace.on = true;
+        bubbleTrace.rects = [];
+        try {
+          paintShot(b.def, shot, t);
+        } finally {
+          bubbleTrace.on = false;
+        }
+        const rs = bubbleTrace.rects;
+        for (let i = 0; i < rs.length; i++)
+          for (let j = i + 1; j < rs.length; j++)
+            expect(
+              rectsOverlap(rs[i]!, rs[j]!),
+              `${id}/${shot.name}@${t}: ${rs[i]!.key} vs ${rs[j]!.key}`,
+            ).toBe(false);
+        checked += rs.length;
+      }
+    }
+    expect(checked).toBeGreaterThan(5);
+  });
+  it('the plan sheet height follows the content and keeps the chair clear', () => {
+    const one: RoomOutcome = { title: 'T', items: [{ label: 'A' }], facts: [], why: [] };
+    const five: RoomOutcome = { ...one, items: Array.from({ length: 5 }, () => ({ label: 'A' })) };
+    expect(sheetHeight(one)).toBeLessThan(sheetHeight(five));
+    expect(14 + SHEET_W).toBeLessThan(185); // round-table: armchair starts at x 185
   });
 });

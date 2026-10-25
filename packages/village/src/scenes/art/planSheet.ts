@@ -2,12 +2,20 @@ import type { RoomOutcome } from '@squad/core';
 import { Raster } from '../pixel/raster';
 import { GLYPH_H, drawText } from '../pixel/font';
 
-/** Sheet geometry (px): fits the 224x128 interiors between the table row and the roof beam. */
-export const SHEET_W = 160;
-export const SHEET_H = 52;
+/** Sheet width (px); the height follows the content (see `sheetHeight`). */
+export const SHEET_W = 150;
 const PAD = 4;
 const CHARS = Math.floor((SHEET_W - 2 * PAD + 1) / 4);
 export const SHEET_LINES = 5;
+const ITEMS_Y = 12;
+const PITCH = GLYPH_H + 1;
+
+/** Height by content: title band, one row per course line, then the credits fact when present. */
+export function sheetHeight(o: RoomOutcome): number {
+  const n = Math.min(SHEET_LINES, o.items.length);
+  const base = ITEMS_Y + n * PITCH;
+  return creditsFact(o) ? base + 2 + GLYPH_H + 4 : base + 3;
+}
 
 /** The 3x5 font has no curly quotes, dashes or ellipsis: fold them to plain ASCII. */
 export function fontSafe(s: string): string {
@@ -52,19 +60,20 @@ export function sheetLines(o: RoomOutcome): { title: string; items: string[]; fa
  */
 export function planSheet(o: RoomOutcome): Raster {
   const L = sheetLines(o);
-  const r = new Raster(SHEET_W, SHEET_H);
-  r.rect(0, 0, SHEET_W, SHEET_H, 'wall-lit');
-  r.frame(0, 0, SHEET_W, SHEET_H, 'wood-dark');
+  const H = sheetHeight(o);
+  const r = new Raster(SHEET_W, H);
+  r.rect(0, 0, SHEET_W, H, 'wall-lit');
+  r.frame(0, 0, SHEET_W, H, 'wood-dark');
   r.rect(1, 1, SHEET_W - 2, 8, 'roof-wine');
   r.hline(1, 9, SHEET_W - 2, 'wood-dark');
   drawText(r, PAD, 2, L.title, 'wall-lit');
-  let y = 12;
+  let y = ITEMS_Y;
   for (const line of L.items) {
     drawText(r, PAD, y, line, 'ink');
-    y += GLYPH_H + 1;
+    y += PITCH;
   }
   if (L.fact) {
-    const fy = 45;
+    const fy = y + 2;
     r.hline(1, fy - 2, SHEET_W - 2, 'wall-mid');
     drawText(r, PAD, fy, L.fact, 'alert');
   }
