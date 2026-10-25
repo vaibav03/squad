@@ -32,3 +32,6 @@ createRoot(document.getElementById('root')!).render(
     )}
   </StrictMode>,
 );
+
+// Tell the static boot guard in index.html that the app took over.
+requestAnimationFrame(() => window.dispatchEvent(new Event('squad:booted')));

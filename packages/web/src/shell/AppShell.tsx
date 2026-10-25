@@ -10,6 +10,7 @@ import { useCalmMode } from '../hooks/useCalmMode';
 import { routeTitleFor, squadNav } from './routes';
 import { FailureState } from './ErrorBoundary';
 import { useRenderWatchdog } from './RenderWatchdog';
+import { BuildMarker } from './BuildMarker';
 import { ShellContext } from './shell-context';
 import type { NavItem } from './types';
 import { useTheme, type ThemeChoice } from './useTheme';
@@ -203,6 +204,8 @@ export function AppShell({
             <Fragment key={pageKey}>{children}</Fragment>
           )}
         </main>
+
+        <BuildMarker />
 
         <nav className="sq-shell__tabs" aria-label="Main">
           {primary.map((n) =>
