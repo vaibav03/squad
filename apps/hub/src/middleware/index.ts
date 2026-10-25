@@ -39,7 +39,7 @@ export const DEFAULT_RULES: Rule[] = [
     name: 'students',
     method: 'GET',
     path: '/v1/auth/students',
-    limit: 120,
+    limit: 600,
     windowMs: MIN,
     by: 'ip',
   },
@@ -47,7 +47,7 @@ export const DEFAULT_RULES: Rule[] = [
     name: 'stream-token',
     method: 'POST',
     path: '/v1/squad/stream-token',
-    limit: 60,
+    limit: 240,
     windowMs: MIN,
     by: 'user',
   },
@@ -86,7 +86,23 @@ export const DEFAULT_RULES: Rule[] = [
   { name: 'persona', method: 'PUT', path: '/v1/personas', limit: 20, windowMs: MIN, by: 'user' },
   { name: 'quiz-answer', method: 'POST', path: '/v1/quiz', limit: 120, windowMs: MIN, by: 'user' },
   // chat/council routes land from other leads; limits are keyed on path prefix so they apply on merge
-  { name: 'chat-send', method: 'POST', path: '/v1/chat', limit: 60, windowMs: MIN, by: 'user' },
+  // Exact paths: a prefix match also counted POST /v1/chat/file-token (one per page load) against the send limit.
+  {
+    name: 'chat-send',
+    method: 'POST',
+    path: '/v1/chat/send',
+    limit: 60,
+    windowMs: MIN,
+    by: 'user',
+  },
+  {
+    name: 'chat-upload',
+    method: 'POST',
+    path: '/v1/chat/upload',
+    limit: 30,
+    windowMs: MIN,
+    by: 'user',
+  },
   {
     name: 'council-ask',
     method: 'POST',
@@ -103,7 +119,10 @@ export const DEFAULT_RULES: Rule[] = [
     windowMs: MIN,
     by: 'ip',
   },
-  { name: 'api-ip', method: '*', path: '/v1', limit: 3000, windowMs: MIN, by: 'ip' },
+  // Read ceilings. Interactive use (a page load is ~15 requests, a polling page a few per second) must never reach
+  // these: a shared campus/NAT address carries many people, so the per-address ceiling is high and the per-person one
+  // (keyed on the session, falling back to the address when there is none) is what actually bounds a single account.
+  { name: 'api-ip', method: '*', path: '/v1', limit: 6000, windowMs: MIN, by: 'ip' },
   { name: 'api-user', method: '*', path: '/v1', limit: 1200, windowMs: MIN, by: 'user' },
 ];
 
@@ -171,7 +190,7 @@ export function applySecurity(app: HubApp, deps: HubDeps, o: SecurityOptions = {
       }),
     );
   app.use('*', streamTokenOnly(deps));
-  app.use('*', sseCap(o.maxStreamsPerUser ?? 12, userOf));
+  app.use('*', sseCap(o.maxStreamsPerUser ?? 24, userOf));
   app.use('*', ledgerScope(deps, userOf));
   app.use('*', uploadGuard());
 }

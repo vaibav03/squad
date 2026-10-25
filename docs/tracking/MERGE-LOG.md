@@ -613,3 +613,17 @@ Branch `merge/batch23` (worktree `squad-wt/merge23`), one `--no-ff` merge per br
 
 - Landing merge commit: `b2db4393eb0e8a438cfd15a275f5606f412f101b` (parents `42eeeb8e61768bb10c6275a10329d2b5f0d3fa97` = tag `pre-merge-batch23`, `363350a1d2337631c522c996d71ed039e193d7e8` = merge/batch23; only tracker docs differ).
 - Rollback: `git revert -m 1 b2db4393eb0e8a438cfd15a275f5606f412f101b`.
+
+## Batch 24: fix/blank-shell-2 + feature/release-gate into main
+
+Branch `merge/batch24` (worktree `squad-wt/merge24`), one `--no-ff` merge per branch (blank-shell-2 final head `e4a6cd3d`, release-gate final head `b1864e9e`), landed as one true merge. Both leads were still pushing when first checked; I waited until blank-shell-2's last push was 20+ minutes old and the coordinator reported release-gate done.
+
+- fix/blank-shell-2 conflict in `packages/web/src/pages/village/index.tsx`: kept main's `REPLAY_ALIAS` (council replays) and blank-shell-2's staged-loading constants; dropped main's `LOAD_TIMEOUT_MS` because blank-shell-2's `VILLAGE_LOAD_TIMEOUT_MS` (45 s) replaces its only use.
+- Interaction fixes (test/format only, no product change): `e2e/blank-rate.mjs` prettier-formatted (the branch's own check failed on it); `VillageBoot.test.tsx` now mocks the council board host and `createCouncilBoardStore` that w5 added to the village page (3 tests had failed after the merge); removed a duplicated identical `"@squad/core"` key in `packages/web/package.json` (merge artifact already on main, vitest warned about it).
+- feature/release-gate merged cleanly; its `eslint.config.js` / `.prettierignore` edits do not break `pnpm check`. It deliberately adds `docs/qa/RELEASE-GATE-REPORT.{md,json}` and 5 key screenshots under `docs/design/shots/gate/` (the gate lead's own report outputs). The full `pnpm gate` was not run (fixture run was 17/22 with 5 real-difference failures per the lead; the exit 1 is intended and gate is not part of `pnpm check`).
+- Checks on the final tree: `pnpm check` exit 0; `pnpm demo:live` OK; hub smoke 138/138; browser smoke (fresh Playwright context, hub :9000 / web :5400 / agents 4871+, new squad `summa`): 3 routes render, build marker equal, chat sends and answers, `@cubbie plan a trip to Cabo in March` creates a trip visible on /squad/trips, 0 page errors.
+
+### Landing (batch 24)
+
+- Landing merge commit: `823a095f81de7f214206b596610fbd8cf05f8861` (parents `5491edb052d0c5d78d2ffa52a5996faa68a4f056` = tag `pre-merge-batch24`, `c1b1e45f193689f8d67e772d4041fbcd47bc46e1` = merge/batch24; only tracker docs differ).
+- Rollback: `git revert -m 1 823a095f81de7f214206b596610fbd8cf05f8861`.

@@ -7,6 +7,8 @@ export interface RateStore {
   hit(key: string, windowMs: number, now: number): number;
   /** Read without counting. */
   peek(key: string, windowMs: number, now: number): number;
+  /** Milliseconds until the current window for `key` ends (0 when there is none). */
+  ttl(key: string, windowMs: number, now: number): number;
   reset(key: string): void;
 }
 
@@ -30,6 +32,10 @@ export function memoryStore(maxKeys = 50_000): RateStore {
     peek(key, windowMs, now) {
       const e = m.get(key);
       return e && now - e.start < windowMs ? e.n : 0;
+    },
+    ttl(key, windowMs, now) {
+      const e = m.get(key);
+      return e && now - e.start < windowMs ? e.start + windowMs - now : 0;
     },
     reset: (key) => void m.delete(key),
   };
@@ -59,6 +65,10 @@ export function sqliteStore(db: Db): RateStore {
     peek(key, windowMs, now) {
       const e = row(key);
       return e && now - e.start < windowMs ? e.n : 0;
+    },
+    ttl(key, windowMs, now) {
+      const e = row(key);
+      return e && now - e.start < windowMs ? e.start + windowMs - now : 0;
     },
     reset: (key) => void del.run(key),
   };
@@ -125,8 +135,11 @@ export function rateLimit(o: LimiterOptions): MiddlewareHandler {
       for (const k of keys) {
         if (o.store.hit(k, r.windowMs, now) > r.limit) {
           o.onLimit?.({ rule: r.name });
-          const retry = Math.max(1, Math.ceil(r.windowMs / 1000));
-          return c.json({ error: { code: 'rate_limited' } }, 429, { 'retry-after': String(retry) });
+          // seconds until THIS key's window ends (not the whole window), so a client waits only as long as needed
+          const retry = Math.max(1, Math.ceil(o.store.ttl(k, r.windowMs, now) / 1000));
+          return c.json({ error: { code: 'rate_limited', retryAfterS: retry } }, 429, {
+            'retry-after': String(retry),
+          });
         }
       }
     }

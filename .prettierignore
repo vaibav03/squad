@@ -5,3 +5,5 @@ docs
 assets
 pnpm-lock.yaml
 .worktrees
+e2e/gate/.tmp/
+e2e/gate/.tmp-real/

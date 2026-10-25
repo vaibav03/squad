@@ -30,3 +30,11 @@ Chapter expert (packages/brain/src/experts/expert.ts) has no tool access and its
 
 ## Run the scan
 `pnpm security:scan` (flags: `--no-audit` offline, `--no-history` skip git history). Exit 1 on any critical/high/medium finding. Hub tests: `pnpm --filter @squad/hub test:security`.
+
+## Rate limits and interactive use (blank-shell 2)
+
+| ID | Change |
+| -- | ------ |
+| ABUSE-RL-1 | The security middleware answered 429/413/403 before CORS ran, so the browser got no `Access-Control-Allow-Origin`, hid the status and the web showed "You are offline". CORS now runs first, and exposes `Retry-After`. FIXED. |
+| ABUSE-RL-2 | Read ceilings raised for interactive use and shared (campus/NAT) addresses: `api-ip` 6000/min, `api-user` 1200/min keyed on the session, `students` 600/min, `stream-token` 240/min, invite preview 120 per 10 min, SSE streams 24 per user. Unchanged (abuse intent kept): auth start 20/h per IP, verify 60/h, dev-login 300 per 5 min, uploads 10-20/h, call start 20/h, council 12/h, chat 60/min, internal events. |
+| ABUSE-RL-3 | 429 bodies always carry `retryAfterS` and a `Retry-After` header equal to the time left in that key's window. |

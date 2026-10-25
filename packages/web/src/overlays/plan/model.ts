@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import type { PlanItem, PlanItemPatch, PlanMode, PlanView } from '@squad/core';
 
 export type PlanStatus = 'loading' | 'ready' | 'error' | 'offline';
@@ -62,7 +63,7 @@ export type PlanCall =
 
 async function call(hub: PlanHub, method: string, path: string, body?: unknown): Promise<PlanCall> {
   try {
-    const res = await fetch(`${base(hub)}${path}`, {
+    const res = await timedFetch(`${base(hub)}${path}`, {
       method,
       headers: {
         Authorization: `Bearer ${hub.token ?? ''}`,

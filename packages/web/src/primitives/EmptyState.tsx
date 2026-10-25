@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Button } from './Button';
+import { tooManyRequests, useCountdown } from '../lib/rate-limit';
 import { Icon } from './Icon';
 import type { IconName } from './icon-names';
 import './empty-state.css';
@@ -84,6 +85,36 @@ export function OfflineState({ onRetry }: { onRetry?: () => void }) {
         onRetry ? (
           <Button variant="secondary" onClick={onRetry}>
             Retry connection
+          </Button>
+        ) : undefined
+      }
+    />
+  );
+}
+
+/** The hub answered 429. Honest copy, a live countdown to the automatic retry, and a Retry button. */
+export function RateLimitedState({
+  retryAt,
+  onRetry,
+}: {
+  /** epoch ms of the automatic retry; omit when there is none scheduled */
+  retryAt?: number | null;
+  onRetry?: () => void;
+}) {
+  const left = useCountdown(retryAt ?? null);
+  return (
+    <EmptyState
+      icon="refresh"
+      title="Too many requests"
+      body={
+        retryAt
+          ? `${tooManyRequests(left)} Squad is asking you to slow down for a moment; nothing is lost.`
+          : 'Squad is asking you to slow down for a moment. Wait a few seconds, then try again.'
+      }
+      action={
+        onRetry ? (
+          <Button variant="secondary" onClick={onRetry}>
+            Retry now
           </Button>
         ) : undefined
       }

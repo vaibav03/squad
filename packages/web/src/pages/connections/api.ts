@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { timedFetch } from '../../lib/http';
 import { STATE_COPY, STATES, type ConnState } from './model';
 
 export class ConnError extends Error {
@@ -135,7 +136,8 @@ async function call<T>(
 ): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${ctx.hubUrl}${path}`, {
+    // timedFetch: a read that never answers ends in the offline state with Retry, not "Loading connections" forever
+    res = await timedFetch(`${ctx.hubUrl}${path}`, {
       method,
       headers: {
         ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
