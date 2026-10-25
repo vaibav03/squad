@@ -3,7 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 const openSource = vi.fn();
-vi.mock('../components/source-viewer', () => ({ openSource: (c: unknown) => openSource(c) }));
+vi.mock('../components/source-viewer', () => ({
+  openSource: (c: unknown) => openSource(c),
+  hasSourceHost: () => true,
+  SourceViewerHost: () => null,
+}));
 
 import { LivePanel } from './LivePanel';
 import { LiveChatCard } from './LiveChatCard';
