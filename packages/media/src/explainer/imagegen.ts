@@ -34,17 +34,20 @@ export class FakeImageGen implements ImageGen {
 }
 
 /**
- * Gemini image model via models.generateContent with responseModalities ['IMAGE'] (supported by the
- * installed @google/genai 1.52). The current docs show the newer Interactions API
- * (`ai.interactions.create`, result `output_image.data`); the model id default
- * `gemini-nano-banana-2.1` comes from those docs and is overridable with GEMINI_IMAGE_MODEL.
+ * Gemini image model via models.generateContent with responseModalities ['IMAGE'], matching the
+ * generateContent image-generation guide (ai.google.dev/gemini-api/docs/generate-content/image-generation;
+ * image bytes in candidates[].content.parts[].inlineData.data). The Interactions API equivalent is
+ * `ai.interactions.create` -> `output_image.data`. Default model `gemini-nano-banana-2.1` is listed
+ * on the models page; overridable with GEMINI_IMAGE_MODEL.
  * Not verified against a live call in CI: run `SQUAD_LIVE=1 pnpm --filter @squad/media smoke:live`.
  */
 export class GeminiImageGen implements ImageGen {
-  private readonly ai: GoogleGenAI;
+  private readonly ai: Pick<GoogleGenAI, 'models'>;
   private readonly model: string;
-  constructor(opts: { apiKey?: string; model?: string } = {}) {
-    this.ai = new GoogleGenAI({ apiKey: opts.apiKey ?? process.env.GEMINI_API_KEY });
+  constructor(
+    opts: { apiKey?: string; model?: string; client?: Pick<GoogleGenAI, 'models'> } = {},
+  ) {
+    this.ai = opts.client ?? new GoogleGenAI({ apiKey: opts.apiKey ?? process.env.GEMINI_API_KEY });
     this.model = opts.model ?? process.env.GEMINI_IMAGE_MODEL ?? 'gemini-nano-banana-2.1';
   }
   async generate(prompt: string): Promise<Uint8Array> {

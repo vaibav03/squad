@@ -1,4 +1,11 @@
-import { GoogleGenAI, type Content, type GenerateContentConfig, type Part } from '@google/genai';
+import {
+  GoogleGenAI,
+  type Content,
+  type FunctionCall,
+  type GenerateContentConfig,
+  type GenerateContentResponse,
+  type Part,
+} from '@google/genai';
 import { z } from 'zod';
 import type {
   CacheHandle,
@@ -38,7 +45,11 @@ function toParts(content: string | LlmPart[]): Part[] {
           ? { inlineData: { mimeType: p.mimeType, data: p.data } }
           : { fileData: { mimeType: p.mimeType, fileUri: p.uri } };
       case 'tool_call':
-        return { functionCall: { id: p.id, name: p.name, args: p.args } };
+        // Gemini 3 rejects a replayed functionCall part without its thoughtSignature (400).
+        return {
+          functionCall: { id: p.id, name: p.name, args: p.args },
+          ...(p.signature ? { thoughtSignature: p.signature } : {}),
+        };
       case 'tool_result':
         return {
           functionResponse: {
@@ -56,6 +67,22 @@ function toContents(messages: LlmMessage[]): Content[] {
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: toParts(m.content),
   }));
+}
+
+/**
+ * Function calls with their thoughtSignature. Read from the candidate parts because the SDK's
+ * `functionCalls` getter drops the signature; for parallel calls only the first part carries one.
+ */
+function functionCallsOf(
+  res: GenerateContentResponse,
+): { call: FunctionCall; signature?: string }[] {
+  const parts = res.candidates?.[0]?.content?.parts;
+  if (!parts) return (res.functionCalls ?? []).map((call) => ({ call }));
+  return parts.flatMap((p) =>
+    p.functionCall
+      ? [{ call: p.functionCall, ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}) }]
+      : [],
+  );
 }
 
 /**
@@ -114,10 +141,11 @@ export class GeminiLlm implements Llm {
       });
       return {
         text: res.text ?? '',
-        toolCalls: (res.functionCalls ?? []).map((c, i) => ({
+        toolCalls: functionCallsOf(res).map(({ call: c, signature }, i) => ({
           id: c.id ?? `call_${i}`,
           name: c.name ?? '',
           args: (c.args ?? {}) as Record<string, unknown>,
+          ...(signature ? { signature } : {}),
         })),
         usage: {
           inputTokens: res.usageMetadata?.promptTokenCount,
@@ -151,11 +179,13 @@ export class GeminiLlm implements Llm {
         ...(req.contents ? { contents: toContents(normalizeMessages(req.contents)) } : {}),
       },
     });
+    const expireMs = c.expireTime ? Date.parse(c.expireTime) : NaN;
     return {
       id: c.name ?? '',
       provider: this.provider,
       model,
-      expiresAt: Date.now() + ttl * 1000,
+      // CachedContent.expireTime is "always provided on output"; fall back to the requested ttl.
+      expiresAt: Number.isFinite(expireMs) ? expireMs : Date.now() + ttl * 1000,
     };
   }
 

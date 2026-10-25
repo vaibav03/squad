@@ -190,18 +190,33 @@ export class ElevenLabsEngine implements TtsEngine {
     return ((await res.json()) as { voice_id: string }).voice_id;
   }
 
-  /** GET /v1/voices: used to discover a usable stock voice for the fallback. */
-  async listVoices(): Promise<{ id: string; name: string; category?: string }[]> {
-    const res = await this.f(this.base + '/v1/voices', { headers: this.headers(false) });
-    if (!res.ok)
-      throw new TtsHttpError(res.status, (await res.text().catch(() => '')).slice(0, 300));
-    const j = (await res.json()) as {
-      voices: { voice_id: string; name: string; category?: string }[];
-    };
-    return j.voices.map((v) => ({
-      id: v.voice_id,
-      name: v.name,
-      ...(v.category ? { category: v.category } : {}),
-    }));
+  /**
+   * GET /v2/voices (GET /v1/voices now sits under "Legacy" in the API reference). Paged with
+   * page_size (max 100) and next_page_token; used to discover a usable stock voice for the fallback.
+   */
+  async listVoices(maxPages = 5): Promise<{ id: string; name: string; category?: string }[]> {
+    const out: { id: string; name: string; category?: string }[] = [];
+    let token: string | undefined;
+    for (let page = 0; page < maxPages; page++) {
+      const q = new URLSearchParams({ page_size: '100' });
+      if (token) q.set('next_page_token', token);
+      const res = await this.f(`${this.base}/v2/voices?${q}`, { headers: this.headers(false) });
+      if (!res.ok)
+        throw new TtsHttpError(res.status, (await res.text().catch(() => '')).slice(0, 300));
+      const j = (await res.json()) as {
+        voices: { voice_id: string; name?: string; category?: string }[];
+        has_more?: boolean;
+        next_page_token?: string | null;
+      };
+      for (const v of j.voices)
+        out.push({
+          id: v.voice_id,
+          name: v.name ?? '',
+          ...(v.category ? { category: v.category } : {}),
+        });
+      if (!j.has_more || !j.next_page_token) break;
+      token = j.next_page_token;
+    }
+    return out;
   }
 }
