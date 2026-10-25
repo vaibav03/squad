@@ -4,11 +4,13 @@ import type { CouncilService } from '@squad/brain';
 import {
   CouncilAskBodySchema,
   CouncilResultSchema,
+  type CouncilAction,
   type CouncilAskResponse,
   type CouncilResult,
   type VillageEvent,
 } from '@squad/core';
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
+import { z } from 'zod';
 import { requireViewer } from '../auth';
 import { COURSE_ID } from '../cast';
 import type { HubApp, HubDeps, HubEnv, Viewer } from '../types';
@@ -16,6 +18,8 @@ import type { HubApp, HubDeps, HubEnv, Viewer } from '../types';
 const enc = new TextEncoder();
 const MAX_BODY_BYTES = 4096;
 const RUN_ID = /^cn_[a-z0-9]{12}$/;
+
+const ActionBodySchema = z.strictObject({ actionId: z.string().min(1).max(40) });
 
 const err = (code: string) => ({ error: { code } });
 
@@ -92,6 +96,66 @@ export function createCouncilRoutes(deps: HubDeps): HubApp {
     const out = CouncilResultSchema.safeParse(res);
     if (!out.success) return c.json(err('internal'), 500);
     return c.json(out.data);
+  });
+
+  /**
+   * Action items of a run (CouncilResult.actions). The client names an item by id; the text always comes from the
+   * run, never from the request body. Unknown runs, runs of another squad and other people's private runs are all
+   * 404 (canSee, existence is never revealed); an unknown item is 404 `action_not_found`.
+   */
+  type Got = { res: Response } | { action: CouncilAction };
+  const actionFor = async (c: Context<HubEnv>): Promise<Got> => {
+    const id = c.req.param('id') ?? '';
+    if (!RUN_ID.test(id)) return { res: c.json(err('not_found'), 404) as unknown as Response };
+    const run = (await service()).get(id);
+    if (!run || !canSee(run, c.get('viewer')))
+      return { res: c.json(err('not_found'), 404) as unknown as Response };
+    const body = ActionBodySchema.safeParse(await c.req.json().catch(() => null));
+    if (!body.success) return { res: c.json(err('invalid_request'), 400) as unknown as Response };
+    const action = run.actions?.find((a) => a.id === body.data.actionId);
+    if (!action) return { res: c.json(err('action_not_found'), 404) as unknown as Response };
+    return { action };
+  };
+
+  r.post('/v1/council/:id/actions/plan', need, async (c) => {
+    const viewer = c.get('viewer');
+    const got = await actionFor(c);
+    if ('res' in got) return got.res;
+    const res = deps.plans.addItem(viewer, {
+      title: got.action.title,
+      ...(got.action.detail ? { detail: got.action.detail } : {}),
+      source: 'council',
+    });
+    if (!res.ok)
+      return c.json(
+        { ok: false, error: { code: res.code, message: res.message } },
+        res.status as 403 | 409 | 422,
+      );
+    if (res.say.text) deps.plans.post(viewer.squadId, res.say);
+    return c.json({
+      ok: true,
+      added: res.say.text !== '',
+      planId: res.plan.id,
+      rev: res.plan.rev,
+    });
+  });
+
+  r.post('/v1/council/:id/actions/chat', need, async (c) => {
+    const viewer = c.get('viewer');
+    const got = await actionFor(c);
+    if ('res' in got) return got.res;
+    const who = deps.directory.student(viewer.studentId)?.name ?? 'Someone';
+    const posted = deps.chat.postBot({
+      chatId: `group:${viewer.squadId}`,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      emoji: '🐻',
+      text: `Council action item (shared by ${who}): ${got.action.title}`,
+      citations: [],
+      attachments: [],
+    });
+    if (!posted) return c.json({ ok: false, error: { code: 'chat_unavailable' } }, 409);
+    return c.json({ ok: true, messageId: posted.id });
   });
 
   r.get('/v1/council/:id/stream', needSse, async (c) => {
