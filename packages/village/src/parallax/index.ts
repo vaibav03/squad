@@ -9,7 +9,15 @@ import type {
   Glow,
 } from '../world/api';
 import { DEPTH, LOGICAL_H } from '../world/api';
-import { clamp01, flicker, lerp, modeClockHours, targetNightness, tileOffset } from './math';
+import {
+  clamp01,
+  flicker,
+  lerp,
+  millAlpha,
+  modeClockHours,
+  targetNightness,
+  tileOffset,
+} from './math';
 import { MOON_ALPHA, RAMPS, STAR_ALPHA } from './ramps';
 
 const BG = 'assets/pixel/composed/backgrounds/';
@@ -319,7 +327,11 @@ export function createParallax(scene: Phaser.Scene, d: ParallaxDeps) {
   }
 
   // windmill on the near hills (84 px tower, 8-frame sail strip pivoting on the hub at (21,25))
-  const mills: Array<{ body: Phaser.GameObjects.Image; sails: Phaser.GameObjects.Image }> = [];
+  const mills: Array<{
+    lx: number;
+    body: Phaser.GameObjects.Image;
+    sails: Phaser.GameObjects.Image;
+  }> = [];
   if (d.assets.has('landmark.windmill') && d.assets.has('landmark.windmill.sails')) {
     for (const lx of [520, 1650]) {
       const base = 214; // stands on the near-hill ridge
@@ -333,7 +345,7 @@ export function createParallax(scene: Phaser.Scene, d: ParallaxDeps) {
         .setOrigin(0.5)
         .setScrollFactor(0.6, 1)
         .setDepth(DEPTH.parallaxMid + 1.6);
-      mills.push({ body, sails });
+      mills.push({ lx, body, sails });
       all.push(body, sails);
     }
   }
@@ -370,7 +382,9 @@ export function createParallax(scene: Phaser.Scene, d: ParallaxDeps) {
       }
       const sailFrame = calm ? 0 : Math.floor(t / 220) % 8;
       for (const m of mills) {
-        m.sails.setFrame(sailFrame);
+        const a = millAlpha(m.lx + 0.4 * cam.scrollX, d.layout.slots);
+        m.body.setAlpha(a);
+        m.sails.setAlpha(a).setFrame(sailFrame);
         m.body.setTexture(
           n > 0.45
             ? 'landmark.windmill'

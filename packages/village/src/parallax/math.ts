@@ -58,3 +58,26 @@ export function flicker(timeMs: number, phase = 0): number {
   const e = tri * tri * (3 - 2 * tri);
   return 0.85 + 0.15 * e;
 }
+
+/**
+ * Parallax props appear to stand at world x = layerX + (1 - factor) * scrollX. A windmill is only drawn where that spot
+ * is clear of every building footprint (plus its sail radius), fading in over 48 px, so sails never cross a roof.
+ */
+export function clearance(
+  worldX: number,
+  slots: ReadonlyArray<{ x: number; w: number; kind: string }>,
+): number {
+  let best = Infinity;
+  for (const s of slots) {
+    if (s.kind === 'spawn' || s.kind === 'road') continue;
+    best = Math.min(best, Math.abs(worldX - s.x) - s.w / 2);
+  }
+  return best;
+}
+export function millAlpha(
+  worldX: number,
+  slots: ReadonlyArray<{ x: number; w: number; kind: string }>,
+  sailRadius = 36,
+): number {
+  return clamp01((clearance(worldX, slots) - sailRadius) / 48);
+}

@@ -26,3 +26,17 @@ describe('parallax math', () => {
     expect(flicker(2000)).toBeCloseTo(1);
   });
 });
+
+import { millAlpha } from './math';
+describe('windmill clearance', () => {
+  const slots = [
+    { x: 2600, w: 128, kind: 'student-home' },
+    { x: 1412, w: 139, kind: 'council-hall' },
+  ];
+  it('hides over a house and shows in the open', () => {
+    expect(millAlpha(2600, slots)).toBe(0);
+    expect(millAlpha(2600 + 64 + 36, slots)).toBe(0);
+    expect(millAlpha(2600 + 64 + 36 + 48, slots)).toBe(1);
+    expect(millAlpha(2000, slots)).toBe(1);
+  });
+});
