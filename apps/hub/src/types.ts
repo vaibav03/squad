@@ -17,6 +17,7 @@ import type { HubConfig } from './config';
 import type { Logger } from './log';
 import type { Ports } from './ports';
 import type { ChatHub } from './chat/hub-chat';
+import type { PlanService } from './plans/service';
 
 export type LedgerEntryEventT = Extract<VillageEvent, { t: 'ledger.entry' }>;
 
@@ -294,6 +295,8 @@ export interface HubDeps {
   /** iMessage chat bindings, handle links and dedupe (docs/imessage.md). */
   imessage: ImessageStore;
   codeSender: CodeSender;
+  /** Shared study plans (docs/study-plan.md). */
+  plans: PlanService;
   /** Live agent discussions; built lazily by `liveServiceFor` (live/wire.ts). */
   live?: LiveService;
   /** Real-ports wiring for live grounding/takeaways (set by adapters/real.ts). */

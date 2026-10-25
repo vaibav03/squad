@@ -31,6 +31,11 @@ import { createInternalRoutes } from './routes/internal';
 import { createLiveRoutes } from './routes/live';
 import { createLibraryRoutes } from './routes/library';
 import { createMediaRoutes } from './routes/media';
+import { createPlanRoutes } from './plans/routes';
+import { createDefaultPlanContext } from './plans/context';
+import { createPlanService } from './plans/service';
+import { createPlanStore } from './plans/store';
+import { COURSE_ID } from './cast';
 import { createQuizRoutes } from './routes/quiz';
 import { createReplayRoutes } from './routes/replay';
 import { createSimRoutes } from './routes/sim';
@@ -130,6 +135,11 @@ export function createHub(opts: HubOptions = {}): Hub {
       ? mkdtempSync(join(tmpdir(), 'squad-chat-files-'))
       : join(dirname(config.dbPath), 'chat-files'),
   );
+  deps.plans = createPlanService(
+    deps,
+    createDefaultPlanContext(deps.db, COURSE_ID),
+    createPlanStore(deps.db),
+  );
   if (config.seed) {
     seedDemo(deps);
     // The seeded demo squad becomes a real one (owner = its first member) so Members, invites and roles work.
@@ -188,6 +198,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createCouncilRoutes(deps),
     createLiveRoutes(deps),
     createChatRoutes(deps),
+    createPlanRoutes(deps),
     ...(config.sim ? [createSimRoutes(deps)] : []),
   ])
     app.route('/', routes);
