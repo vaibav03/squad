@@ -8,6 +8,8 @@ import {
   chapterProviderFromStore,
   createBrain,
   createCoursePlanSkill,
+  createDebateSkill,
+  createDevilTaSkill,
   createFeynmanSkill,
   createMasteryStore,
   createQuizSkill,
@@ -81,6 +83,29 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
     }),
     // After studyPlan so its phrases win ties; scores 0 unless addressed and asking for course planning.
     createCoursePlanSkill({ emit, llm: d.llm, ...now }),
+    // Devil's TA: '@cubbie devil's TA ch2' / 'find my mistake'. Judged in code, feedback only.
+    createDevilTaSkill({
+      emit,
+      chapters,
+      db: d.db,
+      llm: d.llm,
+      courseIdFor,
+      defaultChapter: () => chapterIdsFromStore(brain.store)(course())[0],
+      ...now,
+    }),
+    // Debate Stage: '@cubbie debate <question>' / 'debate this'. Course questions are grounded in the
+    // routed chapter; anything else is a labelled general debate.
+    createDebateSkill({
+      emit,
+      llm: d.llm,
+      materialFor: async (question) => {
+        const route = await brain.dean.route(course(), question);
+        const chapter = route.chapters[0];
+        if (!chapter) return undefined;
+        const context = await chapters.chapterContext(course(), chapter);
+        return context.trim() ? { context, chapter } : undefined;
+      },
+    }),
   ];
   const mediaSkills = d.media
     ? createMediaSkills({

@@ -41,6 +41,8 @@ describe('full registry on banter', () => {
         'behind',
         'chat',
         'coursePlan',
+        'debate',
+        'devilTa',
         'doubt',
         'explainer',
         'feynman',
