@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import type { Page } from '@playwright/test';
-import { HUB } from '../lib/env';
+import { HUB, SECRET } from '../lib/env';
 import { actor, api, apiLogin, expect, note, shot, test } from '../lib/helpers';
 
 const J = 'j10-village';
@@ -26,6 +26,20 @@ const KEY: Record<string, string> = {
   'Rubric Courthouse': 'Rubric|Courthouse',
   "Devil's TA": 'Devil',
 };
+
+const SLOT: Record<string, string> = {
+  'Council Hall': 'council-hall',
+  'Debate Stage': 'debate-stage',
+  'Round Table': 'round-table',
+  'Feynman Porch': 'feynman-porch',
+  'Panic Line': 'panic-booth',
+  'Exam Oracle': 'exam-oracle',
+  'Oral Exam Hut': 'oral-exam-hut',
+  'Rubric Courthouse': 'rubric-courthouse',
+  "Devil's TA": 'devils-ta',
+};
+// the skills that open the four locked landmarks announce themselves with an agent.state
+const SKILL_AGENTS = ['expert:oracle', 'expert:oral', 'expert:rubric', 'expert:devil'];
 
 const hash = async (page: Page) =>
   crypto
@@ -72,6 +86,13 @@ test('J10 enter every room, read it, leave with Esc', async ({ browser }) => {
     body: JSON.stringify({ speed: 30 }),
   });
   note(`demo-run ${run.status}`);
+  // use each skill BEFORE opening the village: the snapshot must unlock their rooms for a late viewer
+  for (const agent of SKILL_AGENTS)
+    await fetch(`${HUB}/internal/events`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-nook-internal': SECRET },
+      body: JSON.stringify({ t: 'agent.state', agent, state: 'studying' }),
+    });
   await new Promise((r) => setTimeout(r, 8000));
   const a = await actor(browser, 's_ana');
   const { page } = a;
@@ -83,7 +104,13 @@ test('J10 enter every room, read it, leave with Esc', async ({ browser }) => {
   let infoPanelSeen = 0;
   const entered: string[] = [];
   for (const room of ROOMS) {
-    await page.locator(`[aria-label^="${room}"]`).first().click();
+    // chips open the inspector (the mouse never moves the player); walk the player to the door instead
+    await page.evaluate((id) => {
+      const w = (window as unknown as { __world: { debug: { ctx(): any } } }).__world;
+      const c = w.debug.ctx();
+      const it = c.interactables.list().find((x: { id: string }) => x.id === `enter-${id}`);
+      void c.player.walkTo(it.x);
+    }, SLOT[room]);
     const prompt = page.getByText(new RegExp(`^Open .*(${KEY[room]})`, 'i')).first();
     await expect(prompt, `walk prompt for ${room}`).toBeVisible({ timeout: 60_000 });
     await prompt.click();
@@ -100,11 +127,20 @@ test('J10 enter every room, read it, leave with Esc', async ({ browser }) => {
         .count()
     )
       infoPanelSeen++;
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(900);
-    await expect(page.getByText(/^Inside /))
-      .toHaveCount(0, { timeout: 8000 })
-      .catch(() => note(`still inside after Esc: ${room}`));
+    // the first Esc closes the room info panel when it is open, the next leaves the room
+    for (let k = 0; k < 2; k++) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(600);
+    }
+    // outside again: the door prompt is back and nothing covers it (E2E-006)
+    await expect(
+      page.getByText(new RegExp(`^Open .*(${KEY[room]})`, 'i')).first(),
+      `Esc leaves ${room}: its Open prompt is back`,
+    ).toBeVisible({ timeout: 8000 });
+    await expect(
+      page.locator('.rr-strip'),
+      `transcript strip must not cover the world after leaving ${room}`,
+    ).toHaveCount(0);
   }
   expect(entered.length).toBe(ROOMS.length);
   note(`rooms entered: ${entered.length}/9 chip rooms (4 chapter houses are walk-only)`);
