@@ -1,0 +1,70 @@
+# Railway hub image: the `hub` target of /Dockerfile as the last stage (Railway cannot pick a build target), cache mounts removed.
+# Generated from Dockerfile lines 1-68; keep in sync. No secrets: everything comes from the runtime environment.
+# syntax=docker/dockerfile:1.7
+# Squad production images. One file, four targets: hub, agent, bot, web.
+#   docker build --target hub   -t squad-hub .
+#   docker build --target agent -t squad-agent .
+#   docker build --target bot   -t squad-bot .
+#   docker build --target web   -t squad-web .
+# Workspace packages export TypeScript sources, so Node services run through tsx (no tsc emit step).
+# No secrets are baked: everything comes from the runtime environment. assets/vendor is excluded by .dockerignore.
+
+ARG NODE_VERSION=22
+ARG PNPM_VERSION=10.23.0
+
+# ---------- base: toolchain for installs (native modules: better-sqlite3, sharp) ----------
+FROM node:${NODE_VERSION}-bookworm-slim AS base
+ARG PNPM_VERSION
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH CI=1
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+# Manifests first for layer caching.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
+COPY apps/agent/package.json apps/agent/
+COPY apps/bot/package.json apps/bot/
+COPY apps/hub/package.json apps/hub/
+COPY apps/web-host/package.json apps/web-host/
+COPY packages/brain/package.json packages/brain/
+COPY packages/core/package.json packages/core/
+COPY packages/interior/package.json packages/interior/
+COPY packages/media/package.json packages/media/
+COPY packages/mesh/package.json packages/mesh/
+COPY packages/village/package.json packages/village/
+COPY packages/web/package.json packages/web/
+COPY scripts/demo/package.json scripts/demo/
+
+# ---------- runtime base: slim, non-root, no build tools ----------
+FROM node:${NODE_VERSION}-bookworm-slim AS runtime
+ENV NODE_ENV=production
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl tini \
+  && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+# ================= hub =================
+FROM base AS hub-deps
+RUN \
+    pnpm install --frozen-lockfile --filter "@squad/hub..." --filter .
+COPY packages/core packages/core
+COPY packages/mesh packages/mesh
+COPY packages/brain packages/brain
+COPY packages/media packages/media
+COPY apps/hub apps/hub
+COPY assets/sprites assets/sprites
+COPY assets/fluent-characters assets/fluent-characters
+
+FROM runtime AS hub
+# ffmpeg: podcast / audio mixing in packages/media. Verified by preflight and the CI smoke job.
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+COPY --from=hub-deps --chown=node:node /app /app
+RUN mkdir -p /data && chown node:node /data
+ENV HUB_PORT=8788 DB_PATH=/data/squad.db
+VOLUME ["/data"]
+USER node
+EXPOSE 8788
+HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:${HUB_PORT:-8788}/health || exit 1
+STOPSIGNAL SIGTERM
+CMD ["node", "--import", "tsx", "apps/hub/src/main.ts"]
