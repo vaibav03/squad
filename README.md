@@ -70,7 +70,7 @@ Quiz results feed a per-chapter mastery view (no points, streaks or leaderboards
 
 ### Group chat, podcast and explainer
 
-> Status: the group-chat web view (citations that open at the matching sentence, quiz and confirm cards, DM versus group) is on branch `chat/web`, lands in batch 2. The podcast and explainer skills (`podcast`, `picture it`) are on `main` (`apps/bot/src/skills/media.ts`); their screenshots arrive with the chat view. Details: [User guide](docs/guide/USER-GUIDE.md).
+> Status: the group-chat web view (citations that open at the matching sentence, quiz and confirm cards, DM versus group) is on `main` (merged in batch 3). The podcast and explainer skills (`podcast`, `picture it`) are on `main` (`apps/bot/src/skills/media.ts`). Details: [User guide](docs/guide/USER-GUIDE.md).
 
 ## 5-minute quickstart
 

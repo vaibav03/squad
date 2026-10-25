@@ -12,7 +12,7 @@
 
 **Why does the village show a Replay badge?** `?replay=track2` plays scripted `VillageEvent`s through the same code as Live. Offline, no keys.
 
-**Which rooms work today?** [docs/guide/ROOMS.md](guide/ROOMS.md) has a status per room and says which are on unmerged branches.
+**Which rooms work today?** [docs/guide/ROOMS.md](guide/ROOMS.md) has a status per room (all 13 rooms are on `main`; it says which parts are still partial).
 
 ## Trust and privacy
 

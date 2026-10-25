@@ -22,9 +22,9 @@ e2e/stack-down.sh
 
 `E2E_REUSE=1` never boots or kills anything. `E2E_NO_AGENTS=1` boots without agents (for a second stack beside one that owns 4101-4104). `E2E_KEEP=1` leaves the stack running after the run.
 
-## Status of features that are not on main
+## Status of features that were not on main
 
-A journey whose feature lives on an unmerged branch (chat/web, council/ask, qa/web, ...) detects it (`chatMerged()` probes `/v1/chat/chats`) and reports `blocked: not merged yet` instead of failing. After merging `origin/main` into this branch, just rerun.
+A journey whose feature is not on the branch under test (chat/web, council/ask, qa/web were on branches when this was written; they are on `main` now) detects it (`chatMerged()` probes `/v1/chat/chats`) and reports `blocked: not merged yet` instead of failing. After merging `origin/main` into this branch, just rerun.
 
 ## Journeys
 

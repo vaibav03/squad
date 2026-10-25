@@ -39,7 +39,7 @@ Architecture and diagrams: [docs/architecture/OVERVIEW.md](architecture/OVERVIEW
 | LLM answers | Gemini when `GEMINI_API_KEY` is set and has credits; otherwise a scripted stand-in, labeled "Demo" and reported by `GET /v1/status` with a reason (`no_key`, `credits_depleted`, `rate_limited`, `invalid_key`), with automatic recovery |
 | Voices | ElevenLabs when a key is set; captions always |
 | iMessage | Prototype transport (`imessage-kit`); simulated students in the web panel are the fallback |
-| Rooms | Some rooms work end to end on `main`, some are on unmerged branches; see [ROOMS.md](guide/ROOMS.md) for the current status |
+| Rooms | All 13 rooms are on `main`; see [ROOMS.md](guide/ROOMS.md) for which parts are still partial |
 
 ## Honest limitations
 

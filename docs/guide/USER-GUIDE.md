@@ -4,7 +4,7 @@ Squad gives your study group a bot, `@cubbie`, that lives in the group chat you 
 
 ![Squad home](../design/shots/integration/home-desk.png)
 
-> **Status box.** Written against `origin/main` at `39aa87e` (batch 1). Some skills are on unmerged branches and are marked "on branch X, lands in batch 2". Their phrases are read from branch code and are not yet in a merged build. See [ROOMS.md](ROOMS.md) for the room status table.
+> **Status box.** Written against the merged tree on `origin/main` after batches 1 to 6. The rooms and chat features that were on branches (rooms/a, rooms/b, council/ask, chat/web, qa/web) are on `main` now. See [ROOMS.md](ROOMS.md) for the room status table.
 
 ## 1. Set up
 
@@ -60,16 +60,16 @@ Phrases are case-insensitive. Replace the examples with your own chapter or topi
 
 If you ask for media on a chapter with no uploaded material, Cubbie says "I don't have course materials for that yet." Upload your PDFs in setup.
 
-### On a branch, lands in batch 2
+### Rooms and council skills (landed in batch 2 and 3)
 
-| Skill | Phrase | Branch |
+| Skill | Phrase | Source |
 | --- | --- | --- |
-| Debate | `@cubbie debate should we ...?`, or `debate this` | `rooms/a` |
-| Devil's TA | `@cubbie devil's TA ch3 gradient descent`, `find the mistake` | `rooms/a` |
-| Exam Oracle | `@cubbie exam oracle`, `what should I study next`, `predict my exam` | `rooms/b` |
-| Rubric check | `@cubbie rubric check`, `check my answer against the rubric` | `rooms/b` |
-| Oral exam | `@cubbie oral exam`, `practice an oral` | `rooms/b` |
-| Council on demand | council panel and chat card | `council/ask` |
+| Debate | `@cubbie debate should we ...?`, or `debate this` | on `main` |
+| Devil's TA | `@cubbie devil's TA ch3 gradient descent`, `find the mistake` | on `main` |
+| Exam Oracle | `@cubbie exam oracle`, `what should I study next`, `predict my exam` | on `main` |
+| Rubric check | `@cubbie rubric check`, `check my answer against the rubric` | on `main` |
+| Oral exam | `@cubbie oral exam`, `practice an oral` | on `main` |
+| Council on demand | `@cubbie council <question>`, `ask the council ...` (council panel and chat card) | on `main` |
 
 ## 5. The rooms
 
@@ -78,15 +78,15 @@ The village has 13 rooms. You can walk into any of them at <http://localhost:518
 | Room | For | Try |
 | --- | --- | --- |
 | Chapter houses 1 to 4 | Quiz one chapter | `@cubbie quiz me on ch1` |
-| Council Hall | Blind check of quiz answer keys | runs behind quizzes (partial on main) |
-| Debate Stage | Two sides of an argument | on branch `rooms/a` |
+| Council Hall | Blind check of quiz answer keys | `@cubbie council <question>` (on demand); the quiz-key check behind quizzes is still partial |
+| Debate Stage | Two sides of an argument | `@cubbie debate should we ...?` |
 | Round Table | Plan your next term | `@cubbie plan my next semester` |
 | Feynman Porch | Explain an idea simply | `@cubbie feynman ch3 gradient descent` |
 | Panic Line booth | Find where two solutions split | `@cubbie diff` |
-| Exam Oracle | What to study next | on branch `rooms/b` |
-| Oral Exam Hut | Practise aloud | on branch `rooms/b` |
-| Rubric Courthouse | Check against criteria | on branch `rooms/b` |
-| Devil's TA | Find the planted mistake | on branch `rooms/a` |
+| Exam Oracle | What to study next | `@cubbie exam oracle` |
+| Oral Exam Hut | Practise aloud | `@cubbie oral exam` |
+| Rubric Courthouse | Check against criteria | `@cubbie rubric check` |
+| Devil's TA | Find the planted mistake | `@cubbie devil's TA ch3 gradient descent` |
 
 ![Village](../design/shots/merge1/village-track2-desk.png)
 
@@ -125,7 +125,7 @@ Cubbie answers from your own course files and shows its citations. For graded ho
 | Blank village | The village loads only on its own page. Hard reload `/squad/village`. For the offline demo use `/squad/village?replay=track2`. |
 | Port already in use | `pnpm dev:all` honours `DEV_ALL_HUB_PORT` and `DEV_ALL_WEB_PORT`. Free 8788 and 5180, or set those. |
 | Install or run errors | Use Node 20 or newer and pnpm 10 (`corepack enable`). Run `pnpm squad:doctor` to check your setup. |
-| A room says nothing in chat starts it yet | That feature is on a branch that has not landed. See the status box in [ROOMS.md](ROOMS.md). |
+| A room says nothing in chat starts it yet | Check the phrase in [ROOMS.md](ROOMS.md); the status box there says which parts are still partial. |
 | Step diff waits | Both people must DM Cubbie their photo (or a multi-line text of their steps). |
 
 For the five-minute demo with no keys and no phones, use `pnpm demo:seed` then `pnpm demo:replay track2` (see the root README).
