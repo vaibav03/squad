@@ -1,5 +1,5 @@
 import type { BrainPort, CourseStatus } from '../ports';
-import { COURSE_ID, STUDENT_IDS } from '../cast';
+import { COURSE_ID } from '../cast';
 
 const CONCEPTS = ['ch2', 'ch3', 'ch6', 'ch12'];
 const SCORES: Record<string, number[]> = {
@@ -9,7 +9,8 @@ const SCORES: Record<string, number[]> = {
   s_dev: [0.6, 0.4, 0.5, 0.5],
 };
 
-export function createStubBrain(): BrainPort {
+/** `squadMates(student)` = the ids of everyone in the student's active squad (real membership, not the seed cast). */
+export function createStubBrain(squadMates?: (student: string) => string[]): BrainPort {
   const courses = new Map<string, CourseStatus[]>();
   const seeded = (): CourseStatus => ({
     courseId: COURSE_ID,
@@ -44,7 +45,9 @@ export function createStubBrain(): BrainPort {
       return {
         concepts: CONCEPTS,
         mine: [...(SCORES[student] ?? CONCEPTS.map(() => 0))],
-        squad: STUDENT_IDS.map((s) => [...(SCORES[s] ?? [])]),
+        squad: (squadMates?.(student) ?? Object.keys(SCORES)).map((s) => [
+          ...(SCORES[s] ?? CONCEPTS.map(() => 0)),
+        ]),
       };
     },
     async loadCalendar(_student, input) {

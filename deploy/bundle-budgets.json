@@ -1,0 +1,8 @@
+{
+  "_comment": "Gzip sizes in KiB for apps/web-host/dist. CI fails when any budget is exceeded. Measured 2026-10: entry 189, phaser 338, total JS ~700.",
+  "entryJsGzipKiB": 260,
+  "largestLazyChunkGzipKiB": 380,
+  "totalJsGzipKiB": 800,
+  "totalCssGzipKiB": 60,
+  "distTotalMiB": 8
+}

@@ -20,34 +20,61 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     nav: { label: 'Village', icon: 'map', order: 1, primary: true },
   },
   {
+    key: 'chat',
+    path: '/squad/chat',
+    title: 'Chat',
+    nav: { label: 'Chat', icon: 'message', order: 2, primary: true },
+  },
+  {
+    key: 'squad-create',
+    path: '/squad/new',
+    title: 'Create a squad',
+  },
+  {
+    key: 'squad-members',
+    path: '/squad/members',
+    title: 'Members',
+  },
+  {
     key: 'setup',
     path: '/squad/setup/:step?',
     title: 'Setup',
-    nav: { label: 'Setup', icon: 'sparkle', order: 4 },
+    nav: { label: 'Setup', icon: 'sparkle', order: 5 },
   },
   {
     key: 'personas',
     path: '/squad/personas',
     title: 'Personas',
-    nav: { label: 'Personas', icon: 'users', order: 5 },
+    nav: { label: 'Personas', icon: 'users', order: 6 },
   },
   {
     key: 'ledger',
     path: '/squad/ledger/:taskId?',
     title: 'Glass Box',
-    nav: { label: 'Ledger', icon: 'ledger', order: 2, primary: true },
+    nav: { label: 'Ledger', icon: 'ledger', order: 3, primary: true },
   },
   {
     key: 'trip',
-    path: '/squad/trips/:tripId',
+    path: '/squad/trips/:tripId?',
     title: 'Trip',
-    nav: { label: 'Trip', icon: 'plane', order: 3, primary: true },
+    nav: { label: 'Trip', icon: 'plane', order: 4 },
+  },
+  {
+    key: 'status',
+    path: '/squad/status',
+    title: 'Status',
   },
   {
     key: 'mastery',
     path: '/squad/mastery/:courseId?',
     title: 'Mastery',
-    nav: { label: 'Mastery', icon: 'book', order: 6 },
+    nav: { label: 'Mastery', icon: 'book', order: 7 },
+  },
+  {
+    key: 'courses',
+    path: '/squad/courses/:courseId?',
+    title: 'Courses',
+    nav: { label: 'Courses', icon: 'book', order: 7 },
   },
 ];
 
@@ -96,4 +123,13 @@ export function loadPage(meta: SquadRouteMeta): ComponentType {
 export const squadRoutes: RouteObject[] = squadRouteMeta.map((meta) => {
   const Page = loadPage(meta);
   return { path: meta.path, element: createElement(Page), handle: meta } satisfies RouteObject;
+});
+
+/** Reachable before sign-in (accounts). Hosts mount these outside the shell. */
+export const accountPublicRoutes: RouteObject[] = [
+  { key: 'welcome', path: '/welcome/:step?', title: 'Welcome' },
+  { key: 'squad-join', path: '/join/:code?', title: 'Join a squad' },
+].map((meta) => {
+  const Page = loadPage({ ...meta, public: true });
+  return { path: meta.path, element: createElement(Page) } satisfies RouteObject;
 });

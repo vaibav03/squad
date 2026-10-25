@@ -36,5 +36,11 @@ export default defineConfig({
   plugins: [react(), repoAssetsPlugin()],
   server: { port: 5180, strictPort: false, fs: { allow: [resolve(__dirname, '../..')] } },
   preview: { port: 5180 },
-  build: { sourcemap: true, chunkSizeWarningLimit: 700 },
+  build: {
+    // deploy: source maps stay off in production builds (SQUAD_SOURCEMAP=1 opts in; never ship them publicly).
+    sourcemap: process.env.SQUAD_SOURCEMAP === '1',
+    // deploy: hashed bundles live under /static so the unhashed repo art can own /assets (long-cache split).
+    assetsDir: 'static',
+    chunkSizeWarningLimit: 1600,
+  },
 });

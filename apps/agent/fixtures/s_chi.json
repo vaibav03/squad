@@ -1,0 +1,28 @@
+{
+  "tz": "UTC",
+  "workHours": {
+    "startHour": 9,
+    "endHour": 18
+  },
+  "topics": {
+    "canTeach": ["graphs"],
+    "weak": ["dynamic-programming"]
+  },
+  "hardNos": [],
+  "id": "s_chi",
+  "name": "Chi",
+  "venmo": "cam-r",
+  "calendar": [
+    {
+      "start": "2026-11-04T09:00:00Z",
+      "end": "2026-11-04T11:00:00Z",
+      "title": "shift"
+    }
+  ],
+  "hourCost": {
+    "14": 0,
+    "15": 1
+  },
+  "budget": 400,
+  "tripRanking": ["lake", "flagstaff", "barcrawl", "cabo"]
+}

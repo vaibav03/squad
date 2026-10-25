@@ -8,58 +8,58 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `chat/` | 1 | 12 | 153 | Claude Sonnet 5.5 (12) |
-| `council/` | 1 | 12 | 99 | Claude Sonnet 5.5 (6) |
-| `deploy/` | 1 | 5 | 20 | Claude Sonnet 5.5 (4) |
+| `audit/` | 2 | 5 | 17 | Claude Sonnet 5.5 (3) |
 | `docs/` | 1 | 7 | 13 | Claude Sonnet 5.5 (7) |
-| `e2e/` | 1 | 2 | 30 | Claude Sonnet 5.5 (2) |
-| `ops/` | 2 | 2 | 29 | Claude Sonnet 5.5 (2) |
-| `product/` | 3 | 11 | 77 | Claude Sonnet 5.5 (11) |
-| `qa/` | 1 | 11 | 277 | Claude Sonnet 5.5 (10) |
-| `security/` | 1 | 2 | 24 | Claude Sonnet 5.5 (2) |
+| `e2e/` | 4 | 19 | 201 | Claude Haiku 5.5 (6), Claude Sonnet 5.5 (9) |
+| `ops/` | 1 | 9 | 69 | Claude Sonnet 5.5 (7) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `chat/web` | 12 | 153 | 2026-10-24 22:47 | 2026-10-24 23:36 | Vaibav |
-| `council/ask` | 12 | 99 | 2026-10-24 22:48 | 2026-10-24 23:24 | Vaibav |
-| `deploy/prod` | 5 | 20 | 2026-10-24 23:33 | 2026-10-24 23:40 | Vaibav |
+| `audit/a11y` | 2 | 9 | 2026-10-25 00:15 | 2026-10-25 00:15 | Vaibav |
+| `audit/perf` | 3 | 8 | 2026-10-24 23:34 | 2026-10-25 00:17 | Vaibav |
 | `docs/guide` | 7 | 13 | 2026-10-24 23:31 | 2026-10-24 23:36 | Vaibav |
-| `e2e/acceptance` | 2 | 30 | 2026-10-24 23:36 | 2026-10-24 23:37 | Vaibav |
-| `ops/live-verify` | 1 | 17 | 2026-10-24 23:37 | 2026-10-24 23:37 | Vaibav |
-| `ops/observability` | 1 | 12 | 2026-10-24 23:38 | 2026-10-24 23:38 | Vaibav |
-| `product/accounts` | 3 | 40 | 2026-10-24 23:32 | 2026-10-24 23:40 | Vaibav |
-| `product/courses` | 3 | 15 | 2026-10-24 23:32 | 2026-10-24 23:36 | Vaibav |
-| `product/proactive` | 5 | 22 | 2026-10-24 23:34 | 2026-10-24 23:38 | Vaibav |
-| `qa/web` | 11 | 277 | 2026-10-24 22:54 | 2026-10-24 23:28 | Vaibav |
-| `security/review` | 2 | 24 | 2026-10-24 23:35 | 2026-10-24 23:39 | Vaibav |
+| `e2e/acceptance` | 8 | 101 | 2026-10-24 23:36 | 2026-10-25 00:40 | Vaibav |
+| `e2e/accounts` | 3 | 36 | 2026-10-25 00:36 | 2026-10-25 00:36 | Vaibav |
+| `e2e/courses` | 2 | 33 | 2026-10-25 00:32 | 2026-10-25 00:32 | Vaibav |
+| `e2e/ops` | 6 | 31 | 2026-10-25 00:27 | 2026-10-25 00:40 | Vaibav |
+| `ops/live-verify` | 9 | 69 | 2026-10-24 23:37 | 2026-10-25 00:19 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 74 |
-| Claude Sonnet 5.5 | 349 |
+| (no trailer) | 115 |
+| Claude Haiku 5.5 | 6 |
+| Claude Sonnet 5.5 | 385 |
 
 ## Commits landed on main by area (subject prefix)
 
 | Area | Commits |
 |---|---:|
-| (other) | 21 |
+| (other) | 50 |
 | Initial commit | 1 |
 | Merge batch 1 | 1 |
 | Merge batch 2 | 1 |
+| Merge batch 3 | 1 |
+| Merge batch 4 | 1 |
+| Merge batch 5 | 1 |
+| accounts | 5 |
 | bot | 1 |
 | brain-answers | 7 |
 | brain-quiz | 7 |
+| chat | 17 |
 | ci | 2 |
 | core | 4 |
+| council | 6 |
+| courses | 8 |
 | demo | 7 |
+| deploy | 5 |
 | design | 18 |
-| docs | 14 |
+| docs | 15 |
 | hub | 5 |
 | integration | 41 |
 | interior-engine | 9 |
@@ -67,13 +67,20 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | media-audio | 7 |
 | merge batch1 | 2 |
 | merge batch2 | 7 |
+| merge batch3 | 3 |
+| merge batch4 | 3 |
+| merge batch5 | 3 |
 | mesh-crypto | 13 |
 | mesh-flows | 8 |
 | motion | 10 |
+| obs | 3 |
 | plan | 1 |
+| proactive | 7 |
+| qa | 10 |
 | repo | 4 |
 | rooms-a | 7 |
 | rooms-b | 4 |
+| security | 4 |
 | spine | 13 |
 | ux | 7 |
 | village-mesh | 22 |
@@ -90,5 +97,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Author | Commits |
 |---|---:|
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 131 |
+| Vaibav | 214 |
 | vaibav03 | 26 |

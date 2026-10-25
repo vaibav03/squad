@@ -1,0 +1,31 @@
+# Never bake secrets, local data, vendor/licensed art or dev junk into images.
+.git
+.github
+.claude
+.worktrees
+**/node_modules
+**/dist
+**/.scratch
+.env
+.env.*
+!.env.example
+data/
+**/data/
+logs/
+**/logs/
+*.log
+*.db
+*.sqlite*
+# Licensed packs (Modern Interiors etc.) must never enter an image.
+assets/vendor/
+**/vendor/
+assets/interior/vendor-recipe.json
+docs/*
+!docs/design/
+docs/design/*
+!docs/design/tokens.css
+**/*.test.ts
+**/*.test.tsx
+**/test/
+**/shots/
+.DS_Store

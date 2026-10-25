@@ -27,6 +27,12 @@ export function createBot(opts: BotOptions): Bot {
   const confirms = createConfirmManager({
     db,
     dm: (student, text) => dm(student, text),
+    ...(transport.confirmPrompt
+      ? { prompt: (student, p) => transport.confirmPrompt!(student, p) }
+      : {}),
+    ...(transport.confirmResolved
+      ? { resolved: (student, taskId, a) => transport.confirmResolved!(student, taskId, a) }
+      : {}),
     events,
     now,
     timeoutMs: opts.confirmTimeoutMs,

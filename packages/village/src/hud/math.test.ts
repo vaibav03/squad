@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AgentInfo } from '../world/api';
-import { chipOrder, formatClock, initialOf } from './math';
+import { chipOrder, closePopovers, formatClock, initialOf } from './math';
 
 const a = (
   id: string,
@@ -26,5 +26,27 @@ describe('hud math', () => {
   it('initial skips articles', () => {
     expect(initialOf('The Dean')).toBe('D');
     expect(initialOf('')).toBe('?');
+  });
+});
+
+describe('closePopovers (Escape)', () => {
+  const mk = (open: string) => {
+    const attrs: Record<string, string> = {};
+    return {
+      panel: { dataset: { open } as Record<string, string | undefined> },
+      button: { setAttribute: (n: string, v: string) => (attrs[n] = v) },
+      attrs,
+    };
+  };
+  it('closes open popovers, syncs aria-expanded, reports consumption', () => {
+    const help = mk('true');
+    const pop = mk('false');
+    expect(closePopovers([help, pop])).toBe(true);
+    expect(help.panel.dataset.open).toBe('false');
+    expect(help.attrs['aria-expanded']).toBe('false');
+    expect(pop.attrs['aria-expanded']).toBeUndefined();
+  });
+  it('does not consume Escape when nothing is open', () => {
+    expect(closePopovers([mk('false'), mk('')])).toBe(false);
   });
 });

@@ -4,18 +4,31 @@ import { openDb } from '@squad/core/node';
 import type { Db } from '@squad/core';
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createStubPorts } from './adapters';
 import { createBroker } from './broker';
+import { createConsoleCodeSender, createImessageCodeSender, type CodeSender } from './code-sender';
 import { createCallRegistry } from './calls';
 import { loadHubConfig, type HubConfig } from './config';
+import { createChatHub } from './chat/hub-chat';
+import { createChatRoutes } from './chat/routes';
 import { createConfirmRouter } from './confirms';
 import { createIngestor } from './ingest';
+import { applySecurity, type SecurityOptions } from './middleware';
 import { createLogger } from './log';
+import { installObservability, type ObsOptions } from './observability';
 import type { Ports } from './ports';
 import { createAuthRoutes } from './routes/auth';
+import { createInviteRoutes } from './routes/invites';
+import { createMemberRoutes } from './routes/members';
+import { createSquadRoutes } from './routes/squads';
 import { createCallRoutes } from './routes/call';
+import { createCouncilRoutes } from './routes/council';
 import { createDomainRoutes } from './routes/domain';
 import { createInternalRoutes } from './routes/internal';
+import { createLibraryRoutes } from './routes/library';
 import { createMediaRoutes } from './routes/media';
 import { createQuizRoutes } from './routes/quiz';
 import { createReplayRoutes } from './routes/replay';
@@ -24,7 +37,9 @@ import { createStateRoutes } from './routes/state';
 import { createStatusRoutes } from './routes/status';
 import { createStreamRoutes } from './routes/stream';
 import { seedDemo } from './sim/seed';
+import { createAccountsStore } from './store/accounts';
 import { createDirectory } from './store/directory';
+import { createSquadsStore } from './store/squads';
 import { createEventLog } from './store/eventlog';
 import { createLedgerStore } from './store/ledger';
 import { createSquadState } from './store/state';
@@ -36,8 +51,14 @@ export interface HubOptions {
   /** Override any subset of ports (brain/media plug in here). Missing ports use the in-memory stubs. */
   ports?: Partial<Ports>;
   now?: () => number;
+  /** How verification codes are delivered. Default: console, or iMessage when CODE_SENDER=imessage. */
+  codeSender?: CodeSender;
   /** Shared sqlite (core `openDb`). Default: open `config.dbPath` (`:memory:` under vitest). */
   db?: Db;
+  /** HTTP hardening knobs (rate limits, trust proxy); defaults are safe. */
+  security?: SecurityOptions;
+  /** Observability overrides (admin token, agent probes, sentry). Defaults come from env. */
+  obs?: ObsOptions;
 }
 export interface Hub {
   app: HubApp;
@@ -50,7 +71,7 @@ const VERSION = '0.1.0';
 export function createHub(opts: HubOptions = {}): Hub {
   const config: HubConfig = { ...loadHubConfig(), ...opts.config };
   const now = opts.now ?? Date.now;
-  const log = createLogger(config.logLevel);
+  const log = createLogger(config.logLevel, undefined, config.authSecret);
   const startedAt = now();
 
   // Components reference `deps` lazily, so the container is filled in dependency order below.
@@ -63,6 +84,30 @@ export function createHub(opts: HubOptions = {}): Hub {
     ownDb = true;
   }
   deps.directory = createDirectory(deps.db);
+  deps.accounts = createAccountsStore(deps.db, {
+    secret: config.sessionSecret,
+    pepper: config.contactPepper,
+    now,
+    sessionDays: config.sessionDays,
+  });
+  deps.squads = createSquadsStore(deps.db, deps.directory, deps.accounts, {
+    now,
+    maxSize: config.squadMax,
+    onDisband: (id) => void deps.db.prepare('DELETE FROM hub_events WHERE squad_id=?').run(id),
+    onLog: (msg, f) => log.debug(msg, f),
+  });
+  deps.codeSender =
+    opts.codeSender ??
+    (config.codeSender === 'imessage' && config.imessageSendUrl
+      ? createImessageCodeSender({ url: config.imessageSendUrl, log })
+      : createConsoleCodeSender(log));
+  // Real accounts come back into the directory at boot, and again after a dev reset wipes it.
+  const clearDirectory = deps.directory.clear.bind(deps.directory);
+  deps.directory.clear = () => {
+    clearDirectory();
+    deps.squads.hydrate();
+  };
+  deps.squads.hydrate();
   deps.events = createEventLog({ max: config.sse.bufferSize, db: deps.db });
   deps.ledger = createLedgerStore(deps.db);
   deps.trips = createTripStore(deps.db);
@@ -74,19 +119,35 @@ export function createHub(opts: HubOptions = {}): Hub {
   deps.ingest = createIngestor(deps);
   deps.confirms = createConfirmRouter(deps);
   deps.ports = { ...createStubPorts(deps), ...opts.ports };
+  deps.chat = createChatHub(
+    deps,
+    config.dbPath === ':memory:'
+      ? mkdtempSync(join(tmpdir(), 'squad-chat-files-'))
+      : join(dirname(config.dbPath), 'chat-files'),
+  );
   if (config.seed) seedDemo(deps);
 
   const app: HubApp = new Hono<HubEnv>();
+  applySecurity(app, deps, opts.security);
   app.use(
     '*',
     cors({
       origin: (origin) =>
         config.corsOrigins.includes('*') || config.corsOrigins.includes(origin) ? origin : null,
-      allowHeaders: ['authorization', 'content-type', 'last-event-id', 'x-nook-internal'],
-      allowMethods: ['GET', 'POST', 'PUT', 'OPTIONS'],
-      exposeHeaders: ['content-type'],
+      allowHeaders: [
+        'authorization',
+        'content-type',
+        'last-event-id',
+        'x-nook-internal',
+        'x-squad-id',
+      ],
+      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      exposeHeaders: ['content-type', 'x-squad-token'],
+      credentials: true,
     }),
   );
+  // ops: correlation ids, metrics, /health, /ready, /metrics, /v1/admin/*; registered before the legacy health below
+  const obs = installObservability(app, deps, { version: VERSION, ...opts.obs });
   const health = (c: Context) =>
     c.json({
       ok: true,
@@ -101,15 +162,21 @@ export function createHub(opts: HubOptions = {}): Hub {
 
   for (const routes of [
     createAuthRoutes(deps),
+    createSquadRoutes(deps),
+    createMemberRoutes(deps),
+    createInviteRoutes(deps),
     createInternalRoutes(deps),
     createStatusRoutes(deps),
     createStateRoutes(deps),
     createStreamRoutes(deps),
     createReplayRoutes(deps),
     createQuizRoutes(deps),
+    createLibraryRoutes(deps),
     createCallRoutes(deps),
     createMediaRoutes(deps),
     createDomainRoutes(deps),
+    createCouncilRoutes(deps),
+    createChatRoutes(deps),
     ...(config.sim ? [createSimRoutes(deps)] : []),
   ])
     app.route('/', routes);
@@ -124,7 +191,9 @@ export function createHub(opts: HubOptions = {}): Hub {
     app,
     deps,
     async close() {
+      obs.stop();
       deps.broker.closeAll();
+      deps.chat.close();
       if (ownDb) deps.db.close();
     },
   };

@@ -7,9 +7,15 @@ import {
   chapterIdsFromStore,
   chapterProviderFromStore,
   createBrain,
+  type Brain,
+  type MasteryStore,
   createCoursePlanSkill,
   createDebateSkill,
   createDevilTaSkill,
+  councilLlmFor,
+  createCouncilService,
+  createCouncilSkill,
+  type CouncilService,
   createFeynmanSkill,
   createMasteryStore,
   createOracleSkill,
@@ -24,6 +30,8 @@ import {
 } from '@squad/brain';
 import type { ExplainerDeps, PodcastDeps } from '@squad/media';
 import { buildRegistry } from './registry';
+import { createProactive } from '../scheduler/wire';
+import type { Scheduler } from '../scheduler/scheduler';
 import { chatSkill } from './chat';
 import { createMediaSkills } from './media';
 
@@ -46,6 +54,14 @@ export interface SkillDeps {
   /** Load the committed OpenStax sample course when the store is empty (offline, no LLM). Default true. */
   seedFixtureCourse?: boolean;
   now?: () => number;
+  /** Stamp council results as demo-model output (true, or a getter when the model can fall back). */
+  demo?: boolean | (() => boolean);
+  /** Receives the council service the skills use, so the hub's HTTP routes can share it. */
+  onCouncil?: (c: CouncilService) => void;
+  /** Share the hub's brain and mastery store so chat, quiz and the village use one instance. */
+  shared?: { brain?: Brain; mastery?: MasteryStore; council?: CouncilService };
+  /** Shared proactive scheduler (main starts it once the bot exists). A private one is created if omitted. */
+  proactive?: Scheduler;
 }
 
 // Static, dependency-free fallback (chat only). The full registry is built by `createSkills`.
@@ -60,19 +76,35 @@ export const skills: Skill[] = buildRegistry([chatSkill]);
 export async function createSkills(d: SkillDeps): Promise<Skill[]> {
   const emit = async (e: VillageEvent): Promise<void> => void (await d.emit(e));
   const now = d.now ? { now: d.now } : {};
-  const brain = createBrain({ llm: d.llm, db: d.db, emit, ...now });
+  const brain = d.shared?.brain ?? createBrain({ llm: d.llm, db: d.db, emit, ...now });
   const course = d.courseId ?? (() => 'demo');
   if ((d.seedFixtureCourse ?? true) && !brain.store.getCourse(course())) {
     await loadFixtureCourse({ store: brain.store }, course());
   }
-  const mastery = createMasteryStore({ db: d.db, emit, ...now });
+  const mastery = d.shared?.mastery ?? createMasteryStore({ db: d.db, emit, ...now });
   const chapters = chapterProviderFromStore(brain.store);
   const engine = new QuizEngine({ db: d.db, llm: d.llm, emit, mastery, chapters, ...now });
   const feynman = new FeynmanEngine({ db: d.db, llm: d.llm, emit, mastery, chapters, ...now });
   const stepDiff = new StepDiffEngine({ db: d.db, llm: d.llm, emit, mastery, ...now });
   const courseIdFor = () => course();
+  const council =
+    d.shared?.council ??
+    createCouncilService({
+      llm:
+        d.demo === undefined
+          ? d.llm
+          : councilLlmFor(d.llm, typeof d.demo === 'function' ? d.demo : () => d.demo === true),
+      db: d.db,
+      emit,
+      brain,
+      courseId: course,
+      ...(d.demo !== undefined ? { demo: d.demo } : {}),
+      ...now,
+    });
+  d.onCouncil?.(council);
 
   const brainSkills: Skill[] = [
+    createCouncilSkill(council, { courseId: courseIdFor }),
     ...answerSkills(brain, course),
     createQuizSkill({ engine, courseIdFor }),
     createFeynmanSkill({ engine: feynman, courseIdFor }),
@@ -124,7 +156,13 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
         courseId: course,
       })
     : [];
-  return buildRegistry([chatSkill], mediaSkills, brainSkills);
+  const proactive = createProactive({
+    db: d.db,
+    ...(d.now ? { now: d.now } : {}),
+    ...(d.proactive ? { scheduler: d.proactive } : {}),
+    courseId: course,
+  });
+  return buildRegistry([chatSkill], mediaSkills, brainSkills, proactive.skills);
 }
 
 export { buildRegistry, chatSkill };

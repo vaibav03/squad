@@ -132,3 +132,116 @@ Looked at two. `village-track2-desk.png`: populated night village (moon, stars, 
 - Parent 2 (batch tip, `origin/merge/batch2`): `3bbb819343843d513705d0721d7f047800dc787b`.
 - Rollback: `git revert -m 1 89eb85df65045b41c1d04070d79b91939f7885e1` (keeps history). Reset to `pre-merge-batch2` only with the owner's explicit approval.
 - Operational note: in fresh worktrees `git merge` fails with `fatal: stash failed` while the index has stat-dirty entries (`git diff-index HEAD` lists many files); loop `git update-index --really-refresh` until `git diff-index HEAD` is empty, then merge.
+
+## Batch 3: chat/web (+ council/ask) and qa/web into main
+
+Branch `merge/batch3` (worktree `squad-wt/merge3`), landed as a true `--no-ff` merge.
+
+### What merged
+
+| Source | Tip sha | Notes |
+| --- | --- | --- |
+| origin/chat/web (already contains council/ask and the council-card fix) | 66ea576 | chat page, ChatDock, cards, useChat |
+| origin/qa/web | merged second | RoomLayer mounted on the village, `chat-send.ts` wiring, e2e scripts, QA fixes |
+
+### Manual resolutions (both sides kept)
+
+1. `apps/hub/src/routes/status.ts`: kept main's version (`lastProbeAt`/`nextProbeAt`, `invalid_key` and `rate_limited` notices, exact credits-depleted banner). qa/web's older `auth:` notice dropped (main's `invalid_key` replaces it).
+2. `packages/core/src/llm/resilient.ts`: kept main's probing wrapper with `onRecover`; ported qa/web's cache portability (a cache handle made by one model is turned into a system prompt when the other model answers) on top of it. qa/web's `reprobeMs` and `probe()` were dropped because main's automatic probes cover them. `resilient.test.ts`: main's tests kept (the auto-merge had replaced them with qa's older ones), plus qa's portability test.
+3. `apps/hub/test/smoke/squad.smoke.test.ts`: main's version (asserts `lastProbeAt`/`nextProbeAt`).
+4. `packages/web/src/pages/village/index.tsx`: both `ChatDock` and `RoomLayer` mounted, qa/web's `chat-send.ts` wiring and `.sqv-stage` focus return kept.
+5. `palette.cpython-314.pyc` (tracked Python cache): kept ours, force-added. `.pyc` stays a tracked-but-ignored file.
+6. Prettier run over qa/web's `apps/web-host/e2e/*.mjs` (formatting only) so `pnpm check` passes.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` (typecheck, lint 0 errors, every package's tests) | pass |
+| `pnpm demo:live` | `demo:live OK` |
+| Browser happy path (haiku agent plus a hand check; dev:all hub :18833, web :15233) | village 1280x800 and 390x844: 0 page errors, 0 console errors, 0 failed requests, scene rendered. /squad/chat with a dev-login session: sent "@Cubbie what is a hash table?", Cubbie replied (demo model: "Not in the materials. Ask the TA."), 0 page errors |
+
+Frames: `docs/design/shots/merge3/{village-desk,village-phone,chat-desk}.png`. Looked at village-desk (night village, campfire, Home house, bubbles, populated) and chat-desk.
+
+### Known gaps
+
+- A chat session without `live` and a hub shows "Chat is offline" by design; the smoke needed a dev-login token.
+- Demo-mode answers are the scripted model's.
+- `main` moved with tracker commits while verifying; merged in with `--no-ff` (docs only, no re-run of tests).
+
+### Landing (batch 3)
+
+- Landing merge commit: `d4e974e357385151746bdef13865e45c4482b5c5` (parents `af2b4310d5da09c450442fbabff467962d951b45` = tag `pre-merge-batch3`, and `517e02f5142f18a5ebc4a02ce15608736aa9665a` = origin/merge/batch3; `git diff origin/merge/batch3` empty), then origin/main tracker commits merged in as `42450c7eea8c1ce3ee49de41ef8ad6dc5f38263c`.
+- Rollback: `git revert -m 1 d4e974e357385151746bdef13865e45c4482b5c5`.
+
+## Batch 4 (product): product/accounts, product/proactive, product/courses into main
+
+Branch `merge/batch4` (worktree `squad-wt/merge4`), landed as a true `--no-ff` merge.
+
+### Manual resolutions (union, both sides kept)
+
+1. `apps/hub/src/app.ts` CORS: one block, allow headers incl. `x-squad-id`, methods `GET POST PUT PATCH DELETE OPTIONS` (present once), expose `content-type, x-squad-token`, `credentials: true`; all route mounts from both sides (chat, council, library, invites, members, squads).
+2. `apps/hub/src/auth.ts`: `TokenKind = 'bearer' | 'session' | 'stream' | 'call' | 'file'`, `SESSION_COOKIE` kept.
+3. `apps/hub/src/types.ts` `LedgerStore`: both `privateValues()` and `forget(student)`.
+4. `packages/web/src/index.ts`, `shell/routes.tsx`: exports `source-viewer` and `auth`; routes chat, squad-create, squad-members.
+5. `packages/brain/src/index.ts` and `apps/bot/src/skills/index.ts`: union (`library` + `skills/nudges` exports; `SkillDeps` gets both main's council/shared fields and `proactive`).
+6. Typecheck fix after the merge: `library/index.ts` re-exported its internal `withTimeout`, clashing with quiz's exported `withTimeout` (TS2308); removed that one re-export (library code imports it directly).
+7. SourceViewerHost: mounted once, only by the courses page (`pages/courses/source.tsx`); chat pages do not mount one.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` | pass |
+| `pnpm demo:live`, `pnpm test:smoke hub` (97 tests) | pass |
+| Browser (dev:all hub :18844 web :15244, dev-login token in `squad.session` and `squad.token`) | village 1280x800 and 390x844, /squad/courses, /squad/chat: 0 page errors, 0 console errors, 0 HTTP >= 400; chat answered "@Cubbie what is a hash table?" (demo model: "Not in the materials. Ask the TA."); a Courses nav entry appears |
+
+Note for testers: with accounts, a dev-login session must also be stored under `squad.token` or the app shows the onboarding screen (a first haiku run hit this: 401s and the welcome flow). Frames: `docs/design/shots/merge4/`.
+
+### Known gaps
+
+- Courses page shows the empty library state in demo; uploads were not exercised.
+- Account sign-in by code (iMessage/console sender) not exercised in a browser.
+
+### Landing (batch 4)
+
+- Landing merge commit: `9bf3216c8a8e54f08ba76dfaf45b620425d90729` (parents `487ee4bddbe34bb699a4246f4b14a664d50e0077` = tag `pre-merge-batch4`, `9df8258f1df581204dcafd7356fccdad8e28571c` = origin/merge/batch4; diff empty).
+- Rollback: `git revert -m 1 9bf3216c8a8e54f08ba76dfaf45b620425d90729`.
+
+## Batch 5 (ops): security/review, deploy/prod, ops/observability into main
+
+Branch `merge/batch5` (worktree `squad-wt/merge5`), landed as a true `--no-ff` merge.
+
+### Manual resolutions
+
+1. Root `package.json`: union of scripts (`security:scan` plus `build`, `build:web`, `bundle:report`, `preflight`).
+2. `apps/hub/src/app.ts`: union. Order is `applySecurity` (security middleware) first, then CORS (accounts: `x-squad-id`, PATCH/DELETE, credentials), then `installObservability` (correlation ids, `/metrics`, `/ready`, `/v1/admin/*`); options `security` and `obs`; `close()` stops obs and the chat hub.
+3. `apps/hub/src/main.ts`: kept main's single-process flow (`attachChatEngine`, one resilient model) and added observability on top: `installProcessHandlers`, `propagateTo` agents and bot, and the model wrapped by `instrumentLlm` through a new `instrument` option on `attachChatEngine` (`chat/engine.ts`). ops' own `main.ts` model/ports wiring was dropped because main's engine already does it.
+4. `packages/core/src/index.ts`: both `accounts` and `telemetry` exports.
+5. Kept deploy's `apps/web-host/vite.config.ts` (assetsDir `static`, source maps only with `SQUAD_SOURCEMAP=1`; no conflict).
+6. Fixes found by the merged tests:
+   - security's body guard returned 415 for the course catalogue CSV import (`PUT /v1/library/catalogue`, text/csv); that path now accepts `text/csv` and `text/plain`.
+   - `security:scan` CORS-2 flagged any `allow-credentials: true`, which product/accounts needs for cookie sessions on the allow-listed origin; it now flags credentials only with a wildcard origin. `pnpm security:scan`: 0 blocking (1 LOW: dev-dependency audit).
+7. Prettier on `docker-compose.yml` and `scripts/deploy/*.ts`.
+8. `webHostHeaders` (CSP and friends for the web host) is NOT applied: it needs the web-host server and a CSP check against the pixel canvas and inline styles, so it is left as the open item HDR-1 in `docs/security/FINDINGS.md`.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check`, `pnpm test:smoke all`, `pnpm demo:live` | pass |
+| `pnpm security:scan` | 0 blocking |
+| Browser (hub :18855, web :15255) | village 1280x800 and 390x844, /squad/courses, /squad/chat: 0 page errors, 0 HTTP >= 400; chat answered; `/health` ok, `/v1/status` returns the fallback status |
+
+Frames: `docs/design/shots/merge5/`.
+
+### Known gaps
+
+- HDR-1 web-host headers (above).
+- `packages/mesh` `gate.test.ts` "does not false-positive on hex payloads" failed once in a full `pnpm check` and passed 3/3 alone and on the rerun (random payloads; mesh is untouched by this batch).
+- `/metrics` and admin routes need the admin token; not exercised in a browser.
+
+### Landing (batch 5)
+
+- Landing merge commit: `52c9a73d794ff74e397ce110a44d7f5fdea6d548` (parents `3e21a141b0ae13eee9e02125dffd949830b66c05` = tag `pre-merge-batch5`, `eaa24679759e4d631f48827c34c92d702e89d4c0` = origin/merge/batch5; the only diff vs the batch tip is tracker docs that moved on main).
+- Rollback: `git revert -m 1 52c9a73d794ff74e397ce110a44d7f5fdea6d548`.

@@ -18,6 +18,8 @@ export interface AppShellProps {
   user: { id: string; name: string; avatarUrl?: string };
   status?: { connection: 'live' | 'replay' | 'offline'; label?: string };
   onSignOut?: () => void;
+  /** Extra account sheet content (the squad switcher). */
+  accountExtra?: ReactNode;
   fullBleed?: boolean;
   /** Router adapter so AppShell stays router-agnostic: render a link. */
   renderLink: (item: {
@@ -67,6 +69,7 @@ export function AppShell({
   user,
   status = { connection: 'live' },
   onSignOut,
+  accountExtra,
   fullBleed: fullBleedProp = false,
   renderLink,
   pathname,
@@ -266,6 +269,7 @@ export function AppShell({
           }
         >
           <div className="sq-shell__acct">
+            {accountExtra}
             <fieldset className="sq-shell__theme">
               <legend>Chrome theme</legend>
               <div className="sq-shell__seg" role="radiogroup" aria-label="Chrome theme">

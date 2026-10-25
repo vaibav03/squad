@@ -1,0 +1,55 @@
+.sq-join__from {
+  color: var(--muted-foreground);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+}
+.sq-join__facts {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--sq-sky-deep);
+  border: 1px solid var(--border);
+}
+.sq-join__facts li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+  min-height: 28px;
+}
+.sq-join__facts svg {
+  color: var(--sq-cloud-lo);
+  flex: none;
+}
+.sq-join__code {
+  font: 600 var(--text-sm) / var(--lh-sm) var(--font-mono);
+  letter-spacing: 0.12em;
+  color: var(--sq-moon);
+}
+.sq-join__problem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.sq-join__badge {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: var(--sq-sky-deep);
+  box-shadow: var(--pixel-outline);
+  color: var(--sq-cloud-hi);
+}
+.sq-join__badge.is-ok {
+  color: var(--sq-ok);
+}
+.sq-join__body {
+  margin-top: 0;
+}
