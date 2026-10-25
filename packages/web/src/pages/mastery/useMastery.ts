@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { safeParseVillageEvent, type VillageEvent } from '@squad/core';
 import { useEventFeed, useLiveConfig, type Connection } from '../../overlays/kit';
-import { masteryReducer, sanitize, type MasteryData } from './model';
+import { masteryFromHub, masteryReducer, sanitize, type MasteryData } from './model';
 import { masteryData, recordedScript } from './fixtures';
 import type { MasteryStatus } from './MasteryView';
 
@@ -20,7 +20,10 @@ export function useMastery(courseId: string) {
         headers: cfg.token ? { Authorization: `Bearer ${cfg.token}` } : {},
       });
       if (!res.ok) throw new Error(String(res.status));
-      setData(sanitize((await res.json()) as MasteryData));
+      const body: unknown = await res.json();
+      const parsed = masteryFromHub(body);
+      if (!parsed) throw new Error('mastery shape');
+      setData(sanitize(parsed));
       setStatus('ready');
     } catch {
       setStatus(typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'error');

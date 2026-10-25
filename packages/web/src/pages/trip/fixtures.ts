@@ -1,7 +1,8 @@
 import type { RecordedScript } from '../../overlays/kit';
 import type { TripEvent, TripState } from './model';
 
-export const TRIP_ID = 'trip_spring_break';
+/** Default trip for /squad/trips: the demo hub seeds `trip_cabo`. */
+export const TRIP_ID = 'trip_cabo';
 
 export const tripOpen: TripState = {
   tripId: TRIP_ID,

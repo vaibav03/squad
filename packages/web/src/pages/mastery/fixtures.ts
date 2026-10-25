@@ -2,7 +2,8 @@ import type { VillageEvent } from '@squad/core';
 import type { RecordedScript } from '../../overlays/kit';
 import type { MasteryData } from './model';
 
-export const COURSE_ID = 'bio201';
+/** Default course for /squad/mastery: the demo hub seeds `cse310`. */
+export const COURSE_ID = 'cse310';
 const c = (id: string, label: string, box: number, squadAvg?: number) => ({
   id,
   label,

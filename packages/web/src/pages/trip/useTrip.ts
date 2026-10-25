@@ -3,7 +3,7 @@ import { useEventFeed, useLiveConfig, type Connection } from '../../overlays/kit
 import {
   parseTripEvent,
   tripReducer,
-  TripStateSchema,
+  tripFromHub,
   withDerived,
   type TripEvent,
   type TripState,
@@ -36,12 +36,14 @@ export function useTrip(tripId: string) {
         headers: auth,
       });
       if (!res.ok) throw new Error(String(res.status));
-      setBase(withDerived(TripStateSchema.parse(await res.json())));
+      const parsed = tripFromHub(await res.json(), cfg.userId);
+      if (!parsed) throw new Error('trip shape');
+      setBase(withDerived(parsed));
       setStatus('ready');
     } catch {
       setStatus(typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'error');
     }
-  }, [cfg.mode, cfg.hubUrl, auth, tripId]);
+  }, [cfg.mode, cfg.hubUrl, cfg.userId, auth, tripId]);
 
   const script = useMemo(
     () =>

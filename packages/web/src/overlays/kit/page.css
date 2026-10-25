@@ -186,3 +186,17 @@
 .lv-av[data-tone='you'] {
   box-shadow: 0 0 0 2px var(--sq-glow);
 }
+
+/* Sentence under a page title (Page from the shell primitives); tucks up under the heading. */
+.lv-lede {
+  margin: calc(var(--space-3) * -1) 0 0;
+  max-width: 60ch;
+  color: var(--muted-foreground);
+  font: 400 var(--text-base) / var(--lh-base) var(--font-sans);
+  text-wrap: pretty;
+}
+@media (min-width: 768px) {
+  .lv-lede {
+    margin-top: calc(var(--space-6) * -1);
+  }
+}

@@ -97,7 +97,7 @@ export function LedgerView(props: LedgerViewProps) {
         </>
       }
     >
-      <p className="lv-ledger__lede">
+      <p className="lv-lede">
         Everything your agents shared, and everything they kept back. Withheld details never leave
         their owner.
       </p>

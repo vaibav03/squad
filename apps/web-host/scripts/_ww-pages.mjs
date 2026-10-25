@@ -12,7 +12,7 @@ const pages = [
   ['personas', '/squad/personas', true],
   ['setup-persona', '/squad/setup/persona', false],
   ['ledger', '/squad/ledger', true],
-  ['trip', '/squad/trips/trip_demo', true],
+  ['trip', '/squad/trips/trip_cabo', true],
   ['mastery', '/squad/mastery', true],
 ];
 const only = (process.env.ONLY || '').split(',').filter(Boolean);

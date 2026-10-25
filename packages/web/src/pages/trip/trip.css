@@ -164,11 +164,8 @@
 .lv-trip__cta {
   display: flex;
 }
-.lv-trip__cta .lv-pbtn {
-  min-height: 48px;
-}
 @media (max-width: 639px) {
-  .lv-trip__cta .lv-pbtn {
+  .lv-trip__cta .sq-btn {
     width: 100%;
   }
 }

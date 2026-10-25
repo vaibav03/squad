@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ConfirmSheet } from '../../overlays/ConfirmSheet';
+import { Button, Page, Skeleton } from '../../primitives';
 import {
   Avatar,
   ConnectionBadge,
   LvIcon,
-  PageHeader,
   StateBlock,
   propArt,
   type Connection,
@@ -55,13 +55,16 @@ export function TripView(props: TripViewProps) {
   const delay = props.cutsceneDelaySec ?? 3;
 
   return (
-    <div className="lv-page lv-trip">
-      <PageHeader
-        eyebrow="Trip planner"
-        title={trip?.title ?? 'Trip planner'}
-        subtitle="Everyone's limits stay private. Your agent finds what works and only shares what has to be shared."
-        status={<ConnectionBadge connection={connection} />}
-      />
+    <Page
+      className="lv-trip"
+      eyebrow="Plan together"
+      title={trip?.title ?? 'Trip planner'}
+      actions={<ConnectionBadge connection={connection} />}
+    >
+      <p className="lv-lede">
+        Everyone&rsquo;s limits stay private. Your agent finds what works and only shares what has
+        to be shared.
+      </p>
       {status === 'loading' && <TripSkeleton />}
       {status === 'error' && (
         <StateBlock
@@ -100,7 +103,7 @@ export function TripView(props: TripViewProps) {
           confirmOpen={props.confirmOpen}
         />
       )}
-    </div>
+    </Page>
   );
 }
 
@@ -170,21 +173,13 @@ function TripBody({
             </p>
           </div>
           <div className="lv-trip__donebtns">
-            <button
-              type="button"
-              className="lv-pbtn lv-pbtn--primary"
-              onClick={() => onTripConfirmed?.(trip.tripId)}
-            >
+            <Button variant="primary" iconEnd="arrow-right" onClick={() => onTripConfirmed?.(trip.tripId)}>
               Watch in the village
-            </button>
+            </Button>
             {delay > 0 && !stay && (
-              <button
-                type="button"
-                className="lv-pbtn lv-pbtn--ghost"
-                onClick={() => setStay(true)}
-              >
+              <Button variant="ghost" onClick={() => setStay(true)}>
                 Stay here
-              </button>
+              </Button>
             )}
           </div>
         </section>
@@ -234,14 +229,15 @@ function TripBody({
           </ol>
           {!trip.iVoted && !trip.confirmed && (
             <div className="lv-trip__cta">
-              <button
-                type="button"
-                className="lv-pbtn lv-pbtn--primary"
-                onClick={() => onSubmitVote(ranking)}
+              <Button
+                variant="primary"
+                size="lg"
+                loading={submitting === 'vote'}
                 disabled={submitting === 'vote' || ranking.length === 0}
+                onClick={() => onSubmitVote(ranking)}
               >
                 {submitting === 'vote' ? 'Sending' : 'Submit my ranking'}
-              </button>
+              </Button>
             </div>
           )}
         </section>
@@ -318,13 +314,9 @@ function TripBody({
               ))}
             </ul>
             {!trip.confirmed && chosen && mine && !mine.confirmed && (
-              <button
-                type="button"
-                className="lv-pbtn lv-pbtn--primary lv-card__btn"
-                onClick={() => setSheet(true)}
-              >
+              <Button variant="primary" className="lv-card__btn" onClick={() => setSheet(true)}>
                 Confirm {chosen.name}
-              </button>
+              </Button>
             )}
             {!trip.confirmed && !chosen && (
               <p className="lv-card__foot">Confirmations open once the squad has a front runner.</p>
@@ -458,12 +450,12 @@ function TripSkeleton() {
       <span className="lv-vh">Loading the trip</span>
       <div className="lv-trip__main">
         {[0, 1, 2].map((i) => (
-          <span key={i} className="lv-skeleton" style={{ height: 96 }} />
+          <Skeleton key={i} shape="block" height={96} />
         ))}
       </div>
       <div className="lv-trip__side">
         {[0, 1].map((i) => (
-          <span key={i} className="lv-skeleton" style={{ height: 140 }} />
+          <Skeleton key={i} shape="block" height={140} />
         ))}
       </div>
     </div>

@@ -96,3 +96,70 @@ export function move<T>(list: readonly T[], from: number, to: number): T[] {
   next.splice(to, 0, x as T);
   return next;
 }
+
+const dollars = (v: unknown): number => {
+  const n = Number.parseFloat(String(v ?? '').replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) ? n : 0;
+};
+const nameOf = (id: string) => {
+  const bare = id.replace(/^s_/, '');
+  return bare.charAt(0).toUpperCase() + bare.slice(1);
+};
+
+/**
+ * `GET /v1/trips/:tripId` (hub-api.md) -> the page's TripState. `fits` is computed here from the viewer's OWN limits
+ * (the hub only sends those to their owner); the secret vote exposes only how many have voted.
+ */
+export function tripFromHub(raw: unknown, me: string): TripState | undefined {
+  const h = raw as {
+    tripId?: string;
+    status?: string;
+    dates?: string;
+    options?: { id: string; label: string; estCost?: string }[];
+    votes?: { student: string }[] | null;
+    tallies?: Record<string, number> | null;
+    vetoed?: { optionId: string }[];
+    confirmations?: { student: string; confirmed: boolean }[];
+    myLimits?: Record<string, string> | null;
+  } | null;
+  if (!h || typeof h.tripId !== 'string' || !Array.isArray(h.options) || !Array.isArray(h.confirmations)) return undefined;
+  const vetoed = new Set((h.vetoed ?? []).map((v) => v.optionId));
+  const limits = h.myLimits ?? undefined;
+  const budget = limits ? dollars(limits.budget) : undefined;
+  const options = h.options.map((o) => {
+    const total = dollars(o.estCost);
+    return {
+      id: o.id,
+      name: o.label,
+      dates: h.dates ?? '',
+      total,
+      fits: !vetoed.has(o.id) && (budget === undefined || budget === 0 || total <= budget),
+      vetoed: vetoed.has(o.id),
+    };
+  });
+  const lead = h.tallies
+    ? Object.entries(h.tallies)
+        .filter(([id]) => !vetoed.has(id))
+        .sort((a, b) => b[1] - a[1])[0]?.[0]
+    : undefined;
+  return withDerived({
+    tripId: h.tripId,
+    title: 'Trip planner',
+    options,
+    members: h.confirmations.map((c) => ({ id: c.student, name: nameOf(c.student), confirmed: c.confirmed })),
+    voted: h.votes?.length ?? 0,
+    iVoted: !!h.votes?.some((v) => v.student === me),
+    ...(lead ? { leadingOptionId: lead } : {}),
+    ...(limits
+      ? {
+          myLimits: {
+            budget: budget ?? 0,
+            notes: Object.entries(limits)
+              .filter(([k]) => k !== 'budget')
+              .map(([k, v]) => `${nameOf(k)}: ${v}`),
+          },
+        }
+      : {}),
+    confirmed: h.status === 'confirmed',
+  });
+}

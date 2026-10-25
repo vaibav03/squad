@@ -84,3 +84,34 @@ export function masteryReducer(d: MasteryData, e: VillageEvent, me: string): Mas
     ),
   };
 }
+
+/**
+ * `GET /v1/mastery/:courseId` answers `{ courseId, concepts: string[], mine: number[], squadAvg: number[] | null }` with
+ * 0..1 fractions. The page works in Leitner boxes 0..5, so fractions become boxes and the course is one chapter.
+ * `squadAvg` is null under 3 members, which hides the squad column.
+ */
+export function masteryFromHub(raw: unknown): MasteryData | undefined {
+  const r = raw as { courseId?: unknown; concepts?: unknown; mine?: unknown; squadAvg?: unknown } | null;
+  if (!r || typeof r.courseId !== 'string' || !Array.isArray(r.concepts) || !Array.isArray(r.mine)) return undefined;
+  const box = (n: unknown) => Math.min(5, Math.max(0, Math.round((typeof n === 'number' ? n : 0) * 5)));
+  const avg = Array.isArray(r.squadAvg) ? (r.squadAvg as unknown[]) : null;
+  const title = r.courseId.toUpperCase();
+  return {
+    courseId: r.courseId,
+    courseTitle: title,
+    // The hub only sends the average when the squad has at least 3 members.
+    memberCount: avg ? 3 : 0,
+    chapters: [
+      {
+        id: r.courseId,
+        title,
+        concepts: r.concepts.map((label, i) => ({
+          id: `${r.courseId}:${i}`,
+          label: String(label),
+          box: box(r.mine && (r.mine as unknown[])[i]),
+          ...(avg ? { squadAvg: box(avg[i]) } : {}),
+        })),
+      },
+    ],
+  };
+}

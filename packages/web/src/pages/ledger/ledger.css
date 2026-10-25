@@ -1,17 +1,5 @@
 @import '../../overlays/kit/bridge.css';
 
-.lv-ledger__lede {
-  margin: calc(var(--space-3) * -1) 0 0;
-  max-width: 60ch;
-  color: var(--muted-foreground);
-  font: 400 var(--text-base) / var(--lh-base) var(--font-sans);
-  text-wrap: pretty;
-}
-@media (min-width: 768px) {
-  .lv-ledger__lede {
-    margin-top: calc(var(--space-6) * -1);
-  }
-}
 .lv-ledger__sum {
   display: flex;
   flex-wrap: wrap;

@@ -1,10 +1,10 @@
 import {
   ConnectionBadge,
   LvIcon,
-  PageHeader,
   StateBlock,
   type Connection,
 } from '../../overlays/kit';
+import { Page, Skeleton } from '../../primitives';
 import {
   chapterBox,
   LEVEL_LABEL,
@@ -31,18 +31,20 @@ export function MasteryView({ status, connection, data, onRetry }: MasteryViewPr
   const showSquad = data ? squadVisible(data) : false;
   const next = nextUp(chapters);
   return (
-    <div className="lv-page lv-mastery">
-      <PageHeader
-        eyebrow="Mastery"
-        title={data?.courseTitle ?? 'Mastery'}
-        subtitle="How well each idea has stuck for you. This is a study map, not a grade."
-        status={<ConnectionBadge connection={connection} />}
-      />
+    <Page
+      className="lv-mastery"
+      eyebrow="Mastery"
+      title={data?.courseTitle ?? 'Mastery'}
+      actions={<ConnectionBadge connection={connection} />}
+    >
+      <p className="lv-lede">
+        How well each idea has stuck for you. This is a study map, not a grade.
+      </p>
       {status === 'loading' && (
         <div className="lv-mastery__skel" role="status" aria-busy="true">
           <span className="lv-vh">Loading your mastery map</span>
           {[0, 1, 2].map((i) => (
-            <span key={i} className="lv-skeleton" style={{ height: 160 }} />
+            <Skeleton key={i} shape="block" height={160} />
           ))}
         </div>
       )}
@@ -108,7 +110,7 @@ export function MasteryView({ status, connection, data, onRetry }: MasteryViewPr
           </div>
         </>
       )}
-    </div>
+    </Page>
   );
 }
 
