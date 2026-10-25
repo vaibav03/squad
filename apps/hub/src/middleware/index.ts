@@ -4,7 +4,7 @@ import type { HubApp, HubDeps } from '../types';
 import { assertSafeConfig } from '../security/config-guard';
 import { auditLog } from './audit';
 import { bodyGuard } from './body';
-import { ledgerScope, sseCap } from './guards';
+import { ledgerScope, sseCap, streamTokenOnly } from './guards';
 import { securityHeaders } from './headers';
 import { memoryStore, rateLimit, sqliteStore, type RateStore, type Rule } from './rate-limit';
 import { requestId } from './request-id';
@@ -170,6 +170,7 @@ export function applySecurity(app: HubApp, deps: HubDeps, o: SecurityOptions = {
         onLimit: ({ rule }) => log.warn('rate limited', { rule }),
       }),
     );
+  app.use('*', streamTokenOnly(deps));
   app.use('*', sseCap(o.maxStreamsPerUser ?? 12, userOf));
   app.use('*', ledgerScope(deps, userOf));
   app.use('*', uploadGuard());

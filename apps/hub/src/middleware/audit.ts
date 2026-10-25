@@ -1,4 +1,4 @@
-import type { MiddlewareHandler } from 'hono';
+import type { Context, MiddlewareHandler } from 'hono';
 import type { Logger } from '../log';
 import { clientIp, idHash } from './rate-limit';
 
@@ -11,7 +11,7 @@ export function auditLog(o: {
   hashKey: string;
   trustProxy: boolean;
   now: () => number;
-  userOf: (c: import('hono').Context) => string | undefined;
+  userOf: (c: Context) => string | undefined;
 }): MiddlewareHandler {
   return async (c, next) => {
     const t0 = o.now();

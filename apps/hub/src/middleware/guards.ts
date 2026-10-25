@@ -1,7 +1,8 @@
-import type { MiddlewareHandler } from 'hono';
+import type { Context, MiddlewareHandler } from 'hono';
+import { verifyToken } from '../auth';
 import type { HubDeps } from '../types';
 
-const deny = (c: import('hono').Context, status: 403 | 404, code: string) =>
+const deny = (c: Context, status: 403 | 404, code: string) =>
   c.json({ error: { code } }, status);
 
 /**
@@ -11,7 +12,7 @@ const deny = (c: import('hono').Context, status: 403 | 404, code: string) =>
  */
 export function ledgerScope(
   deps: HubDeps,
-  userOf: (c: import('hono').Context) => string | undefined,
+  userOf: (c: Context) => string | undefined,
 ): MiddlewareHandler {
   return async (c, next) => {
     const m = /^\/v1\/ledger\/([^/]+)$/.exec(new URL(c.req.url).pathname);
@@ -30,7 +31,7 @@ export function ledgerScope(
 /** Caps concurrent SSE connections per student; the slot is released when the stream ends or is cancelled. */
 export function sseCap(
   max: number,
-  userOf: (c: import('hono').Context) => string | undefined,
+  userOf: (c: Context) => string | undefined,
 ): MiddlewareHandler {
   const open = new Map<string, number>();
   return async (c, next) => {
@@ -81,5 +82,20 @@ export function sseCap(
     });
     c.res = new Response(body, res);
     return;
+  };
+}
+
+/**
+ * The long-lived bearer must not travel in a URL (proxy logs, Referer, browser history). On the SSE route the
+ * `?st=` parameter only accepts a short-lived stream token; an Authorization header is unaffected.
+ */
+export function streamTokenOnly(deps: HubDeps): MiddlewareHandler {
+  return async (c, next) => {
+    if (new URL(c.req.url).pathname !== '/v1/squad/stream' || c.req.header('authorization'))
+      return next();
+    const st = c.req.query('st');
+    if (st && !verifyToken(deps.config.authSecret, st, ['stream'], deps.now()))
+      return c.json({ error: { code: 'unauthorized' } }, 401);
+    return next();
   };
 }

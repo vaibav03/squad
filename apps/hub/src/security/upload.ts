@@ -82,7 +82,7 @@ export function safeFileName(raw: string, max = 96): string {
   const base = raw.split(/[\\/]/).pop() ?? '';
   const clean = base
     // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u001f\u007f‪-‮⁦-⁩​-‏]/g, '')
+    .replace(/[\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069\u200b-\u200f]/g, '')
     .replace(/^\.+/, '')
     .replace(/[<>:"|?*]/g, '_')
     .trim();

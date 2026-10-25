@@ -8,8 +8,14 @@ dist/
 .worktrees/
 data/
 logs/
-<<<<<<< HEAD
 docs/design/shots/integration/video/
-=======
 assets/vendor/
->>>>>>> origin/main
+# security: never commit these
+vendor-local/
+*.db
+*.sqlite
+*.sqlite3
+*.map
+*.pem
+*.key
+*.p12
