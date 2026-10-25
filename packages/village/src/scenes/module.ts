@@ -314,7 +314,7 @@ const mod = {
               slot: l.p.slotId,
               instance: st.instance,
               title: st.title,
-              box: st.glow * 5,
+              box: st.access === 'open' ? st.glow * 5 : 0, // a quiet house has nothing to show yet
               n: chapterNumber(st.instance) ?? chapterNumber(l.p.slotId),
               open: st.access === 'open',
             };

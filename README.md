@@ -64,9 +64,9 @@ Call an expert agent from the village; captions are always shown, voice plays wh
 
 ### Mastery
 
-Quiz results feed a per-chapter mastery view (no points, streaks or leaderboards by design).
+Mastery lives in the village itself, not on a separate page. Each chapter house shows your mastery on its sign (pips), the HUD shows a chip with the word and pips when you stand at a house, and the **Mastery board** at the entrance of the study district (walk up, press Enter) opens an in-game panel with every chapter, your weakest topics and a **Practise this** button that sends `@cubbie quiz me on chapter N` to the squad chat. Words plus pips only: no points, streaks, grades or leaderboards by design, and squad averages appear only for groups of three or more. The old `/squad/mastery` link redirects to `/squad/village?mastery=1`, which opens the panel.
 
-![Mastery page](docs/design/shots/wire-web/mastery-desk-dark.png)
+![Mastery board panel](docs/design/shots/e2e/rooms/mastery-1280.png)
 
 ### Group chat, podcast and explainer
 
@@ -149,7 +149,7 @@ flowchart LR
   Med --> Hub
   Ledger --> Hub
   Hub[Hub: /internal/events, SSE, replay] --> Village[Squad Village: Phaser]
-  Hub --> Web[Web pages: ledger, trip, mastery, overlays]
+  Hub --> Web[Web pages: ledger, trip, overlays (mastery panel in the village)]
   Replay[(Replay JSON)] --> Hub
 ```
 

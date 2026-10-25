@@ -66,7 +66,7 @@ export function initBase(
     occupant: 'idle',
     occupantSince: 0,
     windowLit: false,
-    glow: 0.15,
+    glow: 0,
     glowFrom: 0.15,
     glowSince: 0,
     sign: opts.sign ?? opts.title ?? '',
