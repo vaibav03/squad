@@ -13,6 +13,11 @@
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests"
   },
   "dependencies": {
-    "@squad/core": "workspace:*"
+    "@squad/core": "workspace:*",
+    "phaser": "3.90.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1",
+    "vite": "^6.4.5"
   }
 }
