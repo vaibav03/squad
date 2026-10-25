@@ -53,4 +53,46 @@ describe('OverlayHost', () => {
     expect(onClosed).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole('dialog')).toBeNull();
   });
+
+  describe('live confirm on a non-trip task', () => {
+    const hub = { hubUrl: 'http://hub.test', token: 't' };
+    const open = async (answerStatus: number) => {
+      const calls: string[] = [];
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (url: string, init?: RequestInit) => {
+          calls.push(`${init?.method ?? 'GET'} ${url}`);
+          if (url.includes('/v1/trips/')) return new Response('{}', { status: 404 });
+          if (init?.method === 'POST') return new Response('{}', { status: answerStatus });
+          return new Response('{}', { status: 404 });
+        }),
+      );
+      const onClosed = vi.fn();
+      const ev: OverlayEvent = {
+        type: 'openConfirm',
+        taskId: 'task_debate_1',
+        question: 'Debate: should exams be open book? Which side argued better?',
+      };
+      render(<OverlayHost event={ev} mode="live" hub={hub} onClosed={onClosed} />);
+      await wait(60);
+      return calls;
+    };
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('Yes shows the done state even though the preview 404s', async () => {
+      const calls = await open(200);
+      fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
+      await wait(50);
+      expect(screen.getByText(/Your answer is in/)).toBeTruthy();
+      expect(
+        calls.some((c) => c.startsWith('POST') && c.endsWith('/v1/confirms/task_debate_1')),
+      ).toBe(true);
+    });
+    it('an expired task says so, not "Nothing was shared"', async () => {
+      await open(404);
+      fireEvent.click(screen.getByRole('button', { name: 'Yes' }));
+      await wait(50);
+      expect(screen.getByRole('alert').textContent).toMatch(/expired/);
+    });
+  });
 });
