@@ -1,3 +1,4 @@
+// TODO(shared): dedupe into @squad/world-shared (source: ws/village-world packages/village/src/boot/scaler.ts; this copy drops the 270px height cap)
 export interface ScaleResult {
   /** Art zoom: 3 at css width >= 900 else 2 (docs/design/DESIGN.md 2.2), reduced only if the height cannot fit. */
   zoom: number;

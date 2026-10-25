@@ -1,3 +1,4 @@
+// TODO(shared): dedupe into @squad/world-shared (source: ws/motion packages/village/src/motion.ts; docs/design/tokens.ts)
 /** The three curves of docs/specs/08-village-motion.md as bezier functions (t in 0..1 -> eased 0..1). */
 function bezier(x1: number, y1: number, x2: number, y2: number): (t: number) => number {
   const cx = 3 * x1;

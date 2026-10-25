@@ -34,3 +34,13 @@ Engine code never names a file: `assets/interior/manifest.json` (committed, CC0 
 
 ## Behaviour notes
 Walking is constant speed with an instant start and stop (spec 08 row 3 asks for an 80 ms ease-out stop; not implemented because tile paths stop on a whole pixel, one-line change in `PathFollower`). Calm mode (OS reduced motion or `setCalm`): camera jump-cuts between rooms, NPC wandering off. Door sprites show locked/closed/open; closed doors open when anyone is within 1.75 tiles.
+
+## To dedupe
+Copies kept here until spec 10 ticket P-1 extracts `@squad/world-shared` (after the village branches merge to main). Each carries a `// TODO(shared)` comment. This package never imports `packages/village`.
+| Interior file | Source of truth to move from |
+|---|---|
+| `src/shared/overlay-bridge.ts` | `packages/village/src/overlay-bridge/bridge.ts` (ws/village-mesh) |
+| `src/boot/scaler.ts` | `packages/village/src/boot/scaler.ts` (ws/village-world); this copy drops the 270 px height cap |
+| `src/world/motion.ts` | `packages/village/src/motion.ts` (ws/motion), `docs/design/tokens.ts` |
+| `src/agents/director.ts` | `packages/village/src/adapter/` (ws/village-mesh); verbs in `docs/interior-events.md` |
+| `src/shared/sources.ts` | `packages/village/src/sources/` (ws/village-mesh); only the `VillageSource` type is used |

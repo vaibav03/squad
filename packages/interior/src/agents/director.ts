@@ -1,3 +1,4 @@
+// TODO(shared): dedupe into @squad/world-shared (source: ws/village-mesh packages/village/src/adapter/; verbs documented in docs/interior-events.md)
 /**
  * Maps VillageEvents onto interior actions. Pure: no Phaser, no timers. The scene executes the commands.
  * Candidate to share with the village adapter (packages/village adapter produces SceneCommands from the

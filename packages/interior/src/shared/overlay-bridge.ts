@@ -1,3 +1,4 @@
+// TODO(shared): dedupe into @squad/world-shared (source: ws/village-mesh packages/village/src/overlay-bridge/bridge.ts)
 // CANDIDATE FOR @squad/village-shared: Phaser-free and world-agnostic. Semantics copied from
 // packages/village (ws/village-mesh) overlay-bridge: one overlay at a time, FIFO queue, dedupe.
 import type { OverlayEvent } from '../api';
