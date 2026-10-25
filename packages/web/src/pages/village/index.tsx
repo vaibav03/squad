@@ -14,7 +14,10 @@ import { hubStudentId } from '../../shell/dev-login';
 import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
 import { ChatDock } from '../chat/ChatDock';
+import { RoomLayer } from '../../overlays/room-info';
 import { CouncilHall } from '../../council';
+import { useToast } from '../../primitives/Toast';
+import { sendPhraseToChat } from './chat-send';
 import { OverlayHost } from './OverlayHost';
 import { DEFAULT_WORLD, loadWorld, type WorldHandle } from './worlds';
 import './village.css';
@@ -108,6 +111,52 @@ export default function VillagePage({ world }: { world?: string }) {
     // calm is applied live through setCalm; the world is not remounted for it.
   }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable]);
 
+  // After the room-info panel closes, focus rests on its "?" button, where the world's own Esc/walk keys do not
+  // reach. Forward Escape from the room layer's controls to the stage so a keyboard user can still leave the room.
+  const onRootKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Escape' || e.defaultPrevented) return;
+    const t = e.target as HTMLElement;
+    const st = stage.current?.querySelector<HTMLElement>('.sqv-stage');
+    if (!st || !t.closest('.rr-layer') || t.closest('[role="dialog"]')) return;
+    e.preventDefault();
+    st.focus({ preventScroll: true });
+    st.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }),
+    );
+  }, []);
+
+  // The Council Hall opens its own "Ask the council" panel on entry. Mark its room-info panel as already seen so the
+  // two never stack on first entry; the info stays one tap away on the room's "?" button.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('squad:room-info-seen:council-hall', '1');
+    } catch {
+      /* private mode: the panels may both open once */
+    }
+  }, []);
+
+  // A room's "say this in chat" button sends the phrase to the squad group chat. Not offered in replays.
+  const { toast } = useToast();
+  const runPhrase = useMemo(
+    () =>
+      hub?.token && !replayName
+        ? (phrase: string) => {
+            void sendPhraseToChat(hub, phrase).then((ok) =>
+              toast(
+                ok
+                  ? { title: 'Sent to the squad chat', body: phrase, tone: 'ok' }
+                  : {
+                      title: 'Could not send that',
+                      body: 'Open Chat and say it there.',
+                      tone: 'warn',
+                    },
+              ),
+            );
+          }
+        : undefined,
+    [hub, replayName, toast],
+  );
+
   const onClosed = useCallback(() => handle.current?.overlayClosed(), []);
 
   if (!runnable)
@@ -121,7 +170,7 @@ export default function VillagePage({ world }: { world?: string }) {
       </div>
     );
   return (
-    <div className="sq-world">
+    <div className="sq-world" onKeyDown={onRootKeyDown}>
       <div ref={stage} className="sq-world__stage" />
       {state === 'loading' && (
         <div className="sq-world__loading">
@@ -143,16 +192,21 @@ export default function VillagePage({ world }: { world?: string }) {
           Replay
         </span>
       )}
+      <RoomLayer calm={calm} onRun={runPhrase} />
       <OverlayHost
         event={event}
         mode={mode}
         hub={hub}
         calm={calm}
-        returnFocusTo={stage.current?.querySelector('canvas')}
+        returnFocusTo={stage.current?.querySelector<HTMLElement>('.sqv-stage')}
         onClosed={onClosed}
       />
       <ChatDock enabled={live && !replayName} />
-      <CouncilHall hub={hub} calm={calm} returnFocusTo={stage.current?.querySelector('canvas')} />
+      <CouncilHall
+        hub={hub}
+        calm={calm}
+        returnFocusTo={stage.current?.querySelector<HTMLElement>('.sqv-stage')}
+      />
     </div>
   );
 }

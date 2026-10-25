@@ -54,6 +54,18 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
       ? { llm: 'real' }
       : { llm: 'fake', reason: 'no_key', since: now() };
   let probing = false;
+  // A cache handle only works on the model that made it: when the other model answers, the handle is dropped
+  // and the context it held is sent as the system prompt instead.
+  const caches = new Map<string, { owner: 'real' | 'fake'; system?: string }>();
+
+  function portable<R extends { cache?: CacheHandle; system?: string }>(req: R, toFake: boolean): R {
+    if (!req.cache) return req;
+    const meta = caches.get(req.cache.id);
+    if (!meta || (meta.owner === 'fake') === toFake) return req;
+    const { cache: _drop, ...rest } = req;
+    void _drop;
+    return { ...rest, system: [meta.system, req.system].filter(Boolean).join('\n\n') } as R;
+  }
 
   const reasonOf = (e: unknown): LlmFallbackReason | undefined => {
     const k = classifyGeminiError(e).kind;
@@ -92,13 +104,13 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
     })();
   }
 
-  async function run<T>(f: (l: Llm) => Promise<T>): Promise<T> {
+  async function run<T>(f: (l: Llm, toFake: boolean) => Promise<T>): Promise<T> {
     if (state.llm === 'fake' || !o.real) {
       maybeProbe();
-      return f(o.fake);
+      return f(o.fake, true);
     }
     try {
-      return await f(o.real);
+      return await f(o.real, false);
     } catch (e) {
       const reason = reasonOf(e);
       if (!reason) throw classifyGeminiError(e);
@@ -113,7 +125,7 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
         };
         o.onSwitch?.({ ...state });
       }
-      return f(o.fake);
+      return f(o.fake, true);
     }
   }
 
@@ -122,9 +134,17 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
       maybeProbe();
       return { ...state };
     },
-    complete: (req: LlmRequest) => run((l) => l.complete(req)),
-    json: <T>(req: LlmJsonRequest<T>) => run((l) => l.json(req)),
-    createCache: (req: LlmCacheRequest) => run((l) => l.createCache(req)),
+    complete: (req: LlmRequest) => run((l, t) => l.complete(portable(req, t))),
+    json: <T>(req: LlmJsonRequest<T>) => run((l, t) => l.json(portable(req, t))),
+    async createCache(req: LlmCacheRequest) {
+      let owner: 'real' | 'fake' = 'real';
+      const h = await run((l, t) => {
+        owner = t ? 'fake' : 'real';
+        return l.createCache(req);
+      });
+      caches.set(h.id, { owner, ...(req.system !== undefined ? { system: req.system } : {}) });
+      return h;
+    },
     async deleteCache(h: CacheHandle) {
       if (h.provider === 'fake') return o.fake.deleteCache?.(h);
       if (state.llm === 'real') return run((l) => l.deleteCache?.(h) ?? Promise.resolve());
