@@ -72,6 +72,7 @@ const live = { provider: 'google', mode: 'live', status: 'live' };
 describe('setup readers (server state only)', () => {
   it('phone: done only with a linked handle', async () => {
     answers['/v1/imessage/link'] = { links: [] };
+    answers['/v1/me'] = { user: { id: 'u' }, phoneVerified: false };
     expect(await phoneDone(ctx)).toBe(false);
     answers['/v1/imessage/link'] = { links: [{ hint: '•••• 0077', linkedAt: 1 }] };
     expect(await phoneDone(ctx)).toBe(true);
