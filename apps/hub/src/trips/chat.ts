@@ -1,7 +1,7 @@
 // Chat -> trip actions. Runs in the hub BEFORE the bot router for every student message (web or iMessage via the bridge),
 // returns true when it handled the text. It only acts on tight patterns, so ordinary chatter still reaches the bot.
 import { parseConfirmReply } from '@squad/bot';
-import { parseMentions } from '@squad/core';
+import { parseMentions, plannerIntent } from '@squad/core';
 import type { HubDeps, Viewer } from '../types';
 import { monthOf, MONTHS } from './logic';
 import type { TripService } from './service';
@@ -51,6 +51,22 @@ export function parseCreate(
   return { destination: d.replace(/\s+/g, ' '), ...(month ? { month } : {}) };
 }
 
+/** `@planner ... trip ...` without a planning verb ("@planner trip to Cabo in March"): the trip flow with the same slots. */
+export function parseLooseTrip(
+  text: string,
+): { destination: string; month?: number } | 'no_destination' | null {
+  const pm = parseMentions(text);
+  if (!pm.mentions.some((m) => m.agent.id === 'planner') || plannerIntent(pm.rest) !== 'trip')
+    return null;
+  const rest = pm.rest;
+  const dest = DEST_TO.exec(rest)?.[1] ?? DEST_IN.exec(rest)?.[1];
+  const monthWord = MONTH.exec(rest)?.[1];
+  const month = monthWord ? monthOf(monthWord === 'sept' ? 'september' : monthWord) : undefined;
+  const d = dest?.trim();
+  if (!d || monthOf(d) || d.length < 2) return 'no_destination';
+  return { destination: d.replace(/\s+/g, ' '), ...(month ? { month } : {}) };
+}
+
 export async function handleTripChat(
   ctx: TripChatCtx,
   v: Viewer,
@@ -75,7 +91,7 @@ export async function handleTripChat(
 
   // 1. create
   if (addressed) {
-    const c = parseCreate(text);
+    const c = parseCreate(text) ?? parseLooseTrip(text);
     if (c) {
       if (c === 'no_destination') {
         reply(usage);

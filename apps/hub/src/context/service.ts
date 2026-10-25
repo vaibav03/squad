@@ -4,6 +4,9 @@ import {
   CANVAS_SCOPES,
   ConnectorAuthError,
   ConnectorExpiredError,
+  ConnectorRevokedError,
+  expiredNote,
+  revokedNote,
   ConnectorRateLimitError,
   GOOGLE_SCOPES,
   buildGoogleAuthorizationUrl,
@@ -674,7 +677,8 @@ export function createContextService(
         try {
           const r = await connector.refresh(authFor(c, s) as GoogleAuth);
           tokens.put(c.id, { ...s, accessToken: r.accessToken });
-          store.patchConnection(c.id, { expiresAt: Math.max(r.expiresAt ?? 0, deps.now() + HOUR) });
+          // The real expiry: never stretch a short-lived token to an hour (it would show "live" while Google 401s).
+          store.patchConnection(c.id, { expiresAt: r.expiresAt ?? deps.now() + HOUR });
           return;
         } catch (e) {
           if (e instanceof ConnectorRateLimitError) {
@@ -686,15 +690,18 @@ export function createContextService(
             store.patchSyncState(c.id, { retryAfter: deps.now() + e.retryAfterMs });
             return;
           }
+          if (e instanceof ConnectorRevokedError) {
+            // Google says the grant is gone: privacy first, the imported data is purged (docs/nook-parity.md, V3).
+            store.revokeConnection(c.id, 'revoked', deps.now(), revokedNote(c.provider));
+            tokens.delete(c.id);
+            return;
+          }
           if (!(e instanceof ConnectorExpiredError))
             deps.log.warn('context.refresh_failed', { connectionId: c.id });
         }
       }
-      store.setStatus(
-        c.id,
-        'expired',
-        'The credential expired and could not be renewed. Reconnect to resume syncing.',
-      );
+      // Could not renew and the provider did not say "revoked": keep the data, flag it stale, ask to reconnect.
+      store.setStatus(c.id, 'expired', expiredNote(c.provider));
     },
 
     async sync(userId, connectionId) {
@@ -722,7 +729,14 @@ export function createContextService(
               auth as CanvasAuth,
             )
           : await syncConnection(
-              { store, now: deps.now },
+              {
+                store,
+                now: deps.now,
+                onRefreshed: (r) => {
+                  tokens.put(c.id, { ...tokens.get(c.id)!, accessToken: r.accessToken });
+                  store.patchConnection(c.id, { expiresAt: r.expiresAt ?? deps.now() + HOUR });
+                },
+              },
               fresh,
               googleConnector(fresh),
               auth as GoogleAuth,

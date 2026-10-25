@@ -85,6 +85,17 @@ export class ConnectorExpiredError extends Error {
   }
 }
 
+/**
+ * The provider itself says the grant is gone (Google `invalid_grant`: the user removed access, or the refresh token was
+ * revoked). A kind of expiry, but the one case where Squad purges the imported data (privacy first, see docs/nook-parity.md).
+ */
+export class ConnectorRevokedError extends ConnectorExpiredError {
+  constructor(message = 'grant revoked upstream') {
+    super(message);
+    this.name = 'ConnectorRevokedError';
+  }
+}
+
 export interface Connector<A> {
   readonly provider: Provider;
   readonly mode: ConnectionMode;

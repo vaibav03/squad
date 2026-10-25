@@ -111,7 +111,7 @@ const CALENDAR_KINDS: ReadonlySet<SourceKind> = new Set(['gcal_event', 'canvas_e
 const STATE_LABEL = {
   live: 'Connected',
   fixture: 'Demo data, not a real account',
-  expired: 'Expired: reconnect to resume syncing',
+  expired: 'Expired: reconnect to resume syncing. Imported data is kept but may be out of date',
   revoked: 'Disconnected: imported data deleted',
   rate_limited: 'Rate limited by the provider: retrying automatically, imported data is kept',
   error: 'Error: the last sync failed, showing the last imported data',
@@ -143,7 +143,13 @@ function view(svc: ContextService, c: ContextConnection) {
     stateLabel:
       c.degraded && state === 'error'
         ? 'Degraded: the provider rejected the credential; showing the last imported data'
-        : STATE_LABEL[state],
+        : state === 'revoked' && c.statusNote
+          ? c.statusNote
+          : STATE_LABEL[state],
+    /** The grant is gone or could not be renewed: the UI offers a Reconnect button. */
+    needsReconnect: state === 'revoked' || state === 'expired',
+    /** Imported data of this connection may be out of date (expired and not purged, degraded, rate limited). */
+    stale: state === 'expired' || state === 'error' || state === 'rate_limited',
     status: c.status,
     statusLabel: c.degraded
       ? 'Degraded: the provider rejected the credential; showing the last imported data'
@@ -341,7 +347,17 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
       mode: svc.mode,
       results: hits
         .filter((h) => !kind || h.kind === kind)
-        .map((h) => ({ ...h, provenance: svc.store.source(h.sourceId)?.provenance ?? null })),
+        .map((h) => {
+          const src = svc.store.source(h.sourceId);
+          const cn = src?.connectionId ? svc.store.connection(src.connectionId) : undefined;
+          const st = cn ? connectionState(cn) : 'live';
+          return {
+            ...h,
+            provenance: src?.provenance ?? null,
+            /** The connection is expired / degraded / rate limited: the data is kept but may be out of date. */
+            stale: st === 'expired' || st === 'error' || st === 'rate_limited',
+          };
+        }),
     });
   });
 

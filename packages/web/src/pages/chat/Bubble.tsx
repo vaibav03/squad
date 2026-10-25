@@ -9,6 +9,7 @@ import { LiveChatCard } from '../../live/LiveChatCard';
 import { useSquadConfig } from '../../shell/context';
 import { AudioPlayer, ImageAttachment } from './media';
 import { ChatAvatar } from './parts';
+import { SyncBadge } from './sync/SyncBadge';
 import {
   attachmentLabel,
   citationSpeech,
@@ -41,6 +42,8 @@ export interface BubbleProps {
   onCite: (c: ChatCitation, answerText?: string) => void;
   onRetry: (localId: string) => void;
   onDiscard: (localId: string) => void;
+  /** Retry a failed iMessage delivery of this message (id = hub message id). */
+  onRetryDelivery?: (messageId: string) => void;
   quizAnswer: (messageId: string) => string | undefined;
   onQuizAnswer: (m: ChatMessage, choice: string) => Promise<boolean>;
   onConfirm: (m: ChatMessage, n: number) => Promise<ConfirmResult>;
@@ -270,6 +273,19 @@ export function MessageBubble(p: BubbleProps) {
             ))}
           </div>
         ) : null}
+
+        <SyncBadge
+          {...(m.transport ? { transport: m.transport } : {})}
+          {...(m.deliveryState ? { deliveryState: m.deliveryState } : {})}
+          {...(m.senderLabel && m.senderLabel !== sender.name
+            ? { senderLabel: m.senderLabel }
+            : {})}
+          {...(m.skippedAttachments ? { skippedAttachments: m.skippedAttachments } : {})}
+          {...(m.receivedLate ? { receivedLate: true } : {})}
+          {...(p.onRetryDelivery && row.state === 'sent'
+            ? { onRetry: () => p.onRetryDelivery!(m.id) }
+            : {})}
+        />
 
         {row.state === 'pending' ? (
           <p className="sqc-msg__state" data-testid="chat-msg-state" role="status">
