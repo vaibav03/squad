@@ -10,7 +10,6 @@ import { openBoard, useBoardVersion } from '../../council/board/bridge';
 import { ModeBadge } from '../../council/board/ModeBadge';
 import { EmptyHelp } from './focus/EmptyHelp';
 import { LastRunLabel } from '../../council/last-run/components';
-import { useCouncilHub } from '../../council/last-run/hub';
 import { useLastRunsState } from '../../council/last-run/store';
 
 const STATE_WORD = {
@@ -87,7 +86,6 @@ export function HierarchyTab({
   inspector: InspectorStore;
 }) {
   useBoardVersion(board);
-  const hub = useCouncilHub();
   const stored = useLastRunsState();
   const lastBoard = board?.run();
   // Honest empty state: say what the last council was, or that none ever ran, with a way to convene one.

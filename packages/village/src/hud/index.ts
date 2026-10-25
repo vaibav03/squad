@@ -13,7 +13,6 @@ import type {
 import { nearestInteractable } from '../world/interact';
 import {
   KIND_ROLE,
-  STATE_LABEL,
   STATUS_WORD,
   KIND_BLURB,
   chipName,

@@ -16,12 +16,6 @@ export const HANDOFF_STATUS_LABEL: Record<HandoffStatus, string> = {
   done: 'Done',
   degraded: 'Degraded',
 };
-export const HANDOFF_STATUS_GLYPH: Record<HandoffStatus, string> = {
-  queued: '○',
-  working: '◐',
-  done: '✓',
-  degraded: '▲',
-};
 
 /** The only envelope fields a card or row may read. Anything else on an object is ignored by construction. */
 export const PUBLIC_TURN_FIELDS = [
@@ -293,7 +287,6 @@ export function reasoningCards(messages: readonly A2aMessage[], o: ReasoningOpti
 export type ProviderTier = 'live' | 'degraded' | 'fixture';
 export interface ProviderState {
   tier: ProviderTier;
-  glyph: string;
   /** 'LIVE: Gemini' | 'DEGRADED: <reason>' | 'FIXTURE: scripted, not Gemini' | 'DEMO: scripted, not Gemini' */
   text: string;
   /** 'Gemini Live (audio + transcript)' | 'Gemini streaming' | 'Scripted (not Gemini)' | 'Transport not reported' */
@@ -312,7 +305,6 @@ export function providerState(
   if (demo)
     return {
       tier: 'fixture',
-      glyph: '◆',
       text: o.fixture ? 'FIXTURE: scripted, not Gemini' : 'DEMO: scripted, not Gemini',
       transport: 'Scripted (not Gemini)',
     };
@@ -325,7 +317,7 @@ export function providerState(
       : 'Gemini streaming';
   if (bad) {
     const why = modeInfo(bad).word.replace(/^Degraded:?\s*/, '');
-    return { tier: 'degraded', glyph: '▲', text: why ? `DEGRADED: ${why}` : 'DEGRADED', transport };
+    return { tier: 'degraded', text: why ? `DEGRADED: ${why}` : 'DEGRADED', transport };
   }
-  return { tier: 'live', glyph: '●', text: 'LIVE: Gemini', transport };
+  return { tier: 'live', text: 'LIVE: Gemini', transport };
 }
