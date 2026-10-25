@@ -27,22 +27,53 @@ describe('alias table', () => {
     }
   });
   it.each([
-    ['cubbie', 'cubbie'], ['CUBBI', 'cubbie'], ['squad', 'cubbie'], ['teacher', 'tutor'], ['Tutor', 'tutor'],
-    ['skeptic', 'skeptic'], ['planner', 'planner'], ['examiner', 'examiner'], ['chair', 'chair'],
-    ['council', 'council'], ['advisor', 'advisor'], ['chill', 'chill'], ['grind', 'grind'],
-    ['chairman', 'chairman'], ['quiz', 'quiz'], ['feynman', 'feynman'], ['stepdiff', 'stepdiff'], ['podcast', 'podcast'],
+    ['cubbie', 'cubbie'],
+    ['CUBBI', 'cubbie'],
+    ['squad', 'cubbie'],
+    ['teacher', 'tutor'],
+    ['Tutor', 'tutor'],
+    ['skeptic', 'skeptic'],
+    ['planner', 'planner'],
+    ['examiner', 'examiner'],
+    ['chair', 'chair'],
+    ['council', 'council'],
+    ['advisor', 'advisor'],
+    ['chill', 'chill'],
+    ['grind', 'grind'],
+    ['chairman', 'chairman'],
+    ['quiz', 'quiz'],
+    ['feynman', 'feynman'],
+    ['stepdiff', 'stepdiff'],
+    ['podcast', 'podcast'],
   ])('@%s resolves to %s', (w, id) => expect(resolveAlias(w)?.id).toBe(id));
 });
 
 describe('parseMentions: positives', () => {
   it.each([
-    '@cubbie hi', '@Cubbie hi', '@CUBBIE hi', '@cubbi hi', '@Cubbi hi', '@CuBbI hi',
-    'hey @cubbie what is a z-score?', 'thanks @cubbie!', 'so @cubbi, can you explain',
-    '@cubbi: quiz me', '@cubbi? hello', 'what is this @cubbie', '(@cubbie)', 'ok.@cubbie',
-    '@cubbie\nnext line', '@cubbie.', 'wait @cubbi...',
+    '@cubbie hi',
+    '@Cubbie hi',
+    '@CUBBIE hi',
+    '@cubbi hi',
+    '@Cubbi hi',
+    '@CuBbI hi',
+    'hey @cubbie what is a z-score?',
+    'thanks @cubbie!',
+    'so @cubbi, can you explain',
+    '@cubbi: quiz me',
+    '@cubbi? hello',
+    'what is this @cubbie',
+    '(@cubbie)',
+    'ok.@cubbie',
+    '@cubbie\nnext line',
+    '@cubbie.',
+    'wait @cubbi...',
   ])('mention in %j', (t) => expect(ids(t)).toEqual(['cubbie']));
   it('several mentions keep order and are distinct per agent', () => {
-    expect(ids('@tutor then @skeptic then @tutor again and @squad')).toEqual(['tutor', 'skeptic', 'cubbie']);
+    expect(ids('@tutor then @skeptic then @tutor again and @squad')).toEqual([
+      'tutor',
+      'skeptic',
+      'cubbie',
+    ]);
     expect(ids('@cubbie @cubbi @Cubbie')).toEqual(['cubbie']);
     expect(MAX_MENTION_FANOUT).toBe(3);
   });
@@ -61,10 +92,34 @@ describe('parseMentions: positives', () => {
 
 describe('parseMentions: not mentions', () => {
   it.each([
-    '', '   ', 'lol', 'cubbie', 'cubbie is slow', '@cubbies', '@cubb', '@cub', '@squadron', '@cubbie-bot', '@cubbi.fan',
-    'me@cubbi.com', 'me@cubbie.com', 'a.b@squad.io', 'user@host', 'x@cubbi', 'a+b@cubbie', '@@cubbie', 'path/@cubbie',
-    'use `@cubbie` here', 'use ```\n@cubbie\n``` here', 'he said "@cubbie hi"', 'she said “@tutor hi”',
-    '> @cubbie quoted', 'https://x.com/@cubbie', 'www.x.com/@cubbi', '[@cubbie](https://x.com)', '@cubbié',
+    '',
+    '   ',
+    'lol',
+    'cubbie',
+    'cubbie is slow',
+    '@cubbies',
+    '@cubb',
+    '@cub',
+    '@squadron',
+    '@cubbie-bot',
+    '@cubbi.fan',
+    'me@cubbi.com',
+    'me@cubbie.com',
+    'a.b@squad.io',
+    'user@host',
+    'x@cubbi',
+    'a+b@cubbie',
+    '@@cubbie',
+    'path/@cubbie',
+    'use `@cubbie` here',
+    'use ```\n@cubbie\n``` here',
+    'he said "@cubbie hi"',
+    'she said “@tutor hi”',
+    '> @cubbie quoted',
+    'https://x.com/@cubbie',
+    'www.x.com/@cubbi',
+    '[@cubbie](https://x.com)',
+    '@cubbié',
   ])('%j', (t) => {
     expect(ids(t)).toEqual([]);
     expect(unknown(t)).toEqual([]);
@@ -115,7 +170,9 @@ describe('suggestAliases', () => {
   it('lists Cubbie first and matches @cub and @cubbi', () => {
     expect(suggestAliases('')[0]!.alias).toBe('cubbie');
     expect(suggestAliases('cub').map((s) => s.alias)).toEqual(['cubbie', 'cubbi']);
-    expect(suggestAliases('cubbi').map((s) => s.alias)).toEqual(['cubbie', 'cubbi'].filter((a) => a.startsWith('cubbi')));
+    expect(suggestAliases('cubbi').map((s) => s.alias)).toEqual(
+      ['cubbie', 'cubbi'].filter((a) => a.startsWith('cubbi')),
+    );
     expect(suggestAliases('TU')[0]!.agent.id).toBe('tutor');
     expect(suggestAliases('zzz')).toEqual([]);
   });

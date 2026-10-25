@@ -192,7 +192,11 @@ export function createRouter(d: RouterDeps) {
         const scores = await scoreSkills(d.skills, m2, d.ctx, scoreTimeout);
         const decision = decide(m2, scores, { now: d.now() }, d.policy);
         if (decision.action !== 'run') return [];
-        return await runSkill(m2, { ...decision, reason: 'mentioned', unprompted: false }, messageId);
+        return await runSkill(
+          m2,
+          { ...decision, reason: 'mentioned', unprompted: false },
+          messageId,
+        );
       }
       if (agent.kind === 'persona') {
         const p = getPersona(agent.personaId);
@@ -215,7 +219,11 @@ export function createRouter(d: RouterDeps) {
         return await sendAll([
           { chatId: m.chatId, text: `@${t.alias} is not available right now. Try @cubbie.` },
         ]);
-      const m2 = { ...m, text: `@cubbie ${agent.keyword ?? ''} ${rest}`.replace(/\s+/g, ' ').trim(), mentionsBot: true };
+      const m2 = {
+        ...m,
+        text: `@cubbie ${agent.keyword ?? ''} ${rest}`.replace(/\s+/g, ' ').trim(),
+        mentionsBot: true,
+      };
       const decision: Decision = {
         action: 'run',
         reason: 'mentioned',
@@ -240,7 +248,9 @@ export function createRouter(d: RouterDeps) {
     const dm = m.isGroup ? d.transport.dmChatId(m.from) : m.chatId;
     const out = await sendAll([{ chatId: dm, text: mentionHelpText(clean), personaId: 'cubbie' }]);
     if (m.isGroup && out.length)
-      out.push(...(await sendAll([{ chatId: m.chatId, text: MENTION_DM_NOTICE, personaId: 'cubbie' }])));
+      out.push(
+        ...(await sendAll([{ chatId: m.chatId, text: MENTION_DM_NOTICE, personaId: 'cubbie' }])),
+      );
     return out;
   }
 
@@ -262,7 +272,13 @@ export function createRouter(d: RouterDeps) {
             mentioned: true,
             unprompted: false,
           }
-        : { action: 'quiet', reason: 'unknown_mention', scores: [], mentioned: true, unprompted: false };
+        : {
+            action: 'quiet',
+            reason: 'unknown_mention',
+            scores: [],
+            mentioned: true,
+            unprompted: false,
+          };
       setDecision(d.db, messageId, { ...decision, spoke: sent.length > 0 } as Decision);
       return { decision, sent };
     });

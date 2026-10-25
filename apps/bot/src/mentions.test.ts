@@ -87,7 +87,12 @@ describe('explicit agent mentions', () => {
     const t = mk();
     await t.say('s_ana', G, '@tutor explain z');
     const ev = t.events.filter((e: VillageEvent) => e.t === 'agent.state') as any[];
-    expect(ev.some((e) => e.state === 'studying' && /@tutor/.test(e.thought ?? '') && e.work?.skill === 'tutor')).toBe(true);
+    expect(
+      ev.some(
+        (e) =>
+          e.state === 'studying' && /@tutor/.test(e.thought ?? '') && e.work?.skill === 'tutor',
+      ),
+    ).toBe(true);
     expect(ev.at(-1).state).toBe('idle');
   });
   it('a duplicate delivery does not answer twice', async () => {
@@ -98,7 +103,11 @@ describe('explicit agent mentions', () => {
   });
   it('a failing LLM still answers (apology), never silence', async () => {
     const t = createTestBot({
-      llm: { complete: async () => { throw new Error('boom'); } } as never,
+      llm: {
+        complete: async () => {
+          throw new Error('boom');
+        },
+      } as never,
     });
     await t.say('s_ana', G, '@tutor explain z');
     expect(texts(t, G)).toHaveLength(1);
@@ -169,7 +178,12 @@ describe('privacy', () => {
   it('a mention in a group never copies DM history or private values into the group reply', async () => {
     const seen: string[] = [];
     const t = createTestBot({
-      llm: { complete: async (r: { system?: string; messages: unknown }) => { seen.push(JSON.stringify(r)); return { text: 'ok' }; } } as never,
+      llm: {
+        complete: async (r: { system?: string; messages: unknown }) => {
+          seen.push(JSON.stringify(r));
+          return { text: 'ok' };
+        },
+      } as never,
     });
     await t.say('s_ana', 'dm', 'my secret budget is $4242');
     seen.length = 0;

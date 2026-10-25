@@ -14,7 +14,12 @@ describe('activeMentionQuery', () => {
     ['ask @Tu', 7, 'Tu'],
   ])('%j at %i', (t, c, q) => expect(activeMentionQuery(t, c)?.query).toBe(q));
   it.each([
-    ['hello', 5], ['me@cub', 6], ['@cubbie hi', 10], ['a/@cubbi', 8], ['@@cub', 5], ['', 0],
+    ['hello', 5],
+    ['me@cub', 6],
+    ['@cubbie hi', 10],
+    ['a/@cubbi', 8],
+    ['@@cub', 5],
+    ['', 0],
   ])('not typing a mention: %j at %i', (t, c) => expect(activeMentionQuery(t, c)).toBeNull());
 });
 
@@ -28,14 +33,19 @@ describe('suggestions', () => {
   });
   it('applySuggestion replaces the typed word and moves the caret', () => {
     expect(applySuggestion('hey @cub', 8, 'cubbie')).toEqual({ text: 'hey @cubbie ', caret: 12 });
-    expect(applySuggestion('@cub what is z', 4, 'cubbi')).toEqual({ text: '@cubbi what is z', caret: 7 });
+    expect(applySuggestion('@cub what is z', 4, 'cubbi')).toEqual({
+      text: '@cubbi what is z',
+      caret: 7,
+    });
   });
 });
 
 describe('<MentionAutocomplete>', () => {
   it('renders nothing when not typing a mention', () => {
-    const { container } = render(<MentionAutocomplete text="hello" caret={5} onSelect={() => {}} />);
-    expect(container.innerHTML).toBe("");
+    const { container } = render(
+      <MentionAutocomplete text="hello" caret={5} onSelect={() => {}} />,
+    );
+    expect(container.innerHTML).toBe('');
   });
   it('lists Cubbie first and selects on click', () => {
     const onSelect = vi.fn();
@@ -49,7 +59,10 @@ describe('<MentionAutocomplete>', () => {
   it('mentionKey moves, selects and closes', () => {
     expect(mentionKey('ArrowDown', '@', 1, 0)).toEqual({ kind: 'move', index: 1 });
     expect(mentionKey('ArrowUp', '@', 1, 0)?.kind).toBe('move');
-    expect(mentionKey('Enter', '@cub', 4, 0)).toEqual({ kind: 'select', next: { text: '@cubbie ', caret: 8 } });
+    expect(mentionKey('Enter', '@cub', 4, 0)).toEqual({
+      kind: 'select',
+      next: { text: '@cubbie ', caret: 8 },
+    });
     expect(mentionKey('Escape', '@cub', 4, 0)).toEqual({ kind: 'close' });
     expect(mentionKey('a', '@cub', 4, 0)).toBeNull();
     expect(mentionKey('Enter', 'hello', 5, 0)).toBeNull();

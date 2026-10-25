@@ -753,7 +753,12 @@ describe('typed mentions in a bound group', () => {
       { from: CY, text: 'lol same', guid: 'GUID-3', mention: false },
       { from: BEN, text: '@Cubbi quiz me on ch6', guid: 'GUID-4', mention: true },
       { from: ANA, text: 'thanks @cubbie!', guid: 'GUID-5', mention: true },
-      { from: CY, text: 'ok so I think @CUBBI could explain the normal distribution better', guid: 'GUID-6', mention: true },
+      {
+        from: CY,
+        text: 'ok so I think @CUBBI could explain the normal distribution better',
+        guid: 'GUID-6',
+        mention: true,
+      },
       { from: BEN, text: 'cubbie is slow today', guid: 'GUID-7', mention: false },
       { from: ANA, text: 'see @cubbies tomorrow', guid: 'GUID-8', mention: false },
     ];
@@ -829,7 +834,14 @@ describe('typed mentions in a bound group', () => {
   it('near-misses, emails and code stay silent', async () => {
     await bind();
     const gid = `group:${c.squadId}`;
-    for (const t of ['@cubbies are cute', 'cubbie is slow', '@cub', 'mail me@cubbi.com', 'use `@cubbie` in code', 'he said "@cubbie hi"']) {
+    for (const t of [
+      '@cubbies are cute',
+      'cubbie is slow',
+      '@cub',
+      'mail me@cubbi.com',
+      'use `@cubbie` in code',
+      'he said "@cubbie hi"',
+    ]) {
       await c.sdk.group(G1, ANA, t);
       await settle();
     }

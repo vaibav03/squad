@@ -324,7 +324,7 @@ export function parseMentions(text: string): ParsedMentions {
   rest += text.slice(at);
   out.rest = rest
     .replace(/\s+([,.!?;:])/g, '$1')
-    .replace(/^[\s,:;\-]+/, '')
+    .replace(/^[\s,:;-]+/, '')
     .replace(/\s{2,}/g, ' ')
     .trim();
   return out;
@@ -352,5 +352,6 @@ export function mentionHelpText(unknown?: string): string {
 }
 
 /** Plain-text reply to a bare mention. */
-export const BARE_MENTION_REPLY = 'What do you need? Ask me a question, or say "quiz me", "make a plan" or "explain <topic>".';
+export const BARE_MENTION_REPLY =
+  'What do you need? Ask me a question, or say "quiz me", "make a plan" or "explain <topic>".';
 export const MENTION_DM_NOTICE = 'Sent you a DM';

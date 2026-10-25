@@ -22,7 +22,9 @@ const EMOJI: Record<string, string> = {
 };
 
 /** Default personas for every taggable persona alias, so `@tutor` replies are prefixed `Tutor:` even before media registers art. */
-const aliasPersonas: Persona[] = AGENT_ALIASES.filter((a) => a.kind === 'persona' && a.personaId).map((a) => ({
+const aliasPersonas: Persona[] = AGENT_ALIASES.filter(
+  (a) => a.kind === 'persona' && a.personaId,
+).map((a) => ({
   id: a.personaId!,
   name: a.name,
   role: 'council',
@@ -30,7 +32,10 @@ const aliasPersonas: Persona[] = AGENT_ALIASES.filter((a) => a.kind === 'persona
   ...(EMOJI[a.id] ? { emoji: EMOJI[a.id]! } : {}),
 }));
 
-const personas = new Map<string, Persona>([[CUBBIE.id, CUBBIE], ...aliasPersonas.map((p): [string, Persona] => [p.id, p])]);
+const personas = new Map<string, Persona>([
+  [CUBBIE.id, CUBBIE],
+  ...aliasPersonas.map((p): [string, Persona] => [p.id, p]),
+]);
 
 /** Media owns the real personas; it (or the integrator) registers them at startup. */
 export function registerPersonas(list: Persona[]): void {

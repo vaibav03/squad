@@ -10,23 +10,30 @@ let engine: ChatEngineHandle;
 let squadId: string;
 let ana: string;
 let ben: string;
-let clock = T0;
+const clock = T0;
 
 async function api(method: string, path: string, token?: string, body?: unknown) {
   const r = await hub.app.request(path, {
     method,
-    headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    headers: {
+      'content-type': 'application/json',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
   return (await r.json()) as any;
 }
 async function signUp(name: string, phone: string) {
   const s = await api('POST', '/v1/auth/start', undefined, { name, phone });
-  const v = await api('POST', '/v1/auth/verify', undefined, { challengeId: s.challengeId, code: s.devCode });
+  const v = await api('POST', '/v1/auth/verify', undefined, {
+    challengeId: s.challengeId,
+    code: s.devCode,
+  });
   return { token: v.token as string, id: v.user.id as string };
 }
 const gid = () => `group:${squadId}`;
-const history = (chatId: string): ChatMessage[] => hub.deps.chat.store.history(chatId, { limit: 200 }).messages;
+const history = (chatId: string): ChatMessage[] =>
+  hub.deps.chat.store.history(chatId, { limit: 200 }).messages;
 const bots = (chatId: string) => history(chatId).filter((m) => m.sender.kind === 'persona');
 const waitFor = async (p: () => boolean, ms = 6000) => {
   const end = Date.now() + ms;
@@ -45,7 +52,14 @@ const say = (who: string, text: string, clientId?: string) =>
 beforeEach(async () => {
   hub = createHub({
     now: () => clock,
-    config: { dbPath: ':memory:', seed: true, sim: false, logLevel: 'silent', production: false, webUrl: 'https://squad.test' },
+    config: {
+      dbPath: ':memory:',
+      seed: true,
+      sim: false,
+      logLevel: 'silent',
+      production: false,
+      webUrl: 'https://squad.test',
+    },
   });
   const a = await signUp('Ana', '+15550000001');
   const b = await signUp('Ben', '+15550000002');
@@ -55,7 +69,13 @@ beforeEach(async () => {
   squadId = sq.squad.id;
   const inv = await api('POST', `/v1/squads/${squadId}/invites`, a.token, { maxUses: null });
   await api('POST', '/v1/invites/join', b.token, { code: inv.invite.code });
-  engine = await attachChatEngine(hub, { real: null, env: { HUB_SCHEDULER: '1' }, envFile: false, noProbe: true, now: () => clock });
+  engine = await attachChatEngine(hub, {
+    real: null,
+    env: { HUB_SCHEDULER: '1' },
+    envFile: false,
+    noProbe: true,
+    now: () => clock,
+  });
 }, 60_000);
 afterEach(async () => {
   await engine.stop();
