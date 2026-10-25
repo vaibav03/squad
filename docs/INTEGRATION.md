@@ -46,3 +46,16 @@ Merge order suggestion: spine, hub, brain-answers, brain-quiz, mesh-crypto, mesh
 - Dean BM25 fallback gets the right chapter 88% (14/16); it cannot say "none" for off-topic questions with rare shared words, so the quote check refuses them.
 - Model ids: main now defaults to the verified gemini-3.x ids (the brain notes still mention 2.5 from before the fix).
 - Canvas ingest (B12) and replay-fixture recording (B11) were not in this slice and remain open.
+
+## Hub (from the hub handoff)
+- Replace the stub ports in `apps/hub/src/main.ts` via `createHub({ports})`: `createAudioServices().mediaPort(personas)` and `.callPort({answer})` from media; brain supplies `QuizPort` and `BrainPort`.
+- Mesh sends hub-only envelopes with core's `postHubEnvelope`: `x.trip.upsert` (full TripRecord incl. private limits) and `x.ledger.private` (raw withheld for the owner view). VillageEvents still go through `postEvent`. The hub drops a `trip.confirmed` unless every member confirmed; seeded squad id is `sq_demo`.
+- Clients: fetch the snapshot, open the stream with `Last-Event-ID=seq`, refetch the snapshot on `x.resync`; trip changes arrive as `x.trip.updated` (already per-viewer filtered). Dev login: `POST /v1/auth/dev-login`, `GET /v1/auth/students`. Port 8788; `HUB_CORS_ORIGINS` for other hosts.
+- Gaps: the event log, trips, ledger and directory are in memory (a restart loses them; clients get `x.resync`; spec wants the shared SQLite, a contained change in `store/eventlog.ts` and the stores). Sign-in is a stub, single process. No real-key smoke script.
+
+## Design foundation (from its handoff)
+- `pnpm dlx playwright install chromium` before using `docs/design/tools/capture.mjs`.
+- Still missing art: interiors for debate stage, courthouse, oracle and devil's TA cave; animals, birds, fireflies; rain/snow; left/back-facing frames (engine flips right-facing); a 4-frame idle. Building anchors in provenance.json are stale (pre-trim); anchor is bottom-centre.
+- Weak spots to polish later: lit-window spill, interior lamp dithering, sofa/stalls/bunting crispness, dawn bands, tree highlights, tiny faces at 1x. The last dusk background revision was regenerated but not re-viewed. The Playwright capture script and the walk cycle were never run or watched.
+- Walk speed decision: 36 px/s at 12 fps (3 px planted-foot per frame), with Left/Mid/Right presets and tap-to-walk for distance.
+- Chapter-house row uses only the hut and smaller landmarks; larger Autumn Town houses are one-per-screen or backdrop.
