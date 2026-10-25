@@ -1,4 +1,5 @@
 import type { VillageEvent } from '@squad/core';
+import type { AssetLib } from './assets';
 import type { Raster } from './pixel/raster';
 
 /**
@@ -74,6 +75,8 @@ export interface PaintOpts {
   t: number;
   /** Calm mode or prefers-reduced-motion: steady lights, no bob, fades only. */
   calm: boolean;
+  /** The composed art (manifest images, cast frames). Painters compose from this. */
+  assets: AssetLib;
 }
 
 export interface Anchor {

@@ -256,6 +256,23 @@ export class Raster {
     return this;
   }
 
+  /** Copy of a sub-rectangle (out-of-range reads are transparent). */
+  crop(x: number, y: number, w: number, h: number): Raster {
+    const r = new Raster(w, h);
+    for (let j = 0; j < h; j++) {
+      for (let i = 0; i < w; i++) {
+        if (!this.inside(x + i, y + j)) continue;
+        const si = ((y + j) * this.w + x + i) * 4;
+        const di = (j * w + i) * 4;
+        r.data[di] = this.data[si]!;
+        r.data[di + 1] = this.data[si + 1]!;
+        r.data[di + 2] = this.data[si + 2]!;
+        r.data[di + 3] = this.data[si + 3]!;
+      }
+    }
+    return r;
+  }
+
   /** Upscale by an integer factor (nearest neighbour). */
   scaled(k: number): Raster {
     const out = new Raster(this.w * k, this.h * k);
