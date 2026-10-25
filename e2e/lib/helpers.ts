@@ -214,7 +214,9 @@ export const FAIL_PATTERNS = {
 /** `test` with the LIVE=1 guard applied to every test: skip with a clear message when Gemini cannot answer. */
 export const test = base.extend<{ _liveGuard: void }>({
   _liveGuard: [
-    async (_fixtures, use) => {
+    // Playwright requires an object destructuring pattern as the first argument, even when empty
+    // eslint-disable-next-line no-empty-pattern
+    async ({}, use) => {
       await liveGuard();
       await use();
     },
