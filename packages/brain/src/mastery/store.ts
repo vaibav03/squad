@@ -1,4 +1,5 @@
 import type { Db, StudentId } from '@squad/core';
+import { emitMasteryChanged } from '../experts/emit';
 import { nextBox, nextDueAfter } from './leitner';
 import { ensureMasterySchema } from './schema';
 import { MIN_BOX, type EmitEvent, type MasteryRow, type MasteryStore } from './types';
@@ -51,7 +52,7 @@ export function createMasteryStore(opts: MasteryStoreOptions): MasteryStore {
     const moved = before.box !== box;
     if (moved) {
       try {
-        await emit({ t: 'mastery.changed', student, chapter, box });
+        await emitMasteryChanged(emit, student, chapter, box); // the one code path (brain-answers)
       } catch (e) {
         console.warn('[mastery] emit failed', (e as Error).message);
       }

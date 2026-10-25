@@ -21,6 +21,8 @@ export interface QuizPort {
     a: { choice?: string; text?: string },
   ): Promise<QuizAnswerResult | null>;
   listOpen(viewer: StudentId): Promise<{ quizId: string; chapter: string; target?: StudentId }[]>;
+  /** Start a quiz round (dev routes and the demo). Real engines generate questions; stubs have none. */
+  start?(args: { chapter: string; students?: StudentId[] }): Promise<string>;
 }
 
 export type CallTurn = {
