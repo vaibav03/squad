@@ -155,7 +155,7 @@ flowchart LR
   Med --> Hub
   Ledger --> Hub
   Hub[Hub: /internal/events, SSE, replay] --> Village[Squad Village: Phaser]
-  Hub --> Web[Web pages: ledger, trip, overlays (mastery panel in the village)]
+  Hub --> Web["Web pages: ledger, trip, overlays (mastery panel in the village)"]
   Replay[(Replay JSON)] --> Hub
 ```
 
