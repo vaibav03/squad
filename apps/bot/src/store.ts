@@ -6,22 +6,17 @@ export function seedRoster(db: Db, roster: Roster, transport: string, now = Date
     `INSERT INTO students(id, name, handle, persona_id, voice_id, avatar_url, created_at) VALUES(?,?,?,?,?,?,?)
      ON CONFLICT(id) DO UPDATE SET name=excluded.name, handle=excluded.handle`,
   );
+  const taken = db.prepare('SELECT 1 FROM students WHERE handle = ? AND id <> ?');
   for (const s of roster.students) {
-    const run = (handle: string) =>
-      st.run(
-        s.id,
-        s.name,
-        handle,
-        s.personaId ?? null,
-        s.voiceId ?? null,
-        s.avatarUrl ?? null,
-        now,
-      );
+    // Account handles are masked contact hints ("r•••@example.com"), which two people can share; students.handle is
+    // UNIQUE, so a clash keeps the hint readable and adds the id. Without this the hub crashed on restart.
+    const handle = taken.get(s.handle, s.id) ? `${s.handle} (${s.id})` : s.handle;
+    const run = (h: string) =>
+      st.run(s.id, s.name, h, s.personaId ?? null, s.voiceId ?? null, s.avatarUrl ?? null, now);
     try {
-      run(s.handle);
+      run(handle);
     } catch (e) {
-      // Account handles are masked emails ("j•••@example.com"), so two accounts can share one. That must never keep the
-      // hub from starting: fall back to the (unique) id as the handle for the later one.
+      // Safety net: if a UNIQUE clash still slips through, fall back to the (unique) id so the hub always starts.
       if (!/UNIQUE constraint failed: students\.handle/.test(String((e as Error).message))) throw e;
       run(s.id);
     }

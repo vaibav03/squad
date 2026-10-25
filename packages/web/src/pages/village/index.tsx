@@ -7,6 +7,7 @@ import {
   withTripCutscene,
   type VillageSource,
 } from '@squad/village/sources';
+import { Button } from '../../primitives/Button';
 import { EmptyState } from '../../primitives/EmptyState';
 import { WorldLoading } from '../../shell/WorldLoading';
 import { useCalmMode } from '../../hooks/useCalmMode';
@@ -26,6 +27,8 @@ import { sendPhraseToChat } from './chat-send';
 import { OverlayHost } from './OverlayHost';
 import { DEFAULT_WORLD, loadWorld, type WorldHandle } from './worlds';
 import './village.css';
+
+const LOAD_TIMEOUT_MS = 15000;
 
 interface Feed {
   source: VillageSource;
@@ -47,6 +50,7 @@ export default function VillagePage({ world }: { world?: string }) {
   const calmRef = useRef(calm);
   calmRef.current = calm;
   const [state, setState] = useState<'loading' | 'ready' | { error: string }>('loading');
+  const [attempt, setAttempt] = useState(0);
   const [event, setEvent] = useState<OverlayEvent | null>(null);
   const [inspector, setInspector] = useState<InspectorStore | null>(null);
   const q = new URLSearchParams(location.search);
@@ -75,6 +79,15 @@ export default function VillagePage({ world }: { world?: string }) {
     let dead = false;
     let feed: Feed | undefined;
     setState('loading');
+    // The world must open, or say why not: a stalled hub or chunk ends in an error with Retry, never a spinner forever.
+    const stall = setTimeout(
+      () =>
+        !dead &&
+        setState((s) =>
+          s === 'loading' ? { error: 'The village is taking too long to open.' } : s,
+        ),
+      LOAD_TIMEOUT_MS,
+    );
     void (async () => {
       try {
         const baseUrl = cfg.hubUrl!.replace(/\/+$/, '');
@@ -126,6 +139,7 @@ export default function VillagePage({ world }: { world?: string }) {
     })();
     return () => {
       dead = true;
+      clearTimeout(stall);
       feed?.close();
       handle.current?.destroy();
       handle.current = null;
@@ -134,7 +148,7 @@ export default function VillagePage({ world }: { world?: string }) {
       setInspectorStore(null);
     };
     // calm is applied live through setCalm; the world is not remounted for it.
-  }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable]);
+  }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable, attempt]);
 
   // After the room-info panel closes, focus rests on its "?" button, where the world's own Esc/walk keys do not
   // reach. Forward Escape from the room layer's controls to the stage so a keyboard user can still leave the room.
@@ -209,6 +223,11 @@ export default function VillagePage({ world }: { world?: string }) {
             tone="error"
             title="The village did not load"
             body={state.error}
+            action={
+              <Button variant="primary" onClick={() => setAttempt((n) => n + 1)}>
+                Retry
+              </Button>
+            }
           />
         </div>
       )}

@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import { z } from 'zod';
 import { pixelPortrait } from '../../pixel/portraits';
 import type { PersonaDraft, VoiceOption } from './fixtures';
@@ -44,7 +45,7 @@ const headers = (c: Ctx): Record<string, string> =>
   c.token ? { Authorization: `Bearer ${c.token}` } : {};
 
 export async function fetchPersonas(c: Ctx, fallback: PersonaDraft[]): Promise<PersonaDraft[]> {
-  const res = await fetch(`${c.hubUrl}/v1/personas`, { headers: headers(c) });
+  const res = await timedFetch(`${c.hubUrl}/v1/personas`, { headers: headers(c) });
   if (!res.ok) throw new Error(`personas ${res.status}`);
   const parsed = HubPersonas.parse(await res.json());
   return parsed.map((p) => {
@@ -58,7 +59,7 @@ export async function fetchPersonas(c: Ctx, fallback: PersonaDraft[]): Promise<P
   });
 }
 export async function fetchVoices(c: Ctx, fallback: VoiceOption[]): Promise<VoiceOption[]> {
-  const res = await fetch(`${c.hubUrl}/v1/voices`, { headers: headers(c) });
+  const res = await timedFetch(`${c.hubUrl}/v1/voices`, { headers: headers(c) });
   if (!res.ok) throw new Error(`voices ${res.status}`);
   const parsed = HubVoices.parse(await res.json());
   return parsed.map((v, i) => ({
@@ -71,7 +72,7 @@ export async function fetchVoices(c: Ctx, fallback: VoiceOption[]): Promise<Voic
   }));
 }
 export async function savePersona(c: Ctx, p: PersonaDraft): Promise<void> {
-  const res = await fetch(`${c.hubUrl}/v1/personas/${encodeURIComponent(p.id)}`, {
+  const res = await timedFetch(`${c.hubUrl}/v1/personas/${encodeURIComponent(p.id)}`, {
     method: 'PUT',
     headers: { 'content-type': 'application/json', ...headers(c) },
     body: JSON.stringify({ voiceId: p.voiceId, avatarUrl: p.avatarId }),
@@ -94,7 +95,7 @@ const VoiceStatusBody = z.object({
 });
 export async function fetchVoiceStatus(c: Ctx): Promise<VoiceStatus | null> {
   try {
-    const res = await fetch(`${c.hubUrl}/v1/status`);
+    const res = await timedFetch(`${c.hubUrl}/v1/status`);
     if (!res.ok) return null;
     const b = VoiceStatusBody.parse(await res.json());
     return {
@@ -109,7 +110,7 @@ export async function fetchVoiceStatus(c: Ctx): Promise<VoiceStatus | null> {
 /** A preview refused because voices are off (HTTP 503 `voices_unavailable`); `message` is user-safe. */
 export class VoicesUnavailable extends Error {}
 export async function fetchPreviewBlob(c: Ctx, voiceId: string, text: string): Promise<Blob> {
-  const res = await fetch(`${c.hubUrl}/v1/voices/preview`, {
+  const res = await timedFetch(`${c.hubUrl}/v1/voices/preview`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...headers(c) },
     body: JSON.stringify({ voiceId, text }),

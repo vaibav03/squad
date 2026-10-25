@@ -27,6 +27,7 @@ export default function TripPage() {
         navigate(`/squad/village?cutscene=trip&task=${encodeURIComponent(id)}`)
       }
       onRetry={t.retry}
+      onPlan={() => navigate('/squad/chat')}
     />
   );
 }
