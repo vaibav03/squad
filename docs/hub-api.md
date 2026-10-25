@@ -71,6 +71,21 @@ Rules the hub enforces at ingest (not just at send): `ledger.entry.withheld` is 
 
 Each SSE message: `id: <seq>`, `event: <t>` (the VillageEvent `t`, or `x.*`), `data: <JSON>` where JSON is the VillageEvent itself (or the `x.*` `data`). Gaps in ids are normal (events filtered out for this viewer). A comment line `: ping` every 15 s. If the requested id is older than the retained buffer (5000 events) the hub sends `event: x.resync` `data: {"seq":<latest>}` and the client must refetch the snapshot. A client that cannot keep up (queue over 256 events) is disconnected; it reconnects with `Last-Event-ID`. `taskId` filters only events that carry a `taskId`; the others still pass.
 
+### 5a. Multiplexed stream: `GET /v1/stream`
+
+One SSE connection that carries both the squad stream and the chat stream for the same viewer. Browsers cap HTTP/1.1 at 6 connections per `host:port`, and every tab used to hold two SSEs (`/v1/squad/stream`, `/v1/chat/stream`), starving ordinary fetches. Production behind nginx with HTTP/2 has no such cap, but the dev stack and plain-HTTP deployments do, so the web client multiplexes onto this single connection (one tab leads and rebroadcasts to the others via `BroadcastChannel`). The legacy endpoints are unchanged.
+
+- Auth: identical to the legacy streams (`Authorization: Bearer` or `?st=<stream token>`; only a stream token is accepted in the query). 401/403 as legacy. Counts against the same per-user SSE cap; at the cap the hub answers `429` with `Retry-After: 5` (also on `/v1/squad/stream` now) and `{ "error": { "code": "rate_limited" } }`.
+- Filtering: exactly the legacy per-viewer filtering (`broker.subscribe(viewer, ...)` and `chat.subscribe(viewer, ...)`); nothing a viewer could not see on the two legacy streams appears here.
+- Query: `channels` (comma list, default `squad,chat`; unknown names ignored; none valid gives `400 invalid_channels`), `taskId` (squad filter, as legacy), `lastEventId` or the `Last-Event-ID` header as a composite cursor `<squadSeq>:<chatSeq>` (either side may be empty; a plain number means squad only), and `squadLast` / `chatLast` which override the cursor sides.
+- First bytes: `retry: 2000`, `: connected`, then a `sys` `hello` frame.
+- Every frame is an unnamed SSE message whose `data:` is JSON `{ "ch": "squad"|"chat"|"sys", "event": string, "id"?: number, "data": any }`:
+  - `squad`: `event` is the village event type, `id` the broker seq, `data` the legacy payload. Too-old resume: `{"ch":"squad","event":"x.resync","data":{"seq":N}}` (refetch the snapshot).
+  - `chat`: `event` is `chat.message` (with `id` = message seq), `chat.update`, `chat.typing`, `chat.sync` or `chat.resync`; `data` is the legacy payload.
+  - `sys`: `hello` `{channels, pingMs, retryMs, cursor: {squad?, chat?}}` once (`cursor` is each subscribed channel's head seq at subscribe time), then `hb` `{ts}` every `pingMs` (a real data frame so JS clients can detect a dead connection).
+- The SSE `id:` line on squad/chat frames is the composite cursor `<squadSeq>:<chatSeq>` (highest seen per channel, starting from the cursor you sent; empty if unknown), so native `EventSource` reconnects resume both channels. `sys` frames carry no `id:`.
+- If either underlying subscription closes (queue overflow, per-student chat stream cap) the stream ends and the client reconnects with its cursor.
+
 Snapshot shape (`GET /v1/squad/state`):
 
 ```ts

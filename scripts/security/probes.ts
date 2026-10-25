@@ -48,6 +48,7 @@ const PROTECTED: [string, string][] = [
   ['GET', '/v1/me'],
   ['GET', '/v1/squad/state'],
   ['GET', '/v1/squad/stream'],
+  ['GET', '/v1/stream'],
   ['GET', '/v1/tasks'],
   ['GET', '/v1/ledger/task_study_ch6'],
   ['GET', '/v1/trips/trip_cabo'],
@@ -124,6 +125,14 @@ export const tokenKinds: Probe = async (c) => {
       ),
     );
   void url?.body?.cancel().catch(() => undefined);
+  const mux = await req(c, `/v1/stream?st=${c.tokens.ana}`, {
+    signal: AbortSignal.timeout(1500),
+  }).catch(() => null);
+  if (mux && mux.status === 200)
+    out.push(
+      f('AUTH-4', 'medium', 'long-lived bearer token accepted in the query string of /v1/stream'),
+    );
+  void mux?.body?.cancel().catch(() => undefined);
   // a tampered signature and a none-style token
   const [body] = c.tokens.ana.split('.');
   for (const t of [`${body}.AAAA`, `${body}.`, `${body}`, `${body}.${'A'.repeat(43)}`]) {
