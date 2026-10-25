@@ -9,6 +9,7 @@ import {
   createBrain,
   type Brain,
   type MasteryStore,
+  createCoursePlanSkill,
   createFeynmanSkill,
   createMasteryStore,
   createQuizSkill,
@@ -82,6 +83,8 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
       chaptersFor: chapterIdsFromStore(brain.store),
       courseIdFor,
     }),
+    // After studyPlan so its phrases win ties; scores 0 unless addressed and asking for course planning.
+    createCoursePlanSkill({ emit, llm: d.llm, ...now }),
   ];
   const mediaSkills = d.media
     ? createMediaSkills({

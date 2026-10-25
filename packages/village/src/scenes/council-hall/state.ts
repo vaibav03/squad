@@ -88,6 +88,12 @@ export function reduceCouncil(
         n = seat(n, cmd.dissenter);
         const d = cmd.dissenter;
         const has = n.bubbles.some((b) => b.who === d);
+        n = {
+          ...n,
+          bubbleQueue: n.bubbleQueue.map((q) =>
+            q.bubble.who === d ? { ...q, bubble: { ...q.bubble, style: 'dissent' as const } } : q,
+          ),
+        };
         if (has) {
           // the dissenter's own bubble becomes the lone red-lined one, and stays
           n = {

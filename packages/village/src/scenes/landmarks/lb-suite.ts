@@ -51,7 +51,7 @@ export function landmarkSuite(
         { c: 'bubble', bubble: { who: 'expert', text: waitingWords, style: 'speech' } },
       ]);
     });
-    it('call.start / caption / end: portrait, clipped 60 char caption, back to idle', () => {
+    it('call.start / caption / end: portrait, clipped 90 char caption, back to idle', () => {
       const s = { ...def.init(), access: 'open' as const };
       expect(def.mapEvent({ t: 'call.start', agent, callId: 'c' }, s, ctx)).toEqual([
         { c: 'setOccupant', state: 'in_call' },
@@ -66,7 +66,7 @@ export function landmarkSuite(
       );
       expect(cap[0]).toEqual({ c: 'portrait', on: true });
       const b = cap[1] as { c: 'bubble'; bubble: { text: string; style: string } };
-      expect(b.bubble.text.length).toBeLessThanOrEqual(60);
+      expect(b.bubble.text.length).toBeLessThanOrEqual(90);
       expect(b.bubble.style).toBe('caption');
       expect(def.mapEvent({ t: 'call.caption', agent, callId: 'c', text: ' ' }, s, ctx)).toEqual([
         { c: 'portrait', on: true },

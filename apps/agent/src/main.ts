@@ -39,7 +39,8 @@ if (process.env.FAKE_LLM === '0') {
   llm = createResilientLlm({
     ...(cfg.geminiApiKey ? { real: new GeminiLlm({ apiKey: cfg.geminiApiKey }) } : {}),
     fake: new FakeLlm(),
-    onSwitch: (st) => console.log(`[${id}] llm switched to FakeLlm (${st.reason})`),
+    onSwitch: (st) => console.log(`[${id}] llm on FakeLlm (${st.reason}), re-probing`),
+    onRecover: () => console.log(`[${id}] real Gemini is back`),
   });
 }
 

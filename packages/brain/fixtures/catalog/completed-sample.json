@@ -1,0 +1,24 @@
+{
+  "note": "Mock record: a student at the end of year 2 (SAMPLE DATA). Course ids only; no grades.",
+  "completed": [
+    "CSL 101",
+    "CSL 102",
+    "CSL 110",
+    "CSL 201",
+    "CSL 210",
+    "CSL 220",
+    "CSL 230",
+    "CSL 380",
+    "MAT 111",
+    "MAT 112",
+    "MAT 210",
+    "STA 201",
+    "WRT 101",
+    "HUM 101",
+    "HUM 120",
+    "SOC 101",
+    "SOC 110",
+    "ART 101",
+    "SCI 101"
+  ]
+}

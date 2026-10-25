@@ -183,7 +183,7 @@ if (live && hasGemini) {
       if (c === 'credits_depleted') {
         say(
           'warn',
-          'The app automatically falls back to FakeLlm demo mode (GET /v1/status shows {llm:"fake", reason:"credits_depleted"}).',
+          'The app serves FakeLlm demo answers meanwhile, re-probes Gemini once per 60 s and switches back by itself when credits return (GET /v1/status shows llm, reason, lastProbeAt, nextProbeAt). No restart needed after topping up.',
         );
         step(
           "Gemini credits are depleted (HTTP 402 RESOURCE_EXHAUSTED). Top up AI Studio prepay billing: https://ai.studio/projects  (open the key's project there, then Billing; docs: https://ai.google.dev/gemini-api/docs/billing), then rerun SQUAD_LIVE=1 pnpm doctor.",
@@ -194,7 +194,7 @@ if (live && hasGemini) {
         );
       else if (c === 'auth')
         step(
-          'Gemini rejected the key (401/403). Create a fresh key at https://aistudio.google.com/apikey and update GEMINI_API_KEY in .env.',
+          'Gemini rejected the key (401/403, status reason invalid_key). The running app keeps serving the fake and re-probes every 10 minutes, but only with the key it started with, so after fixing the key restart it. Create a fresh key at https://aistudio.google.com/apikey and update GEMINI_API_KEY in .env.',
         );
       else if (c === 'bad_request')
         step(

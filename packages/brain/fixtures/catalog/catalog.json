@@ -1,0 +1,357 @@
+{
+  "name": "Sun Devil CS-lite (SAMPLE DATA)",
+  "sample": true,
+  "courses": [
+    {
+      "id": "CSL 101",
+      "title": "Intro to Programming",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 6,
+      "offered": ["fall", "spring", "summer"],
+      "area": "core"
+    },
+    {
+      "id": "CSL 102",
+      "title": "Programming Practice",
+      "credits": 3,
+      "prereqs": ["CSL 101"],
+      "workload": 7,
+      "offered": ["fall", "spring"],
+      "area": "core"
+    },
+    {
+      "id": "CSL 110",
+      "title": "Discrete Structures",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 7,
+      "offered": ["fall", "spring"],
+      "area": "core"
+    },
+    {
+      "id": "CSL 201",
+      "title": "Computer Organization",
+      "credits": 3,
+      "prereqs": ["CSL 102"],
+      "workload": 8,
+      "offered": ["fall"],
+      "area": "core"
+    },
+    {
+      "id": "CSL 210",
+      "title": "Data Structures",
+      "credits": 3,
+      "prereqs": ["CSL 102"],
+      "workload": 9,
+      "offered": ["fall", "spring"],
+      "area": "core"
+    },
+    {
+      "id": "CSL 220",
+      "title": "Algorithms",
+      "credits": 3,
+      "prereqs": ["CSL 210", "CSL 110"],
+      "workload": 10,
+      "offered": ["spring"],
+      "area": "core"
+    },
+    {
+      "id": "CSL 230",
+      "title": "Software Engineering",
+      "credits": 3,
+      "prereqs": ["CSL 210"],
+      "workload": 9,
+      "offered": ["spring"],
+      "area": "core"
+    },
+    {
+      "id": "CSL 240",
+      "title": "Operating Systems",
+      "credits": 3,
+      "prereqs": ["CSL 201", "CSL 210"],
+      "workload": 10,
+      "offered": ["fall"],
+      "area": "core"
+    },
+    {
+      "id": "CSL 310",
+      "title": "Databases",
+      "credits": 3,
+      "prereqs": ["CSL 210"],
+      "workload": 8,
+      "offered": ["fall", "spring"],
+      "area": "core"
+    },
+    {
+      "id": "CSL 320",
+      "title": "Theory of Computation",
+      "credits": 3,
+      "prereqs": ["CSL 220"],
+      "workload": 10,
+      "offered": ["fall"],
+      "area": "core"
+    },
+    {
+      "id": "CSL 490",
+      "title": "Senior Project",
+      "credits": 4,
+      "prereqs": ["CSL 230", "CSL 310"],
+      "workload": 12,
+      "offered": ["spring"],
+      "area": "core"
+    },
+    {
+      "id": "MAT 111",
+      "title": "Calculus I",
+      "credits": 4,
+      "prereqs": [],
+      "workload": 9,
+      "offered": ["fall", "spring"],
+      "area": "math"
+    },
+    {
+      "id": "MAT 112",
+      "title": "Calculus II",
+      "credits": 4,
+      "prereqs": ["MAT 111"],
+      "workload": 10,
+      "offered": ["fall", "spring"],
+      "area": "math"
+    },
+    {
+      "id": "MAT 210",
+      "title": "Linear Algebra",
+      "credits": 3,
+      "prereqs": ["MAT 111"],
+      "workload": 8,
+      "offered": ["fall", "spring"],
+      "area": "math"
+    },
+    {
+      "id": "STA 201",
+      "title": "Statistics for Computing",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 7,
+      "offered": ["fall", "spring", "summer"],
+      "area": "math"
+    },
+    {
+      "id": "CSL 331",
+      "title": "Computer Networks",
+      "credits": 3,
+      "prereqs": ["CSL 201"],
+      "workload": 8,
+      "offered": ["fall"],
+      "area": "sys"
+    },
+    {
+      "id": "CSL 341",
+      "title": "Security Foundations",
+      "credits": 3,
+      "prereqs": ["CSL 240"],
+      "workload": 9,
+      "offered": ["spring"],
+      "area": "sys"
+    },
+    {
+      "id": "CSL 350",
+      "title": "Cloud Computing",
+      "credits": 3,
+      "prereqs": ["CSL 310"],
+      "workload": 8,
+      "offered": ["spring", "summer"],
+      "area": "sys"
+    },
+    {
+      "id": "CSL 360",
+      "title": "Compilers",
+      "credits": 3,
+      "prereqs": ["CSL 220", "CSL 201"],
+      "workload": 11,
+      "offered": ["spring"],
+      "area": "sys"
+    },
+    {
+      "id": "CSL 370",
+      "title": "Intro to AI",
+      "credits": 3,
+      "prereqs": ["CSL 220"],
+      "workload": 9,
+      "offered": ["fall", "spring"],
+      "area": "ai"
+    },
+    {
+      "id": "CSL 371",
+      "title": "Machine Learning",
+      "credits": 3,
+      "prereqs": ["CSL 370", "MAT 210", "STA 201"],
+      "workload": 10,
+      "offered": ["spring"],
+      "area": "ai"
+    },
+    {
+      "id": "CSL 372",
+      "title": "Natural Language Processing",
+      "credits": 3,
+      "prereqs": ["CSL 370"],
+      "workload": 9,
+      "offered": ["fall"],
+      "area": "ai"
+    },
+    {
+      "id": "CSL 380",
+      "title": "Web Development",
+      "credits": 3,
+      "prereqs": ["CSL 102"],
+      "workload": 7,
+      "offered": ["fall", "spring", "summer"],
+      "area": "app"
+    },
+    {
+      "id": "CSL 381",
+      "title": "Mobile Apps",
+      "credits": 3,
+      "prereqs": ["CSL 210"],
+      "workload": 8,
+      "offered": ["fall"],
+      "area": "app"
+    },
+    {
+      "id": "CSL 382",
+      "title": "Game Programming",
+      "credits": 3,
+      "prereqs": ["CSL 210"],
+      "workload": 8,
+      "offered": ["spring", "summer"],
+      "area": "app"
+    },
+    {
+      "id": "CSL 383",
+      "title": "Human-Computer Interaction",
+      "credits": 3,
+      "prereqs": ["CSL 102"],
+      "workload": 6,
+      "offered": ["fall", "spring"],
+      "area": "app"
+    },
+    {
+      "id": "HUM 101",
+      "title": "World Literature",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 6,
+      "offered": ["fall", "spring", "summer"],
+      "area": "hum"
+    },
+    {
+      "id": "HUM 120",
+      "title": "Intro to Philosophy",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 6,
+      "offered": ["fall", "spring"],
+      "area": "hum"
+    },
+    {
+      "id": "HUM 210",
+      "title": "Ethics in Technology",
+      "credits": 3,
+      "prereqs": ["HUM 101"],
+      "workload": 6,
+      "offered": ["spring"],
+      "area": "hum"
+    },
+    {
+      "id": "SOC 101",
+      "title": "Intro to Psychology",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 5,
+      "offered": ["fall", "spring", "summer"],
+      "area": "soc"
+    },
+    {
+      "id": "SOC 110",
+      "title": "Principles of Economics",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 6,
+      "offered": ["fall", "spring"],
+      "area": "soc"
+    },
+    {
+      "id": "SOC 220",
+      "title": "Technology and Society",
+      "credits": 3,
+      "prereqs": ["SOC 101"],
+      "workload": 6,
+      "offered": ["fall"],
+      "area": "soc"
+    },
+    {
+      "id": "WRT 101",
+      "title": "College Composition",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 7,
+      "offered": ["fall", "spring", "summer"],
+      "area": "wrt"
+    },
+    {
+      "id": "WRT 201",
+      "title": "Technical Writing",
+      "credits": 3,
+      "prereqs": ["WRT 101"],
+      "workload": 6,
+      "offered": ["fall", "spring"],
+      "area": "wrt"
+    },
+    {
+      "id": "ART 101",
+      "title": "Design Thinking",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 5,
+      "offered": ["fall", "spring"],
+      "area": "arts"
+    },
+    {
+      "id": "ART 120",
+      "title": "Digital Media",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 6,
+      "offered": ["spring", "summer"],
+      "area": "arts"
+    },
+    {
+      "id": "SCI 101",
+      "title": "Physics Concepts",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 7,
+      "offered": ["fall", "spring"],
+      "area": "sci"
+    },
+    {
+      "id": "SCI 110",
+      "title": "Biology Basics",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 6,
+      "offered": ["fall", "spring"],
+      "area": "sci"
+    },
+    {
+      "id": "SCI 120",
+      "title": "Earth and Environment",
+      "credits": 3,
+      "prereqs": [],
+      "workload": 6,
+      "offered": ["spring", "summer"],
+      "area": "sci"
+    }
+  ]
+}

@@ -15,7 +15,7 @@ import { Raster } from '../pixel/raster';
 import { DIM, type PaletteName } from '../pixel/palette';
 import { bubble } from './bubble';
 import type { AssetLib } from '../assets';
-import { eventAgent, clip } from '../model/events';
+import { eventAgent, clip, CAPTION_CHARS } from '../model/events';
 import { routeAgent, routeCouncil } from '../routing';
 import type { BaseState, BubbleView } from '../model/base';
 
@@ -150,7 +150,7 @@ export function mapAgentCommon(
         { c: 'portrait', on: true },
       ];
     case 'call.caption': {
-      const text = clip((e.text ?? '').trim());
+      const text = clip((e.text ?? '').trim(), CAPTION_CHARS);
       const cmds: SceneCommand[] = [{ c: 'portrait', on: true }];
       if (text) cmds.push({ c: 'bubble', bubble: { who: EXPERT, text, style: 'caption' } });
       return cmds;

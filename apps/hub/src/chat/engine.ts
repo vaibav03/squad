@@ -43,8 +43,6 @@ export interface ChatEngineOptions {
   realPorts?: boolean;
   /** Path of a .env to read, or false to read none (tests). Default: the repo's .env. */
   envFile?: string | false;
-  /** Re-probe interval for the real model after a quota failure. Default 60 s. */
-  reprobeMs?: number;
   now?: () => number;
   /** Skip the startup probe (tests that count calls). */
   noProbe?: boolean;
@@ -89,20 +87,16 @@ export async function attachChatEngine(
       ...(real ? { real } : {}),
       fake: o.demo ?? createDemoLlm(),
       forceFake: forced,
-      reprobeMs: o.reprobeMs ?? 60_000,
       ...(o.now ? { now: o.now } : {}),
     });
   const wantRealPorts = !!o.realPorts && (!!real || env.FORCE_FAKE_LLM === '1' || !!o.llm);
   deps.runtime ??= {
     // topped-up credits are noticed without a restart: a stale failure re-probes in the background
-    llm: () => {
-      void llm.probe();
-      return llm.status();
-    },
+    llm: () => llm.status(),
     tts: () => useEleven,
     ports: () => (wantRealPorts ? 'real' : 'stub'),
   };
-  if (real && !o.noProbe) void llm.probe();
+  if (real && !o.noProbe) llm.status(); // starts a probe when a stale failure is on record
 
   registerMediaPersonas();
   const { media } = buildMedia({ cfg, llm, fake: !useEleven });
