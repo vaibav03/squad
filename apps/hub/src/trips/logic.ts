@@ -1,4 +1,5 @@
 // Pure helpers for collaborative trips: dates, tally, recommendation text. No IO, no clocks except what is passed in.
+import { plural } from '@squad/core';
 import type { TripRecord } from '../types';
 
 export const DAY_MS = 86_400_000;
@@ -13,6 +14,30 @@ export const CATALOG: { label: string; days: number; perPerson: number }[] = [
   { label: 'Lake Day', days: 2, perPerson: 90 },
   { label: 'Cabo', days: 4, perPerson: 650 },
 ];
+
+/** Voting instruction built from the real option count; never names a number that does not exist. */
+export function voteHelp(n: number): string {
+  return n === 1
+    ? 'Reply 1 to confirm this option, or tell me what to change.'
+    : `Reply with a number from 1 to ${n}.`;
+}
+export const pickRange = (n: number): string => `Pick a number from 1 to ${n}`;
+
+/** Demo/fixture options for the destination the group typed. Never substitutes another place. */
+export function destinationOptions(
+  label: string,
+  days: number,
+  budget: number | undefined,
+): { label: string; perPerson: number }[] {
+  const cat = CATALOG.find((c) => c.label.toLowerCase() === label.toLowerCase());
+  const base = cat ? Math.round((cat.perPerson * days) / cat.days) : days * 150;
+  const cap = (n: number) => Math.max(1, budget && budget > 0 ? Math.min(n, budget) : n);
+  return [
+    { label, perPerson: cap(base) },
+    { label: `${label} (saver stay)`, perPerson: cap(Math.round(base * 0.7)) },
+    { label: `${label} (resort stay)`, perPerson: cap(Math.round(base * 1.3)) },
+  ];
+}
 
 export const slug = (label: string): string =>
   label
@@ -167,17 +192,17 @@ export function recommend(i: RecoInput): RecoText {
         : 'it fits the shared days';
   const chair = `Go with ${pick.label}: ${why}.`;
   const planner = run
-    ? `${fmtRange(run)}, ${pick.days} day${pick.days === 1 ? '' : 's'}, ${money(pick.perPerson)} each.`
+    ? `${fmtRange(run)}, ${plural(pick.days, 'day')}, ${money(pick.perPerson)} each.`
     : i.overlap === null
-      ? `${pick.days} days, ${money(pick.perPerson)} each. Dates not checked against calendars.`
-      : `${pick.days} days, ${money(pick.perPerson)} each.`;
+      ? `${plural(pick.days, 'day')}, ${money(pick.perPerson)} each. Dates not checked against calendars.`
+      : `${plural(pick.days, 'day')}, ${money(pick.perPerson)} each.`;
   if (i.overlap && i.overlap.length - pick.days < 2)
     dissent.push(
-      `Skeptic: only ${i.overlap.length} shared free day${i.overlap.length === 1 ? '' : 's'}, almost no slack if plans shift.`,
+      `Skeptic: only ${plural(i.overlap.length, 'shared free day')}, almost no slack if plans shift.`,
     );
   if (i.droppedIds.length)
     dissent.push(
-      `Skeptic: ${i.droppedIds.length} option${i.droppedIds.length === 1 ? ' was' : 's were'} dropped because a budget or hard no rules ${i.droppedIds.length === 1 ? 'it' : 'them'} out (not saying whose).`,
+      `Skeptic: ${plural(i.droppedIds.length, 'option')} ${i.droppedIds.length === 1 ? 'was' : 'were'} dropped because a budget or hard no rules ${i.droppedIds.length === 1 ? 'it' : 'them'} out (not saying whose).`,
     );
   if (i.skippedFor.length)
     dissent.push(`Skeptic: calendars and budgets were not checked for ${i.skippedFor.join(', ')}.`);

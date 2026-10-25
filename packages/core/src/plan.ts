@@ -1,6 +1,7 @@
 // Shared study plan wire contract (docs/study-plan.md). Browser-safe: the hub, the bot skill and the web panel share it.
 // No points, streaks or rankings anywhere: progress is plain counts and words.
 import { z } from 'zod';
+import { plural } from './plural';
 
 export const PLAN_ITEM_KINDS = ['review', 'teach', 'practice'] as const;
 export type PlanItemKind = (typeof PLAN_ITEM_KINDS)[number];
@@ -207,8 +208,8 @@ export const PlanDoneBodySchema = z.strictObject({ done: z.boolean().optional() 
 export function planProgressWords(done: number, total: number): string {
   if (total === 0) return 'No items yet';
   if (done === 0) return `Not started: 0 of ${total} done`;
-  if (done === total) return `All ${total} items done`;
-  return `${done} of ${total} items done`;
+  if (done === total) return `All ${plural(total, 'item')} done`;
+  return `${done} of ${plural(total, 'item')} done`;
 }
 
 export function planCountdownWords(days: number): string {

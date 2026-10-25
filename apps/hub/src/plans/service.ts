@@ -15,6 +15,7 @@ import {
   type PlanItemPatch,
   type PlanMember,
   type PlanView,
+  plural,
 } from '@squad/core';
 import type { HubDeps, Viewer } from '../types';
 import {
@@ -493,7 +494,7 @@ export function createPlanService(
           plan,
           say: {
             text:
-              `${nameOf(v.studentId)} proposed a study plan: ${examWords(plan, now)}, ${plan.items.length} items.\n` +
+              `${nameOf(v.studentId)} proposed a study plan: ${examWords(plan, now)}, ${plural(plan.items.length, 'item')}.\n` +
               `${lines(plan)}\n${badge.kindLabel} (${badge.label}). ${plan.rationale ? `Why: ${plan.rationale}\n` : ''}` +
               `Built from: ${cites || 'your course materials'}. ${plan.generator.note}\n${tail}`,
             card: cardOf(plan),
@@ -664,7 +665,7 @@ export function createPlanService(
           422,
           hits.length ? 'ambiguous' : 'not_found',
           hits.length
-            ? `"${ref}" matches ${hits.length} items. Use the chapter, like "plan 3 ch6 to Dev".`
+            ? `"${ref}" matches ${plural(hits.length, 'item')}. Use the chapter, like "plan 3 ch6 to Dev".`
             : `I could not find an item called "${ref}".`,
           { plan: p },
         );

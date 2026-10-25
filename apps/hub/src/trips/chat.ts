@@ -1,9 +1,9 @@
 // Chat -> trip actions. Runs in the hub BEFORE the bot router for every student message (web or iMessage via the bridge),
 // returns true when it handled the text. It only acts on tight patterns, so ordinary chatter still reaches the bot.
 import { parseConfirmReply } from '@squad/bot';
-import { parseMentions, plannerIntent } from '@squad/core';
+import { parseMentions, plannerIntent, plural } from '@squad/core';
 import type { HubDeps, Viewer } from '../types';
-import { monthOf, MONTHS } from './logic';
+import { monthOf, MONTHS, pickRange, voteHelp } from './logic';
 import type { TripService } from './service';
 
 /** Agents whose tag addresses trip planning (the shared alias table maps cubbie/cubbi/squad to `cubbie`). */
@@ -23,6 +23,7 @@ const DEST_TO = new RegExp(`\\b(?:to|at)\\s+([A-Za-z][A-Za-z .'-]{1,40}?)${DEST_
 const DEST_IN = new RegExp(`\\bin\\s+([A-Za-z][A-Za-z .'-]{1,40}?)${DEST_STOP}`, 'i');
 const VOTE =
   /^\s*(?:@\w+[\s,:]*)?(?:i\s+|i'd\s+|we\s+)?(?:vote|pick|choose|go\s+with|rank)\s+(?:for\s+)?(?:option\s+|#)?(.+?)\s*[.!]*$/i;
+const BARE_NUM = /^\s*(?:@\w+[\s,:]*)?(?:option\s+|#)?(\d+)\s*[.!]*$/i;
 const CONFIRM = /^\s*(?:@\w+[\s,:]*)?(?:i\s+)?(?:confirm|i'?m\s+in|count\s+me\s+in)[.! ]*$/i;
 const DECLINE =
   /^\s*(?:@\w+[\s,:]*)?(?:i\s+)?(?:can'?t\s+make\s+it|i'?m\s+out|not\s+for\s+me|decline)[.! ]*$/i;
@@ -122,7 +123,7 @@ export async function handleTripChat(
     }
     if (STATUS.test(text) && cur) {
       reply(
-        `${cur.title}: ${cur.status}. ${cur.options.length} options. ${cur.constraints.note ?? ''}`.trim(),
+        `${cur.title}: ${cur.status}. ${plural(cur.options.length, 'option')}. ${cur.constraints.note ?? ''}`.trim(),
       );
       return true;
     }
@@ -130,14 +131,19 @@ export async function handleTripChat(
   if (!active) return false;
 
   // 2. vote
-  const vm = VOTE.exec(text);
+  const vm = VOTE.exec(text) ?? (isDm || addressed ? BARE_NUM.exec(text) : null);
   if (vm && active.status === 'voting') {
     const live = active.options.filter((o) => !active.vetoed.some((x) => x.optionId === o.id));
     const rest = vm[1]!;
     let ranking: string[] | undefined;
-    if (/^\d(?:[\s,>]+\d)+$/.test(rest.trim())) {
-      const idx = rest.match(/\d/g)!.map((d) => Number(d) - 1);
-      if (idx.every((i) => i >= 0 && i < live.length)) ranking = idx.map((i) => live[i]!.id);
+    if (/^\d+(?:[\s,>]+\d+)*$/.test(rest.trim())) {
+      const idx = rest.match(/\d+/g)!.map((d) => Number(d) - 1);
+      if (!idx.every((i) => i >= 0 && i < live.length)) {
+        // out of range: never counted
+        reply(pickRange(live.length));
+        return true;
+      }
+      ranking = idx.map((i) => live[i]!.id);
     } else {
       const p = parseConfirmReply(
         rest,
@@ -162,7 +168,7 @@ export async function handleTripChat(
   if (cf || dc) {
     if (active.status === 'voting') {
       reply(
-        'Voting is still open. Say "I vote 2" (or open the Trip page). Confirming comes after voting closes.',
+        `Voting is still open. ${voteHelp(active.options.filter((o) => !active.vetoed.some((x) => x.optionId === o.id)).length)} Confirming comes after voting closes.`,
       );
       return true;
     }

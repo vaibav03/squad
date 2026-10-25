@@ -1,11 +1,13 @@
 // Collaborative trip planning: the hub owns the trip (options, ballots, confirmation); the mesh only answers what the
 // group's private inputs can answer without revealing them (overlap + budget/veto aggregates).
 // docs/trip-planning.md is the spec of the rules implemented here.
-import type { TripViewV2 } from '@squad/core';
+import { plural, type TripViewV2 } from '@squad/core';
 import type { HubDeps, TripCollab, TripRecord, Viewer } from '../types';
 import { createTripAgents, type TripAgents } from './agents';
 import {
   CATALOG,
+  destinationOptions,
+  voteHelp,
   DAY_MS,
   DEFAULT_DEADLINE_MS,
   MAX_WINDOW_DAYS,
@@ -392,7 +394,7 @@ export function createTripService(
       if (c.constraints.state === 'done') {
         openVoting(
           t,
-          `Free days for all ${members.length}: ${fmtDays(out.common)}.${t.vetoed.length ? ` ${t.vetoed.length} option${t.vetoed.length === 1 ? '' : 's'} dropped by budget or a hard no (nobody is named).` : ''}`,
+          `Free days for all ${members.length}: ${fmtDays(out.common)}.${t.vetoed.length ? ` ${plural(t.vetoed.length, 'option')} dropped by budget or a hard no (nobody is named).` : ''}`,
         );
       } else {
         save(t);
@@ -428,7 +430,7 @@ export function createTripService(
     const list = live(t).map((o, i) => `${i + 1}. ${o.label} (${money(perOf(t)(o.id))})`);
     mirror(
       t,
-      `Voting is open. ${why}\n${list.join('\n')}\nVote on the Trip page, or DM me "I vote 2". Votes are secret.`,
+      `Voting is open (demo estimates, not live prices). ${why}\n${list.join('\n')}\n${voteHelp(list.length)} Votes are secret.`,
     );
     promptVotes(t);
   }
@@ -695,7 +697,6 @@ export function createTripService(
       const label = body.destination.trim();
       const cat = CATALOG.find((c) => c.label.toLowerCase() === label.toLowerCase());
       const days = Math.min(body.days ?? cat?.days ?? 3, Math.max(1, span));
-      const perPerson = body.perPerson ?? cat?.perPerson ?? 0;
       const tripId = `trip_${rid()}`;
       const t: TripRecord = {
         tripId,
@@ -738,30 +739,23 @@ export function createTripService(
         t.options.push({
           id,
           label: lbl,
-          estCost: est ? `${money(p)} est.` : money(p),
+          estCost: est ? `${money(p)} demo estimate` : money(p),
           days: d,
           perPerson: p,
         });
         t.collab!.optionMeta[id] = { by, rev: 1, days: d, perPerson: p };
       };
-      add(label, v.studentId, days, perPerson, !body.perPerson && !!cat);
-      for (const c of CATALOG.filter((x) => x.label.toLowerCase() !== label.toLowerCase()).slice(
-        0,
-        2,
-      ))
-        add(c.label, 'council', Math.min(c.days, Math.max(1, span)), c.perPerson, true);
+      // The typed budget is a cap, not a quote. Options are always for the typed destination (demo estimates).
+      destinationOptions(label, days, body.perPerson).forEach((o, i) =>
+        add(o.label, i === 0 ? v.studentId : 'council', days, o.perPerson, true),
+      );
       syncMembers(t);
       log(t, v.studentId, `Started the plan for ${label}`);
       deps.trips.put(t);
       touch(t);
       mirror(
         t,
-        `${nameOf(v.studentId)} started a trip plan for ${label}, ${fmtRange([window.from, window.to])} window. Council added ${t.options
-          .filter((o) => t.collab!.optionMeta[o.id]!.by === 'council')
-          .map((o) => o.label)
-          .join(
-            ' and ',
-          )} as alternatives. Agents are checking free days and budgets; nobody's calendar or limits are shared.`,
+        `${nameOf(v.studentId)} started a trip plan for ${label}, ${fmtRange([window.from, window.to])} window. Council added ${plural(t.options.filter((o) => t.collab!.optionMeta[o.id]!.by === 'council').length, 'alternative')} for ${label} (${t.options.map((o) => o.label).join(', ')}). Prices are demo estimates, not live quotes. Agents are checking free days and budgets; nobody's calendar or limits are shared.`,
       );
       runConstraints(tripId);
       return { ok: true, trip: view(deps.trips.get(tripId)!, v)! };
@@ -788,7 +782,7 @@ export function createTripService(
       log(t, v.studentId, `${nameOf(v.studentId)} proposed ${body.label}`, id2);
       setReco(t);
       save(t);
-      mirror(t, `${nameOf(v.studentId)} proposed ${body.label} (${days} days, ${money(p)} each).`);
+      mirror(t, `${nameOf(v.studentId)} proposed ${body.label} (${plural(days, 'day')}, ${money(p)} each).`);
       // A second live option is what makes a ballot possible: members without a card get one now.
       if (t.status === 'voting') promptVotes(t);
       rerun(t);
