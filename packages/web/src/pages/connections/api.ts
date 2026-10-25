@@ -41,6 +41,7 @@ const RawConnection = z.looseObject({
   lastSyncAt: z.number().nullable(),
   expiresAt: z.number().nullable().optional(),
   canSync: z.boolean().optional(),
+  syncVia: z.enum(['extension', 'hub']).optional(),
   sources: z.object({ total: z.number(), byKind: z.record(z.string(), z.number()) }),
   sharedWithSquads: z.array(z.string()).default([]),
 });
@@ -60,6 +61,8 @@ export interface Connection {
   scopes: string[];
   lastSyncAt: number | null;
   canSync: boolean;
+  /** `extension`: syncs happen in the browser (Canvas session), not from the hub. */
+  syncVia: 'extension' | 'hub';
   sources: { total: number; byKind: Record<string, number> };
   sharedWithSquads: string[];
 }
@@ -90,6 +93,7 @@ export function toConnection(raw: z.infer<typeof RawConnection>): Connection {
     scopes: raw.scopes,
     lastSyncAt: raw.lastSyncAt,
     canSync: raw.canSync ?? (raw.status === 'live' || raw.status === 'error'),
+    syncVia: raw.syncVia ?? (raw.variant === 'session' ? 'extension' : 'hub'),
     sources: raw.sources,
     sharedWithSquads: raw.sharedWithSquads,
   };
@@ -163,11 +167,6 @@ export const hub = (ctx: Ctx) => ({
   async sync(id: string): Promise<Connection> {
     return toConnection(
       (await call(ctx, 'POST', `/v1/connections/${enc(id)}/sync`, One)).connection,
-    );
-  },
-  async canvasSync(id: string): Promise<Connection> {
-    return toConnection(
-      (await call(ctx, 'POST', `/v1/connections/${enc(id)}/canvas-sync`, One)).connection,
     );
   },
   async disconnect(id: string, remove = false) {

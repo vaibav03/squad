@@ -177,12 +177,16 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
             variant="secondary"
             iconStart="refresh"
             disabled={!c.canSync || c.syncPhase === 'syncing'}
-            onClick={() =>
-              void p.run((h) => (c.variant === 'session' ? h.canvasSync(c.id) : h.sync(c.id)))
-            }
+            onClick={() => void p.run((h) => h.sync(c.id))}
           >
             Sync now
           </Button>
+          {c.syncVia === 'extension' ? (
+            <p className="sq-conn__hint">
+              This Canvas connection syncs from the browser extension. Open Canvas in that browser
+              and use Connect in the Canvas card to sync again.
+            </p>
+          ) : null}
           {c.state === 'expired' || c.state === 'error' ? (
             <Button size="sm" variant="secondary" onClick={reconnect}>
               Reconnect

@@ -24,9 +24,10 @@ const conn = (o: Partial<Connection> = {}): Connection => ({
   cursor: null,
   lastOutcome: null,
   note: null,
-  scopes: ['canvas.session.read'],
+  scopes: ['canvas.browser_session.read'],
   lastSyncAt: NOW - 120_000,
-  canSync: true,
+  canSync: false,
+  syncVia: 'extension',
   sources: { total: 3, byKind: { canvas_assignment: 2, canvas_file: 1 } },
   sharedWithSquads: [],
   ...o,
@@ -106,21 +107,31 @@ describe('actions', () => {
     );
     expect(disconnect).toHaveBeenCalledWith('conn_1');
   });
-  it('sync now uses canvas-sync for session connections and sync otherwise', () => {
-    const canvasSync = vi.fn().mockResolvedValue(conn());
+  it('session connections sync from the extension; hub connections sync now', () => {
     const sync = vi.fn().mockResolvedValue(conn());
     render(
       <ConnectionsView
         {...props(
-          { connections: [conn(), conn({ id: 'g', provider: 'google', variant: 'oauth' })] },
-          { canvasSync, sync },
+          {
+            connections: [
+              conn(),
+              conn({
+                id: 'g',
+                provider: 'google',
+                variant: 'oauth',
+                canSync: true,
+                syncVia: 'hub',
+              }),
+            ],
+          },
+          { sync },
         )}
       />,
     );
     const [a, b] = screen.getAllByRole('button', { name: 'Sync now' });
-    fireEvent.click(a!);
+    expect((a as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/syncs from the browser extension/)).toBeTruthy();
     fireEvent.click(b!);
-    expect(canvasSync).toHaveBeenCalledWith('conn_1');
     expect(sync).toHaveBeenCalledWith('g');
   });
   it('shares all non-calendar sources with the active squad', () => {
