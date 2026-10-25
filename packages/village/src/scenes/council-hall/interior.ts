@@ -80,7 +80,11 @@ function archAlcove(r: Raster, cx: number, top: number, w: number, h: number): v
   r.rect(x + 4, top, w - 8, 2, 'sky-deep');
   // stars through the glass
   for (let k = 0; k < 5; k++) {
-    r.px(x + 2 + ((k * 7 + hashString(`${cx}${k}`)) % (w - 4)), top + 6 + ((k * 5) % (h - 14)), k % 2 ? 'cloud-hi' : 'moon');
+    r.px(
+      x + 2 + ((k * 7 + hashString(`${cx}${k}`)) % (w - 4)),
+      top + 6 + ((k * 5) % (h - 14)),
+      k % 2 ? 'cloud-hi' : 'moon',
+    );
   }
   r.vline(cx, top + 2, h - 2, 'wall-shade'); // mullion
   r.hline(x, top + Math.floor(h / 2), w, 'wall-shade');
@@ -250,7 +254,12 @@ function lectern(r: Raster): void {
   r.rect(cx - 10, DAIS_Y + 1, 20, 1, 'wood-dark');
 }
 
-function table(r: Raster, s: CouncilHallState, o: PaintOpts, plates: { member: string; x: number }[]): void {
+function table(
+  r: Raster,
+  s: CouncilHallState,
+  o: PaintOpts,
+  plates: { member: string; x: number }[],
+): void {
   const { cx, cy, rx, ry } = TABLE;
   // legs
   r.rect(cx - 52, cy + 4, 6, 18, 'wood-dark');
@@ -357,7 +366,7 @@ export function paintInterior(s: CouncilHallState, o: PaintOpts): Raster {
 
   // members: draw back to front (all on one row); table covers their laps
   const plates: { member: string; x: number }[] = [];
-  const present = open || seatedMembers.length > 0;
+  const present = true; // a council is always at its table; access only changes the lights
   for (let seat = 0; seat < 3; seat++) {
     const who = seatedMembers.find((m) => m.seat === seat)?.member;
     const member = who ?? ['solver-a', 'solver-b', 'solver-c'][seat]!;
@@ -405,23 +414,23 @@ function paintBubbles(
       x = Math.round(fx + (tx - fx) * k);
     }
     const style = ranked && v.b.style === 'thought' ? 'speech' : v.b.style;
-    const art = bubble(v.b.text, style, 20, 3, ranked ? null : 0.5);
+    const art = bubble(v.b.text, style, 12, 4, ranked ? null : 0.5);
     if (ranked) {
       // bubbles hover in the rank row above the table; numerals show position, never a score
-      drawBubbleAt(r, art, { x, y: headTop - 3 + art.r.h - art.tail.y }, o.calm ? v.alpha : v.alpha);
+      const tip = { x, y: headTop - 3 + art.r.h - art.tail.y };
+      drawBubbleAt(r, art, tip, v.alpha);
+      const place = s.slots ? s.slots.to.indexOf(v.b.who) : -1;
+      if (place >= 0 && place < 3 && v.alpha > 0.9) {
+        // rank tab on the bubble's corner: position only, never a score
+        const bx = tip.x - art.tail.x;
+        const by = tip.y - art.tail.y;
+        r.rect(bx - 2, by - 3, 7, 7, 'ink');
+        r.frame(bx - 2, by - 3, 7, 7, 'glow');
+        drawText(r, bx, by - 2, String(place + 1), 'glow-core');
+      }
     } else {
       drawBubbleAt(r, art, { x, y: headTop }, v.alpha);
     }
-  }
-  if (s.slots) {
-    s.slots.to.slice(0, 3).forEach((m, i) => {
-      if (!s.bubbles.some((b) => b.who === m)) return;
-      const x = SEAT_X[i] ?? 128;
-      const label = String(i + 1);
-      r.rect(x - 4, headTop - 38, 9, 7, 'ink');
-      r.frame(x - 4, headTop - 38, 9, 7, 'glow');
-      drawTextCentered(r, x, headTop - 37, label, 'glow-core');
-    });
   }
 }
 
@@ -432,9 +441,11 @@ function paintVerdict(r: Raster, s: CouncilHallState, o: PaintOpts): void {
   if (age < 0 || age > 8000 + 120) return;
   const enter = o.calm ? 1 : easeOut(Math.min(1, age / 240));
   const exit = age > 8000 ? 1 - (age - 8000) / 120 : 1;
-  const art = bubble(v.text, 'announce', 26, 3, 0.1);
+  const art = bubble(v.text, 'announce', 24, 3, 0.1);
   const headTop = DAIS_Y - 17 + 3 - 3 - 2;
-  r.blit(art.r, 128 - art.tail.x, headTop - art.tail.y, { alpha: Math.max(0, Math.min(enter, exit)) });
+  r.blit(art.r, 128 - art.tail.x, headTop - art.tail.y, {
+    alpha: Math.max(0, Math.min(enter, exit)),
+  });
 }
 
 void drawText;

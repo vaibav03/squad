@@ -28,9 +28,7 @@ const quizOpinions = [
   { at: 0, event: op(QK, 'solver-b', 'I get B too, step 3 checks out.') },
   { at: 0, event: op(QK, 'solver-c', 'I got C: sign flips in step 2.', true) },
 ];
-const quizRank = [
-  { at: 2000, event: rank(QK, 'solver-a', ['solver-b', 'solver-a', 'solver-c']) },
-];
+const quizRank = [{ at: 2000, event: rank(QK, 'solver-a', ['solver-b', 'solver-a', 'solver-c']) }];
 
 export const shots: ShotDef[] = [
   { name: 'exterior-states', view: 'exterior', script: [], sample: [0], calm: false },
@@ -71,7 +69,13 @@ export const shots: ShotDef[] = [
     script: [
       ...quizOpinions,
       ...quizRank,
-      { at: 4000, event: verdict(QK, 'Dropped: uncertain, ask your TA.', { dissent: true, dissenter: 'solver-c' }) },
+      {
+        at: 4000,
+        event: verdict(QK, 'Dropped: uncertain, ask your TA.', {
+          dissent: true,
+          dissenter: 'solver-c',
+        }),
+      },
     ],
     sample: [4100, 4600, 5100, 5600, 6200, 7000],
   },
@@ -92,7 +96,13 @@ export const shots: ShotDef[] = [
     script: [
       ...quizOpinions,
       ...quizRank,
-      { at: 4000, event: verdict(QK, 'Dropped: uncertain, ask your TA.', { dissent: true, dissenter: 'solver-c' }) },
+      {
+        at: 4000,
+        event: verdict(QK, 'Dropped: uncertain, ask your TA.', {
+          dissent: true,
+          dissenter: 'solver-c',
+        }),
+      },
     ],
     sample: [5000, 6000],
   },

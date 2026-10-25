@@ -1,5 +1,11 @@
 import { RGBA, paletteNameOf, type PaletteName } from './palette';
 
+/**
+ * Test hook: with `LIGHTS.on = false` every translucent write (glow, alpha pixels, faded blits) is
+ * skipped or made opaque, so a frame's BASE art can be audited against the master palette.
+ */
+export const LIGHTS = { on: true };
+
 /** Anything drawable: a palette name, or null to erase to transparent. */
 export type Ink = PaletteName | null;
 
@@ -33,6 +39,7 @@ export class Raster {
 
   /** Opaque palette pixel, or `alpha` (0..1) blended over what is there. */
   px(x: number, y: number, ink: Ink, alpha = 1): this {
+    if (!LIGHTS.on && alpha < 1) return this;
     x = Math.round(x);
     y = Math.round(y);
     if (!this.inside(x, y)) return this;
@@ -172,7 +179,7 @@ export class Raster {
 
   /** Copy `src` onto this raster at (x,y); transparent source pixels are skipped. */
   blit(src: Raster, x: number, y: number, opts: { flipX?: boolean; alpha?: number } = {}): this {
-    const a = opts.alpha ?? 1;
+    const a = LIGHTS.on ? (opts.alpha ?? 1) : 1;
     for (let j = 0; j < src.h; j++) {
       for (let i = 0; i < src.w; i++) {
         const si = (j * src.w + (opts.flipX ? src.w - 1 - i : i)) * 4;

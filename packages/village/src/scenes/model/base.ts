@@ -29,7 +29,7 @@ export interface BaseState {
   night: boolean;
   /** Set by onEnter, cleared by onExit (interior fade timing). */
   enteredAt: number | null;
-  /** Last time anything happened here; relevance dimming uses it. */
+  /** Last time anything happened here (-1 = never). */
   touched: number;
 }
 
@@ -57,7 +57,7 @@ export function initBase(
     portrait: false,
     night: false,
     enteredAt: null,
-    touched: 0,
+    touched: -1,
   };
 }
 

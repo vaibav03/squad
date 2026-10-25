@@ -16,7 +16,11 @@ export function handlesCouncil(e: VillageEvent): boolean {
  * slide to rank slots; verdict: the chairman announces, the lone dissenter's bubble stays red-lined
  * and the lantern flickers; otherwise it glows steady.
  */
-export function mapCouncilEvent(e: VillageEvent, s: CouncilHallState, _ctx: SceneCtx): SceneCommand[] {
+export function mapCouncilEvent(
+  e: VillageEvent,
+  s: CouncilHallState,
+  _ctx: SceneCtx,
+): SceneCommand[] {
   if (!handlesCouncil(e) || !('councilId' in e)) return [];
   const cmds: SceneCommand[] = [];
   if (s.access !== 'open') cmds.push({ c: 'setAccess', access: 'open' });

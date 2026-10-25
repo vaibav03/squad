@@ -26,11 +26,16 @@ export const councilHall: SceneDef<CouncilHallState> = {
   reduce: reduceCouncil,
   paint(s: CouncilHallState, view: View, o: PaintOpts) {
     if (view === 'interior') return paintInterior(s, o);
-    return paintExterior(s, o, s.access === 'open' && s.touched > 0 && o.t - s.touched < SESSION_MS);
+    return paintExterior(
+      s,
+      o,
+      s.access === 'open' && s.touched >= 0 && o.t - s.touched < SESSION_MS,
+    );
   },
   describe(s: CouncilHallState) {
     if (s.access === 'locked') return 'Council Hall, closed for now.';
-    if (s.access === 'dim') return 'Council Hall, quiet. Three council members and a chairman sit inside.';
+    if (s.access === 'dim')
+      return 'Council Hall, quiet. Three council members and a chairman sit inside.';
     const parts = ['Council Hall, in session'];
     if (s.verdict) {
       parts.push(`verdict: ${s.verdict.text}`);

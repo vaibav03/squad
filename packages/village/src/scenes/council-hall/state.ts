@@ -27,7 +27,9 @@ export interface CouncilHallState extends BaseState {
   speaker: { who: string; since: number } | null;
 }
 
-export function initCouncilHall(opts: { instance?: string; title?: string } = {}): CouncilHallState {
+export function initCouncilHall(
+  opts: { instance?: string; title?: string } = {},
+): CouncilHallState {
   return {
     ...initBase({ ...opts, title: opts.title ?? 'Council Hall', access: 'dim' }),
     seats: {},
@@ -60,7 +62,11 @@ export function seated(s: CouncilHallState): string[] {
     .map(([m]) => m);
 }
 
-export function reduceCouncil(s: CouncilHallState, cmd: SceneCommand, at: number): CouncilHallState {
+export function reduceCouncil(
+  s: CouncilHallState,
+  cmd: SceneCommand,
+  at: number,
+): CouncilHallState {
   switch (cmd.c) {
     case 'bubble':
       return seat(reduceBase(s, cmd, at), cmd.bubble.who);
@@ -84,7 +90,10 @@ export function reduceCouncil(s: CouncilHallState, cmd: SceneCommand, at: number
         const has = n.bubbles.some((b) => b.who === d);
         if (has) {
           // the dissenter's own bubble becomes the lone red-lined one, and stays
-          n = { ...n, bubbles: n.bubbles.map((b) => (b.who === d ? { ...b, style: 'dissent' as const } : b)) };
+          n = {
+            ...n,
+            bubbles: n.bubbles.map((b) => (b.who === d ? { ...b, style: 'dissent' as const } : b)),
+          };
         }
       }
       return n;

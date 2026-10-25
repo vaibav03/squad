@@ -2,7 +2,7 @@ import { Raster } from '../pixel/raster';
 import { DIM } from '../pixel/palette';
 import { drawText, textWidth } from '../pixel/font';
 import type { PaintOpts } from '../contract';
-import { frameAt, lanternFrame, triangle } from '../model/base';
+import { lanternFrame, triangle } from '../model/base';
 import type { CouncilHallState } from './state';
 
 export const EXT_W = 120;
@@ -122,7 +122,14 @@ function columns(r: Raster): void {
   }
 }
 
-function archWindow(r: Raster, cx: number, y: number, lit: boolean, shut: boolean, flick: number): void {
+function archWindow(
+  r: Raster,
+  cx: number,
+  y: number,
+  lit: boolean,
+  shut: boolean,
+  flick: number,
+): void {
   const w = 9;
   const h = 18;
   const x = cx - 4;
@@ -184,7 +191,15 @@ function lantern(r: Raster, s: CouncilHallState, o: PaintOpts): void {
   r.rect(px - 2, 62, 6, 2, 'wood-dark');
   r.rect(px - 3, 55, 8, 8, f === 0 && s.lantern !== 'off' ? 'wood-dark' : 'ink');
   const lit = s.lantern !== 'off';
-  const core = !lit ? 'wall-shade' : s.lantern === 'flicker' ? (f === 2 ? 'alert' : f === 1 ? 'ember' : 'roof-wine') : 'glow';
+  const core = !lit
+    ? 'wall-shade'
+    : s.lantern === 'flicker'
+      ? f === 2
+        ? 'alert'
+        : f === 1
+          ? 'ember'
+          : 'roof-wine'
+      : 'glow';
   r.rect(px - 2, 56, 6, 6, core);
   if (lit && f > 0) r.rect(px - 1, 57, 4, 3, s.lantern === 'flicker' ? 'ember' : 'glow-core');
   r.hline(px - 3, 54, 8, 'wood-dark');
