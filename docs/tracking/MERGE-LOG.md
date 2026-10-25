@@ -403,3 +403,26 @@ Branch `merge/batch10` (worktree `squad-wt/merge10`), landed as a true `--no-ff`
 
 - Landing merge commit: `4287ad7273e36626d8a96309fabb7d898bb59516` (parents `8a571f2005ec812e16db03ae7d50f680c4b8146b` = tag `pre-merge-batch10`, `7a5b2a3806efe84416e516b6b04510c2c855306c` = origin/merge/batch10; diff empty).
 - Rollback: `git revert -m 1 4287ad7273e36626d8a96309fabb7d898bb59516`.
+
+## Batch 11: feature/live-discussion into main
+
+Branch `merge/batch11` (worktree `squad-wt/merge11`), landed as a true `--no-ff` merge.
+
+- Merged cleanly (no conflicts), including the edits to `packages/village/src/inspector/describe.ts`, `conversation.ts` and `packages/core/src/events.ts`; the village inspector tests pass (inside `pnpm check`).
+- Fix found by the hub smoke tests (the lead had only grepped `pnpm check`, so this was missed): two hub smoke tests (`squad.smoke.test.ts` "every event type round-trips" and `domain.smoke.test.ts` "demo run ingests every VillageEvent type") require every `VILLAGE_EVENT_TYPES` kind to reach a plain stream or the demo log, but `discussion.*` events are scoped to a live run's squad (ingest drops them for an unknown run). Those two checks now exclude `discussion.*`; delivery is covered by `src/live/engine.test.ts` and `routes/live.test.ts`.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` (exit status read: 0) | pass |
+| `pnpm demo:live` | OK |
+| `pnpm test:smoke hub` | 102 tests pass (2 failed before the fix above) |
+| Browser, demo mode (hub :18911, web :15311, `FORCE_FAKE_LIVE=1`), `@cubbie discuss: hash tables vs trees` in /squad/chat | Cubbie replies with a Live Discussion card; "Open discussion" opens the panel (Demo mode: scripted discussion): five seats (Chair, Tutor, Skeptic, Examiner, Planner), captions stream turn by turn (15 turns), the run ends at its turn limit, Takeaways show 3 decisions and an open disagreement with "Jump to turn" links; 0 page errors, 0 HTTP >= 400 |
+
+Frames: `docs/design/shots/merge11/`. The real Gemini Live path was verified by the branch lead, not re-run here.
+
+### Landing (batch 11)
+
+- Landing merge commit: `a933aa516f0c885cf618d4f061cb9dcd922b1db1` (parents `9a26267eebd03cca03d8916c0cfbd5939fba94ce` = tag `pre-merge-batch11`, `2ce58f31acf0fe995fa939b4261674f6338de5d8` = origin/merge/batch11; only tracker docs differ).
+- Rollback: `git revert -m 1 a933aa516f0c885cf618d4f061cb9dcd922b1db1`.
