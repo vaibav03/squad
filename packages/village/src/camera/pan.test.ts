@@ -63,3 +63,23 @@ describe('camera.panTo restores the exact previous preset', () => {
     expect(cam.scrollX).toBe(leftScroll);
   });
 });
+
+describe('camera.release ends an open-ended pan hold', () => {
+  it('holds on the pan target until released, then returns to the preset', async () => {
+    const { cam, c } = fake();
+    c.setMode('right');
+    c.update(0, 16);
+    const rightScroll = cam.scrollX;
+    const done = c.panTo(900, { holdMs: 600_000 });
+    for (let i = 0; i < 60; i++) c.update(i * 16, 16);
+    const held = cam.scrollX;
+    expect(held).not.toBe(rightScroll);
+    for (let i = 0; i < 200; i++) c.update(2000 + i * 16, 16); // still held, no auto-return
+    expect(cam.scrollX).toBe(held);
+    c.release?.(true);
+    for (let i = 0; i < 60; i++) c.update(6000 + i * 16, 16);
+    await done;
+    expect(c.mode).toBe('right');
+    expect(cam.scrollX).toBe(rightScroll);
+  });
+});

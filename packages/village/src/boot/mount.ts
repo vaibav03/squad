@@ -2,6 +2,9 @@ import type Phaser from 'phaser';
 import type { WorldScene } from '../scene-manager/world-scene';
 import { fetchManifest } from './assets';
 import { computeScale } from './scaler';
+
+/** Height of the phone agent dock (chip row plus its gaps), reserved under the canvas on narrow layouts. */
+const PHONE_DOCK_PX = 76;
 import { loadAdapter, loadModules } from '../scene-manager/modules';
 import { type CameraMode, type MountOptions, type VillageHandle } from '../world/api';
 
@@ -40,7 +43,7 @@ export function mountVillage(
   const root = document.createElement('div');
   root.className = 'sqv-root';
   root.style.cssText =
-    'position:absolute;inset:0;background:#0b1d38;overflow:hidden;display:flex;align-items:center;justify-content:center';
+    'position:absolute;inset:0;box-sizing:border-box;background:linear-gradient(180deg,#060d1f 0%,#0b1d38 100%);overflow:hidden;display:flex;align-items:center;justify-content:center';
   const stage = document.createElement('div');
   stage.className = 'sqv-stage';
   stage.tabIndex = 0;
@@ -64,9 +67,16 @@ export function mountVillage(
 
   const applySize = (g?: Phaser.Game) => {
     const r = parent.getBoundingClientRect();
+    // Phones: the agent dock is a row under the picture. Reserve it so the picture sits right above it, and
+    // let the leftover height become extra sky at the top (same colour as the sky's top edge) instead of a gap
+    // between the picture and the dock.
+    const narrow = (r.width || 960) < 900;
+    const dock = narrow ? PHONE_DOCK_PX : 0;
+    root.style.alignItems = narrow ? 'flex-end' : 'center';
+    root.style.paddingBottom = `${dock}px`;
     const s = computeScale(
       r.width || 960,
-      r.height || 540,
+      (r.height || 540) - dock,
       window.devicePixelRatio || 1,
       zoomExtra,
     );

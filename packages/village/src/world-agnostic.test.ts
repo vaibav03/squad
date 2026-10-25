@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 
 /** The seam for a future top-down world: pure layers carry slot ids and agent ids, never pixels. */
 describe('world-agnostic contract', () => {
-  for (const dir of ['adapter', 'sources', 'overlay-bridge', 'a11y']) {
+  for (const dir of ['adapter', 'sources', 'overlay-bridge', 'a11y', 'director']) {
     const base = new URL(`./${dir}/`, import.meta.url);
     const files = readdirSync(base).filter(
       (f) => f.endsWith('.ts') && !f.endsWith('.test.ts') && f !== 'module.ts',

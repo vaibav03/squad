@@ -79,6 +79,11 @@ export function createCamera(scene: Phaser.Scene, d: CameraDeps): CameraImpl {
         panDone = res;
       });
     },
+    release(immediate) {
+      if (!panDone) return;
+      holdLeft = 0;
+      if (immediate || d.calm()) elapsed = BLEND_MS;
+    },
     update(_t, dt) {
       if (started) {
         // Preset or pan target is held until the player starts walking again, then we glide back to follow.

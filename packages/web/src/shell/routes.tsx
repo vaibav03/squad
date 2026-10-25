@@ -3,6 +3,7 @@ import type { RouteObject } from 'react-router-dom';
 import type { NavItem, SquadRouteMeta } from './types';
 import { EmptyState } from '../primitives/EmptyState';
 import { Skeleton } from '../primitives/Skeleton';
+import { WorldLoading } from './WorldLoading';
 
 export const squadRouteMeta: SquadRouteMeta[] = [
   {
@@ -81,7 +82,12 @@ export function loadPage(meta: SquadRouteMeta): ComponentType {
   return function PageHost() {
     return createElement(
       Suspense,
-      { fallback: createElement(Skeleton, { shape: 'block', height: 240 }) },
+      {
+        fallback:
+          meta.key === 'village'
+            ? createElement(WorldLoading)
+            : createElement(Skeleton, { shape: 'block', height: 240 }),
+      },
       createElement(Lazy),
     );
   };

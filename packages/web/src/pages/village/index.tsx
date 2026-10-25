@@ -8,7 +8,7 @@ import {
   type VillageSource,
 } from '@squad/village/sources';
 import { EmptyState } from '../../primitives/EmptyState';
-import { Skeleton } from '../../primitives/Skeleton';
+import { WorldLoading } from '../../shell/WorldLoading';
 import { useCalmMode } from '../../hooks/useCalmMode';
 import { hubStudentId } from '../../shell/dev-login';
 import { useSquadConfig } from '../../shell/context';
@@ -122,9 +122,8 @@ export default function VillagePage({ world }: { world?: string }) {
     <div className="sq-world">
       <div ref={stage} className="sq-world__stage" />
       {state === 'loading' && (
-        <div className="sq-world__loading" role="status" aria-live="polite">
-          <Skeleton width={160} height={12} />
-          <span>Opening the village</span>
+        <div className="sq-world__loading">
+          <WorldLoading />
         </div>
       )}
       {typeof state === 'object' && (

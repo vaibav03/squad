@@ -1,0 +1,104 @@
+/* Night-gradient loading state for the world page (same footprint as .sq-world, no layout jump on handover). */
+.sq-world-loading {
+  --wl-top: #050b1a;
+  --wl-mid: #0b1d38;
+  --wl-low: #124063;
+  --sq-world-chrome: calc(48px + var(--safe-top, 0px) + 64px + var(--safe-bottom, 0px));
+  position: relative;
+  width: 100%;
+  height: calc(100dvh - var(--sq-world-chrome));
+  min-height: 320px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, var(--wl-top) 0%, var(--wl-mid) 55%, var(--wl-low) 100%);
+}
+@media (min-width: 1024px) {
+  .sq-world-loading {
+    height: calc(100dvh - 48px - var(--safe-top, 0px));
+  }
+}
+.sq-world-loading__stars {
+  position: absolute;
+  inset: 0 0 35% 0;
+  opacity: 0.9;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, #f4e8c0 99%, transparent),
+    radial-gradient(1px 1px at 27% 42%, #cfe0ff 99%, transparent),
+    radial-gradient(2px 2px at 41% 12%, #f4e8c0 99%, transparent),
+    radial-gradient(1px 1px at 58% 33%, #cfe0ff 99%, transparent),
+    radial-gradient(1px 1px at 72% 20%, #f4e8c0 99%, transparent),
+    radial-gradient(2px 2px at 86% 46%, #cfe0ff 99%, transparent),
+    radial-gradient(1px 1px at 93% 14%, #f4e8c0 99%, transparent),
+    radial-gradient(1px 1px at 6% 58%, #cfe0ff 99%, transparent),
+    radial-gradient(1px 1px at 64% 58%, #f4e8c0 99%, transparent);
+}
+.sq-world-loading__moon {
+  position: absolute;
+  top: 14%;
+  left: 18%;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow:
+    inset -9px -2px 0 0 #f6e7b4,
+    0 0 24px 6px rgba(120, 170, 255, 0.28);
+  image-rendering: pixelated;
+}
+.sq-world-loading__hills {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22%;
+  background:
+    linear-gradient(180deg, transparent, rgba(5, 11, 26, 0.55)),
+    linear-gradient(180deg, #0f2e4d, #0b1d38);
+  clip-path: polygon(
+    0 55%,
+    12% 35%,
+    26% 52%,
+    41% 28%,
+    57% 50%,
+    72% 30%,
+    88% 48%,
+    100% 34%,
+    100% 100%,
+    0 100%
+  );
+}
+.sq-world-loading__label {
+  position: relative;
+  margin: 0;
+  color: #b9cde0;
+  font-size: 0.9375rem;
+  letter-spacing: 0.04em;
+}
+.sq-world-loading__dots::after {
+  content: '';
+  display: inline-block;
+  width: 1.5em;
+  text-align: left;
+  animation: sq-world-dots 1.2s steps(4, end) infinite;
+}
+@keyframes sq-world-dots {
+  0% {
+    content: '';
+  }
+  25% {
+    content: '.';
+  }
+  50% {
+    content: '..';
+  }
+  75% {
+    content: '...';
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sq-world-loading__dots::after {
+    animation: none;
+    content: '...';
+  }
+}

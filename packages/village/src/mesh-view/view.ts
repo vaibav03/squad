@@ -2,6 +2,7 @@ import type { VillageContext, ModuleInstance, SceneCommand as WorldCommand } fro
 import { parseAgentId } from '@squad/core';
 import { studentName } from '../adapter';
 import type { Place, SceneCommand } from '../adapter';
+import { createDirector, type FocusTarget, type Shot } from '../director';
 import { createActors } from './actors';
 import type { Actor } from './actors';
 import { createBubbles } from './bubbles';
@@ -38,23 +39,68 @@ export function createMeshView(
   let visitors = 0;
   let pinIndex = 0;
   let destroyed = false;
-  let lastPan = -Infinity;
   const handOffStarts: number[] = []; // concurrent hand-offs stagger by 60 ms each (spec 08 row 7)
 
   /**
-   * Mesh activity can happen off-screen. When the focus is outside the view and the student is not walking
-   * (never fights keyboard input, spec 08 row 3), bring it into view at most once per 6 s: the stage (campfire,
-   * board, the viewer's house) is the world's Right preset, which holds until the student walks again; a single
-   * door gets a 400 ms ease-in-out pan.
+   * Camera director binding. The pure director (src/director) decides which Place the camera should look at from
+   * the same SceneCommands the scenes execute; this resolves a Place to an x in this side-view world and performs the
+   * move with the 400 ms ease-in-out pan (a jump cut in Calm mode). It yields to the viewer: key, tap, walking or a
+   * camera button silence it for 5 s and end the current hold.
    */
-  const focus = (x: number, stage = false): void => {
+  const director = createDirector({ calm: () => ctx.calm });
+  const shotLog: Array<Record<string, unknown>> = [];
+  ctx.registry.set('director.log', shotLog);
+  let walkingPrev = false;
+  const userTouched = (): void => {
+    director.userInput(ctx.scene.time.now);
+    ctx.camera.release?.(true);
+  };
+  const offs: Array<() => void> = [];
+  offs.push(ctx.bus.on('cameraMode', () => director.userInput(ctx.scene.time.now)));
+  const kb = ctx.scene.input.keyboard;
+  kb?.on('keydown', userTouched);
+  ctx.scene.input.on('pointerdown', userTouched);
+  offs.push(() => {
+    kb?.off('keydown', userTouched);
+    ctx.scene.input.off('pointerdown', userTouched);
+  });
+
+  /** Campfire, board and the viewer's house share one view when there is room (427 px wide at 3x). */
+  const stageX = (): number => (ctx.scene.cameras.main.width >= 400 ? camp.x + STAGE_DX : camp.x);
+  const targetX = (t: FocusTarget): number | undefined => {
+    switch (t.kind) {
+      case 'commons':
+        return stageX();
+      case 'board':
+        return ctx.scene.cameras.main.width >= 400 ? stageX() : places.board.x;
+      case 'agent': {
+        const a = actorFor(t.agent);
+        return a ? a.sprite.x : places.doorX(t.agent);
+      }
+      case 'door':
+        if (parseAgentId(t.agent).kind === 'mediator') return undefined;
+        return homes.isMine(t.agent) ? stageX() : places.doorX(t.agent);
+      default:
+        return places.resolve(t)?.x;
+    }
+  };
+  const takeShot = (shot: Shot): void => {
+    const x = targetX(shot.target);
     const cam = ctx.scene.cameras.main;
-    const now = ctx.scene.time.now;
-    if (ctx.player.isWalking || now - lastPan < 6000) return;
-    if (x > cam.scrollX + 40 && x < cam.scrollX + cam.width - 40) return;
-    lastPan = now;
-    if (stage) ctx.camera.setMode('right');
-    else void ctx.camera.panTo(Math.round(x), { holdMs: 6000 });
+    const entry: Record<string, unknown> = {
+      t: Math.round(ctx.scene.time.now),
+      key: shot.key,
+      reason: shot.reason,
+      score: shot.score,
+      x,
+      jump: shot.jump,
+    };
+    shotLog.push(entry);
+    if (shotLog.length > 400) shotLog.shift();
+    if (x === undefined) return;
+    const center = cam.scrollX + cam.width / 2;
+    entry.panned = Math.abs(x - center) > cam.width * 0.3; // already comfortably framed: leave it
+    if (entry.panned) void ctx.camera.panTo(Math.round(x), { holdMs: shot.holdMs });
   };
 
   const actorFor = (agentId: string): Actor | undefined => {
@@ -84,6 +130,7 @@ export function createMeshView(
   const onCommand = (raw: WorldCommand): void => {
     if (destroyed) return;
     const cmd = raw as unknown as SceneCommand;
+    director.observe(cmd, ctx.scene.time.now);
     switch (cmd.type) {
       case 'setAgentState':
         if (parseAgentId(cmd.agent).kind === 'student')
@@ -95,7 +142,6 @@ export function createMeshView(
         const x = places.doorX(cmd.agent);
         if (cmd.on) {
           actorFor(cmd.agent); // the agent steps out to its door while waiting
-          if (homes.isMine(cmd.agent)) focus(camp.x + STAGE_DX, true); // the viewer's own yes is the one to watch
         }
         fx.ring(cmd.agent, x, cmd.on);
         break;
@@ -112,7 +158,6 @@ export function createMeshView(
       case 'spawnEnvelope': {
         const carrier = actorFor(cmd.from);
         const at = { x: places.doorX(cmd.from), y: g - 33 };
-        focus(camp.x + STAGE_DX, true);
         envs.spawn(
           cmd.id,
           cmd.to,
@@ -170,7 +215,6 @@ export function createMeshView(
       case 'marker': {
         const p = markerPos(cmd.at);
         if (p) {
-          if (cmd.at.kind === 'commons') focus(camp.x + STAGE_DX, true);
           fx.marker(cmd.key, p.x, p.y);
         }
         break;
@@ -180,7 +224,6 @@ export function createMeshView(
         break;
 
       case 'ledgerCard': {
-        focus(camp.x + STAGE_DX, true);
         board.pin(cmd.card);
         const who = studentName(cmd.student);
         const c = cmd.card;
@@ -231,7 +274,14 @@ export function createMeshView(
 
   return {
     onCommand,
-    update() {
+    update(now) {
+      const t = ctx.scene.time.now;
+      if (ctx.player.isWalking && !walkingPrev) userTouched();
+      walkingPrev = ctx.player.isWalking;
+      const act = director.tick(t);
+      if (act?.action === 'shot') takeShot(act);
+      else if (act?.action === 'release') ctx.camera.release?.();
+      void now;
       actors.update();
       envs.update();
       bubbles.update();
@@ -240,6 +290,7 @@ export function createMeshView(
     },
     destroy() {
       destroyed = true;
+      offs.forEach((f) => f());
       bubbles.destroy();
       envs.destroy();
       fx.destroy();

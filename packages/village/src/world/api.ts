@@ -147,6 +147,8 @@ export interface CameraApi {
   readonly mode: CameraMode;
   /** Pan to x (400 ms ease-in-out) then hold; returns to follow after `holdMs` if given. Skippable. */
   panTo(x: number, opts?: { holdMs?: number }): Promise<void>;
+  /** End a pan hold now and glide back to where the camera was (follow / preset). `immediate` skips the rest of the pan blend. */
+  release?(immediate?: boolean): void;
 }
 
 /* ---------- events between world modules ---------- */
