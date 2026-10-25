@@ -1,23 +1,22 @@
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent';
-const order: Record<LogLevel, number> = { debug: 10, info: 20, warn: 30, error: 40, silent: 99 };
+import { createLogger as createCoreLogger, type Logger, type LogLevel } from '@squad/core';
+import { traceFields } from './observability/context';
 
-export interface Logger {
-  debug(msg: string, f?: Record<string, unknown>): void;
-  info(msg: string, f?: Record<string, unknown>): void;
-  warn(msg: string, f?: Record<string, unknown>): void;
-  error(msg: string, f?: Record<string, unknown>): void;
-}
+export type { Logger, LogLevel };
 
-/** Structured JSON-line logger. Callers must never pass event bodies, free text or secrets as fields. */
+/** Structured JSON-line logger shared with the bot and agents (`@squad/core` telemetry): redacts keys,
+ * tokens, secrets and withheld values, hashes student ids, and stamps the active correlation id. */
 export function createLogger(
   level: LogLevel = 'info',
-  sink: (line: string) => void = (l) => process.stderr.write(l + '\n'),
+  sink?: (line: string) => void,
+  salt?: string,
 ): Logger {
-  const emit = (lv: Exclude<LogLevel, 'silent'>) => (msg: string, f?: Record<string, unknown>) => {
-    if (order[lv] < order[level]) return;
-    sink(JSON.stringify({ ts: new Date().toISOString(), level: lv, svc: 'hub', msg, ...f }));
-  };
-  return { debug: emit('debug'), info: emit('info'), warn: emit('warn'), error: emit('error') };
+  return createCoreLogger({
+    svc: 'hub',
+    level,
+    ...(sink ? { sink } : {}),
+    ...(salt ? { salt } : {}),
+    context: traceFields,
+  });
 }
 
 export const silentLogger: Logger = createLogger('silent');

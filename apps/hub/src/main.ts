@@ -1,13 +1,26 @@
 import { startHub } from './server';
 import { attachChatEngine } from './chat/engine';
+import { getObs, instrumentLlm } from './observability';
 import { agentUrlsFromEnv } from './wire';
 
 const hub = await startHub();
+const obs = getObs(hub.deps)!;
+obs.installProcessHandlers();
 const agentUrls = agentUrlsFromEnv();
 hub.deps.confirms.setAgentUrls(agentUrls);
+// carry the correlation id to the agents and the bot's internal server
+obs.propagateTo([...Object.values(agentUrls), process.env.BOT_URL]);
 // One process serves the village and the chat: one resilient model (Gemini, or the demo model when there is no key
 // or the credits are gone), one brain, one mastery store. GET /v1/status says which one is answering.
-const chat = await attachChatEngine(hub, { realPorts: true, agentUrls });
+// The model is wrapped once so every call (village ports and chat skills) lands in the llm metrics.
+const chat = await attachChatEngine(hub, {
+  realPorts: true,
+  agentUrls,
+  instrument: (llm) =>
+    instrumentLlm(llm, obs.metrics, undefined, (reason) =>
+      hub.deps.log.warn(`llm: serving the demo model (${reason}); GET /v1/status shows why`),
+    ),
+});
 const st = hub.deps.runtime!.llm();
 hub.deps.log.info(
   `ports: ${hub.deps.runtime!.ports()}, llm: ${st.llm}${st.reason ? ` (${st.reason})` : ''}; GET /v1/status shows why`,

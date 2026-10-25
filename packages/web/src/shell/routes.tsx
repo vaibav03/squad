@@ -60,6 +60,11 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     nav: { label: 'Trip', icon: 'plane', order: 4 },
   },
   {
+    key: 'status',
+    path: '/squad/status',
+    title: 'Status',
+  },
+  {
     key: 'mastery',
     path: '/squad/mastery/:courseId?',
     title: 'Mastery',

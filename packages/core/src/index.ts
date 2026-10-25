@@ -13,3 +13,4 @@ export * from './council';
 export { parseIcsBusy } from './ics';
 export type { BusyBlock } from './ics';
 export * from './accounts';
+export * from './telemetry';

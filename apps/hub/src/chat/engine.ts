@@ -30,6 +30,8 @@ export interface ChatEngineOptions {
   env?: Record<string, string | undefined>;
   /** An already-built resilient model (main.ts shares one with the real ports). Overrides `real`/`demo`. */
   llm?: ResilientLlm;
+  /** Wrap the model once it is built (the hub uses this for llm metrics). Must keep `status()`. */
+  instrument?: (llm: ResilientLlm) => ResilientLlm;
   /** Where each student's mesh agent listens (passed to the real ports). */
   agentUrls?: Record<string, string>;
   /** The real model. Omit to build Gemini from GEMINI_API_KEY; pass `null` to force demo mode. Tests inject a failing client here. */
@@ -81,7 +83,7 @@ export async function attachChatEngine(
         : undefined));
   const useEleven = !!cfg.elevenLabsApiKey && !forceDemo;
   // A quota failure serves the demo model and re-probes the real one at most once a minute.
-  const llm =
+  const built =
     o.llm ??
     createResilientLlm({
       ...(real ? { real } : {}),
@@ -89,6 +91,7 @@ export async function attachChatEngine(
       forceFake: forced,
       ...(o.now ? { now: o.now } : {}),
     });
+  const llm = o.instrument ? o.instrument(built) : built;
   const wantRealPorts = !!o.realPorts && (!!real || env.FORCE_FAKE_LLM === '1' || !!o.llm);
   deps.runtime ??= {
     // topped-up credits are noticed without a restart: a stale failure re-probes in the background
