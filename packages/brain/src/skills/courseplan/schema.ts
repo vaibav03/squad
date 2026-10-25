@@ -7,6 +7,11 @@ import completedJson from '../../../fixtures/catalog/completed-sample.json';
 export const TermSchema = z.enum(['fall', 'spring', 'summer']);
 export type TermName = z.infer<typeof TermSchema>;
 
+export const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+export const DaySchema = z.enum(DAY_NAMES);
+export type DayName = z.infer<typeof DaySchema>;
+const TimeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+
 export const CatalogCourseSchema = z.strictObject({
   id: z.string().regex(/^[A-Z]{3} \d{3}$/),
   title: z.string().min(1),
@@ -17,8 +22,52 @@ export const CatalogCourseSchema = z.strictObject({
   workload: z.number().positive(),
   offered: z.array(TermSchema).min(1),
   area: z.string().min(1),
+  /**
+   * Weekly meeting pattern. Optional in the schema only so older stored catalogues still load; they are
+   * flagged 'Missing days/time' (see `missingSchedule`) and skipped by the time-conflict check. The committed
+   * fixture and every new import must have all three.
+   */
+  days: z.array(DaySchema).min(1).optional(),
+  start: TimeSchema.optional(),
+  end: TimeSchema.optional(),
+  location: z.string().optional(),
 });
 export type CatalogCourse = z.infer<typeof CatalogCourseSchema>;
+
+export interface Meeting {
+  days: DayName[];
+  /** minutes after midnight */
+  start: number;
+  end: number;
+}
+
+export const toMinutes = (t: string): number => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+
+/** The course's weekly meeting, or null when days/start/end is incomplete (or end is not after start). */
+export function meetingOf(c: CatalogCourse): Meeting | null {
+  if (!c.days?.length || !c.start || !c.end) return null;
+  const start = toMinutes(c.start);
+  const end = toMinutes(c.end);
+  return end > start ? { days: c.days, start, end } : null;
+}
+
+/** 'Missing days/time' when the row cannot be placed on a week, else null. Never rendered as blanks. */
+export function missingSchedule(c: CatalogCourse): string | null {
+  return meetingOf(c) ? null : 'Missing days/time';
+}
+
+/** True when two courses meet on a shared day with overlapping times. Incomplete rows never conflict. */
+export function timesOverlap(a: CatalogCourse, b: CatalogCourse): boolean {
+  const x = meetingOf(a);
+  const y = meetingOf(b);
+  if (!x || !y) return false;
+  return x.days.some((d) => y.days.includes(d)) && x.start < y.end && y.start < x.end;
+}
+
+/** 'Mon/Wed 09:00-10:15' for display. */
+export function scheduleLabel(c: CatalogCourse): string {
+  return meetingOf(c) ? `${c.days!.join('/')} ${c.start}-${c.end}` : 'Missing days/time';
+}
 
 export const CatalogSchema = z.strictObject({
   name: z.string(),
