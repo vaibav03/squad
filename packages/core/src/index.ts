@@ -22,3 +22,4 @@ export * from './live';
 export * from './mentions';
 export * from './plan';
 export * from './trip';
+export * from './outbound-links';
