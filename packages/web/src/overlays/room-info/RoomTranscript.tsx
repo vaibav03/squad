@@ -18,6 +18,8 @@ export interface RoomTranscriptProps {
   onRun?: (phrase: string) => void;
   /** Smaller strip (used while the plan card is showing above it). */
   compact?: boolean;
+  /** Inside a disclosure: no heading, no own scrolling. */
+  flat?: boolean;
   className?: string;
 }
 
@@ -45,6 +47,7 @@ export function RoomTranscript({
   info,
   onRun,
   compact,
+  flat,
   className,
 }: RoomTranscriptProps) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -63,11 +66,13 @@ export function RoomTranscript({
       data-compact={compact ? 'true' : undefined}
     >
       <div className="rr-strip__bar">
-        <p className="rr-strip__head" aria-hidden="true">
-          <Icon name="message" size={14} />
-          What they are saying
-        </p>
-        {canOpenBoard ? (
+        {flat ? null : (
+          <p className="rr-strip__head" aria-hidden="true">
+            <Icon name="message" size={14} />
+            What they are saying
+          </p>
+        )}
+        {canOpenBoard && !flat ? (
           <button type="button" className="rr-strip__board" onClick={() => openBoard()}>
             <Icon name="scale" size={14} />
             Open deliberation board

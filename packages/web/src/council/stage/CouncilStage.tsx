@@ -92,7 +92,7 @@ function useDockOffset(): (el: HTMLElement | null) => void {
     const root = document.documentElement;
     if (!el) return void root.style.removeProperty('--room-strip-bottom');
     const set = () =>
-      root.style.setProperty('--room-strip-bottom', `${Math.ceil(el.offsetHeight) + 12}px`);
+      root.style.setProperty('--room-strip-bottom', `${Math.ceil(el.offsetHeight) + 12 + 40}px`);
     set();
     if (typeof ResizeObserver !== 'undefined') {
       ro.current = new ResizeObserver(set);
@@ -167,7 +167,7 @@ export function CouncilStage({ hub, calm }: { hub: HubCtx | null; calm?: boolean
     () =>
       (run?.messages ?? [])
         .filter((m) => !m.to.startsWith('tool:') && m.to !== 'room' && !m.from.startsWith('code:'))
-        .slice(-3),
+        .slice(-1),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [run, version],
   );
@@ -188,9 +188,6 @@ export function CouncilStage({ hub, calm }: { hub: HubCtx | null; calm?: boolean
     );
   }
 
-  const demo =
-    (info?.transport?.kind ?? (run.mode.startsWith('demo') ? 'demo' : '')) === 'demo' ||
-    run.mode.startsWith('demo');
   const last = [...run.messages].reverse().find((m) => !!m.summary && !m.to.startsWith('tool:'));
   const speakerName = (id: string) => a2aPartyName(id);
   return (
@@ -202,17 +199,9 @@ export function CouncilStage({ hub, calm }: { hub: HubCtx | null; calm?: boolean
       data-mode={run.mode}
       data-calm={calm ? 'true' : undefined}
     >
-      {demo && (
-        <p className="cn-stage__demo" role="note" data-testid="demo-banner">
-          Demo: scripted, not Gemini
-        </p>
-      )}
       <div className="cn-stage__head">
         <span>{SLOT_TITLE[slot]}</span>
         <ModeBadge mode={run.mode} />
-        <span className="cn-stage__transport" data-testid="stage-transport">
-          {info?.transport?.label ?? (demo ? 'Demo (scripted, not Gemini)' : 'Gemini')}
-        </span>
         <span className="cn-stage__spacer" />
         {live.connected && (
           <button
@@ -266,6 +255,7 @@ export function CouncilStage({ hub, calm }: { hub: HubCtx | null; calm?: boolean
         live={live}
         mode={run.mode}
         calm={calm}
+        hideMode
         fallback={last ? { name: speakerName(last.from), text: last.summary ?? '' } : undefined}
       />
       {live.connected && running && mine.has(run.runId) && (

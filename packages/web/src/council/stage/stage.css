@@ -2,13 +2,14 @@
 .cn-stage {
   position: absolute;
   left: 50%;
-  bottom: var(--lv-s4, 16px);
+  /* the shell can be taller than the viewport: keep the stage fully on screen */
+  bottom: 56px;
   z-index: calc(var(--z-panel, 20) + 1);
   display: flex;
   flex-direction: column;
   gap: 6px;
   width: min(720px, calc(100% - 32px));
-  padding: 10px 12px;
+  padding: 8px 12px;
   transform: translateX(-50%);
   border: 2px solid var(--sq-ink, #0b1d38);
   border-radius: 14px;
@@ -150,3 +151,25 @@
   animation: none;
   opacity: 1;
 }
+
+/* compact stage: title row, seats with the latest handoff beside them, one caption line */
+.cn-stage .cn-captions {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  background: rgb(255 255 255 / 0.07);
+}
+.cn-stage .cn-captions__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font: 500 14px/1.45 var(--font-sans, system-ui);
+}
+.cn-stage .cn-captions__head { flex: none; }
+.cn-stage .cn-seat { font-size: 14px; }
+.cn-stage .cn-arrows { font-size: 13px; }

@@ -11,12 +11,15 @@ export function CouncilCaptions({
   mode,
   fallback,
   calm,
+  hideMode,
 }: {
   live: Pick<CouncilLiveState, 'speaker' | 'turns' | 'transcript'>;
   mode: string | undefined;
   /** Text to show when there is no live channel (the last public line, for runs on the streaming transport). */
   fallback?: { name: string; text: string } | undefined;
   calm?: boolean | undefined;
+  /** The host already shows the mode badge. */
+  hideMode?: boolean | undefined;
 }) {
   const turn: LiveTurn | undefined = live.speaker
     ? live.turns.find((t) => t.turn === live.speaker!.turn)
@@ -38,7 +41,7 @@ export function CouncilCaptions({
             {name}
           </span>
         ) : null}
-        <ModeBadge mode={mode} />
+        {hideMode ? null : <ModeBadge mode={mode} />}
         {turn?.state === 'streaming' ? (
           <span className="cn-captions__tag">Speaking</span>
         ) : turn?.state === 'cut' ? (

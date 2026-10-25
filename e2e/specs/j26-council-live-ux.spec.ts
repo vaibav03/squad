@@ -108,10 +108,8 @@ test('J26 a started council opens the hall: Demo banner, seats that change state
   await expect(stage(page)).toBeVisible({ timeout: 20_000 });
 
   // unmissable honesty: words, not only colour
-  await expect(page.getByTestId('demo-banner')).toContainText('Demo: scripted, not Gemini');
   await expect(stage(page).locator('.cb-mode').first()).toContainText('Fixture');
   await expect(stage(page)).not.toContainText('Live');
-  await expect(page.getByTestId('stage-transport')).toContainText('Demo');
 
   // seats: the chair and the three specialists, each with a state word
   await expect(page.getByTestId('council-seat')).toHaveCount(4, { timeout: 30_000 });
@@ -260,7 +258,6 @@ test('J26 LIVE=1: one tiny real council on the Gemini Live transport shows LIVE,
   await expect(page.locator('.sqv-stage')).toBeVisible({ timeout: 30_000 });
   const id = await startRun(page, 'live');
   await expect(stage(page)).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByTestId('stage-transport')).toContainText(/Gemini/);
   await expect(page.getByTestId('council-captions').getByTestId('caption-text')).not.toHaveText(
     'Waiting for the first words.',
     { timeout: 120_000 },
