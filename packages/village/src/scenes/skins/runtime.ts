@@ -1,5 +1,12 @@
 import type { Raster } from '../pixel/raster';
-import { SKIN_INDEX, SKIN_ROOT, type LayerName, type SkinIndex, type SkinLayout, type SkinManifest } from './types';
+import {
+  SKIN_INDEX,
+  SKIN_ROOT,
+  type LayerName,
+  type SkinIndex,
+  type SkinLayout,
+  type SkinManifest,
+} from './types';
 
 /** A skin ready to paint: decoded layers plus its anchors. Rasters are shared, never mutate. */
 export interface LoadedSkin {
@@ -62,7 +69,11 @@ export async function fetchSkinManifests(
     for (const rel of Object.values(idx.skins)) {
       if (typeof rel !== 'string' || !safeSkinPath(rel)) continue;
       const m = await fetchJson(url(`${SKIN_ROOT}/${rel}`));
-      if (isManifest(m) && Object.values(m.layers).every((f) => typeof f === 'string' && safeSkinPath(f))) out.push(m);
+      if (
+        isManifest(m) &&
+        Object.values(m.layers).every((f) => typeof f === 'string' && safeSkinPath(f))
+      )
+        out.push(m);
     }
     return out;
   } catch {

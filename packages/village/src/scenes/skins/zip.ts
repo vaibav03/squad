@@ -41,7 +41,8 @@ export function openZip(path: string): ZipFile {
     const count = tail.readUInt16LE(e + 10);
     const cdSize = tail.readUInt32LE(e + 12);
     const cdOff = tail.readUInt32LE(e + 16);
-    if (count === 0xffff || cdOff === 0xffffffff) throw new Error('zip64 archives are not supported');
+    if (count === 0xffff || cdOff === 0xffffffff)
+      throw new Error('zip64 archives are not supported');
     const cd = readAt(fd, cdOff, cdSize);
     const entries = new Map<string, ZipEntry>();
     let p = 0;

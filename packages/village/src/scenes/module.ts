@@ -240,7 +240,12 @@ async function loadSkins(ctx: HostCtx): Promise<Map<string, LoadedSkin>> {
       });
     }
     publishActiveSkins(
-      [...out.values()].map((k) => ({ scene: k.scene, id: k.id, title: k.title, credit: k.credit })),
+      [...out.values()].map((k) => ({
+        scene: k.scene,
+        id: k.id,
+        title: k.title,
+        credit: k.credit,
+      })),
     );
   } catch {
     out.clear();
@@ -630,7 +635,9 @@ const mod = {
       .then((a) => {
         if (!destroyed) assets = a;
       })
-      .catch((err: unknown) => ctx.log('scenes: asset load failed', err));
+      .catch((err: unknown) => {
+        ctx.log('scenes: asset load failed', err);
+      });
 
     function blit(tex: CanvasTex | null, r: Raster): void {
       if (!tex) return;

@@ -13,7 +13,13 @@ export function interiorSkinPlugin(repoRoot: string): Plugin {
     name: 'squad-interior-skin',
     transformIndexHtml: () =>
       existsSync(index)
-        ? [{ tag: 'meta', attrs: { name: 'squad-interior-skin', content: 'on' }, injectTo: 'head' as const }]
+        ? [
+            {
+              tag: 'meta',
+              attrs: { name: 'squad-interior-skin', content: 'on' },
+              injectTo: 'head' as const,
+            },
+          ]
         : [],
   };
 }

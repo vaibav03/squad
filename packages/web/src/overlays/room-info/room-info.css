@@ -585,7 +585,7 @@
 .rr-skin {
   position: absolute;
   left: max(var(--lv-s4), var(--safe-left, 0px));
-  top: calc(var(--room-help-top, 72px) + var(--safe-top, 0px));
+  top: calc(var(--room-help-top, 72px) + 64px + var(--safe-top, 0px));
   margin: 0;
   padding: 2px 8px;
   border-radius: 6px;

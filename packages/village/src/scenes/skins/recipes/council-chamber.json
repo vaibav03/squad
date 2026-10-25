@@ -3,10 +3,7 @@
   "scene": "council-hall",
   "title": "Council Chamber (Modern Interiors)",
   "credit": "World art: Modern Interiors by LimeZu",
-  "size": [
-    224,
-    128
-  ],
+  "size": [224, 128],
   "sheets": {
     "conf": "1_Interiors/16x16/Theme_Sorter/13_Conference_Hall_16x16.png",
     "generic": "1_Interiors/16x16/Theme_Sorter/1_Generic_16x16.png",
@@ -143,6 +140,15 @@
         "x": 0,
         "y": 32,
         "w": 224,
+        "h": 96,
+        "color": "#241247",
+        "alpha": 0.34
+      },
+      {
+        "op": "fill",
+        "x": 0,
+        "y": 32,
+        "w": 224,
         "h": 4,
         "color": "#1b1030",
         "alpha": 0.28
@@ -150,7 +156,7 @@
       {
         "op": "fill",
         "x": 66,
-        "y": 110,
+        "y": 116,
         "w": 92,
         "h": 6,
         "color": "#0e0820",
@@ -209,14 +215,14 @@
       {
         "op": "put",
         "sprite": "plant-a",
-        "x": 8,
-        "y": 92
+        "x": 10,
+        "y": 94
       },
       {
         "op": "put",
         "sprite": "plant-a",
         "x": 194,
-        "y": 92,
+        "y": 94,
         "flip": true
       },
       {
@@ -236,6 +242,54 @@
         "sprite": "stool",
         "x": 100,
         "y": 110
+      },
+      {
+        "op": "fill",
+        "x": 0,
+        "y": 0,
+        "w": 3,
+        "h": 128,
+        "color": "#1d1236"
+      },
+      {
+        "op": "fill",
+        "x": 221,
+        "y": 0,
+        "w": 3,
+        "h": 128,
+        "color": "#1d1236"
+      },
+      {
+        "op": "fill",
+        "x": 0,
+        "y": 125,
+        "w": 224,
+        "h": 3,
+        "color": "#1d1236"
+      },
+      {
+        "op": "fill",
+        "x": 3,
+        "y": 0,
+        "w": 1,
+        "h": 125,
+        "color": "#4b3a7a"
+      },
+      {
+        "op": "fill",
+        "x": 220,
+        "y": 0,
+        "w": 1,
+        "h": 125,
+        "color": "#4b3a7a"
+      },
+      {
+        "op": "fill",
+        "x": 3,
+        "y": 124,
+        "w": 218,
+        "h": 1,
+        "color": "#4b3a7a"
       }
     ],
     "mid": [
@@ -245,7 +299,7 @@
         "mid": "table-m",
         "right": "table-r",
         "x": 64,
-        "y": 80,
+        "y": 86,
         "w": 96
       }
     ]
@@ -270,22 +324,12 @@
     ],
     "chair": {
       "x": 112,
-      "y": 89
+      "y": 86
     },
-    "rowX": [
-      50,
-      112,
-      174
-    ],
+    "rowX": [50, 112, 174],
     "rowTip": 66,
-    "lantern": [
-      112,
-      30
-    ],
-    "planSheet": [
-      37,
-      4
-    ],
+    "lantern": [112, 30],
+    "planSheet": [37, 4],
     "floorRing": false,
     "entry": {
       "x": 112,

@@ -10,6 +10,8 @@ Required credit line, shown in the app footer and in any recording or screenshot
 
 > World art: Modern Interiors by LimeZu
 
+The optional Council Chamber skin (`docs/interior-skin.md`, `pnpm interior:import`) composes the room from the licensed pack into `assets/vendor/interiors/` on the owner's machine only; its credit shows in the room panel while it is active.
+
 Anyone who clones this repo does not get the pack and must buy their own license to use it.
 
 ## Pixel art (`assets/pixel/`)
