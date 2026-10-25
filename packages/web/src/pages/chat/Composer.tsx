@@ -88,6 +88,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   const [drag, setDrag] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [ctx, setCtx] = useState<ChatContextRef[]>([]);
+  const askRef = useRef<ReturnType<typeof takePendingAsk>>(null);
   const area = useRef<HTMLTextAreaElement>(null);
   const file = useRef<HTMLInputElement>(null);
   const draftsRef = useRef(drafts);
@@ -127,12 +128,15 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   // "Ask Cubbie": take the queued item for this chat, verify it with the hub, show the chip, prefill (never send).
   useEffect(() => {
     if (!api?.contextRef || !chatId) return;
-    const ask = takePendingAsk(chatId);
+    // StrictMode (and a re-run when `api` arrives) runs this effect twice: the ask is taken once and kept in a ref
+    const ask = askRef.current?.chatId === chatId ? askRef.current : takePendingAsk(chatId);
     if (!ask) return;
+    askRef.current = ask;
     let dead = false;
     void Promise.all(ask.sourceIds.map((s) => api.contextRef!(s.sourceId, s.anchor))).then(
       (rs) => {
         if (dead) return;
+        askRef.current = null; // attached: a later re-run must not attach it again
         const refs = rs.map((r) => (chatKind === 'group' ? r.groupView : r.ref));
         setCtx(refs);
         const t = ask.prefill ?? defaultPrefill(refs[0]?.title ?? 'this');
