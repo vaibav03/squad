@@ -1,0 +1,494 @@
+{
+ "ui/envelope.png": {
+  "size": [
+   16,
+   12
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "ui/envelope-pop.png": {
+  "size": [
+   72,
+   14
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   18,
+   14
+  ],
+  "count": 4,
+  "fps": 22,
+  "anchor": "bottom-center",
+  "note": "180ms ease-out pop: sizes 6x5, 12x9, 18x14 overshoot, 16x12 final"
+ },
+ "ui/padlock.png": {
+  "size": [
+   8,
+   8
+  ],
+  "source": "hand-pixeled",
+  "license": "original"
+ },
+ "ui/padlock-open.png": {
+  "size": [
+   8,
+   8
+  ],
+  "source": "hand-pixeled",
+  "license": "original"
+ },
+ "ui/door-ring.png": {
+  "size": [
+   96,
+   16
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   32,
+   16
+  ],
+  "count": 3,
+  "anchor": "center",
+  "note": "3 sizes 24x12/28x14/32x16 centred in 32x16 frames; pulse by scale/alpha tween per motion row 10"
+ },
+ "ui/door-ring-ok.png": {
+  "size": [
+   24,
+   12
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "note": "ok-coloured ring"
+ },
+ "ui/check.png": {
+  "size": [
+   12,
+   10
+  ],
+  "source": "hand-pixeled",
+  "license": "original"
+ },
+ "ui/marker-alert.png": {
+  "size": [
+   8,
+   14
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "ui/marker-question.png": {
+  "size": [
+   8,
+   14
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "ui/lantern-council.png": {
+  "size": [
+   30,
+   16
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   10,
+   16
+  ],
+  "count": 3,
+  "fps": 6,
+  "anchor": "top-center (5,0)",
+  "note": "3-frame flicker; hangs from the top"
+ },
+ "ui/lantern-dissent.png": {
+  "size": [
+   30,
+   16
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   10,
+   16
+  ],
+  "count": 3,
+  "fps": 6,
+  "anchor": "top-center (5,0)",
+  "note": "3-frame flicker; hangs from the top"
+ },
+ "ui/lantern-street.png": {
+  "size": [
+   30,
+   16
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   10,
+   16
+  ],
+  "count": 3,
+  "fps": 3,
+  "anchor": "top-center (5,0)",
+  "note": "3-frame flicker; hangs from the top"
+ },
+ "ui/zzz.png": {
+  "size": [
+   42,
+   18
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   14,
+   18
+  ],
+  "count": 3,
+  "fps": 2,
+  "anchor": "bottom-left"
+ },
+ "ui/notes.png": {
+  "size": [
+   17,
+   9
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   9,
+   8
+  ],
+  "count": 2,
+  "fps": 3
+ },
+ "ui/bubble-wall.png": {
+  "size": [
+   24,
+   24
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "nineslice": {
+   "corner": 5,
+   "size": [
+    24,
+    24
+   ],
+   "stretch_center": [
+    5,
+    5,
+    14,
+    14
+   ]
+  }
+ },
+ "ui/bubble-wall-tail-left.png": {
+  "size": [
+   8,
+   6
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "top-left",
+  "note": "top row overlaps the bubble bottom border; x offset from bubble left >= 6"
+ },
+ "ui/bubble-wall-tail-right.png": {
+  "size": [
+   8,
+   6
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "top-right",
+  "note": "mirror of left; top row overlaps bottom border"
+ },
+ "ui/thought-wall-dots.png": {
+  "size": [
+   8,
+   11
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "top-left",
+  "note": "2 trailing dots; place below the bubble bottom border"
+ },
+ "ui/bubble-moon.png": {
+  "size": [
+   24,
+   24
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "nineslice": {
+   "corner": 5,
+   "size": [
+    24,
+    24
+   ],
+   "stretch_center": [
+    5,
+    5,
+    14,
+    14
+   ]
+  }
+ },
+ "ui/bubble-moon-tail-left.png": {
+  "size": [
+   8,
+   6
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "top-left",
+  "note": "top row overlaps the bubble bottom border; x offset from bubble left >= 6"
+ },
+ "ui/bubble-moon-tail-right.png": {
+  "size": [
+   8,
+   6
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "top-right",
+  "note": "mirror of left; top row overlaps bottom border"
+ },
+ "ui/thought-moon-dots.png": {
+  "size": [
+   8,
+   11
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "top-left",
+  "note": "2 trailing dots; place below the bubble bottom border"
+ },
+ "ui/withheld-bar.png": {
+  "size": [
+   16,
+   8
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "nineslice": {
+   "corner": 2,
+   "size": [
+    16,
+    8
+   ]
+  },
+  "note": "static black bar; stretch horizontally; never animated"
+ },
+ "ui/notice-board.png": {
+  "size": [
+   64,
+   48
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "slots": {
+   "size": [
+    16,
+    12
+   ],
+   "origin_xy": [
+    [
+     5,
+     15
+    ],
+    [
+     23,
+     15
+    ],
+    [
+     41,
+     15
+    ],
+    [
+     5,
+     28
+    ],
+    [
+     23,
+     28
+    ],
+    [
+     41,
+     28
+    ]
+   ],
+   "face_rect": [
+    4,
+    15,
+    56,
+    26
+   ],
+   "note": "6 slots 3x2"
+  }
+ },
+ "ui/notice-board-lit.png": {
+  "size": [
+   64,
+   48
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "slots": {
+   "size": [
+    16,
+    12
+   ],
+   "origin_xy": [
+    [
+     5,
+     15
+    ],
+    [
+     23,
+     15
+    ],
+    [
+     41,
+     15
+    ],
+    [
+     5,
+     28
+    ],
+    [
+     23,
+     28
+    ],
+    [
+     41,
+     28
+    ]
+   ],
+   "face_rect": [
+    4,
+    15,
+    56,
+    26
+   ]
+  }
+ },
+ "ui/card-shared.png": {
+  "size": [
+   16,
+   12
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "note": "green tick"
+ },
+ "ui/card-hidden.png": {
+  "size": [
+   16,
+   12
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "note": "padlock + black bar"
+ },
+ "ui/card-blocked.png": {
+  "size": [
+   16,
+   12
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "note": "red stop mark"
+ },
+ "ui/card-pinned.png": {
+  "size": [
+   16,
+   12
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "note": "pinned envelope"
+ },
+ "ui/trip-door.png": {
+  "size": [
+   64,
+   40
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   32,
+   40
+  ],
+  "count": 2,
+  "anchor": "bottom-center",
+  "note": "frame 0 closed, 1 open"
+ },
+ "ui/emote-alert.png": {
+  "size": [
+   16,
+   16
+  ],
+  "source": "assets/pixel/ui/ninja-adventure/Emote/emote21.png requantized",
+  "license": "CC0 Ninja Adventure",
+  "native": "16px, 2x coarser than scene art: use ONLY at scale 1, above characters",
+  "anchor": "bottom-center"
+ },
+ "ui/emote-question.png": {
+  "size": [
+   16,
+   16
+  ],
+  "source": "assets/pixel/ui/ninja-adventure/Emote/emote23.png requantized",
+  "license": "CC0 Ninja Adventure",
+  "native": "16px, 2x coarser than scene art: use ONLY at scale 1, above characters",
+  "anchor": "bottom-center"
+ },
+ "ui/emote-heart.png": {
+  "size": [
+   16,
+   16
+  ],
+  "source": "assets/pixel/ui/ninja-adventure/Emote/emote27.png requantized",
+  "license": "CC0 Ninja Adventure",
+  "native": "16px, 2x coarser than scene art: use ONLY at scale 1, above characters",
+  "anchor": "bottom-center"
+ },
+ "ui/emote-zzz.png": {
+  "size": [
+   16,
+   16
+  ],
+  "source": "assets/pixel/ui/ninja-adventure/Emote/emote28.png requantized",
+  "license": "CC0 Ninja Adventure",
+  "native": "16px, 2x coarser than scene art: use ONLY at scale 1, above characters",
+  "anchor": "bottom-center"
+ },
+ "ui/emote-dots.png": {
+  "size": [
+   16,
+   16
+  ],
+  "source": "assets/pixel/ui/ninja-adventure/Emote/emote20.png requantized",
+  "license": "CC0 Ninja Adventure",
+  "native": "16px, 2x coarser than scene art: use ONLY at scale 1, above characters",
+  "anchor": "bottom-center"
+ },
+ "ui/emote-smile.png": {
+  "size": [
+   16,
+   16
+  ],
+  "source": "assets/pixel/ui/ninja-adventure/Emote/emote11.png requantized",
+  "license": "CC0 Ninja Adventure",
+  "native": "16px, 2x coarser than scene art: use ONLY at scale 1, above characters",
+  "anchor": "bottom-center"
+ }
+}
