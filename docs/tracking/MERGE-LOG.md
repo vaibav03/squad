@@ -173,3 +173,37 @@ Frames: `docs/design/shots/merge3/{village-desk,village-phone,chat-desk}.png`. L
 
 - Landing merge commit: `d4e974e357385151746bdef13865e45c4482b5c5` (parents `af2b4310d5da09c450442fbabff467962d951b45` = tag `pre-merge-batch3`, and `517e02f5142f18a5ebc4a02ce15608736aa9665a` = origin/merge/batch3; `git diff origin/merge/batch3` empty), then origin/main tracker commits merged in as `42450c7eea8c1ce3ee49de41ef8ad6dc5f38263c`.
 - Rollback: `git revert -m 1 d4e974e357385151746bdef13865e45c4482b5c5`.
+
+## Batch 4 (product): product/accounts, product/proactive, product/courses into main
+
+Branch `merge/batch4` (worktree `squad-wt/merge4`), landed as a true `--no-ff` merge.
+
+### Manual resolutions (union, both sides kept)
+
+1. `apps/hub/src/app.ts` CORS: one block, allow headers incl. `x-squad-id`, methods `GET POST PUT PATCH DELETE OPTIONS` (present once), expose `content-type, x-squad-token`, `credentials: true`; all route mounts from both sides (chat, council, library, invites, members, squads).
+2. `apps/hub/src/auth.ts`: `TokenKind = 'bearer' | 'session' | 'stream' | 'call' | 'file'`, `SESSION_COOKIE` kept.
+3. `apps/hub/src/types.ts` `LedgerStore`: both `privateValues()` and `forget(student)`.
+4. `packages/web/src/index.ts`, `shell/routes.tsx`: exports `source-viewer` and `auth`; routes chat, squad-create, squad-members.
+5. `packages/brain/src/index.ts` and `apps/bot/src/skills/index.ts`: union (`library` + `skills/nudges` exports; `SkillDeps` gets both main's council/shared fields and `proactive`).
+6. Typecheck fix after the merge: `library/index.ts` re-exported its internal `withTimeout`, clashing with quiz's exported `withTimeout` (TS2308); removed that one re-export (library code imports it directly).
+7. SourceViewerHost: mounted once, only by the courses page (`pages/courses/source.tsx`); chat pages do not mount one.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` | pass |
+| `pnpm demo:live`, `pnpm test:smoke hub` (97 tests) | pass |
+| Browser (dev:all hub :18844 web :15244, dev-login token in `squad.session` and `squad.token`) | village 1280x800 and 390x844, /squad/courses, /squad/chat: 0 page errors, 0 console errors, 0 HTTP >= 400; chat answered "@Cubbie what is a hash table?" (demo model: "Not in the materials. Ask the TA."); a Courses nav entry appears |
+
+Note for testers: with accounts, a dev-login session must also be stored under `squad.token` or the app shows the onboarding screen (a first haiku run hit this: 401s and the welcome flow). Frames: `docs/design/shots/merge4/`.
+
+### Known gaps
+
+- Courses page shows the empty library state in demo; uploads were not exercised.
+- Account sign-in by code (iMessage/console sender) not exercised in a browser.
+
+### Landing (batch 4)
+
+- Landing merge commit: `9bf3216c8a8e54f08ba76dfaf45b620425d90729` (parents `487ee4bddbe34bb699a4246f4b14a664d50e0077` = tag `pre-merge-batch4`, `9df8258f1df581204dcafd7356fccdad8e28571c` = origin/merge/batch4; diff empty).
+- Rollback: `git revert -m 1 9bf3216c8a8e54f08ba76dfaf45b620425d90729`.
