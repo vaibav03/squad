@@ -2,9 +2,9 @@
 // Generates assets/interior/maps/demo.json (Tiled JSON, orthogonal, 16px) from the ASCII plans below.
 // Run gen-tileset.mjs first (this script reads tileset.json and props.json for gids and sprite sizes).
 //
-// BUILDING LAYOUT (tile coordinates, 48 x 34):
+// BUILDING LAYOUT (tile coordinates, 48 x 32):
 //   rows 0-1 void | row 2 cap, 3 face.hi, 4 face | top rooms floor rows 5-12 | row 13 cap, 14 hi, 15 face
-//   | bottom rooms floor rows 16-27 | row 28 cap, 29 hi, 30 face | rows 31-33 void.
+//   | bottom rooms floor rows 16-27 | row 28 outer south cap (no face) | rows 29-31 void.
 //   Vertical dividers are cap-only columns (see lib/tiles.mjs). Walls are 3 rows tall.
 //
 //        0         1         2         3         4
@@ -28,7 +28,7 @@ const prJson = JSON.parse(
 ).props;
 
 const W = 48;
-const H = 34;
+const H = 32;
 const T = 16;
 
 // ---------------------------------------------------------------- rooms
@@ -175,7 +175,7 @@ const PLANS = {
     '............u...r...', // 8
     '..............y.b.x.',
     '....................',
-    'pkkk...KK.wa....G..P', // 11 south wall: couch (seen from behind), cabinet, cooler, coat rack
+    'pkkk...KK.wa.SS.G..P', // 11 south wall: couch (seen from behind), cabinet, cooler, coat rack
   ],
   library: [
     //012345678901234567
@@ -195,6 +195,13 @@ const PLANS = {
 };
 
 // flat decor placed in the furniture layer: [tileName, roomId, localX, localY]
+// rect rugs from the 3x3 rug sets: [prefix, roomId, localX, localY, w, h]
+const RUG_RECTS = [
+  ['rug.lounge', 'commons', 9, 5, 7, 5],
+  ['rug.lounge', 'hall', 3, 1, 5, 4],
+  ['rug.reading', 'library', 13, 2, 4, 4],
+  ['rug.reading', 'library', 13, 6, 4, 4],
+];
 const RUGS = [
   ...[
     ['tl', 11, 5],
@@ -287,11 +294,13 @@ const doorCells = (d) => {
 };
 for (const d of DOORS) for (const [x, y] of doorCells(d)) type[idx(x, y)] = 'gap';
 
+// The building's outer south wall is cap-only (its face would be exterior): it ends cleanly on void.
+const OUTER_SOUTH_CAP_ROW = 28;
 // faces: two rows under every cap cell whose south neighbour is not wall/floor/gap
 const faceRow = new Array(W * H).fill(0); // 1 = hi, 2 = lo
 for (let y = 0; y < H; y++)
   for (let x = 0; x < W; x++)
-    if (tyAt(x, y) === 'cap' && tyAt(x, y + 1) === 'void') {
+    if (y !== OUTER_SOUTH_CAP_ROW && tyAt(x, y) === 'cap' && tyAt(x, y + 1) === 'void') {
       type[idx(x, y + 1)] = 'face';
       faceRow[idx(x, y + 1)] = 1;
       if (tyAt(x, y + 2) === 'void') {
@@ -323,7 +332,7 @@ const themeOfFace = (x, y) => {
     if (tyAt(x + dx, y) === 'floor') return ROOMS[roomAt[idx(x + dx, y)]].theme;
   return 'commons';
 };
-const windowCells = new Set(WINDOWS.map(([r, lx]) => `${ROOMS[r].x + lx},${ROOMS[r].y - 3}`));
+const windowCells = new Set([...WINDOWS.map(([r, lx]) => `${ROOMS[r].x + lx},${ROOMS[r].y - 3}`)]);
 
 // ground: floors
 const planksKey = (x, y) => (x * 3 + y * 5) % 3;
@@ -426,6 +435,18 @@ for (let y = 0; y < H; y++)
   }
 
 const cellOf = (roomId, lx, ly) => [ROOMS[roomId].x + lx, ROOMS[roomId].y + ly];
+for (const [prefix, rid, lx, ly, w, h] of RUG_RECTS)
+  for (let j = 0; j < h; j++)
+    for (let i = 0; i < w; i++) {
+      const [x, y] = cellOf(rid, lx + i, ly + j);
+      if (tyAt(x, y) !== 'floor') throw new Error(`rug ${prefix} off floor at ${x},${y}`);
+      const row = j === 0 ? 't' : j === h - 1 ? 'b' : '';
+      const col = i === 0 ? 'l' : i === w - 1 ? 'r' : '';
+      const nm = row || col ? (row && col ? `${row}${col}` : row ? `${row}` : `${col}`) : 'c';
+      furniture[idx(x, y)] = gid(
+        `${prefix}.${{ t: 't', b: 'b', l: 'l', r: 'r', tl: 'tl', tr: 'tr', bl: 'bl', br: 'br', c: 'c' }[nm]}`,
+      );
+    }
 for (const [name, rid, lx, ly] of RUGS) {
   const [x, y] = cellOf(rid, lx, ly);
   if (tyAt(x, y) !== 'floor') throw new Error(`rug ${name} off floor at ${x},${y}`);

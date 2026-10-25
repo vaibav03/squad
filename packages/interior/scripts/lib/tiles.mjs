@@ -12,7 +12,7 @@
 //   outline of the floor corner closes. Dividers hanging from a horizontal wall start in the cap
 //   row and simply replace the face tiles in their column with cap tiles.
 import { Pix } from './png.mjs';
-import { rng, hline, vline, frame, darken, shadowCol, roundCorners } from './draw.mjs';
+import { rng, hline, vline, darken, shadowCol, roundCorners } from './draw.mjs';
 
 export const THEMES = {
   // plaster (hi, body, shade) + wainscot (rail, panel, line, base)
@@ -655,6 +655,72 @@ export function buildTiles(C) {
     3,
     2,
     'rug.play',
+  );
+
+  // Resizable 3x3 rugs: tl t tr / l c r / bl b br. Repeat t, b, l, r and c for any size >= 2x2.
+  const rug9 = (prefix, profile, fieldA, fieldB, lattice, dots) => {
+    const names = [
+      ['tl', 't', 'tr'],
+      ['l', 'c', 'r'],
+      ['bl', 'b', 'br'],
+    ];
+    for (let j = 0; j < 3; j++)
+      for (let i = 0; i < 3; i++) {
+        const nm = names[j][i];
+        const open = { n: j === 0, s: j === 2, w: i === 0, e: i === 2 };
+        tile(`${prefix}.${nm}`, (p) => {
+          for (let y = 0; y < 16; y++)
+            for (let x = 0; x < 16; x++) {
+              const ds = [];
+              if (open.n) ds.push(y);
+              if (open.s) ds.push(15 - y);
+              if (open.w) ds.push(x);
+              if (open.e) ds.push(15 - x);
+              const d = ds.length ? Math.min(...ds) : 99;
+              let c;
+              if (d < profile.length) c = C[profile[d]];
+              else {
+                c = x >> 3 === y >> 3 ? C[fieldA] : C[fieldB];
+                // diamond motif: same phase on every tile so the field tiles seamlessly
+                const lx = x & 7,
+                  ly = y & 7;
+                const dx = Math.abs(lx - 3.5),
+                  dy = Math.abs(ly - 3.5);
+                if (dx + dy <= 1.5) c = C[lattice];
+                else if (dx + dy <= 2.5 && dx + dy > 2) c = C[dots];
+              }
+              p.set(x, y, c);
+            }
+          if (nm === 'tl') p.set(0, 0, clear);
+          if (nm === 'tr') p.set(15, 0, clear);
+          if (nm === 'bl') p.set(0, 15, clear);
+          if (nm === 'br') p.set(15, 15, clear);
+        });
+      }
+  };
+  rug9(
+    'rug.lounge',
+    ['line', 'orange', 'peach-sh', 'cream-hi', 'peach-sh', 'peach'],
+    'peach',
+    'peach-hi',
+    'orange',
+    'peach-sh',
+  );
+  rug9(
+    'rug.gallery',
+    ['line', 'teal-hi', 'teal', 'cream-hi', 'teal', 'teal-sh'],
+    'teal',
+    'teal-hi',
+    'cream-hi',
+    'teal-sh',
+  );
+  rug9(
+    'rug.reading',
+    ['line', 'wine-hi', 'wine', 'glow', 'wine', 'wine-dk'],
+    'moss',
+    'moss-hi',
+    'cream-hi',
+    'moss-sh',
   );
 
   // hearth rug 3x1 (48x16)

@@ -1,5 +1,5 @@
 import { Pix } from './png.mjs';
-export function drawContact(path, { tiles, tileSheet, placed, atlas, C }) {
+export function drawContact(path, { tiles, placed }) {
   const S = 3;
   const bg = [58, 42, 58, 255];
   const cols = 16;

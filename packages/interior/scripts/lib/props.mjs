@@ -13,7 +13,7 @@
 //                        and 6px of wainscot below transparent so the wall shows around it
 //   wall.clock 16x16, wall.frame 16x16, wall.frame.wide 32x16, wall.map 32x24, bulletin.board 48x32, council.banner 16x32, hearth 48x32
 //                        wall-hung: place with the sprite bottom on the wall base row's bottom edge (2-row tall wall faces)
-//   lamp.floor 16x32, lamp.floor.glow 48x48 (lamp centred at x 16..31 with a baked warm halo)
+//   lamp.floor 16x32, lamp.floor.glow 48x48 (lamp centred at x 16..31 with a baked warm halo), lamp.floor.glow2 (2nd frame)
 //   couch 48x32 (front), couch.blue, couch.back (seen from behind), bench 32x24
 //   bean.bag.red/.blue/.yellow 16x16, toy.bin 16x24, globe 16x24, cabinet 32x32, water.cooler 16x32, coat.rack 16x32
 //   council.table 80x32, council.chair.down/.up/.l/.r 16x32 (high backs), council.banner 16x32
@@ -25,14 +25,11 @@ import {
   rng,
   hline,
   vline,
-  frame,
   ellipse,
-  art,
   flipH,
   contactShadow,
   box3,
   remap,
-  darken,
   shadowCol,
 } from './draw.mjs';
 
@@ -71,14 +68,6 @@ export function buildProps(C) {
     front: K('wood-lit'),
     frontHi: K('wood-hi'),
     frontSh: K('wood-mid'),
-  };
-  const darkWood = {
-    line: K('line'),
-    top: K('wood'),
-    topHi: K('wood-lit'),
-    front: K('wood-dark'),
-    frontHi: K('wood'),
-    frontSh: K('wood-deep'),
   };
 
   // ------------------------------------------------------------ desks
@@ -228,7 +217,7 @@ export function buildProps(C) {
       x += w;
     }
   };
-  const shelf = (w, h, seed, th = darkWood) =>
+  const shelf = (w, h, seed) =>
     S(w, h, (p) => {
       const r = rng(seed);
       const baseY = h - 4;
@@ -310,12 +299,11 @@ export function buildProps(C) {
       [12, 4],
     ])
       p.set(x, y, K('cream'));
-    // tablecloth runner + teapot + two mugs (asymmetric so it does not read as a face)
-    cup(p, 8, 12);
-    cup(p, 21, 10, false);
-    teapot(p, 13, 9);
-    p.rect(19, 14, 5, 2, K('line'));
-    p.rect(20, 14, 3, 1, K('trim-hi'));
+    // a teapot and one mug, bunched to the right (a symmetric scatter reads as a face)
+    teapot(p, 16, 11);
+    cup(p, 23, 12);
+    p.rect(9, 15, 5, 2, K('line'));
+    p.rect(10, 15, 3, 1, K('trim-hi'));
   });
   add('round.table', roundTable, 'full');
 
@@ -649,7 +637,7 @@ export function buildProps(C) {
   add('hearth', hearth, 'none');
 
   // ------------------------------------------------------------ lamps
-  const lamp = (halo) => {
+  const lamp = (halo, frame = 0) => {
     const W = halo ? 48 : 16;
     const H = halo ? 48 : 32;
     const ox = halo ? 16 : 0;
@@ -658,9 +646,9 @@ export function buildProps(C) {
       if (halo) {
         const gl = (a) => [255, 214, 116, a];
         const rows = [
-          [22, 20, 26],
-          [17, 15, 38],
-          [12, 10, 52],
+          [18 + frame * 3, 16 + frame * 2, 24 - frame * 6],
+          [14 + frame * 2, 12 + frame, 34 - frame * 6],
+          [10, 8, 46],
         ];
         for (const [rx, ry, a] of rows) ellipse(p, 24, 22, rx, ry, gl(a));
       }
@@ -686,6 +674,9 @@ export function buildProps(C) {
   add('lamp.floor', lamp(false), footBottom(lamp(false), 1), true);
   const lg = lamp(true);
   add('lamp.floor.glow', lg, { x: 16, y: 32, w: 16, h: 16 }, true);
+  // second animation frame (halo breathes out one step): same footprint and anchor
+  const lg2 = lamp(true, 1);
+  add('lamp.floor.glow2', lg2, { x: 16, y: 32, w: 16, h: 16 }, true);
 
   // ------------------------------------------------------------ couches
   const couchFront = S(48, 32, (p) => {
@@ -913,41 +904,39 @@ export function buildProps(C) {
 
   const coatRack = S(16, 32, (p) => {
     contactShadow(p, 1, 28, 14, 4, 80);
+    // star base, pole, knob
     p.rect(3, 27, 10, 2, K('line'));
     hline(p, 4, 27, 8, K('wood-lit'));
-    p.rect(7, 4, 2, 24, K('line'));
-    vline(p, 7, 5, 22, K('wood-lit'));
-    vline(p, 8, 5, 22, K('wood-mid'));
+    p.rect(7, 5, 2, 23, K('line'));
+    vline(p, 7, 6, 21, K('wood-lit'));
+    vline(p, 8, 6, 21, K('wood-mid'));
+    p.rect(6, 3, 4, 3, K('line'));
+    p.rect(7, 3, 2, 2, K('glow'));
+    // hooks
     for (const [x, y] of [
-      [4, 6],
-      [11, 6],
-      [4, 13],
-      [11, 13],
+      [4, 8],
+      [10, 10],
     ]) {
-      p.rect(x, y, 2, 2, K('line'));
-      p.set(x, y, K('wood-hi'));
+      p.rect(x, y, 3, 2, K('line'));
+      p.set(x + 1, y, K('wood-hi'));
     }
-    p.rect(6, 2, 4, 2, K('line'));
-    // coat on the left hook: shoulders, body, sleeve
-    p.rect(1, 9, 8, 3, K('line'));
-    p.rect(2, 9, 6, 2, K('red'));
-    hline(p, 2, 9, 6, K('orange'));
-    p.rect(2, 12, 7, 11, K('line'));
-    p.rect(3, 12, 5, 10, K('red'));
-    vline(p, 3, 12, 10, K('orange'));
-    vline(p, 7, 12, 10, K('wine'));
-    hline(p, 3, 22, 5, K('wine'));
-    p.set(5, 15, K('yellow'));
-    p.set(5, 18, K('yellow'));
+    // coat hanging on the left hook: shoulders, body, buttons
+    p.rect(1, 10, 7, 3, K('line'));
+    p.rect(2, 10, 5, 2, K('red'));
+    hline(p, 2, 10, 5, K('orange'));
+    p.rect(2, 13, 6, 11, K('line'));
+    p.rect(3, 13, 4, 10, K('red'));
+    vline(p, 3, 13, 10, K('orange'));
+    vline(p, 6, 13, 10, K('wine'));
+    hline(p, 3, 23, 4, K('wine'));
+    p.set(5, 16, K('yellow'));
+    p.set(5, 19, K('yellow'));
     // scarf on the right hook
-    p.rect(10, 12, 4, 8, K('line'));
-    p.rect(11, 13, 2, 6, K('teal'));
+    p.rect(10, 12, 4, 9, K('line'));
+    p.rect(11, 13, 2, 7, K('teal'));
     hline(p, 11, 13, 2, K('teal-hi'));
     p.set(11, 16, K('cream-hi'));
     p.set(12, 18, K('cream-hi'));
-    // hat on top
-    p.rect(3, 2, 4, 3, K('line'));
-    p.rect(4, 2, 2, 2, K('yellow'));
   });
   add('coat.rack', coatRack, footBottom(coatRack, 1), true);
 
@@ -960,12 +949,12 @@ export function buildProps(C) {
       vline(p, lx + 2, 23, 5, K('wood-dark'));
     }
     p.rect(1, 3, 78, 21, K('line'));
-    p.rect(2, 4, 76, 15, K('wood'));
-    hline(p, 2, 4, 76, K('wood-lit'));
-    vline(p, 2, 4, 15, K('wood-lit'));
-    p.rect(2, 19, 76, 2, K('wood-dark'));
-    p.rect(2, 21, 76, 2, K('wood-deep'));
-    hline(p, 2, 19, 76, K('wood'));
+    p.rect(2, 4, 76, 15, K('wood-lit'));
+    hline(p, 2, 4, 76, K('wood-hi'));
+    vline(p, 2, 4, 15, K('wood-hi'));
+    p.rect(2, 19, 76, 2, K('wood-mid'));
+    p.rect(2, 21, 76, 2, K('wood'));
+    hline(p, 2, 19, 76, K('wood-lit'));
     // runner
     p.rect(6, 7, 68, 9, K('line'));
     p.rect(7, 8, 66, 7, K('wine'));
@@ -1063,7 +1052,14 @@ export function buildProps(C) {
       p.rect(lx, 16, 3, 6, K('line'));
       vline(p, lx + 1, 17, 4, K('wood'));
     }
-    box3(p, 1, 3, 30, 8, 14, darkWood);
+    box3(p, 1, 3, 30, 8, 14, {
+      ...wood,
+      top: K('wood-lit'),
+      topHi: K('wood-hi'),
+      front: K('wood-mid'),
+      frontHi: K('wood-lit'),
+      frontSh: K('wood'),
+    });
     // open book
     p.rect(4, 4, 12, 6, K('line'));
     p.rect(5, 5, 5, 4, K('cream-hi'));

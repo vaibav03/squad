@@ -6,10 +6,27 @@
 //   assets/interior/placeholder/_contact.png                 (contact sheet of every tile and prop)
 // Original CC0 pixel art, no third-party pixels. The licensed pack replaces it later via the same names.
 //
-// ---------------------------------------------------------------- NAMING / CONVENTIONS (see also tiles.mjs, props.mjs)
-// Tiled gid = tileset index + 1. Wall = 3 rows: wall.cap.* / wall.face.hi.* / wall.face.* (lower, above floor).
-// Prop foot = blocking footprint in sprite pixels (tile-aligned in map space, bottom of the sprite).
-// foot w=h=0 means "non-blocking decor / wall-hung".
+// ---------------------------------------------------------------- CONVENTIONS (read this before editing maps)
+// Tiled gid = tileset index + 1 (tileset.json "tiles" maps name -> index; 16 columns).
+//
+// WALLS (3/4 view, light from top-left). A horizontal wall is THREE map rows:
+//   wall.cap.<mask>     flat top surface; 4-neighbour autotile, mask N=1 E=2 S=4 W=8 = "a cap tile exists that way"
+//   wall.face.hi.<k>    upper front face (crown moulding on top)
+//   wall.face.<k>       lower front face with wainscot, sits directly above the floor row
+//   k = plain | skirt | window | left-end | right-end | pillar (lower), plain | window | left-end | right-end | pillar (hi)
+//   Themes: unprefixed = commons (peach); wall.face.class.* (teal), .library.* (moss), .council.* (plum), .hall.* (greige).
+//   Vertical walls (dividers between side-by-side rooms) are CAP-ONLY columns. Where a cap run ends towards the south
+//   the two face rows continue beneath it; a divider hanging from a horizontal wall starts in its cap row and replaces the
+//   face tiles in its column. Cap tiles that join N+E / N+W carry a concave-corner notch pixel. The outer south wall of the
+//   building is cap-only (no exterior face).
+// DOORWAYS: horizontal gap = 2 wide x 3 deep (cap row + 2 face rows): doorway.h.{top,mid,bot}.{l,r} in the `wall` layer,
+//   doorway.h.lintel.{l,r} in `overhead` over the cap-row cells; door.h.* sprite (32x48) bottom = bottom of the lower face row.
+//   Vertical gap = 1 wide x 2 tall: doorway.v.{top,bot}; door.v.* sprite (16x32).
+// SHADOWS: floor.shadow.{top,left,corner} are translucent; they go in the `furniture` layer (above the opaque ground).
+// RUGS: rug.play.* (3x2 mat), rug.hearth.l/m/r (3x1), resizable 3x3 sets rug.lounge / rug.gallery / rug.reading
+//   (tl t tr / l c r / bl b br). Carpet: floor.council.{a,b,wood} + floor.council.border.{n,s,e,w,nw,ne,sw,se}.
+// PROPS: sprite BASE (y-sort line) = sprite bottom; foot = blocking footprint in sprite px (tile aligned in map space,
+//   at the bottom); foot w=h=0 means non-blocking decor / wall-hung. Wall-hung sprites sit on the wall base row.
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -185,7 +202,7 @@ export function main() {
   write(resolve(ROOT, 'docs/design/palette-interiors.json'), pal);
 
   // ------------------------------------------------ contact sheet
-  drawContact(resolve(OUT, '_contact.png'), { tiles, tileSheet: sheet, index, placed, atlas, C });
+  drawContact(resolve(OUT, '_contact.png'), { tiles, placed });
   console.log(
     `tileset: ${tiles.length} tiles (${sheet.w}x${sheet.h}), props: ${placed.length} (${ATLAS_W}x${atlasH})`,
   );
