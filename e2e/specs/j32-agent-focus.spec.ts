@@ -62,9 +62,17 @@ test('J32 village: a sprite and a HUD chip each open ONE focused panel that swap
   const chips = page.locator('.sqv-chip');
   const n = await chips.count();
   expect(n).toBeGreaterThan(1);
+  // every chip is a real button (no listitem role), named '<Display name>, <status word>', with a portrait and a status label
   for (let i = 0; i < n; i++) {
     const chip = chips.nth(i);
     expect(await chip.evaluate((el) => el.tagName)).toBe('BUTTON');
+    expect(await chip.getAttribute('role')).toBeNull();
+    expect(await chip.getAttribute('aria-pressed')).not.toBeNull();
+    expect(await chip.getAttribute('aria-label')).toMatch(/, (Resting|Thinking|Speaking|Waiting)$/);
+    expect(await chip.getAttribute('title')).toMatch(/: (Resting|Thinking|Speaking|Waiting)/);
+    await expect(chip.locator('img')).toHaveCount(1);
+    await expect(chip.locator('.sqv-status__w')).toHaveText(/^(Resting|Thinking|Speaking|Waiting)$/);
+    expect(await chip.locator('.sqv-glyph').count()).toBe(0);
   }
   for (let i = 0; i < n; i++) {
     await chips.nth(i).click();
@@ -73,6 +81,23 @@ test('J32 village: a sprite and a HUD chip each open ONE focused panel that swap
   }
   expect(await title(page)).not.toBe(first);
   await expect(page.getByRole('dialog', { name: await title(page) })).toHaveCount(1);
+  // exactly these five tabs, Conversation selected by default
+  await expect(panelOf(page).getByRole('tab')).toHaveText([
+    'Activity',
+    'Reasoning summary',
+    'Conversation',
+    'Team',
+    'Structure',
+  ]);
+  // the live announcement names the SELECTED agent and the tab, never another agent's state
+  const name = (await title(page)).split(' — ')[0]!;
+  await page.waitForTimeout(400);
+  await panelOf(page).getByRole('tab', { name: 'Team' }).click();
+  await expect(panelOf(page).locator('.af-sr[role="status"]')).toHaveText(`${name}: Team`);
+  // no tab is a dead end: Structure of a non-council agent explains itself and offers Ask Cubbie
+  await panelOf(page).getByRole('tab', { name: 'Structure' }).click();
+  await expect(panelOf(page).getByTestId('af-help').first()).toBeVisible();
+  await expect(panelOf(page).getByRole('button', { name: /^Ask Cubbie about / })).toBeVisible();
   await snap(page, '2-hud-chip-swap');
 
   // keyboard: Enter on a chip opens, Escape closes and focus returns to that chip
@@ -134,6 +159,13 @@ test('J32 council board on the track4 replay: card and timeline chip open one pa
     expect(w).toContain('→');
   }
   await snap(page, '4-board-card-focus');
+  await expect(panel.getByRole('tab')).toHaveText([
+    'Activity',
+    'Reasoning summary',
+    'Conversation',
+    'Team',
+    'Structure',
+  ]);
 
   // filter switch
   await panel.getByRole('button', { name: 'All communication' }).click();
@@ -147,10 +179,10 @@ test('J32 council board on the track4 replay: card and timeline chip open one pa
   expect(await title(page)).not.toMatch(/^Skeptic — /);
 
   // Decisions: reasoning summary cards with the four labelled fields and the privacy footer
-  await panelOf(page).getByRole('tab', { name: 'Decisions' }).click();
+  await panelOf(page).getByRole('tab', { name: 'Reasoning summary' }).click();
   const card = panelOf(page).getByTestId('af-reasoning').first();
   await expect(card).toBeVisible();
-  for (const k of ['Goal', 'Evidence and sources', 'Decision', 'Next action'])
+  for (const k of ['Goal', 'Evidence', 'Decision', 'Next step'])
     await expect(card.getByText(k, { exact: true })).toBeVisible();
   await expect(card).toContainText('Summary shared by the agent. Private reasoning is never shown.');
   await expect(card.getByTestId('af-scripted')).toHaveText('Scripted example');
