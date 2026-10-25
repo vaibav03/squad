@@ -1,4 +1,4 @@
-import type { StudentId } from '@squad/core';
+import type { StudentId, VillageEvent } from '@squad/core';
 
 export const MAX_BOX = 5;
 export const MIN_BOX = 1;
@@ -12,7 +12,7 @@ export interface MasteryRow {
 }
 
 /** Emitter for village events; real impl wraps core `postEvent`. Never throws. */
-export type EmitEvent = (e: import('@squad/core').VillageEvent) => Promise<void> | void;
+export type EmitEvent = (e: VillageEvent) => Promise<void> | void;
 
 export interface MasteryStore {
   get(student: StudentId, courseId: string, chapter: string): MasteryRow;
