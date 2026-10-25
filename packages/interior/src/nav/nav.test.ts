@@ -41,7 +41,9 @@ describe('Pathfinder', () => {
 
   it('returns null for blocked endpoints and a single tile for same start and end', () => {
     const { nav } = setup();
-    expect(nav.find({ x: 0, y: 0 }, { x: 2, y: 2 })).toBeNull();
+    // a blocked start (standing in a door that just locked) snaps to the nearest walkable tile
+    expect(nav.find({ x: 0, y: 0 }, { x: 2, y: 2 })).not.toBeNull();
+    expect(nav.find({ x: 0, y: 0 }, { x: 19, y: 9 })).toBeNull();
     expect(nav.find({ x: 2, y: 2 }, { x: 0, y: 0 })).toBeNull();
     expect(nav.find({ x: 2, y: 2 }, { x: 2, y: 2 })).toEqual([{ x: 2, y: 2 }]);
   });

@@ -11,10 +11,15 @@ import { Pathfinder, tileCenter, tileOf } from '../nav/pathfinder';
 import type { Vec } from '../nav/pathfinder';
 import { createOverlayBridge } from '../shared/overlay-bridge';
 import type { OverlayBridge } from '../shared/overlay-bridge';
-import { CollisionGrid, moveAndSlide } from '../tilemap/collision';
+import { CollisionGrid, boxBlocked, moveAndSlide } from '../tilemap/collision';
 import type { InteriorMap, PropsDef, DoorDef, TileLayerName } from '../tilemap/types';
 import { TILE } from '../tilemap/types';
-import { followScroll, lerpScroll, roomFrame, roomScroll } from '../world/camera-math';
+import {
+  buildingFrame,
+  lerpScroll,
+  roomFrame,
+  roomScroll,
+} from '../world/camera-math';
 import { DUR, easeInOut } from '../world/motion';
 import { createRng } from '../world/rng';
 import { RoomRegistry } from '../world/rooms';
@@ -35,6 +40,7 @@ export interface SceneInit {
   calm: { value: boolean };
   log: (m: string, e?: unknown) => void;
   onReady: () => void;
+  onFail: (e: unknown) => void;
 }
 
 const TILES_KEY = 'interior.tiles';
@@ -67,6 +73,7 @@ export class InteriorScene extends Phaser.Scene {
   private readonly overlays: OverlayEvent[] = [];
   private readonly cleanup: (() => void)[] = [];
   private spawnIndex = 0;
+  private building: { x: number; y: number; w: number; h: number } | undefined;
 
   constructor(private readonly init0: SceneInit) {
     super('interior');
@@ -82,11 +89,27 @@ export class InteriorScene extends Phaser.Scene {
       const f = c.frame ?? manifest.characters.frame;
       this.load.spritesheet(`char.${c.id}`, url(c.image), { frameWidth: f.w, frameHeight: f.h });
     }
-    this.load.on('loaderror', (f: Phaser.Loader.File) => this.init0.log(`asset failed: ${f.key}`));
+    this.load.on('loaderror', (f: Phaser.Loader.File) => {
+      this.init0.log(`asset failed: ${f.key}`);
+      if (
+        f.key === TILES_KEY ||
+        f.key === PROPS_KEY ||
+        f.key === `char.${manifest.characters.player}`
+      )
+        this.init0.onFail(new Error(`required asset failed to load: ${f.key}`));
+    });
   }
 
   /* ------------------------------------------------------------------- create */
   create(): void {
+    try {
+      this.build();
+    } catch (e) {
+      this.init0.onFail(e);
+    }
+  }
+
+  private build(): void {
     const { map, propsDef, manifest, opts } = this.init0;
     this.rng = createRng(opts.seed ?? 1);
     this.rooms = new RoomRegistry(map);
@@ -227,6 +250,9 @@ export class InteriorScene extends Phaser.Scene {
   private bindInput(): void {
     const stage = this.init0.stage;
     const down = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return; // never swallow browser shortcuts
+      // Keys pressed on the HUD prompt button are handled by its own click, not twice.
+      if (e.target instanceof HTMLButtonElement && ACTION_KEYS.has(e.code)) return;
       if (MOVE_KEYS.has(e.code)) {
         this.keys.press(e.code);
         e.preventDefault();
@@ -341,7 +367,7 @@ export class InteriorScene extends Phaser.Scene {
         this.setDoorLocked(c.door, c.locked);
         break;
       case 'marker':
-        this.npcs.get(c.agent)?.setMarker(c.marker);
+        this.ensureNpc(c.agent).setMarker(c.marker);
         break;
       case 'gather':
         for (const id of [...this.npcs.keys()]) this.sendTo(id, { kind: 'room', room: c.room });
@@ -380,10 +406,14 @@ export class InteriorScene extends Phaser.Scene {
     if (!dest) return false;
     this.nav.refresh();
     const path = this.nav.find(tileOf(npc.x, npc.y - 1), tileOf(dest.x, dest.y));
-    if (!path) return false;
+    if (!path) {
+      npc.goalKey = undefined; // never keep reserving a seat we cannot reach
+      return false;
+    }
     npc.wander = wander || (goal.kind === 'room' && goal.room === 'commons');
-    npc.goalKey = occupiedKey(dest);
     npc.followPath(this.pathToPoints(path, npc));
+    npc.goalKey = occupiedKey(dest);
+    npc.goal = { goal, wander };
     return true;
   }
 
@@ -391,10 +421,35 @@ export class InteriorScene extends Phaser.Scene {
     if (!this.rooms.setLocked(id, locked)) return;
     this.grid.setDoorLocked(id, locked);
     this.nav.refresh();
+    if (locked) {
+      this.nudgeOutOfDoor(this.player, id);
+      // Replan everyone who is walking: a locked door must never be walked through.
+      for (const n of this.npcs.values()) {
+        if (!n.busy || !n.goal) continue;
+        const { goal, wander } = n.goal;
+        n.followPath([]);
+        if (!this.sendTo(n.id, goal, wander)) n.goal = undefined;
+      }
+    }
     this.updateDoorSprites(true);
     this.init0.hud.announce(
       `${id.replace(/^door-/, '').replace(/-/g, ' to ')} door ${locked ? 'locked' : 'unlocked'}.`,
     );
+  }
+
+  /** If an actor stands inside a door that just locked, put it on the nearest walkable tile. */
+  private nudgeOutOfDoor(a: { x: number; y: number; sync(): void }, doorId: string): void {
+    const d = this.rooms.door(doorId);
+    if (!d) return;
+    const r = d.rect;
+    const inside =
+      a.x >= r.x - 5 && a.x < r.x + r.w + 5 && a.y - 3 >= r.y - 3 && a.y - 3 < r.y + r.h + 3;
+    if (!inside || !boxBlocked(this.grid, a.x, a.y, FEET_BOX)) return;
+    const t = this.nav.nearestWalkable(tileOf(a.x, a.y - 1), 4);
+    if (!t) return;
+    a.x = t.x * TILE + TILE / 2;
+    a.y = t.y * TILE + TILE / 2 + 6;
+    a.sync();
   }
 
   private updateDoorSprites(force = false): void {
@@ -425,14 +480,13 @@ export class InteriorScene extends Phaser.Scene {
   private cameraTarget(): Vec {
     const { map } = this.init0;
     const view = this.viewSize();
+    const mapPx = { w: map.pxW, h: map.pxH };
     const focus = { x: this.player.x, y: this.player.y - 8 };
-    if (this.cameraMode === 'follow') return followScroll(focus, view, { w: map.pxW, h: map.pxH });
+    // Never show the void margin of the map: clamp to the built area.
+    const building = (this.building ??= buildingFrame(map.rooms, mapPx));
     const room = this.currentRoom ? this.rooms.room(this.currentRoom) : undefined;
-    if (!room) return followScroll(focus, view, { w: map.pxW, h: map.pxH });
-    return roomScroll(focus, view, roomFrame(room.bounds, { w: map.pxW, h: map.pxH }), {
-      w: map.pxW,
-      h: map.pxH,
-    });
+    if (this.cameraMode === 'follow' || !room) return roomScroll(focus, view, building);
+    return roomScroll(focus, view, roomFrame(room.bounds, mapPx), building);
   }
 
   private snapCameraNow(): void {
@@ -590,6 +644,7 @@ export class InteriorScene extends Phaser.Scene {
     this.tornDown = true;
     this.unsub?.();
     this.bridge?.dispose();
+    this.init0.hud.destroy();
     for (const c of this.cleanup) c();
     this.cleanup.length = 0;
   }

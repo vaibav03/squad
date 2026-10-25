@@ -46,7 +46,12 @@ export class Pathfinder {
 
   /** Tiles from `from` to `to` inclusive, or null if unreachable. Blocked endpoints return null. */
   find(from: Tile, to: Tile): Tile[] | null {
-    if (this.grid.isBlocked(from.x, from.y) || this.grid.isBlocked(to.x, to.y)) return null;
+    if (this.grid.isBlocked(from.x, from.y)) {
+      const n = this.nearestWalkable(from, 3); // e.g. standing in a doorway that just locked
+      if (!n) return null;
+      from = n;
+    }
+    if (this.grid.isBlocked(to.x, to.y)) return null;
     if (from.x === to.x && from.y === to.y) return [{ ...from }];
     let result: Tile[] | null | undefined;
     this.es.findPath(from.x, from.y, to.x, to.y, (p) => {

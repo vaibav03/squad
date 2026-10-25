@@ -10,11 +10,12 @@ const CSS = `
   display:flex;align-items:center;gap:10px;min-height:44px;padding:0 16px 0 10px;cursor:pointer;
   background:rgba(11,29,56,.9);color:#fff;border:2px solid #070f1f;border-radius:8px;font:500 14px/20px 'Inter',system-ui,sans-serif;
   transition:opacity 150ms ease,transform 160ms cubic-bezier(.23,1,.32,1);touch-action:manipulation;max-width:calc(100% - 32px)}
-.sqi-prompt[hidden]{display:flex;opacity:0;pointer-events:none;transform:translateX(-50%) translateY(6px)}
+.sqi-prompt[hidden]{display:flex;opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-50%) translateY(6px);transition:opacity 150ms ease,transform 160ms cubic-bezier(.23,1,.32,1),visibility 0s 160ms}
 .sqi-prompt:active{transform:translateX(-50%) scale(.97)}
 .sqi-prompt kbd{font:400 16px/1 'Jersey 10','Courier New',monospace;background:#ffc857;color:#070f1f;border-radius:4px;padding:4px 7px;
   min-width:24px;text-align:center}
 .sqi-prompt:focus-visible{outline:2px solid #ffc857;outline-offset:2px}
+.sqi-stage:focus-visible{outline:2px solid #ffc857;outline-offset:-4px}
 .sqi-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.sqi-chip,.sqi-prompt{transition:opacity 150ms ease}}
 `;

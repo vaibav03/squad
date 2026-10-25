@@ -53,3 +53,7 @@ Copies kept here until spec 10 ticket P-1 extracts `@squad/world-shared` (after 
 | `src/world/motion.ts`          | `packages/village/src/motion.ts` (ws/motion), `docs/design/tokens.ts`                           |
 | `src/agents/director.ts`       | `packages/village/src/adapter/` (ws/village-mesh); verbs in `docs/interior-events.md`           |
 | `src/shared/sources.ts`        | `packages/village/src/sources/` (ws/village-mesh); only the `VillageSource` type is used        |
+
+## Known gaps (review panel, not fixed)
+
+Calm mode does not teleport directed NPC moves with a 120 ms fade (spec 08 row 3) and there is no HUD Calm toggle yet; announcements overwrite instead of queueing; several NPCs sharing `commons.hearth` or a door waypoint stack on one tile; locked-door padlock and open-door states are subtle at 1x; the 16x16 CC0 placeholder characters are smaller than the 16x32 Modern Interiors characters the furniture is scaled for; tap on a wall picks the single nearest walkable tile even if unreachable; DPR changes after mount are not tracked. Art review notes (rug/beanbag seams, classroom teal-on-teal, library floor contrast) are low priority for placeholder art.

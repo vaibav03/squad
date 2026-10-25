@@ -35,20 +35,37 @@ export function roomFrame(bounds: Rect, mapPx: View): Rect {
 }
 
 /** Room-snap camera: stays inside the room frame, follows the target if the frame is larger than the view. */
-export function roomScroll(target: Vec2, view: View, frame: Rect, mapPx?: View): Vec2 {
+export function roomScroll(target: Vec2, view: View, frame: Rect, clamp?: Rect): Vec2 {
   const s = {
     x: fitAxis(target.x, view.w, frame.x, frame.x + frame.w),
     y: fitAxis(target.y, view.h, frame.y, frame.y + frame.h),
   };
-  if (!mapPx) return s;
-  // Never show void beyond the map edge when the map itself is larger than the view.
+  if (!clamp) return s;
+  // Never show void beyond the building when the building is larger than the view.
   return {
-    x: mapPx.w > view.w ? Math.min(Math.max(s.x, 0), mapPx.w - view.w) : s.x,
-    y: mapPx.h > view.h ? Math.min(Math.max(s.y, 0), mapPx.h - view.h) : s.y,
+    x: clamp.w > view.w ? Math.min(Math.max(s.x, clamp.x), clamp.x + clamp.w - view.w) : s.x,
+    y: clamp.h > view.h ? Math.min(Math.max(s.y, clamp.y), clamp.y + clamp.h - view.h) : s.y,
   };
 }
 
 /** Linear blend between two scroll positions with an externally eased t; whole pixels. */
 export function lerpScroll(a: Vec2, b: Vec2, t: number): Vec2 {
   return { x: Math.round(a.x + (b.x - a.x) * t), y: Math.round(a.y + (b.y - a.y) * t) };
+}
+
+/** Smallest rect covering every room's camera frame: the built area, without the void margin of the map. */
+export function buildingFrame(rooms: readonly { bounds: Rect }[], mapPx: View): Rect {
+  if (!rooms.length) return { x: 0, y: 0, w: mapPx.w, h: mapPx.h };
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const r of rooms) {
+    const f = roomFrame(r.bounds, mapPx);
+    x0 = Math.min(x0, f.x);
+    y0 = Math.min(y0, f.y);
+    x1 = Math.max(x1, f.x + f.w);
+    y1 = Math.max(y1, f.y + f.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }

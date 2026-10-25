@@ -51,10 +51,15 @@ export function createOverlayBridge(opts: OverlayBridgeOptions): OverlayBridge {
   let current: { kind: OverlayKind; key: string } | undefined;
   const queue: OverlayEvent[] = [];
   let disposed = false;
+  let paused = false;
 
   const show = (e: OverlayEvent, kind: OverlayKind) => {
+    // Input stays paused across queued overlays: pause once on idle -> open, resume once when idle again.
+    if (!paused) {
+      paused = true;
+      opts.pauseInput?.();
+    }
     current = { kind, key: keyOf(e) };
-    opts.pauseInput?.();
     opts.onOverlay(e);
   };
   const dequeue = () => {
@@ -62,7 +67,10 @@ export function createOverlayBridge(opts: OverlayBridgeOptions): OverlayBridge {
     const k = next && kindOf(next);
     if (next && k) show(next, k);
     else {
-      opts.resumeInput?.();
+      if (paused) {
+        paused = false;
+        opts.resumeInput?.();
+      }
       opts.focusCanvas?.();
     }
   };

@@ -74,7 +74,9 @@ export async function loadManifest(
   const main = await io.fetchJson(joinUrl(base, 'interior/manifest.json'));
   if (main === undefined) throw new Error('interior asset manifest not found');
   let merged: unknown = main;
-  const local = await io.fetchJson(joinUrl(base, 'interior/manifest.local.json')).catch(() => undefined);
+  const local = await io
+    .fetchJson(joinUrl(base, 'interior/manifest.local.json'))
+    .catch(() => undefined);
   if (local !== undefined) {
     try {
       merged = mergeManifest(main, local);

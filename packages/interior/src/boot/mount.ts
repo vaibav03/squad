@@ -98,7 +98,10 @@ export function mountInterior(
         import('../scene/interior-scene'),
         import('../scene/hud'),
       ]);
-      if (destroyed) return;
+      if (destroyed) {
+        onFail(new Error('destroyed before boot finished'));
+        return;
+      }
       if (!mapJson || !propsJson) throw new Error('map or props definition missing');
       const map = parseTiledMap(mapJson);
       const propsDef = parsePropsDef(propsJson);
@@ -115,6 +118,7 @@ export function mountInterior(
         hud,
         calm,
         log,
+        onFail: fail,
         onReady: () => {
           status.remove();
           if (pendingCamera) scene?.setCameraMode(pendingCamera);
@@ -156,6 +160,7 @@ export function mountInterior(
         else game.loop.wake();
       };
       document.addEventListener('visibilitychange', vis);
+      vis();
       matchMedia(REDUCED).addEventListener?.('change', (e) => {
         if (e.matches) calm.value = true;
       });
@@ -178,7 +183,6 @@ export function mountInterior(
       }
       game = undefined;
       root.remove();
-      document.querySelectorAll('style[data-sqi-hud]').forEach((n) => n.remove());
     },
     setCalm(v) {
       calm.value = v;

@@ -115,7 +115,7 @@ describe('overlay bridge', () => {
     expect(shown.map((e) => e.type)).toEqual(['openLedger', 'openQuiz']);
     b.closed('quiz');
     expect(resumed).toBe(1);
-    expect(paused).toBe(2);
+    expect(paused).toBe(1); // one pause for the whole burst, balanced by one resume
     expect(b.open).toBeUndefined();
   });
   it('relays non-modal requests immediately', () => {

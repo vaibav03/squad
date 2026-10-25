@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { fixtureMapJson } from '../test-fixtures';
 import { parseTiledMap } from '../tilemap/parse';
 import { computeScale } from '../boot/scaler';
-import { followScroll, lerpScroll, roomFrame, roomScroll } from './camera-math';
+import { buildingFrame, followScroll, lerpScroll, roomFrame, roomScroll } from './camera-math';
 import { DEPTH, SORT_BIAS, ysortDepth } from './ysort';
 import { createRng } from './rng';
 import { RoomRegistry } from './rooms';
@@ -163,6 +163,20 @@ describe('roomScroll map clamp', () => {
     const view = { w: 200, h: 100 };
     const frame = { x: 16, y: 16, w: 100, h: 80 };
     expect(roomScroll({ x: 60, y: 50 }, view, frame)).toEqual({ x: -34, y: 6 });
-    expect(roomScroll({ x: 60, y: 50 }, view, frame, { w: 600, h: 400 })).toEqual({ x: 0, y: 6 });
+    expect(roomScroll({ x: 60, y: 50 }, view, frame, { x: 0, y: 0, w: 600, h: 400 })).toEqual({
+      x: 0,
+      y: 6,
+    });
+  });
+});
+
+describe('buildingFrame', () => {
+  it('covers all rooms plus walls and excludes the map void margin', () => {
+    const rooms = [
+      { bounds: { x: 64, y: 80, w: 100, h: 100 } },
+      { bounds: { x: 200, y: 256, w: 100, h: 100 } },
+    ];
+    expect(buildingFrame(rooms, { w: 768, h: 512 })).toEqual({ x: 48, y: 48, w: 268, h: 324 });
+    expect(buildingFrame([], { w: 10, h: 20 })).toEqual({ x: 0, y: 0, w: 10, h: 20 });
   });
 });
