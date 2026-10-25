@@ -1,5 +1,6 @@
 // Browser-safe main entry: contracts, VillageEvent schema, replay schema, postEvent, Llm interface
 // + FakeLlm, sentinel utility. Node-only pieces (sqlite, config, GeminiLlm) are in `@squad/core/node`.
+export * from './context';
 export * from './types';
 export * from './agent-id';
 export * from './events';

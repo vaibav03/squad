@@ -1,4 +1,5 @@
 import type { CacheHandle, Citation, Db, Llm, StudentId, VillageEvent } from '@squad/core';
+import type { ContextStore } from '../context/store';
 import type { CourseStore, Page } from '../ingest/types';
 
 /** Every event goes through this. Default: `postEvent` from @squad/core. Tests pass a collector. */
@@ -10,6 +11,8 @@ export interface BrainDeps {
   /** Defaults to core `postEvent` (never throws on a missing hub). */
   emit?: Emit;
   now?: () => number;
+  /** Connected-source store (Canvas/Drive/Calendar). With it, `ask(..., { viewer })` can also cite those sources. */
+  context?: ContextStore;
 }
 
 /** What an expert returns. grounded=false means the text is exactly the "not in the materials" reply. */
@@ -93,8 +96,15 @@ export interface Brain {
     path: string,
     opts?: { title?: string; chapter?: string },
   ): Promise<number>;
-  /** Dean -> expert(s) -> (merge) -> verified answer. */
-  ask(courseId: string, question: string): Promise<ExpertAnswer>;
+  /**
+   * Dean -> expert(s) -> (merge) -> verified answer. With `opts.viewer` (and a context store wired in) the
+   * viewer's own and squad-shared Canvas/Drive/Calendar chunks can be cited too.
+   */
+  ask(
+    courseId: string,
+    question: string,
+    opts?: { viewer?: { studentId: string; squadIds: string[] } },
+  ): Promise<ExpertAnswer>;
   expert(courseId: string, chapter: string): ChapterExpert;
   dean: Dean;
   captions: CaptionPipeline;
