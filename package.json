@@ -1,0 +1,30 @@
+{
+  "name": "squad",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@10.23.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r --workspace-concurrency=4 run typecheck",
+    "lint": "eslint . && prettier --check .",
+    "test": "pnpm -r run test",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "test:smoke": "node scripts/smoke.mjs",
+    "format": "prettier --write .",
+    "dev": "pnpm -r --parallel --if-present run dev"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^20.19.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "prettier": "^3.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "~5.9.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.2.0"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@squad/web-host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --dir src --passWithNoTests",
+    "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
+    "dev": "echo \"@squad/web-host: dev not implemented yet\""
+  },
+  "dependencies": {
+    "@squad/web": "workspace:*",
+    "@squad/core": "workspace:*"
+  }
+}
