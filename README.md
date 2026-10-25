@@ -125,7 +125,7 @@ Ask the hub which mode it is in: `GET /v1/status` returns `llm` (`gemini` or `fa
 
 While in fallback, answers come from the scripted model and the village and web show a Demo notice. Details: [architecture, LLM layer](docs/architecture/OVERVIEW.md).
 
-Live run with real keys: put `GEMINI_API_KEY`, `ELEVENLABS_API_KEY` and a real `INTERNAL_EVENTS_SECRET` in `.env`, run `pnpm dev:all`, and check `pnpm demo:preflight --live`. iMessage via `imessage-kit` runs on a Mac signed into a dedicated bot Apple ID; fallback is the simulated students in the web panel. Real-key smoke scripts need `SQUAD_LIVE=1` and use a tiny budget. Hosting: [docs/DEPLOY.md](docs/DEPLOY.md) (owned by the deploy lead; may not be on `main` yet).
+Live run with real keys: put `GEMINI_API_KEY`, `ELEVENLABS_API_KEY` and a real `INTERNAL_EVENTS_SECRET` in `.env`, run `pnpm dev:all`, and check `pnpm demo:preflight --live`. iMessage via `imessage-kit` runs on a Mac signed into a dedicated bot Apple ID; fallback is the simulated students in the web panel. Real-key smoke scripts need `SQUAD_LIVE=1` and use a tiny budget. Hosting: `docs/DEPLOY.md` (deploy lead; not on `main` yet, so not linked).
 
 ## How it works
 
