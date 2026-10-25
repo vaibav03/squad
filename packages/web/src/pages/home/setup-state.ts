@@ -80,21 +80,29 @@ const READERS: Record<SetupKey, (ctx: HubCtx) => Promise<boolean>> = {
 const ALL = (s: ItemState): SetupStates => ({ phone: s, courses: s, calendar: s, persona: s });
 
 /** Each item settles on its own; one slow or failing read never holds back the others. */
-export function useSetupChecklist(ctx: HubCtx): {
+export function useSetupChecklist(
+  ctx: HubCtx,
+  /** The shared hub bootstrap has not finished: stay `loading` instead of reporting `todo` for a missing session. */
+  waiting = false,
+): {
   states: SetupStates;
   retry: () => void;
   anyError: boolean;
 } {
   const live = !!ctx.hubUrl && !!ctx.token;
-  const [states, setStates] = useState<SetupStates>(() => ALL(live ? 'loading' : 'todo'));
+  const [states, setStates] = useState<SetupStates>(() =>
+    ALL(live || waiting ? 'loading' : 'todo'),
+  );
   const gen = useRef<Record<SetupKey, number>>({ phone: 0, courses: 0, calendar: 0, persona: 0 });
   const { hubUrl, token } = ctx;
+  const waitingRef = useRef(waiting);
+  waitingRef.current = waiting;
 
   const load = useCallback(
     (keys: readonly SetupKey[]) => {
       if (!hubUrl || !token) {
         for (const k of keys) gen.current[k]++;
-        setStates(ALL('todo')); // no hub session: nothing server-side can be done yet
+        setStates(ALL(waitingRef.current ? 'loading' : 'todo')); // no hub session: nothing server-side can be done yet
         return;
       }
       setStates((prev) => {

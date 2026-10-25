@@ -15,6 +15,7 @@ import {
   useAccount,
   EmptyState,
   RateLimitedState,
+  OfflineState,
   Button,
   Gallery,
   FailureState,
@@ -87,13 +88,15 @@ function LiveShellLayout() {
   if (account.status === 'loading')
     return (
       <LoadingTimeout
-        what="Signing you in"
+        what={account.connecting ? 'Connecting to Squad' : 'Signing you in'}
         slowWhat="your session"
-        timeoutMs={12000}
+        timeoutMs={account.connecting ? 20000 : 12000}
         onRetry={() => window.location.reload()}
       >
         <div style={{ padding: 24 }} role="status" aria-live="polite">
-          <p style={{ margin: '0 0 16px' }}>Signing you in...</p>
+          <p style={{ margin: '0 0 16px' }}>
+            {account.connecting ? 'Connecting to Squad...' : 'Signing you in...'}
+          </p>
           <Skeleton shape="block" height={240} />
         </div>
       </LoadingTimeout>
@@ -105,6 +108,13 @@ function LiveShellLayout() {
           retryAt={account.retryAt}
           onRetry={() => void account.refresh().catch(() => undefined)}
         />
+      </div>
+    );
+  // The hub stayed unreachable through the bounded boot retries: a true offline state with Retry (never a redirect).
+  if (account.status === 'offline' && !account.user)
+    return (
+      <div style={{ padding: 24 }}>
+        <OfflineState onRetry={() => void account.reconnect()} />
       </div>
     );
   if (account.status === 'signed-out' || !account.user)

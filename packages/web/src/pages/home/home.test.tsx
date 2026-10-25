@@ -29,6 +29,7 @@ beforeEach(() => {
     'fetch',
     vi.fn((url: string) => {
       const path = url.replace(HUB, '');
+      if (path === '/health') return Promise.resolve(new Response('{"ok":true}', { status: 200 }));
       calls.push(path);
       const a = answers[path];
       if (a === 'hang') return new Promise(() => {});
@@ -114,10 +115,10 @@ describe('setup readers (server state only)', () => {
 });
 
 describe('Home checklist', () => {
-  it('unknown -> checking, never Done or To do', () => {
+  it('unknown -> checking, never Done or To do', async () => {
     answers = Object.fromEntries(Object.keys(allEmpty()).map((k) => [k, 'hang']));
     mount();
-    expect(screen.getAllByText('Checking…').length).toBeGreaterThanOrEqual(4);
+    expect((await screen.findAllByText('Checking…')).length).toBeGreaterThanOrEqual(4);
     expect(screen.queryByText('Done')).toBeNull();
     expect(screen.queryByText('To do')).toBeNull();
   });

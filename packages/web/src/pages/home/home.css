@@ -189,3 +189,12 @@
   border-top: 1px solid var(--border, currentColor);
   font: 400 var(--text-sm)/1.3 var(--font-sans);
 }
+
+.sq-home__connecting {
+  display: grid;
+  gap: var(--space-3, 12px);
+}
+.sq-home__connecting p {
+  margin: 0;
+  color: var(--text-muted, inherit);
+}
