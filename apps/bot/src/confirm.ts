@@ -4,6 +4,7 @@ import { nullLogger } from './log';
 import type { ConfirmApi, EventPublisher, Logger } from './types';
 
 export const DEFAULT_CONFIRM_TIMEOUT_MS = 600_000;
+const REPROMPT_EVERY_MS = 30_000;
 
 export interface ConfirmDeps {
   db: Db;
@@ -33,7 +34,8 @@ interface Entry {
   timer?: ReturnType<typeof setTimeout>;
   rowId?: number;
   ready: boolean;
-  reprompted: boolean;
+  /** ts of the last "did not catch that" reply (at most one per REPROMPT_EVERY_MS) */
+  repromptedAt?: number;
 }
 
 export function formatConfirmDm(question: string, options: string[]): string {
@@ -161,7 +163,6 @@ export function createConfirmManager(deps: ConfirmDeps): ConfirmApi {
           resolve,
           reject,
           ready: false,
-          reprompted: false,
         };
         if (active.has(student)) q.push(entry);
         else void start(entry);
@@ -174,8 +175,11 @@ export function createConfirmManager(deps: ConfirmDeps): ConfirmApi {
       const p = parseConfirmReply(m.text, entry.options);
       if (p.kind === 'match') {
         finish(entry, p.option);
-      } else if (!entry.reprompted) {
-        entry.reprompted = true;
+      } else if (
+        entry.repromptedAt === undefined ||
+        now() - entry.repromptedAt >= REPROMPT_EVERY_MS
+      ) {
+        entry.repromptedAt = now();
         deps
           .dm(
             entry.student,

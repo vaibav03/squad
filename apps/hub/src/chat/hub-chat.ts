@@ -58,7 +58,7 @@ export interface ChatSub {
 
 export type SendResult =
   | { ok: true; message: ChatMessage }
-  | { ok: false; status: 400 | 403 | 404 | 429 | 503; code: string };
+  | { ok: false; status: 400 | 403 | 404 | 409 | 429 | 503; code: string };
 
 export interface ChatHub {
   store: ChatStore;
@@ -77,7 +77,26 @@ export interface ChatHub {
 const RATE_PER_MIN = 30;
 const TYPING_MAX_MS = 45_000;
 const MAX_QUEUE = 256;
+const MAX_BACKLOG = 200; // a longer catch-up is a resync, not a replay
+const MAX_STREAMS_PER_STUDENT = 3;
+const MAX_INFLIGHT = 2; // bot runs per student at once
+const CLIENT_ID_TTL_MS = 5 * 60_000;
 const PRIVATE_FALLBACK = 'I kept that private. Ask me in a DM.';
+
+const squash = (t: string) =>
+  t
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '');
+/** Exact (case-insensitive) match, plus a punctuation/spacing-insensitive match for values long enough to be unambiguous. */
+function leaks(value: unknown, secrets: readonly string[]): boolean {
+  if (findLeak(value, secrets)) return true;
+  const flat = squash(JSON.stringify(value) ?? '');
+  return secrets.some((x) => {
+    const q = squash(x);
+    return q.length >= 6 && flat.includes(q);
+  });
+}
 
 class Sub implements ChatSub {
   private queue: ChatWire[] = [];
@@ -130,11 +149,15 @@ export function createChatHub(
   filesDir: string,
 ): ChatHub {
   const store = createChatStore(deps.db);
+  store.expirePendingConfirms(); // the bot dropped its pending confirms with the old process
   const files = createChatFiles(deps.db, filesDir, deps.now);
   const subs = new Set<Sub>();
   const rate = new Map<string, number[]>();
   const typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
-  const typingCount = new Map<string, number>();
+  const typingRuns = new Map<string, Set<number>>();
+  const inflight = new Map<string, number>();
+  const clientIds = new Map<string, { at: number; message: ChatMessage }>();
+  let runSeq = 0;
   /** Replies are labelled demo whenever the hub's runtime says the real model is not answering. */
   const isDemo = () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : true);
 
@@ -146,30 +169,38 @@ export function createChatHub(
 
   const nameOf = (id: string) => deps.directory.student(id)?.name ?? id;
 
-  function typing(chatId: string, personaId: string, name: string, on: boolean) {
+  /** A run is one bot turn. The indicator is on while any run is open; a late `off` of a timed-out run is harmless. */
+  function typingStart(chatId: string, personaId: string, name: string): () => void {
     const key = `${chatId}|${personaId}`;
-    const n = Math.max(0, (typingCount.get(key) ?? 0) + (on ? 1 : -1));
-    typingCount.set(key, n);
-    const clear = () => {
-      const t = typingTimers.get(key);
-      if (t) clearTimeout(t);
-      typingTimers.delete(key);
-    };
-    if (on) {
-      if (n === 1)
-        fan(chatId, { event: 'chat.typing', data: { chatId, personaId, name, on: true } });
-      clear();
-      const t = setTimeout(() => {
-        typingCount.set(key, 0);
+    const id = ++runSeq;
+    const runs = typingRuns.get(key) ?? new Set<number>();
+    typingRuns.set(key, runs);
+    const wasOff = runs.size === 0;
+    runs.add(id);
+    if (wasOff) fan(chatId, { event: 'chat.typing', data: { chatId, personaId, name, on: true } });
+    const off = () => {
+      const open = typingRuns.get(key);
+      if (!open?.delete(id)) return; // already ended (timer): do not touch a newer run
+      if (open.size === 0) {
+        const t = typingTimers.get(key);
+        if (t) clearTimeout(t);
         typingTimers.delete(key);
         fan(chatId, { event: 'chat.typing', data: { chatId, personaId, name, on: false } });
-      }, TYPING_MAX_MS);
-      t.unref?.();
-      typingTimers.set(key, t);
-    } else if (n === 0) {
-      clear();
-      fan(chatId, { event: 'chat.typing', data: { chatId, personaId, name, on: false } });
-    }
+      }
+    };
+    const prev = typingTimers.get(key);
+    if (prev) clearTimeout(prev);
+    const t = setTimeout(() => {
+      typingTimers.delete(key);
+      const open = typingRuns.get(key);
+      if (open && open.size > 0) {
+        open.clear();
+        fan(chatId, { event: 'chat.typing', data: { chatId, personaId, name, on: false } });
+      }
+    }, TYPING_MAX_MS);
+    t.unref?.();
+    typingTimers.set(key, t);
+    return off;
   }
 
   const hub: ChatHub = {
@@ -179,16 +210,18 @@ export function createChatHub(
       hub.engine = e;
     },
     subscribe(viewer, afterSeq) {
-      const sub = new Sub(viewer, (s) => subs.delete(s));
+      // at most N live streams per student: the oldest one is closed
+      const mine = [...subs].filter((x) => x.viewer.studentId === viewer.studentId);
+      while (mine.length >= MAX_STREAMS_PER_STUDENT) mine.shift()?.close();
+      const sub = new Sub(viewer, (x) => subs.delete(x));
+      subs.add(sub); // registered before the backlog: nothing can slip between replay and live
       if (afterSeq !== undefined) {
-        // backlog and live registration are synchronous: no gap, no duplicate
-        if (afterSeq > store.lastSeq())
-          sub.push({ event: 'chat.resync', data: { seq: store.lastSeq() } });
-        else
-          for (const m of store.since(afterSeq, chatIdsOf(viewer)))
-            sub.push({ event: 'chat.message', id: m.seq, data: m });
+        const last = store.lastSeq();
+        const backlog = afterSeq > last ? [] : store.since(afterSeq, chatIdsOf(viewer));
+        if (afterSeq > last || backlog.length > MAX_BACKLOG)
+          sub.push({ event: 'chat.resync', data: { seq: last } });
+        else for (const m of backlog) sub.push({ event: 'chat.message', id: m.seq, data: m });
       }
-      subs.add(sub);
       return sub;
     },
     async send(viewer, body) {
@@ -197,8 +230,27 @@ export function createChatHub(
       if (!text && !(body.attachments?.length ?? 0))
         return { ok: false, status: 400, code: 'invalid' };
       const t = deps.now();
+      if (body.clientId) {
+        for (const [k, v] of clientIds) if (t - v.at > CLIENT_ID_TTL_MS) clientIds.delete(k);
+        const seen = clientIds.get(`${viewer.studentId}|${body.clientId}`);
+        if (seen) return { ok: true, message: seen.message }; // a retry of a send that already landed
+      }
+      if (body.confirmTaskId) {
+        const card = store.findConfirm(dmChatId(viewer.studentId), body.confirmTaskId)?.card;
+        if (
+          body.chatId !== dmChatId(viewer.studentId) ||
+          card?.type !== 'confirm' ||
+          card.status !== 'pending'
+        )
+          return { ok: false, status: 409, code: 'stale_confirm' };
+      }
       const recent = (rate.get(viewer.studentId) ?? []).filter((x) => t - x < 60_000);
       if (recent.length >= RATE_PER_MIN) return { ok: false, status: 429, code: 'rate_limited' };
+      if (
+        (inflight.get(viewer.studentId) ?? 0) >= MAX_INFLIGHT &&
+        hub.engine?.mentions(text, body.chatId)
+      )
+        return { ok: false, status: 429, code: 'busy' };
       recent.push(t);
       rate.set(viewer.studentId, recent);
 
@@ -225,12 +277,13 @@ export function createChatHub(
         demo: false,
       });
       publish(message);
+      if (body.clientId) clientIds.set(`${viewer.studentId}|${body.clientId}`, { at: t, message });
 
       const engine = hub.engine;
       if (engine) {
         const answers = engine.mentions(text, body.chatId);
         const run = async () => {
-          if (answers) typing(body.chatId, 'cubbie', 'Cubbie', true);
+          const off = answers ? typingStart(body.chatId, 'cubbie', 'Cubbie') : () => {};
           try {
             await engine.inject({
               chatId: body.chatId,
@@ -241,9 +294,11 @@ export function createChatHub(
           } catch (e) {
             deps.log.error('chat inject failed', { err: (e as Error).name });
           } finally {
-            if (answers) typing(body.chatId, 'cubbie', 'Cubbie', false);
+            off();
+            inflight.set(viewer.studentId, Math.max(0, (inflight.get(viewer.studentId) ?? 1) - 1));
           }
         };
+        inflight.set(viewer.studentId, (inflight.get(viewer.studentId) ?? 0) + 1);
         void run();
       }
       return { ok: true, message };
@@ -258,7 +313,7 @@ export function createChatHub(
       if (isGroup) {
         // Defense in depth: a group message must never carry a private ledger value or a sentinel.
         const secrets = [...SENTINELS, ...deps.ledger.privateValues()];
-        if (findLeak({ text, card, citations }, secrets)) {
+        if (leaks({ text, card, citations }, secrets)) {
           deps.log.warn('chat: group reply withheld by leak guard', { chatId: p.chatId });
           text = PRIVATE_FALLBACK;
           card = undefined;

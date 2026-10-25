@@ -1,5 +1,6 @@
 import { readFileSync, statSync } from 'node:fs';
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
 import { ChatIdSchema, ChatSendBodySchema } from '@squad/core';
 import type { MiddlewareHandler } from 'hono';
@@ -45,37 +46,53 @@ export function createChatRoutes(deps: HubDeps): HubApp {
     return c.json({ chatId: q.data.chatId, ...h });
   });
 
-  r.post('/v1/chat/send', need, async (c) => {
-    let raw: unknown;
-    try {
-      raw = await c.req.json();
-    } catch {
-      return c.json(err('invalid'), 400);
-    }
-    const body = ChatSendBodySchema.safeParse(raw);
-    if (!body.success) return c.json(err('invalid'), 400);
-    const res = await chat().send(c.get('viewer'), body.data);
-    if (!res.ok) return c.json(err(res.code), res.status);
-    return c.json({ message: res.message }, 202);
-  });
+  r.post(
+    '/v1/chat/send',
+    need,
+    bodyLimit({ maxSize: 64 * 1024, onError: (c) => c.json(err('too_large'), 413) }),
+    async (c) => {
+      let raw: unknown;
+      try {
+        raw = await c.req.json();
+      } catch {
+        return c.json(err('invalid'), 400);
+      }
+      const body = ChatSendBodySchema.safeParse(raw);
+      if (!body.success) return c.json(err('invalid'), 400);
+      const res = await chat().send(c.get('viewer'), body.data);
+      if (!res.ok) return c.json(err(res.code), res.status);
+      return c.json({ message: res.message }, 202);
+    },
+  );
 
-  r.post('/v1/chat/upload', need, async (c) => {
-    const v = c.get('viewer');
-    let form: Record<string, unknown>;
-    try {
-      form = await c.req.parseBody();
-    } catch {
-      return c.json(err('invalid'), 400);
-    }
-    const f = form.file;
-    if (!(f instanceof File)) return c.json(err('invalid'), 400);
-    if (f.size > MAX_UPLOAD_BYTES) return c.json(err('too_large'), 413);
-    const bytes = new Uint8Array(await f.arrayBuffer());
-    const sniffed = sniffImage(bytes);
-    if (!sniffed || !(UPLOAD_TYPES as readonly string[]).includes(f.type) || sniffed !== f.type)
-      return c.json(err('unsupported_type'), 415);
-    return c.json({ attachment: chat().files.saveUpload(v.studentId, bytes, sniffed, f.name) });
-  });
+  r.post(
+    '/v1/chat/upload',
+    need,
+    bodyLimit({
+      maxSize: MAX_UPLOAD_BYTES + 64 * 1024,
+      onError: (c) => c.json(err('too_large'), 413),
+    }),
+    async (c) => {
+      const v = c.get('viewer');
+      let form: Record<string, unknown>;
+      try {
+        form = await c.req.parseBody();
+      } catch {
+        return c.json(err('invalid'), 400);
+      }
+      const f = form.file;
+      if (!(f instanceof File)) return c.json(err('invalid'), 400);
+      if (f.size > MAX_UPLOAD_BYTES) return c.json(err('too_large'), 413);
+      const bytes = new Uint8Array(await f.arrayBuffer());
+      const sniffed = sniffImage(bytes);
+      if (!sniffed || !(UPLOAD_TYPES as readonly string[]).includes(f.type) || sniffed !== f.type)
+        return c.json(err('unsupported_type'), 415);
+      chat().files.sweep(); // unsent uploads older than an hour go away
+      const saved = chat().files.saveUpload(v.studentId, bytes, sniffed, f.name);
+      if (!saved) return c.json(err('upload_limit'), 429);
+      return c.json({ attachment: saved });
+    },
+  );
 
   // A file-scoped token (`ft`, 2 h) can read chat files and nothing else, so it is safe in an <img src>.
   const FILE_TTL = 2 * 60 * 60 * 1000;
@@ -107,7 +124,11 @@ export function createChatRoutes(deps: HubDeps): HubApp {
     const buf = readFileSync(file.path);
     const headers: Record<string, string> = {
       'content-type': file.mime,
-      'cache-control': 'private, max-age=3600',
+      // a student's own uploads and DM files are not left in a shared browser cache
+      'cache-control':
+        file.chatId === null || file.chatId.startsWith('dm:')
+          ? 'private, no-store'
+          : 'private, max-age=3600',
       'x-content-type-options': 'nosniff',
       'accept-ranges': 'bytes',
       'content-disposition': 'inline',

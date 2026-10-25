@@ -68,6 +68,12 @@ describe('chat with Gemini credits depleted', () => {
     // credits come back: the next request after the cooldown uses the real model, no restart
     broke = false;
     t += 61_000;
+    // the probe runs in the background (never on a message's path); status() triggers it
+    for (let i = 0; i < 40; i++) {
+      const b = (await get<Record<string, unknown>>(hub.url, '/v1/status')).body;
+      if (b.llm === 'gemini') break;
+      await new Promise((r) => setTimeout(r, 50));
+    }
     await ask('@cubbie hello once more');
     await sse.waitFor(
       () => msgs().some((m) => m.text.includes('A real model answered this.')),
@@ -77,5 +83,5 @@ describe('chat with Gemini credits depleted', () => {
     expect(live.demo).toBe(false);
     expect((await get(hub.url, '/v1/status')).body).toMatchObject({ llm: 'gemini', demo: false });
     sse.stop();
-  });
+  }, 20_000);
 });

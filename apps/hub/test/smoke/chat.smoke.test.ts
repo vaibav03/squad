@@ -376,3 +376,165 @@ describe('uploads and files', () => {
     expect((await send('s_ana', 'dm:s_ana', 'again', [{ id: a.id }])).status).toBe(404);
   });
 });
+
+describe('hardening', () => {
+  it('a confirm answer carries its task: stale or foreign ones are refused, and a retry is idempotent', async () => {
+    const p = engine.bot.ctx.askConfirm('s_chi', 'Share your slots?', ['Yes', 'No'], 'task_h_1');
+    await waitMsg(
+      streams.s_chi!,
+      (m) => m.card?.type === 'confirm' && m.card.taskId === 'task_h_1',
+    );
+    const send2 = (taskId: string, clientId?: string) =>
+      post<{ message: ChatMessage }>(
+        url,
+        '/v1/chat/send',
+        { chatId: 'dm:s_chi', text: '1', confirmTaskId: taskId, ...(clientId ? { clientId } : {}) },
+        tok.s_chi,
+      );
+    expect((await send2('task_other')).status).toBe(409);
+    expect(
+      (
+        await post(
+          url,
+          '/v1/chat/send',
+          { chatId: GROUP, text: '1', confirmTaskId: 'task_h_1' },
+          tok.s_chi,
+        )
+      ).status,
+    ).toBe(409); // a confirm is only answered in the student's own DM
+    const first = await send2('task_h_1', 'cid-1');
+    expect(first.status).toBe(202);
+    expect(await p).toBe('Yes');
+    const again = await send2('task_h_1', 'cid-1'); // same clientId: the first message comes back, nothing is re-sent
+    expect(again.status).toBe(202);
+    expect(again.body.message.id).toBe(first.body.message.id);
+    expect((await send2('task_h_1')).status).toBe(409); // answered: no longer open
+  });
+
+  it('a retried send with the same clientId never posts twice', async () => {
+    const body = { chatId: GROUP, text: 'only once please', clientId: 'cid-dup' };
+    const a = await post<{ message: ChatMessage }>(url, '/v1/chat/send', body, tok.s_dev);
+    const b = await post<{ message: ChatMessage }>(url, '/v1/chat/send', body, tok.s_dev);
+    expect(b.body.message.id).toBe(a.body.message.id);
+    const h = await get<{ messages: ChatMessage[] }>(
+      url,
+      `/v1/chat/history?chatId=${GROUP}&limit=100`,
+      tok.s_dev,
+    );
+    expect(h.body.messages.filter((m) => m.text === 'only once please')).toHaveLength(1);
+  });
+
+  it('bodies are bounded and uploads are rate limited', async () => {
+    const big = await fetch(`${url}/v1/chat/send`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${tok.s_ben}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ chatId: GROUP, text: 'x'.repeat(70_000) }),
+    });
+    expect(big.status).toBe(413);
+    const PNG = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    const up = async () => {
+      const fd = new FormData();
+      fd.set('file', new File([PNG], 'w.png', { type: 'image/png' }));
+      return (
+        await fetch(`${url}/v1/chat/upload`, {
+          method: 'POST',
+          headers: { authorization: `Bearer ${tok.s_chi}` },
+          body: fd,
+        })
+      ).status;
+    };
+    const codes: number[] = [];
+    for (let i = 0; i < 12; i++) codes.push(await up());
+    expect(codes.slice(0, 8).every((c) => c === 200)).toBe(true);
+    expect(codes).toContain(429); // at most 8 unsent uploads per student
+  });
+
+  it('a student keeps at most 3 live streams; a long catch-up becomes a resync', async () => {
+    const mk = async (lastEventId?: number) => {
+      const st = await post<{ st: string }>(url, '/v1/squad/stream-token', {}, tok.s_dev);
+      return openSse(url, {
+        st: st.body.st,
+        path: '/v1/chat/stream',
+        ...(lastEventId !== undefined ? { lastEventId } : {}),
+      });
+    };
+    const opened = [] as Sse[];
+    for (let i = 0; i < 5; i++) opened.push(await mk());
+    await new Promise((r) => setTimeout(r, 300));
+    const live = (hub.deps.chat as unknown as { count(): number }).count();
+    expect(live).toBeLessThanOrEqual(6); // three other students plus at most 3 for dev
+    for (const s of opened) s.stop();
+    // seed enough history for a resync
+    for (let i = 0; i < 210; i++)
+      hub.deps.chat.store.append({
+        chatId: GROUP,
+        ts: Date.now(),
+        sender: { kind: 'student', id: 's_ana', name: 'Ana' },
+        text: `filler ${i}`,
+        private: false,
+        attachments: [],
+        citations: [],
+        demo: false,
+      });
+    const late = await mk(0);
+    await late.waitFor((f) => f.some((x) => x.event === 'chat.resync'), 3000);
+    expect(late.frames.some((f) => f.event === 'chat.message')).toBe(false);
+    late.stop();
+  });
+
+  it('pending confirm cards from a previous process are marked timed out at boot', () => {
+    const m = hub.deps.chat.store.append({
+      chatId: 'dm:s_dev',
+      ts: Date.now(),
+      sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+      text: 'old question',
+      private: true,
+      attachments: [],
+      citations: [],
+      card: {
+        type: 'confirm',
+        taskId: 'task_old',
+        question: 'old question',
+        options: ['Yes', 'No'],
+        status: 'pending',
+      },
+      demo: true,
+    });
+    expect(hub.deps.chat.store.expirePendingConfirms()).toBeGreaterThanOrEqual(1);
+    expect(hub.deps.chat.store.get(m.id)!.card).toMatchObject({ status: 'timeout' });
+  });
+
+  it('the leak guard also catches spaced or punctuated copies of a private value in the group', () => {
+    const post1 = (text: string) =>
+      hub.deps.chat.postBot({
+        chatId: GROUP,
+        personaId: 'cubbie',
+        personaName: 'Cubbie',
+        text,
+        citations: [],
+        attachments: [],
+      })!;
+    expect(post1('someone mentioned t-h-e-r-a-p-y').text).not.toMatch(/t-h-e/);
+    expect(post1('the page 180 shows a graph').text).toContain('page 180'); // short numbers are not guessed at
+  });
+
+  it('files in a DM are never left in a shared cache', async () => {
+    const fd = new FormData();
+    const PNG = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    fd.set('file', new File([PNG], 'w.png', { type: 'image/png' }));
+    const up = await fetch(`${url}/v1/chat/upload`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${tok.s_dev}` },
+      body: fd,
+    });
+    const a = ((await up.json()) as { attachment: { url: string } }).attachment;
+    const r = await fetch(`${url}${a.url}?st=${tok.s_dev}`);
+    expect(r.headers.get('cache-control')).toContain('no-store');
+  });
+});

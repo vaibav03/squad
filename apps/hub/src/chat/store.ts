@@ -25,8 +25,10 @@ export interface ChatStore {
   since(afterSeq: number, chatIds: string[]): ChatMessage[];
   last(chatId: string): ChatMessage | undefined;
   lastSeq(): number;
-  /** Newest confirm-card message for this student and task. */
+  /** Newest confirm-card message in this chat for this task. */
   findConfirm(chatId: string, taskId: string): ChatMessage | undefined;
+  /** After a restart no confirm can still be pending (the bot drops them): mark those cards `timeout`. Returns how many. */
+  expirePendingConfirms(): number;
   clear(): void;
 }
 
@@ -46,8 +48,8 @@ export function createChatStore(db: Db): ChatStore {
   const lastOf = db.prepare(
     'SELECT json FROM hub_chat_messages WHERE chat_id=? ORDER BY seq DESC LIMIT 1',
   );
-  const recent = db.prepare(
-    'SELECT json FROM hub_chat_messages WHERE chat_id=? ORDER BY seq DESC LIMIT 60',
+  const byTask = db.prepare(
+    'SELECT json FROM hub_chat_messages WHERE chat_id=? AND instr(json, ?) > 0 ORDER BY seq DESC LIMIT 5',
   );
   const seqOf = (id: string): number | undefined => {
     const m = /^m_(\d+)$/.exec(id);
@@ -100,9 +102,24 @@ export function createChatStore(db: Db): ChatStore {
       return r.s ?? 0;
     },
     findConfirm(chatId, taskId) {
-      return rows(recent.all(chatId)).find(
+      // the taskId is matched as its JSON-encoded form, so it cannot widen the search
+      return rows(byTask.all(chatId, `"taskId":${JSON.stringify(taskId)}`)).find(
         (m) => m.card?.type === 'confirm' && m.card.taskId === taskId,
       );
+    },
+    expirePendingConfirms() {
+      const pending = db
+        .prepare(`SELECT json FROM hub_chat_messages WHERE instr(json, '"status":"pending"') > 0`)
+        .all() as { json: string }[];
+      let n = 0;
+      for (const r of pending) {
+        const m = parse(r.json);
+        if (m?.card?.type === 'confirm' && m.card.status === 'pending') {
+          setJson.run(JSON.stringify({ ...m, card: { ...m.card, status: 'timeout' } }), m.seq);
+          n++;
+        }
+      }
+      return n;
     },
     clear() {
       db.exec('DELETE FROM hub_chat_messages; DELETE FROM hub_chat_files;');
