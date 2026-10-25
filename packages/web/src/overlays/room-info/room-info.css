@@ -4,7 +4,7 @@
 .rr-layer {
   position: absolute;
   inset: 0;
-  z-index: var(--z-panel);
+  z-index: var(--sq-z-panel);
   pointer-events: none;
   font-family: var(--lv-font-ui);
   color: var(--lv-text);
@@ -43,7 +43,8 @@
 .rr-help {
   position: absolute;
   top: calc(var(--room-help-top, 72px) + var(--safe-top));
-  right: max(var(--lv-s4), var(--safe-right));
+  /* top left, under the HUD chips: the right side belongs to the panel dock (shell/panel-dock.css) */
+  left: max(var(--lv-s4), var(--safe-left));
   width: var(--lv-tap);
   height: var(--lv-tap);
   padding: 0;
@@ -386,7 +387,7 @@
 @media (min-width: 640px) {
   .lv-ovl[data-placement='dock'] .rr-panel {
     align-self: flex-start;
-    max-height: calc(100% - var(--lv-s6));
+    max-height: 100%;
   }
 }
 .rr-panel__body {
