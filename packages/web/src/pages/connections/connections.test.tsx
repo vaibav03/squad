@@ -30,6 +30,7 @@ const conn = (o: Partial<Connection> = {}): Connection => ({
   syncVia: 'extension',
   sources: { total: 3, byKind: { canvas_assignment: 2, canvas_file: 1 } },
   sharedWithSquads: [],
+  needsReconnect: false,
   ...o,
 });
 function props(over: Partial<ViewProps> = {}, client: Partial<HubClient> = {}): ViewProps {
@@ -37,6 +38,7 @@ function props(over: Partial<ViewProps> = {}, client: Partial<HubClient> = {}): 
     view: 'ready',
     connections: [],
     squadId: 'sq_1',
+    squadNames: { sq_1: 'Stats 101 Study Squad' },
     error: null,
     client: client as HubClient,
     clearError: () => {},
@@ -84,13 +86,16 @@ describe('state badges', () => {
   it('shows counts, last sync, sharing and plain-word scopes, syncing phase', () => {
     render(
       <ConnectionsView
-        {...props({ connections: [conn({ syncPhase: 'syncing', sharedWithSquads: ['sq_9'] })] })}
+        {...props({
+          connections: [conn({ syncPhase: 'syncing', sharedWithSquads: ['sq_9'] })],
+          squadNames: { sq_9: 'Bio Crew' },
+        })}
       />,
     );
     expect(screen.getByText('Syncing')).toBeTruthy();
     expect(screen.getByText('2 min ago')).toBeTruthy();
     expect(screen.getByText('2 assignments, 1 files')).toBeTruthy();
-    expect(screen.getByText('sq_9')).toBeTruthy();
+    expect(screen.getByText('Bio Crew')).toBeTruthy();
     expect(screen.getByText(/through your own browser session/)).toBeTruthy();
   });
 });
@@ -144,7 +149,10 @@ describe('actions', () => {
     render(
       <ConnectionsView
         {...props({
-          connections: [conn({ state: 'expired' }), conn({ id: 'r', state: 'revoked' })],
+          connections: [
+            conn({ state: 'expired', needsReconnect: true }),
+            conn({ id: 'r', state: 'revoked', needsReconnect: true }),
+          ],
         })}
       />,
     );
@@ -265,5 +273,83 @@ describe('extension detection and bridge', () => {
     expect(seen).toContainEqual(
       expect.objectContaining({ type: MSG.authorize, canvasUserId: '7', userId: 'u1' }),
     );
+  });
+});
+
+const RAW =
+  /\b[us]_[0-9a-f]{6,}\b|\bsq_[a-z0-9_]{3,}\b|\b[0-9a-f]{24,}\b|\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i;
+/** Every rendered text node and every aria-label / title / alt / placeholder under the body. */
+function scan(): string[] {
+  const out: string[] = [];
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = w.nextNode(); n; n = w.nextNode()) out.push(n.textContent ?? '');
+  document.body.querySelectorAll('*').forEach((el) => {
+    for (const a of ['aria-label', 'title', 'alt', 'placeholder'])
+      if (el.hasAttribute(a)) out.push(el.getAttribute(a) ?? '');
+  });
+  return out;
+}
+
+describe('Shared with shows squad names, never raw ids (S2)', () => {
+  const shared = (id: string) =>
+    conn({ provider: 'google', variant: 'oauth', syncVia: 'hub', sharedWithSquads: [id] });
+  it('resolves ids through the roster', () => {
+    render(<ConnectionsView {...props({ connections: [shared('sq_1')] })} />);
+    expect(screen.getByText('Stats 101 Study Squad')).toBeTruthy();
+  });
+  it.each([
+    ['a known squad', 'sq_a193aba6d4e4', { sq_a193aba6d4e4: 'Bio Crew' }],
+    ['a squad the roster does not know', 'sq_9f3c0a7be211', {}],
+    ['a long hex id', 'a193aba6d4e49f3c0a7be211a193aba6d4e4', {}],
+  ])('no raw ids anywhere on the page: %s', (_n, id, names) => {
+    render(
+      <ConnectionsView {...props({ connections: [shared(id)], squadId: id, squadNames: names })} />,
+    );
+    for (const t of scan()) expect(t).not.toMatch(RAW);
+  });
+});
+
+describe('revoked / expired grants offer Reconnect with an honest message (V3, V4)', () => {
+  it('revoked: states the purge in words and shows Reconnect', () => {
+    const msg = 'Google access was revoked. Imported data was removed. Reconnect to import again.';
+    render(
+      <ConnectionsView
+        {...props({
+          connections: [
+            conn({
+              provider: 'google',
+              variant: 'oauth',
+              syncVia: 'hub',
+              state: 'revoked',
+              stateLabel: msg,
+              note: msg,
+              needsReconnect: true,
+              sources: { total: 0, byKind: {} },
+            }),
+          ],
+        })}
+      />,
+    );
+    expect(screen.getAllByText(msg)).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Reconnect' })).toBeTruthy();
+  });
+  it('expired: keeps the data, flags it, shows Reconnect', () => {
+    render(
+      <ConnectionsView
+        {...props({
+          connections: [
+            conn({
+              provider: 'google',
+              variant: 'oauth',
+              syncVia: 'hub',
+              state: 'expired',
+              stateLabel: 'Expired: reconnect to resume syncing',
+              needsReconnect: true,
+            }),
+          ],
+        })}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Reconnect' })).toBeTruthy();
   });
 });

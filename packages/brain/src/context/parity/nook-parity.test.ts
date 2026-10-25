@@ -16,6 +16,7 @@ import {
   GOOGLE_SCOPES,
   ConnectorAuthError,
   ConnectorExpiredError,
+  ConnectorRevokedError,
   ConnectorRateLimitError,
   type CanvasAuth,
   type GoogleAuth,
@@ -497,7 +498,7 @@ describe('Nook parity: Google OAuth and Workspace (bridge/google-workspace.ts)',
     expect(log.find((l) => l.includes('/calendar/v3/'))).toContain('updatedMin=');
   });
 
-  it('P16 refresh: success moves the token; invalid_grant is expired; 429 is rate limited', async () => {
+  it('P16 refresh: success moves the token; invalid_grant is revoked; 429 is rate limited', async () => {
     const f = fakeGoogle({
       accessToken: 'AT-1',
       refreshToken: 'RT-1',
@@ -514,7 +515,7 @@ describe('Nook parity: Google OAuth and Workspace (bridge/google-workspace.ts)',
       fetch: fakeGoogle({ accessToken: 'AT-1', refreshToken: 'RT-1', refreshInvalidGrant: true }),
       oauth: cfg,
     });
-    await expect(revoked.refresh!(gauth())).rejects.toBeInstanceOf(ConnectorExpiredError);
+    await expect(revoked.refresh!(gauth())).rejects.toBeInstanceOf(ConnectorRevokedError);
   });
 
   it('error mapping: 401 -> revoked state on probe; 429 and quota 403 -> rate limit; plain 403 -> auth error', async () => {

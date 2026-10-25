@@ -202,6 +202,8 @@ export interface FakeGoogleOpts {
   issue?: { access_token: string; refresh_token?: string; expires_in?: number; scope?: string };
   /** `invalid_grant` on refresh. */
   refreshInvalidGrant?: boolean;
+  /** The refresh is refused for a reason other than a revoked grant (`invalid_client`). */
+  refreshRefused?: boolean;
   /** 429 with Retry-After on API calls. */
   rateLimitSeconds?: number;
   /** 403 rateLimitExceeded body on Calendar. */
@@ -284,6 +286,7 @@ export function fakeGoogle(opts: FakeGoogleOpts): typeof fetch {
     if (url.host === 'oauth2.googleapis.com' && url.pathname === '/token') {
       const body = new URLSearchParams(String(init?.body ?? ''));
       if (body.get('grant_type') === 'refresh_token') {
+        if (opts.refreshRefused) return jsonRes({ error: 'invalid_client' }, 401);
         if (opts.refreshInvalidGrant || body.get('refresh_token') !== opts.refreshToken)
           return jsonRes({ error: 'invalid_grant' }, 400);
         return jsonRes({

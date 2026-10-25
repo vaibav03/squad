@@ -12,6 +12,7 @@ import {
   ChatApiError,
   type ChatApi,
   type ChatSendInput,
+  type ChatSyncEvent,
   type StreamHandlers,
   type StreamState,
 } from './api';
@@ -244,6 +245,10 @@ export interface FakeChatApi extends ChatApi {
   setStream(state: StreamState): void;
   pushMessage(m: Omit<ChatMessage, 'id' | 'seq'>): ChatMessage;
   pushUpdate(u: ChatUpdate): void;
+  /** a `chat.sync` event: the delivery state of a message changed */
+  pushSync(e: ChatSyncEvent): void;
+  /** message ids the web asked to retry (POST /v1/imessage/messages/:id/retry) */
+  retried: string[];
   pushTyping(t: ChatTyping): void;
   resync(): void;
   sent: ChatSendInput[];
@@ -428,6 +433,12 @@ export function createFakeChatApi(o: FakeChatOptions = {}): FakeChatApi {
     setStream: (s) => subs.forEach((h) => h.onState(s)),
     pushMessage: push,
     pushUpdate: (u) => subs.forEach((h) => h.onUpdate(u)),
+    pushSync: (e) => subs.forEach((h) => h.onSync?.(e)),
+    retried: [],
+    retryImessage: async (id) => {
+      api.retried.push(id);
+      return true;
+    },
     pushTyping: (t) => subs.forEach((h) => h.onTyping(t)),
     resync: () => subs.forEach((h) => h.onResync(seq)),
   };
