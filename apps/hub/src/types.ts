@@ -245,6 +245,8 @@ export interface TripCollab {
   failure: { code: string; message: string } | null;
   /** When the last member confirmed (ms). Lets a client find a recent trip whose cutscene it missed. */
   confirmedAt?: number;
+  /** Demo mode only: the organizer's ranking auto-accepted every member. */
+  demoAuto?: boolean;
   declined: StudentId[];
   /** Student ids that were told at least once (mirror dedupe) */
   mirrored?: string[];

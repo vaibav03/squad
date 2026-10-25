@@ -96,6 +96,8 @@ export const TripViewV2Schema = z.object({
   /** { voted, of } only once 3 or more members voted and the squad has 3+ members; otherwise null. */
   voteProgress: z.object({ voted: z.number(), of: z.number() }).nullable(),
   members: z.array(TripMemberSchema),
+  /** Demo mode: every member was auto-accepted. */
+  demoAuto: z.boolean().optional(),
   confirmations: z.array(z.object({ student: z.string(), confirmed: z.boolean() })),
   vetoed: z.array(z.object({ optionId: z.string(), by: z.string(), reason: z.string() })),
   myLimits: z.record(z.string(), z.string()).nullable(),

@@ -117,6 +117,7 @@ export function buildTripView(
         voted: id === me ? voters.has(id) : showPart ? voters.has(id) : null,
       };
     }),
+    ...(c?.demoAuto ? { demoAuto: true } : {}),
     confirmations: t.confirmations.map((r) => ({ student: r.student, confirmed: r.confirmed })),
     vetoed: t.vetoed.map((v) => ({ optionId: v.optionId, by: v.by, reason: v.reason })),
     myLimits: mine && !viewer.projector ? { ...mine } : null,

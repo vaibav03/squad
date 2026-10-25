@@ -309,6 +309,7 @@ function TripBody({
               Everyone said yes{trip.chosen?.dates ? `. ${trip.chosen.dates}` : ''}. The van is
               packed.
             </p>
+            {trip.demoAuto && <p data-testid="trip-demo-auto">Demo: all members auto-accepted</p>}
           </div>
           {!inline && (
             <div className="lv-trip__donebtns">

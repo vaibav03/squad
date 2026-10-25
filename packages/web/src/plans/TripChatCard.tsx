@@ -113,6 +113,12 @@ export function TripChatCard({
           {trip.window ? ` · ${trip.window.from} to ${trip.window.to}` : ''}
         </p>
       ) : null}
+      {trip?.demoAuto ? (
+        <p className="sqp-card__meta" data-testid="trip-demo-auto">
+          Demo: all members auto-accepted ({trip.confirmations.filter((c) => c.confirmed).length} of{' '}
+          {trip.confirmations.length} accepted)
+        </p>
+      ) : null}
     </PlanCard>
   );
 }

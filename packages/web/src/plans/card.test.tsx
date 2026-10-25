@@ -164,6 +164,34 @@ describe('TripChatCard', () => {
   });
 });
 
+describe('TripChatCard demo auto-accept', () => {
+  it('shows an honest note and the watch link when every member was auto-accepted', async () => {
+    const t = {
+      ...tripConfirmed,
+      demoAuto: true,
+      confirmations: tripConfirmed.confirmations.map((c) => ({ ...c, confirmed: true })),
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify(t), { status: 200 })),
+    );
+    render(
+      <PlanActionsContext.Provider value={{ askCubbie: vi.fn(), openPlan: vi.fn() }}>
+        <TripChatCard
+          hub={{ hubUrl: 'http://h', token: 't' }}
+          card={{ type: 'trip', tripId: 'trip_cabo', rev: 1 }}
+        />
+      </PlanActionsContext.Provider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('trip-demo-auto')).toBeTruthy());
+    expect(screen.getByTestId('trip-demo-auto').textContent).toContain(
+      'Demo: all members auto-accepted',
+    );
+    expect(screen.getByTestId('plan-watch-trip')).toBeTruthy();
+    vi.unstubAllGlobals();
+  });
+});
+
 describe('plan actions stay inside the group chat', () => {
   const noLeave = (root: HTMLElement) => {
     for (const a of root.querySelectorAll('a[href]')) {
