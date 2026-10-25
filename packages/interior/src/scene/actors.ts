@@ -114,7 +114,7 @@ export class NpcActor extends Actor {
   wander = true;
   goalKey: string | undefined;
   /** Last directed goal, replanned when a door locks mid-route. */
-  goal: { goal: import('../agents/director').Goal; wander: boolean } | undefined;
+  goal: { goal: Goal; wander: boolean } | undefined;
   constructor(
     scene: Phaser.Scene,
     manifest: Manifest,
