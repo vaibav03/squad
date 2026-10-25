@@ -26,7 +26,7 @@ export const BouncerOutputSchema = z.strictObject({
 export type BouncerVerdict = z.infer<typeof BouncerOutputSchema>;
 
 const MAX_LEN = 2000;
-const ZERO_WIDTH = /[​-‏‪-‮⁠-⁤﻿]/;
+const ZERO_WIDTH = new RegExp('[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]');
 
 /** Fold lookalikes and strip noise so "i g n o r e" and fullwidth letters hit the same patterns. */
 export function normalize(text: string): string {
@@ -63,7 +63,6 @@ const RULES: { reason: BouncerReason; re: RegExp }[] = [
   },
 ];
 
-const BASE64_BLOB = /(?:[a-z0-9+/]{24,}={0,2})/i;
 const HEXISH_BLOB = /\b[0-9a-f]{40,}\b/i;
 
 /** Deterministic pre-filter. Returns the reasons that fired (empty = nothing found). */
@@ -77,12 +76,13 @@ export function prefilter(text: string): BouncerReason[] {
   for (const { reason, re } of RULES) if (re.test(n)) reasons.add(reason);
   if (/ignore(all)?(the)?(previous|prior|above)(instructions?|rules?|prompt)/.test(squashed))
     reasons.add('instruction_override');
-  if (
-    BASE64_BLOB.test(text.replace(/\s/g, '')) &&
-    !/^[\w\s.,:;'"()-]+$/.test(text.trim().slice(0, 30)) === false &&
-    /[+/=]/.test(text)
-  )
-    reasons.add('encoded_payload');
+  for (const tok of text.split(/\s+/)) {
+    if (tok.length >= 24 && /^[A-Za-z0-9+/]+={0,2}$/.test(tok) && /\d|[A-Z]/.test(tok)) {
+      reasons.add('encoded_payload');
+      const decoded = Buffer.from(tok, 'base64').toString('utf8');
+      if (decoded !== text) for (const r of prefilter(decoded)) reasons.add(r);
+    }
+  }
   if (HEXISH_BLOB.test(text)) reasons.add('encoded_payload');
   return [...reasons];
 }
