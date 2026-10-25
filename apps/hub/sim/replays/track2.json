@@ -49,7 +49,10 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "task.open",
-        "shared": ["study plan opened", "3 members"]
+        "shared": [
+          "study plan opened",
+          "3 members"
+        ]
       }
     },
     {
@@ -57,7 +60,14 @@
       "event": {
         "t": "agent.state",
         "agent": "student:s_ana",
-        "state": "studying"
+        "state": "studying",
+        "thought": "Opening a study plan for chapter 6 with the other two agents",
+        "work": {
+          "tier": "fast",
+          "demo": true,
+          "thinking": true,
+          "skill": "Squad planning"
+        }
       }
     },
     {
@@ -65,7 +75,14 @@
       "event": {
         "t": "agent.state",
         "agent": "student:s_ben",
-        "state": "studying"
+        "state": "studying",
+        "thought": "Checking which evenings Ben has free without seeing his calendar",
+        "work": {
+          "tier": "fast",
+          "demo": true,
+          "thinking": true,
+          "skill": "Squad planning"
+        }
       }
     },
     {
@@ -73,7 +90,14 @@
       "event": {
         "t": "agent.state",
         "agent": "student:s_chi",
-        "state": "studying"
+        "state": "studying",
+        "thought": "Blinding my free slots first, then comparing with the others",
+        "work": {
+          "tier": "fast",
+          "demo": true,
+          "thinking": true,
+          "skill": "Squad planning"
+        }
       }
     },
     {
@@ -84,7 +108,10 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "psi.blind",
-        "shared": ["168 blinded tokens (padded)"]
+        "shared": [
+          "168 blinded tokens (padded)"
+        ],
+        "thought": "Hiding the real slots so nobody sees a raw calendar"
       }
     },
     {
@@ -106,7 +133,9 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "psi.blind",
-        "shared": ["168 blinded tokens (padded)"]
+        "shared": [
+          "168 blinded tokens (padded)"
+        ]
       }
     },
     {
@@ -128,7 +157,9 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "psi.blind",
-        "shared": ["168 blinded tokens (padded)"]
+        "shared": [
+          "168 blinded tokens (padded)"
+        ]
       }
     },
     {
@@ -150,7 +181,9 @@
         "to": "mediator",
         "taskId": "task_study_ch6",
         "kind": "psi.tokens",
-        "shared": ["168 blinded tokens"]
+        "shared": [
+          "168 blinded tokens"
+        ]
       }
     },
     {
@@ -161,7 +194,9 @@
         "to": "mediator",
         "taskId": "task_study_ch6",
         "kind": "psi.tokens",
-        "shared": ["168 blinded tokens"]
+        "shared": [
+          "168 blinded tokens"
+        ]
       }
     },
     {
@@ -172,7 +207,9 @@
         "to": "mediator",
         "taskId": "task_study_ch6",
         "kind": "psi.tokens",
-        "shared": ["168 blinded tokens"]
+        "shared": [
+          "168 blinded tokens"
+        ]
       }
     },
     {
@@ -183,7 +220,10 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "psi.common",
-        "shared": ["0 common slots"]
+        "shared": [
+          "0 common slots"
+        ],
+        "thought": "Comparing blinded tokens from all three to find shared free time"
       }
     },
     {
@@ -194,7 +234,10 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "conflict",
-        "shared": ["no slot works for everyone"]
+        "shared": [
+          "no slot works for everyone"
+        ],
+        "thought": "No slot works for everyone, so I will propose a shorter plan"
       }
     },
     {
@@ -205,7 +248,10 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "result",
-        "shared": ["plan proposed"]
+        "shared": [
+          "plan proposed"
+        ],
+        "thought": "Choosing the least bad option and asking each person to confirm"
       }
     },
     {
@@ -213,7 +259,14 @@
       "event": {
         "t": "agent.state",
         "agent": "student:s_ben",
-        "state": "waiting_for_student"
+        "state": "waiting_for_student",
+        "thought": "Waiting on Ben before the plan can be locked",
+        "work": {
+          "tier": "main",
+          "demo": true,
+          "thinking": false,
+          "skill": "Confirm"
+        }
       }
     },
     {
@@ -250,7 +303,9 @@
         "to": "commons",
         "taskId": "task_study_ch6",
         "kind": "result",
-        "shared": ["plan found"]
+        "shared": [
+          "plan found"
+        ]
       }
     },
     {
@@ -326,7 +381,10 @@
         "to": "student:s_ana",
         "taskId": "task_attack_budget",
         "kind": "query",
-        "shared": ["asks: budget"]
+        "shared": [
+          "asks: budget"
+        ],
+        "thought": "Asking about budget so the plan fits, knowing it may be refused"
       }
     },
     {
@@ -337,7 +395,10 @@
         "to": "student:s_ben",
         "taskId": "task_attack_budget",
         "kind": "query_denied",
-        "shared": ["request denied: budget"]
+        "shared": [
+          "request denied: budget"
+        ],
+        "thought": "This request would reveal a private value, so the gate says no"
       }
     },
     {
@@ -368,7 +429,10 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "task.open",
-        "shared": ["trip plan opened", "3 members"]
+        "shared": [
+          "trip plan opened",
+          "3 members"
+        ]
       }
     },
     {
@@ -376,7 +440,14 @@
       "event": {
         "t": "agent.state",
         "agent": "student:s_ana",
-        "state": "studying"
+        "state": "studying",
+        "thought": "Opening a trip plan; two choices to weigh: dates and cost",
+        "work": {
+          "tier": "main",
+          "demo": true,
+          "thinking": true,
+          "skill": "Squad planning"
+        }
       }
     },
     {
@@ -403,7 +474,9 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "psi.blind",
-        "shared": ["64 blinded tokens (padded)"]
+        "shared": [
+          "64 blinded tokens (padded)"
+        ]
       }
     },
     {
@@ -425,7 +498,9 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "psi.blind",
-        "shared": ["64 blinded tokens (padded)"]
+        "shared": [
+          "64 blinded tokens (padded)"
+        ]
       }
     },
     {
@@ -447,7 +522,9 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "psi.blind",
-        "shared": ["64 blinded tokens (padded)"]
+        "shared": [
+          "64 blinded tokens (padded)"
+        ]
       }
     },
     {
@@ -469,7 +546,10 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "psi.common",
-        "shared": ["3 common slots"]
+        "shared": [
+          "3 common slots"
+        ],
+        "thought": "Three shared slots found, now checking cost without showing amounts"
       }
     },
     {
@@ -480,7 +560,9 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": ["secret share of 3 values (cantAfford)"]
+        "shared": [
+          "secret share of 3 values (cantAfford)"
+        ]
       }
     },
     {
@@ -502,7 +584,9 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": ["secret share of 3 values (cantAfford)"]
+        "shared": [
+          "secret share of 3 values (cantAfford)"
+        ]
       }
     },
     {
@@ -524,7 +608,9 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": ["secret share of 3 values (cantAfford)"]
+        "shared": [
+          "secret share of 3 values (cantAfford)"
+        ]
       }
     },
     {
@@ -546,7 +632,9 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": ["secret share of 3 values (veto)"]
+        "shared": [
+          "secret share of 3 values (veto)"
+        ]
       }
     },
     {
@@ -568,7 +656,9 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": ["secret share of 3 values (veto)"]
+        "shared": [
+          "secret share of 3 values (veto)"
+        ]
       }
     },
     {
@@ -590,7 +680,9 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "share.vec",
-        "shared": ["secret share of 3 values (veto)"]
+        "shared": [
+          "secret share of 3 values (veto)"
+        ]
       }
     },
     {
@@ -612,7 +704,9 @@
         "to": "mediator",
         "taskId": "task_trip_cabo",
         "kind": "share.sum",
-        "shared": ["secret share of 3 values (cantAfford)"]
+        "shared": [
+          "secret share of 3 values (cantAfford)"
+        ]
       }
     },
     {
@@ -623,7 +717,9 @@
         "to": "mediator",
         "taskId": "task_trip_cabo",
         "kind": "share.sum",
-        "shared": ["secret share of 3 values (cantAfford)"]
+        "shared": [
+          "secret share of 3 values (cantAfford)"
+        ]
       }
     },
     {
@@ -634,7 +730,9 @@
         "to": "mediator",
         "taskId": "task_trip_cabo",
         "kind": "share.sum",
-        "shared": ["secret share of 3 values (cantAfford)"]
+        "shared": [
+          "secret share of 3 values (cantAfford)"
+        ]
       }
     },
     {
@@ -645,7 +743,10 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "option_dropped",
-        "shared": ["option dropped: budget"]
+        "shared": [
+          "option dropped: budget"
+        ],
+        "thought": "Dropping the option that someone cannot afford"
       }
     },
     {
@@ -656,7 +757,10 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "option_dropped",
-        "shared": ["dropped: veto"]
+        "shared": [
+          "dropped: veto"
+        ],
+        "thought": "Dropping the option that someone ruled out"
       }
     },
     {
@@ -667,7 +771,10 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "result",
-        "shared": ["top options ranked"]
+        "shared": [
+          "top options ranked"
+        ],
+        "thought": "Ranking what is left: two options remain"
       }
     },
     {
@@ -678,7 +785,16 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "result",
-        "shared": ["plan proposed"]
+        "shared": [
+          "plan proposed"
+        ],
+        "thought": "Proposing the top option and asking everyone to confirm",
+        "work": {
+          "tier": "chair",
+          "demo": true,
+          "thinking": true,
+          "skill": "Squad planning"
+        }
       }
     },
     {
@@ -686,7 +802,8 @@
       "event": {
         "t": "agent.state",
         "agent": "student:s_ana",
-        "state": "waiting_for_student"
+        "state": "waiting_for_student",
+        "thought": "Waiting for two more confirms before booking"
       }
     },
     {
@@ -791,7 +908,16 @@
         "to": "commons",
         "taskId": "task_trip_cabo",
         "kind": "result",
-        "shared": ["plan found"]
+        "shared": [
+          "plan found"
+        ],
+        "thought": "Everyone said yes, so the plan is final",
+        "work": {
+          "tier": "chair",
+          "demo": true,
+          "thinking": false,
+          "skill": "Squad planning"
+        }
       }
     },
     {
