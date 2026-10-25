@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@squad/core": "workspace:*",
-    "phaser": "3.90.0"
+    "phaser": "3.90.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "playwright": "^1.64.1",
