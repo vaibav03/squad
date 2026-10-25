@@ -1,11 +1,17 @@
 // Chat -> trip actions. Runs in the hub BEFORE the bot router for every student message (web or iMessage via the bridge),
 // returns true when it handled the text. It only acts on tight patterns, so ordinary chatter still reaches the bot.
 import { parseConfirmReply } from '@squad/bot';
+import { parseMentions } from '@squad/core';
 import type { HubDeps, Viewer } from '../types';
 import { monthOf, MONTHS } from './logic';
 import type { TripService } from './service';
 
-const AT = /(^|[^a-z0-9_])@(?:cubbie|cubbi|squad|planner|council)(?![a-z0-9_])/i;
+/** Agents whose tag addresses trip planning (the shared alias table maps cubbie/cubbi/squad to `cubbie`). */
+const TRIP_AGENTS = new Set(['cubbie', 'planner', 'council']);
+/** True when the text tags Cubbie, the planner or the council, by the shared mention parser (typos, emails, quotes and code do not count). */
+export function addressesTrip(text: string): boolean {
+  return parseMentions(text).mentions.some((m) => TRIP_AGENTS.has(m.agent.id));
+}
 const CREATE = /\b(?:plan|organi[sz]e|start|set\s*up|book)\b[^.!?\n]*?\btrip\b([^\n]*)$/i;
 const MONTH_WORDS = MONTHS.map((m) => m.slice(0, 3))
   .concat(MONTHS, ['sept'])
@@ -62,7 +68,7 @@ export async function handleTripChat(
       citations: [],
       attachments: [],
     });
-  const addressed = isDm || AT.test(text);
+  const addressed = isDm || addressesTrip(text);
   const cur = svc.current(v);
   const active =
     cur && ['planning', 'voting', 'confirming'].includes(cur.status) && cur.organizer ? cur : null;

@@ -5,7 +5,7 @@ import { createHub } from '../app';
 import { withContext, noGrounder } from '../live/grounder';
 import { busyBlocksOf } from '../adapters/real';
 import { contextServiceFor } from './service';
-import { contextBusyBlocks, mergeContextBusy } from './busy';
+import { contextBusyBlocks, mergeContextBusy, refreshBusyForTrip } from './busy';
 
 const T0 = Date.UTC(2026, 10, 2, 12);
 
@@ -97,5 +97,17 @@ describe('context wiring in the hub', () => {
     const rows = busyBlocksOf(h.deps, 's_ana');
     expect(rows).toHaveLength(1);
     expect(JSON.stringify(rows)).not.toContain('Doctor');
+  });
+
+  it("trip planning refreshes every member's calendar busy blocks (busy only, no titles)", () => {
+    const { h, add } = hub();
+    add('s_ana', 'gcal_event', 'e2', 'Therapy session', {
+      startsAt: T0 + 86_400_000,
+      endsAt: T0 + 86_400_000 + 3_600_000,
+    });
+    refreshBusyForTrip(h.deps, ['s_ana', 's_ben']);
+    expect(busyBlocksOf(h.deps, 's_ana')).toHaveLength(1);
+    expect(busyBlocksOf(h.deps, 's_ben')).toHaveLength(0);
+    expect(JSON.stringify(busyBlocksOf(h.deps, 's_ana'))).not.toContain('Therapy');
   });
 });

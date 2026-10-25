@@ -66,7 +66,8 @@ export function useTrip(tripId?: string) {
     try {
       res = await timedFetch(`${cfg.hubUrl}${base}`, { headers });
     } catch {
-      netFail();
+      // a blip while a trip is already on screen keeps it (the timer re-reads); only a first load shows the error
+      if (viewRef.current === undefined) netFail();
       return;
     }
     try {

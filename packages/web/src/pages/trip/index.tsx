@@ -58,7 +58,6 @@ export default function TripPage() {
       }}
       onWatchCutscene={(v) => claimCutscene(v.tripId)}
       onRetry={t.retry}
-      onPlan={() => navigate('/squad/chat')}
     />
   );
 }
