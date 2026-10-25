@@ -2,13 +2,14 @@ import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FakeLlm, type Llm, type Skill } from '@squad/core';
-import { GeminiLlm, describeConfig, loadConfig, openDb } from '@squad/core/node';
+import { GeminiLlm, describeConfig, loadConfig, openDb, openMemoryDb } from '@squad/core/node';
 import { createBot } from './bot';
 import { ChatRepl } from './cli/repl';
 import { STUB_SKILLS } from './cli/stub-skills';
 import { teePublisher, createEventPublisher } from './events';
 import { createLogger } from './log';
-import { skills as registry } from './skills';
+import { createSkills } from './skills';
+import { buildMedia, registerMediaPersonas } from './wiring';
 import { CliTransport } from './transports/cli';
 import type { EventPublisher, Roster, Transport } from './types';
 
@@ -40,6 +41,13 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
   if (dryRun) {
     console.log('[bot] dry run: config below, nothing connected');
     console.log(JSON.stringify(describeConfig(cfg), null, 2));
+    const probe = new FakeLlm({ fallback: 'dry run' });
+    const m = buildMedia({ cfg, llm: probe, fake: true });
+    const names = (
+      await createSkills({ llm: probe, db: openMemoryDb(), emit: () => {}, media: m.media })
+    ).map((s) => s.name);
+    console.log(`[bot] skills: ${names.join(', ')}`);
+    console.log(`[bot] personas registered: ${registerMediaPersonas()}`);
     return;
   }
 
@@ -53,10 +61,7 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
   const llm: Llm = fake
     ? new FakeLlm({ fallback: 'Hi! (fake LLM reply)' })
     : new GeminiLlm({ apiKey: cfg.geminiApiKey!, models: cfg.geminiModels });
-  const skills: Skill[] = [
-    ...registry,
-    ...(env.STUB_SKILLS === '1' ? Object.values(STUB_SKILLS) : []),
-  ];
+  registerMediaPersonas();
   const tap: { current?: EventPublisher } = {};
   const hub = createEventPublisher({
     log,
@@ -66,6 +71,12 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
   const events = teePublisher(hub, {
     publish: (e) => tap.current?.publish(e) ?? Promise.resolve(),
   });
+  const { media, reason } = buildMedia({ cfg, llm, fake });
+  if (reason) console.log(`[bot] ${reason}`);
+  const skills: Skill[] = [
+    ...(await createSkills({ llm, db, emit: (e) => events.publish(e), media })),
+    ...(env.STUB_SKILLS === '1' ? Object.values(STUB_SKILLS) : []),
+  ];
 
   let transport: Transport;
   if (kind === 'imessage') {
