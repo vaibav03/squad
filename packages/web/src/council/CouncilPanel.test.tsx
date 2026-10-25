@@ -274,10 +274,11 @@ describe('CouncilPanel: verdict variants', () => {
 
   it('demo: shows the demo badge', () => {
     render(<CouncilCard result={f.demo} />);
-    expect(screen.getByText('Demo mode')).toBeTruthy();
+    expect(screen.getByText('Demo')).toBeTruthy();
     cleanup();
     render(<CouncilCard result={f.done} />);
-    expect(screen.queryByText('Demo mode')).toBeNull();
+    expect(screen.queryByText('Demo')).toBeNull();
+    expect(screen.getByText('Live')).toBeTruthy();
   });
 
   it('a verdict without dissent renders no dissent block', () => {

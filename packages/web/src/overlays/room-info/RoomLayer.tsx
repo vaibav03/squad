@@ -5,6 +5,7 @@ import { LvIcon } from '../kit';
 import { OutcomeCard } from './OutcomeCard';
 import { RoomInfoPanel } from './RoomInfoPanel';
 import { RoomTranscript } from './RoomTranscript';
+import { RoomExtras } from '../../council/board/Launchers';
 import './room-info.css';
 
 export interface RoomLayerProps {
@@ -178,6 +179,13 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
                   },
                 }
               : undefined
+          }
+          headerExtra={
+            slot === 'council-hall' ? (
+              <RoomExtras councilId="council:ask" />
+            ) : slot === 'round-table' ? (
+              <RoomExtras councilId="council:planner" />
+            ) : undefined
           }
           returnFocusTo={helpRef.current}
           calm={calm}

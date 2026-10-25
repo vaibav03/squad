@@ -13,3 +13,5 @@ export {
   useCanOpenBoard,
 } from './bridge';
 export { ModeBadge } from './ModeBadge';
+export { RoomExtras, HudButton } from './Launchers';
+export { resultMode } from './mode-of';

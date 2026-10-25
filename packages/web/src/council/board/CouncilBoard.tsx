@@ -1,5 +1,24 @@
-import type { CouncilBoardStore } from '@squad/village/council';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ASK_FIXTURE,
+  STEPS,
+  messageHeadline,
+  playCouncilFixture,
+  type BoardRun,
+  type CouncilBoardStore,
+} from '@squad/village/council';
 import type { HubCtx } from '../../pages/village/hub';
+import { sendPhraseToChat } from '../../pages/village/chat-send';
+import { OverlayFrame } from '../../overlays/kit/OverlayFrame';
+import { LvIcon } from '../../overlays/kit/icons';
+import { DelegationCards } from './DelegationCards';
+import { Feed, NO_FILTER, type FeedFilter } from './Feed';
+import { ModeBadge } from './ModeBadge';
+import { OrgChart } from './OrgChart';
+import { Stepper } from './Stepper';
+import { VerdictCard } from './VerdictCard';
+import { useBoardVersion } from './bridge';
+import './board.css';
 
 export interface CouncilBoardProps {
   store: CouncilBoardStore;
@@ -10,9 +29,172 @@ export interface CouncilBoardProps {
   calm?: boolean;
   hub?: HubCtx | null;
   returnFocusTo?: HTMLElement | null;
+  /** A recorded replay: nothing is sent anywhere. */
+  replay?: boolean;
 }
 
-/** PLACEHOLDER: the real board is built in this file's siblings (workstream W5). */
-export function CouncilBoard({ open }: CouncilBoardProps) {
-  return open ? <div role="dialog" aria-label="Council board" /> : null;
+const stageLabel = (run: BoardRun): string =>
+  run.stage === 'done'
+    ? 'All steps done'
+    : (STEPS.find((s) => s.stage === run.stage)?.label ?? 'Starting');
+
+/** Words for a screen reader: new messages (display names only) and stage changes. Polite, never raw ids. */
+function useAnnouncer(run: BoardRun | undefined): string {
+  const [text, setText] = useState('');
+  const last = useRef<{ run: string; seq: number; stage: string } | null>(null);
+  useEffect(() => {
+    if (!run) return;
+    const prev = last.current?.run === run.runId ? last.current : null;
+    const parts: string[] = [];
+    if (prev && prev.stage !== run.stage) parts.push(`Step: ${stageLabel(run)}.`);
+    const fresh = run.messages.filter((m) => !prev || m.seq > prev.seq).slice(-2);
+    if (prev) for (const m of fresh) parts.push(`${messageHeadline(m)}.`);
+    const maxSeq = run.messages.reduce((n, m) => Math.max(n, m.seq), prev?.seq ?? -1);
+    last.current = { run: run.runId, seq: maxSeq, stage: run.stage };
+    if (parts.length) setText(parts.join(' '));
+  }, [run, run?.messages.length, run?.stage]);
+  return text;
+}
+
+/**
+ * The Council board: org chart, decision-flow stepper, delegations, verdict and the live A2A feed in one dialog.
+ * Reads the board store (fed by the village stream, a replay, or a fixture). Every surface says Live, Degraded or
+ * Demo from the event mode. Esc closes; Tab stays inside; the feed and the chart are keyboard lists.
+ */
+export function CouncilBoard({
+  store,
+  open,
+  onClose,
+  focusAgent,
+  calm,
+  hub,
+  returnFocusTo,
+  replay,
+}: CouncilBoardProps) {
+  useBoardVersion(store);
+  const run = store.run();
+  const runs = store.runs();
+  const [filter, setFilter] = useState<FeedFilter>(NO_FILTER);
+  const [selectedMsg, setSelectedMsg] = useState<string | null>(null);
+  const [jump, setJump] = useState<{ id: string; n: number } | undefined>();
+  const announce = useAnnouncer(open ? run : undefined);
+  const jumpN = useRef(0);
+
+  useEffect(() => {
+    if (open) setFilter(NO_FILTER);
+  }, [open, run?.runId]);
+
+  const onJump = useCallback((id: string) => {
+    setSelectedMsg(id);
+    setJump({ id, n: ++jumpN.current });
+  }, []);
+
+  const send = useMemo(
+    () => (hub?.token && !replay ? (text: string) => sendPhraseToChat(hub, text) : undefined),
+    [hub, replay],
+  );
+  const sendOff = replay
+    ? 'This is a recorded replay, so nothing is sent.'
+    : 'Sign in to a hub to send these to your chat.';
+
+  const initialFocus = useCallback(
+    () => document.querySelector<HTMLElement>('.cb-panel .cb-close'),
+    [],
+  );
+
+  return (
+    <OverlayFrame
+      open={open}
+      onClose={onClose}
+      returnFocusTo={returnFocusTo}
+      calm={calm}
+      labelledBy="cb-title"
+      size="lg"
+      className="cb-panel"
+      initialFocus={initialFocus}
+    >
+      <header className="cb-head">
+        <div className="cb-head__main">
+          <p className="cb-pixel">Council board</p>
+          <h2 id="cb-title" className="cb-title">
+            {run ? run.councilName : 'Council board'}
+          </h2>
+          {run?.question ? <p className="cb-question">{run.question}</p> : null}
+        </div>
+        <div className="cb-head__side">
+          {run ? <ModeBadge mode={run.mode} /> : <ModeBadge mode="demo" />}
+          {runs.length > 1 ? (
+            <label className="cb-field">
+              <span className="cb-field__k">Session</span>
+              <select
+                value={run?.runId ?? ''}
+                onChange={(e) => {
+                  store.selectRun(e.target.value);
+                  setSelectedMsg(null);
+                }}
+              >
+                {runs.map((r, i) => (
+                  <option key={r.runId} value={r.runId}>
+                    {`${r.councilName} ${i + 1}`}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <button type="button" className="lv-btn lv-btn--ghost cb-close" onClick={onClose}>
+            <LvIcon name="x" size={16} />
+            Close
+          </button>
+        </div>
+      </header>
+      {run ? (
+        <>
+          <Stepper stage={run.stage} />
+          <div className="cb-body">
+            <div className="cb-col cb-col--left">
+              <OrgChart
+                store={store}
+                run={run}
+                {...(calm ? { calm: true } : {})}
+                selected={filter.agent || focusAgent || ''}
+                onSelect={(id) => setFilter((f) => ({ ...f, agent: id }))}
+              />
+              <DelegationCards delegations={run.delegations} onSeeAnswer={onJump} />
+              <VerdictCard run={run} onJump={onJump} send={send} sendOffReason={sendOff} />
+            </div>
+            <div className="cb-col cb-col--right">
+              <Feed
+                run={run}
+                filter={filter}
+                onFilter={setFilter}
+                jumpTo={jump}
+                selectedId={selectedMsg}
+                onSelect={(id) => setSelectedMsg((cur) => (cur === id ? null : id))}
+              />
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="cb-none">
+          <p className="cb-none__title">No council session yet</p>
+          <p className="cb-dim">
+            Ask the council in the Council Hall and its members appear here, with every message they
+            send each other.
+          </p>
+          <button
+            type="button"
+            className="lv-btn"
+            onClick={() =>
+              playCouncilFixture(ASK_FIXTURE, (e) => store.apply(e), { instant: true })
+            }
+          >
+            Show a sample (Demo)
+          </button>
+        </div>
+      )}
+      <p className="cb-sr" role="status" aria-live="polite" aria-atomic="true">
+        {announce}
+      </p>
+    </OverlayFrame>
+  );
 }

@@ -28,6 +28,13 @@ import { OverlayHost } from './OverlayHost';
 import { DEFAULT_WORLD, loadWorld, type WorldHandle } from './worlds';
 import './village.css';
 
+/** Short names for the council replays (`?replay=track4`); the hub serves them by file name. */
+const REPLAY_ALIAS: Record<string, string> = {
+  track4: 'track4-council-a2a',
+  track4b: 'track4b-council-degraded',
+  track4c: 'track4c-council-private',
+};
+
 interface Feed {
   source: VillageSource;
   me?: string;
@@ -81,7 +88,10 @@ export default function VillagePage({ world }: { world?: string }) {
         const baseUrl = cfg.hubUrl!.replace(/\/+$/, '');
         const me = cfg.userId ? hubStudentId(cfg.userId) : undefined;
         if (replayName) {
-          const r = await loadReplay(replayName, { baseUrl, opts: { autoplay: true } });
+          const r = await loadReplay(REPLAY_ALIAS[replayName] ?? replayName, {
+            baseUrl,
+            opts: { autoplay: true },
+          });
           feed = { source: r, me: r.cast.me, close: () => r.close() };
         } else {
           const token = cfg.token ?? undefined;
@@ -260,6 +270,7 @@ export default function VillagePage({ world }: { world?: string }) {
       <ChatDock enabled={live && !replayName} />
       <CouncilBoardHost
         hub={hub}
+        replay={!!replayName}
         calm={calm}
         returnFocusTo={stage.current?.querySelector<HTMLElement>('.sqv-stage')}
       />

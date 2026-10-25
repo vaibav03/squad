@@ -132,7 +132,7 @@ describe('LiveChatCard', () => {
   it('summarises takeaways, labels demo, and opens the discussion read-only', async () => {
     render(<LiveChatCard hub={null} liveId={MOCK_ID} />);
     const card = await screen.findByTestId('live-card');
-    expect(within(card).getByText('Demo mode')).toBeTruthy();
+    expect(within(card).getByText('Demo')).toBeTruthy();
     expect(within(card).getByText(/decision/)).toBeTruthy();
     expect(within(card).getByText(/Grounded in your course material/)).toBeTruthy();
     fireEvent.click(within(card).getByRole('button', { name: 'Open discussion' }));

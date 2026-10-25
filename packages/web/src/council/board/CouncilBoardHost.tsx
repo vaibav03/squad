@@ -10,6 +10,7 @@ import {
   useBoardStoreRef,
 } from './bridge';
 import { CouncilBoard } from './CouncilBoard';
+import { HudButton } from './Launchers';
 
 /**
  * Village mount for the council board. `?board=ask|roundtable` plays a scripted fixture into the store and opens the
@@ -20,7 +21,9 @@ export function CouncilBoardHost({
   hub,
   calm,
   returnFocusTo,
+  replay,
 }: {
+  replay?: boolean;
   hub?: HubCtx | null;
   calm?: boolean;
   returnFocusTo?: HTMLElement | null;
@@ -56,14 +59,18 @@ export function CouncilBoardHost({
 
   if (!store) return null;
   return (
-    <CouncilBoard
-      store={getBoardStore() ?? store}
-      open={open}
-      onClose={closeBoard}
-      {...(agent ? { focusAgent: agent } : {})}
-      calm={calm}
-      hub={hub}
-      returnFocusTo={returnFocusTo}
-    />
+    <>
+      <HudButton />
+      <CouncilBoard
+        store={getBoardStore() ?? store}
+        open={open}
+        onClose={closeBoard}
+        {...(agent ? { focusAgent: agent } : {})}
+        calm={calm}
+        hub={hub}
+        replay={replay}
+        returnFocusTo={returnFocusTo}
+      />
+    </>
   );
 }

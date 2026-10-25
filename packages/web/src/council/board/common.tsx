@@ -1,4 +1,4 @@
-import { modeInfo, type A2aStatus, type BoardRole } from '@squad/village/council';
+import { a2aPartyName, modeInfo, type A2aStatus, type BoardRole } from '@squad/village/council';
 
 export const STATUS_LABEL: Record<A2aStatus, string> = {
   queued: 'Waiting',
@@ -45,5 +45,7 @@ export function StatusChip({ status }: { status: A2aStatus }) {
 }
 
 /** Agent ids never reach the screen: a rank `order` entry that still looks like an id goes through the resolver. */
+export const displayName = (s: string): string => (/^[a-z]+:/i.test(s) ? a2aPartyName(s) : s);
+
 export const classes = (...c: Array<string | false | undefined>): string =>
   c.filter(Boolean).join(' ');

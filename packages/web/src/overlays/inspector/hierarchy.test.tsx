@@ -60,6 +60,8 @@ describe('Hierarchy tab', () => {
     fireEvent.click(chip);
     expect(store.selected).toBe(spec.id);
     await settle();
+    if (!screen.queryByTestId('hierarchy'))
+      fireEvent.click(screen.getByRole('tab', { name: 'Hierarchy' }));
     expect(screen.getByText(/Specialist under/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Open council board' }));
     expect(screen.getByTestId('open').textContent).toBe(`open:${spec.id}`);
@@ -76,7 +78,7 @@ describe('Hierarchy tab', () => {
     act(() => store.select('council:ask'));
     await settle();
     fireEvent.click(screen.getByRole('tab', { name: 'Hierarchy' }));
-    expect(screen.getByText('Chair')).toBeTruthy();
+    expect(screen.getByText('Chair', { selector: 'dt' })).toBeTruthy();
     expect(screen.getByText('Specialists')).toBeTruthy();
   });
 });
