@@ -83,6 +83,11 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     title: 'Mastery',
     // No nav item: mastery lives in the village. This path only redirects to /squad/village?mastery=1.
   },
+  {
+    key: 'health',
+    path: '/squad/connections/health',
+    title: 'Connections',
+  },
 ];
 
 /** nav links resolve params-free targets */

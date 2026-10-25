@@ -19,6 +19,7 @@ import { useHubReady } from './bootstrap';
 import { OfflineState } from '../../primitives/EmptyState';
 import { useSetupChecklist } from './setup-state';
 import { HomePlanCard } from './PlanCard';
+import { HealthBanner } from '../health/HealthBanner';
 import './home.css';
 
 /** Home owns a journey provider only when it renders outside the shell (tests, stories). */
@@ -73,6 +74,7 @@ function HomeBody() {
             : 'Everything is set up. Ask the council or plan something in the group chat.'
       }
     >
+      {live && ready ? <HealthBanner /> : null}
       <section
         className="sq-home__nextcard"
         aria-labelledby="next-title"

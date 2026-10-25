@@ -173,6 +173,7 @@ export async function attachChatEngine(
       store: contextServiceFor(deps).store,
       // membership comes from the hub directory, never from message text
       viewerFor: (m) => ({ studentId: m.from, squadIds: deps.directory.squadsOf(m.from) }),
+      llmIsReal: () => (deps.runtime ? deps.runtime.llm().llm === 'real' : false),
     },
     live: {
       start: async ({ topic, askedBy, chatId }) => {

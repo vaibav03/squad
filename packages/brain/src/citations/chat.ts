@@ -23,7 +23,15 @@ export function chatCitationForSource(
 export function chatCitationsFromAnswer(citations: readonly Citation[]): ChatCitation[] {
   return citations.flatMap((c) =>
     c.source
-      ? [{ file: c.source.title ?? c.file, page: 1, label: c.source.title ?? c.file, source: c.source }]
+      ? [
+          {
+            file: c.source.title ?? c.file,
+            page: 1,
+            label: c.source.title ?? c.file,
+            source: c.source,
+            ...(c.quote ? { quote: c.quote.slice(0, 600) } : {}),
+          },
+        ]
       : [],
   );
 }
