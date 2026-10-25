@@ -89,7 +89,7 @@ Overlays (React, over the canvas, focus-trapped, Esc closes):
 - Configuration: the hub base URL comes from one config value (`VITE_HUB_URL` in web-host, a prop or context in `@squad/web`).
 
 ## Hub endpoints (on `apps/hub`; zod contract in `packages/core`, re-exported as contracts; typed fetch helpers live in `packages/web`)
-All browser-facing endpoints are bearer-auth and return `{error:{code}}` on failure. Port and secret come from env (`HUB_PORT`, `HUB_INTERNAL_SECRET`); CORS allows the web-host origin.
+All browser-facing endpoints are bearer-auth and return `{error:{code}}` on failure. Port and secret come from env (`HUB_PORT`, `INTERNAL_EVENTS_SECRET`); CORS allows the web-host origin.
 - `GET  /v1/squad/state` → snapshot for late joiners (agent states, pending confirms for the viewer, trip confirmation status); the stream then resumes from it with `Last-Event-ID`.
 - `POST /v1/squad/stream-token` → `{ st }` (5-minute SSE token).
 - `POST /v1/call/start` `{agentId}` → `{ callId }`; websocket `/v1/call/ws/:callId` (audio and `call.caption`).
@@ -126,7 +126,7 @@ DOM overlays and pages follow `08-village-motion.md`: its three curve tokens (sh
 
 ## File layout
 ```
-apps/hub/src/{index.ts, routes/squad.ts, store/squad.ts, sim/squad.ts (seed + fake events)}   env: HUB_PORT, HUB_INTERNAL_SECRET
+apps/hub/src/{index.ts, routes/squad.ts, store/squad.ts, sim/squad.ts (seed + fake events)}   env: HUB_PORT, INTERNAL_EVENTS_SECRET
 apps/hub/sim/replays/<name>.json · apps/hub/test/squad.test.ts
 apps/web-host/src/{main.tsx, router.tsx, SignInStub.tsx, AppShell.tsx, tokens.css}
 packages/web/src/routes/squad-{home,village,setup,personas,ledger,trip,mastery}.tsx
