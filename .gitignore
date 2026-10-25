@@ -8,3 +8,4 @@ dist/
 .worktrees/
 data/
 logs/
+docs/design/shots/integration/video/
