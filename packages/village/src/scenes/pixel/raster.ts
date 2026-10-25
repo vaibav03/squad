@@ -1,4 +1,4 @@
-import { RGBA, type PaletteName } from './palette';
+import { RGBA, paletteNameOf, type PaletteName } from './palette';
 
 /** Anything drawable: a palette name, or null to erase to transparent. */
 export type Ink = PaletteName | null;
@@ -221,6 +221,21 @@ export class Raster {
       }
     }
     for (let i = 0; i < marks.length; i += 2) this.px(marks[i]!, marks[i + 1]!, ink);
+    return this;
+  }
+
+  /** Palette swap on opaque pixels (stays on-palette): dim/locked looks, night shifts. */
+  remap(map: Readonly<Partial<Record<PaletteName, PaletteName>>>): this {
+    for (let i = 0; i < this.data.length; i += 4) {
+      if (this.data[i + 3] !== 255) continue;
+      const name = paletteNameOf(this.data[i]!, this.data[i + 1]!, this.data[i + 2]!);
+      const to = name ? map[name] : undefined;
+      if (!to) continue;
+      const c = RGBA[to];
+      this.data[i] = c[0];
+      this.data[i + 1] = c[1];
+      this.data[i + 2] = c[2];
+    }
     return this;
   }
 

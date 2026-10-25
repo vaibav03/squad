@@ -40,8 +40,15 @@ const cache = new Map<string, BubbleArt>();
  * dissent (red-lined: alert border and underline, it stays), announce (chairman, glow-core),
  * caption (dark plate). Text appears whole; this never animates the words.
  */
-export function bubble(text: string, style: BubbleStyle, maxChars = 18, maxLines = 4): BubbleArt {
-  const key = `${style}|${maxChars}|${maxLines}|${text}`;
+export function bubble(
+  text: string,
+  style: BubbleStyle,
+  maxChars = 18,
+  maxLines = 4,
+  /** Where the tail sits along the bottom edge, 0..1; `null` draws no tail (ranked slots). */
+  tailFrac: number | null = 0.5,
+): BubbleArt {
+  const key = `${style}|${maxChars}|${maxLines}|${tailFrac}|${text}`;
   const hit = cache.get(key);
   if (hit) return hit;
   let lines = wrap(text, maxChars);
@@ -53,7 +60,7 @@ export function bubble(text: string, style: BubbleStyle, maxChars = 18, maxLines
   const tw = Math.max(...lines.map(textWidth), 6);
   const w = tw + 6;
   const h = lines.length * (GLYPH_H + 1) - 1 + 6;
-  const tailH = style === 'thought' ? 5 : 2;
+  const tailH = tailFrac === null ? 0 : style === 'thought' ? 5 : 2;
   const r = new Raster(w, h + tailH);
 
   const fill =
@@ -86,8 +93,11 @@ export function bubble(text: string, style: BubbleStyle, maxChars = 18, maxLines
   }
   lines.forEach((ln, i) => drawText(r, 3, 3 + i * (GLYPH_H + 1), ln, textInk));
 
-  const cx = Math.floor(w / 2);
-  if (style === 'thought') {
+  const cx =
+    tailFrac === null ? Math.floor(w / 2) : Math.min(w - 4, Math.max(3, Math.round(w * tailFrac)));
+  if (tailFrac === null) {
+    // no tail
+  } else if (style === 'thought') {
     r.rect(cx - 1, h, 2, 2, fill);
     r.frame(cx - 1, h, 2, 2, edge);
     r.px(cx, h + 3, edge);
@@ -100,7 +110,7 @@ export function bubble(text: string, style: BubbleStyle, maxChars = 18, maxLines
     r.px(cx + 1, h, edge);
     r.px(cx, h + 1, edge);
   }
-  const art: BubbleArt = { r, tail: { x: cx, y: h + tailH - 1 } };
+  const art: BubbleArt = { r, tail: { x: cx, y: Math.max(h, h + tailH - 1) } };
   cache.set(key, art);
   return art;
 }
