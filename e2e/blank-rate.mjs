@@ -201,7 +201,7 @@ async function fresh(browser, token) {
       try {
         if (!localStorage.getItem('squad.token')) localStorage.setItem('squad.token', t);
       } catch {
-        /* storage unavailable */
+        /* storage blocked */
       }
     }, token);
   const page = await ctx.newPage();
