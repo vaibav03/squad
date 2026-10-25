@@ -4,3 +4,4 @@ export * from './primitives';
 export * from './shell';
 export * from './hooks';
 export { default as Gallery } from './gallery';
+export * from './pixel/portraits';

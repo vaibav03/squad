@@ -90,7 +90,7 @@ export const PERSONAS: PersonaDraft[] = [
     role: 'Your daily companion',
     blurb: 'Keeps you company, nudges you, and rounds up your squad.',
     voiceId: 'friendly-ta',
-    avatarId: 'persona-01-mascot-bear',
+    avatarId: 'freshman',
     sample: 'Ready when you are. Which chapter should we start with?',
   },
   {
@@ -99,7 +99,7 @@ export const PERSONAS: PersonaDraft[] = [
     role: 'Knows one chapter inside out',
     blurb: 'Answers from your own course PDFs and cites the page.',
     voiceId: 'calm-professor',
-    avatarId: 'persona-04-chapter-expert-mage',
+    avatarId: 'expert',
     sample: 'Glycolysis happens in the cytoplasm. The details are on page twelve.',
   },
   {
@@ -108,7 +108,7 @@ export const PERSONAS: PersonaDraft[] = [
     role: 'Quizzes you like the real exam',
     blurb: 'Asks, listens, and tells you where your answer slipped.',
     voiceId: 'stern-examiner',
-    avatarId: 'persona-03-examiner-teacher',
+    avatarId: 'examiner',
     sample: 'Explain, in your own words, why the cell needs oxygen.',
   },
   {
@@ -117,7 +117,7 @@ export const PERSONAS: PersonaDraft[] = [
     role: 'Routes your question to the right expert',
     blurb: 'Knows who in the village can answer, and says so honestly.',
     voiceId: 'librarian',
-    avatarId: 'avatar-06',
+    avatarId: 'dean',
     sample: 'That sounds like a chapter five question. I will bring you to the expert.',
   },
   {
@@ -126,7 +126,7 @@ export const PERSONAS: PersonaDraft[] = [
     role: 'Several experts, one verdict',
     blurb: 'Debates quietly, then gives you a single ranked answer.',
     voiceId: 'storyteller',
-    avatarId: 'avatar-03',
+    avatarId: 'council-balance',
     sample: 'We disagreed on step three, so here is how each of us sees it.',
   },
   {
@@ -135,7 +135,7 @@ export const PERSONAS: PersonaDraft[] = [
     role: 'Keeps you honest',
     blurb: 'Pushes you to try one more problem before you stop.',
     voiceId: 'hype-coach',
-    avatarId: 'persona-05-rival-ninja',
+    avatarId: 'ta',
     sample: 'Bet you cannot do the next three without looking. Go.',
   },
 ];

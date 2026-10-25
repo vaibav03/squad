@@ -11,19 +11,19 @@ export const PERSONA_CHOICES = [
     id: 'buddy-bear',
     name: 'Study buddy',
     blurb: 'Warm, patient, always up for one more question.',
-    portrait: 'persona-01-mascot-bear',
+    portrait: 'freshman',
   },
   {
     id: 'owl',
     name: 'Night owl',
     blurb: 'Calm and precise. Best for late sessions.',
-    portrait: 'persona-02-mascot-alt-owl',
+    portrait: 'mediator',
   },
   {
     id: 'examiner',
     name: 'The examiner',
     blurb: 'Quizzes you the way your exam will.',
-    portrait: 'persona-03-examiner-teacher',
+    portrait: 'examiner',
   },
 ] as const;
 
