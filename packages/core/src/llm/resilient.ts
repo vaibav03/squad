@@ -58,7 +58,10 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
   // and the context it held is sent as the system prompt instead.
   const caches = new Map<string, { owner: 'real' | 'fake'; system?: string }>();
 
-  function portable<R extends { cache?: CacheHandle; system?: string }>(req: R, toFake: boolean): R {
+  function portable<R extends { cache?: CacheHandle; system?: string }>(
+    req: R,
+    toFake: boolean,
+  ): R {
     if (!req.cache) return req;
     const meta = caches.get(req.cache.id);
     if (!meta || (meta.owner === 'fake') === toFake) return req;
