@@ -1,6 +1,6 @@
 # 09 · Game scenes: Squad Village (draft for approval)
 
-Workstream for `app/packages/village`, mounted by `app/apps/web` at `/squad/village`. Conforms to `00-OVERVIEW.md` (Village event contract, `VillageSource`). Visual direction: `CLAUDE-DESIGN-PROMPT-WORLD.md`. Event shapes are owned by 00 (this file only maps them to animation). Vocabulary: "Core" and "Later".
+Workstream for `packages/village`, mounted by the village page in `packages/web` (`@squad/web`, hosted by `apps/web-host`) at `/squad/village`. Integration into the Nook clone is later (00 and 06 appendix). Conforms to `00-OVERVIEW.md` (Village event contract, `VillageSource`). Visual direction: `CLAUDE-DESIGN-PROMPT-WORLD.md`. Event shapes are owned by 00 (this file only maps them to animation). Vocabulary: "Core" and "Later".
 
 ## Summary
 Squad Village is a walkable side-view pixel-art night world: parallax sky, moon, hills, windmill, houses with lit windows, chimney smoke. The student's character walks (arrow keys, or tap-to-walk). Every building is an agent from 03/04/05. The village **only renders real events** (or the same events from a replay file); it never decides what agents do. Calls and quizzes are ordinary React overlays on top of the canvas, so they stay accessible and share logic with iMessage.
@@ -11,7 +11,7 @@ Squad Village is a walkable side-view pixel-art night world: parallax sky, moon,
 - **Research findings.**
   - Phaser 4 shipped in April 2026 and Phaser 3 ended at 3.90.0 ([Phaser 3 vs 4](https://phaser.io/news/2026/05/phaser-3-vs-phaser-4), [migration guide](https://phaser.io/news/2026/04/migrating-from-phaser-3-to-phaser-4-what-you-need-to-know)). You asked for Phaser 3; I pin `phaser@3.90.0` and see Decision 1.
   - `roundPixels` defaults to true since 3.70, but `pixelArt` does not ([release](https://github.com/phaserjs/phaser/releases/tag/v3.70.0)), so we set `pixelArt: true` ourselves.
-  - SSR: Phaser touches `window` on import, so it must never load on the server. The route renders a shell on the server; `useEffect` runs `await import('@nook/village')` and creates the game, and `destroy(true)` on unmount. Loaded only on `/squad/village`, matching 00.
+  - SSR: Phaser touches `window` on import, so it must never load on the server. `@squad/web` stays SSR-safe because Nook is SSR (later); the page renders a shell on the server; `useEffect` runs `await import('@squad/village')` and creates the game, and `destroy(true)` on unmount. Loaded only on the village route, matching 00.
   - Layout: hand-placed in one typed `layout.ts` (building ids, x positions, depth). Tiled is overkill for one horizontal strip and adds a toolchain. Reconsider only if we ever add interior maps.
   - Parallax: 4 to 5 `TileSprite` layers with `scrollFactor` 0.05 to 0.6 and `tilePositionX` driven from the camera; Phaser's own parallax examples use the same approach.
 
@@ -19,7 +19,7 @@ Squad Village is a walkable side-view pixel-art night world: parallax sky, moon,
 ```
 src/index.ts           mountVillage(el, { source, onOverlay }) -> { destroy, setCamera }   (V0 owns this canvas mount; 06 W7 owns the host page)
 src/source/live.ts     LiveSource (hub /v1/squad/stream)   src/source/replay.ts  ReplaySource (JSON script player)
-                       both exported Phaser-free at `@nook/village/sources` (06 imports them without loading Phaser)
+                       both exported Phaser-free at `@squad/village/sources` (06 imports them without loading Phaser)
 src/adapter.ts         VillageEvent -> SceneCommand[]  (pure, unit-testable, no Phaser import)
 src/scenes/            Boot, Village, Interior(house|hall), TripCutscene   (scene manager = Phaser's)
 src/entities/          Player, AgentNpc, Building, Bubble, Envelope, Lantern     src/layout.ts  world map
@@ -60,7 +60,7 @@ Unknown or malformed events are logged and ignored; they never crash a scene. Ag
 
 ## Live vs Replay
 - **Live:** `LiveSource` opens the hub SSE stream (stream token from `POST /v1/squad/stream-token`), falls back to polling after two errors. Late joiners load the `GET /v1/squad/state` snapshot, then resume with `Last-Event-ID`. Badge says "Live".
-- **Replay:** `?replay=<name>` (or a toggle) plays `apps/mock/sim/replays/<name>.json`, served by the hub at `GET /v1/squad/replay/:name`; other replay variants are deleted. Badge says "Replay". Visuals are identical because both feed the same adapter.
+- **Replay:** `?replay=<name>` (or a toggle) plays `apps/hub/sim/replays/<name>.json`, served by the hub at `GET /v1/squad/replay/:name`; other replay variants are deleted. Badge says "Replay". Visuals are identical because both feed the same adapter.
 ```jsonc
 { "name": "track2", "version": 1, "loop": false,
   "cast": { "me": "s_ana" },                       // which student the viewer is
@@ -100,9 +100,9 @@ Single horizontal scroll strip with drag and tap-to-walk; bottom dock of agent c
 ## Tickets (order only; nothing is cut)
 | # | Ticket | Depends on |
 |---|---|---|
-| V0 | Package scaffold, `mountVillage` canvas mount (06 W7 owns the host page at `/squad/village`), asset audit plus `LICENSES.md`, pixel config, Boot scene | 00 repo layout, 06 W0 |
+| V0 | Package scaffold, `mountVillage` canvas mount (06 W7 owns the host page in `packages/web`), asset audit plus `LICENSES.md`, pixel config, Boot scene | 00 repo layout, 06 W0 |
 | V1 | Village scene: parallax, moon, hills, windmill, houses, player walk (keys, tap), camera buttons, HUD chips incl. Calm mode toggle | V0, M-1, M-2 |
-| V2 | Adapter, `@nook/village/sources` (LiveSource, ReplaySource), replay format and `?replay=`, badge | V0, 06 hub stream |
+| V2 | Adapter, `@squad/village/sources` (LiveSource, ReplaySource), replay format and `?replay=`, badge | V0, 06 hub stream |
 | V3 | Chapter houses, interiors, mastery glow (`mastery.changed`), quiz overlay bridge | V1, V2, 03 |
 | V4 | Council Hall (opinions, ranks, verdict, dissenter bubble and lantern) plus landmark buildings | V2, V3, M-4, M-6 |
 | V5 | Mesh view: locked houses, commons, envelopes, "!" markers, blocked ledger cards, waiting ring, notice board | V2, 04, 06 ledger, M-3, M-4 |
@@ -123,8 +123,8 @@ Motion tickets M-1..M-9 are defined in `08-village-motion.md`; M-1 (`motion.ts`)
 - Phaser version drift (Phaser 4 vs 3): pin the version, keep scene code to common API.
 - Asset gaps in CC0 packs make the world look uneven: V0 audit decides early.
 - Canvas text is hard to translate and read: all long text lives in DOM overlays.
-- SSE buffering in dev (same as 06): point the stream at :8787.
-- Replay drifting from live shapes: both validate with the shared zod schema in `packages/core` (re-exported by `packages/contracts`).
+- SSE buffering in dev (same as 06): point the stream at the hub port.
+- Replay drifting from live shapes: both validate with the shared zod schema in `packages/core` (contracts re-exported from core).
 
 ## Decisions for you
 1. **Phaser 3.90.0 or Phaser 4.x?** *Recommend 3.90.0* (pinned; 06 states the same version): stable, most tutorials, and our needs are standard. Phaser 4 stays a decision here; migration is a few hours.

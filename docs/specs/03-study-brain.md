@@ -38,12 +38,12 @@ Everything is built. "Core" is built first, "Later" after it.
 | Feature | Phase | Notes |
 |---|---|---|
 | Course ingest: uploaded PDFs → chapters → pages | Core | `unpdf` per-page text. Chapter = one file, or split by headings. |
-| Dean router → chapter experts, with citations | Core | Haiku routes; Sonnet answers with the chapter cached. |
+| Dean router → chapter experts, with citations | Core | `fast` role routes; `strong` role answers with the chapter in a Gemini context cache (`Llm.cache`). Model roles are defined in 02. |
 | @cubbie doubt answering ("not in the materials" fallback) | Core | The headline feature. |
 | Quiz engine (one engine for iMessage and village) | Core | 3 questions, plain feedback per answer, no scoreboard. |
 | Council (quiz-key verify) | Core | Discrete opinion, rank and verdict steps, see below. |
 | Feynman check | Core | Runs in DM, group or village; a rubric gives feedback on clarity and gaps. |
-| Step Diff | Core | Claude vision; LLM equivalence check (sympy skipped). |
+| Step Diff | Core | Gemini vision (`vision` role) with JSON-schema output; LLM equivalence check (sympy skipped). |
 | Group study plan | Core | Assignment is local; times come through `MeshScheduler`. |
 | Mastery per student per chapter | Core | Leitner boxes ported from Exam Mode; no FSRS or BKT. |
 | Village event emission (incl. `mastery.changed`) and call captions | Core | Tickets B9–B11. |
@@ -56,11 +56,11 @@ Everything is built. "Core" is built first, "Later" after it.
 
 ## Key design
 - **Ingest.** Each PDF goes through `unpdf` into `Page` rows (courseId, chapter, file, page, text) in SQLite. A chapter's pages join into one context block with `[file p.N]` markers.
-- **Grounding.** Each expert's system prompt is the chapter context with `cache_control`. Citations: (a) Anthropic Citations (`page_location` → `Citation`) or (b) prompted `[file p.N]` markers with code checking the quote is on that page. Use (b) first. With no supporting page the expert replies "not in the materials".
-- **Dean router.** Haiku picks 1 or 2 chapters (or "none") from titles plus 3-line summaries, falling back to BM25 over pages. With 2 chapters both experts answer and Sonnet merges, keeping all citations.
-- **One quiz engine.** A state machine in the db: `asking → collecting → reveal → next`. There is a single `quizId` everywhere (events, API, db). iMessage and the village are two front ends over the same engine and db tables. A quiz answered in the village is handled exactly like one in iMessage. Plain quiz: question, answer, feedback; no confidence bets or calibration. Haiku grades free text. Answers go to `quiz_answers` and the Leitner box updates per chapter, emitting `mastery.changed`.
+- **Grounding.** Each expert gets its chapter as a `CacheHandle` from `Llm.cache` (Gemini context caching: an explicit cache when the model supports it, otherwise the chapter block kept first and byte-identical so implicit caching hits; see 02). Citations are prompted `[file p.N]` markers, and code checks that the quoted words are on that page (this replaces any provider citation API, so it works on any model). The expert returns JSON `{answer, claims: [{text, file, page, quote}]}` through `Llm.json`; a claim whose quote is not on the page is dropped. With no supporting page the expert replies "not in the materials". Gemini's File Search tool (page-level annotations) is a possible later swap, not used now.
+- **Dean router.** The `fast` role picks 1 or 2 chapters (or "none") from titles plus 3-line summaries via `Llm.json`, falling back to BM25 over pages. With 2 chapters both experts answer (`strong` role) and one more `strong` call merges them, keeping all citations.
+- **One quiz engine.** A state machine in the db: `asking → collecting → reveal → next`. There is a single `quizId` everywhere (events, API, db). iMessage and the village are two front ends over the same engine and db tables. A quiz answered in the village is handled exactly like one in iMessage. Plain quiz: question, answer, feedback; no confidence bets or calibration. The `fast` role grades free text through `Llm.json` (`{correct, feedback}`), with the key never shown to the student. Answers go to `quiz_answers` and the Leitner box updates per chapter, emitting `mastery.changed`.
 - **Quiz payload and endpoints.** `GET /v1/quiz/:quizId` returns `{quizId, chapter, index, kind: 'choice' | 'free', question, choices?}` (no answer key). `POST /v1/quiz/:quizId/answer {choice | text}` returns `{accepted: true}`; correctness reaches the student privately and reaches the squad only per the setting (default hidden). Both live on the hub and call `QuizEngine`.
-- **Council as discrete steps.** The council runs as three separately returned phases, not one blob: (1) each member's independent `opinion`, (2) each member's `ranking` of the others (best first, emitted as `order`), (3) the chairman `verdict` with `dissent: boolean` and `dissenter` (the member whose answer the verdict overrode; the first one if several). Each phase is an awaited step that returns structured data and emits its event, so the scene can animate members one at a time. Two councils, with ids `council:<id>` and member names defined here: `council:quizkey` (members `solver-a`, `solver-b`, `solver-c`, chair `chair`) verifies quiz keys (3 blind solves; disagreement drops the question and shows "uncertain"); `council:planner` (members `chill`, `grind`, `advisor`, chair `chair`) plans courses (Later).
+- **Council as discrete steps.** The council runs as three separately returned phases, not one blob: (1) each member's independent `opinion`, (2) each member's `ranking` of the others (best first, emitted as `order`), (3) the chairman `verdict` with `dissent: boolean` and `dissenter` (the member whose answer the verdict overrode; the first one if several). Members and chair use the `strong` role (the chair may be configured to a different id, see 02 Decision 7). Each phase is an awaited step that returns structured data (`Llm.json`) and emits its event, so the scene can animate members one at a time. Two councils, with ids `council:<id>` and member names defined here: `council:quizkey` (members `solver-a`, `solver-b`, `solver-c`, chair `chair`) verifies quiz keys (3 blind solves; disagreement drops the question and shows "uncertain"); `council:planner` (members `chill`, `grind`, `advisor`, chair `chair`) plans courses (Later).
 - **Call transcript and caption contract.** A call is a `callId` tied to one expert. The voice layer (05) speaks the expert's answer; brain supplies the text in sentence-sized chunks. Each chunk is one `call.caption` event, posted to the hub's `/internal/events` through the `packages/core` helper (the hub owns `call.start`/`call.end`), carrying `text` and, when it states a fact, a `cite: Citation`. Uncited factual chunks are not allowed: the citation check runs before the caption is emitted. The full transcript with citations is stored so the dashboard (06) can replay it. Student speech arrives as text via 05 and goes through the same grounding path as a doubt.
 - **Feynman check.** The student explains a concept; a "confused freshman" asks up to 2 naive "why"s; a grader gives feedback on accuracy, completeness and plainness (no points) and lists missed points with citations.
 - **Step Diff.** `@cubbie diff` opens a session; both people DM a photo; vision turns each into steps; an aligner finds the first non-equivalent pair and its concept tag. The group sees only matching steps and the split step, never a verdict. The concept goes to the mastery queue of whoever was wrong.
@@ -84,13 +84,13 @@ Layout: `packages/brain/src/{ingest,experts,skills,council,events}/`, `mastery.t
 ## Build tickets (order and dependencies only)
 | # | Ticket | Est. | Depends on |
 |---|---|---|---|
-| B1 | Ingest: PDF → pages → chapters (+ summaries), tables, fixture course | 1.5 h | 02 core db/llm |
-| B2 | Dean + chapter expert + citation check + BM25 fallback, `Brain.ask` | 2 h | B1 |
+| B1 | Ingest: PDF → pages → chapters (+ `fast`-role summaries), tables, fixture course | 1.5 h | 02 core db/llm |
+| B2 | Dean + chapter expert (`Llm.cache` handle per chapter, JSON claims) + `[file p.N]` code check + BM25 fallback, `Brain.ask` | 2 h | B1 |
 | B3 | `doubtSkill` (answer formatting, "not in the materials") | 0.5 h | B2 |
 | B4 | Quiz engine (one engine, two front ends) + feedback + mastery (Leitner) | 2 h | B2 |
 | B5 | Council with discrete opinion / rank / verdict steps; quiz-key verify | 1.5 h | B4 (stubbed interface) |
 | B6 | Feynman check skill | 1 h | B2 |
-| B7 | Step Diff: vision → steps → align → group/DM flow, fixture photos | 2.5 h | 02 attachments |
+| B7 | Step Diff: `Llm.vision` → steps (JSON) → align → group/DM flow, fixture photos | 2.5 h | 02 attachments, `Llm.vision` |
 | B8 | Study plan: assignment + `MeshScheduler` stub + askConfirm | 1 h | B4, 04 interface |
 | B9 | Event emitter (`events/`): wrap `agent.state`, `quiz.*` (with `quizId`), `council.*` (with `order`, `dissent`, `dissenter`) and `mastery.changed` around B2–B8 using the `packages/core` helper, and unit-test the emitted sequences | 1 h | B2, B4, B5, 06 hub |
 | B10 | Call text and caption pipeline: sentence chunks, citation gate, `call.caption` via the hub, stored transcript | 1.5 h | B2, 05 voice, B9 |
@@ -104,7 +104,7 @@ Layout: `packages/brain/src/{ingest,experts,skills,council,events}/`, `mastery.t
 
 Order: B1 and B7 start together; B2 follows B1; B3–B6, B8, B16 and B17 run in parallel; B9–B11 after those; B12–B15 (Later) after Core passes its smoke tests.
 
-## Smoke tests (vitest, real API key, fixture course)
+## Smoke tests (vitest; fixture course; unit tests use `FakeLlm` from 02, the grounding, Step Diff and council checks also run once against the real Gemini key)
 - In-material question → `grounded=true`, at least 1 citation, and the cited page contains the quoted words. Off-material → `grounded=false`, "not in the materials".
 - A quiz run through iMessage and through the village with the same fake students gives identical feedback; mastery boxes move after right and wrong answers.
 - A council run returns opinions, rankings and a verdict as separate steps, in order, each emitting its event; a deliberately wrong key is dropped and `dissent` and `dissenter` are set.
@@ -119,16 +119,16 @@ Order: B1 and B7 start together; B2 follows B1; B3–B6, B8, B16 and B17 run in 
 
 ## Risks
 - **Citation drift:** the code checks the quote is on the page; otherwise drop the claim or answer ungrounded. Captions are gated the same way.
-- **Handwriting OCR** on messy photos: use clean fixtures, and fall back to asking the student to type the split step.
-- **Latency:** cached chapters with Haiku routing; send a "thinking…" tapback if iMessage replies are slow. Captions stream by sentence so calls feel live. The council runs before a round starts.
+- **Handwriting OCR** on messy photos (Gemini vision, inline images under 20 MB per request): use clean fixtures, and fall back to asking the student to type the split step.
+- **Latency and rate limits:** cached chapters with `fast`-role routing; Gemini free-tier quotas are small, so the demo needs a billed project (see 02 risks), and parallel council members count against the per-minute limit, so they go through the `Llm` limiter; send a "thinking…" tapback if iMessage replies are slow. Captions stream by sentence so calls feel live. The council runs before a round starts.
 - **Event drift:** if a skill's behavior changes but its events don't, the village shows something false. B9 tests lock the event sequences; Live and Replay must match.
 - **Two quiz front ends diverging:** keep all rules in `QuizEngine`; front ends only render.
 - **Council stage cost:** three phases means more calls; run members in parallel inside each phase, and keep phase boundaries so the scene can animate.
 - **iMessage photo handling** depends on 02: Step Diff photos arrive by DM, so the group never sees full solutions.
-- **Context size:** if a chapter is over about 60k tokens, split it into sub-experts by heading.
+- **Context size:** Gemini's window is large (about 1M tokens), so the limit is cost and answer quality, not fit. If a chapter is over about 60k tokens, still split it into sub-experts by heading. Context caches need a minimum size (4,096 tokens on 3.8 Flash); a tiny chapter falls back to a plain prompt.
 
 ## Decisions for you
-1. **Citations method:** (b) prompted `[file p.N]` markers checked by code, or (a) Anthropic Citations. **Recommend (b)** first (works with caching and our JSON); move to (a) later if wanted.
+1. **Citations method:** prompted `[file p.N]` markers checked by code (provider-neutral; Gemini has no equivalent of a citations API for your own text), or Gemini File Search annotations later. **Recommend the markers** (works with caching and our JSON).
 2. **Demo course:** which PDFs as fixtures? **Recommend** one real course with 3–4 chapters (physics or ML, which suits Step Diff).
 3. **Canvas ingest:** now a normal ticket (B12) built after Core. Confirm.
 4. **Spaced repetition:** Leitner or FSRS? **Recommend Leitner** (already proven in Track 1).

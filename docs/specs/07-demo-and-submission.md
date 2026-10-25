@@ -2,7 +2,7 @@
 
 Tracks 2 and 3 are judged privately by Cubbie on technical and use-case merit. The site asks us to show three things: how agents
 handle **conflicting constraints**, **what they share**, and **when they ask the student to confirm**. Judges also want a clear reason a student would say "we need this".
-The main visual is the walkable pixel **Squad Village** (09), driven by live events or a scripted **Replay** mode. Nothing is cut for schedule; we submit once every quality gate in 00 passes.
+The main visual is the walkable pixel **Squad Village** (09), driven by live events or a scripted **Replay** mode. There is no deadline pressure: everything is built in parallel and we submit once every quality gate in 00 passes.
 
 ## Scope
 - Two demos, each about 2 minutes: Track 3 (the group chat plus the village) and Track 2 (agents per student plus the mesh view), each with a Replay-mode backup and a recording.
@@ -45,7 +45,7 @@ On screen: the laptop shows the village mesh view (campfire commons, each studen
 7. **Trip planner.** "@cubbie plan Flagstaff next weekend." Budgets stay private ($80 vs $200); dates overlap by PSI and budgets are secret-shared bits, so the group sees only "option dropped: budget" and the surviving plan. Each phone gets "Hold the cabin at $64/person?"; two yeses and one "not yet" mean nothing is booked, and the door shows a waiting ring. When the last student taps yes, `trip.confirmed` fires and the village trip cutscene plays (road scrolls, vehicle drives, Trip door pops). The trip beat stands alone. Close: *"Agents that negotiate for you, share the minimum, and ask before they commit."*
 
 ## Replay-mode backup plan
-- Replay uses a scripted JSON file in 09's replay shape (`{name, version, loop, cast, events:[{at, event}], checkpoints}`) at `apps/mock/sim/replays/track2.json` and `track3.json`, served by `GET /v1/squad/replay/:name` and played by `ReplaySource` (`@nook/village/sources`) through the same `mountVillage` path as Live, so the visuals are identical: same sprites, overlays, conflict marker, waiting ring, motion and trip cutscene. No other replay variants exist.
+- Replay uses a scripted JSON file in 09's replay shape (`{name, version, loop, cast, events:[{at, event}], checkpoints}`) at `apps/hub/sim/replays/track2.json` and `track3.json`, served by `GET /v1/squad/replay/:name` and played by `ReplaySource` (`@squad/village/sources`) through the same `mountVillage` path as Live, so the visuals are identical: same sprites, overlays, conflict marker, waiting ring, motion and trip cutscene. No other replay variants exist.
 - Scripts mirror the beats above and are recorded from a live run where possible (02's `/record`), then hand-edited. Withheld values never appear in them.
 - Switch: `/squad/village?replay=track2` (a visible "Replay" badge stays on screen; say it out loud if asked). If Live drops mid-demo, reload with the replay URL and continue from the current beat or a checkpoint.
 - Also keep one screen recording of each script (phones via QuickTime mirroring plus the laptop), uploaded unlisted; use it as `--video`.
@@ -100,7 +100,7 @@ cd /Users/vaibav/Documents/projects/devhacks/cubbie-hackathon-kit/skills/cubbie-
 python3 scripts/hackathon.py whoami && python3 scripts/hackathon.py status
 python3 scripts/hackathon.py submit --track groupchat --team "<team>" --name "<T3 name>" \
   --pitch "@cubbie in your class group chat: answers doubts from your own course files with citations, quizzes the group, finds your first wrong step." \
-  --member "<Your Name> <you@asu.edu>" --repo https://github.com/<you>/<repo>/tree/main/track3 --video <youtube link>
+  --member "<Your Name> <you@asu.edu>" --repo https://github.com/<owner>/squad/tree/main/track3 --video <youtube link>
 #   ...review the preview, then repeat with --yes
 python3 scripts/hackathon.py submit --track agents ... \
   --pitch "Each student gets a Cubbie agent that plans study sessions and trips with friends, shares only what it must, and asks you before it commits."
@@ -108,26 +108,25 @@ python3 scripts/hackathon.py mine && python3 scripts/hackathon.py gallery --trac
 ```
 Both pitches fit: 139 and 140 characters. Order of steps, each gated on the previous one passing:
 1. Dry runs of Live and Replay clean; record both scripts.
-2. READMEs written, export built and pushed to a public repo (see Decision 1, ticket D5).
-3. Incognito check that the repo opens, the clean-clone check passes (ticket D5), the village Replay runs from a fresh clone, and the video plays.
+2. READMEs written and everything pushed to the `squad` repo; visibility set per Decision 1 (flip to public only on the owner's say-so).
+3. Check that the repo opens for the judges (incognito), the village Replay runs from a fresh clone (`pnpm i`, `demo:seed`, `demo:replay`), and the video plays.
 4. Preview both submissions and review every field.
 5. `--yes` on both, then `mine` shows both entries.
 6. Fix anything the gallery shows; resubmit while the track is open.
 
 ## Build tickets
-Ordered by dependency only; all get built.
+Ordered by dependency only; all get built. Parallelize with git worktrees and a branch per workstream; see `docs/WORKFLOW.md` (being written).
 | # | Ticket | Owner of | Depends on |
 |---|---|---|---|
-| D1 | Merged replays `apps/mock/sim/replays/track2.json` and `track3.json`. One owner, assembled from 02's `/record`, 04 `demo-trip`, 09's replay shape; track2 ends with `trip.confirmed` and has a checkpoint just before the last confirm | the only author of those two files | 02 V, 04, 09 |
+| D1 | Merged replays `apps/hub/sim/replays/track2.json` and `track3.json`. One owner, assembled from 02's `/record`, 04 `demo-trip`, 09's replay shape; track2 ends with `trip.confirmed` and has a checkpoint just before the last confirm | the only author of those two files | 02 V, 04, 09 |
 | D2 | `pnpm demo:seed`: course pack, `.ics` fixtures, lodging list, roster, one trip awaiting its last confirm | seed script | 02 fixtures, 03, 04 |
 | D3 | `pnpm demo:reset`: reseed DB, clear the group, rewind the village | reset script | D2 |
 | D4 | `pnpm demo:replay`: start the hub and open `/squad/village?replay=track2` (or `track3`) | replay launcher | D1, 06 W7 |
-| D5 | Export script (`pnpm export:submission`): copy the whole `app/` workspace excluding `EVIDENCE.md`, `recovered/`, `rea/`, `docs/hackathon-ideas`, with no copied Cubbie assets; then a clean-clone check (fresh clone, `pnpm i`, `demo:seed`, `demo:replay` runs, grep confirms no excluded paths or Cubbie assets) | export + check | D1-D4 |
-| D6 | READMEs (`track2/`, `track3/`), recordings, dry runs of Live and Replay | docs and video | D1-D5 |
+| D5 | READMEs (`track2/`, `track3/`), recordings, dry runs of Live and Replay | docs and video | D1-D4 |
 
 ## Decisions for you
-1. **Submission repo.** `vaibav03/cubbie-re` holds the reverse-engineering evidence of Cubbie's own app (`EVIDENCE.md`, `recovered/`, `rea/`), and Cubbie staff are the judges. Develop in `cubbie-re/app`. **Decided:** submit a clean export of the whole `app/` workspace (Nook plus the new apps and packages, including `packages/village`), excluding `EVIDENCE.md`, `recovered/`, `rea/` and `docs/hackathon-ideas`, with no copied Cubbie assets (ticket D5).
-2. **One repo or two.** **Recommend:** one repo with `track2/` and `track3/` READMEs, linked by subpath. Ask in #cubbie-track whether one codebase can enter both tracks.
+1. **Submission repo.** *Decided:* the submission is this repo, `squad` (private pnpm monorepo, no Cubbie evidence files, no copied Cubbie assets). It is public or as the organizers require; currently private. Flip to public at submission time only on the owner's say-so. No export script or clean-clone-from-clone step.
+2. **One repo or two.** **Decided:** one repo (`squad`) with `track2/` and `track3/` READMEs, linked by subpath. Ask in #cubbie-track whether one codebase can enter both tracks.
 3. **Phones.** **Recommend:** borrow 2 phones or use an iPad. Keep the simulated-student panel and Replay as fallbacks.
 4. **Calendars.** **Recommend:** seeded `.ics` files on stage, with live Google OAuth only in the README.
 5. **Track 3 coverage.** All beats are built; the 2-minute script shows the village beats, with explainers, avatar generation and the podcast shown on the web page or as an extra beat.

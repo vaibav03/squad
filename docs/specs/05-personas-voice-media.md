@@ -33,7 +33,7 @@ Students can also walk up to an agent in the village and talk to it by voice in 
 ## Key design
 **Personas.** `personas.json`, seeded and then stored in SQLite (02's db): id, name, role, systemPrompt, voice description, voiceId, `spriteSheet` (path and frame map), `portrait`, emoji (`spriteSheet` and `portrait` are the extensions 00 lists on `Persona`). Chapter experts come from one template ("Ch5 expert") so 03 can add them on the fly, rotating through pre-designed expert voices. Later ticket M11 gives each its own designed voice.
 
-**Voices (ElevenLabs).**
+**Voices (ElevenLabs; the LLM provider is Gemini, but voices stay ElevenLabs).** Env: `ELEVENLABS_API_KEY` in `.env` (gitignored), plus `GEMINI_API_KEY` for the text, vision and transcription steps below. Gemini also ships TTS models (`gemini-3.8-flash-tts`), but they are not used.
 - Design flow: `POST /v1/text-to-voice/design` with a description returns 3 previews, each with a `generated_voice_id`. Saving a preview with `POST /v1/text-to-voice` gives a permanent `voiceId`. [1]
 - Persona voices are designed by a script and saved in the registry. Per-student picks live in `Student.voiceId`.
 - Fallback: OpenAI `gpt-4o-mini-tts`, which takes style instructions [4]. Each persona gets a mapped built-in voice plus a one-line style, so calls still work if ElevenLabs fails or is rate limited.
@@ -46,16 +46,16 @@ Students can also walk up to an agent in the village and talk to it by voice in 
 
 **Podcast pipeline.**
 1. 03 provides chapter material and citations. 03/04 provide the squad's shared weak spots as anonymized counts only; for squads under 3 the counts are dropped and the episode covers the chapter only (minimum group size rule, defined in 00). 02 provides 3-5 opt-in inside-joke snippets with names removed.
-2. Sonnet writes a JSON script of `{speaker, text}` turns, 350-450 words. Hosts: Cubbie (host) and the Rival (a skeptic who asks naive "why"s).
-3. A council-lite check (Haiku) compares every factual line with the citations and drops what it can't support.
+2. The `strong` role (02) writes, through `Llm.json`, a JSON script of `{speaker, text}` turns, 350-450 words. Hosts: Cubbie (host) and the Rival (a skeptic who asks naive "why"s).
+3. A council-lite check (`fast` role, `Llm.json`) compares every factual line with the citations and drops what it can't support.
 4. ElevenLabs Text to Dialogue (`POST /v1/text-to-dialogue`, up to 10 voices, about 2,000 characters per request [3]) renders chunks of 1,800 characters or less. Fallback: one TTS call per turn.
 5. ffmpeg joins the chunks, adds a 2 s jingle, normalizes loudness (`loudnorm`) and encodes AAC m4a (`-c:a aac -b:a 96k`).
 6. Send through `ctx.send({ attachments:[{path, mime:'audio/mp4'}] })` with a 2-line summary and the citations. The personal cut uses the same pipeline with the student's own weak spots, by DM only.
 
 **Explainer pipeline.**
-1. Sonnet plans 1-3 panels: `{kind:'diagram'|'illustration', spec}`.
+1. The `strong` role plans 1-3 panels (`Llm.json`): `{kind:'diagram'|'illustration', spec}`.
 2. **Diagrams** are drawn by code: Mermaid (`mmdc` to PNG) or a matplotlib script in a subprocess with a timeout. These carry every label, number and formula.
-3. **Illustrations** come from Gemini 2.5 Flash Image [5] or gpt-image-1 [6]. The prompt always says "no text, no labels". Captions are overlaid by code (sharp/ImageMagick).
+3. **Illustrations** come from a Gemini image model (the models page lists Nano Banana 2 `gemini-3.1-flash-image`, Nano Banana 2 Lite `gemini-3.1-flash-lite-image`, Nano Banana 2.1 `gemini-nano-banana-2.1`; `gemini-2.5-flash-image` is limited-access now; pick one in M6, same `GEMINI_API_KEY`) [5] or gpt-image-1 [6]. The prompt always says "no text, no labels". Captions are overlaid by code (sharp/ImageMagick).
 4. Panels are sent as PNG attachments, with citations in the text.
 
 **Characters: sprites, portraits, GIFs.**
@@ -69,7 +69,7 @@ A student walks next to an agent sprite and a "Talk" prompt appears. Pressing it
 
 **Browser call path.**
 1. Client posts `POST /v1/call/start {agent, student}` to the hub. The hub creates a `callId`, sets the agent to `in_call`, and emits `call.start` (with `student`; `in_call` is for voice calls only). Audio streams over the hub websocket `/v1/call/ws/:callId`. `call.caption` is emitted by 03's caption pipeline via the hub.
-2. Student speaks or types. Core path is typed text or push-to-talk captured by the browser `SpeechRecognition` or a Whisper-style STT endpoint, sent as text. The agent's answer comes from the same brain as iMessage (03), so the same citations apply.
+2. Student speaks or types. Core path is typed text or push-to-talk captured by the browser `SpeechRecognition`, or recorded audio sent to `Llm.transcribe` (Gemini audio understanding, or `gemini-3.5-transcribe`; see 02), sent on as text. Voice output stays ElevenLabs. The agent's answer comes from the same brain as iMessage (03), so the same citations apply.
 3. The server streams the reply: text tokens go to ElevenLabs TTS streaming [11], and audio chunks go to the browser over a websocket. The browser plays them with WebAudio (`AudioContext`, decode and queue chunks, no gaps) and keeps an `AnalyserNode` for the loudness meter.
 4. For each sentence the server emits `call.caption { agent, callId, text, cite? }` with the `Citation` from 03. The panel shows live captions with a citation chip per sentence. `call.end` closes it.
 5. Later: realtime voice (ElevenLabs Conversational AI agent, or STT streaming into the same brain with barge-in, where the student's speech stops the agent's audio). Later: live phone calls to a student's number with the same persona voice, opt-in only.
@@ -105,7 +105,7 @@ File layout: `packages/media/src/{personas,voices,tts,stream,call,podcast,explai
 | M2 | Voice design script; design and save persona voices; OpenAI fallback mapping | core | M1, API key |
 | M3 | TTS service: cache, timestamps, fallback | core | M1 |
 | M4 | Sprite builder: map personas to CC0 pack characters found by V0's audit, write sheets and `frames.json`; choose portraits from the Fluent set (no generation) | core | V0 asset audit (09) |
-| M5 | Podcast: script prompt, fact check, dialogue render, ffmpeg m4a, squad + personal cuts | core | M3, 03 retrieval, 02 send |
+| M5 | Podcast: script prompt (`Llm.json`, `strong`), fact check (`fast`), dialogue render, ffmpeg m4a, squad + personal cuts | core | M3, 03 retrieval, 02 send, `Llm` |
 | M6 | Explainer: panel planner, Mermaid/matplotlib runner, illustration + caption overlay | core | 03 retrieval |
 | M7 | Browser call: `streamSpeak`, `POST /v1/call/start` and ws `/v1/call/ws/:callId` on the hub, WebAudio player, captions with citations, `call.*` events | core | M3, 06 hub, 09 V0 canvas mount |
 | M8 | Village talking animation (frame swap, bob, glow) wired to `call.caption`; CSS portrait speaking glow for UI chrome | core | M4, M7 |
@@ -126,12 +126,14 @@ Ordering: M1-M4 and M6 start in parallel; M5, M7 and M10 start once M3 is done; 
 - Browser call: start a call on a fixture agent; `call.start`, one `call.caption` per sentence with a citation, and `call.end` arrive in order; audio plays with no gaps; the talking animation runs only between the first audio chunk and about 1 s after the last; the sprite is idle again after `call.end`.
 - A caption never contains a withheld value, and the same question answered in iMessage and in a call cites the same source.
 - `makePodcast` on a fixture chapter gives an m4a of 90-200 s that plays in iMessage on an iPhone in the real group.
+- Podcast script and explainer plan tests use `FakeLlm` (02); one run each against the real Gemini key.
 - `makeExplainer`: the diagram PNG contains every expected label, and the illustration prompt includes "no text".
 - The sprite GIF animates in an iMessage thread; the UI portrait glows only while audio plays.
 - Later: realtime call interrupts when the student speaks; a phone call is placed only to an opted-in number; clip mp4 plays in iMessage.
 
 ## Risks
 - **Voice cloning consent:** clone only the user's own voice, recorded live, with an explicit yes stored. Never a professor's, a friend's or a celebrity's voice.
+- **Gemini quota and cost for text steps:** podcast scripts and explainer plans use the `strong` role, one call each, cached on disk by content hash so a replay makes no LLM call; fact-check uses `fast`. Free-tier limits are small (see 02 risks), so the project must be billed.
 - **Credit and rate limits:** caching, a per-hour character budget, and automatic switch to OpenAI TTS (this is a safeguard, not a schedule cut).
 - **Text to Dialogue limits** (about 2k characters, 10 voices): chunking, plus a per-turn TTS fallback.
 - **Image models invent labels:** illustrations never carry text, and every fact goes in a code-drawn panel.

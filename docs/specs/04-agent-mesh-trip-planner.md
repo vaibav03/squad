@@ -28,7 +28,7 @@ Time is not a constraint (see 00 "Build order"). "Core" is built first, "Later" 
 | Mock calendars/budgets as JSON fixtures; deterministic scripted run | Budget range proof (snarkjs) over a committed budget, only if it still proves something (see Decisions) |
 
 ## Key design
-**Agents.** `apps/agent` runs one Node process per student (`AGENT_ID=s_ana PORT=4101`). Private state = a JSON fixture (calendar, budget, hard no's, topics, preferences). Claude does two jobs only: talk to its own student (via `ctx.dm` / `ctx.askConfirm` from 02) and explain results. It never writes agent-to-agent text.
+**Agents.** `apps/agent` runs one Node process per student (`AGENT_ID=s_ana PORT=4101`). Private state = a JSON fixture (calendar, budget, hard no's, topics, preferences). The LLM (Gemini, `fast` role through `Ctx.llm`, see 02) does two jobs only: talk to its own student (via `ctx.dm` / `ctx.askConfirm` from 02) and explain results. It never writes agent-to-agent text.
 
 **Protocol (A2A-shaped, not the full SDK).** `POST /a2a` with `AgentMessage`. Tasks move through A2A states `submitted → working → input-required → completed | failed | canceled`. `input-required` is exactly "waiting for my student to confirm", so the wire view and the village show it.
 
@@ -119,12 +119,13 @@ app/apps/agent/scripts/  dev-mesh.ts (spawn 4 agents)  demo-study.ts  demo-trip.
 | T6 | Trip flow + trip mediator + simulate + split/Venmo + `trip.confirmed` emit (after all confirms) | L | T2–T4 |
 | T7 | `confirm.ts`: bridge to 02's `askConfirm`, emits `confirm.pending/done`; CLI stub if 02 isn't ready | S | 02 |
 | T8 | `--scripted` deterministic run + replay JSON export for 09 | S | T5, T6 |
-| T9 | Bouncer: quarantine reader (Haiku, JSON-schema output only) on inbound foreign text | M | T4 |
+| T9 | Bouncer: quarantine reader (`fast` role via `Llm.json`, JSON-schema output only, zod-validated, no tools) on inbound foreign text | M | T4 |
 | T10 | Google `freeBusy` / `node-ical` import → slot set | M | T4 |
 | T11 | snarkjs budget range proof over a committed budget (only if Decision 2 flips to yes) | L | T6 |
 T1, T2, T3 start together; T5 and T6 run in parallel after T4. T9–T11 are built after the core smoke tests pass.
 
 ## Smoke tests
+All tests run with `FakeLlm` (02); only the Bouncer eval and the explain-results wording also run once against the real Gemini key. The mesh itself uses no LLM, so Live and Replay stay deterministic.
 - `demo-study`: 4 agents → one slot chosen; ledger has no event titles; the gate drops a message with an injected `"reason"` key.
 - `demo-trip`: Cabo dropped (budget), bar crawl dropped (veto), Flagstaff wins; no ledger row contains a dollar cap or a reason; all 4 confirms → Venmo links.
 - **Events never leak:** run both flows with sentinel private values (e.g. `$187`, "therapy Tue 2pm", "under 21") and assert none appear in any emitted `VillageEvent`, any `withheld` is exactly `'hidden'`, and no event names who vetoed or couldn't afford.
@@ -140,6 +141,8 @@ T1, T2, T3 start together; T5 and T6 run in parallel after T4. T9–T11 are buil
 - Ring PSI ordering bugs → fall back to mediator-run hashed intersection (labelled "data minimization", not crypto).
 - 02 not ready → confirm via CLI prompt; the flows still work.
 - Live flakiness → seeded fixtures, temperature 0, scripted replay as backup.
+- Gemini quota or latency: the mesh needs no LLM calls (the model only talks to a student and explains results), so a 429 or outage degrades to templated text, never to a stalled negotiation. Four agents sharing one API key share one project quota (limits are per project), so `fast` calls go through the `Llm` limiter.
+- Structured output only checks part of a JSON schema server-side (no `minLength`, `maxLength`, `uniqueItems`), so the Bouncer's zod check is the real gate.
 - Over-claiming → use the trust table above verbatim in the pitch.
 
 ## Decisions for you
