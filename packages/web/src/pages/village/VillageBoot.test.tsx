@@ -33,7 +33,7 @@ vi.mock('../../overlays/mastery', () => ({ MasteryLayer: () => null }));
 vi.mock('../../overlays/inspector', () => ({ InspectorPanel: () => null }));
 vi.mock('../../components/source-viewer', () => ({ SourceViewerHost: () => null }));
 vi.mock('../../council', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../../council')>()),
+  ...(await importOriginal<Record<string, unknown>>()),
   CouncilHall: () => null,
   CouncilBoardHost: () => null,
 }));
