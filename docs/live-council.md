@@ -63,8 +63,8 @@ only, output redacted). Models: default tiers (`gemini-3.5-flash-lite` fast, `ge
 | 3 | **Fully live**: `status=done mode=live`, stages question > delegation > opinions > critiques > dissent > verdict > actions > done, both specialists called `retrieve_course` then `submit_turn` (verified citations 1 and 2, 0 struck), Chair delegated in parallel then gave the verdict through `submit_turn`; all envelopes `source: model`/`code`, no `script`; no-thinking scan of the result JSON clean | 11 | 14,752 / 688 | ~$0.009 |
 
 38 s wall for run 3. Cost is an ESTIMATE from placeholder prices ($0.5/$3 per M tokens, deliberately pessimistic); the real bill
-is lower or equal. Total spend of all real council runs in this workstream (3 smoke + 3 failed Live probe attempts at $0)
-is about $0.03 by that estimate.
+is lower or equal. Run 1 was repeated once with call tracing (same outcome, 11 calls). Total spend of all real council runs in this workstream (4 smoke runs, plus 4 failed Live probe connections at $0)
+is about $0.04 by that estimate.
 
 Observations: the two-specialist run gave `uncertain` confidence because the committed answers differed in wording
 ("The median, with caveats" vs "median"); the dissent check normalises text only, so a semantic-equality check by the Chair
