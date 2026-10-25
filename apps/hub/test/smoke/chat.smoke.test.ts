@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ChatMessageSchema, SENTINELS, findLeak, type ChatMessage } from '@squad/core';
 import { attachChatEngine } from '../../src/chat/engine';
 import type { RunningHub } from '../../src/server';
-import { auth, boot, get, login, openSse, post } from '../helpers';
+import { boot, get, login, openSse, post } from '../helpers';
 
 /**
  * Chat over real HTTP and SSE: group + DM, mention rules, private replies, structured cards, DM isolation and the

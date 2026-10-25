@@ -66,10 +66,10 @@ Smoke covers: ingest and 401/422, every event type round-tripping, snapshot then
 
 `pnpm --filter @squad/hub dev` (or `start`) now also serves chat: `src/main.ts` calls `attachChatEngine`, which mounts the bot in process (`createBot` with the `web` Transport from `@squad/bot`, the full skill registry, one db, one emit, one brain and mastery store). Contract: `docs/chat-api.md`; wire types in `@squad/core` (`chat.ts`).
 
-| Env | Effect |
-|---|---|
-| `GEMINI_API_KEY` | real model (and real brain/quiz/media ports). Missing: deterministic demo model over the OpenStax sample, every reply labelled demo. |
-| `ELEVENLABS_API_KEY` | real TTS for podcasts. Missing: fake audio, `tts: 'none'`. |
-| `CHAT_FORCE_DEMO=1` | ignore keys and run the demo model (e2e, screenshots). |
+| Env                  | Effect                                                                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `GEMINI_API_KEY`     | real model (and real brain/quiz/media ports). Missing: deterministic demo model over the OpenStax sample, every reply labelled demo. |
+| `ELEVENLABS_API_KEY` | real TTS for podcasts. Missing: fake audio, `tts: 'none'`.                                                                           |
+| `CHAT_FORCE_DEMO=1`  | ignore keys and run the demo model (e2e, screenshots).                                                                               |
 
 Gemini errors with 402/429/RESOURCE_EXHAUSTED never loop: the reply is served by the demo model, `GET /v1/status` says `{llm:'fake', reason:'credits_depleted'}` with the banner copy, and the real model is retried at most once a minute (topped-up credits work without a restart). Files: `src/chat/` (`hub-chat.ts` store + fan-out + leak guard, `routes.ts`, `files.ts` unguessable file tokens, `engine.ts`, `llm.ts`). Tests: `test/smoke/chat*.smoke.test.ts` (real HTTP and SSE: DM isolation, sentinels, cards, uploads, credits depleted).

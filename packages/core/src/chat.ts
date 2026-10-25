@@ -103,7 +103,10 @@ export type ChatUpdate = z.infer<typeof ChatUpdateSchema>;
 export const ChatSendBodySchema = z.strictObject({
   chatId: ChatIdSchema,
   text: z.string().max(4000),
-  attachments: z.array(z.strictObject({ id: z.string() })).max(4).optional(),
+  attachments: z
+    .array(z.strictObject({ id: z.string() }))
+    .max(4)
+    .optional(),
 });
 export type ChatSendBody = z.infer<typeof ChatSendBodySchema>;
 
@@ -131,7 +134,8 @@ export type HubStatus = z.infer<typeof HubStatusSchema>;
 export const DEMO_NOTICE = 'Demo mode: add GEMINI_API_KEY to .env for real answers';
 export const DEMO_NOTICE_CREDITS =
   'Demo mode: Gemini credits depleted, add credits in AI Studio for real answers';
-export const DEMO_NOTICE_ERROR = 'Demo mode: the Gemini API is unavailable, answers are from the course sample';
+export const DEMO_NOTICE_ERROR =
+  'Demo mode: the Gemini API is unavailable, answers are from the course sample';
 
 /** Mentions the bot answers to in a group (case-insensitive, word bounded). */
 export const CHAT_MENTIONS = ['cubbie', 'squad'] as const;

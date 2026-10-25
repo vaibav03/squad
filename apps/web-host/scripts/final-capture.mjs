@@ -9,10 +9,17 @@ const TAG = process.argv[3] ?? '';
 const BASE = process.env.BASE ?? 'http://localhost:5180';
 const TIMES = (process.env.TIMES ?? '0,10,25,40,60,80,100').split(',').map(Number);
 mkdirSync(OUT, { recursive: true });
-const sess = JSON.stringify({ userId: 's_ana', name: 'Ana', token: 'dev', avatarUrl: '/avatars/ana.png' });
+const sess = JSON.stringify({
+  userId: 's_ana',
+  name: 'Ana',
+  token: 'dev',
+  avatarUrl: '/avatars/ana.png',
+});
 const vps = { desk: { width: 1280, height: 800 }, phone: { width: 390, height: 844 } };
 const errors = {};
-const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] });
+const browser = await chromium.launch({
+  args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'],
+});
 async function run(track, vpName) {
   const c = await browser.newContext({ viewport: vps[vpName], deviceScaleFactor: 1 });
   await c.addInitScript((s) => localStorage.setItem('squad.session', s), sess);
@@ -20,7 +27,8 @@ async function run(track, vpName) {
   const tag = `${track}-${vpName}`;
   errors[tag] = [];
   page.on('console', (m) => {
-    if (['error', 'warning'].includes(m.type())) errors[tag].push(`${m.type()}: ${m.text().slice(0, 300)}`);
+    if (['error', 'warning'].includes(m.type()))
+      errors[tag].push(`${m.type()}: ${m.text().slice(0, 300)}`);
   });
   page.on('pageerror', (e) => errors[tag].push('pageerror: ' + String(e).slice(0, 300)));
   const t0 = Date.now();
@@ -28,10 +36,17 @@ async function run(track, vpName) {
   for (const s of TIMES) {
     const wait = s * 1000 - (Date.now() - t0);
     if (wait > 0) await page.waitForTimeout(wait);
-    await page.screenshot({ path: `${OUT}/${TAG}${track}-${vpName}-t${String(s).padStart(3, '0')}.png` });
+    await page.screenshot({
+      path: `${OUT}/${TAG}${track}-${vpName}-t${String(s).padStart(3, '0')}.png`,
+    });
   }
   await c.close();
 }
-await Promise.all([run('track2', 'desk'), run('track3', 'desk'), run('track2', 'phone'), run('track3', 'phone')]);
+await Promise.all([
+  run('track2', 'desk'),
+  run('track3', 'desk'),
+  run('track2', 'phone'),
+  run('track3', 'phone'),
+]);
 writeFileSync(`${OUT}/${TAG}console-errors.json`, JSON.stringify(errors, null, 2));
 await browser.close();
