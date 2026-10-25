@@ -1,5 +1,5 @@
 import type { VillageEvent } from '@squad/core';
-import { routeAgent, routeCouncil } from '../routing';
+import { landmarkOf, routeAgent, routeCouncil } from '../routing';
 import type { SceneId } from '../contract';
 
 /** The agent id an event concerns, if it concerns one building's occupant. */
@@ -38,9 +38,29 @@ export function eventScene(e: VillageEvent): SceneId | null {
 
 /** Chapter id for chapter-house events: expert:<chapter> agents, quiz.* and mastery.changed. */
 export function eventChapter(e: VillageEvent): string | null {
-  if ('chapter' in e && typeof e.chapter === 'string') return e.chapter;
+  if ('chapter' in e && typeof e.chapter === 'string') {
+    return isLandmarkToken(e.chapter) ? null : e.chapter;
+  }
   const a = eventAgent(e);
-  return a && a.startsWith('expert:') ? a.slice('expert:'.length) : null;
+  if (!a || !a.startsWith('expert:') || landmarkOf(a)) return null;
+  return a.slice('expert:'.length);
+}
+
+/** Quiz chapters that belong to a landmark (`oracle`, `rubric:ch5`, `devil-ta`...), never to a house. */
+const LANDMARK_TOKENS = [
+  'rubric',
+  'oracle',
+  'devil',
+  'devils-ta',
+  'feynman',
+  'oral',
+  'panic',
+  'stepdiff',
+];
+export function isLandmarkToken(chapter: string): boolean {
+  return LANDMARK_TOKENS.some(
+    (t) => chapter === t || chapter.startsWith(`${t}:`) || chapter.startsWith(`${t}-`),
+  );
 }
 
 /** First 60 chars, as call captions show over the agent (the full text lives in the overlay). */

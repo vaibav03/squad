@@ -2,12 +2,14 @@ import type { VillageEvent } from '@squad/core';
 import {
   DEFAULT_CTX,
   step,
+  type PaintOpts,
   type SceneCtx,
   type SceneDef,
   type ShotDef,
   type View,
 } from './contract';
 import { paletteNameOf } from './pixel/palette';
+import { nodeAssets } from './tools/node-assets';
 import type { Raster } from './pixel/raster';
 
 /** Run a script through a scene; returns the state after every event with at <= upTo. */
@@ -32,7 +34,7 @@ export function paintShot<S>(def: SceneDef<S>, shot: ShotDef, sample: number): R
     instance: shot.instance,
     title: shot.title,
   });
-  return def.paint(s, shot.view, { t: sample, calm: shot.calm ?? false });
+  return def.paint(s, shot.view, po(sample, shot.calm ?? false));
 }
 
 /** Opaque pixels that are not in the master palette (translucent light overlays are allowed). */
@@ -52,3 +54,8 @@ export function opaqueCount(r: Raster): number {
 }
 
 export const VIEWS: readonly View[] = ['exterior', 'interior'];
+
+/** PaintOpts with the real composed art loaded from disk (tests, capture). */
+export function po(t = 0, calm = false): PaintOpts {
+  return { t, calm, assets: nodeAssets() };
+}

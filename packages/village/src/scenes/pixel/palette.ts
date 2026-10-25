@@ -55,3 +55,27 @@ export function paletteNameOf(r: number, g: number, b: number): PaletteName | nu
   }
   return null;
 }
+
+/**
+ * One step colder and darker, on-palette. A 'dim' building is the same art with this remap
+ * (quiet, unlit, waiting); 'locked' adds shutters on top. Warm lights are removed separately.
+ */
+export const DIM: Readonly<Partial<Record<PaletteName, PaletteName>>> = {
+  'wall-lit': 'wall-mid',
+  'wall-mid': 'wall-shade',
+  'wall-shade': 'hill-mid',
+  'roof-wine': 'roof-shade',
+  'roof-shade': 'wood-dark',
+  'wood-lit': 'wood',
+  wood: 'wood-dark',
+  'glow-core': 'cloud-lo',
+  glow: 'wall-shade',
+  ember: 'roof-wine',
+  moon: 'cloud-hi',
+  'leaf-lit': 'leaf-dark',
+  'cloud-hi': 'cloud-lo',
+  violet: 'wall-shade',
+  ok: 'leaf-lit',
+  alert: 'roof-wine',
+  'skin-lt': 'wall-lit',
+};

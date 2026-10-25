@@ -30,3 +30,18 @@ A building is a `SceneDef<S>` (`scenes/contract.ts`): pure `init`, `handles`, `m
 
 ## Agent id conventions (routing.ts)
 `expert:<chapter>` chapter house; `council:quizkey` Council Hall; `council:planner` Round Table; `council:debate` Debate Stage; `expert:feynman` Feynman Porch; `expert:stepdiff|panic` Panic Line; `expert:oral|examiner` Oral Exam Hut; `expert:rubric` Rubric Courthouse; `expert:oracle` Exam Oracle; `expert:devil|devils-ta` Devil's TA. Members: planner chill/grind/advisor + chair; quizkey solver-a/b/c + chair.
+
+## Composed art (supersedes "Art rules" about procedural sprites)
+The village uses the design foundation's art (`assets/pixel/composed/**`, ids in `assets/asset-manifest.json`), native 1x, one scale: door ~32 px, cast 32x32 cells (figure ~28 px, faces right, anchor [16,31]), interiors 224x128 canvases with the floor line at y=112. Painters compose Rasters from `PaintOpts.assets` (`scenes/assets.ts`):
+- `assets.image('landmark.council-hall' | 'house.hut', variant?)` -> `{r, ax, ay}`; variants: houses `lit|dark`, landmarks `active|locked` (booth `off|glow|locked`); `assets.frame(persona, anim, n)` cast frame (personas: student, dean, expert, council-chill, council-hard, council-balance, chairman, examiner, mediator, ta, freshman; anims idle/walk/talk/sit/wave); `assets.sheet('fx.chimney-smoke', n)`; `put(raster, asset, x, y, {flipX, alpha})` blits with the anchor on (x,y).
+- Exterior raster = the base sprite's box (+ margin for overlays); bottom row is the ground. Interior raster = 224x128. `SceneDef.exterior/interior/door/entry` must match.
+- States: open = active/lit art; dim = active art through `raster.remap(DIM)` (cached clone, no warm lights); locked = `locked` variant + `ui.padlock` at the door. Lit window flicker = crossfade the lit variant over the dark one, alpha 0.85..1 over 4 s (calm: steady).
+- UI sprites from the manifest (`ui.lantern-*`, `ui.marker-*`, `ui.door-ring*`, `ui.check`, `ui.bubble-*`, `prop.chalkboard`, `prop.chalk-tick|cross`, ...) before drawing anything yourself. Anything you still draw must be on-palette and match the 1x scale (nothing at 2x). Interiors without a composed asset (debate stage, courthouse, oracle, devil's cave) are composed from props + cast frames on a painted 224x128 room (floor y=112).
+- Tests/captures: `po(t, calm)` from `testkit.ts` gives PaintOpts with the real art loaded from disk (node PNG decoder); `paintShot` uses it.
+
+## Run, test, capture
+- Unit tests: `pnpm --filter @squad/village test` (scene logic, mapping, determinism, privacy, calm).
+- Frame sheets (headless, from the real composed art): `pnpm --filter @squad/village capture [sceneId...]` -> `docs/design/shots/village-scenes/<scene>-<shot>.png` (4x, labelled with sample times).
+- In the live Phaser world: `scenes/module.ts` is discovered by the world loader (`../scenes/module.ts`). Dev harness: `pnpm --filter @squad/village dev`, then emit events via `window.__emit({...})`; enter a building with the `enter-<slotId>` interactable (Enter on the door prompt), Esc or tap the veil to leave. In-world captures: `docs/design/shots/village-scenes/world/`.
+- Event routing convention: see "Agent id conventions" above and `scenes/routing.ts`. The module routes raw `VillageEvent`s through each scene's own `mapEvent` (the village-mesh adapter commands are ignored by design for these buildings).
+- Contract notes for the integrator: chapter ids are claimed lazily by slot (`ch<N>` digits pick `chapter-N` for N<=4, else next free); landmark agent ids are `expert:oracle|oral|rubric|devil|feynman|stepdiff` and `council:debate|planner|quizkey`; `AgentRegistry` entries are registered for the landmarks only.

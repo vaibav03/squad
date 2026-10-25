@@ -1,4 +1,10 @@
-import { RGBA, type PaletteName } from './palette';
+import { RGBA, paletteNameOf, type PaletteName } from './palette';
+
+/**
+ * Test hook: with `LIGHTS.on = false` every translucent write (glow, alpha pixels, faded blits) is
+ * skipped or made opaque, so a frame's BASE art can be audited against the master palette.
+ */
+export const LIGHTS = { on: true };
 
 /** Anything drawable: a palette name, or null to erase to transparent. */
 export type Ink = PaletteName | null;
@@ -33,6 +39,7 @@ export class Raster {
 
   /** Opaque palette pixel, or `alpha` (0..1) blended over what is there. */
   px(x: number, y: number, ink: Ink, alpha = 1): this {
+    if (!LIGHTS.on && alpha < 1) return this;
     x = Math.round(x);
     y = Math.round(y);
     if (!this.inside(x, y)) return this;
@@ -172,7 +179,7 @@ export class Raster {
 
   /** Copy `src` onto this raster at (x,y); transparent source pixels are skipped. */
   blit(src: Raster, x: number, y: number, opts: { flipX?: boolean; alpha?: number } = {}): this {
-    const a = opts.alpha ?? 1;
+    const a = LIGHTS.on ? (opts.alpha ?? 1) : 1;
     for (let j = 0; j < src.h; j++) {
       for (let i = 0; i < src.w; i++) {
         const si = (j * src.w + (opts.flipX ? src.w - 1 - i : i)) * 4;
@@ -224,6 +231,21 @@ export class Raster {
     return this;
   }
 
+  /** Palette swap on opaque pixels (stays on-palette): dim/locked looks, night shifts. */
+  remap(map: Readonly<Partial<Record<PaletteName, PaletteName>>>): this {
+    for (let i = 0; i < this.data.length; i += 4) {
+      if (this.data[i + 3] !== 255) continue;
+      const name = paletteNameOf(this.data[i]!, this.data[i + 1]!, this.data[i + 2]!);
+      const to = name ? map[name] : undefined;
+      if (!to) continue;
+      const c = RGBA[to];
+      this.data[i] = c[0];
+      this.data[i + 1] = c[1];
+      this.data[i + 2] = c[2];
+    }
+    return this;
+  }
+
   /** Banded radial light: concentric steps (pixel-art glow, not a smooth gradient). */
   glow(cx: number, cy: number, radius: number, ink: PaletteName, strength = 0.5, bands = 4): this {
     for (let b = 0; b < bands; b++) {
@@ -232,6 +254,23 @@ export class Raster {
       this.ellipse(cx, cy, Math.round(r), Math.max(1, Math.round(r * 0.9)), ink, a);
     }
     return this;
+  }
+
+  /** Copy of a sub-rectangle (out-of-range reads are transparent). */
+  crop(x: number, y: number, w: number, h: number): Raster {
+    const r = new Raster(w, h);
+    for (let j = 0; j < h; j++) {
+      for (let i = 0; i < w; i++) {
+        if (!this.inside(x + i, y + j)) continue;
+        const si = ((y + j) * this.w + x + i) * 4;
+        const di = (j * w + i) * 4;
+        r.data[di] = this.data[si]!;
+        r.data[di + 1] = this.data[si + 1]!;
+        r.data[di + 2] = this.data[si + 2]!;
+        r.data[di + 3] = this.data[si + 3]!;
+      }
+    }
+    return r;
   }
 
   /** Upscale by an integer factor (nearest neighbour). */

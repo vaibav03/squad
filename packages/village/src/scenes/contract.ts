@@ -1,4 +1,5 @@
 import type { VillageEvent } from '@squad/core';
+import type { AssetLib } from './assets';
 import type { Raster } from './pixel/raster';
 
 /**
@@ -74,6 +75,8 @@ export interface PaintOpts {
   t: number;
   /** Calm mode or prefers-reduced-motion: steady lights, no bob, fades only. */
   calm: boolean;
+  /** The composed art (manifest images, cast frames). Painters compose from this. */
+  assets: AssetLib;
 }
 
 export interface Anchor {
@@ -113,7 +116,30 @@ export interface SceneDef<S = unknown> {
 }
 
 /** Feed an event through a scene: handles -> mapEvent -> reduce. Returns the new state. */
-export function step<S>(def: SceneDef<S>, state: S, e: VillageEvent, ctx: SceneCtx, at: number): S {
+/**
+ * Privacy gate applied to every event before a scene sees it (00: per-student `correct` only for
+ * the viewer; squads under 3 reveal nothing about others): quiz.* about another student loses
+ * `correct`, so no scene can draw a tick or cross for someone else.
+ */
+export function sanitizeEvent(e: VillageEvent, ctx: SceneCtx): VillageEvent {
+  if ((e.t === 'quiz.answer' || e.t === 'quiz.result') && e.correct !== undefined) {
+    const own = e.student !== undefined && ctx.viewer !== '' && e.student === ctx.viewer;
+    if (!own) {
+      const { correct: _hidden, ...rest } = e;
+      return rest;
+    }
+  }
+  return e;
+}
+
+export function step<S>(
+  def: SceneDef<S>,
+  state: S,
+  event: VillageEvent,
+  ctx: SceneCtx,
+  at: number,
+): S {
+  const e = sanitizeEvent(event, ctx);
   if (!def.handles(e, state, ctx)) return state;
   let s = state;
   for (const cmd of def.mapEvent(e, s, ctx)) s = def.reduce(s, cmd, at);
