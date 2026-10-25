@@ -5,7 +5,7 @@ import { CAST_ATLAS } from './assets';
 import { agentName } from '../adapter';
 import { pixelText, snap, tween } from './util';
 
-const WALK_PX_PER_S = 36; // constant speed like the player, never eased (spec 08 row 3)
+const WALK_PX_PER_S = 48; // constant speed, never eased (spec 08 row 3; motion-api default)
 const STOP_PX = 4;
 const STOP_MS = 80;
 

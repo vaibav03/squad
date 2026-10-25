@@ -63,7 +63,7 @@ export function createMeshView(
   const markerPos = (at: Place): { x: number; y: number } | undefined => {
     if (at.kind === 'commons') return { x: camp.x, y: g - 34 };
     const p = places.resolve(at);
-    return p ? { x: p.x, y: g - 92 } : undefined;
+    return p ? { x: p.x, y: g - 138 } : undefined; // above the roof ridge: clear of the name sign
   };
 
   const bubbleAnchor = (
@@ -93,7 +93,7 @@ export function createMeshView(
         const x = places.doorX(cmd.agent);
         if (cmd.on) {
           actorFor(cmd.agent); // the agent steps out to its door while waiting
-          focus(x);
+          if (homes.isMine(cmd.agent)) focus(camp.x + STAGE_DX, true); // the viewer's own yes is the one to watch
         }
         fx.ring(cmd.agent, x, cmd.on);
         break;
@@ -167,7 +167,7 @@ export function createMeshView(
       case 'marker': {
         const p = markerPos(cmd.at);
         if (p) {
-          focus(p.x);
+          if (cmd.at.kind === 'commons') focus(camp.x + STAGE_DX, true);
           fx.marker(cmd.key, p.x, p.y);
         }
         break;
