@@ -1,0 +1,147 @@
+{
+  "name": "sample",
+  "version": 1,
+  "loop": false,
+  "cast": { "me": "s_ana" },
+  "events": [
+    { "at": 0, "event": { "t": "agent.state", "agent": "dean", "state": "studying" } },
+    {
+      "at": 300,
+      "event": { "t": "agent.state", "agent": "student:s_ana", "state": "waiting_for_student" }
+    },
+    {
+      "at": 500,
+      "event": {
+        "t": "confirm.pending",
+        "student": "s_ana",
+        "taskId": "task_trip",
+        "question": "Share your free evenings with the squad?"
+      }
+    },
+    {
+      "at": 900,
+      "event": {
+        "t": "confirm.done",
+        "student": "s_ana",
+        "taskId": "task_trip",
+        "question": "Share your free evenings with the squad?"
+      }
+    },
+    {
+      "at": 1200,
+      "event": {
+        "t": "council.opinion",
+        "councilId": "council:planner",
+        "member": "chill",
+        "text": "Start with ch5."
+      }
+    },
+    {
+      "at": 1500,
+      "event": {
+        "t": "council.rank",
+        "councilId": "council:planner",
+        "member": "advisor",
+        "order": ["chill", "grind"]
+      }
+    },
+    {
+      "at": 1800,
+      "event": {
+        "t": "council.verdict",
+        "councilId": "council:planner",
+        "member": "advisor",
+        "dissent": true,
+        "dissenter": "grind"
+      }
+    },
+    {
+      "at": 2000,
+      "event": { "t": "quiz.question", "quizId": "q_1", "chapter": "ch5", "target": "s_ana" }
+    },
+    {
+      "at": 2400,
+      "event": { "t": "quiz.answer", "quizId": "q_1", "chapter": "ch5", "student": "s_ana" }
+    },
+    {
+      "at": 2600,
+      "event": { "t": "quiz.result", "quizId": "q_1", "chapter": "ch5", "student": "s_ana" }
+    },
+    {
+      "at": 2800,
+      "event": { "t": "mastery.changed", "student": "s_ana", "chapter": "ch5", "box": 2 }
+    },
+    {
+      "at": 3000,
+      "event": { "t": "call.start", "agent": "expert:ch5", "callId": "call_1", "student": "s_ana" }
+    },
+    {
+      "at": 3400,
+      "event": {
+        "t": "call.caption",
+        "agent": "expert:ch5",
+        "callId": "call_1",
+        "text": "Enthalpy is heat at constant pressure.",
+        "cite": { "courseId": "chem101", "chapter": "ch5", "file": "ch5.pdf", "page": 12 }
+      }
+    },
+    { "at": 3800, "event": { "t": "call.end", "agent": "expert:ch5", "callId": "call_1" } },
+    {
+      "at": 4000,
+      "event": {
+        "t": "agent.message",
+        "from": "student:s_ben",
+        "to": "commons",
+        "taskId": "task_trip",
+        "kind": "availability",
+        "shared": ["Fri evening"]
+      }
+    },
+    {
+      "at": 4200,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip",
+        "student": "s_ben",
+        "field": "availability",
+        "shared": "Fri evening"
+      }
+    },
+    {
+      "at": 4400,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip",
+        "student": "s_ana",
+        "field": "budget",
+        "withheld": "hidden"
+      }
+    },
+    {
+      "at": 4600,
+      "event": {
+        "t": "ledger.entry",
+        "taskId": "task_trip",
+        "student": "s_ana",
+        "field": "reason",
+        "withheld": "hidden",
+        "blocked": true
+      }
+    },
+    {
+      "at": 4800,
+      "event": {
+        "t": "agent.message",
+        "from": "mediator",
+        "to": "commons",
+        "taskId": "task_trip",
+        "kind": "option_dropped",
+        "shared": []
+      }
+    },
+    { "at": 5000, "event": { "t": "agent.state", "agent": "student:s_ana", "state": "in_call" } },
+    { "at": 5200, "event": { "t": "agent.state", "agent": "dean", "state": "idle" } },
+    { "at": 6000, "event": { "t": "trip.confirmed", "taskId": "task_trip", "squadId": "squad_1" } }
+  ],
+  "checkpoints": { "council": 1200, "trip": 6000 }
+}
