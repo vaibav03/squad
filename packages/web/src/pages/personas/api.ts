@@ -72,7 +72,7 @@ export async function fetchVoices(c: Ctx, fallback: VoiceOption[]): Promise<Voic
   }));
 }
 export async function savePersona(c: Ctx, p: PersonaDraft): Promise<void> {
-  const res = await fetch(`${c.hubUrl}/v1/personas/${encodeURIComponent(p.id)}`, {
+  const res = await timedFetch(`${c.hubUrl}/v1/personas/${encodeURIComponent(p.id)}`, {
     method: 'PUT',
     headers: { 'content-type': 'application/json', ...headers(c) },
     body: JSON.stringify({ voiceId: p.voiceId, avatarUrl: p.avatarId }),
@@ -95,7 +95,7 @@ const VoiceStatusBody = z.object({
 });
 export async function fetchVoiceStatus(c: Ctx): Promise<VoiceStatus | null> {
   try {
-    const res = await fetch(`${c.hubUrl}/v1/status`);
+    const res = await timedFetch(`${c.hubUrl}/v1/status`);
     if (!res.ok) return null;
     const b = VoiceStatusBody.parse(await res.json());
     return {
@@ -110,7 +110,7 @@ export async function fetchVoiceStatus(c: Ctx): Promise<VoiceStatus | null> {
 /** A preview refused because voices are off (HTTP 503 `voices_unavailable`); `message` is user-safe. */
 export class VoicesUnavailable extends Error {}
 export async function fetchPreviewBlob(c: Ctx, voiceId: string, text: string): Promise<Blob> {
-  const res = await fetch(`${c.hubUrl}/v1/voices/preview`, {
+  const res = await timedFetch(`${c.hubUrl}/v1/voices/preview`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...headers(c) },
     body: JSON.stringify({ voiceId, text }),

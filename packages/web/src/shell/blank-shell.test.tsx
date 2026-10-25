@@ -167,11 +167,14 @@ const CONCRETE: Record<string, string> = {
   '/squad/mastery/:courseId?': '/squad/mastery',
   '/squad/courses/:courseId?': '/squad/courses',
 };
-const TOP = squadRouteMeta.map((m) => ({
-  path: CONCRETE[m.path] ?? m.path,
-  title: m.title,
-  key: m.key,
-}));
+// mastery has no page of its own: it redirects into the village overlay (covered by its own test below)
+const TOP = squadRouteMeta
+  .filter((m) => m.key !== 'mastery')
+  .map((m) => ({
+    path: CONCRETE[m.path] ?? m.path,
+    title: m.title,
+    key: m.key,
+  }));
 
 const nav: { go: (p: string) => void } = { go: () => {} };
 function Routes_({ routes }: { routes: RouteObject[] }) {
@@ -247,6 +250,11 @@ describe('router location drives title, landmark and content', () => {
       }
     }
   }, 240000);
+
+  it('/squad/mastery lands on the village with the village title and landmark', async () => {
+    mount('/squad/mastery');
+    await expectRoute('/squad/village', 'Village');
+  }, 60000);
 
   it('the nav highlight follows the location', async () => {
     mount('/squad/chat');

@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import type { LiveConfig } from '../../overlays/kit/live-config';
 import { mockExcerpt } from './fixtures';
 import type { SourceCitation, SourceExcerpt } from './types';
@@ -44,7 +45,7 @@ async function run(
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new OfflineError();
   let res: Response;
   try {
-    res = await fetch(sourceUrl(c, cfg.hubUrl ?? ''), {
+    res = await timedFetch(sourceUrl(c, cfg.hubUrl ?? ''), {
       signal,
       headers: cfg.token ? { Authorization: `Bearer ${cfg.token}` } : {},
     });
@@ -117,7 +118,7 @@ export async function fetchRawObjectUrl(openUrl: string, cfg: LiveConfig): Promi
   const abs = /^https?:/i.test(openUrl)
     ? openUrl
     : `${(cfg.hubUrl ?? '').replace(/\/$/, '')}${openUrl}`;
-  const res = await fetch(abs, {
+  const res = await timedFetch(abs, {
     headers: cfg.token ? { Authorization: `Bearer ${cfg.token}` } : {},
   });
   if (!res.ok) throw new Error(`Hub answered ${res.status}`);

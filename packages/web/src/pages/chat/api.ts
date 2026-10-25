@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import {
   ChatAttachmentSchema,
   ChatCitationExcerptSchema,
@@ -100,7 +101,8 @@ export interface HttpChatApiOptions {
 
 export function createChatApi(o: HttpChatApiOptions): ChatApi {
   const base = o.hubUrl.replace(/\/+$/, '');
-  const f: typeof fetch = o.fetchImpl ?? ((...a) => fetch(...a));
+  // reads give up after 8 s (timedFetch), so a stalled hub ends in the error state with Retry, not "Loading chats" forever
+  const f: typeof fetch = o.fetchImpl ?? ((i, init) => timedFetch(i, init));
   const auth = { Authorization: `Bearer ${o.token}` };
 
   async function call<T>(

@@ -88,7 +88,7 @@ export function useTrip(tripId: string) {
   const post = useCallback(
     async (path: string, body: unknown) => {
       if (cfg.mode !== 'live' || !cfg.hubUrl) return true;
-      const res = await fetch(`${cfg.hubUrl}/v1/trips/${encodeURIComponent(tripId)}/${path}`, {
+      const res = await timedFetch(`${cfg.hubUrl}/v1/trips/${encodeURIComponent(tripId)}/${path}`, {
         method: 'POST',
         headers: auth,
         body: JSON.stringify(body),
