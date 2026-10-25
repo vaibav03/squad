@@ -23,6 +23,8 @@ const S = (
 ): LayoutSlot => ({ id, kind, x, w, region, label, ...(door ? { door: { x } } : {}) });
 
 export const SLOTS: readonly LayoutSlot[] = [
+  // The Mastery board stands at the entrance of the study district, just left of the first chapter house.
+  S('mastery-board', 'mastery-board', 30, 40, 'left', 'Mastery board'),
   // Left: chapter houses (hut art 128 px wide, 160 px pitch) and study landmarks. Widths are the real art widths
   // from assets/asset-manifest.json; gaps between footprints are >= 32 px.
   S('chapter-1', 'chapter-house', 120, 128, 'left', 'Chapter 1 house'),

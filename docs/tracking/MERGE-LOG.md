@@ -519,3 +519,16 @@ Branch `merge/batch16` (worktree `squad-wt/merge16`), landed as a true `--no-ff`
 
 - Landing merge commit: `75f73ad7a506c7c54e90f04e9bb2107dc67e0b75` (parents `acd78466ac90c1ef495098341a7381f0ab16a66f` = tag `pre-merge-batch16`, `e414427d72078171e614e1e0ef9109d2231b5780` = origin/merge/batch16; diff empty).
 - Rollback: `git revert -m 1 75f73ad7a506c7c54e90f04e9bb2107dc67e0b75`.
+
+## Batch 17: feature/mastery-in-village into main
+
+Branch `merge/batch17` (worktree `squad-wt/merge17`), landed as a true `--no-ff` merge.
+
+- One conflict, `packages/village/src/hud/index.ts`: kept mastery's `lastChip` state and main's focus return to the stage after the prompt click (batch 16 Esc/focus work).
+- The lead had not re-run `pnpm check` after its last merge of main: it exits 0 here (status read). `pnpm demo:live` OK; hub smoke 102 of 102.
+- Browser (hub :18917, web :15317, no agents): village renders; top nav has no Mastery item (Home, Village, Chat, Ledger, Trip, Setup, Personas, Courses); the Mastery board interactable `enter-mastery-board` (activated through the world's interactable list, the same call Enter makes at the board; the walk itself was not driven) opens the "Mastery board" panel ("A study map, not a grade", chapter states); `/squad/mastery` redirects to `/squad/village?mastery=1`; 0 page errors, 0 HTTP >= 400. Frames in `docs/design/shots/merge17/`.
+
+### Landing (batch 17)
+
+- Landing merge commit: `4ff5dbd55e9ecf4069ab4fb07c502ad3955feddc` (parents `bda7a90fe3f07f6534ab8930a34a99bce80d87e7` = tag `pre-merge-batch17`, `59b94d8eb5835e0c1dc708c74a3d1819d2f52f28` = origin/merge/batch17; diff empty).
+- Rollback: `git revert -m 1 4ff5dbd55e9ecf4069ab4fb07c502ad3955feddc`.

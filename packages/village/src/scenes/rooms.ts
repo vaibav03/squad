@@ -15,3 +15,5 @@ export function publishRoomSession(s: RoomSession): void {
 export function getRoomSession(): RoomSession | undefined {
   return (globalThis as Record<string, unknown>)[KEY] as RoomSession | undefined;
 }
+
+export * from './mastery';
