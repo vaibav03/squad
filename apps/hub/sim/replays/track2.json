@@ -215,7 +215,7 @@
         "kind": "psi.common",
         "shared": ["0 common slots"],
         "thought": "Comparing blinded tokens from all three to find shared free time",
-        "message": "I compared everyone’s blinded evenings and found no slot that works for all three."
+        "message": "I compared everyone\u2019s blinded evenings and found no slot that works for all three."
       }
     },
     {
@@ -365,7 +365,8 @@
         "councilId": "council:quizkey",
         "member": "solver-a",
         "text": "MSE averages the squared errors, so the answer is choice 1.",
-        "thought": "Checking the definition of mean squared error"
+        "thought": "Checking the definition of mean squared error",
+        "mode": "demo"
       }
     },
     {
@@ -374,7 +375,8 @@
         "t": "council.opinion",
         "councilId": "council:quizkey",
         "member": "solver-b",
-        "text": "Squaring then averaging matches choice 1; choice 3 forgets the square."
+        "text": "Squaring then averaging matches choice 1; choice 3 forgets the square.",
+        "mode": "demo"
       }
     },
     {
@@ -383,7 +385,8 @@
         "t": "council.opinion",
         "councilId": "council:quizkey",
         "member": "solver-c",
-        "text": "I get choice 1 as well. The lecture 4 slide defines it that way."
+        "text": "I get choice 1 as well. The lecture 4 slide defines it that way.",
+        "mode": "demo"
       }
     },
     {
@@ -392,7 +395,8 @@
         "t": "council.rank",
         "councilId": "council:quizkey",
         "member": "solver-a",
-        "order": ["solver-c", "solver-b"]
+        "order": ["solver-c", "solver-b"],
+        "mode": "demo"
       }
     },
     {
@@ -401,7 +405,8 @@
         "t": "council.rank",
         "councilId": "council:quizkey",
         "member": "solver-b",
-        "order": ["solver-a", "solver-c"]
+        "order": ["solver-a", "solver-c"],
+        "mode": "demo"
       }
     },
     {
@@ -410,7 +415,8 @@
         "t": "council.rank",
         "councilId": "council:quizkey",
         "member": "solver-c",
-        "order": ["solver-a", "solver-b"]
+        "order": ["solver-a", "solver-b"],
+        "mode": "demo"
       }
     },
     {
@@ -420,7 +426,8 @@
         "councilId": "council:quizkey",
         "member": "chair",
         "text": "Verified: all three solvers agree on choice 1, so the quiz key stands.",
-        "dissent": false
+        "dissent": false,
+        "mode": "demo"
       }
     },
     {

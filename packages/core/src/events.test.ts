@@ -66,6 +66,32 @@ const samples: VillageEvent[] = [
   },
   { t: 'call.end', agent: 'expert:c', callId: 'k' },
   { t: 'trip.confirmed', taskId: 't', squadId: 's' },
+  {
+    t: 'council.stage',
+    councilId: 'council:ask',
+    correlationId: 'cn_k3j9x0a1b2c3',
+    stage: 'opinions',
+    mode: 'live',
+  },
+  {
+    t: 'a2a.message',
+    mode: 'live',
+    msg: {
+      id: 'am_a1b2c3d4e5f6',
+      correlationId: 'cn_k3j9x0a1b2c3',
+      seq: 1,
+      from: 'council:ask-chair',
+      to: 'council:ask-skeptic',
+      kind: 'delegate',
+      stage: 'delegation',
+      summary: 'Check the claim.',
+      status: 'done',
+      mode: 'live',
+      source: 'model',
+      redaction: 'public',
+      ts: 1,
+    },
+  },
   { t: 'mastery.changed', student: 's_ana', chapter: 'c', box: 3 },
 ];
 
@@ -190,5 +216,29 @@ describe('optional thought and work (agent inspector)', () => {
     expect(safeParseVillageEvent({ ...base, thought: 'x'.repeat(241) }).success).toBe(false);
     expect(safeParseVillageEvent({ ...base, work: { tier: 'huge' } }).success).toBe(false);
     expect(safeParseVillageEvent({ ...base, work: { key: 'a' } }).success).toBe(false);
+  });
+});
+
+describe('additive mode on existing events', () => {
+  it('any kind may carry an optional honest mode, and a bad mode fails', () => {
+    for (const e of samples.filter((s) => s.t !== 'council.stage')) {
+      for (const mode of ['live', 'degraded:rate_limited', 'demo']) {
+        expect(safeParseVillageEvent({ ...e, mode }).success).toBe(true);
+      }
+      expect(safeParseVillageEvent({ ...e, mode: 'scripted' }).success).toBe(false);
+    }
+    expect(
+      safeParseVillageEvent({
+        t: 'council.opinion',
+        councilId: 'council:ask',
+        member: 'skeptic',
+        a2aId: 'am_a1b2c3d4e5f6',
+        mode: 'demo',
+      }).success,
+    ).toBe(true);
+    expect(
+      safeParseVillageEvent({ t: 'council.opinion', councilId: 'c', member: 'm', a2aId: 'bad' })
+        .success,
+    ).toBe(false);
   });
 });

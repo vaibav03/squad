@@ -2,6 +2,13 @@ import { z } from 'zod';
 import { AgentIdSchema } from './agent-id';
 import { CitationSchema } from './types';
 import { DiscussionEvent } from './live';
+import {
+  A2aCorrelationIdSchema,
+  A2aMessageIdSchema,
+  A2aMessageSchema,
+  A2aStageSchema,
+  AgentModeSchema,
+} from './a2a';
 
 const StudentId = z.string().min(1);
 const AgentId = AgentIdSchema;
@@ -28,6 +35,8 @@ const Extras = {
   thought: ThoughtSchema.optional(),
   work: WorkSchema.optional(),
   message: MessageSchema.optional(),
+  /** Optional, additive: honest status of the agent that produced the event (live | degraded:<why> | demo). */
+  mode: AgentModeSchema.optional(),
 } as const;
 
 /**
@@ -95,6 +104,8 @@ export const CouncilEvent = z.strictObject({
   t: z.enum(['council.opinion', 'council.rank', 'council.verdict']),
   ...Extras,
   councilId: z.string(),
+  /** Optional: the A2A envelope this legacy event mirrors. */
+  a2aId: A2aMessageIdSchema.optional(),
   member: z.string(),
   text: z.string().optional(),
   dissent: z.boolean().optional(),
@@ -141,6 +152,23 @@ export const MasteryChangedEvent = z.strictObject({
   box: z.number(),
 });
 
+/** One typed agent-to-agent message (docs/a2a.md). Additive kind: old strict consumers must ship this schema first. */
+export const A2aMessageEvent = z.strictObject({
+  t: z.literal('a2a.message'),
+  ...Extras,
+  msg: A2aMessageSchema,
+});
+
+/** Decision-flow stage change of a run. No text, so it is safe for every viewer of the squad. */
+export const CouncilStageEvent = z.strictObject({
+  t: z.literal('council.stage'),
+  ...Extras,
+  councilId: z.string(),
+  correlationId: A2aCorrelationIdSchema,
+  stage: A2aStageSchema,
+  mode: AgentModeSchema,
+});
+
 export const VillageEventSchema = z.discriminatedUnion('t', [
   AgentStateEvent,
   AgentMessageEvent,
@@ -151,7 +179,9 @@ export const VillageEventSchema = z.discriminatedUnion('t', [
   CallEvent,
   TripConfirmedEvent,
   MasteryChangedEvent,
-  DiscussionEvent.extend(Extras),
+  DiscussionEvent.extend({ ...Extras, a2aId: A2aMessageIdSchema.optional() }),
+  A2aMessageEvent,
+  CouncilStageEvent,
 ]);
 
 export type VillageEvent = z.infer<typeof VillageEventSchema>;
@@ -180,6 +210,8 @@ export const VILLAGE_EVENT_TYPES = [
   'discussion.interrupted',
   'discussion.takeaway',
   'discussion.ended',
+  'a2a.message',
+  'council.stage',
 ] as const satisfies readonly VillageEventType[];
 
 /** Live (SSE) or replay (JSON script). Returns an unsubscribe function. */

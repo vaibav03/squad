@@ -92,10 +92,19 @@ export interface EventLog {
 }
 
 // ---------- filter ----------
+/** Who owns a council run / live discussion (A2A privacy). Modelled on `CallRegistry.ownerOf`. */
+export interface CouncilRunRegistry {
+  /** `undefined` = unknown run (default deny). `private` runs show other viewers arrows only, never text. */
+  ownerOf(
+    correlationId: string,
+  ): { askedBy: string; squadId: string; private: boolean } | undefined;
+}
 export interface FilterCtx {
   directory: Directory;
   calls: CallRegistry;
   trips: TripStore;
+  /** Optional until the council runtime lands (W2/W4); without it `a2a.message` and `council.stage` are dropped. */
+  councils?: CouncilRunRegistry;
 }
 /** What the viewer receives on the wire, or null when it must not be sent. */
 export interface WireEvent {
