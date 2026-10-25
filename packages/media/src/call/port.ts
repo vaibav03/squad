@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises';
 import type { AgentId, Citation, StudentId } from '@squad/core';
-import { INTERNAL_HEADER } from '@squad/core';
 import type { BudgetGuard } from '../tts/budget';
 import { sentences, type TtsService } from '../tts/service';
 import type { Transcriber } from './transcribe';
@@ -16,36 +15,6 @@ import type {
 export const MAX_USER_TEXT = 1000;
 export const MAX_HISTORY = 12;
 
-export type SpeakingEmitter = (e: {
-  agent: AgentId;
-  speaking: boolean;
-  callId: string;
-}) => void | Promise<void>;
-
-/** Posts the hub extension envelope `x.persona.speaking` (docs/hub-api.md section 4). Never throws. */
-export function hubSpeakingEmitter(
-  opts: { baseUrl?: string; secret?: string; fetch?: typeof fetch } = {},
-): SpeakingEmitter {
-  return async (e) => {
-    const base = (opts.baseUrl ?? process.env.HUB_BASE_URL ?? 'http://localhost:8788').replace(
-      /\/+$/,
-      '',
-    );
-    const secret =
-      opts.secret ?? process.env.INTERNAL_EVENTS_SECRET ?? process.env.NOOK_INTERNAL_SECRET ?? '';
-    try {
-      await (opts.fetch ?? fetch)(`${base}/internal/events`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', [INTERNAL_HEADER]: secret },
-        body: JSON.stringify({ type: 'x.persona.speaking', data: e }),
-        signal: AbortSignal.timeout(2000),
-      });
-    } catch {
-      /* the hub being down must not break a call */
-    }
-  };
-}
-
 export interface CallPortOptions {
   tts: Pick<TtsService, 'speak'>;
   answer: AnswerFn;
@@ -53,10 +22,7 @@ export interface CallPortOptions {
   personaFor?: (agent: AgentId) => string;
   greeting?: (agent: AgentId) => string;
   transcriber?: Transcriber;
-  emit?: SpeakingEmitter;
   budget?: BudgetGuard;
-  /** Delay before the speaking=false event after the last audio turn. Default 1000 ms. */
-  speakingTailMs?: number;
   log?: (msg: string, ctx?: Record<string, unknown>) => void;
   knownAgent?: (agent: AgentId) => boolean;
 }
@@ -84,11 +50,10 @@ async function* toIter(
  * turn still carries text: the call degrades to captions only.
  */
 export function createCallPort(o: CallPortOptions): CallPort {
-  const tail = o.speakingTailMs ?? 1000;
   return {
     async open({ callId, agent, student }) {
       if (o.knownAgent && !o.knownAgent(agent)) return null;
-      return new Session(o, callId, agent, student, tail);
+      return new Session(o, callId, agent, student);
     },
   };
 }
@@ -97,8 +62,6 @@ class Session implements CallSession {
   private readonly history: HistoryItem[] = [];
   private chunks: Uint8Array[] = [];
   private readonly chunkMime = 'audio/webm';
-  private speaking = false;
-  private timer: ReturnType<typeof setTimeout> | undefined;
   private closed = false;
 
   constructor(
@@ -106,22 +69,10 @@ class Session implements CallSession {
     private readonly callId: string,
     private readonly agent: AgentId,
     private readonly student: StudentId,
-    private readonly tailMs: number,
   ) {}
 
   private persona(): string {
     return (this.o.personaFor ?? defaultPersonaFor)(this.agent);
-  }
-
-  private setSpeaking(on: boolean) {
-    if (this.speaking === on) return;
-    this.speaking = on;
-    void this.o.emit?.({ agent: this.agent, speaking: on, callId: this.callId });
-  }
-
-  private scheduleStop() {
-    if (this.timer) clearTimeout(this.timer);
-    this.timer = setTimeout(() => this.setSpeaking(false), this.tailMs);
   }
 
   private async turn(s: AnswerSentence): Promise<CallTurn> {
@@ -130,8 +81,6 @@ class Session implements CallSession {
     try {
       const r = await this.o.tts.speak(this.persona(), text);
       const data = new Uint8Array(await readFile(r.path));
-      this.setSpeaking(true);
-      if (this.timer) clearTimeout(this.timer);
       return { ...base, audio: { mime: r.mime, data } };
     } catch (e) {
       this.o.log?.('call tts unavailable, captions only', {
@@ -158,7 +107,7 @@ class Session implements CallSession {
         }
       }
     } finally {
-      if (this.speaking) this.scheduleStop();
+      /* nothing to flush */
     }
   }
 
@@ -219,8 +168,6 @@ class Session implements CallSession {
   async close(): Promise<void> {
     this.closed = true;
     this.chunks = [];
-    if (this.timer) clearTimeout(this.timer);
-    this.setSpeaking(false);
   }
 }
 

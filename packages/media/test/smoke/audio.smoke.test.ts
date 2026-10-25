@@ -29,7 +29,7 @@ describe('audio smoke (fakes)', () => {
     expect((await a.tts.speak('cubbie', 'hello')).cached).toBe(true);
     expect(x.durationMs).toBeGreaterThan(300);
 
-    const port = a.callPort({ answer: fakeAnswer, emit: () => undefined });
+    const port = a.callPort({ answer: fakeAnswer });
     const s = (await port.open({ callId: 'c', agent: 'expert:ch5', student: 's' }))!;
     const turns: { text: string; cite?: unknown; audio?: unknown }[] = [];
     for await (const t of s.reply('what is a limit')) turns.push(t);

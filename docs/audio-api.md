@@ -13,7 +13,7 @@ Owner: `packages/media/src/{voices,tts,call,podcast,explainer,delivery}/**` plus
 | `SQUAD_BUDGET_EL_CHARS_HOUR/_TOTAL` | defaults 30000 / 200000 characters |
 | `SQUAD_BUDGET_GEMINI_CALLS_HOUR/_TOTAL` | defaults 300 / 3000 |
 | `SQUAD_BUDGET_GEMINI_IMAGES_HOUR/_TOTAL` | defaults 20 / 100 |
-| `HUB_BASE_URL`, `INTERNAL_EVENTS_SECRET` | for the `x.persona.speaking` envelope |
+| `SQUAD_TTS_CONCURRENCY` | concurrent ElevenLabs requests, default 3 (raise to match the plan) |
 | `SQUAD_LIVE=1` | enables `pnpm --filter @squad/media smoke:live` |
 
 ## Wiring (hub integration step)
@@ -73,12 +73,11 @@ NOT verified (no keys were available in this worktree: `.env` symlink target was
 1. The `/stream` endpoint path and `mp3_44100_64` format for streaming (from memory); `streamSpeak` is unused by the call path, which streams per sentence.
 2. Default stock voice id (Rachel) and that `GET /v1/voices` lists premade voices on the account.
 3. Gemini calls use `models.generateContent` (works in installed `@google/genai` 1.52); current docs show the newer Interactions API (`ai.interactions.create`). Image generation with `responseModalities:['IMAGE']` on `gemini-nano-banana-2.1` and the transcription call are untested live. Each is a one-function change (`GeminiTranscriber.transcribe`, `GeminiImageGen.generate`).
-4. Concurrency default 3 (`TtsService.concurrency`); raise to match the paid plan.
+4. Concurrency default 3, set by `SQUAD_TTS_CONCURRENCY`.
 5. Loudness: tests assert within 3 LU of -16 on synthetic tones; real speech lands closer with single-pass loudnorm but is not measured here.
 
 ## Contract requests
 
 1. Hub `CallSession.audio(chunk)` has no end-of-utterance signal and no way to push turns back. Core input path is `user.text` (browser SpeechRecognition). The session exposes `audio()` buffering and `replyToAudio()` (transcribe with Gemini, answer); the hub would need to call `replyToAudio()` on `mute:true` / a new `{type:'audio.end'}` frame and stream the returned turns. Until then mic audio is buffered, never stored, and ignored.
-2. `postEvent` accepts only `VillageEvent`; the `x.*` envelope is posted by `hubSpeakingEmitter` with raw fetch. Core could expose `postExtension(type, data)`.
-3. Core `Llm` has no `transcribe` (spec 02 mentions `Llm.transcribe`); `GeminiTranscriber` lives in media meanwhile.
-4. Persona ids come from media-art's registry; voice profiles resolve by role regex in `voices/profiles.ts`. If ids change, only that table needs editing.
+2. `GeminiTranscriber` stays in media by decision (no `transcribe` on core `Llm`).
+3. Persona ids come from media-art's registry; voice profiles resolve by role regex in `voices/profiles.ts`. If ids change, only that table needs editing.

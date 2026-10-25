@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { findRepoRoot, loadConfig, type Config } from '@squad/core/node';
-import { createCallPort, hubSpeakingEmitter, type CallPortOptions } from './call/port';
+import { createCallPort, type CallPortOptions } from './call/port';
 import type { CallPort } from './call/types';
 import { createMediaPort, type MediaPort } from './call/media-port';
 import { GeminiTranscriber, type Transcriber } from './call/transcribe';
@@ -64,6 +64,10 @@ export function createAudioServices(o: AudioOptions = {}): AudioServices {
     budget,
     ...(o.fallbackEngine ? { fallbackEngine: o.fallbackEngine } : {}),
     fallbackVoiceId,
+    concurrency:
+      Number(process.env.SQUAD_TTS_CONCURRENCY) > 0
+        ? Math.floor(Number(process.env.SQUAD_TTS_CONCURRENCY))
+        : 3,
   });
   return {
     tts,

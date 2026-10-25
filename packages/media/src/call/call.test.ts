@@ -31,9 +31,8 @@ async function collect(it: AsyncIterable<CallTurn>) {
 }
 
 describe('call port', () => {
-  it('one turn per sentence, audio attached, citation on the cited sentence, speaking events bracket audio', async () => {
+  it('one turn per sentence, audio attached, citation on the cited sentence', async () => {
     const { tts } = await mk();
-    const events: boolean[] = [];
     const port = createCallPort({
       tts,
       answer: fakeAnswer,
@@ -51,10 +50,6 @@ describe('call port', () => {
     expect(turns[0]!.cite).toBeUndefined();
     expect(turns[1]!.cite).toEqual(FIXTURE_CITE);
     expect(turns.every((t) => t.audio && t.audio.data.length > 500)).toBe(true);
-    await new Promise((r) => setTimeout(r, 30));
-    expect(events[0]).toBe(true);
-    expect(events.at(-1)).toBe(false);
-    expect(events.every((v, i) => v === (i % 2 === 0))).toBe(true); // alternating, never stuck on
     await s.close();
   });
 
