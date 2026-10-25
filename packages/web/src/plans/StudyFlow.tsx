@@ -5,6 +5,7 @@ import { Icon } from '../primitives/Icon';
 import { Stepper } from '../primitives/Stepper';
 import { dayLabel, minutesWords, planApi, STATUS_WORD, type PlanHub } from '../overlays/plan/model';
 import { STUDY_FLOW } from './registry';
+import type { PlanSeed } from './context';
 import './plans.css';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -20,11 +21,11 @@ export function studyStepFor(plan: PlanView | null): string {
  * plan card. The hub builds the draft from course materials, the squad's shared Canvas/Google items and busy/free days
  * only; it posts the one plan card into the group chat itself. Labels come from the plan's own generator mode.
  */
-export function StudyFlow({ hub }: { hub: PlanHub | null }) {
+export function StudyFlow({ hub, seed }: { hub: PlanHub | null; seed?: PlanSeed | null }) {
   const [plan, setPlan] = useState<PlanView | null>(null);
   const [step, setStep] = useState('goal');
-  const [examDate, setExamDate] = useState('');
-  const [label, setLabel] = useState('');
+  const [examDate, setExamDate] = useState(seed?.examDate ?? '');
+  const [label, setLabel] = useState(seed?.label ?? '');
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -96,6 +97,16 @@ export function StudyFlow({ hub }: { hub: PlanHub | null }) {
         {STUDY_FLOW.steps[idx]?.hint}
       </p>
 
+      {seed && step !== 'plan' ? (
+        <ul className="sqp-note" data-testid="study-context-chips" aria-label="Context from the answer">
+          {seed.chips.map((c) => (
+            <li key={c.id} data-testid="study-context-chip" data-kind={c.kind}>
+              {c.label}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
       {step === 'goal' ? (
         <form
           className="sqp-form"
@@ -158,7 +169,10 @@ export function StudyFlow({ hub }: { hub: PlanHub | null }) {
               onClick={() =>
                 void run(
                   'draft',
-                  () => planApi.propose(hub!, examDate, label ? { examLabel: label } : {}),
+                  () => planApi.propose(hub!, examDate, {
+                    ...(label ? { examLabel: label } : {}),
+                    ...(seed?.sourceIds.length ? { contextSourceIds: seed.sourceIds } : {}),
+                  }),
                   'draft',
                 )
               }

@@ -195,6 +195,8 @@ export const PlanProposeBodySchema = z.strictObject({
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
   examLabel: z.string().min(1).max(80).optional(),
+  /** "Plan from this answer": the viewer's own imported sources (cited in the answer) the draft is built from. */
+  contextSourceIds: z.array(z.string().min(1).max(80)).max(20).optional(),
 });
 export const PlanRespondBodySchema = z.strictObject({ response: z.enum(['accept', 'decline']) });
 export const PlanEditBodySchema = z.strictObject({
