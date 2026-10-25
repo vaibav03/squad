@@ -8,6 +8,7 @@ import type {
   Persona,
   Student,
   StudentId,
+  LlmStatus,
   VillageEvent,
 } from '@squad/core';
 import type { HubConfig } from './config';
@@ -254,6 +255,16 @@ export interface HubDeps {
   projector: Set<StudentId>;
   filterCtx: FilterCtx;
   now(): number;
+  /** What GET /v1/status reports; set by `main.ts` after wiring (defaults to stub/fake when absent). */
+  runtime?: HubRuntime;
+}
+
+/** Which providers are live right now; read lazily so a mid-run credits switch shows up. */
+export interface HubRuntime {
+  llm(): LlmStatus;
+  /** true when an ElevenLabs engine is wired */
+  tts(): boolean;
+  ports(): 'real' | 'stub';
 }
 
 export type { Citation, Persona, Student, StudentId, VillageEvent, LedgerEntry, AgentId };

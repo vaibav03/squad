@@ -20,6 +20,7 @@ import { createQuizRoutes } from './routes/quiz';
 import { createReplayRoutes } from './routes/replay';
 import { createSimRoutes } from './routes/sim';
 import { createStateRoutes } from './routes/state';
+import { createStatusRoutes } from './routes/status';
 import { createStreamRoutes } from './routes/stream';
 import { seedDemo } from './sim/seed';
 import { createDirectory } from './store/directory';
@@ -99,6 +100,7 @@ export function createHub(opts: HubOptions = {}): Hub {
   for (const routes of [
     createAuthRoutes(deps),
     createInternalRoutes(deps),
+    createStatusRoutes(deps),
     createStateRoutes(deps),
     createStreamRoutes(deps),
     createReplayRoutes(deps),

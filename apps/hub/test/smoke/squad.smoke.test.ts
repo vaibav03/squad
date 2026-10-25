@@ -396,3 +396,24 @@ describe('misc', () => {
     expect((await r.arrayBuffer()).byteLength).toBeGreaterThan(100);
   });
 });
+
+describe('GET /v1/status', () => {
+  it('is public and reports demo mode when no runtime is wired, without secrets', async () => {
+    const r = await get<Record<string, unknown>>(url, '/v1/status');
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ llm: 'fake', tts: 'none', demo: true, ports: 'stub' });
+    expect(r.body.notice).toMatch(/GEMINI_API_KEY/);
+  });
+  it('reflects the runtime: real, then credits_depleted', async () => {
+    let llm: import('@squad/core').LlmStatus = { llm: 'real' };
+    hub.deps.runtime = { llm: () => llm, tts: () => true, ports: () => 'real' };
+    const live = await get<Record<string, unknown>>(url, '/v1/status');
+    expect(live.body).toMatchObject({ llm: 'gemini', tts: 'elevenlabs', demo: false });
+    expect(live.body.notice).toBeUndefined();
+    llm = { llm: 'fake', reason: 'credits_depleted', since: 1 };
+    const dead = await get<Record<string, unknown>>(url, '/v1/status');
+    expect(dead.body).toMatchObject({ llm: 'fake', demo: true, reason: 'credits_depleted' });
+    expect(dead.body.notice).toMatch(/credits are depleted/);
+    hub.deps.runtime = undefined;
+  });
+});
