@@ -24,7 +24,19 @@ if (!panel) {
   }
 }
 
+// ?replay=<url of a JSON array of real VillageEvents>: records them in the room instead of the fixture script.
+const replay = q.get('replay');
+
 function script(s: ReturnType<typeof createRoomSession>) {
+  if (replay) {
+    s.enter(room);
+    void fetch(replay)
+      .then((r) => r.json())
+      .then((events: Parameters<typeof s.record>[1][]) => {
+        for (const e of events) s.record(room, e, Date.now());
+      });
+    return;
+  }
   const say = (member: string, text: string, extra: object = {}) =>
     s.record(room, { t: 'council.opinion', councilId: 'c1', member, text, ...extra }, Date.now());
   s.enter(room);
