@@ -58,7 +58,12 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     key: 'trip',
     path: '/squad/trips/:tripId?',
     title: 'Trip',
-    nav: { label: 'Trip', icon: 'plane', order: 4 },
+    // No nav item: planning happens in the group chat; this path redirects there.
+  },
+  {
+    key: 'plan',
+    path: '/squad/plan',
+    title: 'Plan',
   },
   {
     key: 'status',
