@@ -19,7 +19,7 @@ function scan(): string[] {
   });
   return out;
 }
-const settle = () => act(async () => new Promise((r) => setTimeout(r, 120)));
+const settle = () => act(async () => new Promise((r) => setTimeout(r, 20)));
 
 afterEach(() => {
   cleanup();

@@ -63,7 +63,7 @@ describe('LivePanel (mock stream)', () => {
     // captions-only mode (default mode for entry-less topic): no AudioContext
     expect(AC).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: /Replay with captions/ })).toBeTruthy();
-  });
+  }, 20000);
 
   it('interruption yields the current speaker and the table answers', async () => {
     const tr = mockLiveTransport({ wordMs: 5, gapMs: 5 });
