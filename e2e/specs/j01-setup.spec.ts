@@ -127,7 +127,7 @@ test('J1 other students ingest + calendars through the API (needed by later jour
       body: fd,
     });
     expect(r.status, `${id} course upload`).toBe(202);
-    const icsName = id === 's_chi' ? 's_cam.ics' : `${id}.ics`; // fixtures are named after the agent ids
+    const icsName = `${id}.ics`; // fixtures are named after the agent ids
     const cfd = new FormData();
     cfd.append(
       'file',

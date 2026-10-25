@@ -74,10 +74,11 @@ test('J10 enter every room, read it, leave with Esc', async ({ browser }) => {
   note(`demo-run ${run.status}`);
   // the Oracle, Devil's TA, Rubric and Oral landmarks unlock from their own skills: ask for each in the group chat
   const ana = await apiLogin('s_ana');
+  // rubric before Devil's TA: Devil's TA waits for a follow-up answer and would swallow the next message
   for (const text of [
     '@cubbie exam oracle',
+    '@cubbie rubric check: my answer: The mean is the sum of the values divided by how many there are. rubric: states the definition; gives an example',
     "@cubbie devil's TA ch2",
-    '@cubbie rubric check: the mean is the sum of the values divided by how many there are',
     '@cubbie oral exam',
   ]) {
     const r = await api(ana, '/v1/chat/send', {
@@ -138,7 +139,7 @@ test('J10 enter every room, read it, leave with Esc', async ({ browser }) => {
       return !(hit && (el === hit || el.contains(hit) || hit.contains(el)));
     });
     if (covered) occluded.push(room);
-    await prompt.click({ force: true });
+    await prompt.click({ force: covered });
     await expect(page.getByText(new RegExp(`Inside .*(${KEY[room]})`, 'i')).first()).toBeAttached({
       timeout: 15_000,
     });
