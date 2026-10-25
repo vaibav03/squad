@@ -73,6 +73,13 @@ export const ChatCardSchema = z.discriminatedUnion('type', [
     rev: z.number().int().nonnegative().optional(),
     status: z.string().max(20).optional(),
   }),
+  /** Shared trip plan card; one per trip, refreshed from `GET /v1/trips/:tripId` (docs/trip-planning.md). */
+  z.strictObject({
+    type: z.literal('trip'),
+    tripId: z.string().regex(/^trip_[a-z0-9]{4,16}$/),
+    rev: z.number().int().nonnegative().optional(),
+    status: z.string().max(20).optional(),
+  }),
   z.strictObject({
     type: z.literal('live'),
     liveId: z.string().regex(/^ld_[a-z0-9]{12}$/),
@@ -146,6 +153,8 @@ export const ChatSendBodySchema = z.strictObject({
     .optional(),
   /** Client-generated id: a retry of the same send returns the first message instead of posting a duplicate. */
   clientId: z.string().min(1).max(64).optional(),
+  /** With `clientId`: the first send landed but no answer arrived; ask the bot again for the SAME message (never a new prompt). */
+  retryAnswer: z.boolean().optional(),
   /** Set when this text answers a confirm card: rejected with 409 `stale_confirm` unless that card is still pending. */
   confirmTaskId: z.string().min(1).max(200).optional(),
   /** Imported items attached with "Ask Cubbie" (the hub re-derives every field from the source; see chat-context.ts). */

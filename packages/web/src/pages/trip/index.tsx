@@ -5,12 +5,13 @@ import { TripView } from './TripView';
 import { useTrip } from './useTrip';
 import { claimCutscene, cutsceneHref } from './model';
 import { useLiveConfig } from '../../overlays/kit';
+import { PlanRedirect, usePlanFull } from '../../plans/redirects';
 
 /**
  * /squad/trips (the squad's current trip) and /squad/trips/:tripId. When a trip becomes confirmed while the page is
  * open it hands off to the village cutscene, once per trip per browser.
  */
-export default function TripPage() {
+export function TripFullPage() {
   const { setTitle } = useShell();
   useEffect(() => setTitle('Trip'), [setTitle]);
   const { tripId } = useParams();
@@ -65,4 +66,9 @@ export default function TripPage() {
       onRetry={t.retry}
     />
   );
+}
+
+/** Planning moved into the group chat: redirect, unless `?full=1` asks for the full plan view. */
+export default function TripPage() {
+  return usePlanFull() ? <TripFullPage /> : <PlanRedirect />;
 }

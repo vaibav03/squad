@@ -65,6 +65,9 @@ describe('Council board', () => {
     expect(within(dlg).getByRole('region', { name: 'Council org chart' })).toBeTruthy();
     expect(within(dlg).getByRole('region', { name: 'Message feed' })).toBeTruthy();
     expect(within(dlg).getByTestId('cb-verdict')).toBeTruthy();
+    // specialists have portraits, not letter tiles
+    expect(dlg.querySelectorAll('.cb-tile:not([data-role="code"])')).toHaveLength(0);
+    expect(dlg.querySelectorAll('.cb-card .cb-portrait, .cb-card .cb-card__avatar').length).toBeGreaterThanOrEqual(4);
     const nodes = dlg.querySelectorAll('.cb-node');
     expect(nodes.length).toBeGreaterThanOrEqual(4);
     expect(within(dlg).getAllByText('Chair').length).toBeGreaterThan(0);

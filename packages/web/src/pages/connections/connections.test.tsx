@@ -72,19 +72,9 @@ describe('state badges', () => {
       />,
     );
     expect(screen.getByTestId('conn-state').textContent).toBe(
-      {
-        live: 'Live',
-        fixture: 'Demo data',
-        expired: 'Reauth required',
-        revoked: 'Disconnected',
-        rate_limited: 'Degraded',
-        error: 'Degraded',
-      }[state],
+      { live: 'Live', fixture: 'Demo data', expired: 'Reconnect needed', revoked: 'Disconnected', rate_limited: 'Degraded', error: 'Degraded' }[state],
     );
-    if (state === 'fixture')
-      expect(screen.getByTestId('conn-fixture-note').textContent).toContain(
-        'Fixture (simulated, not your account)',
-      );
+    if (state === 'fixture') expect(screen.getByTestId('conn-fixture-note').textContent).toContain('Fixture (simulated, not your account)');
     else expect(screen.queryByTestId('conn-fixture-note')).toBeNull();
     if (state === 'rate_limited') expect(screen.getByText(/Will retry in/)).toBeTruthy();
   });

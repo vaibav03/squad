@@ -1,4 +1,5 @@
-import type { SourceRow } from '../connections/api';
+import type { Connection, SourceRow } from '../connections/api';
+import { deriveProviderState, type ProviderView } from '../connections/connection-state';
 import { TOUR_PATH } from './gate';
 
 export const STEP_ORDER = ['connect', 'review', 'share'] as const;
@@ -81,3 +82,25 @@ export function sharePlan(
 export const DEMO_CANVAS_FEED = 'https://canvas.example.edu/feeds/calendars/user_demo.ics';
 export const TOUR_ROOT = TOUR_PATH;
 export const TOUR_RETURN = `${TOUR_PATH}/connect`;
+
+/** One data-bearing check shared by the tour, the adapter and the gate (via the one provider state machine). */
+const HAS_DATA = new Set(['live', 'demo', 'syncing', 'degraded']);
+export function providerViews(conns: readonly Connection[], now = Date.now()) {
+  return {
+    canvas: deriveProviderState(
+      'canvas',
+      conns.filter((c) => c.provider === 'canvas'),
+      { now },
+    ),
+    google: deriveProviderState(
+      'google',
+      conns.filter((c) => c.provider === 'google'),
+      { now },
+    ),
+  };
+}
+export const providerHasData = (v: ProviderView): boolean => HAS_DATA.has(v.state);
+export const anyConnected = (conns: readonly Connection[]): boolean => {
+  const v = providerViews(conns);
+  return providerHasData(v.canvas) || providerHasData(v.google);
+};

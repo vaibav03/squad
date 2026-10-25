@@ -57,7 +57,7 @@ describe('focused agent panel: selection', () => {
     expect(within(dlg).getByRole('button', { name: /Close/ }).tagName).toBe('BUTTON');
     expect(dlg.textContent).toMatch(/Status\s*Done/);
   });
-  it('selecting another agent swaps the panel in place: one dialog, announced politely, back on Conversation', async () => {
+  it('selecting another agent swaps the panel in place: one dialog, announced politely, tab kept', async () => {
     const { store } = boot();
     render(<InspectorPanel store={store} mode="replay" />);
     act(() => store.select(SK));
@@ -67,7 +67,7 @@ describe('focused agent panel: selection', () => {
     await settle();
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(screen.getByRole('dialog', { name: /^Teacher/ })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Conversation', selected: true })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Reasoning summary', selected: true })).toBeTruthy();
     const live = document.querySelector('.af-sr[role="status"]')!;
     expect(live.getAttribute('aria-live')).toBe('polite');
     expect(live.textContent).toBe('Now showing Teacher');
@@ -111,6 +111,44 @@ describe('live announcement binds to the selected agent', () => {
     fireEvent.click(screen.getByRole('tab', { name: /^Structure/ }));
     await settle(30);
     expect(live()).toBe('Chapter 6 expert: Structure');
+  });
+});
+
+describe('Next keeps the tab and swaps the art', () => {
+  it('Prev/Next keep the selected tab, change the portrait, and the live text names the new agent', async () => {
+    const { store } = boot();
+    render(<InspectorPanel store={store} mode="replay" />);
+    act(() => store.select('council:ask-chair'));
+    await settle(300);
+    fireEvent.click(screen.getByRole('tab', { name: /^Team/ }));
+    const art = () => document.querySelector('.ai-portrait img')!.getAttribute('src');
+    const before = art();
+    // walk until the focused agent changes to one with a different role
+    for (let i = 0; i < 5 && art() === before; i++) {
+      fireEvent.click(screen.getByRole('button', { name: 'Next agent' }));
+      await settle(30);
+    }
+    expect(store.selected).not.toBe('council:ask-chair');
+    expect(art()).not.toBe(before);
+    expect(screen.getByRole('tab', { name: 'Team', selected: true })).toBeTruthy();
+  });
+});
+
+describe('empty states carry time, source, mode and a way forward', () => {
+  it('a council agent with no run: As of time, Source, Mode, state badge and two CTAs; Structure explains itself', async () => {
+    const { store } = boot({ run: false });
+    render(<InspectorPanel store={store} />);
+    act(() => store.select(SK));
+    await settle();
+    fireEvent.click(screen.getByRole('tab', { name: 'Structure' }));
+    expect(screen.getByText(/Structure shows who reports to whom/)).toBeTruthy();
+    const meta = screen.getAllByTestId('af-meta')[0]!;
+    expect(meta.textContent).toMatch(/As of/);
+    expect(meta.textContent).toMatch(/Source/);
+    expect(meta.textContent).toMatch(/Mode/);
+    expect(meta.querySelector('time')!.getAttribute('title')).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Start a council' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'Ask Cubbie' }).length).toBeGreaterThan(0);
   });
 });
 

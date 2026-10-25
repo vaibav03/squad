@@ -1,7 +1,7 @@
 // "Ask Cubbie" handoff between an imported-item UI (Connections, Home) and the chat composer.
 // The item UI calls `queueAskCubbie` and navigates to the chat; the composer for that chat takes it on mount, asks the hub
 // for a VERIFIED context ref, shows a removable chip and prefills (never sends) the prompt.
-import type { ChatContextRef } from '@squad/core';
+import { providerOfSourceKind, sourceChipLabel, type ChatContextRef } from '@squad/core';
 
 export const PENDING_CONTEXT_KEY = 'squad.pendingContext';
 
@@ -41,5 +41,9 @@ export function takePendingAsk(chatId: string): PendingAsk | null {
 export const defaultPrefill = (title: string): string =>
   `@cubbie what should I focus on for ${title}?`;
 
-export const provenanceBadge = (p: ChatContextRef['provenance']): string =>
-  p === 'fixture' ? 'Fixture (simulated)' : 'Real';
+/** `Demo: Canvas` / `Demo: Google` for simulated sources, `Canvas` / `Google` for real imports. */
+export const provenanceBadge = (p: ChatContextRef['provenance'], kind = ''): string => {
+  const prov = providerOfSourceKind(kind);
+  const fixture = p === 'fixture';
+  return prov ? sourceChipLabel(prov, fixture) : fixture ? 'Demo data' : 'Real';
+};

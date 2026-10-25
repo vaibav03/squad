@@ -70,6 +70,18 @@ const ALIASES: Record<string, string> = {
   'avatar-06': 'dean',
 };
 
+/**
+ * Distinct cast portrait key for a council agent id (`council:ask-chair` is the Chairman, `...-skeptic` the calm
+ * face, `...-practitioner` the strict one, everyone else the balanced face). Never a letter tile.
+ */
+export function councilPortraitKey(id: string): string {
+  const k = id.toLowerCase();
+  if (/chair/.test(k)) return 'chairman';
+  if (/chill|skeptic|teacher/.test(k)) return 'council-chill';
+  if (/grind|practitioner|solver|hard/.test(k)) return 'council-hard';
+  return 'council-balance';
+}
+
 /** Resolve any known id (cast, persona, hub agent, legacy) to a portrait URL. */
 export function pixelPortrait(id: string | undefined | null): string | undefined {
   if (!id) return undefined;

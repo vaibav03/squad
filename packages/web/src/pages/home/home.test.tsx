@@ -107,6 +107,17 @@ describe('setup readers (server state only)', () => {
     answers['/v1/squad/calendar'] = { ics: true };
     expect(await calendarDone(ctx)).toBe(true);
   });
+  it('calendar: reads the hub onboarding integrations (one source with onboarding); demo never counts', async () => {
+    answers['/v1/squad/calendar'] = { ics: false };
+    const int = (o: object) => ({ state: 'live', sub: null, counts: {}, lastSyncAt: 1, demo: false, ...o });
+    answers['/v1/onboarding'] = { integrations: { google: int({ state: 'demo', demo: true }), canvas: int({ state: 'not_connected' }) } };
+    answers['/v1/connections'] = { connections: [live] }; // would say done if the fallback were used
+    expect(await calendarDone(ctx)).toBe(false);
+    answers['/v1/onboarding'] = { integrations: { google: int({}), canvas: int({ state: 'not_connected' }) } };
+    expect(await calendarDone(ctx)).toBe(true);
+    answers['/v1/onboarding'] = { integrations: { google: int({ state: 'reauth_required' }), canvas: int({ counts: { calendarEvents: 3 } }) } };
+    expect(await calendarDone(ctx)).toBe(true);
+  });
   it('calendar: a failed read with nothing proven done is an error, not to do', async () => {
     answers['/v1/connections'] = { connections: [] };
     answers['/v1/squad/calendar'] = new TypeError('boom');

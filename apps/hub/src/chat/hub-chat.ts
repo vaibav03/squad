@@ -206,6 +206,8 @@ export function createChatHub(
   const lastSent = new Map<string, { at: number; text: string; message: ChatMessage }>();
   /** The student message whose bot turn is running: every bot post made inside it is that message's answer. */
   const trigger = new AsyncLocalStorage<{ id: string }>();
+  /** message ids whose answer is being produced right now (retryAnswer must not start a second run) */
+  const answering = new Set<string>();
   let runSeq = 0;
   const botListeners = new Set<(m: ChatMessage) => void>();
   const studentListeners = new Set<(m: ChatMessage, via: string) => void>();
@@ -310,6 +312,42 @@ export function createChatHub(
       const text = body.text.trim();
       if (!text && !(body.attachments?.length ?? 0))
         return { ok: false, status: 400, code: 'invalid' };
+      const startAnswer = (
+        message: ChatMessage,
+        text: string,
+        paths: { path: string; mime: string }[],
+        chatId: string,
+        studentId: string,
+        context: ChatContextRef[] = [],
+      ): void => {
+        const engine = hub.engine;
+        if (!engine) return;
+        answering.add(message.id);
+        const answers = engine.mentions(text, chatId);
+        const run = async () => {
+          const off = answers ? typingStart(chatId, 'cubbie', 'Cubbie') : () => {};
+          try {
+            // one bot turn per stored message: the answers posted inside it are keyed to this message id
+            await trigger.run({ id: message.id }, () =>
+              engine.inject({
+                chatId,
+                from: studentId,
+                text,
+                attachments: paths,
+                ...(context.length ? { context } : {}),
+              }),
+            );
+          } catch (e) {
+            deps.log.error('chat inject failed', { err: (e as Error).name });
+          } finally {
+            off();
+            answering.delete(message.id);
+            inflight.set(studentId, Math.max(0, (inflight.get(studentId) ?? 1) - 1));
+          }
+        };
+        inflight.set(studentId, (inflight.get(studentId) ?? 0) + 1);
+        void run();
+      };
       const t = deps.now();
       const cidKey = body.clientId
         ? `${body.chatId}|${viewer.studentId}|${body.clientId}`
@@ -320,7 +358,18 @@ export function createChatHub(
           clientIds.get(cidKey)?.message ??
           // after a restart the in-memory map is empty: the stored message still carries its clientId
           store.findByClientId(body.chatId, viewer.studentId, body.clientId);
-        if (seen) return { ok: true, message: seen, duplicate: true }; // a retry of a send that already landed
+        if (seen) {
+          // Retry of a send that already landed: never a second prompt. With `retryAnswer` and no answer stored for
+          // it, and none in flight, the SAME message (same id) is answered again, once.
+          if (
+            body.retryAnswer &&
+            hub.engine?.mentions(seen.text, body.chatId) &&
+            !answering.has(seen.id) &&
+            !store.hasReplyTo(body.chatId, seen.id)
+          )
+            startAnswer(seen, seen.text, [], body.chatId, viewer.studentId);
+          return { ok: true, message: seen, duplicate: true };
+        }
       }
       // Double-click guard: identical text from this sender in this chat within 3 s is the same ask.
       const guardKey = `${body.chatId}|${viewer.studentId}`;
@@ -372,7 +421,7 @@ export function createChatHub(
         const cv = { studentId: viewer.studentId, squadIds: [viewer.squadId] };
         for (const c of body.context) {
           const r = deps.context
-            ? buildContextRef(deps.context.store, cv, c.sourceId, c.location?.anchor)
+            ? buildContextRef(deps.context.store, cv, c.sourceId, c.location?.anchor, (src) => deps.context!.courses.name(src.connectionId, src.courseId))
             : undefined;
           if (!r?.ok) return { ok: false, status: 404, code: 'context_unreadable' };
           ctxFull.push(r.ref);
@@ -412,32 +461,7 @@ export function createChatHub(
         if (handled) return { ok: true, message };
       }
 
-      const engine = hub.engine;
-      if (engine) {
-        const answers = engine.mentions(text, body.chatId);
-        const run = async () => {
-          const off = answers ? typingStart(body.chatId, 'cubbie', 'Cubbie') : () => {};
-          try {
-            // one bot turn per stored message: the answers posted inside it are keyed to this message id
-            await trigger.run({ id: message.id }, () =>
-              engine.inject({
-                chatId: body.chatId,
-                from: viewer.studentId,
-                text,
-                attachments: paths,
-                ...(ctxFull.length ? { context: ctxFull } : {}),
-              }),
-            );
-          } catch (e) {
-            deps.log.error('chat inject failed', { err: (e as Error).name });
-          } finally {
-            off();
-            inflight.set(viewer.studentId, Math.max(0, (inflight.get(viewer.studentId) ?? 1) - 1));
-          }
-        };
-        inflight.set(viewer.studentId, (inflight.get(viewer.studentId) ?? 0) + 1);
-        void run();
-      }
+      startAnswer(message, text, paths, body.chatId, viewer.studentId, ctxFull);
       return { ok: true, message };
     },
     postExternal(p) {
@@ -500,12 +524,23 @@ export function createChatHub(
           );
         }
       }
+      // A reply that cites any fixture/demo import is Demo, whatever the model mode: sources decide, never "Live".
+      if (
+        mode !== 'demo' &&
+        citations.some((c) => {
+          const s = c.source ? deps.context?.store.source(c.source.id) : undefined;
+          return !!s && /fixture|demo/i.test(s.provenance);
+        })
+      )
+        mode = 'demo';
       // ONE rule for what a reply may claim: only verified citations survive; the rest is an explicit label.
       const composed = composeProvenance({
         text,
         citations,
         verify: verifyCitation,
         mode,
+        isFixture: (c) =>
+          !!c.source && !!deps.context?.store.source(c.source.id)?.provenance.endsWith(':fixture'),
         hint: p.provenance,
         via: lastVia.get(p.chatId) ?? 'web',
       });

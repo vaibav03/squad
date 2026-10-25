@@ -156,7 +156,8 @@ describe('send with context', () => {
       provenance: 'fixture',
       courseName: 'Statistics 101',
     });
-    expect(reply.provenance).toMatchObject({ kind: 'grounded' });
+    expect(reply.provenance).toMatchObject({ kind: 'grounded', mode: 'demo' });
+    expect(reply.provenance!.label).toMatch(/demo data/);
     // the source viewer opens the verified snippet
     const q = new URLSearchParams({
       id: essay.id,
@@ -217,5 +218,64 @@ describe('study plan seeded from imports persists', () => {
     expect(again.generator.mode).toBe(plan.generator.mode);
     const cur = await fetch(`${url}/v1/plans/current`, { headers: auth(ana) });
     expect(((await cur.json()) as { plan: PlanView }).plan.id).toBe(plan.id);
+  });
+});
+
+describe('due windows and relevance in chat answers', () => {
+  it('"what is due from Canvas this week" lists only the next 7 days, with course names and exact dates, no later items', async () => {
+    add('s_chi', 'canvas_assignment', 'w1', 'seed', {}, 'seed'); // another student's data never appears
+    const soon = add(
+      's_ana',
+      'canvas_assignment',
+      'w_soon',
+      'HIST 140 Reading response 2',
+      { dueAt: Date.now() + 2 * DAY },
+      'Course: HIST 140: World History\nWrite a one page response.',
+    );
+    add(
+      's_ana',
+      'canvas_assignment',
+      'w_later',
+      'HIST 140 Term paper',
+      { dueAt: Date.now() + 12 * DAY },
+      'Course: HIST 140: World History\nTen pages.',
+    );
+    const out = await sendAndWait(
+      ana,
+      'dm:s_ana',
+      '@cubbie what is due from Canvas this week? Include course names and exact due dates.',
+    );
+    const reply = out.replies.map((m) => m.text).join('\n');
+    expect(reply).toContain('HIST 140 Reading response 2 (HIST 140: World History)');
+    expect(reply).toMatch(/due \w+day, \w+ \d+, \d+:\d\d (AM|PM) UTC/);
+    expect(reply).not.toContain('Term paper');
+    const chips = out.replies.flatMap((m) => m.citations);
+    expect(chips.some((c) => c.source?.id === soon.id && c.source.courseName === 'HIST 140: World History')).toBe(true);
+    expect(chips.every((c) => !/Term paper/.test(c.label))).toBe(true);
+  });
+
+  it('nothing in the window: says so, names the next item, offers the follow-up; the follow-up lists later items', async () => {
+    const out = await sendAndWait(ana, 'dm:s_ana', '@cubbie what is due tomorrow?');
+    const t = out.replies.map((m) => m.text).join('\n');
+    expect(t).toMatch(/Nothing due tomorrow/);
+    expect(t).toContain('what is due after this week');
+    const later = await sendAndWait(ana, 'dm:s_ana', '@cubbie what is due after this week?');
+    expect(later.replies.map((m) => m.text).join('\n')).toContain('Term paper');
+  });
+
+  it('a question the sources do not cover gets no evidence chip for an unrelated source', async () => {
+    add(
+      's_ana',
+      'canvas_assignment',
+      'h215',
+      'HIST 215 Reading response: Atlantic trade',
+      {},
+      'Course: HIST 215\nWrite a reading response on the Atlantic trade essays.',
+    );
+    const out = await sendAndWait(ana, 'dm:s_ana', '@cubbie what are the HIST 140 discussion board details for week nine?');
+    const r = out.replies.at(-1)!;
+    expect(r.text).not.toMatch(/Atlantic trade essays/);
+    for (const c of r.citations) expect(c.source?.relation).toBe('related');
+    if (r.citations.length) expect(r.provenance).toMatchObject({ kind: 'no_sources', sources: 0 });
   });
 });

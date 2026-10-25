@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GOOGLE_SCOPES } from '@squad/brain';
+import { GOOGLE_SCOPES, courseLabel } from '@squad/brain';
 import { createHub } from '../app';
 import { signToken } from '../auth';
 import { contextServiceFor } from './service';
@@ -41,7 +41,7 @@ describe('demo workspaces', () => {
     expect(r.status).toBe(201);
     const c = r.json.connection;
     expect(c).toMatchObject({ mode: 'fixture', fixture: true, integrationState: 'demo', variant: 'demo' });
-    expect(c.account.label).toBe('Fixture (simulated, not your account)');
+    expect(c.account).toEqual({ label: 'Demo workspace (simulated)', name: 'Demo student' });
     expect(c.modeLabel).toMatch(/^Demo data/);
     expect(c.counts).toEqual({
       courses: 3, modules: 6, assignments: 6, pages: 6, files: 3, announcements: 3,
@@ -178,7 +178,7 @@ describe('onboarding and sharing', () => {
     expect(cal.json.results.some((x: any) => x.kind === 'gcal_event' || x.kind === 'canvas_event')).toBe(false);
     expect(cal.text).not.toMatch(/Climbing|Rec centre/);
     const ben = await call('GET', '/v1/connections/health', 's_ben');
-    expect(ben.text).not.toMatch(/Climbing|DATA 101 lecture|Study group/);
+    expect(ben.text).not.toMatch(/Climbing|STAT 101 lecture|Study group/);
     // busy blocks: start/end only
     const blocks = contextBusyBlocks(hub.deps, 's_ana');
     expect(blocks.length).toBeGreaterThan(4);
@@ -188,5 +188,61 @@ describe('onboarding and sharing', () => {
     const after = (await call('GET', '/v1/connections/items', 's_ana')).json.items as any[];
     expect(after.every((i) => i.sharing === 'private')).toBe(true);
     expect((await call('GET', '/v1/context/search?q=osmosis%20membrane', 's_ben')).json.results).toEqual([]);
+  });
+});
+
+describe('course records, account card, scope words', () => {
+  it('every Canvas demo item resolves courseName + courseCode; items, sources, retrieval and citations carry them', async () => {
+    const { canvasDemo, call, svc } = setup();
+    const c = (await canvasDemo()).json.connection;
+    const items = (await call('GET', '/v1/connections/items', 's_ana')).json.items as any[];
+    for (const i of items) {
+      expect(i.courseName).toBeTruthy();
+      expect(i.courseCode).toMatch(/^[A-Z]+ \d+$/);
+      expect(i.courseLabel).toBe(`${i.courseCode}: ${i.courseName}`);
+    }
+    expect(items.some((i) => i.courseLabel === 'HIST 140: Modern World History')).toBe(true);
+    expect(items.some((i) => i.courseLabel === 'STAT 101: Introduction to Statistics')).toBe(true);
+    const srcs = (await call('GET', `/v1/connections/${c.id}/sources`, 's_ana')).json.sources as any[];
+    expect(srcs.every((s) => s.courseName && s.courseCode)).toBe(true);
+    // retrieval hit + citation
+    const hit = (await call('GET', '/v1/context/search?q=' + encodeURIComponent('monsoon winds ships Indian Ocean'), 's_ana')).json.results[0];
+    expect(hit.courseName).toBe('Modern World History');
+    expect(hit.courseCode).toBe('HIST 140');
+    expect(hit.citation.source.courseName).toBe('HIST 140: Modern World History');
+    expect(courseLabel(hit)).toBe('HIST 140: Modern World History');
+    // Ask Cubbie ref
+    const ref = (await call('GET', `/v1/chat/context-ref?sourceId=${hit.sourceId}`, 's_ana')).json;
+    if (ref?.ref) expect(ref.ref.courseName).toBe('HIST 140: Modern World History');
+    // demo due dates: >= 2 within 1-6 days, the rest within 8-14
+    const due = items.filter((i) => i.kind === 'canvas_assignment').map((i) => (i.whenAt - T0) / 86_400_000);
+    expect(due.filter((d) => d >= 1 && d <= 6.99).length).toBeGreaterThanOrEqual(2);
+    expect(due.filter((d) => d > 6.99).every((d) => d >= 8 && d <= 15)).toBe(true);
+    // purge removes the course records with the sources
+    await call('DELETE', `/v1/connections/${c.id}`, 's_ana');
+    expect(svc.store.course(c.id, 'hist140')).toBeUndefined();
+  });
+
+  it('demo accounts show a name (never None); scopes come with one-line words', async () => {
+    const { canvasDemo, googleDemo } = setup();
+    const cv = (await canvasDemo()).json.connection;
+    expect(cv.account).toEqual({ label: 'Demo workspace (simulated)', name: 'Demo student' });
+    const g = (await googleDemo()).json.connection;
+    expect(g.account.name).toBe('Demo student');
+    expect(g.grantedScopeLabels).toHaveLength(g.grantedScopes.length);
+    expect(g.grantedScopeLabels.every((x: string) => x.length > 10 && !/^Read-only access:/.test(x))).toBe(true);
+    expect(cv.grantedScopes).toEqual(['canvas.demo_workspace']);
+    expect(cv.grantedScopeLabels[0]).toMatch(/Demo workspace/);
+  });
+
+  it('GET /v1/onboarding also answers the flat connected / skippedAt fields the web adapter reads', async () => {
+    const { call, canvasDemo } = setup();
+    let o = (await call('GET', '/v1/onboarding', 's_ana')).json;
+    expect(o).toMatchObject({ connected: false, skippedAt: null });
+    await canvasDemo();
+    o = (await call('GET', '/v1/onboarding', 's_ana')).json;
+    expect(o.connected).toBe(true);
+    const sk = (await call('POST', '/v1/onboarding/skip', 's_ben')).json;
+    expect(sk).toMatchObject({ skippedAt: T0, connected: false });
   });
 });

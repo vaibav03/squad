@@ -101,6 +101,25 @@ const ITEM_TYPE: Record<string, string> = {
 };
 export const itemTypeLabel = (k: string): string => ITEM_TYPE[k] ?? k.replace(/_/g, ' ');
 
+const COUNT_NOUN: [string, string][] = [
+  ['courses', 'course'],
+  ['modules', 'module'],
+  ['assignments', 'assignment'],
+  ['pages', 'page'],
+  ['files', 'file'],
+  ['announcements', 'announcement'],
+  ['calendarEvents', 'calendar event'],
+  ['driveDocs', 'Drive doc'],
+  ['classroomItems', 'Classroom item'],
+];
+/** Per-type count lines from the hub's `counts` (stable keys), else from the kinds. Correct plurals; zero types omitted. */
+export function countLines(
+  c: { counts?: Record<string, number> | undefined; sources: { byKind: Record<string, number> } },
+): string[] {
+  if (c.counts) return COUNT_NOUN.filter(([k]) => (c.counts![k] ?? 0) > 0).map(([k, noun]) => plural(c.counts![k]!, noun));
+  return kindCounts(c.sources.byKind);
+}
+
 export const CALENDAR_KINDS = new Set(['gcal_event', 'canvas_event']);
 
 /** Honest copy for extension/bridge/hub error codes. */

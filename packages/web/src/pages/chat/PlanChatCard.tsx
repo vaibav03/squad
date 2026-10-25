@@ -28,7 +28,7 @@ export function PlanChatCard({ hub, planId, status, rev }: PlanChatCardProps) {
   const badge = plan ? planBadge(plan.generator) : null;
   const sources = plan ? plan.citations : [];
   return (
-    <div className="sqc-plancard" data-testid="chat-plan-card">
+    <div className="sqc-plancard" data-testid="chat-plan-card" data-plan-id={planId}>
       <strong>Study plan</strong>
       <span className="rr-dim">
         {' '}

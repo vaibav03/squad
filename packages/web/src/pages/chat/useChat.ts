@@ -321,6 +321,8 @@ export interface ChatController {
   /** when a message came in over the stream (ms), for the short entrance of live arrivals */
   arrivedAt(messageId: string): number | undefined;
   retry(chatId: string, localId: string): Promise<boolean>;
+  /** No answer came: ask again for the SAME message (same clientId, hub never stores a second prompt). */
+  retryAnswer(chatId: string, message: ChatMessage): Promise<boolean>;
   discard(chatId: string, localId: string): void;
   /** Retry a failed iMessage delivery; the new state arrives as a `chat.sync` event. */
   retryDelivery(messageId: string): Promise<boolean>;
@@ -681,6 +683,24 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
     },
     [doSend],
   );
+  const retryAnswer = useCallback(
+    async (chatId: string, message: ChatMessage) => {
+      if (!api || !message.clientId) return false;
+      try {
+        await api.send({
+          chatId,
+          text: message.text,
+          clientId: message.clientId,
+          retryAnswer: true,
+        });
+        return true;
+      } catch (e) {
+        if (isExpired(e)) expire();
+        return false;
+      }
+    },
+    [api, expire],
+  );
   const retryDelivery = useCallback(
     (messageId: string) =>
       api?.retryImessage ? api.retryImessage(messageId) : Promise.resolve(false),
@@ -765,6 +785,7 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
     confirm,
     arrivedAt: (id) => arrived.current.get(id),
     retry,
+    retryAnswer,
     retryDelivery,
     discard,
     reload,
