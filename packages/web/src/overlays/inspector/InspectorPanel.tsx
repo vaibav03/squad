@@ -8,7 +8,7 @@ import {
 import { roomInfo } from '@squad/village/rooms';
 import { LvIcon, usePresence, usePrefersReducedMotion } from '../kit';
 import { providerState } from '@squad/village/council';
-import { pixelPortrait } from '../../pixel/portraits';
+import { councilPortraitKey, pixelPortrait } from '../../pixel/portraits';
 import { useNow, useSelectedView, useStoreVersion } from './useInspector';
 import { useRoomSnapshot } from './useRoomSession';
 import { AgentsTab, ChatTab } from './Conversation';
@@ -36,7 +36,7 @@ type Tab = FocusTab;
 /** Pixel portrait for an agent: the viewer is the red hood, other students share the freshman look. */
 export function portraitFor(v: Pick<ActivityView, 'id' | 'kind' | 'isMe'>): string | undefined {
   if (v.kind === 'student') return pixelPortrait(v.isMe ? 'student' : 'freshman');
-  if (v.kind === 'council') return pixelPortrait('council-balance');
+  if (v.kind === 'council') return pixelPortrait(councilPortraitKey(v.id));
   return pixelPortrait(v.kind);
 }
 
@@ -104,10 +104,13 @@ export function InspectorPanel({
   const voice = sel && councilWho !== null ? store.voice(councilWho, sel) : null;
   const voiceNote = useAgentNote(voice?.who || sel || undefined);
   const openKey = sel ? `${sel}|${room?.slot ?? ''}|${room?.who ?? ''}` : null;
-  // Every open or swap lands on Conversation: what this agent said and was told, nothing else.
+  // Opening lands on Conversation: what this agent said and was told. Swapping to another agent (Next, a chip) keeps
+  // the tab the user is on.
+  const wasOpen = useRef(false);
   useEffect(() => {
-    if (openKey) setTab('conversation');
-  }, [openKey, roomKey]);
+    if (openKey && !wasOpen.current) setTab('conversation');
+    wasOpen.current = !!openKey;
+  }, [openKey]);
   // Words the room session recorded for this room join the council thread (deduped against the event stream).
   const sessionSnap = useRoomSnapshot();
   const roomSlot = room?.slot;
@@ -143,6 +146,15 @@ export function InspectorPanel({
 
   // The control that opened (or last swapped) the panel; Esc and Close hand focus back to it.
   const origin = useRef<HTMLElement | null>(null);
+  const lastButton = useRef<{ el: HTMLElement; at: number } | null>(null);
+  useEffect(() => {
+    const on = (e: FocusEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && t.tagName === 'BUTTON') lastButton.current = { el: t, at: Date.now() };
+    };
+    document.addEventListener('focusin', on);
+    return () => document.removeEventListener('focusin', on);
+  }, []);
   const close = () => {
     store.select(null);
     store.setFollow(false);
@@ -183,9 +195,13 @@ export function InspectorPanel({
     if (!openedId) return;
     const a = document.activeElement as HTMLElement | null;
     const outside = !!a && a !== document.body && !root.current?.contains(a);
-    // remember the opener (a real control; the canvas and body fall back to the stage)
-    if (outside && a!.tagName !== 'CANVAS' && !a!.matches('[data-stage]')) origin.current = a;
-    wantFocus.current = outside && a!.matches(':focus-visible') && a!.tagName !== 'CANVAS';
+    // The opener is the last real control that took focus a moment ago (the village may move focus to the stage in
+    // the same click); the canvas and body fall back to the stage.
+    const lb = lastButton.current;
+    if (lb && lb.el.isConnected && Date.now() - lb.at < 1500 && !root.current?.contains(lb.el))
+      origin.current = lb.el;
+    wantFocus.current =
+      outside && a!.tagName === 'BUTTON' && a!.matches(':focus-visible') && !root.current?.contains(a);
   }, [openedId]);
   useEffect(() => {
     if (wantFocus.current && root.current) {
@@ -487,7 +503,7 @@ export function InspectorPanel({
         titleId={titleId}
         name={name}
         role={roleWords}
-        portrait={portrait ? <AgentPortrait src={portrait} /> : null}
+        portrait={portrait ? <AgentPortrait key={portrait} src={portrait} /> : null}
         provider={provider}
         status={statusNode}
         tab={tab}
@@ -497,7 +513,7 @@ export function InspectorPanel({
         tabAddon={{
           reasoning:
             (voice ? voice.thinking : v.thinking) ? (
-              <span className="ai-dots" role="status" aria-label="Thinking now">
+              <span className="ai-dots" role="status" aria-label="Working now">
                 <i />
                 <i />
                 <i />
@@ -576,7 +592,7 @@ function VoiceThought({
     <div data-testid="voice-thinking">
       <section className="ai-think" aria-label="Thinking">
         <h3 className="ai-label">
-          {voice.who ? `How ${voice.name} is thinking` : 'How the council is thinking'}
+          {voice.who ? `What ${voice.name} has shared` : 'What the council has shared'}
           {voice.thinking && <span className="ai-live">live</span>}
         </h3>
         <div className="ai-bubble" data-source={voice.thought.source}>

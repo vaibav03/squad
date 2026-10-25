@@ -7,7 +7,8 @@ import {
 } from '@squad/village/council';
 import { openBoard, useBoardVersion } from '../../council/board/bridge';
 import { ModeBadge } from '../../council/board/ModeBadge';
-import { EmptyCouncilState, LastRunLabel } from '../../council/last-run/components';
+import { EmptyHelp } from './focus/EmptyHelp';
+import { LastRunLabel } from '../../council/last-run/components';
 import { useCouncilHub } from '../../council/last-run/hub';
 import { useLastRunsState } from '../../council/last-run/store';
 
@@ -96,10 +97,12 @@ export function HierarchyTab({
           ? 'This agent was not on the last council.'
           : 'Not part of a council run yet.'}
       </p>
+      <p className="af-dim">
+        Structure shows who reports to whom in a council: the Chair on top, specialists under it, and who asked whom.
+        It fills in when this agent takes part in a council run.
+      </p>
       <LastRunLabel runId={lastBoard?.runId ?? stored.runs[0]?.id} />
-      {lastBoard || stored.runs.length || !hub ? null : (
-        <EmptyCouncilState hub={hub} store={board} hideStrip heading="No council has met yet" />
-      )}
+      <EmptyHelp isCouncil topic="this agent" />
     </div>
   );
   if (!board) return <div className="ai-tabpanel">{empty}</div>;

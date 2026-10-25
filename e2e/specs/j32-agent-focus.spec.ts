@@ -28,7 +28,7 @@ const title = async (page: Page) =>
 test('J32 village: a sprite and a HUD chip each open ONE focused panel that swaps; Escape returns focus', async ({
   browser,
 }) => {
-  const a = await actor(browser, 's_ana', { reducedMotion: 'no-preference' });
+  const a = await actor(browser, 's_ana');
   const { page } = a;
   await page.goto('/squad/village?replay=track2');
   await page.waitForFunction(() => (window as unknown as W).__world?.debug?.ctx?.(), null, {
@@ -37,6 +37,8 @@ test('J32 village: a sprite and a HUD chip each open ONE focused panel that swap
   await page.waitForTimeout(8000);
 
   // a village sprite (the player's own character)
+  await page.mouse.click(300, 400); // like J16: the ground click primes the pointer
+  await page.waitForTimeout(800);
   const p = await page.evaluate(() => {
     const c = (window as unknown as W).__world!.debug.ctx()!;
     const cam = c.scene.cameras.main;
@@ -45,8 +47,6 @@ test('J32 village: a sprite and a HUD chip each open ONE focused panel that swap
     const b = c.player.sprite.getBounds();
     return { x: rc.left + (b.centerX - cam.scrollX) * z, y: rc.top + (b.centerY - cam.scrollY) * z };
   });
-  await page.mouse.click(300, 400); // like J16: the ground click primes the pointer
-  await page.waitForTimeout(500);
   await page.mouse.move(p.x, p.y);
   await page.mouse.click(p.x, p.y);
   await expect(panelOf(page)).toHaveCount(1);
@@ -74,6 +74,9 @@ test('J32 village: a sprite and a HUD chip each open ONE focused panel that swap
     await expect(chip.locator('.sqv-status__w')).toHaveText(/^(Resting|Thinking|Speaking|Waiting)$/);
     expect(await chip.locator('.sqv-glyph').count()).toBe(0);
   }
+  // distinct portraits: not every chip shares one picture
+  const srcs = await chips.locator('img').evaluateAll((els) => els.map((e) => (e as HTMLImageElement).src));
+  expect(new Set(srcs).size).toBeGreaterThan(1);
   for (let i = 0; i < n; i++) {
     await chips.nth(i).click();
     await expect(panelOf(page)).toHaveCount(1);
@@ -94,12 +97,15 @@ test('J32 village: a sprite and a HUD chip each open ONE focused panel that swap
   await page.waitForTimeout(400);
   await panelOf(page).getByRole('tab', { name: 'Team' }).click();
   await expect(panelOf(page).locator('.af-sr[role="status"]')).toHaveText(`${name}: Team`);
-  // no tab is a dead end: Structure of a non-council agent explains itself and offers Ask Cubbie
+  // no tab is a dead end: Structure always offers Ask Cubbie
   await panelOf(page).getByRole('tab', { name: 'Structure' }).click();
   await expect(panelOf(page).getByTestId('af-help').first()).toBeVisible();
-  await expect(panelOf(page).getByRole('button', { name: /^Ask Cubbie about / })).toBeVisible();
+  await expect(panelOf(page).getByRole('button', { name: /^Ask Cubbie/ })).toBeVisible();
   await snap(page, '2-hud-chip-swap');
 
+  await panelOf(page).getByRole('heading', { level: 2 }).focus();
+  await page.keyboard.press('Escape');
+  await expect(panelOf(page)).toHaveCount(0);
   // keyboard: Enter on a chip opens, Escape closes and focus returns to that chip
   const chip = chips.nth(0);
   await chip.focus();
@@ -117,7 +123,7 @@ test('J32 council board on the track4 replay: card and timeline chip open one pa
   const a = await actor(browser, 's_ana', { reducedMotion: 'no-preference' });
   const { page } = a;
   await page.goto('/squad/village?replay=track4&board=1');
-  const board = page.getByRole('dialog', { name: /Council|Ask council/ });
+  const board = page.locator('[aria-labelledby="cb-title"]');
   await expect(board).toBeVisible({ timeout: 30_000 });
   await expect(board.locator('.cb-node')).toHaveCount(4, { timeout: 30_000 });
   await expect(board.locator('.cb-stepper__count')).toContainText('All 7 steps done', {

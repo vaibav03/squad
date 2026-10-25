@@ -822,3 +822,12 @@
 .lv-ovl .lv-ovl__panel.cb-panel {
   position: relative;
 }
+.cb-portrait {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  border: 2px solid var(--sq-ink);
+  border-radius: 6px;
+  background: var(--lv-surface-3, var(--secondary));
+}

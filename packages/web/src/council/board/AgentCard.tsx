@@ -1,6 +1,7 @@
 import type { BoardAgent } from '@squad/village/council';
 import { CastAvatar } from '../../components/cast-avatar';
 import { castName, type CastState } from '../../components/cast-avatar/busts';
+import { councilPortraitKey, pixelPortrait } from '../../pixel/portraits';
 import { ModeBadge } from './ModeBadge';
 import { ROLE_LABEL, StatusChip, classes } from './common';
 
@@ -10,6 +11,16 @@ export function InitialTile({ name, role }: { name: string; role: BoardAgent['ro
     <span className="cb-tile" data-role={role} aria-hidden="true">
       {role === 'code' ? '⚙' : name.trim().charAt(0).toUpperCase()}
     </span>
+  );
+}
+
+/** Distinct pixel portrait for a roster agent without cast art (specialists); code checks keep the gear tile. */
+export function AgentPortraitTile({ agent }: { agent: BoardAgent }) {
+  const src = agent.role === 'code' ? undefined : pixelPortrait(councilPortraitKey(agent.id));
+  return src ? (
+    <img className="cb-portrait" src={src} alt="" width={32} height={32} aria-hidden="true" />
+  ) : (
+    <InitialTile name={agent.name} role={agent.role} />
   );
 }
 
@@ -38,7 +49,7 @@ export function AgentCard({ agent, calm, selected, highlighted }: AgentCardProps
             <CastAvatar name={cast} state={state} size={1} {...(calm ? { calm: true } : {})} />
           </span>
         ) : (
-          <InitialTile name={agent.name} role={agent.role} />
+          <AgentPortraitTile agent={agent} />
         )}
         <span className="cb-card__name">{agent.name}</span>
         <StatusChip status={agent.status} />

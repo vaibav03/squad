@@ -15,7 +15,7 @@ import { HandoffTimeline } from '../../overlays/inspector/focus/HandoffTimeline'
 import { EmptyHelp } from '../../overlays/inspector/focus/EmptyHelp';
 import '../../overlays/inspector/inspector.css';
 import '../../overlays/inspector/focus/focus.css';
-import { InitialTile } from './AgentCard';
+import { AgentPortraitTile } from './AgentCard';
 import { ModeBadge } from './ModeBadge';
 import { ROLE_LABEL, STATUS_LABEL } from './common';
 
@@ -41,7 +41,6 @@ export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onC
   const [tab, setTab] = useState<FocusTab>('conversation');
   const titleId = useId();
   const root = useRef<HTMLDivElement>(null);
-  useEffect(() => setTab('conversation'), [agentId]);
   // Esc closes this panel only (not the board behind it); the board hands focus back to the control that opened it.
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -167,7 +166,7 @@ export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onC
           cast ? (
             <CastAvatar name={cast} state="idle" size={1} {...(calm ? { calm: true } : {})} />
           ) : (
-            <InitialTile name={agent.name} role={agent.role} />
+            <AgentPortraitTile agent={agent} />
           )
         }
         provider={provider}

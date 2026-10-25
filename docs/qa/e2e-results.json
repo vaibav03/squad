@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T14:51:45.484Z",
+  "at": "2026-10-25T15:18:30.145Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -453,22 +453,64 @@
     "ms": 71697
    },
    {
-    "title": "J32 council board on the track4 replay: card and timeline chip open one panel; Conversation shows only that agent",
-    "status": "pass",
-    "note": "",
-    "ms": 15756
+    "title": "J17 Council Hall: click the chair and a member, the popup opens on the chat, Esc closes",
+    "status": "fail",
+    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+    "ms": 15746
    },
    {
     "title": "J16 clicking the ground never moves the player; clicking a character opens the inspector",
+    "status": "fail",
+    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).not.\u001b[22mtoBeEmpty\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+    "ms": 21209
+   },
+   {
+    "title": "J20 council board on the track4 replay: org chart, feed filters, verdict with dissent, Demo badge",
     "status": "pass",
     "note": "",
-    "ms": 11558
+    "ms": 15809
+   },
+   {
+    "title": "J20 degraded replay says Degraded with its reason, in a word and a glyph",
+    "status": "pass",
+    "note": "",
+    "ms": 13834
+   },
+   {
+    "title": "J20 Calm: the board is static and still complete",
+    "status": "pass",
+    "note": "",
+    "ms": 13603
+   },
+   {
+    "title": "J20 fixture session: action buttons call the hub and say plainly when it does not know the item",
+    "status": "pass",
+    "note": "",
+    "ms": 1610
+   },
+   {
+    "title": "J20 arrows: messages between council agents draw links in the Council Hall room (static in Calm)",
+    "status": "pass",
+    "note": "",
+    "ms": 11006
+   },
+   {
+    "title": "J20 Hierarchy tab in the Agent Inspector shows position, delegations and opens the board",
+    "status": "fail",
+    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+    "ms": 35666
    },
    {
     "title": "J32 village: a sprite and a HUD chip each open ONE focused panel that swaps; Escape returns focus",
-    "status": "fail",
-    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveCount\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed",
-    "ms": 20417
+    "status": "pass",
+    "note": "",
+    "ms": 15052
+   },
+   {
+    "title": "J32 council board on the track4 replay: card and timeline chip open one panel; Conversation shows only that agent",
+    "status": "pass",
+    "note": "",
+    "ms": 16009
    }
   ]
  }
