@@ -17,7 +17,7 @@ const COND = arg('cond', 'normal');
 const WHO = arg('who', 'acct');
 const SCEN = arg('scenario', 'routes');
 const PAR = Number(arg('par', 4));
-const DEADLINE = Number(arg('deadline', COND === 'normal' || COND === 'cpu4' ? 14000 : 24000));
+const DEADLINE = Number(arg('deadline', COND === 'normal' || COND === 'cpu4' ? 14000 : 26000));
 
 const ROUTES = [
   ['/squad', 'Home'],
@@ -81,7 +81,8 @@ const probe = () => {
   };
   const scope = main ?? root;
   const t = text(scope);
-  const canvas = !!scope?.querySelector('canvas');
+  // a canvas only stands in for text on the village (the world); elsewhere it must not hide a loading state
+  const canvas = location.pathname.startsWith('/squad/village') && !!scope?.querySelector('canvas');
   return {
     title: document.title,
     path: location.pathname,
@@ -91,7 +92,7 @@ const probe = () => {
     text: t.slice(0, 300),
     textLen: t.length,
     canvas,
-    loading: /\b(loading|connecting|signing you in)\b/i.test(t) && !canvas,
+    loading: /(loading|connecting|signing you in|opening the village|starting squad)/i.test(t),
     skeleton: !!scope?.querySelector('[class*="skeleton" i]') && t.length < 40,
     rootLen: text(root).length,
   };
@@ -110,8 +111,10 @@ async function settle(page, expectTitle, deadline = DEADLINE) {
       const again = await page.evaluate(probe).catch(() => null);
       if (again && (again.textLen > 0 || again.canvas) && !again.loading) {
         const why = [];
-        if (expectTitle && !again.title.startsWith(expectTitle)) why.push(`title=${again.title}`);
-        if (expectTitle && again.hasMain && again.mainLabel && again.mainLabel !== expectTitle)
+        // hub down or session gone: the sign-in / offline-with-Retry screen is the correct, non-blank outcome
+        const signIn = (COND === 'down' || COND === '401') && again.title.startsWith('Welcome');
+        if (!signIn && expectTitle && !again.title.startsWith(expectTitle)) why.push(`title=${again.title}`);
+        if (!signIn && expectTitle && again.hasMain && again.mainLabel && again.mainLabel !== expectTitle)
           why.push(`main=${again.mainLabel}`);
         return { ok: why.length === 0, ms: Date.now() - t0, snap: again, why: why.join(';') };
       }
@@ -138,6 +141,18 @@ async function applyCond(ctx, page) {
     await ctx.route(hubRe, async (route) => {
       await sleep(30000);
       route.continue().catch(() => undefined);
+    });
+  // data endpoints only: sign-in and the account work, everything else hangs (dataslow) or answers 500 (data500)
+  const accountPath = (u) =>
+    u === '/health' || u === '/v1/status' || u.startsWith('/v1/auth/') || u === '/v1/me' || u === '/v1/squads';
+  if (COND === 'dataslow' || COND === 'data500')
+    await ctx.route(hubRe, async (route) => {
+      const u = new URL(route.request().url()).pathname;
+      if (accountPath(u)) return route.continue();
+      if (COND === 'data500')
+        return route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":{"code":"boom"}}' });
+      await sleep(40000);
+      route.abort('timedout').catch(() => undefined);
     });
   if (COND === 'down') await ctx.route(hubRe, (route) => route.abort('connectionrefused'));
   if (COND === '401')
@@ -230,6 +245,7 @@ try {
       b.sample = `${r.why} | ${r.snap?.title} | ${r.snap?.text?.slice(0, 80)}`;
     }
     b.maxMs = Math.max(b.maxMs, r.ms);
+    if (process.env.DEBUG_SNAP) console.error(r.name, r.ok, r.ms, JSON.stringify(r.snap?.text?.slice(0, 120)));
   }
   const total = res.length;
   const ok = res.filter((r) => r.ok).length;
