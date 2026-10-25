@@ -24,6 +24,7 @@
     "demo:preflight": "tsx scripts/demo/preflight.ts",
     "demo:live": "tsx scripts/demo/live.ts",
     "dev:all": "tsx scripts/dev/all.ts",
+    "demo:serve": "tsx scripts/dev/serve-built.ts",
     "live:verify": "tsx scripts/live/verify.ts",
     "live:council-live": "tsx scripts/live/council-live-proof.ts",
     "live:council-probe": "tsx scripts/live/council-probe.ts",

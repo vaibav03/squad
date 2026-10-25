@@ -86,8 +86,22 @@
   --touch-min: 44px;                                 /* minimum hit target */
 
   /* ---------- 5. Layers (z-index) ---------- */
-  --z-canvas: 0; --z-scene-dom: 1; --z-hud: 10; --z-panel: 20; --z-dock: 20; --z-scrim: 30;
-  --z-overlay: 40; --z-toast: 50; --z-tooltip: 60; --z-cutscene-skip: 70;
+  /* One scale. --sq-z-* is the source; the older --z-* names below are aliases kept for existing css. */
+  --sq-z-canvas: 0;      /* the game canvas */
+  --sq-z-stage: 1;       /* DOM that sits on the stage: loading cover, replay badge */
+  --sq-z-hud: 10;        /* village HUD, in-room launchers, build marker */
+  --sq-z-dock: 12;       /* the floating chat dock (pill + panel) */
+  --sq-z-nav: 20;        /* bottom tab bar and its notes */
+  --sq-z-panel: 20;      /* large floating panels (Agent Inspector) */
+  --sq-z-scrim: 30;      /* scrim under a modal */
+  --sq-z-modal: 40;      /* modal panels: room, council, board, plan, mastery, sheets */
+  --sq-z-toast: 50;
+  --sq-z-tooltip: 60;
+  --sq-z-skip: 70;       /* cutscene skip */
+  --z-canvas: var(--sq-z-canvas); --z-scene-dom: var(--sq-z-stage); --z-hud: var(--sq-z-hud);
+  --z-panel: var(--sq-z-panel); --z-dock: var(--sq-z-nav); --z-scrim: var(--sq-z-scrim);
+  --z-overlay: var(--sq-z-modal); --z-toast: var(--sq-z-toast); --z-tooltip: var(--sq-z-tooltip);
+  --z-cutscene-skip: var(--sq-z-skip);
 
   /* ---------- 6. Motion: exactly three curves (08-village-motion.md). No others. Never ease-in. ---------- */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);       /* entering, exiting */

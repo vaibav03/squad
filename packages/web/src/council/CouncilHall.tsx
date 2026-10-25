@@ -1,3 +1,4 @@
+import { useDockBusy } from '../shell/panel-dock';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getRoomSession } from '@squad/village/rooms';
 import type { HubCtx } from '../pages/village/hub';
@@ -69,6 +70,7 @@ export function CouncilHall({
   const liveForced = q.get('live') === '1' || q.get('livemock') === '1';
   const inside = useInCouncilHall();
   const canBoard = useCanOpenBoard();
+  const busy = useDockBusy();
   const present = inside || forced || liveForced;
   const [open, setOpen] = useState(forced);
   const livemock = q.get('livemock') === '1';
@@ -104,7 +106,7 @@ export function CouncilHall({
   return (
     <>
       {stage}
-      {!open && !liveOpen && (
+      {!open && !liveOpen && !busy && (
         <button
           type="button"
           className="lv-btn cn-launch cn-launch--live sq-scene"
@@ -115,7 +117,7 @@ export function CouncilHall({
           Start a discussion
         </button>
       )}
-      {!open && !liveOpen && canBoard && (
+      {!open && !liveOpen && !busy && canBoard && (
         <button
           type="button"
           className="lv-btn cn-launch cn-launch--board sq-scene"
@@ -126,7 +128,7 @@ export function CouncilHall({
           Council board
         </button>
       )}
-      {!open && !liveOpen && (
+      {!open && !liveOpen && !busy && (
         <button
           type="button"
           className="lv-btn cn-launch sq-scene"
