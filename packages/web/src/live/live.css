@@ -17,6 +17,17 @@
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+/* the room fits between the shell nav / HUD and the bottom edge; columns scroll inside */
+.lv-ovl__panel.ld-panel--room[data-size] {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 100px);
+  max-height: calc(100dvh - 100px);
+  overflow: hidden;
+}
+.lv-ovl:has(> .ld-panel--room) {
+  align-items: flex-end;
+}
 .ld-dim {
   color: var(--lv-text-dim);
 }
@@ -73,7 +84,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--lv-s3);
-  padding: var(--lv-s5);
+  padding: var(--lv-s5) var(--lv-s5) var(--lv-s7);
   max-width: 640px;
   margin: 0 auto;
 }
@@ -178,9 +189,11 @@
 /* ---- room shell */
 .ld-root {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  gap: var(--lv-s3);
-  padding: var(--lv-s4) var(--lv-s5) var(--lv-s5);
+  gap: var(--lv-s2);
+  min-height: 0;
+  padding: var(--lv-s3) var(--lv-s5) var(--lv-s4);
   --ld-cap: 20px;
 }
 .ld-root[data-size='S'] {
@@ -211,7 +224,7 @@
   align-items: center;
   gap: var(--lv-s2);
   margin: 0;
-  padding: var(--lv-s2) var(--lv-s3);
+  padding: var(--lv-s1) var(--lv-s3);
   border: 2px solid var(--lv-line);
   background: var(--lv-surface-2);
   font: 500 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
@@ -285,15 +298,20 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px 320px;
   grid-template-areas: 'stage tx tk';
+  grid-template-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
   gap: var(--lv-s4);
-  align-items: start;
 }
 .ld-stage {
   grid-area: stage;
   display: flex;
   flex-direction: column;
-  gap: var(--lv-s3);
+  gap: var(--lv-s2);
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .ld-tabs {
   display: none;
@@ -303,7 +321,7 @@
   flex-direction: column;
   gap: var(--lv-s2);
   min-width: 0;
-  max-height: 640px;
+  min-height: 0;
   padding: var(--lv-s3);
   border: 2px solid var(--lv-line);
   background: var(--lv-surface);
@@ -329,6 +347,7 @@
     grid-template-areas:
       'stage tabs'
       'stage pane';
+    grid-template-rows: auto minmax(0, 1fr);
   }
   .ld-tabs {
     grid-area: tabs;
@@ -361,22 +380,27 @@
 /* ---- room */
 .ld-room {
   position: relative;
+  flex: 1 1 230px;
   width: 100%;
-  aspect-ratio: 16 / 8.5;
-  min-height: 300px;
+  min-height: 230px;
   border: 2px solid var(--sq-ink);
   background: var(--sq-ground);
   overflow: hidden;
 }
 .ld-table {
   position: absolute;
-  left: 22%;
-  top: 24%;
-  width: 56%;
-  height: 52%;
-  border: 2px solid var(--sq-wood-dark);
+  left: 24%;
+  top: 30%;
+  width: 52%;
+  height: 40%;
+  border: 2px solid var(--sq-ink);
   border-radius: 50%;
-  background: var(--sq-wood);
+  background: var(--sq-wood-lit);
+  box-shadow:
+    inset 0 0 0 6px var(--sq-wood),
+    inset 0 0 0 8px var(--sq-wood-dark),
+    0 6px 0 var(--sq-wood-dark),
+    0 8px 0 var(--sq-ink);
 }
 .ld-glance {
   position: absolute;
@@ -409,8 +433,8 @@
   border-color: var(--sq-glow);
 }
 .ld-portrait {
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   image-rendering: pixelated;
   border: 2px solid var(--sq-ink);
   background: var(--sq-sky-deep);
@@ -418,7 +442,7 @@
 .ld-ring {
   position: absolute;
   left: 50%;
-  top: 56px;
+  top: 46px;
   width: 80px;
   height: 20px;
   margin-left: -40px;
@@ -568,13 +592,17 @@
 
 /* ---- captions */
 .ld-caps {
-  min-height: calc(var(--ld-cap) * 4.2);
+  flex: none;
+  min-height: calc(var(--ld-cap) * 3.2);
   padding: var(--lv-s3);
   border: 2px solid var(--lv-line);
   background: var(--lv-surface);
 }
 .ld-caps__prev {
-  margin: 0 0 var(--lv-s2);
+  overflow: hidden;
+  margin: 0 0 var(--lv-s1);
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font: 400 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
   color: var(--lv-text-dim);
   animation: ld-rise-in var(--dur-base) var(--lv-ease-out) both;
@@ -616,6 +644,7 @@
 
 /* ---- controls */
 .ld-controls {
+  flex: none;
   display: flex;
   flex-direction: column;
   gap: var(--lv-s2);
@@ -669,8 +698,8 @@
 }
 .ld-ask {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: var(--lv-s2);
 }
 .ld-ask select {
   width: auto;
@@ -928,4 +957,26 @@
   .ld-dots span {
     animation: none;
   }
+}
+
+.ld-note {
+  padding: 0;
+  border: 0;
+  font-size: var(--text-xs);
+  color: var(--lv-text-dim);
+}
+.ld-controls {
+  gap: var(--lv-s1);
+}
+
+.ld-htools {
+  display: flex;
+  align-items: center;
+  gap: var(--lv-s2);
+  margin-left: auto;
+  margin-right: var(--lv-s7);
+}
+.ld-htools .lv-btn,
+.ld-htools .ld-seg__btn {
+  min-height: 36px;
 }

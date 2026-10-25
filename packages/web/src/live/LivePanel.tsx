@@ -157,7 +157,7 @@ export function LivePanel(p: LivePanelProps) {
       placement="dock"
       size="lg"
       dismissOnScrim={false}
-      className="ld-panel"
+      className={room || direct ? 'ld-panel ld-panel--room' : 'ld-panel'}
       initialFocus={() => area.current}
     >
       <button

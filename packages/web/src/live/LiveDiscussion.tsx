@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LIVE_PERSONAS, type LivePersonaId } from '@squad/core';
 import { LvIcon } from '../overlays/kit/icons';
-import { Controls, type CaptionSize } from './Controls';
+import { Controls, HeaderTools, type CaptionSize } from './Controls';
 import { CaptionsBar, Room } from './Room';
 import { TakeawaysPanel } from './TakeawaysPanel';
 import { Transcript } from './Transcript';
@@ -55,7 +55,10 @@ export function LiveDiscussion({
 }) {
   const { state } = ctl;
   const personas = state.snapshot?.personas ?? LIVE_PERSONAS;
-  const startedAt = state.snapshot?.startedAt ?? state.turns[0]?.ts ?? 0;
+  const firstTs = state.turns[0]?.ts ?? 0;
+  const snapStart = state.snapshot?.startedAt ?? 0;
+  // elapsed time is measured from the real start; a missing or later clock falls back to the first turn
+  const startedAt = snapStart > 0 && snapStart <= firstTs ? snapStart : firstTs;
   const [size, setSize] = useState<CaptionSize>(readSize);
   const [ask, setAsk] = useState<LivePersonaId | null>(null);
   const [tab, setTab] = useState<'transcript' | 'takeaways'>('transcript');
@@ -138,8 +141,13 @@ export function LiveDiscussion({
             {statusWord[status] ?? status}
           </span>
           <span className="ld-tag">AI-generated discussion</span>
-          {demo && <span className="ld-tag ld-tag--demo">Demo mode: scripted discussion</span>}
+          {demo && (
+            <span className="ld-tag ld-tag--demo" title={state.note}>
+              Demo mode: scripted discussion
+            </span>
+          )}
           {ctl.readOnly && <span className="ld-tag">Replay</span>}
+          <HeaderTools size={size} onSize={onSize} onLeave={onLeave} />
         </div>
         <h2 className="ld-topic" id="ld-title">
           {topic}
@@ -188,11 +196,6 @@ export function LiveDiscussion({
               are complete.
             </p>
           )}
-          {state.note && demo && (
-            <p className="ld-banner" role="status">
-              <LvIcon name="info" size={14} /> {state.note}
-            </p>
-          )}
         </div>
       )}
 
@@ -236,9 +239,6 @@ export function LiveDiscussion({
               personas={personas}
               ask={ask}
               onAsk={setAsk}
-              size={size}
-              onSize={onSize}
-              onLeave={onLeave}
               speaking={state.floor.speaker !== null && state.floor.speaker !== 'user'}
             />
           )}

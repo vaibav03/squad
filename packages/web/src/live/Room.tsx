@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { Fragment, useEffect, useRef, type KeyboardEvent } from 'react';
 import type { LivePersona, LivePersonaId } from '@squad/core';
 import type { LivePlayer } from './audio';
 import { completedSentences, personaOf, portraitFor, seatSlots } from './personas';
@@ -150,7 +150,7 @@ export function Room({
           >
             <span className="ld-ring" aria-hidden="true" />
             {img ? (
-              <img className="ld-portrait" src={img} alt="" width={64} height={64} />
+              <img className="ld-portrait" src={img} alt="" width={52} height={52} />
             ) : (
               <span className="ld-portrait ld-portrait--blank" aria-hidden="true" />
             )}
@@ -225,9 +225,9 @@ export function CaptionsBar({
           aria-hidden="true"
         >
           {words.map((w, i) => (
-            <span className="ld-w" key={i}>
-              {w}{' '}
-            </span>
+            <Fragment key={i}>
+              <span className="ld-w">{w}</span>{' '}
+            </Fragment>
           ))}
           {!cur.live && last?.interrupted && <span className="ld-yield">yielded</span>}
         </p>

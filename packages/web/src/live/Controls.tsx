@@ -12,23 +12,52 @@ const QUICK: { kind: LiveSayBody['kind']; label: string; text: string }[] = [
   { kind: 'summarize', label: 'Summarize so far', text: 'Can you summarize where we are so far?' },
 ];
 
+/** Caption size and Leave live in the header so the controls stay short enough to always be visible. */
+export function HeaderTools({
+  size,
+  onSize,
+  onLeave,
+}: {
+  size: CaptionSize;
+  onSize(s: CaptionSize): void;
+  onLeave(): void;
+}) {
+  return (
+    <div className="ld-htools">
+      <div className="ld-seg" role="radiogroup" aria-label="Caption size">
+        {(['S', 'M', 'L'] as const).map((s) => (
+          <button
+            key={s}
+            type="button"
+            role="radio"
+            aria-checked={size === s}
+            aria-label={`Caption size ${s === 'S' ? 'small' : s === 'M' ? 'medium' : 'large'}`}
+            className="ld-seg__btn"
+            onClick={() => onSize(s)}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+      <button type="button" className="lv-btn lv-btn--danger" onClick={onLeave}>
+        <LvIcon name="phone-off" size={16} />
+        Leave
+      </button>
+    </div>
+  );
+}
+
 export function Controls({
   ctl,
   personas,
   ask,
   onAsk,
-  size,
-  onSize,
-  onLeave,
   speaking,
 }: {
   ctl: LiveController;
   personas: readonly LivePersona[];
   ask: LivePersonaId | null;
   onAsk(id: LivePersonaId | null): void;
-  size: CaptionSize;
-  onSize(s: CaptionSize): void;
-  onLeave(): void;
   /** Someone has the floor right now. */
   speaking: boolean;
 }) {
@@ -123,25 +152,6 @@ export function Controls({
         >
           <LvIcon name={muted ? 'eye-off' : 'eye'} size={16} />
           {muted ? 'Unmute' : 'Mute'}
-        </button>
-        <div className="ld-seg" role="radiogroup" aria-label="Caption size">
-          {(['S', 'M', 'L'] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              role="radio"
-              aria-checked={size === s}
-              aria-label={`Caption size ${s === 'S' ? 'small' : s === 'M' ? 'medium' : 'large'}`}
-              className="ld-seg__btn"
-              onClick={() => onSize(s)}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-        <button type="button" className="lv-btn lv-btn--danger" onClick={onLeave}>
-          <LvIcon name="phone-off" size={16} />
-          Leave
         </button>
       </div>
 
