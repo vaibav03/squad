@@ -49,7 +49,7 @@ let engine: ChatEngineHandle;
 let im: IMessageHandle;
 let fake: FakeSendblue;
 
-async function boot(demoCode?: string) {
+async function boot(demoCode?: string, envOver: Record<string, string> = {}) {
   hub = createHub({
     config: {
       dbPath: ':memory:',
@@ -82,6 +82,7 @@ async function boot(demoCode?: string) {
       SENDBLUE_WEBHOOK_SECRET: WH,
       SENDBLUE_PUBLIC_URL: 'https://squad.test',
       SENDBLUE_API_BASE: fake.url,
+      ...envOver,
     },
     fetch: fenced as any,
     minGapMs: 0,
@@ -259,5 +260,45 @@ describe('1:1 demo join', () => {
     await settle();
     expect(dmSends().some((t) => t.includes('demo student'))).toBe(false);
     expect(dm().filter((m) => m.transport === 'imessage')).toHaveLength(0);
+  });
+});
+
+describe('production-like 1:1 (dry run, chats + handles allowlists, handle owns a real account)', () => {
+  const REAL = '+16027509644';
+  const Q = '@cubbie what is due from Canvas this week and what Google files should I study?';
+  const dm = () => hub.deps.chat.store.history('dm:s_ana', { limit: 100 }).messages;
+  const prodEnv = {
+    IMESSAGE_ALLOWED_CHATS: 'verify-group-001',
+    IMESSAGE_ALLOWED_HANDLES: REAL,
+    IMESSAGE_DRY_RUN: '1',
+  };
+  async function signUpReal() {
+    const post = (path: string, body: unknown) =>
+      hub.app.request(path, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    const s = (await (await post('/v1/auth/start', { name: 'Real Vaibav', phone: REAL })).json()) as any;
+    const v = await post('/v1/auth/verify', { challengeId: s.challengeId, code: s.devCode });
+    expect(v.status).toBe(200);
+  }
+
+  it('a handle that already owns a Squad account still maps to s_ana after join 123456 (root cause of the empty dm:s_ana)', async () => {
+    await boot('123456', prodEnv);
+    await connectDemoWorkspaces();
+    await signUpReal();
+    await dmInbound(REAL, 'join 123456', 'P-J1');
+    await settle();
+    await dmInbound(REAL, Q, 'P-Q1');
+    await waitFor(() => dm().some((m) => m.sender.kind === 'persona' && m.citations.length > 0));
+    const q = dm().find((m) => m.sender.kind === 'student')!;
+    expect(q).toMatchObject({ sender: { id: 's_ana' }, transport: 'imessage', provider: 'sendblue' });
+    const a = dm().find((m) => m.sender.kind === 'persona' && m.citations.length > 0)!;
+    expect(a.provenance?.mode).toBe('demo');
+    expect(a.citations.length).toBeGreaterThanOrEqual(1);
+    // dry run: nothing reaches the fake line; the reply is queued as a dry-run mirror, never sent
+    expect(fake.sent).toHaveLength(0);
+    expect(JSON.stringify(dm())).not.toContain(REAL);
   });
 });
