@@ -544,3 +544,12 @@ Small fix branch (worktree `squad-wt/roomtab`), landed as a true `--no-ff` merge
 
 - Landing merge commit: `c6cb3a9fca60807d8856397bcf181b699f964ede` (parents `7d8cedb4c206a3e5b43e533a29f8a061c7792518` = tag `pre-merge-batch18`, `56ff97747e85a356f129cf7685186fee2981bb37` = origin/fix/room-click-default-tab; only tracker docs differ).
 - Rollback: `git revert -m 1 c6cb3a9fca60807d8856397bcf181b699f964ede`.
+
+## Batch 19: docs/plan-live-council + docs/plan-e2e-product into main
+
+Branch `merge/batch19` (worktree `squad-wt/merge19`), landed as a true `--no-ff` merge. Docs only: `docs/plans/LIVE-COUNCIL.md`, `docs/plans/E2E-PRODUCT-REVIEW.md`, `docs/plans/RELEASE-GATE.md` and 25 review screenshots under `docs/design/shots/review/`. Both merged cleanly. `pnpm check` exit status 0, `pnpm demo:live` OK, hub smoke 102 of 102 (no browser smoke: no code changed).
+
+### Landing (batch 19)
+
+- Landing merge commit: `408ce998ea30d6a0c72e254a98a955c80bb6d8f7` (parents `0699dc5bfaa4b89194acbe6097335e8059cc619d` = tag `pre-merge-batch19`, `98bad225eca7c16103d5c80e9056762e976f272f` = origin/merge/batch19; diff empty).
+- Rollback: `git revert -m 1 408ce998ea30d6a0c72e254a98a955c80bb6d8f7`.
