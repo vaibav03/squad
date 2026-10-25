@@ -1,4 +1,15 @@
-import { meetsMinGroupSize, type VillageEvent } from '@squad/core';
+import { meetsMinGroupSize } from '@squad/core';
+import {
+  MASTERY_PIPS,
+  masteryLevel,
+  masteryPips,
+  masteryWord,
+  type MasteryChapter,
+  type MasteryLevel,
+} from '@squad/village/rooms';
+
+export { MASTERY_PIPS, masteryPips, masteryWord };
+export type { MasteryChapter };
 
 export interface Concept {
   id: string;
@@ -20,18 +31,14 @@ export interface MasteryData {
   memberCount: number;
 }
 
-export type Level = 'none' | 'learning' | 'getting' | 'solid';
-export function levelOf(box: number): Level {
-  if (box <= 0) return 'none';
-  if (box <= 2) return 'learning';
-  if (box === 3) return 'getting';
-  return 'solid';
-}
+/** One mapping for words and pips everywhere (the village owns it; this is the web's alias). */
+export type Level = MasteryLevel;
+export const levelOf = (box: number): Level => masteryLevel(box);
 export const LEVEL_LABEL: Record<Level, string> = {
-  none: 'Not started',
-  learning: 'Learning',
-  getting: 'Getting there',
-  solid: 'Solid',
+  none: masteryWord(0),
+  learning: masteryWord(1),
+  getting: masteryWord(3),
+  solid: masteryWord(5),
 };
 
 export function chapterBox(c: Chapter): number {
@@ -39,14 +46,24 @@ export function chapterBox(c: Chapter): number {
   return c.concepts.reduce((a, x) => a + x.box, 0) / c.concepts.length;
 }
 
-/** Chapters to look at next: the weakest started-or-not chapters, never ranked by points. */
-export function nextUp(chapters: readonly Chapter[], n = 3): Chapter[] {
-  return [...chapters]
-    .filter((c) => chapterBox(c) < 4)
-    .sort((a, b) => chapterBox(a) - chapterBox(b))
+/** Concepts to look at next: the weakest, never ranked against other students. */
+export function weakestConcepts(chapters: readonly Chapter[], n = 3): Concept[] {
+  return chapters
+    .flatMap((c) => c.concepts)
+    .filter((x) => masteryPips(x.box) < 4)
+    .sort((a, b) => a.box - b.box)
     .slice(0, n);
 }
 
+/** Chapter houses to practise next: weakest first, only those still below Solid. */
+export function weakestChapters(chapters: readonly MasteryChapter[], n = 3): MasteryChapter[] {
+  return [...chapters]
+    .filter((c) => masteryPips(c.box) < 4)
+    .sort((a, b) => masteryPips(a.box) - masteryPips(b.box))
+    .slice(0, n);
+}
+
+/** Squad averages show only with three or more members AND real averages from the hub. */
 export function squadVisible(d: MasteryData): boolean {
   return (
     meetsMinGroupSize(d.memberCount) &&
@@ -66,28 +83,9 @@ export function sanitize(d: MasteryData): MasteryData {
   };
 }
 
-/** mastery.changed (owner-filtered by the hub): the chapter's concepts move up to at least that box. */
-export function masteryReducer(d: MasteryData, e: VillageEvent, me: string): MasteryData {
-  if (e.t !== 'mastery.changed' || e.student !== me) return d;
-  return {
-    ...d,
-    chapters: d.chapters.map((c) =>
-      c.id === e.chapter || c.title === e.chapter
-        ? {
-            ...c,
-            concepts: c.concepts.map((x) => ({
-              ...x,
-              box: Math.max(x.box, Math.min(5, Math.max(0, Math.round(e.box)))),
-            })),
-          }
-        : c,
-    ),
-  };
-}
-
 /**
  * `GET /v1/mastery/:courseId` answers `{ courseId, concepts: string[], mine: number[], squadAvg: number[] | null }` with
- * 0..1 fractions. The page works in Leitner boxes 0..5, so fractions become boxes and the course is one chapter.
+ * 0..1 fractions. The panel works in Leitner boxes 0..5, so fractions become boxes and the course is one chapter.
  * `squadAvg` is null under 3 members, which hides the squad column.
  */
 export function masteryFromHub(raw: unknown): MasteryData | undefined {
@@ -115,7 +113,7 @@ export function masteryFromHub(raw: unknown): MasteryData | undefined {
         concepts: r.concepts.map((label, i) => ({
           id: `${r.courseId}:${i}`,
           label: String(label),
-          box: box(r.mine && (r.mine as unknown[])[i]),
+          box: box((r.mine as unknown[])[i]),
           ...(avg ? { squadAvg: box(avg[i]) } : {}),
         })),
       },

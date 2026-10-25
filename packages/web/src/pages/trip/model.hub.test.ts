@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { tripFromHub } from './model';
-import { masteryFromHub } from '../mastery/model';
+import { masteryFromHub } from '../../overlays/mastery/model';
 
 const hubTrip = {
   tripId: 'trip_cabo',

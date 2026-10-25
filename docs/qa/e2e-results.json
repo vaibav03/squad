@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T09:26:17.673Z",
+  "at": "2026-10-25T10:33:22.559Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -439,6 +439,24 @@
     "status": "pass",
     "note": "",
     "ms": 10501
+   },
+   {
+    "title": "J11 mastery: no tab, redirect opens the in-village panel",
+    "status": "pass",
+    "note": "",
+    "ms": 5315
+   },
+   {
+    "title": "J11 mastery: walk to the board, Enter opens the panel, Practise sends the phrase",
+    "status": "pass",
+    "note": "",
+    "ms": 52165
+   },
+   {
+    "title": "J11 mastery: a replayed mastery.changed lights the house sign and the board",
+    "status": "pass",
+    "note": "",
+    "ms": 71697
    }
   ]
  }
