@@ -67,3 +67,12 @@ Merge order suggestion: spine, hub, brain-answers, brain-quiz, mesh-crypto, mesh
 - If the village adapter treats `agent.message.kind` strings differently, adjust the replays. Kinds used: task.open, psi.blind, psi.tokens, psi.common, share.vec, share.sum, conflict, option_dropped, query, query_denied, result.
 - The doubt answer panel and Step Diff are hub-endpoint panels with no VillageEvent, so the replay only shows agent states around them (the presenter narrates).
 - Owner must sign in to `hackathon.py` to produce the submission previews (`docs/submission/PREVIEWS.md`); `--yes` only after review. Not done yet: GIFs (`docs/demo/media/trackN.gif`), screen recordings and dry runs (need the integrated village and real phones). Cost per question is unmeasured.
+
+## Web-live (from the web-live handoff)
+- The trip page navigates to `/squad/village?cutscene=trip&task=<id>` 3 s after `trip.confirmed`; the web host must pass that query to `mountVillage` (village-mesh supports a direct `playCutscene('trip', {taskId})`, once per taskId, skippable).
+- Add a one-line adapter from `useSquadConfig()` to `LiveConfig {mode, hubUrl, token, userId}` so pages leave mock mode.
+- web-live uses its own `--lv-*` aliases of `docs/design/tokens.css` (`src/overlays/kit/bridge.css`) and page parts in `overlays/kit`, because web-shell primitives had not landed: swap page headers for `Page` and buttons for primitives, or keep. AppShell may double the padding of `.lv-page`. `packages/web/package.json` (react, react-dom, react-router-dom, zod, test/dev deps) will conflict with web-shell's: union them.
+- Route registry should discover `pages/{ledger,trip,mastery}/index.tsx` default exports. Overlays mount inside a relative stage (they render `sq-scene` on their own root).
+- Hub response shapes for `/v1/ledger`, `/v1/trips`, `/v1/mastery` and the `trip.updated` shape are parsed defensively but unverified against the real hub; the projector toggle is client-side until the hub exposes its flag.
+- Ledger is paper cards in columns, not a wood notice board (DESIGN.md forbids fantasy chrome). Not covered: the call panel has no "agent offline" state or group variant; `useMedia` first-paint flash at 1280; keyboard-only flow only unit-tested; confirm-sheet, quiz-done, error and offline screenshots were never read.
+- Personas page and HUD chips still use the Fluent 3D avatars / single letters: switch them to the pixel portraits from the design foundation cast.
