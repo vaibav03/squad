@@ -14,6 +14,7 @@ import { OverlayFrame } from '../overlays/kit/OverlayFrame';
 import { LvIcon } from '../overlays/kit/icons';
 import { usePrefersReducedMotion } from '../overlays/kit/hooks';
 import { ResultBoardButton, RunStrip } from './RunStrip';
+import { ResultStatusStrip } from './status/CouncilStatusStrip';
 import { hubTransport, type CouncilTransport } from './council-client';
 import { useCouncilRun } from './useCouncilRun';
 import {
@@ -209,6 +210,7 @@ export function CouncilPanel(props: CouncilPanelProps) {
         )}
       </header>
       <div className="cn-scroll" data-reduced={reduced ? 'true' : undefined}>
+        <ResultStatusStrip result={result} hub={hub} />
         {idle && (
           <>
             <form className="cn-ask" onSubmit={onSubmit}>

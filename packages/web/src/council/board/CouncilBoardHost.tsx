@@ -11,6 +11,7 @@ import {
 } from './bridge';
 import { CouncilBoard } from './CouncilBoard';
 import { HudButton } from './Launchers';
+import { LastRunSync } from '../last-run/components';
 
 /**
  * Village mount for the council board. `?board=ask|roundtable` plays a scripted fixture into the store and opens the
@@ -60,6 +61,7 @@ export function CouncilBoardHost({
   if (!store) return null;
   return (
     <>
+      <LastRunSync hub={hub} />
       <HudButton />
       <CouncilBoard
         store={getBoardStore() ?? store}

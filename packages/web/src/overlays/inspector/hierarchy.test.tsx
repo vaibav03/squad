@@ -25,7 +25,7 @@ describe('Hierarchy tab', () => {
     act(() => store.select('council:ask-chair'));
     await settle();
     fireEvent.click(screen.getByRole('tab', { name: 'Hierarchy' }));
-    expect(screen.getByText('No council is running for this agent.')).toBeTruthy();
+    expect(screen.getByText('Not part of a council run yet.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Board' })).toBeNull();
   });
 
