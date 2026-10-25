@@ -24,6 +24,5 @@ function repoAssetsPlugin(): Plugin {
 export default defineConfig({
   root: fileURLToPath(new URL('./dev', import.meta.url)),
   plugins: [repoAssetsPlugin()],
-  resolve: { alias: { 'node:crypto': fileURLToPath(new URL('./dev/crypto-shim.ts', import.meta.url)) } },
   server: { port: 5190, strictPort: false, fs: { allow: [fileURLToPath(new URL('../..', import.meta.url))] } },
 });
