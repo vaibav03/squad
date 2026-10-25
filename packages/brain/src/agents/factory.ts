@@ -1,5 +1,5 @@
 import { type AgentMode, type Llm, type VillageEvent } from '@squad/core';
-import { registerAskDemo } from '../councils/ask-demo-script';
+import { registerCouncilDemos } from '../councils/demos';
 import { HourlyCap, budgetFromEnv, type CouncilBudget } from './budget';
 import { createDemoTransport } from './demo-transport';
 import { councilAgentsFlag, decideRunMode, modeInputsFromEnv, type ModeInputs } from './mode';
@@ -37,7 +37,7 @@ export interface CouncilAgents {
 /** Builds the council runtime: raw Gemini over streaming text + tool calling, scripted transport for demo runs only. */
 export function createCouncilAgents(d: CouncilAgentsDeps): CouncilAgents {
   const env = d.env ?? {};
-  registerAskDemo();
+  registerCouncilDemos();
   const budget = { ...budgetFromEnv(env), ...d.budget };
   const hourly = new HourlyCap(budget.maxRunsPerHour, d.now);
   const real = d.transport ?? (d.real ? createStreamTextTransport(d.real) : undefined);
