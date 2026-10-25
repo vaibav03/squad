@@ -1,4 +1,4 @@
-import type { RoomOutcome } from '@squad/core';
+import type { RoomOutcome, VillageEvent } from '@squad/core';
 
 /** The 13 placed rooms, by layout slot id (see registry.ts PLACEMENTS). */
 export const ROOM_SLOTS = [
@@ -71,7 +71,7 @@ export interface RoomSession {
   enter(slot: string): void;
   leave(): void;
   /** Record the public words of `e` in the room that handled it. Unrelated events are ignored. */
-  record(slot: string, e: import('@squad/core').VillageEvent, now: number): void;
+  record(slot: string, e: VillageEvent, now: number): void;
   /** Ask the host to run the room's chat phrase (the host decides how; undefined when not wired). */
   readonly run?: (slot: string, phrase: string) => void;
 }
