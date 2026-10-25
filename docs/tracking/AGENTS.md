@@ -8,23 +8,33 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `feature/` | 1 | 3 | 25 | Claude Sonnet 5.5 (3) |
+| `feature/` | 4 | 10 | 114 | Claude Sonnet 5.5 (10) |
+| `fix/` | 6 | 15 | 127 | Claude Sonnet 5.5 (13) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `feature/council-followup` | 3 | 25 | 2026-10-25 06:37 | 2026-10-25 06:45 | Vaibav |
+| `feature/council-chamber-skin` | 1 | 19 | 2026-10-25 07:00 | 2026-10-25 07:00 | Vaibav |
+| `feature/council-followup` | 4 | 37 | 2026-10-25 06:37 | 2026-10-25 06:50 | Vaibav |
+| `feature/council-live-ux-stage` | 3 | 37 | 2026-10-25 06:47 | 2026-10-25 07:03 | Vaibav |
+| `feature/council-live-ux` | 2 | 21 | 2026-10-25 07:02 | 2026-10-25 07:07 | Vaibav |
+| `fix/connection-budget` | 6 | 34 | 2026-10-25 06:47 | 2026-10-25 06:56 | Vaibav |
+| `fix/demo-serve` | 1 | 7 | 2026-10-25 06:52 | 2026-10-25 06:52 | Vaibav |
+| `fix/home-onboarding-catalogue` | 4 | 22 | 2026-10-25 06:52 | 2026-10-25 06:59 | Vaibav |
+| `fix/oauth-redirect-context-proof` | 2 | 39 | 2026-10-25 06:54 | 2026-10-25 07:07 | Vaibav |
+| `fix/panels-semantics-dedupe` | 1 | 19 | 2026-10-25 06:55 | 2026-10-25 06:55 | Vaibav |
+| `fix/provenance-plan-sync` | 1 | 6 | 2026-10-25 06:59 | 2026-10-25 06:59 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 242 |
+| (no trailer) | 244 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 669 |
+| Claude Sonnet 5.5 | 690 |
 
 ## Commits landed on main by area (subject prefix)
 
@@ -76,7 +86,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | demo | 7 |
 | deploy | 5 |
 | design | 18 |
-| docs | 33 |
+| docs | 34 |
 | e2e | 27 |
 | feat | 1 |
 | fix | 56 |
@@ -152,5 +162,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 |---|---:|
 | Claude | 1 |
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 628 |
+| Vaibav | 651 |
 | vaibav03 | 26 |
