@@ -8,33 +8,34 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `e2e/` | 1 | 7 | 161 | Claude Sonnet 5.5 (5) |
-| `feature/` | 1 | 23 | 134 | Claude Sonnet 5.5 (21) |
+| `e2e/` | 1 | 8 | 163 | Claude Sonnet 5.5 (6) |
+| `feature/` | 1 | 26 | 143 | Claude Sonnet 5.5 (23) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `e2e/acceptance` | 7 | 161 | 2026-10-25 00:54 | 2026-10-25 02:04 | Vaibav |
-| `feature/live-discussion` | 23 | 134 | 2026-10-25 01:16 | 2026-10-25 02:07 | Vaibav |
+| `e2e/acceptance` | 8 | 163 | 2026-10-25 00:54 | 2026-10-25 02:21 | Vaibav |
+| `feature/live-discussion` | 26 | 143 | 2026-10-25 01:16 | 2026-10-25 02:20 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 161 |
+| (no trailer) | 166 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 451 |
+| Claude Sonnet 5.5 | 457 |
 
 ## Commits landed on main by area (subject prefix)
 
 | Area | Commits |
 |---|---:|
-| (other) | 79 |
+| (other) | 80 |
 | Initial commit | 1 |
 | Merge batch 1 | 1 |
+| Merge batch 10 | 1 |
 | Merge batch 2 | 1 |
 | Merge batch 3 | 1 |
 | Merge batch 4 | 1 |
@@ -64,10 +65,11 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | inspector | 12 |
 | integration | 41 |
 | interior-engine | 9 |
-| live | 9 |
+| live | 13 |
 | media-art | 18 |
 | media-audio | 7 |
 | merge batch1 | 2 |
+| merge batch10 | 1 |
 | merge batch2 | 7 |
 | merge batch3 | 3 |
 | merge batch4 | 3 |
@@ -106,5 +108,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Author | Commits |
 |---|---:|
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 330 |
+| Vaibav | 341 |
 | vaibav03 | 26 |
