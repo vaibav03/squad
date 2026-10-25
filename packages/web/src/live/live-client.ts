@@ -1,3 +1,4 @@
+import { permitRunStream } from '@squad/village/sources';
 import { timedFetch } from '../lib/http';
 import {
   LiveActionResultSchema,
@@ -119,7 +120,9 @@ export interface EventSourceLike {
 }
 export type EventSourceFactory = (url: string) => EventSourceLike;
 const defaultFactory: EventSourceFactory | undefined =
-  typeof EventSource === 'undefined' ? undefined : (url) => new EventSource(url);
+  typeof EventSource === 'undefined'
+    ? undefined
+    : (url) => permitRunStream(() => new EventSource(url));
 
 async function streamToken(hub: HubCtx): Promise<string | undefined> {
   if (!hub.token || isOffline()) return undefined;

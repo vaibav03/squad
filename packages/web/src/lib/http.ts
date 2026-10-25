@@ -6,6 +6,7 @@ import {
   retryAfterOf,
   waitForRetry,
 } from './rate-limit';
+import { acquireReadSlot, flightKey, shareFlight, trackRequest } from './request-budget';
 
 /** Data-read requests give up after this long so a page shows an error with Retry instead of loading forever. */
 export const REQUEST_TIMEOUT_MS = 8000;
@@ -27,6 +28,13 @@ export function notifyUnauthorized(): void {
  * writes and uploads keep the plain fetch behavior. A timeout rejects with a TypeError("timeout") so callers that
  * already treat network failures as "offline" keep working.
  */
+function aborted(signal: AbortSignal): Promise<never> {
+  return new Promise((_, reject) => {
+    if (signal.aborted) return reject(new TypeError('timeout'));
+    signal.addEventListener('abort', () => reject(new TypeError('timeout')), { once: true });
+  });
+}
+
 export async function timedFetch(
   input: RequestInfo | URL,
   init: RequestInit = {},
@@ -39,9 +47,16 @@ export async function timedFetch(
     (method === 'GET' || force) && !init.signal && typeof AbortController !== 'undefined';
   const once = async (): Promise<Response> => {
     const ctl = limited ? new AbortController() : null;
+    // the deadline covers waiting for a read slot too, so a queue can never outlast `ms`
     const timer = ctl ? setTimeout(() => ctl.abort(), ms) : undefined;
+    let release: (() => void) | undefined;
+    let done: (() => void) | undefined;
     try {
-      const res = await fetch(input, ctl ? { ...init, signal: ctl.signal } : init);
+      if (ctl && method === 'GET') release = await acquireReadSlot(ctl.signal);
+      if (ctl) done = trackRequest(() => ctl.abort());
+      const sent = fetch(input, ctl ? { ...init, signal: ctl.signal } : init);
+      // the deadline holds even if a fetch implementation ignores the abort signal (the slot is never leaked)
+      const res = ctl ? await Promise.race([sent, aborted(ctl.signal)]) : await sent;
       if (res.status === 401) notifyUnauthorized();
       return res;
     } catch (e) {
@@ -49,6 +64,8 @@ export async function timedFetch(
       throw e;
     } finally {
       if (timer) clearTimeout(timer);
+      done?.();
+      release?.();
     }
   };
   // Reads (and idempotent token requests) that hit HTTP 429 wait out Retry-After and try again, a couple of times.
@@ -56,22 +73,27 @@ export async function timedFetch(
   // counts down meanwhile.
   const retryable = method === 'GET' || force;
   let attempt = 0;
-  for (;;) {
-    const res = await once();
-    if (res.status !== 429) {
-      if (attempt > 0) clearRateLimited();
-      return res;
+  const run = async (): Promise<Response> => {
+    for (;;) {
+      const res = await once();
+      if (res.status !== 429) {
+        if (attempt > 0) clearRateLimited();
+        return res;
+      }
+      const asked = retryAfterOf(res) ?? 2 ** attempt;
+      const wait = Math.min(RATE_LIMIT_MAX_WAIT_S, Math.max(1, asked));
+      if (!retryable || attempt >= RATE_LIMIT_AUTO_RETRIES) {
+        noteRateLimited(Math.max(1, asked), false);
+        return res;
+      }
+      noteRateLimited(wait, true);
+      attempt++;
+      await waitForRetry(wait * 1000);
     }
-    const asked = retryAfterOf(res) ?? 2 ** attempt;
-    const wait = Math.min(RATE_LIMIT_MAX_WAIT_S, Math.max(1, asked));
-    if (!retryable || attempt >= RATE_LIMIT_AUTO_RETRIES) {
-      noteRateLimited(Math.max(1, asked), false);
-      return res;
-    }
-    noteRateLimited(wait, true);
-    attempt++;
-    await waitForRetry(wait * 1000);
-  }
+  };
+  // identical reads in flight at the same time are one request (a page and its widgets often ask for the same thing)
+  const key = method === 'GET' && !init.signal && !init.body ? flightKey(input, init) : null;
+  return key ? shareFlight(key, run) : run();
 }
 
 /** Rejects with TypeError("timeout") if `p` has not settled after `ms`. */
