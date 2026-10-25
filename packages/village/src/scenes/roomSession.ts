@@ -83,7 +83,10 @@ export function createRoomSession(
   const outcomes: Record<string, RoomOutcome> = {};
   const subs = new Set<(s: RoomSnapshot) => void>();
   let seats: readonly RoomSeatInfo[] = [];
-  let snap: RoomSnapshot = { entered, transcripts: {}, outcomes: {}, seats };
+  let focus: RoomSnapshot['focus'] = null;
+  let focusN = 0;
+  let used: readonly string[] = [];
+  let snap: RoomSnapshot = { entered, transcripts: {}, outcomes: {}, seats, focus };
 
   const publish = (): void => {
     snap = {
@@ -91,6 +94,8 @@ export function createRoomSession(
       transcripts: Object.fromEntries(Object.entries(transcripts).map(([k, v]) => [k, [...v]])),
       outcomes: { ...outcomes },
       seats,
+      focus,
+      used,
     };
     for (const fn of subs) fn(snap);
   };
@@ -101,15 +106,26 @@ export function createRoomSession(
       subs.add(fn);
       return () => void subs.delete(fn);
     },
-    enter(slot) {
-      if (entered === slot) return;
+    enter(slot, target) {
+      if (target) focus = { alias: target.focus, ...(target.seed ? { seed: target.seed } : {}), n: ++focusN };
+      if (entered === slot && !target) return;
       entered = slot;
+      publish();
+    },
+    setFocus(target) {
+      focus = { alias: target.focus, ...(target.seed ? { seed: target.seed } : {}), n: ++focusN };
       publish();
     },
     leave() {
       if (entered === null) return;
       entered = null;
       seats = [];
+      focus = null;
+      publish();
+    },
+    setUsed(next) {
+      if (next.length === used.length && next.every((n, i) => n === used[i])) return;
+      used = [...next];
       publish();
     },
     setSeats(next) {

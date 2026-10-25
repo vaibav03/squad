@@ -38,7 +38,7 @@ export function initCouncilHall(
   opts: { instance?: string; title?: string } = {},
 ): CouncilHallState {
   return {
-    ...initBase({ ...opts, title: opts.title ?? 'Council Hall', access: 'dim' }),
+    ...initBase({ ...opts, title: opts.title ?? 'Agent Hall', access: 'dim' }),
     seats: {},
     slots: null,
     speaker: null,

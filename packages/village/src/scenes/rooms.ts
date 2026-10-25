@@ -3,6 +3,7 @@ import type { RoomSession } from './roomTypes';
 export * from './roomTypes';
 export { createRoomSession, holdMsFor, wordsOf } from './roomSession';
 export { ROOM_INFO, roomInfo } from './roomInfo';
+export * from './hall';
 export { roomSeats, saidBy, seatLabel } from './roomSeats';
 export type { RoomSeat } from './roomSeats';
 

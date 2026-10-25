@@ -44,7 +44,8 @@ describe('roomInfo', () => {
         }
       });
       it('avoids jargon', () => {
-        for (const s of strings(r)) expect(s).not.toMatch(JARGON);
+        // the hall's own name is allowed to say "Agent" (copy rule: unless the room's own name)
+        for (const s of strings(r)) if (s !== 'Agent Hall') expect(s).not.toMatch(JARGON);
       });
       it('never promises grades or scores', () => {
         for (const s of strings(r)) {

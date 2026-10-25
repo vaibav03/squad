@@ -36,7 +36,7 @@ export const SLOTS: readonly LayoutSlot[] = [
   // Mid: debate stage, round table, council hall and the landmark row
   S('debate-stage', 'landmark', 1048, 197, 'mid', 'Debate Stage'),
   S('round-table', 'landmark', 1244, 124, 'mid', 'Course-Planning Round Table'),
-  S('council-hall', 'council-hall', 1412, 139, 'mid', 'Council Hall'),
+  S('council-hall', 'council-hall', 1412, 139, 'mid', 'Agent Hall'),
   S('panic-booth', 'landmark', 1532, 28, 'mid', 'Panic Line booth'),
   S('devils-ta', 'landmark', 1649, 134, 'mid', "Devil's TA"),
   S('oral-exam-hut', 'landmark', 1789, 73, 'mid', 'Oral Exam Hut'),

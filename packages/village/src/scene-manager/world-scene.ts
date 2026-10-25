@@ -211,6 +211,14 @@ export class WorldScene extends Phaser.Scene {
             ...(I.opts.me ? { me: I.opts.me } : {}),
             inspector,
             focusAgent: (id) => {
+              // Every agent meets in the Agent Hall: a chip walks there and pre-selects that agent.
+              const openHall = this.registry.get('openHall') as ((agent: string) => void) | undefined;
+              const kind = agents.get(id)?.kind;
+              if (openHall && (kind === 'expert' || kind === 'council')) {
+                openHall(id);
+                stage.focus({ preventScroll: true });
+                return;
+              }
               if (I.opts.inspector) {
                 inspector.select(id);
                 // keyboard users stay on the chip so the panel can take focus; mouse users keep the stage

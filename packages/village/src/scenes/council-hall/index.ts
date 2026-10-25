@@ -13,7 +13,7 @@ export { mapCouncilEvent, handlesCouncil } from './map';
 export const councilHall: SceneDef<CouncilHallState> = {
   id: 'council-hall',
   kind: 'council-hall',
-  title: 'Council Hall',
+  title: 'Agent Hall',
   exterior: { w: EXT_W, h: EXT_H },
   interior: { w: INT_W, h: INT_H },
   door: { x: DOOR_X, y: EXT_H - 1 },
@@ -31,10 +31,10 @@ export const councilHall: SceneDef<CouncilHallState> = {
     );
   },
   describe(s: CouncilHallState) {
-    if (s.access === 'locked') return 'Council Hall, closed for now.';
+    if (s.access === 'locked') return 'Agent Hall, closed for now.';
     if (s.access === 'dim')
-      return 'Council Hall, quiet. Three council members and a chairman sit inside.';
-    const parts = ['Council Hall, in session'];
+      return 'Agent Hall, quiet. Three council members and a chairman sit inside.';
+    const parts = ['Agent Hall, in session'];
     const last = [...s.bubbles].reverse().find((b) => b.text !== '');
     if (s.bubbles.length > 0) {
       parts.push(`${s.bubbles.length} opinions given`);

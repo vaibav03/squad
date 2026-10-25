@@ -79,15 +79,22 @@ export interface RoomSnapshot {
   outcomes: Readonly<Record<string, RoomOutcome>>;
   /** Characters in the room the viewer is inside, left to right. */
   seats?: readonly RoomSeatInfo[];
+  /** Agent Hall: who the viewer asked to meet (a HUD chip, a deep link, a former room's door). `n` bumps on every ask. */
+  /** Former room slots whose agent has already done something this session (access 'open'); the rest wake on first use. */
+  used?: readonly string[];
+  focus?: { alias: string | null; seed?: string; n: number } | null;
 }
 
 export interface RoomSession {
   snapshot(): RoomSnapshot;
   subscribe(fn: (s: RoomSnapshot) => void): () => void;
   /** The viewer walked in / out (the world calls these). */
-  enter(slot: string): void;
+  enter(slot: string, target?: { focus: string | null; seed?: string }): void;
+  /** Re-aim the Agent Hall at another agent while the viewer is already inside. */
+  setFocus?(target: { focus: string | null; seed?: string }): void;
   leave(): void;
   /** The scenes module reports who is in the room right now (seats can change as members arrive). */
+  setUsed?(slots: readonly string[]): void;
   setSeats?(seats: readonly RoomSeatInfo[]): void;
   /** Record the public words of `e` in the room that handled it. Unrelated events are ignored. */
   record(slot: string, e: VillageEvent, now: number): void;

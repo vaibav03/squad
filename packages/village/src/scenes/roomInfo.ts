@@ -39,31 +39,32 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
   'chapter-4': chapter(4),
   'council-hall': {
     slot: 'council-hall',
-    title: 'Council Hall',
-    tagline: 'Checks every quiz answer key before you see it',
+    title: 'Agent Hall',
+    tagline: 'Everyone you can ask, in one place',
     purpose:
-      'Makes sure a quiz question has one right answer before it reaches you, so you never study from a wrong key.',
+      'Meet and chat with every helper in one thread: tutors, the council, the debaters and the judges. Pick one, or just type their name.',
     who: [
+      { name: 'Cubbie', does: 'Your study buddy. Sends your question to the right helper.' },
       {
-        name: 'Three solvers',
-        does: 'Each solves the question alone, without seeing the others or the key.',
+        name: 'Experts',
+        does: 'Feynman, Quiz, Oracle, Rubric, Devil\'s TA and the others each do one job well.',
       },
       {
-        name: 'Chair',
-        does: 'Compares them with the key and throws the question out if anyone disagrees.',
+        name: 'Council and judges',
+        does: 'Solvers, a chair and debaters work a hard question together and show how they decided.',
       },
     ],
     how: {
       phrase: '@cubbie quiz me on ch2',
       steps: [
-        'Ask for a quiz as usual; the hall works in the background when a new question is made.',
-        'It only runs when answer-key checking is switched on for your squad.',
-        'Walk in to read the solvers and the verdict.',
+        'Walk in and press a helper to aim your message at it, or type @ and its name.',
+        'Every answer lands in the same chat you have in the dock.',
+        'Helpers you have not used yet wake up on your first message to them.',
       ],
     },
     outcome:
-      'For each new question: the three independent answers, whether they matched the key, and the chair verdict (kept or dropped).',
-    privacy: 'Only course questions are discussed here. Nothing about you or your answers.',
+      'An answer from the helper you asked, and for council questions the opinions, the vote and the final verdict.',
+    privacy: 'Only course questions are discussed here. Nothing private about you or your answers.',
   },
   'debate-stage': {
     slot: 'debate-stage',

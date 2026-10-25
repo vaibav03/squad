@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import type { WorldScene } from '../scene-manager/world-scene';
-import { getRoomSession } from '../scenes/rooms';
+import { getRoomSession, HALL_SLOT, hallTargetForAgent, legacyRoomTarget, type HallTarget } from '../scenes/rooms';
 import { fetchManifest } from './assets';
 import { computeScale } from './scaler';
 
@@ -256,22 +256,29 @@ export function mountVillage(
       scene?.ctx?.bus.emit('overlayClosed', undefined);
     },
     async openRoom(slot, o) {
+      // Every former room id is the Agent Hall now, with the agent that lived there pre-selected.
+      const target = legacyRoomTarget(slot) ?? hallTargetForAgent(slot);
+      const find = () => scene?.ctx?.interactables.list().find((i) => i.id === `enter-${HALL_SLOT}`);
       // the village may still be loading when a council starts: wait for its door, at most 10 s
-      const find = () => scene?.ctx?.interactables.list().find((i) => i.id === `enter-${slot}`);
       for (let n = 0; n < 40 && !find(); n++) await new Promise((r) => setTimeout(r, 250));
       const ctx = scene?.ctx;
       const door = find();
       if (!ctx || !door || door.enabled?.() === false) return false;
+      const inHall = () => getRoomSession()?.snapshot().entered === HALL_SLOT;
+      if (inHall()) {
+        getRoomSession()?.setFocus?.(target);
+        return true;
+      }
       // walk to the door (Calm and reduced motion: enter at once), but never wait more than 6 s
       if (!o.calm && !calm.value)
         await Promise.race([ctx.player.walkTo(door.x), new Promise((r) => setTimeout(r, 6000))]);
       // the interior art may still be loading (enter is then a no-op): retry until we are inside, at most 10 s
       for (let n = 0; n < 20; n++) {
-        if (getRoomSession()?.snapshot().entered === slot) return true;
-        door.onActivate();
+        if (inHall()) return true;
+        (ctx.registry.get('openHall') as ((t: HallTarget) => void) | undefined)?.(target);
         await new Promise((r) => setTimeout(r, 500));
       }
-      return getRoomSession()?.snapshot().entered === slot;
+      return inHall();
     },
     debug: { game: () => game, ctx: () => scene?.ctx, fps: () => game?.loop.actualFps ?? 0 },
   };

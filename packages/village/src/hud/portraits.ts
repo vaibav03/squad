@@ -36,7 +36,7 @@ export type CrestId = (typeof CREST_IDS)[number];
 export const CREST_DIR = 'assets/pixel/composed/characters/crests';
 export const crestPath = (id: CrestId): string => `${CREST_DIR}/${id}.png`;
 
-/** Plain-words role for tooltips: 'Council Hall: runs the quiz council'. */
+/** Plain-words role for tooltips: 'Agent Hall: runs the quiz council'. */
 export const CREST_ROLE: Record<CrestId, string> = {
   skeptic: 'Challenges weak steps',
   teacher: 'Brings the course notes',
@@ -48,7 +48,7 @@ export const CREST_ROLE: Record<CrestId, string> = {
   'debate-con': 'Argues against',
   judge: 'Judges the debate',
   examiner: 'Tests the answer',
-  quizkey: 'Council Hall quiz council',
+  quizkey: 'Agent Hall quiz council',
   debate: 'Debate Stage council',
   planner: 'Course-planning round table',
   feynman: 'Explains it simply',

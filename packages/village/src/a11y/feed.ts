@@ -183,11 +183,11 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
       {
         id: 'place:council-hall',
         kind: 'place',
-        name: 'Council Hall',
+        name: 'Agent Hall',
         state: 'open',
         stateIcon: 'place',
         detail: verdict,
-        actions: [{ id: 'go:hall', label: 'Open Council Hall', enabled: true }],
+        actions: [{ id: 'go:hall', label: 'Open the Agent Hall', enabled: true }],
       },
       {
         id: 'place:commons',

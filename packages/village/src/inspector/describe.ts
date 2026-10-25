@@ -144,7 +144,7 @@ export function placeOf(id: string, state: RunState, me?: string): string {
       case 'expert':
         return `the ${agentName(id).replace(' expert', '')} house`;
       case 'council':
-        return 'the Council Hall';
+        return 'the Agent Hall';
       case 'dean':
         return "the Dean's office";
       case 'mediator':

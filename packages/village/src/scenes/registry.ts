@@ -33,7 +33,7 @@ export const PLACEMENTS: readonly Placement[] = [
   p('chapter-2', chapterHouse, 'Chapter 2', { chapter: true }),
   p('chapter-3', chapterHouse, 'Chapter 3', { chapter: true }),
   p('chapter-4', chapterHouse, 'Chapter 4', { chapter: true }),
-  p('council-hall', councilHall, 'Council Hall', { agent: 'council:quizkey' }),
+  p('council-hall', councilHall, 'Agent Hall', { agent: 'council:quizkey' }),
   p('debate-stage', debateStage, 'Debate Stage', { agent: 'council:debate' }),
   p('round-table', roundTable, 'Course-Planning Round Table', { agent: 'council:planner' }),
   p('feynman-porch', feynmanPorch, 'Feynman Porch', { agent: 'expert:feynman' }),

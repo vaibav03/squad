@@ -11,6 +11,7 @@ import {
 import type { LayerName } from './skins/types';
 import { DEFAULT_CTX, sanitizeEvent, step, type SceneCtx, type SceneDef } from './contract';
 import { createRoomSession } from './roomSession';
+import { HALL_SLOT, hallTargetForAgent, legacyRoomTarget, type HallTarget } from './hall';
 import { publishRoomSession } from './rooms';
 import { eventChapter } from './model/events';
 import { Raster } from './pixel/raster';
@@ -109,7 +110,7 @@ export interface HostCtx {
       slotId?: string;
     }): void;
   };
-  player: { x: number; sprite: Img; lockInput(): () => void };
+  player: { x: number; sprite: Img; lockInput(): () => void; walkTo(x: number): Promise<unknown> };
   assets: { url(repoPath: string): string };
   bus: {
     on(k: 'villageEvent', fn: (e: VillageEvent) => void): () => void;
@@ -341,14 +342,18 @@ const mod = {
         label: def.describe(def.init({ instance, title: p.title })),
         unregister: () => {},
       };
-      live.unregister = ctx.interactables.register({
-        id: `enter-${p.slotId}`,
-        x: Math.round(slot.x + def.door.x - def.exterior.w / 2),
-        radius: 24,
-        label: `Open ${(live.state as { title?: string }).title || p.title}`,
-        enabled: () => (live.state as { access: string }).access !== 'locked',
-        onActivate: () => enter(live),
-      });
+      // ONE door: only the Agent Hall (the former Council Hall) can be entered. Every other building is scenery.
+      live.unregister =
+        p.slotId === HALL_SLOT
+          ? ctx.interactables.register({
+              id: `enter-${p.slotId}`,
+              x: Math.round(slot.x + def.door.x - def.exterior.w / 2),
+              radius: 24,
+              label: 'Open the Agent Hall',
+              onActivate: () => enter(live),
+            })
+          : () => {};
+      unlock(live);
       lives.push(live);
       if (p.agent) {
         ctx.agents.register({
@@ -361,7 +366,32 @@ const mod = {
       return live;
     }
 
+    /** No building is ever shuttered: the hall is always open, the scenery is just quiet (no dead LOCKED doors). */
+    function unlock(live: Live): void {
+      const st = live.state as { access?: string };
+      if (st.access === 'locked')
+        live.state = live.def.reduce(live.state, { c: 'setAccess', access: live.p.slotId === HALL_SLOT ? 'open' : 'dim' }, now);
+    }
+    let pendingTarget: HallTarget | undefined;
+
     PLACEMENTS.forEach((p, i) => place(p, p.chapter ? `ch${i + 1}` : p.slotId));
+    const hallLive = (): Live | undefined => lives.find((l) => l.p.slotId === HALL_SLOT);
+    /** Walk to the hall door and go in with `target` pre-selected (inside already: just re-aim). */
+    const openHall = (target: HallTarget | string): void => {
+      const t = typeof target === 'string' ? (legacyRoomTarget(target) ?? hallTargetForAgent(target)) : target;
+      if (inside?.p.slotId === HALL_SLOT) {
+        session.setFocus?.(t);
+        return;
+      }
+      const hall = hallLive();
+      if (!hall || inside) return;
+      pendingTarget = t;
+      const x = Math.round(layout.slot(HALL_SLOT).x + hall.def.door.x - hall.def.exterior.w / 2);
+      const go = (): void => enter(hall);
+      if (ctx.calm) go();
+      else void Promise.race([ctx.player.walkTo(x), new Promise((r) => setTimeout(r, 6000))]).then(go);
+    };
+    ctx.registry.set('openHall', openHall);
 
     // The Mastery board: a walk-up notice board. Enter opens the in-world mastery panel (DOM, in the web host).
     const boardSlot = layout.slot('mastery-board');
@@ -576,7 +606,8 @@ const mod = {
       releaseInput = ctx.player.lockInput();
       ctx.registry.set('playerX', ctx.player.x);
       ctx.player.sprite.setVisible(false);
-      session.enter(live.p.slotId);
+      session.enter(live.p.slotId, live.p.slotId === HALL_SLOT ? (pendingTarget ?? { focus: null }) : undefined);
+      pendingTarget = undefined;
       syncSeats(live);
       ctx.bus.emit('enter', { slotId: live.p.slotId });
       fade = { from: alphaNow, to: 1, since: now, dur: ctx.calm ? 120 : 200 };
@@ -619,15 +650,25 @@ const mod = {
         }
       }
       const clean = sanitizeEvent(e, c); // the transcript never holds another student's `correct`
+      let toHall = false;
+      let hallHeard = false;
       for (const live of lives) {
-        if (live.def.handles(clean, live.state, c)) session.record(live.p.slotId, clean, now);
+        if (live.def.handles(clean, live.state, c)) {
+          session.record(live.p.slotId, clean, now);
+          // the hall is where every agent meets: whatever any of them says is also heard there
+          if (live.p.slotId !== HALL_SLOT) toHall = true;
+          else hallHeard = true;
+        }
         const before = live.state;
         live.state = step(live.def, live.state, e, c, now);
+        unlock(live);
         if (live.state !== before && e.t === 'council.verdict') {
           ctx.bus.emit('announce', `Council verdict: ${e.text ?? ''}`.trim());
         }
         if (live.state !== before) live.label = live.def.describe(live.state);
       }
+      if (toHall && !hallHeard) session.record(HALL_SLOT, clean, now);
+      session.setUsed?.(lives.filter((l) => (l.state as { access?: string }).access === 'open').map((l) => l.p.slotId).sort());
       syncMastery();
     });
 
