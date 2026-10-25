@@ -89,6 +89,7 @@ export interface HostCtx {
   assets: { url(repoPath: string): string };
   bus: {
     on(k: 'villageEvent', fn: (e: VillageEvent) => void): () => void;
+    on(k: 'leave', fn: (p: { slotId: string }) => void): () => void;
     emit(k: 'enter' | 'leave', p: { slotId: string }): void;
     emit(k: 'announce', p: string): void;
   };
@@ -315,6 +316,9 @@ const mod = {
       ctx.bus.emit('leave', { slotId: live.p.slotId });
     }
     scene.input.keyboard?.on('keydown-ESC', leave);
+    // The world boots with Phaser's keyboard plugin off (the stage element owns keys), so Esc reaches us as a bus
+    // 'leave' from the input module. leave() is idempotent, so our own emit below does not loop.
+    const offLeave = ctx.bus.on('leave', () => leave());
 
     const offEvent = ctx.bus.on('villageEvent', (e: VillageEvent) => {
       const c = sceneCtx();
@@ -402,6 +406,7 @@ const mod = {
         if (inside) leave();
         destroyed = true;
         offEvent();
+        offLeave();
         scene.input.keyboard?.off('keydown-ESC', leave);
         releaseInput?.();
         interiorImg?.destroy();

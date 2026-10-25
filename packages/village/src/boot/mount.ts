@@ -74,6 +74,9 @@ export function mountVillage(
     const dock = narrow ? PHONE_DOCK_PX : 0;
     root.style.alignItems = narrow ? 'flex-end' : 'center';
     root.style.paddingBottom = `${dock}px`;
+    root.style.background = narrow
+      ? 'var(--sqv-sky-top,#0b1d38)'
+      : 'linear-gradient(180deg,#060d1f 0%,#0b1d38 100%)';
     const s = computeScale(
       r.width || 960,
       (r.height || 540) - dock,

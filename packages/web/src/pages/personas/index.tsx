@@ -158,6 +158,16 @@ function Studio({ personas, voices }: { personas: PersonaDraft[]; voices: VoiceO
     [player, playing, cfg, draft.sample],
   );
 
+  useEffect(() => {
+    if (!dirty) return;
+    const guard = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', guard);
+    return () => window.removeEventListener('beforeunload', guard);
+  }, [dirty]);
+
   const select = (id: string) => {
     if (id === state.selected) return;
     if (dirty) {

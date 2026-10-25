@@ -13,6 +13,7 @@ import { useCalmMode } from '../../hooks/useCalmMode';
 import { hubStudentId } from '../../shell/dev-login';
 import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
+import { RoomLayer } from '../../overlays/room-info';
 import { OverlayHost } from './OverlayHost';
 import { DEFAULT_WORLD, loadWorld, type WorldHandle } from './worlds';
 import './village.css';
@@ -106,6 +107,18 @@ export default function VillagePage({ world }: { world?: string }) {
     // calm is applied live through setCalm; the world is not remounted for it.
   }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable]);
 
+  // After the room-info panel closes, focus rests on its "?" button, where the world's own Esc/walk keys do not
+  // reach. Forward Escape from the room layer's controls to the stage so a keyboard user can still leave the room.
+  const onRootKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Escape' || e.defaultPrevented) return;
+    const t = e.target as HTMLElement;
+    const st = stage.current?.querySelector<HTMLElement>('.sqv-stage');
+    if (!st || !t.closest('.rr-layer') || t.closest('[role="dialog"]')) return;
+    e.preventDefault();
+    st.focus({ preventScroll: true });
+    st.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
+  }, []);
+
   const onClosed = useCallback(() => handle.current?.overlayClosed(), []);
 
   if (!runnable)
@@ -119,7 +132,7 @@ export default function VillagePage({ world }: { world?: string }) {
       </div>
     );
   return (
-    <div className="sq-world">
+    <div className="sq-world" onKeyDown={onRootKeyDown}>
       <div ref={stage} className="sq-world__stage" />
       {state === 'loading' && (
         <div className="sq-world__loading">
@@ -141,6 +154,7 @@ export default function VillagePage({ world }: { world?: string }) {
           Replay
         </span>
       )}
+      <RoomLayer calm={calm} />
       <OverlayHost
         event={event}
         mode={mode}
