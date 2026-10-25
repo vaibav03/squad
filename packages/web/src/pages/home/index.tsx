@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Badge } from '../../primitives/Badge';
 import { Button } from '../../primitives/Button';
 import { Card } from '../../primitives/Card';
 import { Icon } from '../../primitives/Icon';
@@ -43,7 +42,7 @@ export default function HomePage() {
                     <Link to={c.to} className="sq-home__row">
                       <span className={`sq-home__check${c.done ? ' is-done' : ''}`} aria-hidden="true">{c.done ? <Icon name="check" size={14} /> : null}</span>
                       <span className="sq-home__rowtext"><strong>{c.title}</strong><span>{c.body}</span></span>
-                      {c.done ? <Badge tone="ok" label="Done" count={undefined} /> : <span className="sq-home__todo">To do</span>}
+                      {c.done ? <span className="sq-home__done">Done</span> : <span className="sq-home__todo">To do</span>}
                       <Icon name="chevron-right" size={18} />
                     </Link>
                   </li>
