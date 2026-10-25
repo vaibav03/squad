@@ -8,71 +8,70 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `chat/` | 1 | 7 | 55 | Claude Sonnet 5.5 (7) |
-| `council/` | 1 | 11 | 40 | Claude Sonnet 5.5 (5) |
-| `integration/` | 2 | 56 | 586 | Claude Sonnet 5.5 (39) |
-| `plan/` | 1 | 1 | 4 | Claude Sonnet 5.5 (1) |
-| `qa/` | 1 | 4 | 245 | Claude Sonnet 5.5 (3) |
+| `chat/` | 1 | 9 | 143 | Claude Sonnet 5.5 (9) |
+| `council/` | 1 | 12 | 99 | Claude Sonnet 5.5 (6) |
+| `qa/` | 1 | 9 | 275 | Claude Sonnet 5.5 (8) |
 | `rooms/` | 2 | 11 | 138 | Claude Sonnet 5.5 (11) |
-| `ux/` | 1 | 25 | 267 | Claude Sonnet 5.5 (23) |
-| `wire/` | 3 | 26 | 385 | Claude Sonnet 5.5 (26) |
-| `ws/` | 16 | 178 | 3470 | Claude Sonnet 5.5 (148) |
+| `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `chat/web` | 7 | 55 | 2026-10-24 22:47 | 2026-10-24 23:09 | Vaibav |
-| `council/ask` | 11 | 40 | 2026-10-24 22:48 | 2026-10-24 23:12 | Vaibav |
-| `integration/final` | 12 | 74 | 2026-10-24 22:47 | 2026-10-24 23:08 | Vaibav |
-| `integration/preview` | 44 | 512 | 2026-10-24 20:15 | 2026-10-24 20:46 | Vaibav Venkatapathy |
-| `plan/interiors` | 1 | 4 | 2026-10-24 21:38 | 2026-10-24 21:38 | Vaibav Venkatapathy |
-| `qa/web` | 4 | 245 | 2026-10-24 22:54 | 2026-10-24 23:10 | Vaibav |
+| `chat/web` | 9 | 143 | 2026-10-24 22:47 | 2026-10-24 23:27 | Vaibav |
+| `council/ask` | 12 | 99 | 2026-10-24 22:48 | 2026-10-24 23:24 | Vaibav |
+| `qa/web` | 9 | 275 | 2026-10-24 22:54 | 2026-10-24 23:27 | Vaibav |
 | `rooms/a` | 7 | 60 | 2026-10-24 23:04 | 2026-10-24 23:13 | Vaibav |
 | `rooms/b` | 4 | 78 | 2026-10-24 23:07 | 2026-10-24 23:17 | Vaibav |
-| `ux/rooms` | 25 | 267 | 2026-10-24 22:21 | 2026-10-24 23:02 | Vaibav |
-| `wire/bot` | 7 | 45 | 2026-10-24 20:48 | 2026-10-24 21:42 | Vaibav Venkatapathy |
-| `wire/hub` | 8 | 73 | 2026-10-24 20:50 | 2026-10-24 21:47 | Vaibav Venkatapathy |
-| `wire/web` | 11 | 267 | 2026-10-24 20:51 | 2026-10-24 22:20 | Vaibav Venkatapathy |
-| `ws/brain-answers` | 7 | 80 | 2026-10-24 20:15 | 2026-10-24 20:30 | Vaibav Venkatapathy |
-| `ws/brain-quiz` | 7 | 54 | 2026-10-24 20:14 | 2026-10-24 20:26 | Vaibav Venkatapathy |
-| `ws/demo` | 7 | 51 | 2026-10-24 20:26 | 2026-10-24 20:33 | Vaibav Venkatapathy |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
-| `ws/interior-engine` | 9 | 211 | 2026-10-24 21:46 | 2026-10-24 22:13 | Vaibav Venkatapathy |
-| `ws/media-art` | 12 | 890 | 2026-10-24 20:16 | 2026-10-24 21:41 | Vaibav Venkatapathy |
-| `ws/media-audio` | 7 | 58 | 2026-10-24 20:19 | 2026-10-24 20:30 | Vaibav Venkatapathy |
-| `ws/mesh-crypto` | 7 | 52 | 2026-10-24 20:15 | 2026-10-24 20:22 | Vaibav Venkatapathy |
-| `ws/mesh-flows` | 14 | 121 | 2026-10-24 20:15 | 2026-10-24 20:35 | Vaibav Venkatapathy |
-| `ws/motion` | 10 | 80 | 2026-10-24 20:15 | 2026-10-24 20:30 | Vaibav Venkatapathy |
-| `ws/spine` | 7 | 66 | 2026-10-24 20:15 | 2026-10-24 20:37 | Vaibav Venkatapathy |
-| `ws/village-mesh` | 43 | 523 | 2026-10-24 20:15 | 2026-10-24 21:42 | Vaibav Venkatapathy |
-| `ws/village-scenes` | 16 | 510 | 2026-10-24 20:19 | 2026-10-24 20:51 | Vaibav Venkatapathy |
-| `ws/village-world` | 12 | 138 | 2026-10-24 20:16 | 2026-10-24 20:50 | Vaibav Venkatapathy |
-| `ws/web-live` | 6 | 320 | 2026-10-24 20:15 | 2026-10-24 20:42 | Vaibav Venkatapathy |
-| `ws/web-shell` | 8 | 225 | 2026-10-24 20:14 | 2026-10-24 20:35 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 56 |
-| Claude Sonnet 5.5 | 306 |
+| (no trailer) | 60 |
+| Claude Sonnet 5.5 | 316 |
 
 ## Commits landed on main by area (subject prefix)
 
 | Area | Commits |
 |---|---:|
+| (other) | 17 |
 | Initial commit | 1 |
+| Merge batch 1 | 1 |
+| brain-answers | 7 |
+| brain-quiz | 7 |
 | ci | 2 |
 | core | 4 |
+| demo | 7 |
 | design | 18 |
 | docs | 14 |
+| hub | 5 |
+| integration | 41 |
+| interior-engine | 9 |
+| media-art | 18 |
+| media-audio | 7 |
+| merge batch1 | 2 |
+| mesh-crypto | 13 |
+| mesh-flows | 8 |
+| motion | 10 |
+| plan | 1 |
 | repo | 4 |
+| spine | 13 |
+| ux | 7 |
+| village-mesh | 22 |
+| village-scenes | 18 |
+| village-world | 29 |
+| web-live | 10 |
+| web-shell | 8 |
+| wire-bot | 7 |
+| wire-hub | 8 |
+| wire-web | 11 |
 
 ## Authors (all commits)
 
 | Author | Commits |
 |---|---:|
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 70 |
+| Vaibav | 84 |
 | vaibav03 | 26 |
