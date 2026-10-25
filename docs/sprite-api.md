@@ -1,95 +1,85 @@
-# Sprite and portrait API (workstream media-art)
+# Sprite and portrait API (workstream media-art), format v2
 
-Status: format v1, frozen unless a consumer asks. Source of truth is `assets/sprites/**` on `ws/media-art`; consumers read it from `origin/ws/media-art` and stub until merged. All art is palette-locked to the 28-colour master palette (`docs/design/palette.json`), 1 px ink outline, integer scaling only.
+Status: v2 (rebased onto the design-foundation cast; v1 24 px chibi cells are gone). Source of truth is `assets/sprites/**` on `ws/media-art`; consumers read it from `origin/ws/media-art` and stub until merged. The art is the foundation renderer's 32x32 side-view cast plus our extension characters, so one outline, one proportion and one lighting language everywhere. Every pixel is on the 28-colour master palette (`docs/design/palette.json`), alpha is 0 or 255, 1 px ink outline, integer zoom only (DESIGN.md section 2).
 
 ## Files
 
 ```
 assets/sprites/
-  cast.png            one combined atlas image for the whole cast (village loads this)
-  cast.json           Phaser "JSON Hash" atlas for cast.png (load with this.load.atlas)
-  cast.meta.json      cast roster: ids, roles, anchors, anim table (same data as below, merged)
-  <id>/sheet.png      per-persona strip: frames laid out left-to-right in the order of frames.json
-  <id>/frames.json    per-persona atlas, see below
-  <id>/portrait.png   native-size pixel portrait, 40x40 (38 px Faceset art + 1 px ink margin), transparent background
-  <id>/portrait@2x.png  @3x @4x @6x   nearest-neighbour integer upscales, for UI chrome
-  wall/persona-wall.html  + wall-light.png, wall-dark.png   review sheets
+  cast.png            ONE combined atlas for the whole roster (village loads this)
+  cast.json           Phaser JSON Hash atlas + "animations" table (same shape as assets/pixel/composed/characters/atlas.json)
+  cast.meta.json      roster: id, role, spec, headTop; anim fps table
+  <id>/idle.png walk.png talk.png sit.png wave.png   per-persona strips, 32 px per frame, left to right
+  <id>/portrait.png   32x32 native portrait (opaque sky-mid plate with ink frame)
+  <id>/portrait@2x.png @3x @4x    nearest-neighbour integer upscales for DOM chrome
+  <id>/frames.json    per-persona atlas (below)
+  <id>/hello.gif talk.gif   iMessage GIFs
+  wall/persona-wall.html, wall-dark.png, wall-light.png   review wall
+  _contact-*.png      review contact sheets
 ```
+Rebuild everything deterministically: `pnpm --filter @squad/media build:sprites` (python3 + Pillow; byte-identical output, build asserts palette-only, no empty frames, no dead cycles).
 
-## Cell and anchors
+## Cell, anchor, facing
 
-- Every frame is a 24 x 24 cell (the 16 px character stands in the lower-middle, headroom is for hats, props, bubbles).
-- Native size: do not resample. Use integer zoom only (Phaser camera zoom or `setScale(n)`), `pixelArt: true`, `roundPixels: true`, CSS `image-rendering: pixelated`.
-- Anchors are in cell pixels (origin top-left) and are identical on every frame of one persona:
-  - `feet`  {x:12, y:23}  stand point. Phaser origin = (0.5, 23/24). Place this on the walk line.
-  - `head`  {x:12, y:9}   top of the head. Name tags and speech bubbles go 3 px above (`bubble` {x:12,y:5}).
-  - `hand`  {x:17, y:17}  right-hand point for props (lantern, book).
-  - `door`  {x:12, y:23}  same as feet; used when an agent stands at its door.
-- `cast.json` frames carry `pivot: {x:0.5, y:0.9583}` so Phaser uses the feet as origin automatically.
+- Every frame is a 32 x 32 cell; the figure is about 28 px tall (Autumn Town scale). Native size, never resample; integer zoom only (`pixelArt:true`, `roundPixels:true`).
+- Anchor = feet, `{x:16, y:31}`; Phaser origin `(0.5, 1.0)` (the atlas sets `pivot` for you). Feet sit on the walk line.
+- Characters face RIGHT in art; flip with `flipX` for left (the engine flips; light stays upper-left, accepted).
+- Per persona `frames.json` also gives `anchors.head` (top-most opaque pixel of idle_0, native cell coords) and `anchors.bubble` (3 px above it): put name tags and speech bubbles there.
 
-## Directions
+## Frame names and animations (identical for every persona)
 
-`r` = side view facing right (flip with `flipX` for left, art is lit from the upper left and the flip is accepted), `f` = front view (facing the viewer; used for talking, doors, portraits-in-world).
+Atlas keys: `<id>/<anim>/<n>` and `<id>/portrait`. Animation keys: `<id>/<anim>`.
 
-## Frame names (stable, identical for every persona)
+| anim | frames | fps | notes |
+|---|---|---|---|
+| `idle` | 2 | 2 | breathing, 1 px drop |
+| `walk` | 4 | 8 | contact, passing, contact, passing; planted foot moves 3 px per frame, so set ground speed = 24 px/s at 8 fps (no foot slide) |
+| `talk` | 2 | 8 | mouth open/closed plus a hand gesture; motion spec adds the 2 px bob and glow ring |
+| `sit` | 2 | 2 | seated at a desk/campfire |
+| `wave` | 2 | 4 | greeting, used for entrances |
 
-`<id>/<anim>_<dir>_<n>`
+All animations loop (`repeat: -1`). Example keys: `student-03/walk/2`, `cubbie/talk/1`, `dean/portrait`.
 
-| anim | dir | frames | fps | loop |
-|---|---|---|---|---|
-| `idle` | r, f | 2 (`_0`, `_1`; breathing, 1 px drop) | 2 | yes |
-| `walk` | r, f | 4 (`_0`..`_3`) | 8 | yes |
-| `talk` | r, f | 2 (`_0`, `_1`; mouth/hands pair, swap at 8 fps; motion spec adds the 2 px bob and glow) | 8 | yes |
+## Roster (ids are stable)
 
-Example: `student-03/walk_r_2`, `cubbie/talk_f_1`. In `cast.json` the key is exactly this string.
-
-## Per-persona `frames.json`
-
-```jsonc
-{
-  "version": 1,
-  "id": "cubbie",
-  "cell": { "w": 24, "h": 24 },
-  "image": "sheet.png",
-  "anchors": { "feet": {"x":12,"y":23}, "head": {"x":12,"y":9}, "bubble": {"x":12,"y":5}, "hand": {"x":17,"y":17} },
-  "frames": { "idle_r_0": { "x": 0, "y": 0, "w": 24, "h": 24 } /* ... */ },
-  "anims": { "idle_r": { "frames": ["idle_r_0","idle_r_1"], "fps": 2, "loop": true } /* walk_*, talk_* */ }
-}
-```
-`frames` keys in the per-persona file are unprefixed; in `cast.json` they are prefixed with `<id>/`.
+`cubbie` (bear mascot), `examiner`, `dean`, `expert-ada` `expert-sage` `expert-monk` `expert-mage` (chapter experts rotate through these four), `rival`, `council-chill` `council-grind` `council-advisor`, `chairman`, `feynman` (the freshman), `student-01`..`student-06` (the six picker avatars), plus the foundation NPCs `mediator` and `ta`.
+Mapping to the foundation's own ids (same pixels): `expert-ada` = expert, `council-grind` = council-hard, `council-advisor` = council-balance, `feynman` = freshman, `student-01` = student, `council-chill`/`examiner`/`dean`/`chairman`/`mediator`/`ta` unchanged. Village code may use either atlas; this one is a superset keyed by persona id and is what the registry points at.
 
 ## How the village loads it
 
 ```ts
 // preload
 this.load.atlas('cast', '/assets/sprites/cast.png', '/assets/sprites/cast.json');
-// create: one helper builds all anims for a persona
-import { phaserAnims } from '@squad/media/sprites';   // pure data, no Phaser import
-for (const a of phaserAnims('cubbie')) this.anims.create({ ...a, key: a.key });  // key e.g. "cubbie/walk_r"
-sprite = this.add.sprite(x, y, 'cast', 'cubbie/idle_r_0').setOrigin(0.5, 23/24);
-sprite.play('cubbie/walk_r');          // left: sprite.setFlipX(true)
+// create (pure data helper, no Phaser import)
+import { phaserAnims } from '@squad/media/sprites';
+for (const a of phaserAnims('cubbie')) this.anims.create(a);            // keys: "cubbie/walk", "cubbie/talk", ...
+const s = this.add.sprite(x, y, 'cast', 'cubbie/idle/0').setOrigin(0.5, 1);
+s.play('cubbie/walk');  s.setFlipX(goingLeft);                          // ground speed 24 px/s
 ```
-`phaserAnims(id)` returns `{ key, frames: [{key:'cast', frame:'<id>/<name>'}], frameRate, repeat }[]`.
-Speaking: swap `talk_f_0/1` (or `talk_r_*`) at 8 fps while `call.caption` audio plays; return to `idle_*` 1 s after audio ends.
+`phaserAnims(id)` returns `{ key, frames: [{ key: 'cast', frame: '<id>/<anim>/<n>' }], frameRate, repeat }[]`; `cast.json.animations` carries the same data for plain JSON consumers.
+Speaking: alternate `talk` (8 fps) while a `call.caption` audio plays, back to `idle` 1 s after the audio ends; the glow ring, 2 px bob and bubble come from the motion spec.
 
 ## How the web loads it
 
 ```tsx
-import { listPersonas, getPersona } from '@squad/media/personas';
+import { getPersona } from '@squad/media/personas';
 const p = getPersona('cubbie');
-p.portrait       // "assets/sprites/cubbie/portrait.png" (40x40 native; use <img class="pixelated" width={40*4}>) 
-p.spriteSheet    // "assets/sprites/cubbie/frames.json"
+p.portrait;    // "assets/sprites/cubbie/portrait.png" (32x32; render at 2x/3x with image-rendering: pixelated)
+p.spriteSheet; // "assets/sprites/cubbie/frames.json"
 ```
-The portrait pack also has `@2x/@3x/@4x/@6x` files; a CSS `image-rendering: pixelated` upscale of `portrait.png` is identical. Fluent 3D art stays available at `assets/fluent-characters/**` and each persona keeps an optional `fluentPortrait` path, but the default portrait is pixel art so the village, picker and ledger share one look. (Deviation from spec 05: portraits are the pack's hand-drawn Faceset art, quantized to the master palette, instead of Fluent 3D stickers. Say so if you need the Fluent default back; it is one field.)
+Portraits are opaque tiles; per DESIGN.md light pages, show them on their own `sky-deep` plate (the portrait already carries its own plate and ink frame). `fluentPortrait` (optional) points at the Fluent 3D art in `assets/fluent-characters/**` for small chrome icons only; the default is the pixel portrait so village, picker and ledger share one look (deviation from spec 05, one field to flip).
+DOM sprite animation without Phaser: CSS `background-image: url(walk.png)` at `width: 32*px`, `animation: steps(4)`, see `assets/sprites/wall/persona-wall.html`.
 
-## Roster (ids are stable)
+## Per-persona `frames.json`
 
-`cubbie`, `examiner`, `dean`, `expert-ada`, `expert-sage`, `expert-monk`, `expert-mage` (chapter experts rotate through these four), `rival`, `council-chill`, `council-grind`, `council-advisor`, `chairman`, `feynman`, `student-01` .. `student-06` (match the six avatars in the persona picker).
+```jsonc
+{ "version": 2, "id": "cubbie", "cell": {"w":32,"h":32}, "facing": "right",
+  "anchors": { "feet": {"x":16,"y":31}, "head": {"x":16,"y":3}, "bubble": {"x":16,"y":0} },
+  "portrait": "portrait.png",
+  "frames": { "walk/0": { "strip": "walk.png", "x": 0, "y": 0, "w": 32, "h": 32 } /* ... */ },
+  "anims":  { "walk": { "frames": ["walk/0","walk/1","walk/2","walk/3"], "frameRate": 8, "repeat": -1 } } }
+```
 
 ## iMessage GIFs
 
-`assets/sprites/<id>/hello.gif` (idle/wave loop) and `talk.gif`, nearest-neighbour 6x, transparent-safe dark card background.
-
-## Determinism
-
-`python3 packages/media/src/sprites/build/build_cast.py` rebuilds everything byte-for-byte (no randomness, no timestamps). `pnpm --filter @squad/media test` validates atlas shape, palette lock, anchors and frame bounds.
+`<id>/hello.gif` (wave, then talk, ~2 s loop) and `<id>/talk.gif` (talk pair with a speech-bubble), nearest-neighbour integer scale on a `sky-deep` card, under 400 KB, built from the frames with ffmpeg: `pnpm --filter @squad/media build:gifs`.

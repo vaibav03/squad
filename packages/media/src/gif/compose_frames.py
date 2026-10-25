@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Compose upscaled card frames for an iMessage GIF. Usage: compose_frames.py <id> <anim> <scale> <bg> <outdir>
-anim: idle | walk | talk | hello. Frames are emitted at 8 fps (one PNG per 125 ms). Deterministic."""
+"""Compose upscaled card frames for an iMessage GIF (format v2 sprites, 32 px cells, faces right).
+Usage: compose_frames.py <id> <anim> <scale> <bg:card|transparent> <outdir>
+anim: idle | walk | talk | wave | hello. One PNG per 125 ms (8 fps). Deterministic, master-palette pixels only."""
 import os, sys, json
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '../../../..'))
@@ -8,55 +9,54 @@ sys.path.insert(0, os.path.join(ROOT, 'assets/pixel/composed/scripts'))
 from palette import RGB
 from PIL import Image
 
-CARD = 160
-def load_frames(pid):
-    d = os.path.join(ROOT, 'assets/sprites', pid)
-    fj = json.load(open(os.path.join(d, 'frames.json'))); sheet = Image.open(os.path.join(d, fj['image'])).convert('RGBA')
+CELL = 32; CARD_ART = 38           # card is 38 art pixels square (headroom for the bubble), scaled by `scale`
+
+def loader(pid):
+    d = os.path.join(ROOT, 'assets/sprites', pid); fj = json.load(open(os.path.join(d, 'frames.json'))); cache = {}
     def get(name):
-        r = fj['frames'][name]; return sheet.crop((r['x'], r['y'], r['x']+r['w'], r['y']+r['h']))
-    return get
+        r = fj['frames'][name]
+        if r['strip'] not in cache: cache[r['strip']] = Image.open(os.path.join(d, r['strip'])).convert('RGBA')
+        return cache[r['strip']].crop((r['x'], r['y'], r['x'] + r['w'], r['y'] + r['h']))
+    return get, fj
 
-def bubble(im):
-    """3-dot speech bubble above the head (cell coords), palette colours only."""
-    px = im.load(); w = RGB['wall-lit'] + (255,); k = RGB['ink'] + (255,)
-    x0, y0 = 15, 1
-    for x in range(x0, x0+9):
-        for y in range(y0, y0+5):
-            edge = x in (x0, x0+8) or y in (y0, y0+4)
-            if (x in (x0, x0+8)) and (y in (y0, y0+4)): continue
-            px[x, y] = k if edge else w
-    for x in (x0+2, x0+4, x0+6): px[x, y0+2] = k
-    px[x0+2, y0+5] = k; px[x0+1, y0+6] = k
-    return im
+def bubble(card, head, ox, oy):
+    """3-dot speech bubble at art coords (card space), drawn after the frame so it may exceed the cell."""
+    px = card.load(); w = RGB['wall-lit'] + (255,); k = RGB['ink'] + (255,)
+    x0 = ox + head['x'] + 4; y0 = oy + max(head['y'] - 9, 1)
+    for x in range(x0, x0 + 9):
+        for y in range(y0, y0 + 5):
+            if x in (x0, x0 + 8) and y in (y0, y0 + 4): continue
+            px[x, y] = k if (x in (x0, x0 + 8) or y in (y0, y0 + 4)) else w
+    for x in (x0 + 2, x0 + 4, x0 + 6): px[x, y0 + 2] = k
+    px[x0 + 2, y0 + 5] = k; px[x0 + 1, y0 + 6] = k
 
-def sequence(pid, anim):
-    g = load_frames(pid)
-    if anim == 'idle': return [g('idle_f_0')]*4 + [g('idle_f_1')]*4
-    if anim == 'walk': return [g(f'walk_r_{i}') for i in (0, 1, 2, 3)]*2
-    if anim == 'talk': return [bubble(g(f'talk_f_{i}').copy()) for i in (0, 0, 1, 1)]*2
+def sequence(get, anim):
+    f = lambda a, n: get(f'{a}/{n}')
+    if anim == 'idle': return [(f('idle', 0), False)] * 4 + [(f('idle', 1), False)] * 4
+    if anim == 'walk': return [(f('walk', i), False) for i in (0, 1, 2, 3)] * 2
+    if anim == 'wave': return [(f('wave', i), False) for i in (0, 1)] * 4
+    if anim == 'talk': return [(f('talk', i), True) for i in (0, 0, 1, 1)] * 2
     if anim == 'hello':
-        return [g('idle_f_0')]*4 + [g('talk_f_0'), g('talk_f_1')]*4 + [g('idle_f_1')]*2 + [g('idle_f_0')]*2
+        return [(f('idle', 0), False)] * 2 + [(f('wave', i), False) for i in (0, 1)] * 3 + [(f('talk', i), True) for i in (0, 1)] * 2 + [(f('idle', 1), False)] * 2
     raise SystemExit('bad anim')
 
-def card(frame, scale, bg):
-    c = Image.new('RGBA', (CARD, CARD), RGB['sky-deep'] + (255,) if bg == 'card' else (0, 0, 0, 0))
+def render(frame, show_bubble, head, scale, bg):
+    art = Image.new('RGBA', (CARD_ART, CARD_ART), RGB['sky-deep'] + (255,) if bg == 'card' else (0, 0, 0, 0)); px = art.load()
+    ox, oy = (CARD_ART - CELL) // 2, CARD_ART - CELL - 2
     if bg == 'card':
-        px = c.load(); 
-        # hard-edged ground ellipse (palette colours only) under the feet + a lit rim row
-        cx, cy = CARD//2, CARD - 24
-        for y in range(cy-5, cy+6):
-            for x in range(cx-34, cx+35):
-                if ((x-cx)/34)**2 + ((y-cy)/5)**2 <= 1: px[x, y] = RGB['ground'] + (255,)
-        for x in range(0, CARD, 1):
-            for y in range(CARD-10, CARD): px[x, y] = RGB['ground'] + (255,)
-    s = frame.resize((frame.width*scale, frame.height*scale), Image.NEAREST)
-    # feet anchor (12,23) -> sits at the ground ellipse centre
-    c.alpha_composite(s, (CARD//2 - 12*scale, CARD - 24 - 23*scale + 4*scale//scale*0))
-    return c
+        gy = oy + 31                                          # ground line at the feet
+        for y in range(gy + 1, CARD_ART):
+            for x in range(CARD_ART): px[x, y] = RGB['ground'] + (255,)
+        for x in range(CARD_ART): px[x, gy + 1] = RGB['hill-near'] + (255,)
+        for x in range(ox + 6, ox + 27):                     # hard-edged shadow ellipse on the ground
+            px[x, gy] = RGB['ground'] + (255,)
+        for x in range(0, CARD_ART, 4): px[x, gy + 3] = RGB['hill-near'] + (255,) if gy + 3 < CARD_ART else None
+    art.alpha_composite(frame, (ox, oy))
+    if show_bubble: bubble(art, head, ox, oy)
+    return art.resize((CARD_ART * scale, CARD_ART * scale), Image.NEAREST)
 
 def main():
     pid, anim, scale, bg, out = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], sys.argv[5]
-    os.makedirs(out, exist_ok=True)
-    for i, fr in enumerate(sequence(pid, anim)): card(fr, scale, bg).save(os.path.join(out, f'f{i:03d}.png'))
-
+    os.makedirs(out, exist_ok=True); get, fj = loader(pid); head = fj['anchors']['head']
+    for i, (fr, b) in enumerate(sequence(get, anim)): render(fr, b, head, scale, bg).save(os.path.join(out, f'f{i:03d}.png'))
 if __name__ == '__main__': main()

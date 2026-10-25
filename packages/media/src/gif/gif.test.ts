@@ -20,7 +20,7 @@ describe.skipIf(!hasFfmpeg)('persona GIFs (needs ffmpeg)', () => {
     const b = buildPersonaGif({ id: 'cubbie', anim: 'talk', out: '/tmp/squad-gif-test-b.gif' });
     const pr = probeGif(a);
     expect(pr.frames).toBe(8);
-    expect(pr.width % 8).toBe(0);
+    expect(pr.width % 38).toBe(0);
     expect(pr.width).toBe(pr.height);
     expect(statSync(a).size).toBeLessThan(400 * 1024);
     expect(statSync(a).size).toBe(statSync(b).size);

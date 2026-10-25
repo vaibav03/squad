@@ -22,7 +22,7 @@ export interface BuildGifOptions {
 export function buildPersonaGif({
   id,
   anim,
-  scale = 6,
+  scale = 5,
   bg = 'card',
   out,
 }: BuildGifOptions): string {
