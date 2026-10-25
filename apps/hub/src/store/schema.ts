@@ -24,4 +24,6 @@ CREATE TABLE IF NOT EXISTS hub_confirmed_tasks(task_id TEXT PRIMARY KEY);
 
 export function ensureHubSchema(db: Db): void {
   db.exec(HUB_SCHEMA);
+  // Privacy migration: event titles are never kept; blank any stored by older versions (idempotent).
+  db.exec("UPDATE hub_busy_blocks SET title='busy' WHERE title<>'busy'");
 }

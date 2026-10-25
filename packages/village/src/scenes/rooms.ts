@@ -17,3 +17,4 @@ export function getRoomSession(): RoomSession | undefined {
 }
 
 export * from './mastery';
+export * from './plan';

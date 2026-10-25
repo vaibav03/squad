@@ -4,7 +4,7 @@ import { assembleBrain } from './experts/brain';
 import type { Brain, BrainDeps } from './experts/types';
 import { createCourseStore, ingestPdfFile } from './ingest';
 import { createBehindSkill } from './skills/behind';
-import { createDoubtSkill } from './skills/doubt';
+import { createDoubtSkill, type DoubtOptions } from './skills/doubt';
 import { createHwPolicySkill } from './skills/hwpolicy';
 
 /** The one factory: course store, ingest, Dean, experts, captions, all on one Llm/Db/Emit. */
@@ -19,11 +19,15 @@ export function createBrain(deps: BrainDeps): Brain {
 }
 
 /** doubt + behind + hwpolicy, ready for the spine registry (`buildRegistry(..., answerSkills(brain))`). */
-export function answerSkills(brain: Brain, courseId?: () => string): Skill[] {
+export function answerSkills(
+  brain: Brain,
+  courseId?: () => string,
+  viewerFor?: DoubtOptions['viewerFor'],
+): Skill[] {
   const opts = courseId ? { courseId } : {};
   return [
     createHwPolicySkill(brain, opts),
     createBehindSkill(brain, opts),
-    createDoubtSkill(brain, opts),
+    createDoubtSkill(brain, { ...opts, ...(viewerFor ? { viewerFor } : {}) }),
   ];
 }

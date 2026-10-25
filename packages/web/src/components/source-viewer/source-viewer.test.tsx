@@ -8,6 +8,7 @@ import {
   SourceViewerHost,
   openSource,
   parseCitationString,
+  parseSourceUri,
   sourceFixtures,
 } from './index';
 import { clearSourceCache } from './data';
@@ -192,5 +193,102 @@ describe('host', () => {
     fireEvent.click(screen.getByText('Try again'));
     await settle();
     expect(screen.getByText('Verified quote')).toBeTruthy();
+  });
+});
+
+describe('non-PDF sources (Canvas / Drive / Calendar)', () => {
+  const CQ = 'Late work loses 10 percent per day';
+  const ref = {
+    kind: 'canvas_assignment' as const,
+    id: 'src_a301',
+    anchor: 's1',
+    title: 'Assignment 3: Sampling Distributions',
+  };
+
+  it('parses source URIs and rejects pdf/unknown kinds', () => {
+    expect(parseSourceUri('source://canvas_assignment/src_1#s2')).toEqual({
+      kind: 'canvas_assignment',
+      id: 'src_1',
+      anchor: 's2',
+    });
+    expect(parseSourceUri('source://pdf/x')).toBeNull();
+    expect(parseSourceUri('source://nope/x')).toBeNull();
+  });
+
+  it('renders a verified Canvas quote, a demo badge and an external link', () => {
+    const { container } = render(
+      <SourceExcerptView excerpt={sourceFixtures.canvasVerified} state="ready" />,
+    );
+    expect(screen.getByText('Verified quote')).toBeTruthy();
+    expect(screen.getByText('Canvas assignment')).toBeTruthy();
+    expect(screen.getByTestId('source-fixture').textContent).toMatch(/not a real account/);
+    expect(container.querySelector('mark')!.textContent).toContain('Late work loses');
+    const link = screen.getByRole('link', { name: /Open in Canvas/ }) as HTMLAnchorElement;
+    expect(link.href).toContain('canvas.fixture.invalid');
+    expect(link.rel).toContain('noopener');
+    expect(screen.getByTestId('source-live').textContent).toBe(
+      'Verified quote found in Assignment 3: Sampling Distributions',
+    );
+    expect(screen.queryByText('Next page')).toBeNull();
+  });
+
+  it('flags an unverified quote and never renders a javascript: link', () => {
+    const { rerender } = render(
+      <SourceExcerptView excerpt={sourceFixtures.canvasUnverified} state="ready" />,
+    );
+    expect(screen.getByText('Quote not in this source')).toBeTruthy();
+    rerender(
+      <SourceExcerptView
+        excerpt={
+          {
+            ...(sourceFixtures.canvasVerified as object),
+            externalUrl: 'javascript:alert(1)',
+          } as never
+        }
+        state="ready"
+      />,
+    );
+    expect(screen.queryByRole('link', { name: /Open in/ })).toBeNull();
+  });
+
+  it('shows a clear revoked state', () => {
+    render(<SourceExcerptView excerpt={sourceFixtures.revoked} state="ready" onClose={() => {}} />);
+    expect(screen.getByText('Access to this source was revoked')).toBeTruthy();
+  });
+
+  it('chip and host open a source citation in mock mode', async () => {
+    render(
+      <>
+        <CitationChip citation={{ file: ref.title, page: 1, quote: CQ, source: ref }} />
+        <SourceViewerHost />
+      </>,
+    );
+    const chip = screen.getByRole('button', { name: /Source: Assignment 3.*Canvas assignment/ });
+    expect(chip.textContent).toBe(ref.title);
+    fireEvent.click(chip);
+    await settle();
+    expect(screen.getByRole('dialog', { name: ref.title })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Open in Canvas/ })).toBeTruthy();
+    expect(screen.getByText('Verified quote')).toBeTruthy();
+  });
+
+  it('live mode: calls /v1/context/source and shows revoked', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ status: 200, json: async () => ({ ok: false, reason: 'revoked' }) });
+    vi.stubGlobal('fetch', fetchMock);
+    render(
+      <LiveConfigProvider value={{ mode: 'live', hubUrl: 'http://hub', token: 't', userId: 'u' }}>
+        <SourceViewerHost />
+      </LiveConfigProvider>,
+    );
+    act(() => openSource({ file: ref.title, page: 1, quote: CQ, source: ref }));
+    await settle();
+    const url = String(fetchMock.mock.calls[0]![0]);
+    expect(url).toContain('http://hub/v1/context/source?');
+    expect(url).toContain('id=src_a301');
+    expect(url).toContain('kind=canvas_assignment');
+    expect(url).toContain('anchor=s1');
+    expect(screen.getByText('Access to this source was revoked')).toBeTruthy();
   });
 });

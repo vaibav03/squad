@@ -1,0 +1,417 @@
+{
+  "name": "track4c-council-private",
+  "version": 1,
+  "loop": false,
+  "cast": {
+    "me": "s_ana",
+    "chair": "council:ask-chair",
+    "skeptic": "council:ask-skeptic",
+    "teacher": "council:ask-teacher",
+    "practitioner": "council:ask-practitioner"
+  },
+  "events": [
+    {
+      "at": 0,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "question",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 200,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000001",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 0,
+          "from": "council:ask-chair",
+          "to": "room",
+          "kind": "status",
+          "stage": "question",
+          "status": "working",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000000200
+        }
+      }
+    },
+    {
+      "at": 900,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "delegation",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 1000,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000002",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 1,
+          "from": "council:ask-chair",
+          "to": "council:ask-skeptic",
+          "kind": "delegate",
+          "parentMessageId": "am_000000000001",
+          "stage": "delegation",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000001000
+        }
+      }
+    },
+    {
+      "at": 1300,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000003",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 2,
+          "from": "council:ask-chair",
+          "to": "council:ask-teacher",
+          "kind": "delegate",
+          "parentMessageId": "am_000000000001",
+          "stage": "delegation",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000001300
+        }
+      }
+    },
+    {
+      "at": 1600,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000004",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 3,
+          "from": "council:ask-chair",
+          "to": "council:ask-practitioner",
+          "kind": "delegate",
+          "parentMessageId": "am_000000000001",
+          "stage": "delegation",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000001600
+        }
+      }
+    },
+    {
+      "at": 2400,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "opinions",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 3000,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000005",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 4,
+          "from": "council:ask-skeptic",
+          "to": "council:ask-teacher",
+          "kind": "ask",
+          "parentMessageId": "am_000000000002",
+          "stage": "opinions",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000003000
+        }
+      }
+    },
+    {
+      "at": 4200,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000006",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 5,
+          "from": "council:ask-teacher",
+          "to": "council:ask-skeptic",
+          "kind": "answer",
+          "parentMessageId": "am_000000000005",
+          "stage": "opinions",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000004200
+        }
+      }
+    },
+    {
+      "at": 5200,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000007",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 6,
+          "from": "council:ask-skeptic",
+          "to": "council:ask-chair",
+          "kind": "answer",
+          "parentMessageId": "am_000000000002",
+          "stage": "opinions",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000005200
+        }
+      }
+    },
+    {
+      "at": 6200,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000008",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 7,
+          "from": "council:ask-teacher",
+          "to": "council:ask-chair",
+          "kind": "answer",
+          "parentMessageId": "am_000000000003",
+          "stage": "opinions",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000006200
+        }
+      }
+    },
+    {
+      "at": 7200,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000009",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 8,
+          "from": "council:ask-practitioner",
+          "to": "council:ask-chair",
+          "kind": "answer",
+          "parentMessageId": "am_000000000004",
+          "stage": "opinions",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000007200
+        }
+      }
+    },
+    {
+      "at": 8400,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "critiques",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 8800,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000010",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 9,
+          "from": "council:ask-skeptic",
+          "to": "council:ask-practitioner",
+          "kind": "critique",
+          "parentMessageId": "am_000000000009",
+          "stage": "critiques",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000008800
+        }
+      }
+    },
+    {
+      "at": 9300,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000011",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 10,
+          "from": "council:ask-skeptic",
+          "to": "council:ask-chair",
+          "kind": "rank",
+          "parentMessageId": "am_000000000002",
+          "stage": "critiques",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000009300
+        }
+      }
+    },
+    {
+      "at": 9600,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000012",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 11,
+          "from": "council:ask-teacher",
+          "to": "council:ask-chair",
+          "kind": "rank",
+          "parentMessageId": "am_000000000003",
+          "stage": "critiques",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000009600
+        }
+      }
+    },
+    {
+      "at": 10000,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000013",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 12,
+          "from": "council:ask-practitioner",
+          "to": "council:ask-chair",
+          "kind": "rank",
+          "parentMessageId": "am_000000000004",
+          "stage": "critiques",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000010000
+        }
+      }
+    },
+    {
+      "at": 11000,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "dissent",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 12000,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "verdict",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 12400,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000014",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 13,
+          "from": "council:ask-chair",
+          "to": "room",
+          "kind": "verdict",
+          "parentMessageId": "am_000000000001",
+          "stage": "verdict",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000012400
+        }
+      }
+    },
+    {
+      "at": 13200,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "actions",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 14000,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "done",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    }
+  ],
+  "checkpoints": {
+    "delegation": 1000,
+    "opinions": 2400,
+    "critiques": 8400,
+    "verdict": 12000
+  }
+}

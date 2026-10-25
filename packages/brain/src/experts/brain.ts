@@ -2,6 +2,8 @@ import { z } from 'zod';
 import type { Citation } from '@squad/core';
 import { createDean } from '../dean';
 import { claimToCitation } from '../citations';
+import { answerFromContext } from '../context/answer';
+import type { ContextViewer } from '../context/types';
 import type { CourseStore } from '../ingest/types';
 import { BrainUnavailableError } from './errors';
 import { createContextProvider } from './context';
@@ -118,7 +120,31 @@ export function assembleBrain(deps: CreateBrainDeps): Brain {
       for (const c of store.listChapters(courseId)) contexts.invalidate(courseId, c.id);
       return n;
     },
-    async ask(courseId, question): Promise<ExpertAnswer> {
+    async ask(courseId, question, opts): Promise<ExpertAnswer> {
+      const pdf = await askPdf(courseId, question);
+      if (!deps.context || !opts?.viewer) return pdf;
+      // Only chunks the viewer may read (own + squad-shared) are ever retrieved; claims are verified verbatim.
+      const ctxCourse = opts.contextCourseId === undefined ? courseId : opts.contextCourseId;
+      const hits = deps.context.search(question, opts.viewer as ContextViewer, {
+        ...(ctxCourse ? { courseId: ctxCourse } : {}),
+        limit: 4,
+      });
+      if (hits.length === 0) return pdf;
+      const ctx = await answerFromContext(llm, question, hits);
+      if (!ctx.grounded) return pdf;
+      if (!pdf.grounded) return { ...ctx, struck: ctx.struck + pdf.struck };
+      return {
+        text: `${pdf.text} ${ctx.text}`,
+        citations: [...pdf.citations, ...ctx.citations],
+        grounded: true,
+        claims: [...pdf.claims, ...ctx.claims],
+        chapters: [...new Set([...pdf.chapters, ...ctx.chapters])],
+        struck: pdf.struck + ctx.struck,
+      };
+    },
+  };
+  async function askPdf(courseId: string, question: string): Promise<ExpertAnswer> {
+    {
       const route = await dean.route(courseId, question);
       if (route.chapters.length === 0)
         return {
@@ -145,7 +171,7 @@ export function assembleBrain(deps: CreateBrainDeps): Brain {
       if (grounded.length === 0) return ok[0]!;
       if (grounded.length === 1) return grounded[0]!;
       return mergeAnswers(llm, question, grounded[0]!, grounded[1]!);
-    },
-  };
+    }
+  }
   return brain;
 }

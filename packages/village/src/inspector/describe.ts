@@ -405,6 +405,9 @@ export function eventWords(
           : `${studentName(e.student)} practised ${chapterName(e.chapter)}`,
         skill: 'Mastery',
       };
+    case 'a2a.message':
+    case 'council.stage':
+      return { now: SAFE_GENERIC, log: SAFE_GENERIC };
     default: {
       const _x: never = e;
       void _x;

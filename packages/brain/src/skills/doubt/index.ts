@@ -12,6 +12,11 @@ export const UNAVAILABLE_TEXT =
 
 export interface DoubtOptions {
   courseId?: (m: InboundMessage) => string;
+  /**
+   * The asker as a context viewer (squad membership verified by the caller). With it, the doubt is also answered
+   * from the asker's own and squad-shared Canvas/Drive sources and cites them. Absent: unchanged behaviour.
+   */
+  viewerFor?: (m: InboundMessage) => { studentId: string; squadIds: string[] } | undefined;
 }
 
 /**
@@ -33,7 +38,12 @@ export function createDoubtSkill(brain: Brain, opts: DoubtOptions = {}): Skill {
       const question = stripMention(m.text);
       let text: string;
       try {
-        const a = await brain.ask(course(m), question);
+        const viewer = opts.viewerFor?.(m);
+        const a = await brain.ask(
+          course(m),
+          question,
+          viewer ? { viewer, contextCourseId: null } : undefined,
+        );
         text = a.grounded ? a.text : NOT_IN_MATERIALS;
       } catch {
         // Any failure is answered honestly; nothing is invented from model memory.

@@ -277,6 +277,30 @@ describe('ReplaySource', () => {
       'call.end': { t: 'call.end', agent: 'dean', callId: 'c' },
       'trip.confirmed': { t: 'trip.confirmed', taskId: 'x', squadId: 's' },
       'mastery.changed': { t: 'mastery.changed', student: 's', chapter: 'c', box: 1 },
+      'council.stage': {
+        t: 'council.stage',
+        councilId: 'c',
+        correlationId: 'cn_k3j9x0a1b2c3',
+        stage: 'question',
+        mode: 'demo',
+      },
+      'a2a.message': {
+        t: 'a2a.message',
+        msg: {
+          id: 'am_a1b2c3d4e5f6',
+          correlationId: 'cn_k3j9x0a1b2c3',
+          seq: 0,
+          from: 'council:ask-chair',
+          to: 'room',
+          kind: 'status',
+          stage: 'question',
+          status: 'working',
+          mode: 'demo',
+          source: 'script',
+          redaction: 'public',
+          ts: 1,
+        },
+      },
     };
     const clock = new FakeClock();
     const r = createReplaySource(

@@ -26,6 +26,39 @@ export interface GatewayInbound {
   sender: string;
   text: string;
   ts: number;
+  /** Files Apple reports on the message (local paths on this Mac). Empty for plain text. */
+  attachments: GatewayAttachment[];
+  /** true when this arrived through backfill rather than the live watcher. */
+  late?: boolean;
+}
+
+export interface GatewayAttachment {
+  localPath: string | null;
+  mime: string;
+  name?: string;
+}
+
+/** What `sendOne` reports. `sent` only when the transport confirmed. */
+export interface SendDetail {
+  outcome: SendOutcome;
+  /** the transport's guid for the new message, when it reports one */
+  guid?: string;
+  error?: string;
+}
+
+export type TransportHealth = 'ok' | 'degraded' | 'disabled' | 'dry_run';
+export interface GatewayHealth {
+  state: TransportHealth;
+  consecutiveFailures: number;
+  lastOkAt?: number;
+  lastErrorAt?: number;
+  /** the watcher reported an error and has not delivered since */
+  watcherDown: boolean;
+}
+export interface GatewayCapabilities {
+  attachments: boolean;
+  receipts: boolean;
+  backfill: boolean;
 }
 
 export interface OutboxEntry {
@@ -47,6 +80,19 @@ export interface IMessageGateway {
   stop(): Promise<void>;
   /** Text to a group chat guid or a 1:1 handle; long text is split. Never throws. */
   send(to: string, text: string): Promise<SendOutcome>;
+  /** One message (text and/or files), no splitting, with a detailed outcome. Never throws. */
+  sendOne(r: { to: string; text?: string; attachments?: readonly string[] }): Promise<SendDetail>;
+  health(): GatewayHealth;
+  capabilities(): Promise<GatewayCapabilities>;
+  /** Delivery receipts from transports that have them (matched by the guid `sendOne` returned). */
+  onReceipt(
+    fn: (r: { guid: string; state: 'delivered' | 'failed'; reason?: string }) => void,
+  ): void;
+  /**
+   * Fetch what a chat received since `since` and feed it to the inbound handler, flagged `late`. Safety, dedupe and
+   * allowlists apply. Returns how many messages were handed on (0 when the transport cannot backfill).
+   */
+  backfill(chatGuid: string, since: number, limit?: number): Promise<number>;
   /** The raw SDK-shaped send used by the standalone transport (text and/or attachments). */
   sendRaw(r: { to: string; text?: string; attachments?: readonly string[] }): Promise<void>;
   /** Safety-filtered raw watcher for the standalone transport. */
@@ -100,30 +146,44 @@ export function createIMessageGateway(o: GatewayOptions): IMessageGateway {
   };
   // logs carry lengths and the chat kind, never the text or the handle
 
-  async function deliver(r: { to: string; text?: string; attachments?: readonly string[] }) {
+  let consecutiveFailures = 0;
+  let lastOkAt: number | undefined;
+  let lastErrorAt: number | undefined;
+  let watcherDown = false;
+  const receiptFns: Parameters<IMessageGateway['onReceipt']>[0][] = [];
+  let inbound: ((m: GatewayInbound) => void | Promise<void>) | undefined;
+  const DEGRADED_AFTER = 3;
+
+  async function deliver(r: {
+    to: string;
+    text?: string;
+    attachments?: readonly string[];
+  }): Promise<SendDetail> {
     const verdict = safety.admitOutbound(r.to);
     if (!verdict.ok) {
       drops[`out_${verdict.reason}`] = (drops[`out_${verdict.reason}`] ?? 0) + 1;
-      return verdict.reason;
+      return { outcome: verdict.reason };
     }
     if (!safety.consume(r.to)) {
       drops.out_rate_limited = (drops.out_rate_limited ?? 0) + 1;
       log.warn({ kind: verdict.kind }, 'imessage: outbound rate limit, message dropped');
-      return 'rate_limited' as const;
+      return { outcome: 'rate_limited' };
     }
     const text = r.text ?? '';
     if (cfg.dryRun) {
       record({ to: r.to, kind: verdict.kind, text, dryRun: true, at: now() });
       log.info({ kind: verdict.kind, len: text.length }, 'imessage DRY RUN: would send');
       if (text) safety.noteSent(r.to, text);
-      return 'dry_run' as const;
+      return { outcome: 'dry_run' };
     }
     const sdk = await getSdk();
+    let guid: string | undefined;
     try {
       await limiter.run(async () => {
         for (let attempt = 1; ; attempt++) {
           try {
-            await sdk.send(r);
+            const res = (await sdk.send(r)) as { guid?: string } | undefined;
+            if (res && typeof res.guid === 'string') guid = res.guid;
             break;
           } catch (e) {
             log.warn(
@@ -134,13 +194,17 @@ export function createIMessageGateway(o: GatewayOptions): IMessageGateway {
           }
         }
       });
-    } catch {
-      return 'failed' as const;
+    } catch (e) {
+      consecutiveFailures++;
+      lastErrorAt = now();
+      return { outcome: 'failed', error: (e as Error).message.slice(0, 120) };
     }
+    consecutiveFailures = 0;
+    lastOkAt = now();
     if (text) safety.noteSent(r.to, text);
     record({ to: r.to, kind: verdict.kind, text, dryRun: false, at: now() });
     log.info({ kind: verdict.kind, len: text.length }, 'imessage sent');
-    return 'sent' as const;
+    return { outcome: 'sent', ...(guid ? { guid } : {}) };
   }
 
   const normalize = (m: IMessageMessageLike): GatewayInbound => ({
@@ -150,6 +214,11 @@ export function createIMessageGateway(o: GatewayOptions): IMessageGateway {
     sender: senderOf(m),
     text: m.text ?? '',
     ts: m.createdAt.getTime(),
+    attachments: (m.attachments ?? []).map((a) => ({
+      localPath: a.localPath,
+      mime: a.mimeType || 'application/octet-stream',
+      ...(a.fileName ? { name: a.fileName } : {}),
+    })),
   });
 
   const gw: IMessageGateway = {
@@ -160,17 +229,21 @@ export function createIMessageGateway(o: GatewayOptions): IMessageGateway {
     async start(onInbound) {
       if (started) throw new Error('iMessage gateway already started (one watcher per process)');
       started = true;
+      inbound = onInbound;
       try {
         await gw.watchRaw({
           onIncomingMessage: async (raw) => {
-            if (!raw.text) return; // attachments-only messages are not chat text
+            if (!raw.text && !raw.attachments?.length) return; // nothing to show
             try {
               await onInbound(normalize(raw));
             } catch (e) {
               log.error({ err: (e as Error).message }, 'imessage inbound handler failed');
             }
           },
-          onError: (e) => log.error({ err: e.message }, 'imessage watcher error'),
+          onError: (e) => {
+            watcherDown = true;
+            log.error({ err: e.message }, 'imessage watcher error');
+          },
         });
       } catch (e) {
         started = false;
@@ -186,6 +259,7 @@ export function createIMessageGateway(o: GatewayOptions): IMessageGateway {
       await sdk.startWatching({
         ...events,
         onIncomingMessage: async (raw) => {
+          watcherDown = false;
           const v = safety.admitInbound(raw);
           if (!v.ok) {
             drop(v.reason);
@@ -193,6 +267,9 @@ export function createIMessageGateway(o: GatewayOptions): IMessageGateway {
           }
           await events.onIncomingMessage?.(raw);
         },
+      });
+      sdk.watchReceipts?.((r) => {
+        for (const fn of receiptFns) fn(r);
       });
     },
     async stop() {
@@ -203,17 +280,83 @@ export function createIMessageGateway(o: GatewayOptions): IMessageGateway {
       await sdk.close().catch(() => undefined);
       sdkP = undefined;
     },
+    sendOne: async (r) => {
+      try {
+        return await deliver(r);
+      } catch (e) {
+        consecutiveFailures++;
+        lastErrorAt = now();
+        return { outcome: 'failed', error: (e as Error).message.slice(0, 120) };
+      }
+    },
+    health() {
+      const state: TransportHealth = !cfg.enabled
+        ? 'disabled'
+        : cfg.dryRun
+          ? 'dry_run'
+          : consecutiveFailures >= DEGRADED_AFTER || watcherDown
+            ? 'degraded'
+            : 'ok';
+      return {
+        state,
+        consecutiveFailures,
+        watcherDown,
+        ...(lastOkAt !== undefined ? { lastOkAt } : {}),
+        ...(lastErrorAt !== undefined ? { lastErrorAt } : {}),
+      };
+    },
+    async capabilities() {
+      const sdk = await getSdk();
+      return {
+        attachments: true,
+        receipts: typeof sdk.watchReceipts === 'function',
+        backfill: typeof sdk.listMessages === 'function',
+      };
+    },
+    onReceipt(fn) {
+      receiptFns.push(fn);
+    },
+    async backfill(chatGuid, since, limit = 200) {
+      if (!cfg.enabled || !inbound) return 0;
+      const sdk = await getSdk();
+      if (!sdk.listMessages) return 0;
+      let got: Awaited<ReturnType<NonNullable<typeof sdk.listMessages>>>;
+      try {
+        got = await sdk.listMessages({ chatId: chatGuid, since: new Date(since), limit });
+      } catch (e) {
+        log.warn({ err: (e as Error).message }, 'imessage backfill failed');
+        return 0;
+      }
+      watcherDown = false;
+      let n = 0;
+      const sorted = [...got].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      for (const raw of sorted) {
+        if (!raw.text && !raw.attachments?.length) continue;
+        const v = safety.admitInbound(raw, { backfill: true });
+        if (!v.ok) {
+          drop(v.reason);
+          continue;
+        }
+        try {
+          await inbound({ ...normalize(raw), late: true });
+          n++;
+        } catch (e) {
+          log.error({ err: (e as Error).message }, 'imessage backfill handler failed');
+        }
+      }
+      return n;
+    },
     async send(to, text) {
       const parts = splitMessage(text, o.maxLen ?? 900);
       let last: SendOutcome = 'sent';
       for (const p of parts) {
-        last = await deliver({ to, text: p });
+        last = (await deliver({ to, text: p })).outcome;
         if (last !== 'sent' && last !== 'dry_run') break;
       }
       return last;
     },
     async sendRaw(r) {
-      const out = await deliver(r);
+      const out = (await deliver(r)).outcome;
       if (out === 'failed') throw new Error('imessage send failed');
     },
     guardedSdk() {

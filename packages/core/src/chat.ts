@@ -1,5 +1,7 @@
 // Web chat wire contract (docs/chat-api.md). Browser-safe: the hub, the bot's web transport and the web app share it.
 import { z } from 'zod';
+import { CitationSourceSchema } from './context';
+import { ChatSyncFieldsSchema } from './chat-sync';
 
 /** Chat ids: `group:<squadId>` for the squad group chat, `dm:<studentId>` for a private chat with Cubbie. */
 export const ChatIdSchema = z.string().regex(/^(group|dm):[A-Za-z0-9_-]{1,64}$/);
@@ -32,6 +34,8 @@ export const ChatCitationSchema = z.strictObject({
   page: z.number().int().positive(),
   /** Display label, e.g. `ch6.pdf p.4`. */
   label: z.string(),
+  /** Set for non-PDF sources; `file` is then the display title and `page` is 1. */
+  source: CitationSourceSchema.optional(),
 });
 export type ChatCitation = z.infer<typeof ChatCitationSchema>;
 
@@ -58,6 +62,13 @@ export const ChatCardSchema = z.discriminatedUnion('type', [
     question: z.string().max(600).optional(),
   }),
   /** Live discussion takeaways card; fetch `GET /v1/live/:id` (docs/live-discussion.md). */
+  /** Shared study plan card; fetch `GET /v1/plans/:planId` (docs/study-plan.md). */
+  z.strictObject({
+    type: z.literal('plan'),
+    planId: z.string().regex(/^pl_[a-z0-9]{10}$/),
+    rev: z.number().int().nonnegative().optional(),
+    status: z.string().max(20).optional(),
+  }),
   z.strictObject({
     type: z.literal('live'),
     liveId: z.string().regex(/^ld_[a-z0-9]{12}$/),
@@ -66,7 +77,7 @@ export const ChatCardSchema = z.discriminatedUnion('type', [
 ]);
 export type ChatCard = z.infer<typeof ChatCardSchema>;
 
-export const ChatMessageSchema = z.strictObject({
+export const ChatMessageSchema = ChatSyncFieldsSchema.extend({
   id: z.string(), // `m_<seq>`
   seq: z.number().int().positive(), // chat sequence; the SSE id; strictly increasing across the hub
   chatId: ChatIdSchema,

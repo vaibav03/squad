@@ -4,7 +4,12 @@ import { Sheet } from '../../primitives/Sheet';
 import { citationKey, fetchRawObjectUrl, getCached, loadSource, OfflineError } from './data';
 import { SourceExcerptView, type SourceViewPhase } from './SourceExcerptView';
 import { closeSource, registerHost, useCurrentSource } from './store';
-import type { SourceCitation, SourceExcerpt } from './types';
+import {
+  isExternalExcerpt,
+  type PdfSourceExcerpt,
+  type SourceCitation,
+  type SourceExcerpt,
+} from './types';
 
 function useDesktop(): boolean {
   const [d, setD] = useState(() =>
@@ -91,7 +96,7 @@ export function SourceViewerHost() {
     if (el && typeof el.focus === 'function') setTimeout(() => el.isConnected && el.focus(), 0);
   }, []);
 
-  const openFile = useCallback(async (ex: Extract<SourceExcerpt, { ok: true }>) => {
+  const openFile = useCallback(async (ex: PdfSourceExcerpt) => {
     const c = cfgRef.current;
     const abs = /^https?:/i.test(ex.openUrl)
       ? ex.openUrl
@@ -106,8 +111,11 @@ export function SourceViewerHost() {
   }, []);
 
   if (!effective) return null;
-  const shown = loaded.excerpt && loaded.excerpt.ok ? loaded.excerpt : null;
-  const title = `${effective.file}, page ${effective.page}`;
+  const shown =
+    loaded.excerpt && loaded.excerpt.ok && !isExternalExcerpt(loaded.excerpt)
+      ? loaded.excerpt
+      : null;
+  const title = effective.source ? effective.file : `${effective.file}, page ${effective.page}`;
 
   return (
     <Sheet open={!!request} onClose={close} title={title} side={desktop ? 'right' : 'bottom'}>

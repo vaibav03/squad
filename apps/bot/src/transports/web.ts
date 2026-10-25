@@ -92,7 +92,9 @@ export class WebTransport implements Transport {
           ? { card: live.card }
           : quiz
             ? { card: quiz.card }
-            : {}),
+            : o.card
+              ? { card: o.card }
+              : {}),
     });
   }
 

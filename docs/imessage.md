@@ -24,8 +24,8 @@ hub chat store  --onBotPost-->  bridge  --renderForIMessage-->  gateway.send(gro
 
 - Group chats map to `group:<squadId>` through the table `chat_bindings` (unique per `chat_guid`; a squad may serve
   several chats). A 1:1 maps to `dm:<userId>`.
-- Only **bot** messages are mirrored out. A web student's own words are not copied into the iMessage group (the bot
-  would be impersonating them); iMessage members see the bot's answers and their own chat.
+- Bot messages are mirrored out. A web student's own words are copied into the bound group only under the mirroring rules
+  of section 8.4 (by default only when they @mention an agent, labelled `<name> (via Squad): ...`, never as the person).
 - The speaking policy is untouched: the router decides whether the bot speaks (mentioned, or score >= 0.8 with the
   120 s unprompted cooldown). The bridge only carries what the router already posted. 50 lines of banter in a bound
   group produce zero bot messages (tested, `bridge.test.ts` and the bot adversarial suite).
@@ -47,6 +47,9 @@ Code map:
 | `apps/hub/src/imessage/commands.ts` | `join`, `leave squad`, `who is linked` parsing |
 | `apps/hub/src/imessage/routes.ts` | `GET/POST/DELETE /v1/imessage/link` |
 | `apps/hub/src/imessage/wire.ts` | `attachIMessage`, called from `apps/hub/src/main.ts` |
+| `apps/hub/src/imessage/sync.ts`, `sync-rules.ts` | outbound queue and retry, delivery state, backfill, attachment intake; the pure rules (mirroring, caps, backoff) |
+| `packages/core/src/chat-sync.ts` | additive message fields, delivery state names and labels, `orderThread` |
+| `packages/web/src/pages/chat/sync/` | `SyncBadge` (origin and state), `applySyncPatch`, `retryImessage` |
 
 Tables (migration scope `imessage`, run at hub boot):
 `chat_bindings(chat_guid PK, squad_id, bound_by, bound_at)`, `imsg_links(handle_hash PK, user_id -> acct_users ON DELETE
@@ -89,7 +92,7 @@ Note: Apple and imessage-kit expose no group member list, so participants are le
 ## 4. Cards as text
 
 Everything is plain text, no markdown, no tables, at most 900 characters per message, at most 5 messages per bot
-answer (the rest points to the web). iMessage attachments are never sent.
+answer (the rest points to the web). Bot answers never carry attachments (podcasts and pictures are a title and a link); a web student's attached file is sent along with a mirrored message only under section 8.5.
 
 | Web card | iMessage |
 |---|---|
@@ -134,10 +137,12 @@ group cooldown and cap are the scheduler's delivery gate, unchanged.
 ## 6. Manual verification runbook (you, with a spare Apple ID)
 
 Use a **spare Apple ID**, never your main one. Nothing below is automated; I did not send or read anything real.
+**Only your own account and your own chats.** Never message, add or test with a third party: the "group" is you, your
+spare ID and a second number or device that you own. Section 8.8 is the sync-specific smoke checklist to run after this.
 
 1. **Mac setup.** Sign Messages.app into the spare Apple ID (Settings > iMessage). Note its number or email (the bot's
    identity). From your own iPhone (your real number) start a 1:1 with the spare ID once, and make a group of three:
-   your phone, the spare ID, and a friend or a second number. Name it `Cubbie Test`.
+   your phone, the spare ID, and a second number or device that you own. Name it `Cubbie Test`.
 2. **Permissions.** System Settings > Privacy & Security > **Full Disk Access**: add the exact terminal app you run from,
    then quit and reopen it (without this the SDK cannot read `chat.db`). The first send triggers an **Automation**
    prompt (terminal controls Messages): allow it. Run `caffeinate -dis` in another tab so the Mac does not sleep.
@@ -195,9 +200,121 @@ Unverified (real Apple behaviour; one-line fixes where they fail):
   than +1 are normalized as written; a number typed without `+` at sign-up is assumed +1).
 - Sending to a group by chat id and to a 1:1 by handle (the existing transport's assumption).
 - Delivery speed and Apple's own throttling or spam filters for a new Apple ID texting several chats.
+- Sync on real Apple (section 8): whether the SDK reports a GUID for our sends (without it nothing is `delivered` and a
+  receipt cannot match; `sent` still holds), whether delivery receipts exist at all, that `listMessages` since a time returns
+  late-arriving messages and the real `createdAt` ordering, attachment `localPath` access and sizes, the `chatId` of a 1:1 used
+  for backfill (`iMessage;-;<handle>` is assumed, and 1:1 backfill only covers handles that texted since the hub started).
+- The web wiring of the sync display into the chat page (`SyncBadge`, `chat.sync` event; see 8.3) lands with the chat page fix.
 - The web deep links (`/squad?m=`, `/squad?council=`) and a web field for the link code.
 
 Apple limitations: there is no API to create a group or add people from code: you create the group on a phone and add the
 spare ID by hand. Rich cards (tapbacks, polls, link previews made by the bot, buttons) are not supported, hence the text
 fallbacks. Group membership is not exposed, so "who is here" is learned from who speaks. The bot needs a Mac that is
 awake and signed in; Full Disk Access is required to read the database.
+
+## 8. Chat sync (iMessage <-> web)
+
+The bridge keeps one conversation in step on both surfaces. The pieces: an identity map, one deterministic order, a
+delivery state per message, a per-chat cursor with backfill, and an outbound queue with retry. All of it is tested over
+`FakeIMessageTransport` (`apps/hub/src/imessage/sync.test.ts`, `bridge.test.ts`); none of it has met real Apple yet (section 7).
+
+### 8.1 Identity map and dedupe
+
+`imsg_xref(ext_id PK, direction in|out, thread_key, message_id, status, handle_hash, origin_ts)` maps an Apple message GUID
+to a hub message id. Inbound: the gateway claims the GUID atomically before anything else, so redeliveries, backfill
+overlap and races stop at the claim (`claimInbound`; a handler that throws releases it so a redelivery can retry).
+Outbound: when the transport confirms a send and reports the new GUID, it is recorded with direction `out`, which is
+also how a delivery receipt finds its message. Only salted handle hashes are stored, never numbers or emails. A chat GUID
+is a thread key, never a message id.
+
+Loops: an iMessage-origin message is never mirrored out; a mirrored web message is sent as
+`<name> (via Squad): <text>` and any incoming text with that marker is dropped (the gateway's 60 s memory of its own sends
+is the first line, the marker is the second, `isFromMe` and persona prefixes the third).
+
+### 8.2 Order and attribution
+
+One order for both surfaces: `compareThread` / `orderThread` in `@squad/core` sort by message time `ts`, ties by hub
+sequence `seq` (arrival). An inbound message is stored with Apple's own timestamp, so a message that arrives late (offline
+gap, backfill, Apple delivering out of order) lands where it happened and carries `receivedLate: true`. The sender shows as
+the member's name (`senderLabel`) when the handle matches a squad member, otherwise as a masked label (`•••• 4567`).
+Messages from unlinked senders are shown read-only (sender kind `system`) and never routed to the bot; a squad can hide
+them with `showUnlinked: false`. Raw numbers never appear in a message, a label or a log.
+
+### 8.3 Delivery states
+
+Additive fields on every hub message: `transport` (`web` | `imessage`), `externalId`, `deliveryState`, `senderLabel`,
+`attachments` (existing), `skippedAttachments`, `receivedLate`. State changes are stored on the message and streamed as the
+additive SSE event `chat.sync { chatId, messageId, patch }`; old clients ignore it.
+
+| State | Label shown | Meaning |
+|---|---|---|
+| `queued` | Sending to iMessage / Retrying iMessage send / Waiting to send: iMessage connection is unstable | in the outbound queue, not confirmed |
+| `sent` | Sent to iMessage | set **only** after the transport confirmed the send |
+| `delivered` | Delivered | a delivery receipt arrived (only transports that have receipts) |
+| `failed` | Failed: <reason> | gave up; web shows Retry (`POST /v1/imessage/messages/:id/retry`, members of the chat) |
+| `dry_run` | Dry run, not sent | `IMESSAGE_DRY_RUN=1`: routed, nothing sent |
+| `web_only` | Web only, not sent to iMessage | in a bound squad but the mirroring rule keeps it on the web (also: withheld by the privacy guard) |
+
+Failure reasons: `transport_error`, `chat_not_allowed`, `handle_not_allowed`, `kill_switch`, `expired`, `no_handle`,
+`receipt_failed`. A message with several parts or several groups shows one aggregate state (`Failed in 1 of 2 chats`).
+
+### 8.4 Mirroring rules (privacy limits)
+
+| Setting (per squad) | Web squad chat -> bound iMessage groups |
+|---|---|
+| `bot_and_mentions` (default) | bot replies, and student messages that @mention an agent (`@cubbie`, `@cubbi` and the aliases of the shared mention parser) |
+| `bot_only` | bot replies only |
+| `full` | every student message |
+
+Owner changes it with `PUT /v1/imessage/squads/:id/settings { mirror, showUnlinked }`; members can read it.
+Always: DMs never cross threads in either direction (a web DM is not mirrored to the phone, a 1:1 iMessage is never shown
+in a squad chat); a mirrored text is checked against the sentinels and the ledger's private values and kept on the web
+(`web_only`, "Kept on the web: it contains private info") on a hit; several groups bound to one squad all receive the
+mirror, and each group only ever receives its own squad's messages; an unbound group is neither read nor written.
+The `@cubbie` / `@cubbi` detection is `detectMention` today; when `feature/typed-mentions` lands on main the bridge takes its
+aliases from that shared parser (one call site: `mirrorStudent` and `groupInbound` in `bridge.ts`).
+
+### 8.5 Attachments
+
+Inbound: up to 4 per message, 8 MB each, types PNG, JPEG, GIF, WebP, PDF and common audio, decided by the file's own bytes
+(a relabelled file is refused). A kept file gets an unguessable id and is served only to the chat's members; its local path
+never leaves the gateway. Everything else becomes an honest placeholder on the message (`skippedAttachments`:
+`unsupported_type`, `too_large`, `unavailable`) and an attachment-only message from a DM gets "I cannot open that kind of
+file here." Outbound: a web student's attached file goes with a mirrored message under the same rules; bot answers do not
+carry files.
+
+### 8.6 Reconnect, backfill, outbound queue
+
+`imsg_cursor(thread_key, last_ts, last_guid)` advances per chat, forward only. At start, on `reconnect()` and every 60 s the
+hub asks the transport for each bound chat's messages since `cursor - 5 min` (the overlap catches Apple's late arrivals; the
+identity map dedupes), never earlier than the moment the chat was bound. A backfilled message older than 6 h is stored for the
+record but not answered by the bot. A transport without `listMessages` simply does not backfill.
+
+Outbound rows live in `imsg_out(message_id, target, part)` (unique, so queueing is idempotent), sent strictly in order per
+target by a drain every second. A failed attempt retries after 2 s, 8 s, 30 s, 2 min, 5 min, then the row is `failed`; a row
+older than 1 hour expires instead of sending a stale answer; the per-chat rate limit defers without failing. The gateway
+itself tries a send twice before reporting a failure; three failures in a row mark the transport `degraded` (shown on queued
+messages and in `GET /v1/imessage/status`). Text is cleared from a row once it is sent.
+
+### 8.7 Test scenarios
+
+`FakeIMessageTransport` scripts: duplicates (`duplicate`), out-of-order and ties, offline gap then backfill (`dropWatcher`,
+`restoreWatcher`, `listMessages`), send failure then retry (`failNext`), receipts (`receipt`), multiple groups, an unbound
+group, attachments, dry run, a squad with two groups, and the cross-surface consistency check (unique external ids, every
+`sent` has an Apple GUID, one order, no raw handle in messages or the identity map).
+
+### 8.8 Safe real-account smoke (after section 6, yours to run)
+
+Own account and own chats only; never a third party; never read the real Messages database outside the documented
+`--dry-run` flags.
+
+1. `IMESSAGE_ENABLED=1 IMESSAGE_DRY_RUN=1` with `IMESSAGE_ALLOWED_CHATS` set to one chat that only you are in and
+   `IMESSAGE_ALLOWED_HANDLES` to your own number. Send yourself a message: it appears on the web with "via iMessage"; a web
+   `@cubbie` message shows "Dry run, not sent" and nothing arrives on the phone.
+2. Remove `IMESSAGE_DRY_RUN`, restart. Web `@cubbie ...`: the phone gets `<name> (via Squad): ...`, the web state goes
+   queued -> sent (and delivered if Apple reports receipts). Note whether Apple reports a GUID and a receipt at all.
+3. Quit Messages.app or sleep the Mac, send yourself three messages and one web `@cubbie`, wake: the three appear once, in
+   order, flagged late; the web message goes out after reconnect. Turn Wi-Fi off and send from the web: a failed send shows
+   "Failed: ..." and Retry works.
+4. Send yourself a PNG and a `.mov`: the PNG shows, the `.mov` shows an "Attachment not shown" placeholder.
+5. Kill switch: unset `IMESSAGE_ENABLED`, restart: nothing is read or sent. Remove the binding afterwards.
