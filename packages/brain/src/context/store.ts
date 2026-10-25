@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS ctx_sync_state(
   connection_id TEXT PRIMARY KEY, cursor_json TEXT, last_full_at INTEGER, last_outcome TEXT, retry_after INTEGER,
   started_at INTEGER, origin_hash TEXT);
 CREATE INDEX IF NOT EXISTS ctx_connections_account ON ctx_connections(provider, account_hash);
+CREATE TABLE IF NOT EXISTS ctx_courses(
+  connection_id TEXT NOT NULL, course_id TEXT NOT NULL, code TEXT, name TEXT NOT NULL, PRIMARY KEY(connection_id, course_id));
 CREATE TABLE IF NOT EXISTS ctx_tombstones(
   source_id TEXT NOT NULL, owner_id TEXT NOT NULL, reason TEXT NOT NULL, at INTEGER NOT NULL,
   PRIMARY KEY(source_id, owner_id));
@@ -53,6 +55,9 @@ export interface PurgeResult {
 
 export interface ContextStore {
   upsertConnection(c: ContextConnection): void;
+  /** Course records (code + name) of a connection, so every source of that course resolves courseName / courseCode. */
+  setCourses(connectionId: string, courses: { id: string; name: string; code?: string | null }[]): void;
+  course(connectionId: string | null, courseId: string | null): { name: string; code: string | null } | undefined;
   connection(id: string): ContextConnection | undefined;
   connectionsOf(ownerId: string): ContextConnection[];
   /** Every owner's non-revoked connection to the same external account (for the one-owner-per-account rule). */
@@ -153,7 +158,18 @@ export function createContextStore(db: Db, opts: { retentionMs?: number } = {}):
         squad_id: string;
       }[]
     ).map((r) => r.squad_id);
-  const toSource = (r: SrcRow): ContextSource => ({
+  const courseRow = db.prepare('SELECT code, name FROM ctx_courses WHERE connection_id=? AND course_id=?');
+  const toSource = (r: SrcRow): ContextSource => {
+    const cr =
+      r.connection_id && r.course_id
+        ? (courseRow.get(r.connection_id, r.course_id) as { code: string | null; name: string } | undefined)
+        : undefined;
+    return {
+      ...toSourceBase(r),
+      ...(cr ? { courseName: cr.name, courseCode: cr.code } : {}),
+    };
+  };
+  const toSourceBase = (r: SrcRow): ContextSource => ({
     id: r.id,
     connectionId: r.connection_id,
     ownerId: r.owner_id,
@@ -213,6 +229,14 @@ export function createContextStore(db: Db, opts: { retentionMs?: number } = {}):
   }
 
   const store: ContextStore = {
+    setCourses(connectionId, courses) {
+      const ins = db.prepare('INSERT OR REPLACE INTO ctx_courses VALUES(?,?,?,?)');
+      for (const c of courses) if (c.id && c.name) ins.run(connectionId, c.id, c.code ?? null, c.name.slice(0, 300));
+    },
+    course(connectionId, courseId) {
+      if (!connectionId || !courseId) return undefined;
+      return courseRow.get(connectionId, courseId) as { name: string; code: string | null } | undefined;
+    },
     upsertConnection(c) {
       db.prepare(
         `INSERT OR REPLACE INTO ctx_connections(id, owner_id, provider, mode, variant, account_hash, scopes_json, status,
@@ -317,6 +341,7 @@ export function createContextStore(db: Db, opts: { retentionMs?: number } = {}):
         statusNote: note ?? 'Disconnected. All imported data was deleted.',
         expiresAt: null,
       });
+      db.prepare('DELETE FROM ctx_courses WHERE connection_id=?').run(id);
       store.patchSyncState(id, {
         cursor: null,
         lastFullAt: null,
@@ -329,6 +354,7 @@ export function createContextStore(db: Db, opts: { retentionMs?: number } = {}):
     },
     deleteConnection(id) {
       db.prepare('DELETE FROM ctx_sync_state WHERE connection_id=?').run(id);
+      db.prepare('DELETE FROM ctx_courses WHERE connection_id=?').run(id);
       db.prepare('DELETE FROM ctx_connections WHERE id=?').run(id);
     },
 

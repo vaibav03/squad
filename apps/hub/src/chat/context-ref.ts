@@ -24,6 +24,7 @@ export function buildContextRef(
   viewer: ContextViewer,
   sourceId: string,
   anchor?: string,
+  courseNameOf?: (src: ContextSource) => string | null,
 ): ContextRefResult {
   // the read gate: another member's private source answers exactly like a missing one
   const src = store.readable(sourceId, viewer);
@@ -31,7 +32,8 @@ export function buildContextRef(
   const chunks = store.chunks(src.id);
   const chunk = anchor ? store.chunk(src.id, anchor) : chunks[0];
   if (anchor && !chunk) return { ok: false, code: 'page_missing' };
-  const courseLine = /^Course:\s*(.+)$/m.exec(chunks[0]?.text ?? '')?.[1]?.trim();
+  const courseLine =
+    courseNameOf?.(src) ?? /^Course:\s*(.+)$/m.exec(chunks[0]?.text ?? '')?.[1]?.trim();
   const eventLabel =
     src.startsAt !== null
       ? fmt(src.startsAt, true)

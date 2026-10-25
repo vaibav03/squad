@@ -175,7 +175,7 @@ export function createChatRoutes(deps: HubDeps): HubApp {
       .safeParse(c.req.query());
     if (!q.success) return c.json(err('invalid'), 400);
     const v = c.get('viewer');
-    const out = buildContextRef(contextServiceFor(deps).store, { studentId: v.studentId, squadIds: [v.squadId] }, q.data.sourceId, q.data.anchor);
+    const out = buildContextRef(contextServiceFor(deps).store, { studentId: v.studentId, squadIds: [v.squadId] }, q.data.sourceId, q.data.anchor, (src) => contextServiceFor(deps).courses.name(src.connectionId, src.courseId));
     if (!out.ok) return c.json(err(out.code === 'not_found' ? 'context_unreadable' : out.code), 404);
     // the owner sees their own item in full; a group chat shows only what the squad may see
     c.header('Cache-Control', 'no-store');
