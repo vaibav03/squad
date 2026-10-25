@@ -34,15 +34,10 @@ export const RUNBOOKS: Record<string, { code: string; reason: string; anchor: st
     anchor: '#google-oauth-client-and-consent-screen',
   },
   canvas_feed: {
-    code: 'no_canvas_feed',
+    code: 'no_canvas_session_or_feed',
     reason:
-      "GATE_CANVAS_FEED_URL / GATE_OWN_CANVAS_HOST are not set: no Canvas calendar feed of the user's own to read.",
-    anchor: '#canvas-institution-token-or-feed',
-  },
-  canvas_token: {
-    code: 'token_disabled_or_missing',
-    reason: 'No Canvas personal access token (many institutions disable student tokens).',
-    anchor: '#canvas-institution-token-or-feed',
+      "No Canvas route of your own is set up: real Canvas needs your signed-in Canvas SESSION via the extension (install the unpacked extension from apps/extension, sign in to Canvas, GATE_CANVAS_SESSION_VERIFIED=1) OR an .ics calendar-feed URL (GATE_CANVAS_FEED_URL + GATE_OWN_CANVAS_HOST). A student API token is optional and never the blocker.",
+    anchor: '#canvas-session-or-feed',
   },
   apple: {
     code: 'apple_unverified',
@@ -99,11 +94,10 @@ export async function blockerFor(key: string): Promise<Blocker | undefined> {
     case 'google_account':
       return names.has('GATE_OWN_GOOGLE_EMAIL') ? undefined : b('google_account');
     case 'canvas_feed':
-      return names.has('GATE_CANVAS_FEED_URL') && names.has('GATE_OWN_CANVAS_HOST')
+      return (names.has('GATE_CANVAS_FEED_URL') && names.has('GATE_OWN_CANVAS_HOST')) ||
+        names.has('GATE_CANVAS_SESSION_VERIFIED')
         ? undefined
         : b('canvas_feed');
-    case 'canvas_token':
-      return names.has('GATE_CANVAS_TOKEN') ? undefined : b('canvas_token');
     case 'apple':
       return names.has('GATE_APPLE_VERIFIED') && names.has('IMESSAGE_ALLOWED_CHATS')
         ? undefined
