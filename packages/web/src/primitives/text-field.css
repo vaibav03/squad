@@ -30,10 +30,21 @@
     border-color: color-mix(in oklab, var(--input) 55%, var(--foreground));
   }
 }
+/* One focus indicator: the field's border plus a soft glow. The inner input never draws its own outline (that doubled the ring). */
 .sq-field__control:focus-within {
   border-color: var(--ring);
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 35%, transparent);
+  outline: 0;
+}
+@media (forced-colors: active) {
+  .sq-field__control:focus-within {
+    outline: 2px solid Highlight;
+  }
+}
+.sq-field__input:focus,
+.sq-field__input:focus-visible {
+  outline: 0;
+  box-shadow: none;
 }
 .sq-field__input {
   flex: 1;
