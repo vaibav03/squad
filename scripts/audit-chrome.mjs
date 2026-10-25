@@ -14,13 +14,18 @@ const SKIP_FILE = /\.(test|spec)\.[tj]sx?$|fixtures?\.[tj]sx?$|\.d\.ts$/;
 const EMOJI = /\p{Extended_Pictographic}|️|\p{Regional_Indicator}/u;
 // Marker glyphs used as visible decoration. Arrows and ≠/≡ are only flagged in JSX text or string literals.
 const MARKERS = /[●•◆▲○◐◑⚙✓✕≠≡→◇■□▪▫★☆♥]/u;
+const ESCAPED = /\\u(25[a-f0-9]{2}|26[a-f0-9]{2}|27[0-9a-f]{2}|2022|2B[0-9A-F]{2}|\{1f[0-9a-f]{3,4}\})|\\u\{1[fF][0-9a-fA-F]{3,4}\}|&(bull|#x?(25|26|27|2022|1f)[0-9a-f]*);/i;
 const DOT_CSS = /border-radius:\s*50%/;
 
 const allow = existsSync(join(ROOT, 'scripts/audit-chrome.allow.json'))
   ? JSON.parse(readFileSync(join(ROOT, 'scripts/audit-chrome.allow.json'), 'utf8')).entries
   : [];
-const allowed = (file, kind, line) =>
-  allow.some((a) => new RegExp(a.path).test(file) && (!a.kind || a.kind === kind) && (!a.match || line.includes(a.match)));
+let pendingHits = 0;
+const allowed = (file, kind, line) => {
+  const hit = allow.find((a) => new RegExp(a.path).test(file) && (!a.kind || a.kind === kind) && (!a.match || line.includes(a.match)));
+  if (hit?.pending) pendingHits++;
+  return Boolean(hit);
+};
 
 function* walk(dir) {
   for (const n of readdirSync(dir)) {
@@ -33,12 +38,29 @@ function* walk(dir) {
 }
 
 const found = [];
+// CSS dots: a rule block with border-radius 50%, width and height <= 12px and a solid background is a status dot.
+function cssDots(rel, text, area) {
+  const re = /([^{}]+)\{([^{}]*)\}/g;
+  let m;
+  while ((m = re.exec(text))) {
+    const body = m[2];
+    if (!DOT_CSS.test(body)) continue;
+    const w = /(?:^|[;\s])width:\s*(\d+)px/.exec(body);
+    const h = /(?:^|[;\s])height:\s*(\d+)px/.exec(body);
+    if (!w || !h || +w[1] > 12 || +h[1] > 12 || !/background(-color)?:\s*(?!transparent|none)/.test(body)) continue;
+    const sel = m[1].trim().split('\n').pop();
+    const line = text.slice(0, m.index + m[1].length).split('\n').length;
+    if (!allowed(rel, 'dot', sel)) found.push({ area, file: rel, line, kind: 'dot', text: sel.slice(0, 110) });
+  }
+}
 for (const area of AREAS) {
   const base = join(ROOT, area);
   if (!existsSync(base)) continue;
   for (const f of walk(base)) {
     const rel = relative(ROOT, f);
-    const lines = readFileSync(f, 'utf8').split('\n');
+    const src = readFileSync(f, 'utf8');
+    if (extname(f) === '.css') cssDots(rel, src, area);
+    const lines = src.split('\n');
     let inBlock = false;
     lines.forEach((raw, i) => {
       let line = raw;
@@ -54,8 +76,7 @@ for (const area of AREAS) {
         if (!allowed(rel, kind, raw)) found.push({ area, file: rel, line: i + 1, kind, text: raw.trim().slice(0, 110) });
       };
       if (EMOJI.test(line)) push('emoji');
-      if (MARKERS.test(line)) push('marker');
-      if (extname(f) === '.css' && DOT_CSS.test(line)) push('dot');
+      if (MARKERS.test(line) || ESCAPED.test(line)) push('marker');
     });
   }
 }
@@ -75,4 +96,5 @@ for (const a of AREAS) {
   console.log(`  ${a.padEnd(22)} ${c.emoji} / ${c.marker} / ${c.dot}`);
 }
 console.log(`total violations: ${found.length}`);
+if (pendingHits) console.log(`pending (allowlisted, to convert): ${pendingHits}`);
 process.exit(found.length ? 1 : 0);
