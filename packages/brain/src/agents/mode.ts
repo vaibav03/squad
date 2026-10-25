@@ -17,7 +17,11 @@ export interface ModeInputs {
   health?: { llm: 'real' | 'fake'; reason?: string };
 }
 
-const token = (s: string): string => s.toLowerCase().replace(/[^a-z_]+/g, '_').slice(0, 24);
+const token = (s: string): string =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z_]+/g, '_')
+    .slice(0, 24);
 
 export function decideRunMode(i: ModeInputs): AgentMode {
   if (!i.hasKey) return 'demo:no_key';
@@ -37,7 +41,8 @@ export function modeInputsFromEnv(
 ): ModeInputs {
   return {
     hasKey: !!env.GEMINI_API_KEY,
-    forced: env.FORCE_FAKE_LLM === '1' || env.CHAT_FORCE_DEMO === '1' || env.FORCE_FAKE_LIVE === '1',
+    forced:
+      env.FORCE_FAKE_LLM === '1' || env.CHAT_FORCE_DEMO === '1' || env.FORCE_FAKE_LIVE === '1',
     ...(health ? { health } : {}),
   };
 }

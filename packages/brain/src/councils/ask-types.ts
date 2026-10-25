@@ -1,5 +1,7 @@
 import type { CouncilResult, Db, Llm, VillageEvent } from '@squad/core';
 import type { Brain } from '../experts/types';
+import type { CouncilAgents } from '../agents/factory';
+import type { AskViewerData } from './ask-v2';
 
 export type CouncilEmit = (e: VillageEvent) => void | Promise<unknown>;
 
@@ -44,6 +46,15 @@ export interface CouncilServiceDeps {
   /** true when the llm is the deterministic demo model: stamped on every result. */
   demo?: boolean | (() => boolean);
   limits?: Partial<CouncilLimits>;
+  /**
+   * The real agent runtime (COUNCIL_AGENTS=v2, the default when given). Without it the legacy three-phase prompts
+   * run (v1), which is what unit tests of the old path use.
+   */
+  agents?: CouncilAgents;
+  /** Viewer-scoped data for the asker through the privacy gate (calendar/mastery summaries). */
+  viewer?: (askedBy: string, visibility: 'squad' | 'private') => AskViewerData | undefined;
+  /** Raw real model for the one live triage call (never the resilient wrapper). */
+  triageLlm?: Llm;
   /** Run id source; default random. Tests pass a counter. */
   newId?: () => string;
 }
@@ -60,6 +71,8 @@ export interface CouncilService {
   /** Starts a run and returns at once (the run continues in the background). Throws CouncilBusyError. */
   ask(input: CouncilAskInput): CouncilRunHandle;
   get(id: string): CouncilResult | undefined;
+  /** Cheap owner lookup for the per-viewer event filter (A2A privacy). Undefined = unknown run. */
+  ownerOf?(id: string): { askedBy: string; private: boolean } | undefined;
   /** Calls `fn` with the current snapshot now, then after every change; unsubscribes when the returned fn is called. */
   subscribe(id: string, fn: (r: CouncilResult) => void): (() => void) | undefined;
 }

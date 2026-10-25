@@ -82,7 +82,10 @@ export function registerAskDemo(): void {
       return {
         text: '',
         toolCalls: [
-          demoCall('ask_peer', { to: 'teacher', question: demoText('Does step 2 assume a fixed value?') }),
+          demoCall('ask_peer', {
+            to: 'teacher',
+            question: demoText('Does step 2 assume a fixed value?'),
+          }),
         ],
       };
     const s = stanceFor(name as 'Skeptic' | 'Teacher' | 'Practitioner', ctx.question);

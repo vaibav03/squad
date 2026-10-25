@@ -15,13 +15,7 @@ import type {
 export type TransportKind = 'stream-text' | 'live-text' | 'live-audio' | 'demo';
 
 export type AgentRole =
-  | 'chair'
-  | 'specialist'
-  | 'solver'
-  | 'examiner'
-  | 'judge'
-  | 'debater'
-  | 'member';
+  'chair' | 'specialist' | 'solver' | 'examiner' | 'judge' | 'debater' | 'member';
 
 /** Names of the tools an agent may be given. `submit_turn` is the only way to produce visible output. */
 export type ToolName =

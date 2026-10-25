@@ -1,5 +1,6 @@
 import { CouncilResultSchema, type CouncilResult } from '@squad/core';
 import { emptyResult, runAskCouncil } from './ask-run';
+import { runAskV2 } from './ask-v2';
 import {
   CouncilBusyError,
   type CouncilAskInput,
@@ -76,26 +77,50 @@ export function createCouncilService(deps: CouncilServiceDeps): CouncilService {
 
     const done = (async (): Promise<CouncilResult> => {
       try {
-        await runAskCouncil(
-          {
-            llm: deps.llm,
-            emit: deps.emit,
-            ...(deps.brain ? { brain: deps.brain } : {}),
-            courseId: input.courseId ?? course(),
-            now,
-            limits,
-            publish: (x) => {
-              try {
-                save.run(x.id, JSON.stringify(x), now());
-              } catch {
-                // persistence is best effort
-              }
-              notify(x);
+        if (deps.agents && deps.agents.flag === 'v2')
+          await runAskV2(
+            {
+              agents: deps.agents,
+              emit: deps.emit,
+              ...(deps.brain ? { brain: deps.brain } : {}),
+              courseId: input.courseId ?? course(),
+              now,
+              limits,
+              ...(deps.viewer ? { viewer: deps.viewer } : {}),
+              ...(deps.triageLlm ? { triageLlm: deps.triageLlm } : {}),
+              publish: (x) => {
+                try {
+                  save.run(x.id, JSON.stringify(x), now());
+                } catch {
+                  // persistence is best effort
+                }
+                notify(x);
+              },
             },
-          },
-          r,
-          input,
-        );
+            r,
+            input,
+          );
+        else
+          await runAskCouncil(
+            {
+              llm: deps.llm,
+              emit: deps.emit,
+              ...(deps.brain ? { brain: deps.brain } : {}),
+              courseId: input.courseId ?? course(),
+              now,
+              limits,
+              publish: (x) => {
+                try {
+                  save.run(x.id, JSON.stringify(x), now());
+                } catch {
+                  // persistence is best effort
+                }
+                notify(x);
+              },
+            },
+            r,
+            input,
+          );
       } finally {
         active.set(input.askedBy, Math.max(0, (active.get(input.askedBy) ?? 1) - 1));
         if (r.status === 'running') {
@@ -115,6 +140,13 @@ export function createCouncilService(deps: CouncilServiceDeps): CouncilService {
     })();
     // a refusal resolves inside the first tick; surface it to subscribers as well
     return { id, result: () => snapshot(r), done };
+  }
+
+  function ownerOf(id: string): { askedBy: string; private: boolean } | undefined {
+    const r = runs.get(id);
+    if (r) return { askedBy: r.askedBy, private: r.visibility === 'private' };
+    const full = get(id);
+    return full ? { askedBy: full.askedBy, private: full.visibility === 'private' } : undefined;
   }
 
   function get(id: string): CouncilResult | undefined {
@@ -141,6 +173,7 @@ export function createCouncilService(deps: CouncilServiceDeps): CouncilService {
     },
     ask,
     get,
+    ownerOf,
     subscribe(id, fn) {
       const cur = get(id);
       if (!cur) return undefined;

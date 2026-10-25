@@ -7,8 +7,13 @@ const submitTurn = z.object({
     .describe(
       'Public explanation for the student: your conclusion and why, 1 to 2 sentences, max 280 chars. Not scratch work.',
     ),
-  stance: z.string().describe('Short status line, max 80 chars, e.g. "leaning B, unsure about step 3".'),
-  answer: z.string().optional().describe('Your committed short answer ("B", "yes, with a caveat").'),
+  stance: z
+    .string()
+    .describe('Short status line, max 80 chars, e.g. "leaning B, unsure about step 3".'),
+  answer: z
+    .string()
+    .optional()
+    .describe('Your committed short answer ("B", "yes, with a caveat").'),
   order: z
     .array(z.string())
     .optional()

@@ -42,7 +42,10 @@ export function budgetFromEnv(env: Record<string, string | undefined> = {}): Cou
     maxTurns: num(env.COUNCIL_MAX_TURNS, DEFAULT_BUDGET.maxTurns),
     maxTokens: num(env.COUNCIL_MAX_TOKENS, DEFAULT_BUDGET.maxTokens),
     maxWallMs: num(env.COUNCIL_MAX_WALL_MS, DEFAULT_BUDGET.maxWallMs),
-    maxConcurrency: Math.max(1, Math.floor(num(env.COUNCIL_MAX_CONCURRENCY, DEFAULT_BUDGET.maxConcurrency))),
+    maxConcurrency: Math.max(
+      1,
+      Math.floor(num(env.COUNCIL_MAX_CONCURRENCY, DEFAULT_BUDGET.maxConcurrency)),
+    ),
     maxRunsPerHour: num(env.COUNCIL_MAX_RUNS_HOUR, DEFAULT_BUDGET.maxRunsPerHour),
     callTimeoutMs: num(env.COUNCIL_CALL_TIMEOUT_MS, DEFAULT_BUDGET.callTimeoutMs),
   };

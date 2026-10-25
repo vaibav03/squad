@@ -41,7 +41,9 @@ export function parseSubmitTurn(raw: unknown, kind: A2aKind): TurnParse {
     kind,
     summary,
     stance: truncatePublic(a.stance.replace(/\s+/g, ' '), A2A_STANCE_MAX),
-    ...(a.answer?.trim() ? { answer: truncatePublic(a.answer.replace(/\s+/g, ' '), A2A_ANSWER_MAX) } : {}),
+    ...(a.answer?.trim()
+      ? { answer: truncatePublic(a.answer.replace(/\s+/g, ' '), A2A_ANSWER_MAX) }
+      : {}),
     ...(a.order ? { order: a.order.slice(0, 6).map((o) => o.trim().slice(0, 40)) } : {}),
     ...(a.confidence ? { confidence: a.confidence } : {}),
     ...(a.citations?.length
@@ -49,7 +51,11 @@ export function parseSubmitTurn(raw: unknown, kind: A2aKind): TurnParse {
           citations: a.citations
             .filter((c) => Number.isInteger(c.page) && c.page > 0)
             .slice(0, 4)
-            .map((c) => ({ file: c.file.slice(0, 200), page: c.page, quote: c.quote.slice(0, 400) })),
+            .map((c) => ({
+              file: c.file.slice(0, 200),
+              page: c.page,
+              quote: c.quote.slice(0, 400),
+            })),
         }
       : {}),
     ...(a.dissent

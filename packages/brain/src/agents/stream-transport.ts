@@ -34,14 +34,12 @@ export function createStreamTextTransport(llm: Llm): AgentTransport {
               ? { role: 'user', content: input }
               : {
                   role: 'user',
-                  content: input.map(
-                    (r): LlmPart => ({
-                      type: 'tool_result',
-                      id: r.id,
-                      name: r.name,
-                      result: r.result,
-                    }),
-                  ),
+                  content: input.map((r): LlmPart => ({
+                    type: 'tool_result',
+                    id: r.id,
+                    name: r.name,
+                    result: r.result,
+                  })),
                 },
           );
           const res = await llm.complete({

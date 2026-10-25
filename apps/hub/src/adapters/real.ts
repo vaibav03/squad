@@ -18,6 +18,7 @@ import {
   chapterProviderFromStore,
   createBrain,
   councilLlmFor,
+  createCouncilAgents,
   createCouncilService,
   createMasteryStore,
   createOralExaminer,
@@ -56,6 +57,10 @@ export interface RealPortsOptions {
   /** Speech engine. ElevenLabs is built from env by `createAudioServices` when omitted and a key exists; otherwise calls are captions only. */
   tts?: TtsEngine;
   courseId?: string;
+  /** The RAW Gemini model for live council agents (never the resilient wrapper). Omit without a key. */
+  rawLlm?: Llm;
+  /** Env for the council runtime knobs (COUNCIL_AGENTS, COUNCIL_MAX_*). Default `process.env`. */
+  env?: Record<string, string | undefined>;
   /** council:quizkey verifier for generated questions (omit with FakeLlm). */
   verifier?: KeyVerifier;
   /** Mesh agent base URLs by student id; calendar imports are pushed to the owner's agent (X-Nook-Internal). */
@@ -114,6 +119,13 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     brain,
     courseId: () => courseId,
     demo: councilDemo,
+    agents: createCouncilAgents({
+      ...(o.rawLlm ? { real: o.rawLlm } : {}),
+      env: o.env ?? process.env,
+      health: () => (deps.runtime ? deps.runtime.llm() : undefined),
+      emit,
+    }),
+    ...(o.rawLlm ? { triageLlm: o.rawLlm } : {}),
   });
 
   deps.liveWiring = { brain, courseId: () => courseId, llm: o.llm };

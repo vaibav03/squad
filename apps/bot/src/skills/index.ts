@@ -13,6 +13,7 @@ import {
   createDebateSkill,
   createDevilTaSkill,
   councilLlmFor,
+  createCouncilAgents,
   createCouncilService,
   createCouncilSkill,
   type CouncilService,
@@ -57,6 +58,11 @@ export interface SkillDeps {
   now?: () => number;
   /** Stamp council results as demo-model output (true, or a getter when the model can fall back). */
   demo?: boolean | (() => boolean);
+  /** The RAW real model for live council agents (never a resilient wrapper). Omit without a key. */
+  rawLlm?: Llm;
+  env?: Record<string, string | undefined>;
+  /** Hub-level model health at run start (ResilientLlm.status()). */
+  health?: () => { llm: 'real' | 'fake'; reason?: string } | undefined;
   /** Receives the council service the skills use, so the hub's HTTP routes can share it. */
   onCouncil?: (c: CouncilService) => void;
   /** Share the hub's brain and mastery store so chat, quiz and the village use one instance. */
@@ -102,6 +108,14 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
       brain,
       courseId: course,
       ...(d.demo !== undefined ? { demo: d.demo } : {}),
+      agents: createCouncilAgents({
+        ...(d.rawLlm ? { real: d.rawLlm } : {}),
+        env: d.env ?? {},
+        ...(d.health ? { health: d.health } : {}),
+        emit,
+        ...now,
+      }),
+      ...(d.rawLlm ? { triageLlm: d.rawLlm } : {}),
       ...now,
     });
   d.onCouncil?.(council);

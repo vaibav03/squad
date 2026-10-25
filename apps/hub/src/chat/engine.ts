@@ -131,6 +131,8 @@ export async function attachChatEngine(
   if (wantRealPorts) {
     const rp = await wireRealPorts(hub as Parameters<typeof wireRealPorts>[0], {
       llm,
+      ...(real ? { rawLlm: real } : {}),
+      env,
       courseId,
       ...(o.agentUrls ? { agentUrls: o.agentUrls } : {}),
     });
@@ -163,6 +165,9 @@ export async function attachChatEngine(
       },
     },
     demo: () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : true),
+    ...(real ? { rawLlm: real } : {}),
+    env,
+    health: () => (deps.runtime ? deps.runtime.llm() : undefined),
     onCouncil: (c) => void (deps.council ??= c),
     ...(shared
       ? { shared: { ...shared, ...(deps.council ? { council: deps.council } : {}) } }

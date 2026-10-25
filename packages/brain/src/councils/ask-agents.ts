@@ -1,5 +1,5 @@
 import { agentId } from '@squad/core';
-import type { AgentSpec } from '../agents/types';
+import type { AgentSpec, ToolName } from '../agents/types';
 import { ASK_COUNCIL_ID, ASK_MEMBERS, ASK_PROMPT_VERSION, CHAIR_NAME } from './ask-prompts';
 
 export const ASK_V2_PROMPT_VERSION = 'ask-v2';
@@ -10,6 +10,7 @@ const SPECIALIST_RULES = [
   'Commit to one short answer ("B", "yes, with a caveat", "approach 2"). Do not hedge between options: pick.',
   'Never do graded work for the student; help them decide or check their reasoning.',
   'If the question is about what the course materials say, call retrieve_course first and quote only text that appears verbatim in the pages you get back. If the materials do not cover it, say so and reason generally.',
+  "If you have calendar_summary or mastery_summary, use them only when the question is about the student's time or strengths. Their results are private to the student: never repeat event titles, amounts or personal details.",
   'You may ask ONE colleague one short question with ask_peer if a single fact would change your answer; otherwise do not.',
 ].join('\n');
 
@@ -22,7 +23,17 @@ export const CHAIR_V2_SYSTEM = [
 ].join('\n');
 
 /** The Ask council roster: Chair -> Skeptic, Teacher, Practitioner. Each has its own system instruction and tools. */
-export function askRoster(): AgentSpec[] {
+export interface AskRosterOptions {
+  /** The asker's calendar / mastery summaries are reachable through the privacy gate. */
+  calendar?: boolean;
+  mastery?: boolean;
+}
+
+export function askRoster(o: AskRosterOptions = {}): AgentSpec[] {
+  const own = (who: 'teacher' | 'practitioner' | 'skeptic'): ToolName[] => [
+    ...(o.mastery && who !== 'skeptic' ? (['mastery_summary'] as const) : []),
+    ...(o.calendar && who === 'practitioner' ? (['calendar_summary'] as const) : []),
+  ];
   const chair: AgentSpec = {
     id: ASK_CHAIR_ID,
     key: 'chair',
@@ -34,19 +45,17 @@ export function askRoster(): AgentSpec[] {
     tier: 'chair',
     limits: { maxModelCalls: 6, maxOutputTokens: 900 },
   };
-  const specialists = ASK_MEMBERS.map(
-    (m): AgentSpec => ({
-      id: agentId.council(`${ASK_COUNCIL_ID}-${m.id}`),
-      key: m.id,
-      role: 'specialist',
-      parent: chair.id,
-      displayName: m.name,
-      stance: m.stance,
-      system: `${m.lens}\n\n${SPECIALIST_RULES}\n[prompt ${ASK_V2_PROMPT_VERSION}:${m.id}]`,
-      tools: ['retrieve_course', 'ask_peer'],
-      tier: 'main',
-      limits: { maxModelCalls: 6, maxOutputTokens: 900, maxPeerAsks: 1 },
-    }),
-  );
+  const specialists = ASK_MEMBERS.map((m): AgentSpec => ({
+    id: agentId.council(`${ASK_COUNCIL_ID}-${m.id}`),
+    key: m.id,
+    role: 'specialist',
+    parent: chair.id,
+    displayName: m.name,
+    stance: m.stance,
+    system: `${m.lens}\n\n${SPECIALIST_RULES}\n[prompt ${ASK_V2_PROMPT_VERSION}:${m.id}]`,
+    tools: ['retrieve_course', 'ask_peer', ...own(m.id as 'teacher' | 'practitioner' | 'skeptic')],
+    tier: 'main',
+    limits: { maxModelCalls: 6, maxOutputTokens: 900, maxPeerAsks: 1 },
+  }));
   return [chair, ...specialists];
 }
