@@ -24,7 +24,7 @@ Clean-room rules still apply: no Cubbie assets, nothing calls cubbie.ai. Integra
 | `/squad/personas` | Avatar and voice picker | loader |
 | `/squad/ledger/:taskId?` | Glass Box (live) | loader + SSE |
 | `/squad/trips/:tripId` | Trip planner (live): options, private limits, vote, confirmations, split. On `trip.confirmed` it triggers the village trip cutscene (see Motion) | loader + SSE |
-| `/squad/mastery/:courseId?` | Mastery map | loader |
+| `/squad/mastery/:courseId?` | Redirects to `/squad/village?mastery=1` (mastery is the in-village Mastery board and panel, no tab) | redirect |
 
 The web-host owns the router and exposes the routes as one array so a later host (Nook) can mount them under its own prefix.
 

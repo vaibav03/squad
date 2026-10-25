@@ -90,7 +90,7 @@ The village has 13 rooms. You can walk into any of them at <http://localhost:518
 
 ![Village](../design/shots/merge1/village-track2-desk.png)
 
-Other pages: `/squad/ledger` (the disclosure ledger), `/squad/trips/:tripId` (the trip plan), `/squad/mastery` (your own progress), `/squad/personas` (your study buddy). The village shows a **Replay** badge when it plays a recorded run (`?replay=track2` or `?replay=track3`) rather than live events.
+Other pages: `/squad/ledger` (the disclosure ledger), `/squad/trips/:tripId` (the trip plan), your own progress in the village (the Mastery board and the chapter houses; `/squad/mastery` redirects to `/squad/village?mastery=1`), `/squad/personas` (your study buddy). The village shows a **Replay** badge when it plays a recorded run (`?replay=track2` or `?replay=track3`) rather than live events.
 
 ![Disclosure ledger](../design/shots/integration/ledger-desk.png)
 

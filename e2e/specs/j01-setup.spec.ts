@@ -58,23 +58,23 @@ test('J1 setup: phone, PDFs, .ics, persona (Ana, through the UI)', async ({ brow
   await shot(page, J, 'courses-uploaded');
   const ready = await page.getByRole('button', { name: 'Continue' }).isEnabled();
   if (!ready) note('BUG-E2E: Continue stays disabled after a successful live upload');
-  expect.soft(ready, 'E2E-001: Continue should enable once the hub accepted the PDFs').toBe(true);
-  await page.goto('/squad/setup/calendar'); // continue past the defect so later steps are still exercised
+  expect(ready, 'E2E-001: Continue should enable once the hub accepted the PDFs').toBe(true);
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.waitForURL(/setup\/calendar/);
 
   const ics = path.join(ICS_DIR, 's_ana.ics');
   let calPosts = 0;
   page.on('request', (r) => {
     if (r.url().includes('/v1/squad/calendar') && r.method() === 'POST') calPosts++;
   });
+  await expect(page.getByRole('button', { name: 'Upload .ics' })).toBeVisible();
   await page.locator('input[type=file]').setInputFiles(ics);
   await expect(page.getByText(/We found \d+ busy blocks?/)).toBeVisible();
   await page.waitForTimeout(1500);
-  expect
-    .soft(
-      calPosts,
-      'E2E-002: an uploaded .ics must reach the hub (POST /v1/squad/calendar); the UI only parses it locally',
-    )
-    .toBeGreaterThan(0);
+  expect(
+    calPosts,
+    'E2E-002: an uploaded .ics must reach the hub (POST /v1/squad/calendar)',
+  ).toBeGreaterThan(0);
   await shot(page, J, 'calendar-uploaded');
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.waitForURL(/setup\/persona/);
@@ -127,7 +127,7 @@ test('J1 other students ingest + calendars through the API (needed by later jour
       body: fd,
     });
     expect(r.status, `${id} course upload`).toBe(202);
-    const icsName = id === 's_chi' ? 's_cam.ics' : `${id}.ics`; // fixtures are named after the agent ids
+    const icsName = `${id}.ics`; // fixtures are named after the agent ids
     const cfd = new FormData();
     cfd.append(
       'file',

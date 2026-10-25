@@ -32,7 +32,7 @@ export interface BaseState {
   occupant: Occupant;
   occupantSince: number;
   windowLit: boolean;
-  /** Mastery glow, 0 dim .. 1 bright; tweens from glowFrom over 600 ms (calm: snap). */
+  /** Mastery glow, 0 dim .. 1 bright; tweens from glowFrom over 160 ms (calm: snap). */
   glow: number;
   glowFrom: number;
   glowSince: number;
@@ -66,7 +66,7 @@ export function initBase(
     occupant: 'idle',
     occupantSince: 0,
     windowLit: false,
-    glow: 0.15,
+    glow: 0,
     glowFrom: 0.15,
     glowSince: 0,
     sign: opts.sign ?? opts.title ?? '',
@@ -235,10 +235,10 @@ export function reduceBase<S extends BaseState>(s0: S, cmd: SceneCommand, at: nu
   }
 }
 
-/** Mastery glow right now (0..1): eased 600 ms tween, or snapped in calm mode. */
+/** Mastery glow right now (0..1): eased 160 ms tween, or snapped in calm mode. */
 export function glowNow(s: BaseState, o: Clock): number {
   if (o.calm) return s.glow;
-  return s.glowFrom + (s.glow - s.glowFrom) * easeOut(progress(o.t, s.glowSince, 600));
+  return s.glowFrom + (s.glow - s.glowFrom) * easeOut(progress(o.t, s.glowSince, 160));
 }
 
 export interface BubbleView {

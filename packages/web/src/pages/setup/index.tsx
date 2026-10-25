@@ -27,6 +27,7 @@ import { pixelPortrait } from '../../pixel/portraits';
 import { HubError, postCalendar, uploadCourse } from './api';
 import { demoBlocks, PERSONA_CHOICES, SAMPLE_COURSES } from './fixtures';
 import { parseIcs } from './ics';
+import { saveSetupDone } from './progress';
 import {
   completedSteps,
   formatBytes,
@@ -61,6 +62,7 @@ export default function SetupPage() {
   const step: StepId = isStepId(stepParam) ? stepParam : 'phone';
   const headingRef = useRef<HTMLHeadingElement>(null);
   const filesRef = useRef(new Map<string, File>());
+  const startedRef = useRef(new Set<string>());
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
@@ -76,26 +78,23 @@ export default function SetupPage() {
     if (active.length === 0) return;
     if (cfg.mode !== 'mock' && cfg.hubUrl) {
       const ctx = { hubUrl: cfg.hubUrl, token: cfg.token };
-      let cancelled = false;
       for (const c of active.filter((x) => x.status === 'queued')) {
+        if (startedRef.current.has(c.id)) continue;
+        startedRef.current.add(c.id);
         const file = filesRef.current.get(c.id);
         dispatch({ type: 'courses/progress', id: c.id, progress: 0.05, status: 'reading' });
         if (!file) continue;
         uploadCourse(ctx, file).then(
           () => {
-            if (!cancelled)
-              dispatch({ type: 'courses/progress', id: c.id, progress: 1, status: 'ready' });
+            dispatch({ type: 'courses/progress', id: c.id, progress: 1, status: 'ready' });
           },
           (e: unknown) => {
-            if (cancelled) return;
             if (e instanceof HubError && e.code === 'offline') setOffline(true);
             dispatch({ type: 'courses/progress', id: c.id, progress: 0, status: 'failed' });
           },
         );
       }
-      return () => {
-        cancelled = true;
-      };
+      return;
     }
     const t = setInterval(() => {
       for (const c of active) {
@@ -110,6 +109,10 @@ export default function SetupPage() {
 
   const go = useCallback((s: StepId | 'done') => navigate(`/squad/setup/${s}`), [navigate]);
   const completed = completedSteps(state);
+  const completedKey = completed.join(',');
+  useEffect(() => {
+    saveSetupDone(completedKey ? completedKey.split(',') : []);
+  }, [completedKey]);
   const canSkip = step === 'calendar' || step === 'persona';
   const next = nextStep(step);
   const prev = prevStep(step);
@@ -262,6 +265,9 @@ function PhoneStep({ state, dispatch }: StepProps) {
       <p className="sq-setup__lede">
         Your number only connects iMessage to your own agent. Other students never see it.
       </p>
+      <Notice tone="info" title="Demo step">
+        Phone linking is a demo for now: the number is not stored and no code is sent.
+      </Notice>
       <TextField
         label="Mobile number"
         type="tel"
@@ -283,7 +289,7 @@ function PhoneStep({ state, dispatch }: StepProps) {
             autoComplete="one-time-code"
             maxLength={6}
             value={code}
-            hint="We just texted you a code."
+            hint="Demo mode: no text is sent. Enter any 6 digits."
             onChange={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
             onBlur={() => setCodeTouched(true)}
             error={codeErr ?? undefined}
@@ -519,6 +525,21 @@ function CalendarStep({
       return;
     }
     setError(null);
+    if (cfg.mode !== 'mock' && cfg.hubUrl) {
+      setBusy(true);
+      try {
+        await postCalendar({ hubUrl: cfg.hubUrl, token: cfg.token }, { ics: text, name: f.name });
+      } catch (err) {
+        setError(
+          err instanceof HubError && err.code === 'offline'
+            ? 'Cannot reach the hub. Try again in a moment.'
+            : 'We could not send that calendar to your agent.',
+        );
+        setBusy(false);
+        return;
+      }
+      setBusy(false);
+    }
     dispatch({ type: 'calendar/set', blocks, source: 'ics' });
   };
   const n = state.calendar.blocks.length;

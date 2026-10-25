@@ -82,3 +82,27 @@ describe('setup model', () => {
     expect(s.courses[0]!.progress).toBe(1);
   });
 });
+
+describe('postCalendar ics upload', () => {
+  it('sends the file as multipart with an .ics name', async () => {
+    const { postCalendar } = await import('./api');
+    let seen: RequestInit | undefined;
+    const orig = globalThis.fetch;
+    globalThis.fetch = (async (_u: unknown, init?: RequestInit) => {
+      seen = init;
+      return new Response(JSON.stringify({ busyBlocks: 2 }), { status: 200 });
+    }) as typeof fetch;
+    try {
+      const r = await postCalendar(
+        { hubUrl: 'http://h', token: 't' },
+        { ics: 'BEGIN:VCALENDAR', name: 'mine.ics' },
+      );
+      expect(r.busyBlocks).toBe(2);
+      expect(seen?.body).toBeInstanceOf(FormData);
+      const f = (seen?.body as FormData).get('file') as File;
+      expect(f.name).toBe('mine.ics');
+    } finally {
+      globalThis.fetch = orig;
+    }
+  });
+});

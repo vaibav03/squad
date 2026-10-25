@@ -8,7 +8,7 @@ You decide where it goes live.
 | Piece | Image / artifact | Notes |
 |---|---|---|
 | hub | `squad-hub` (Dockerfile target `hub`) | Node 22, non-root (`node`), tini as PID 1, healthcheck `GET /health`, graceful SIGTERM (exits 0 in under a second), SQLite at `/data/squad.db` (volume), ffmpeg included |
-| agents | `squad-agent` (target `agent`), 4 containers | one per student (`s_ana`, `s_ben`, `s_cam`, `s_dev`), SQLite in `/app/apps/agent/data` (volume) |
+| agents | `squad-agent` (target `agent`), 4 containers | one per student (`s_ana`, `s_ben`, `s_chi`, `s_dev`), SQLite in `/app/apps/agent/data` (volume) |
 | web | `squad-web` (target `web`) | Vite static build + repo art behind unprivileged nginx. Also the reverse proxy: `/v1/*` and `/health` go to the hub, `/internal` and `/__sim` are blocked |
 | bot | `squad-bot` (target `bot`, compose profile `bot`) | Discord transport only in containers (iMessage needs macOS) |
 

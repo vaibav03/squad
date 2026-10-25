@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { studentLabel } from '@squad/village/inspector';
 import { type VillageEvent } from '@squad/core';
 
 /** One line on the notice board. Never carries a withheld value: only the fact that one exists. */
@@ -136,8 +137,7 @@ export function rowsByStudent(rows: readonly LedgerRow[], roster: readonly Roste
 }
 
 export function prettyName(id: string): string {
-  const raw = id.replace(/^s_/, '').replace(/^student:/, '');
-  return raw.charAt(0).toUpperCase() + raw.slice(1);
+  return studentLabel(id.replace(/^student:/, ''));
 }
 
 /** Deterministic bar width (percent) from the FIELD LABEL only, never from a value. */

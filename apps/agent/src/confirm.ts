@@ -118,7 +118,7 @@ export function cliConfirm(o: ConfirmOptions): AskConfirm {
   });
 }
 
-/** Env-driven choice: BOT_URL => bridge; CONFIRM_ANSWERS ("s_ben=no,s_cam=timeout") => scripted; else CLI. */
+/** Env-driven choice: BOT_URL => bridge; CONFIRM_ANSWERS ("s_ben=no,s_chi=timeout") => scripted; else CLI. */
 export function confirmFromEnv(emitter: Emitter, env: NodeJS.ProcessEnv = process.env): AskConfirm {
   if (env.BOT_URL)
     return botConfirm({ emitter, botUrl: env.BOT_URL, secret: env.INTERNAL_EVENTS_SECRET ?? '' });

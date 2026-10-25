@@ -8,7 +8,7 @@ import {
   TEST_SENTINELS,
 } from '../../src/flows';
 
-const members = ['s_ana', 's_ben', 's_cam', 's_dev'];
+const members = ['s_ana', 's_ben', 's_chi', 's_dev'];
 const study = (m: ReturnType<typeof createTestMesh>, ids = members) =>
   m.agents.s_ana!.startStudy({
     taskId: 't_study',
@@ -51,7 +51,7 @@ describe('study flow', () => {
     noLeak(m);
   });
   it('one no moves to the next slot; two nos give no slot', async () => {
-    const m = createTestMesh({ seed: 'a', answers: { s_cam: 'no' } });
+    const m = createTestMesh({ seed: 'a', answers: { s_chi: 'no' } });
     const out = await study(m);
     expect(out.status).toBe('no_slot');
     expect(of(m, 'confirm.pending').length).toBeGreaterThanOrEqual(2);
@@ -106,19 +106,19 @@ describe('trip flow', () => {
     noLeak(m);
   });
   it('a confirm timeout counts as no', async () => {
-    const m = createTestMesh({ seed: 'b', answers: { s_cam: 'timeout' } });
+    const m = createTestMesh({ seed: 'b', answers: { s_chi: 'timeout' } });
     const out = await trip(m);
     expect(out.status).toBe('no_plan');
     expect(of(m, 'trip.confirmed')).toHaveLength(0);
   });
   it('an offline agent means no plan and no trip.confirmed', async () => {
-    const m = createTestMesh({ seed: 'b', offline: ['s_cam'] });
+    const m = createTestMesh({ seed: 'b', offline: ['s_chi'] });
     const out = await trip(m);
     expect(out.status).toBe('no_plan');
     expect(of(m, 'trip.confirmed')).toHaveLength(0);
   });
   it('a hanging agent hits the peer timeout', async () => {
-    const m = createTestMesh({ seed: 'b', hang: ['s_cam'], timeouts: { peerMs: 40 } });
+    const m = createTestMesh({ seed: 'b', hang: ['s_chi'], timeouts: { peerMs: 40 } });
     const out = await trip(m);
     expect(out.status).toBe('no_plan');
     expect(of(m, 'trip.confirmed')).toHaveLength(0);
