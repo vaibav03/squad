@@ -15,6 +15,7 @@ export type Command =
   | { type: 'goto'; agent: string; goal: Goal }
   | { type: 'lock'; door: string; locked: boolean }
   | { type: 'marker'; agent: string; marker: 'waiting' | 'check' | 'alert' | 'none' }
+  | { type: 'gather'; room: string }
   | { type: 'announce'; text: string };
 
 export interface DirectorConfig {

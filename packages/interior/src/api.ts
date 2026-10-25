@@ -60,6 +60,8 @@ export interface InteriorWorldDebug {
   doors: { id: string; locked: boolean }[];
   setDoorLocked(id: string, locked: boolean): void;
   teleport(x: number, y: number): void;
+  /** Put the player on a waypoint of that room (or its centre) and snap the camera. */
+  teleportToRoom(id: string): boolean;
   sendNpc(id: string, target: string): boolean;
   spawnNpc(id: string): void;
   setCamera(mode: CameraMode): void;

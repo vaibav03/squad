@@ -343,6 +343,9 @@ export class InteriorScene extends Phaser.Scene {
       case 'marker':
         this.npcs.get(c.agent)?.setMarker(c.marker);
         break;
+      case 'gather':
+        for (const id of [...this.npcs.keys()]) this.sendTo(id, { kind: 'room', room: c.room });
+        break;
       case 'announce':
         this.init0.hud.announce(c.text);
         break;
@@ -629,6 +632,21 @@ export class InteriorScene extends Phaser.Scene {
         this.player.sync();
         this.updateRoom();
         this.snapCameraNow();
+      },
+      teleportToRoom: (id) => {
+        const r = this.rooms.room(id);
+        if (!r) return false;
+        const wp = this.rooms.waypointsIn(id)[0];
+        const c = wp
+          ? tileCenter(tileOf(wp.x, wp.y))
+          : { x: r.bounds.x + r.bounds.w / 2, y: r.bounds.y + r.bounds.h / 2 };
+        this.player.x = c.x;
+        this.player.y = c.y + 6;
+        this.player.follower = undefined;
+        this.player.sync();
+        this.updateRoom();
+        this.snapCameraNow();
+        return true;
       },
       sendNpc: (id, target) =>
         this.sendTo(
