@@ -24,7 +24,12 @@
     "demo:live": "tsx scripts/demo/live.ts",
     "dev:all": "tsx scripts/dev/all.ts",
     "doctor": "tsx scripts/doctor.ts",
-    "squad:doctor": "tsx scripts/doctor.ts"
+    "squad:doctor": "tsx scripts/doctor.ts",
+    "build": "pnpm -r --if-present run build",
+    "build:web": "pnpm --filter @squad/web-host build",
+    "bundle:report": "tsx scripts/deploy/bundle-size.ts",
+    "preflight": "tsx scripts/deploy/preflight.ts",
+    "security:scan": "tsx scripts/security/scan.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

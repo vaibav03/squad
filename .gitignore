@@ -11,3 +11,12 @@ logs/
 docs/design/shots/integration/video/
 assets/vendor/
 cache/audio/
+# security: never commit these
+vendor-local/
+*.db
+*.sqlite
+*.sqlite3
+*.map
+*.pem
+*.key
+*.p12
