@@ -3,7 +3,6 @@ export * from './ids';
 export * from './schema';
 export * from './sniff';
 export * from './textpages';
-export * from './timeout';
 export * from './policy';
 export * from './chapterops';
 export * from './chapterstore';
