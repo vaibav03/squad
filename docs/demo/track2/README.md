@@ -58,7 +58,7 @@ We say "PSI + secure aggregation", never "zero-knowledge". Limits: semi-honest o
 ```sh
 pnpm install && cp .env.example .env
 pnpm demo:seed
-pnpm demo:replay track2        # http://localhost:5173/squad/village?replay=track2
+pnpm demo:replay track2        # http://localhost:5180/squad/village?replay=track2
 pnpm demo:preflight            # env, keys, hub health, replay validity, sentinel-leak check
 ```
 

@@ -53,7 +53,7 @@ Answers come only from the indexed course files, with a citation, otherwise "not
 ```sh
 pnpm install && cp .env.example .env
 pnpm demo:seed
-pnpm demo:replay track3        # http://localhost:5173/squad/village?replay=track3
+pnpm demo:replay track3        # http://localhost:5180/squad/village?replay=track3
 pnpm demo:preflight
 ```
 

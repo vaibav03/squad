@@ -22,7 +22,7 @@ pnpm demo:seed             # seed pack: 4 students, calendars, lodging, OpenStax
 pnpm demo:replay track2    # or: pnpm demo:replay track3
 ```
 
-`demo:replay` validates the script, starts the hub, and opens `http://localhost:5173/squad/village?replay=track2`. Use `--no-open` to skip the browser. Run `pnpm demo:preflight` first to check env, keys, hub health, replay validity and that no withheld value leaked into any script. `pnpm demo:reset` reseeds and rewinds the village between runs.
+`demo:replay` validates the script, starts the hub and the web host, and prints and opens (the URL it prints is authoritative; the web host port is read from its dev script, override with `WEB_HOST_URL`) `http://localhost:5180/squad/village?replay=track2`. Use `--no-open` to skip the browser. Run `pnpm demo:preflight` first to check env, keys, hub health, replay validity and that no withheld value leaked into any script. `pnpm demo:reset` reseeds and rewinds the village between runs.
 
 Replay scripts live in `apps/hub/sim/replays/` and are validated against `@squad/core` (`validateReplay`) in CI.
 
@@ -81,7 +81,7 @@ Rules enforced in code:
 ## Live run
 
 1. `cp .env.example .env` and set `GEMINI_API_KEY`, `ELEVENLABS_API_KEY`, and a real `INTERNAL_EVENTS_SECRET`.
-2. `pnpm install && pnpm demo:seed && pnpm dev` (hub on `:8788`, web host on `:5173`).
+2. `pnpm install && pnpm demo:seed && pnpm dev` (hub on `:8788`, web host on `:5180`).
 3. iMessage: `imessage-kit` runs on a Mac signed into a dedicated bot Apple ID (see the bot README section from the spine workstream). Fallback: simulated students in the web panel.
 4. `pnpm demo:preflight --live` must pass before going on stage. Switch to Replay at any time with `/squad/village?replay=track2`.
 

@@ -75,6 +75,11 @@ async function main(): Promise<void> {
     die(`replay "${name}" is invalid (${replayFile(name, env)}):\n  ${v.errors.join('\n  ')}`);
   console.log(`replay ${name}: valid, ${v.script.events.length} events, me=${v.script.cast.me}`);
 
+  const webDev = inspectScript('apps/web-host', 'dev');
+  const webBase = (
+    env.WEB_HOST_URL || `http://localhost:${portFromScript(webDev.script) ?? 5173}`
+  ).replace(/\/+$/, '');
+
   // 2. Hub.
   const hub = hubBaseUrl(env);
   let health = await fetchHealth(hub);
@@ -99,6 +104,9 @@ async function main(): Promise<void> {
     start('hub', 'pnpm', ['--filter', '@squad/hub', 'start'], {
       HUB_SEED: '1',
       HUB_SIM: '1',
+      // the browser at the web host origin must be allowed to call the hub
+      HUB_CORS_ORIGINS:
+        env.HUB_CORS_ORIGINS || `${webBase},http://localhost:5173,http://localhost:4173`,
       ...(port ? { HUB_PORT: String(port) } : {}),
     });
     health = await waitForHealth(hub, {
@@ -121,10 +129,6 @@ async function main(): Promise<void> {
   }
 
   // 3. Web host (only when it has a real dev script).
-  const webDev = inspectScript('apps/web-host', 'dev');
-  const webBase = (
-    env.WEB_HOST_URL || `http://localhost:${portFromScript(webDev.script) ?? 5173}`
-  ).replace(/\/+$/, '');
   const url = villageUrl(webBase, name);
   if (webDev.stub) {
     console.log(
