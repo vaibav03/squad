@@ -101,6 +101,9 @@ export function mountVillage(
     return s;
   };
 
+  // Reserve the stage box now (before Phaser and the manifest load) so the HUD and canvas never shift it.
+  applySize();
+
   const fail = (e: unknown) => {
     log('boot failed', e);
     status.textContent = 'The village could not load. Reload the page to try again.';
