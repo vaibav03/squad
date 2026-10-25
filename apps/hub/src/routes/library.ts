@@ -117,6 +117,9 @@ export function createLibraryRoutes(deps: HubDeps): HubApp {
     });
     if (!res.ok) deps.log.warn('library progress rejected', { status: e.status });
   });
+  // The chat `semester plan` skill reads the asker's own catalogue through this (labelled sample fallback otherwise).
+  (deps as unknown as { catalogueFor?: (s: string) => unknown }).catalogueFor = (s) =>
+    lib.getCatalogue(s);
   const recovered = lib.recoverInterrupted();
   if (recovered > 0) deps.log.info('library: interrupted ingests marked failed', { recovered });
   // Exposed for tests: wait for queued ingests.
