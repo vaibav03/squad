@@ -419,7 +419,7 @@ describe('GET /v1/status', () => {
       lastProbeAt: 5,
       nextProbeAt: 65,
     });
-    expect(dead.body.notice).toMatch(/credits are depleted/);
+    expect(dead.body.notice).toMatch(/credits depleted/);
     hub.deps.runtime = undefined;
   });
 });

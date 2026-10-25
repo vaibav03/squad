@@ -107,6 +107,9 @@ export function createLedgerStore(db?: Db): LedgerStore {
           return out;
         });
     },
+    privateValues() {
+      return [...priv.values()];
+    },
     taskIds(squadId: string, directory: Directory) {
       const members = new Set(directory.squad(squadId)?.members ?? []);
       return [...new Set(rows.filter((r) => members.has(r.student)).map((r) => r.taskId))];
