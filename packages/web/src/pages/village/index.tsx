@@ -125,6 +125,7 @@ export default function VillagePage({ world }: { world?: string }) {
           calm,
           onOverlay: setEvent,
           inspector: store,
+          councilBoard: board,
         });
         handle.current = h;
         if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__world = h;

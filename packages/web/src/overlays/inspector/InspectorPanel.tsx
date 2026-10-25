@@ -12,17 +12,21 @@ import { pixelPortrait } from '../../pixel/portraits';
 import { useNow, useSelectedView, useStoreVersion } from './useInspector';
 import { useRoomSnapshot } from './useRoomSession';
 import { AgentsTab, ChatTab } from './Conversation';
+import { HierarchyTab } from './Hierarchy';
+import { openBoard, useBoardStoreRef, useCanOpenBoard } from '../../council/board/bridge';
+import { ModeBadge } from '../../council/board/ModeBadge';
 import { openVoice } from './bridge';
 import type { InspectorHub } from './useDmHistory';
 import { MasterySummary, useChapterFor } from '../mastery/MasterySummary';
 import './inspector.css';
 
-type Tab = 'doing' | 'thinking' | 'chat' | 'agents';
+type Tab = 'doing' | 'thinking' | 'chat' | 'agents' | 'hierarchy';
 const TABS: Array<[Tab, string]> = [
   ['doing', 'Doing'],
   ['thinking', 'Thinking'],
   ['chat', 'Chat'],
   ['agents', 'Agents'],
+  ['hierarchy', 'Hierarchy'],
 ];
 
 /** Pixel portrait for an agent: the viewer is the red hood, other students share the freshman look. */
@@ -61,6 +65,8 @@ export function InspectorPanel({
   mode = 'live',
 }: InspectorPanelProps) {
   const [tab, setTab] = useState<Tab>('doing');
+  const board = useBoardStoreRef();
+  const canBoard = useCanOpenBoard();
   const view = useSelectedView(store);
   useStoreVersion(store);
   const room = store.room;
@@ -209,6 +215,15 @@ export function InspectorPanel({
           </h2>
           <p className="ai-role">{voice && voice.who ? voice.role : v.role}</p>
         </div>
+        {canBoard && (
+          <button
+            type="button"
+            className="ai-btn"
+            onClick={() => openBoard(board?.has(v.id) ? { agent: v.id } : {})}
+          >
+            Board
+          </button>
+        )}
         <button type="button" className="ai-icon" onClick={close} aria-label="Close inspector">
           <LvIcon name="x" size={20} />
         </button>
@@ -297,7 +312,7 @@ export function InspectorPanel({
                     <dt>Model</dt>
                     <dd>
                       {v.tierLabel && <span className="ai-tag">{v.tierLabel}</span>}
-                      {v.demo && <span className="ai-tag ai-tag--demo">Demo mode</span>}
+                      {v.demo && <ModeBadge mode="demo" />}
                     </dd>
                   </>
                 )}
@@ -377,6 +392,7 @@ export function InspectorPanel({
           />
         )}
         {tab === 'agents' && <AgentsTab view={v} convo={convo} store={store} now={now} />}
+        {tab === 'hierarchy' && <HierarchyTab agentId={v.id} board={board} inspector={store} />}
         {!v.isMe && v.kind === 'student' && tab !== 'chat' && (
           <p className="ai-privacy">
             <LvIcon name="lock" size={14} aria-hidden="true" /> Public activity only. Private

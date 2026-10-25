@@ -1,0 +1,179 @@
+import type { InspectorStore } from '@squad/village/inspector';
+import {
+  a2aPartyName,
+  type BoardAgent,
+  type BoardDelegation,
+  type CouncilBoardStore,
+} from '@squad/village/council';
+import { openBoard, useBoardVersion } from '../../council/board/bridge';
+import { ModeBadge } from '../../council/board/ModeBadge';
+
+const STATE_WORD = {
+  pending: { glyph: '…', word: 'Pending' },
+  answered: { glyph: '✓', word: 'Answered' },
+  failed: { glyph: '✕', word: 'Failed' },
+} as const;
+
+function Chip({ agent, inspector }: { agent: BoardAgent; inspector: InspectorStore }) {
+  const name = a2aPartyName(agent.id);
+  if (!inspector.has(agent.id)) return <span className="ai-party">{name}</span>;
+  return (
+    <button
+      type="button"
+      className="ai-party ai-party--btn"
+      onClick={() => inspector.select(agent.id)}
+    >
+      {name}
+    </button>
+  );
+}
+
+function Delegations({
+  title,
+  items,
+  dir,
+}: {
+  title: string;
+  items: BoardDelegation[];
+  dir: 'in' | 'out';
+}) {
+  return (
+    <section aria-label={title}>
+      <h3 className="ai-label">{title}</h3>
+      {items.length === 0 ? (
+        <p className="ai-empty">None.</p>
+      ) : (
+        <ul className="ai-thread">
+          {items.map((d) => {
+            const st = STATE_WORD[d.status];
+            return (
+              <li key={d.id} className="ai-msg" data-alert={d.status === 'failed' || undefined}>
+                <p className="ai-msg__text">
+                  {dir === 'in'
+                    ? `${a2aPartyName(d.from)} asked this agent: ${d.summary}`
+                    : `Asked ${a2aPartyName(d.to)}: ${d.summary}`}
+                </p>
+                <div className="ai-msg__meta">
+                  <span className="ai-kind">
+                    <span aria-hidden="true">{st.glyph} </span>
+                    {st.word}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Where the selected agent sits in a council: parent, children, who asked whom what, and its latest public status.
+ * The room-level council agent (e.g. 'council:ask') shows the chair and specialists of its latest run instead.
+ */
+export function HierarchyTab({
+  agentId,
+  board,
+  inspector,
+}: {
+  agentId: string;
+  board: CouncilBoardStore | null;
+  inspector: InspectorStore;
+}) {
+  useBoardVersion(board);
+  const empty = <p className="ai-empty">No council is running for this agent.</p>;
+  if (!board) return <div className="ai-tabpanel">{empty}</div>;
+  const h = board.hierarchy(agentId);
+  if (!h) {
+    const runs = board.runs().filter((r) => r.councilId === agentId);
+    const run = runs.length
+      ? board.run()?.councilId === agentId
+        ? board.run()!
+        : runs.at(-1)!
+      : undefined;
+    if (!run) return <div className="ai-tabpanel">{empty}</div>;
+    const chair = run.agents.filter((a) => a.role === 'chair');
+    const rest = run.agents.filter((a) => a.role !== 'chair');
+    return (
+      <div className="ai-tabpanel" data-testid="hierarchy">
+        <section aria-label="This council">
+          <h3 className="ai-label">{run.councilName}</h3>
+          <p>
+            <ModeBadge mode={run.mode} />
+          </p>
+          <dl className="ai-facts">
+            <dt>Chair</dt>
+            <dd className="ai-chips">
+              {chair.length
+                ? chair.map((a) => <Chip key={a.id} agent={a} inspector={inspector} />)
+                : 'None yet'}
+            </dd>
+            <dt>Specialists</dt>
+            <dd className="ai-chips">
+              {rest.length
+                ? rest.map((a) => <Chip key={a.id} agent={a} inspector={inspector} />)
+                : 'None yet'}
+            </dd>
+          </dl>
+        </section>
+        <button
+          type="button"
+          className="ai-btn ai-open"
+          onClick={() => openBoard({ runId: run.runId })}
+        >
+          Open council board
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="ai-tabpanel" data-testid="hierarchy">
+      <section aria-label="Position">
+        <h3 className="ai-label">Position</h3>
+        <p className="ai-headline">{h.position}</p>
+        <p>
+          <ModeBadge mode={h.agent.mode} />
+        </p>
+        <dl className="ai-facts">
+          <dt>Council</dt>
+          <dd>{h.run.councilName}</dd>
+          <dt>Reports to</dt>
+          <dd>
+            {h.parent ? <Chip agent={h.parent} inspector={inspector} /> : 'Nobody, top of the tree'}
+          </dd>
+          <dt>Works with</dt>
+          <dd className="ai-chips">
+            {h.children.length
+              ? h.children.map((c) => <Chip key={c.id} agent={c} inspector={inspector} />)
+              : 'Nobody below'}
+          </dd>
+        </dl>
+      </section>
+      <section aria-label="Latest status">
+        <h3 className="ai-label">Latest status</h3>
+        {h.agent.summary || h.agent.stance ? (
+          <>
+            {h.agent.summary && <p className="ai-msg__text">{h.agent.summary}</p>}
+            {h.agent.stance && (
+              <p className="ai-msg__meta">
+                <span className="ai-kind">Stance</span> {h.agent.stance}
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="ai-empty">Nothing shared yet.</p>
+        )}
+      </section>
+      <Delegations title="Delegations in" items={h.delegationsIn} dir="in" />
+      <Delegations title="Delegations out" items={h.delegationsOut} dir="out" />
+      <button
+        type="button"
+        className="ai-btn ai-open"
+        onClick={() => openBoard({ agent: h.agent.id })}
+      >
+        Open council board
+      </button>
+    </div>
+  );
+}

@@ -6,6 +6,7 @@
 import type Phaser from 'phaser';
 import type { AgentId, StudentId, VillageEvent, VillageSource } from '@squad/core';
 import type { InspectorStore } from '../inspector/store';
+import type { CouncilBoardStore } from '../council/store';
 
 /* ---------- coordinate system ---------- */
 /**
@@ -262,6 +263,8 @@ export interface MountOptions {
   hud?: boolean;
   /** Agent Inspector store owned by the host (it also renders the panel). Created internally when omitted. */
   inspector?: InspectorStore;
+  /** Council board store owned by the host; its recent message links draw as arrows. Arrows are off when omitted. */
+  councilBoard?: CouncilBoardStore;
 }
 export interface VillageHandle {
   destroy(): void;

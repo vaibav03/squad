@@ -16,6 +16,8 @@ import {
   sameMastery,
   type MasterySnapshot,
 } from './mastery';
+import { paintRoomArrows } from '../council/roomArrows';
+import type { CouncilBoardStore } from '../council/store';
 import { SEAT_BOX, paintSeatRing, paintSeatTag, roomSeats, type RoomSeat } from './roomSeats';
 
 /**
@@ -231,6 +233,7 @@ const mod = {
     let hoverSeat = -1;
     let kbSeat = -1;
     let seatsDirty = false;
+    let arrowsOn = false; // arrows on screen: keep repainting the room
     const store = (): SeatStore | undefined =>
       ctx.registry.get('inspector') as SeatStore | undefined;
 
@@ -431,6 +434,14 @@ const mod = {
             calm: o.calm,
           });
       });
+      // message arrows between the seats (the board store is optional)
+      arrowsOn = paintRoomArrows(
+        r,
+        ctx.registry.get('councilBoard') as CouncilBoardStore | undefined,
+        seats,
+        live.p.agent ?? '',
+        o.calm,
+      );
       return r;
     }
     // Keyboard in a room: Tab / arrows move between the characters, Enter opens the inspector on one.
@@ -591,7 +602,7 @@ const mod = {
           }
         }
         if (inside) syncSeats(inside);
-        if (inside && (dirty || seatsDirty)) {
+        if (inside && (dirty || seatsDirty || arrowsOn)) {
           seatsDirty = false;
           blit(interiorTex, paintRoom(inside, o));
         }
