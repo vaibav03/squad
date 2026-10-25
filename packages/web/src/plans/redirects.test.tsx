@@ -65,7 +65,7 @@ describe('PlanRedirect', () => {
     mount();
     await waitFor(() =>
       expect(screen.getByTestId('where').textContent).toBe(
-        `/squad/chat?group=group%3Asq_1&plan=${tripPlanning.tripId}`,
+        `/squad/chat?group=group%3Asq_1&plan=${tripPlanning.tripId}&notice=plans`,
       ),
     );
   });

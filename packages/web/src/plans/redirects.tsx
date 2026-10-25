@@ -73,7 +73,12 @@ export function PlanRedirect({ tripId: tripIdProp }: { tripId?: string } = {}) {
     );
   const { groups, planId } = state;
   if (groups && groups.length === 1 && planId)
-    return <Navigate replace to={planChatHref({ groupId: groups[0]!.id, planId, tripId })} />;
+    return (
+      <Navigate
+        replace
+        to={`${planChatHref({ groupId: groups[0]!.id, planId, tripId })}&notice=plans`}
+      />
+    );
   return <MigrationScreen groups={groups ?? []} />;
 }
 

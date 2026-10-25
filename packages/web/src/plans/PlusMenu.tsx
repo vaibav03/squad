@@ -6,9 +6,12 @@ import './plans.css';
 /** Composer '+' button with a real menu (button + role=menu): Enter/Space/ArrowDown open, arrows move, Esc closes and refocuses. */
 export function PlusMenu({
   onPick,
+  onLedger,
   disabled,
 }: {
   onPick: (k: PlanKind) => void;
+  /** Group chats: open the group activity and ledger drawer (view=ledger). */
+  onLedger?: () => void;
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);

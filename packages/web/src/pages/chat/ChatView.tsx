@@ -17,6 +17,8 @@ export interface ChatViewProps {
   activeId?: string | null;
   onActiveChange?: (id: string | null) => void;
   onSignInAgain?: () => void;
+  /** group chats: the composer menu's 'Group activity & ledger' */
+  onOpenLedger?: () => void;
 }
 
 /** Keeps the layout in step with the on-screen keyboard (visual viewport) without shifting the page. */
@@ -46,6 +48,7 @@ export function ChatView({
   activeId: controlled,
   onActiveChange,
   onSignInAgain,
+  onOpenLedger,
 }: ChatViewProps) {
   const wide = useMediaQuery('(min-width: 768px)');
   const reduced = useReducedMotion();
@@ -165,6 +168,7 @@ export function ChatView({
               composerRef={composer}
               onBack={wide ? undefined : back}
               onOpenChat={(id) => setPicked(id)}
+              {...(onOpenLedger ? { onOpenLedger } : {})}
             />
           ) : loading ? (
             <div className="sqc__loading" role="status" aria-label="Loading chat">

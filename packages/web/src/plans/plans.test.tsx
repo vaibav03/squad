@@ -70,10 +70,16 @@ describe('WizardDrawer', () => {
     expect(screen.getByTestId('trip-brief-form')).toBeTruthy();
     expect(screen.getByText('Availability')).toBeTruthy();
   });
-  it('study shell is an honest skeleton: coming next, no form', () => {
+  it('study wizard starts at the goal step with the five-step stepper', () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ plan: null }), { status: 200 })),
+    );
     render(<WizardDrawer kind="study" groupTitle="Squad" hub={null} onClose={() => {}} />);
-    expect(screen.getByTestId('wizard-coming').textContent).toMatch(/Coming next/);
+    expect(screen.getByTestId('study-goal-form')).toBeTruthy();
+    expect(screen.getByText('Shared plan')).toBeTruthy();
     expect(screen.queryByTestId('trip-brief-form')).toBeNull();
+    vi.unstubAllGlobals();
   });
   it('creates the trip through the existing API and links the full plan', async () => {
     const fetchMock = vi.fn(
@@ -103,6 +109,22 @@ describe('WizardDrawer', () => {
       perPerson: 1200,
     });
     vi.unstubAllGlobals();
+  });
+});
+
+describe('PlusMenu ledger entry', () => {
+  it('offers Group activity & ledger when the chat can open it', async () => {
+    const onLedger = vi.fn();
+    render(<PlusMenu onPick={() => {}} onLedger={onLedger} />);
+    await userEvent.click(screen.getByTestId('composer-plus'));
+    const items = await screen.findAllByRole('menuitem');
+    expect(items.map((i) => i.textContent)).toEqual([
+      'Plan a trip',
+      'Create a study plan',
+      'Group activity & ledger',
+    ]);
+    await userEvent.click(items[2]!);
+    expect(onLedger).toHaveBeenCalled();
   });
 });
 

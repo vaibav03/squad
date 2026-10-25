@@ -459,7 +459,9 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             e.target.value = '';
           }}
         />
-        {onPlan && chatKind === 'group' ? <PlusMenu onPick={onPlan} {...(onLedger ? { onLedger } : {})} /> : null}
+        {onPlan && chatKind === 'group' ? (
+          <PlusMenu onPick={onPlan} {...(onLedger ? { onLedger } : {})} />
+        ) : null}
         <button
           type="button"
           className="sqc-iconbtn"
