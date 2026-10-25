@@ -8,7 +8,8 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import type { ChatCitation, ChatCitationExcerpt, ChatSummary } from '@squad/core';
+import { headerTruth, type ChatCitation, type ChatCitationExcerpt, type ChatSummary, type CouncilTruth } from '@squad/core';
+import { ChatCardActionsContext, councilTruthFor, useCouncilTruthVersion } from '../../council';
 import { EmptyState, ErrorState } from '../../primitives/EmptyState';
 import { Icon } from '../../primitives/Icon';
 import { Notice } from '../../primitives/Notice';
@@ -92,12 +93,37 @@ export function pausedCopy(ctl: ChatController): string | null {
   return null;
 }
 
-function connStatus(ctl: ChatController): { status: Status; label: string } {
-  if (ctl.conn === 'expired') return { status: 'error', label: 'Signed out' };
-  if (!ctl.online) return { status: 'offline', label: 'Offline' };
-  if (ctl.conn === 'offline') return { status: 'busy', label: 'Reconnecting' };
-  if (ctl.conn === 'connecting') return { status: 'idle', label: 'Connecting' };
-  return { status: 'live', label: 'Live' };
+const TONE_STATUS: Record<string, Status> = {
+  ok: 'live',
+  info: 'live',
+  warn: 'busy',
+  error: 'error',
+  idle: 'idle',
+};
+
+/** Truth of every council card visible in this chat (loaded result wins; the message's own demo flag is the fallback). */
+function visibleCouncils(ctl: ChatController, chatId: string): CouncilTruth[] {
+  const out: CouncilTruth[] = [];
+  for (const it of ctl.thread(chatId)) {
+    const c = it.message.card;
+    if (c?.type !== 'council') continue;
+    out.push(councilTruthFor(c.runId) ?? (it.message.demo ? 'fixture' : 'live'));
+  }
+  return out;
+}
+
+/** The header badge: transport + provider, with any fixture/degraded council content named in the same badge. */
+export function useHeaderTruth(ctl: ChatController, chatId: string) {
+  const v = useCouncilTruthVersion();
+  const items = ctl.thread(chatId);
+  const councils = useMemo(() => visibleCouncils(ctl, chatId), [items, v, chatId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const t = headerTruth({
+    conn: ctl.conn === 'expired' ? 'expired' : ctl.conn === 'offline' ? 'offline' : ctl.conn === 'connecting' ? 'connecting' : 'live',
+    online: ctl.online,
+    status: ctl.status,
+    councils,
+  });
+  return { ...t, status: TONE_STATUS[t.tone] ?? 'idle' };
 }
 
 // ------------------------------------------------------------------ citation sheet
@@ -331,8 +357,33 @@ function MessageList({
   const dmId = dmIdFor(ctl.me);
   const paused = pausedCopy(ctl) !== null;
 
+  const cardActions = useMemo(
+    () => ({
+      fill: onPrompt,
+      cite: (c: { file: string; page: number; label: string }) => {
+        setCite(c);
+        setCiteCtx(undefined);
+      },
+    }),
+    [onPrompt],
+  );
+
+  // cards never take more than ~40% of the thread viewport
+  const wrap = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const w = wrap.current;
+    if (!w) return;
+    const apply = () => w.style.setProperty('--sqc-card-max', `${Math.round(w.clientHeight * 0.4)}px`);
+    apply();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(apply);
+    ro.observe(w);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div className="sqc-log-wrap">
+    <ChatCardActionsContext.Provider value={cardActions}>
+    <div className="sqc-log-wrap" ref={wrap}>
       <div
         ref={el}
         className="sqc-log"
@@ -460,6 +511,7 @@ function MessageList({
         onClose={() => setCite(null)}
       />
     </div>
+    </ChatCardActionsContext.Provider>
   );
 }
 
@@ -476,6 +528,12 @@ export interface ThreadPaneProps {
   onOpenChat?: (id: string) => void;
   /** extra controls in the header (the dock's close button) */
   headerEnd?: ReactNode;
+  /** small header actions next to the truth badge (a 'Plans' button) */
+  headerActions?: ReactNode;
+  /** left of the textarea (the '+' action menu) */
+  composerLeading?: ReactNode;
+  /** inline wizard/drawer above the composer: capped height, scrolls inside, never pushes the composer out */
+  drawer?: ReactNode;
 }
 
 export function ThreadPane({
@@ -488,8 +546,11 @@ export function ThreadPane({
   onBack,
   onOpenChat,
   headerEnd,
+  headerActions,
+  composerLeading,
+  drawer,
 }: ThreadPaneProps) {
-  const st = connStatus(ctl);
+  const st = useHeaderTruth(ctl, chat.id);
   const names = chat.members.map((m) => m.name);
   const subtitle =
     chat.kind === 'dm'
@@ -529,9 +590,12 @@ export function ThreadPane({
               </span>
             </span>
           ) : null}
+          {headerActions ? <span className="sqc-head__actions" data-slot="header-actions">{headerActions}</span> : null}
           <ImessageIndicator status={imsg} chatId={chat.id} compact={compact} />
           <span className="sqc-head__conn">
-            <StatusDot status={st.status} label={st.label} hideLabel={compact} />
+            <span data-testid="chat-header-badge" data-tone={st.tone} title={st.detail}>
+              <StatusDot status={st.status} label={st.label} hideLabel={compact} />
+            </span>
           </span>
           {headerEnd}
         </div>
@@ -547,8 +611,14 @@ export function ThreadPane({
         onPrompt={(t) => composerRef.current?.fill(t)}
         onOpenChat={onOpenChat}
       />
+      {drawer ? (
+        <div className="sqc-drawer" data-slot="drawer" data-testid="chat-drawer">
+          {drawer}
+        </div>
+      ) : null}
       <Composer
         ref={composerRef}
+        leading={composerLeading}
         key={`c-${chat.id}`}
         api={ctl.api}
         chatKind={chat.kind}

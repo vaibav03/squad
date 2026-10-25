@@ -65,12 +65,14 @@ export interface ComposerProps {
   compact?: boolean;
   /** `discuss: <topic>` was typed: offer to watch it live in the Live panel instead of sending. */
   onDiscuss?: (topic: string) => void;
+  /** left-side slot in the row (the '+' action menu); never affects the textarea's min width */
+  leading?: React.ReactNode;
 }
 
 const MAX_H = 144;
 
 export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
-  { api, chatKind, onSend, paused, compact, onDiscuss },
+  { api, chatKind, onSend, paused, compact, onDiscuss, leading },
   ref,
 ) {
   const [text, setText] = useState('');
@@ -322,6 +324,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
         </p>
       ) : null}
       <div className="sqc-composer__row">
+        {leading ? <div className="sqc-composer__lead" data-slot="composer-leading">{leading}</div> : null}
         <input
           ref={file}
           type="file"
