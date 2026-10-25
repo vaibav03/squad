@@ -13,7 +13,7 @@ import {
   type PublicTurn,
 } from '@squad/core';
 import { repairOrder } from '../councils/pure';
-import { BudgetGuard, DEFAULT_BUDGET, HourlyCap, type CouncilBudget } from './budget';
+import { BudgetGuard, DEFAULT_BUDGET, type CouncilBudget, type HourlyCap } from './budget';
 import { degraded, degradedReason, isHaltReason } from './mode';
 import { PUBLIC_TURN_CONTRACT, parseSubmitTurn } from './public-turn';
 import { toolsFor } from './tools';

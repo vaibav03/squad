@@ -1,3 +1,4 @@
+import type { ZodType } from 'zod';
 import type {
   A2aKind,
   A2aMessage,
@@ -65,7 +66,7 @@ export interface ToolDecl {
   name: ToolName;
   description: string;
   /** JSON-schema-able zod type for the arguments. */
-  parameters: import('zod').ZodType<Record<string, unknown>>;
+  parameters: ZodType<Record<string, unknown>>;
 }
 
 export interface ToolResultInput {

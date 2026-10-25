@@ -82,9 +82,9 @@ export async function main(): Promise<number> {
     real: metered,
     env: {
       ...env,
-      COUNCIL_MAX_TURNS: '16',
+      COUNCIL_MAX_TURNS: '24',
       COUNCIL_MAX_TOKENS: '40000',
-      COUNCIL_MAX_WALL_MS: '90000',
+      COUNCIL_MAX_WALL_MS: '110000',
     },
     emit,
   });
