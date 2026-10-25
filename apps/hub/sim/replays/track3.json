@@ -1,0 +1,468 @@
+{
+  "name": "track3",
+  "version": 1,
+  "loop": false,
+  "cast": {
+    "me": "s_ana",
+    "ben": "s_ben",
+    "chi": "s_chi",
+    "dev": "s_dev"
+  },
+  "events": [
+    {
+      "at": 0,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 100,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_chi",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 300,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_dev",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 400,
+      "event": {
+        "t": "agent.state",
+        "agent": "dean",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 3000,
+      "event": {
+        "t": "agent.state",
+        "agent": "dean",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 8000,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 9000,
+      "event": {
+        "t": "agent.state",
+        "agent": "expert:ch6",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 17000,
+      "event": {
+        "t": "agent.state",
+        "agent": "expert:ch6",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 17200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 17500,
+      "event": {
+        "t": "agent.state",
+        "agent": "dean",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 22000,
+      "event": {
+        "t": "call.start",
+        "agent": "expert:ch12",
+        "callId": "call_ch12_1",
+        "student": "s_ana"
+      }
+    },
+    {
+      "at": 22100,
+      "event": {
+        "t": "agent.state",
+        "agent": "expert:ch12",
+        "state": "in_call"
+      }
+    },
+    {
+      "at": 22200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "in_call"
+      }
+    },
+    {
+      "at": 24500,
+      "event": {
+        "t": "call.caption",
+        "agent": "expert:ch12",
+        "callId": "call_ch12_1",
+        "text": "r tells you the direction and strength of the straight-line pattern.",
+        "cite": {
+          "courseId": "demo",
+          "chapter": "ch12",
+          "file": "ch12-linear-regression.pdf",
+          "page": 13,
+          "quote": "strength and direction of the linear association"
+        }
+      }
+    },
+    {
+      "at": 29000,
+      "event": {
+        "t": "call.caption",
+        "agent": "expert:ch12",
+        "callId": "call_ch12_1",
+        "text": "Square it and you get r squared, the share of the variation the line explains.",
+        "cite": {
+          "courseId": "demo",
+          "chapter": "ch12",
+          "file": "ch12-linear-regression.pdf",
+          "page": 14,
+          "quote": "r2 is called the coefficient of determination"
+        }
+      }
+    },
+    {
+      "at": 34000,
+      "event": {
+        "t": "call.caption",
+        "agent": "expert:ch12",
+        "callId": "call_ch12_1",
+        "text": "So r of 0.66 means r squared of about 0.44: the line explains 44 percent.",
+        "cite": {
+          "courseId": "demo",
+          "chapter": "ch12",
+          "file": "ch12-linear-regression.pdf",
+          "page": 13,
+          "quote": "r2 = 0.43969 and r = 0.663"
+        }
+      }
+    },
+    {
+      "at": 38500,
+      "event": {
+        "t": "call.end",
+        "agent": "expert:ch12",
+        "callId": "call_ch12_1"
+      }
+    },
+    {
+      "at": 38600,
+      "event": {
+        "t": "agent.state",
+        "agent": "expert:ch12",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 38700,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 42000,
+      "event": {
+        "t": "agent.state",
+        "agent": "expert:ch6",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 43000,
+      "event": {
+        "t": "quiz.question",
+        "quizId": "qz_ch6_1",
+        "chapter": "ch6",
+        "target": "s_ana"
+      }
+    },
+    {
+      "at": 43200,
+      "event": {
+        "t": "quiz.question",
+        "quizId": "qz_ch6_1",
+        "chapter": "ch6",
+        "target": "s_ben"
+      }
+    },
+    {
+      "at": 47500,
+      "event": {
+        "t": "quiz.answer",
+        "quizId": "qz_ch6_1",
+        "chapter": "ch6",
+        "student": "s_ana"
+      }
+    },
+    {
+      "at": 50500,
+      "event": {
+        "t": "quiz.answer",
+        "quizId": "qz_ch6_1",
+        "chapter": "ch6",
+        "student": "s_ben"
+      }
+    },
+    {
+      "at": 52000,
+      "event": {
+        "t": "quiz.result",
+        "quizId": "qz_ch6_1",
+        "chapter": "ch6",
+        "student": "s_ana"
+      }
+    },
+    {
+      "at": 52200,
+      "event": {
+        "t": "quiz.result",
+        "quizId": "qz_ch6_1",
+        "chapter": "ch6",
+        "student": "s_ben"
+      }
+    },
+    {
+      "at": 54500,
+      "event": {
+        "t": "mastery.changed",
+        "student": "s_ana",
+        "chapter": "ch6",
+        "box": 3
+      }
+    },
+    {
+      "at": 54700,
+      "event": {
+        "t": "mastery.changed",
+        "student": "s_ben",
+        "chapter": "ch6",
+        "box": 2
+      }
+    },
+    {
+      "at": 56000,
+      "event": {
+        "t": "agent.state",
+        "agent": "expert:ch6",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 60000,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 60200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 70000,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 70200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 72000,
+      "event": {
+        "t": "mastery.changed",
+        "student": "s_ana",
+        "chapter": "ch12",
+        "box": 2
+      }
+    },
+    {
+      "at": 72200,
+      "event": {
+        "t": "mastery.changed",
+        "student": "s_ben",
+        "chapter": "ch12",
+        "box": 1
+      }
+    },
+    {
+      "at": 78000,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "waiting_for_student"
+      }
+    },
+    {
+      "at": 78500,
+      "event": {
+        "t": "confirm.pending",
+        "student": "s_ana",
+        "taskId": "task_group_stats",
+        "question": "Send you your own mastery summary by DM?"
+      }
+    },
+    {
+      "at": 82000,
+      "event": {
+        "t": "confirm.done",
+        "student": "s_ana",
+        "taskId": "task_group_stats",
+        "question": "Send you your own mastery summary by DM?"
+      }
+    },
+    {
+      "at": 82200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 88000,
+      "event": {
+        "t": "council.opinion",
+        "councilId": "council:planner",
+        "member": "chill",
+        "text": "Two short evenings are enough if the quiz went well."
+      }
+    },
+    {
+      "at": 91000,
+      "event": {
+        "t": "council.opinion",
+        "councilId": "council:planner",
+        "member": "grind",
+        "text": "Regression needs a third pass before the exam."
+      }
+    },
+    {
+      "at": 94000,
+      "event": {
+        "t": "council.rank",
+        "councilId": "council:planner",
+        "member": "advisor",
+        "order": [
+          "grind",
+          "chill"
+        ]
+      }
+    },
+    {
+      "at": 97000,
+      "event": {
+        "t": "council.verdict",
+        "councilId": "council:planner",
+        "member": "advisor",
+        "dissent": true,
+        "dissenter": "chill"
+      }
+    },
+    {
+      "at": 104000,
+      "event": {
+        "t": "agent.state",
+        "agent": "dean",
+        "state": "studying"
+      }
+    },
+    {
+      "at": 110000,
+      "event": {
+        "t": "agent.state",
+        "agent": "dean",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 114000,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ana",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 114100,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_ben",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 114200,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_chi",
+        "state": "idle"
+      }
+    },
+    {
+      "at": 114300,
+      "event": {
+        "t": "agent.state",
+        "agent": "student:s_dev",
+        "state": "idle"
+      }
+    }
+  ],
+  "checkpoints": {
+    "hook": 3000,
+    "doubt": 8000,
+    "call": 22000,
+    "quiz": 42000,
+    "step-diff": 60000,
+    "private": 78000,
+    "council": 88000,
+    "integrity": 104000
+  }
+}
