@@ -10,7 +10,8 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --dir src --passWithNoTests",
-    "test:smoke": "vitest run --dir test/smoke --passWithNoTests"
+    "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
+    "dev": "vite --config vite.config.ts"
   },
   "dependencies": {
     "@squad/core": "workspace:*",
