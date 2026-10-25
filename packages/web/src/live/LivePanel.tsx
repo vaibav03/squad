@@ -151,6 +151,7 @@ export function LivePanel(p: LivePanelProps) {
     <>
       <OverlayFrame
         open={open}
+        dock="live"
         onClose={() => {
           // leaving mid-discussion is handled by Room's own cleanup (stop is sent by the Leave button; Esc just closes)
           onClose();

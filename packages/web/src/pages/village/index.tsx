@@ -15,6 +15,7 @@ import { useCalmMode } from '../../hooks/useCalmMode';
 import { hubStudentId } from '../../shell/dev-login';
 import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
+import { PanelDockRoot } from '../../shell/panel-dock';
 import { ChatDock } from '../chat/ChatDock';
 import { RoomLayer } from '../../overlays/room-info';
 import { MasteryLayer } from '../../overlays/mastery';
@@ -26,7 +27,7 @@ import { createInspectorStore, type InspectorStore } from '@squad/village/inspec
 import { createCouncilBoardStore } from '@squad/village/council';
 import { CouncilHall, CouncilBoardHost, setBoardStore } from '../../council';
 import { useToast } from '../../primitives/Toast';
-import { sendPhraseToChat } from './chat-send';
+import { createPhraseRunner } from './chat-send';
 import { OverlayHost } from './OverlayHost';
 import { DEFAULT_WORLD, loadWorld, type WorldHandle } from './worlds';
 import './village.css';
@@ -214,24 +215,32 @@ export default function VillagePage({ world }: { world?: string }) {
 
   // A room's "say this in chat" button sends the phrase to the squad group chat. Not offered in replays.
   const { toast } = useToast();
+  const phraseRunner = useMemo(() => createPhraseRunner(), []);
+  const toasted = useRef(new WeakSet<Promise<boolean>>());
   const runPhrase = useMemo(
     () =>
       hub?.token && !replayName
         ? (phrase: string) => {
-            void sendPhraseToChat(hub, phrase).then((ok) =>
-              toast(
-                ok
-                  ? { title: 'Sent to the squad chat', body: phrase, tone: 'ok' }
-                  : {
-                      title: 'Could not send that',
-                      body: 'Open Chat and say it there.',
-                      tone: 'warn',
-                    },
-              ),
-            );
+            const run = phraseRunner(hub, phrase);
+            // one toast per real send: a repeated press returns the same promise
+            if (!toasted.current.has(run)) {
+              toasted.current.add(run);
+              void run.then((ok) =>
+                toast(
+                  ok
+                    ? { title: 'Sent to the squad chat', body: phrase, tone: 'ok' }
+                    : {
+                        title: 'Could not send that',
+                        body: 'Open Chat and say it there.',
+                        tone: 'warn',
+                      },
+                ),
+              );
+            }
+            return run;
           }
         : undefined,
-    [hub, replayName, toast],
+    [hub, replayName, toast, phraseRunner],
   );
 
   const onClosed = useCallback(() => handle.current?.overlayClosed(), []);
@@ -247,7 +256,7 @@ export default function VillagePage({ world }: { world?: string }) {
       </div>
     );
   return (
-    <div className="sq-world" onKeyDown={onRootKeyDown}>
+    <PanelDockRoot className="sq-world" onKeyDown={onRootKeyDown}>
       <div ref={stage} className="sq-world__stage" />
       {state === 'loading' && (
         <div className="sq-world__loading">
@@ -322,6 +331,6 @@ export default function VillagePage({ world }: { world?: string }) {
         calm={calm}
         returnFocusTo={stage.current?.querySelector<HTMLElement>('.sqv-stage')}
       />
-    </div>
+    </PanelDockRoot>
   );
 }

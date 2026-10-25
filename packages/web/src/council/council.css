@@ -5,11 +5,10 @@
 @media (min-width: 640px) {
   .lv-ovl[data-placement='dock']:has(> .cn-panel) {
     align-items: flex-end;
-    padding: var(--lv-s4);
   }
-  /* stay below the village HUD (camera buttons, clock) */
+  /* the dock region already stays below the village HUD and above the Chat launcher */
   .cn-panel {
-    max-height: calc(100% - 96px);
+    max-height: 100%;
   }
 }
 [hidden].cn-members,
@@ -691,7 +690,7 @@
   position: absolute;
   right: var(--lv-s4);
   bottom: calc(var(--lv-s4) + 76px); /* above the phone agent dock */
-  z-index: var(--z-hud, 10);
+  z-index: var(--sq-z-hud);
   min-height: var(--lv-tap);
   border: 2px solid var(--sq-ink);
   background: var(--lv-surface-2);
