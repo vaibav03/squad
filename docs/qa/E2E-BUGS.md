@@ -6,13 +6,13 @@ Filed by the e2e acceptance suite (branch e2e/acceptance). Product code is not t
 |---|---|---|---|
 | E2E-001 | P1 | J1 | open: Setup courses step never completes in live mode |
 | E2E-002 | P2 | J1 | open: uploaded .ics never reaches hub/agent |
-| E2E-003 | P1 | J8 | open: Chi is s_chi in hub and s_cam in agents |
+| E2E-003 | P1 | J8 | open: agents are s_cam, hub squad is s_chi; a trip started with the hub's ids gets `no_plan`/`offline` (with s_cam it completes and all four incl. s_chi see trip.confirmed once on current main) |
 | E2E-004 | P1 | J10 | fixed on main by batch 3 (RoomLayer mounted); kept for the record |
-| E2E-005 | P2 | J10 | open: four landmarks stay LOCKED (needs owner triage, see below) |
+| E2E-005 | P2 | J10 | open, unstable: four landmarks LOCKED in focused runs; in the final full run on the merged main NO room offered an Enter prompt within 60 s each and the test hit its 10 min timeout (`docs/design/shots/e2e/j10-village/no-prompt-*.png`); needs owner triage |
 | E2E-006 | P2 | J10 | open: Esc does not leave a room; transcript panel covers the next Enter prompt |
 | E2E-007 | n/a | J7 | withdrawn (Rubric works when the rubric is pasted after `rubric:`) |
 | E2E-008 | n/a | J7 | withdrawn (Step Diff needs two different students, each DMing one photo; passes) |
-| E2E-009 | P2 | J11 | open: Personas voice picker is empty with no explanation when TTS is off |
+| E2E-009 | P2 | J11 | appears fixed by the honest-status merge (final run found an explanatory message); re-verify |
 | E2E-010 | P3 | J1 | open: Home checklist shows phone and PDFs done before anything is done; phone code accepts any 6 digits and is not stored |
 
 ## E2E-001 (P1) Setup: course upload never finishes in live mode, Continue stays disabled
