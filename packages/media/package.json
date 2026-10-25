@@ -14,7 +14,7 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --dir src --passWithNoTests",
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
-    "build:sprites": "python3 src/sprites/build/build_cast.py && python3 src/portraits/build_portraits.py",
+    "build:sprites": "python3 src/sprites/build/build_cast.py",
     "build:gifs": "tsx src/gif/buildGif.ts",
     "build:wall": "python3 src/sprites/wall/build_wall.py"
   },

@@ -91,15 +91,21 @@ def sage_hand(c, g):
     c.P(x, y + 2, 'skin-lt') if False else None
 SPECS['expert-sage'] = dict(LL=8, TH=9, SK=5, flare=1, seam=True, skin=SK_LT, hair_style='gray', hair=hair('cloud-hi', 'wall-lit', 'cloud-hi'),
     coat=('leaf-lit', 'leaf-dark', 'ok'), hem='leaf-dark', pants=('leaf-dark', 'ink'), boots='wood-dark', boots_sh='ink', eye='dot', armN_fixed=(3, 2),
-    acc=dict(torso=sage_torso, head=chain(beard('cloud-hi', 'wall-lit'), glasses('wood'))))
+    acc=dict(torso=sage_torso, hand=sage_hand, head=chain(beard('cloud-hi', 'wall-lit'), glasses('wood'))))
 def monk_torso(c, g):
     cx, top, hip, fx = g['cx'], g['top'], g['hip'], g['fx']
     for (x, y) in line(fx - 1, top, cx - 3, hip - 3): c.P(x, y, 'roof-wine')
     c.R(cx - 3, hip - 4, cx + 2, hip - 4, 'glow'); c.R(fx - 1, top, fx, top + 1, 'wood-lit')
     for (x, y) in ((fx - 1, top + 2), (fx - 2, top + 3), (fx - 2, top + 4)): c.P(x, y, 'glow-core')
+def monk_hat(c, g):  # wide straw kasa: low cone with a broad brim, a silhouette no other character has
+    hx, hy = g['hx'], g['hy']
+    for i, (x0, x1) in enumerate([(hx + 2, hx + 5), (hx + 1, hx + 6), (hx, hx + 7)]):
+        y = hy - 3 + i; c.R(x0, y, x1, y, 'glow'); c.P(x1, y, 'wood-lit')
+    c.R(hx - 2, hy, hx + 9, hy, 'wood-lit'); c.R(hx + 5, hy, hx + 9, hy, 'wood'); c.P(hx - 2, hy, 'wood')
+    c.R(hx, hy - 1, hx + 7, hy - 1, 'roof-wine')
 SPECS['expert-monk'] = dict(LL=8, TH=9, SK=5, flare=1, skin=SK_MD, hair_style='bald', hair=hair('wood-dark', 'ink', 'wood'),
     coat=('ember', 'roof-wine', 'glow'), hem='roof-wine', pants=('roof-wine', 'roof-shade'), boots='wood-dark', boots_sh='ink', eye='sleepy', armN_fixed=(3, 2),
-    acc=dict(torso=monk_torso))
+    acc=dict(torso=monk_torso, head=monk_hat))
 
 # ---- mage: teal star hat with wide brim, long silver hair (no beard), plum robe + cape, glowing-orb staff
 def mage_hat(c, g):

@@ -20,16 +20,38 @@ const Anim = z.object({
   repeat: z.number(),
 });
 
-export const FramesFileSchema = z.object({
-  version: z.literal(2),
-  id: z.string(),
-  cell: z.object({ w: z.number(), h: z.number() }),
-  facing: z.literal('right'),
-  anchors: z.object({ feet: Pt, head: Pt, bubble: Pt }),
-  portrait: z.string(),
-  frames: z.record(z.string(), Rect.extend({ strip: z.string() })),
-  anims: z.record(z.string(), Anim),
-});
+/** Walk-facing sets for the top-down campus (Modern Interiors style, 4-direction). */
+export const DIRECTIONS = ['down', 'up', 'left', 'right'] as const;
+export type Direction = (typeof DIRECTIONS)[number];
+
+/**
+ * Format v2 = side view, anims keyed '<anim>' (what ships today).
+ * Format v3 = same file shape, plus view 'topdown4' where anims are keyed '<anim>/<dir>' for each
+ * direction in `directions`, frames named '<anim>/<dir>/<n>'. v2 files stay valid unchanged.
+ */
+export const FramesFileSchema = z
+  .object({
+    version: z.union([z.literal(2), z.literal(3)]),
+    id: z.string(),
+    cell: z.object({ w: z.number(), h: z.number() }),
+    view: z.enum(['side', 'topdown4']).default('side'),
+    facing: z.literal('right').optional(),
+    directions: z.array(z.enum(DIRECTIONS)).optional(),
+    poc: z.boolean().optional(),
+    anchors: z.object({ feet: Pt, head: Pt, bubble: Pt }),
+    portrait: z.string(),
+    frames: z.record(z.string(), Rect.extend({ strip: z.string() })),
+    anims: z.record(z.string(), Anim),
+  })
+  .superRefine((f, ctx) => {
+    if (f.view !== 'topdown4') return;
+    const dirs = f.directions ?? [];
+    if (dirs.length !== 4)
+      ctx.addIssue({ code: 'custom', message: 'topdown4 needs all 4 directions' });
+    for (const d of dirs)
+      if (!f.anims[`walk/${d}`] || !f.anims[`idle/${d}`])
+        ctx.addIssue({ code: 'custom', message: `missing walk/idle for ${d}` });
+  });
 export type FramesFile = z.infer<typeof FramesFileSchema>;
 
 export const CastAtlasSchema = z.object({
@@ -89,3 +111,9 @@ export function phaserAnims(id: string, file: FramesFile = loadFrames(id)): Phas
       };
     });
 }
+
+/** Animation key for a facing: side view ignores dir, top-down appends it ('walk/down'). */
+export function animKey(file: FramesFile, anim: string, dir: Direction = 'down'): string {
+  return file.view === 'topdown4' ? `${anim}/${dir}` : anim;
+}
+export * from './source.js';

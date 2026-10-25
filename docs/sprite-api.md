@@ -83,3 +83,13 @@ DOM sprite animation without Phaser: CSS `background-image: url(walk.png)` at `w
 ## iMessage GIFs
 
 `<id>/hello.gif` (wave, then talk, ~2 s loop) and `<id>/talk.gif` (talk pair with a speech-bubble), nearest-neighbour integer scale on a `sky-deep` card, under 400 KB, built from the frames with ffmpeg: `pnpm --filter @squad/media build:gifs`.
+
+## Top-down campus readiness (format v3, planned move from the side-view village)
+
+The owner will later move to a top-down interior campus (Modern Interiors style, 4-direction walking). Nothing top-down is drawn yet; the pipeline, schema and registry are ready.
+
+- **Atlas schema.** `FramesFileSchema` accepts `version: 2 | 3`. A v2 file is `view: "side"` (default, faces right, anims keyed `walk`). A v3 `view: "topdown4"` file lists `directions` (all of `down`, `up`, `left`, `right`), keys anims `<anim>/<dir>` (`walk/down`, `idle/left`, ...) and names frames `<anim>/<dir>/<n>`. Validation requires `idle/<dir>` and `walk/<dir>` for every direction. `animKey(file, 'walk', dir)` returns the right key for either view, so scene code can be written once. Cell size is free (Modern Interiors is 16x32 per frame); anchor `feet` still marks the ground point, `head`/`bubble` still place tags.
+- **Registry.** `MediaPersona.spriteSource` (optional) is `{kind:'generated', view}` (default, the cast in `assets/sprites`) or `{kind:'imported', view, path:'assets/vendor/<pack>/...', framesFile}`. `path` must start with `assets/vendor/`, which is gitignored (local licensed packs only, never committed). `spriteSheet` remains the generated fallback.
+- **Resolver.** `resolveSprites(id, persona.spriteSource)` from `@squad/media/sprites` returns `{framesPath, fellBack}`; a missing vendor pack falls back to the generated side cast so a fresh clone never breaks.
+- **Import recipe.** Drop the pack in `assets/vendor/<pack>/`, write a v3 `frames.json` next to it (a small script mapping the pack's rows to `walk/down` etc.), then set `spriteSource` on the personas (via `upsertPersona` or `data.ts`). Portraits stay the pixel portraits.
+- Tests: `src/sprites/topdown.test.ts` covers v2 compatibility, a synthetic 4-direction v3 file, missing-direction rejection, fallback and the vendor-path rule.

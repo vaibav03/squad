@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Persona } from '@squad/core';
 import { SEED } from './data.js';
+import { SpriteSourceSchema, type SpriteSource } from '../sprites/source.js';
 
 export type PersonaRole =
   | 'cubbie'
@@ -21,6 +22,8 @@ export type MediaPersona = Persona & {
   style: string;
   fluentPortrait?: string;
   nameOverride?: string;
+  /** Generated cast (default) or an imported pack under assets/vendor/. spriteSheet stays the generated fallback. */
+  spriteSource?: SpriteSource;
 };
 
 const Schema = z.object({
@@ -45,6 +48,7 @@ const Schema = z.object({
   portrait: z.string(),
   emoji: z.string(),
   fluentPortrait: z.string().optional(),
+  spriteSource: SpriteSourceSchema.optional(),
   voiceId: z.string().optional(),
   avatarUrl: z.string().optional(),
 });
