@@ -72,6 +72,7 @@ Two forms, both verified-quote only:
 * Any other source: `source://<kind>/<id>#<anchor>` (marker form `[source://...]`), claims checked by
   `verifySourceClaims`: the source and anchor must exist among the retrieved chunks and the quote must appear verbatim
   (same normalisation as PDFs) in that chunk. Anything else is struck and the answer falls back to "Not in the materials".
+  Exception (V1): when the asker can read no source at all (nothing connected, nothing shared with their squads) and the question is about coursework, Canvas, Drive or Calendar content, the reply is `Nothing is connected yet: connect Canvas or Google in [Connections](/squad/connections).` (`NOTHING_CONNECTED`, `ExpertAnswer.reason = 'nothing_connected'`). Questions outside the materials, once any source exists, keep the exact refusal.
 
 `Citation.source = { kind, id, anchor?, title?, url? }`; for non-PDF citations `file` carries the display title and
 `chapter` is `context`. The web `SourceCitation` has the same optional `source` and the chip label is the title.

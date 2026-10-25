@@ -3,7 +3,7 @@ import { FakeLlm, sourceUri, type SourceKind } from '@squad/core';
 import { openMemoryDb } from '@squad/core/node';
 import { assembleBrain } from '../experts/brain';
 import { makeKit } from '../experts/testkit';
-import { NOT_IN_MATERIALS } from '../experts/types';
+import { NOT_IN_MATERIALS, NOTHING_CONNECTED } from '../experts/types';
 import { canvasAnswer, NOT_SYNCED } from './answers';
 import { deriveTripConstraints } from './constraints';
 import { hashExternalAccount } from './ids';
@@ -218,7 +218,7 @@ describe('Brain.ask and retrieve across courses', () => {
     expect(own.grounded).toBe(true);
     expect(own.citations[0]!.source).toMatchObject({ kind: 'canvas_assignment', id: s.id });
     const other = await brain.ask('stat-101', q, { viewer: ben, contextCourseId: null });
-    expect(other.text).toBe(NOT_IN_MATERIALS);
+    expect(other.text).toBe(NOTHING_CONNECTED); // ben can read nothing: honest, and still no leak
     // retrieve tool is viewer-bound
     expect(await createRetrieveContext(store, ben)('late penalty assignment')).toEqual([]);
     expect((await createRetrieveContext(store, ana)('late penalty assignment')).length).toBe(1);

@@ -3,7 +3,7 @@ import { FakeLlm, parseSourceUri, sourceUri } from '@squad/core';
 import { openMemoryDb } from '@squad/core/node';
 import { assembleBrain } from '../experts/brain';
 import { makeKit } from '../experts/testkit';
-import { NOT_IN_MATERIALS } from '../experts/types';
+import { NOT_IN_MATERIALS, NOTHING_CONNECTED } from '../experts/types';
 import {
   formatSourceMarker,
   parseMarkers,
@@ -456,7 +456,15 @@ describe('Brain.ask with connected sources', () => {
     const b = await brain.ask('stat-101', 'what is the late penalty for assignment 3', {
       viewer: { studentId: 's_ben', squadIds: ['sq1'] },
     });
-    expect(b.text).toBe(NOT_IN_MATERIALS);
+    // ben has no readable source at all and asked about coursework: the honest reply, not "Ask the TA"
+    expect(b.text).toBe(NOTHING_CONNECTED);
+    expect(b.reason).toBe('nothing_connected');
+    expect(b.grounded).toBe(false);
+    // a question outside any connected content keeps the exact refusal
+    const z = await brain.ask('stat-101', 'what is a z-score', {
+      viewer: { studentId: 's_ben', squadIds: ['sq1'] },
+    });
+    expect(z.text).toBe(NOT_IN_MATERIALS);
     expect(llm.calls.slice(calls).some((c) => JSON.stringify(c).includes('Late work loses'))).toBe(
       false,
     );
