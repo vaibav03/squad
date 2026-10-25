@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable no-undef, no-empty, no-useless-escape */
+/* eslint-disable no-empty, no-useless-escape */
 // Needs the dev server (pnpm --filter @squad/web-host dev) or BASE_URL. Signs in via localStorage, waits for fonts,
 // emulates reduced motion for determinism, writes <prefix>-<route>-<w>-<theme>.png.
 import { chromium } from 'playwright';
