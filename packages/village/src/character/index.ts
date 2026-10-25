@@ -3,13 +3,11 @@ import type { AssetSpec, Interactable, MotionTokens, PlayerApi, VillageBus, Worl
 import { DEPTH, GROUND_Y } from '../world/api';
 import { nearestInteractable, tabOrder } from '../world/interact';
 import { WalkSim } from './walk';
+import { CHAR_ATLAS, ensureCharacterAnims } from './anims';
+export { ensureCharacterAnims } from './anims';
 
-const P = 'assets/pixel/characters/autumn-town-player-day-night-32px/';
 export const ASSETS: AssetSpec[] = [
-  { type: 'spritesheet', key: 'player-walk-night', path: `${P}SpriteSheet_PlayerWalk_Night.png`, frameWidth: 32, frameHeight: 32 },
-  { type: 'spritesheet', key: 'player-idle-night', path: `${P}SpriteSheet_PlayerIdle_Night.png`, frameWidth: 32, frameHeight: 32 },
-  { type: 'spritesheet', key: 'player-walk-day', path: `${P}SpriteSheet_PlayerWalk_Day.png`, frameWidth: 32, frameHeight: 32 },
-  { type: 'spritesheet', key: 'player-idle-day', path: `${P}SpriteSheet_PlayerIdle_Day.png`, frameWidth: 32, frameHeight: 32 },
+  { type: 'atlas', key: CHAR_ATLAS, path: 'assets/pixel/composed/characters/atlas.png', atlasPath: 'assets/pixel/composed/characters/atlas.json' },
 ];
 
 export interface PlayerDeps {
@@ -26,24 +24,17 @@ export type PlayerImpl = PlayerApi & {
   destroy(): void;
 };
 
-const MARGIN = 14;
+const MARGIN = 16;
 
 export function createPlayer(scene: Phaser.Scene, d: PlayerDeps): PlayerImpl {
-  const A = scene.anims;
-  const mkAnim = (key: string, tex: string, rate: number) => {
-    if (A.exists(key)) return;
-    A.create({ key, frames: A.generateFrameNumbers(tex, {}), frameRate: rate, repeat: -1 });
-  };
-  mkAnim('p-walk-night', 'player-walk-night', 11);
-  mkAnim('p-idle-night', 'player-idle-night', 3);
-  mkAnim('p-walk-day', 'player-walk-day', 11);
-  mkAnim('p-idle-day', 'player-idle-day', 3);
+  ensureCharacterAnims(scene);
+  const cast = (d.registry.get('playerCast') as string | undefined) ?? 'student';
 
   const saved = d.registry.get('playerX') as number | undefined;
   const start = saved ?? d.layout.slot('spawn').x;
   const sim = new WalkSim(start, MARGIN, d.layout.width - MARGIN, d.motion.easeOut);
 
-  const sprite = scene.add.sprite(Math.round(start), GROUND_Y, 'player-idle-night').setOrigin(0.5, 31 / 32).setDepth(DEPTH.actors + 1);
+  const sprite = scene.add.sprite(Math.round(start), GROUND_Y, CHAR_ATLAS, `${cast}/idle/0`).setOrigin(0.5, 31 / 32).setDepth(DEPTH.actors + 1);
   if (!scene.textures.exists('sqv-shadow')) {
     const t = scene.textures.createCanvas('sqv-shadow', 18, 6);
     if (t) {
@@ -88,8 +79,7 @@ export function createPlayer(scene: Phaser.Scene, d: PlayerDeps): PlayerImpl {
       sprite.setPosition(x, GROUND_Y);
       shadow.setPosition(x, GROUND_Y - 1);
       sprite.setFlipX(sim.facing === 'left');
-      const v = d.time.nightness > 0.5 ? 'night' : 'day';
-      const key = `${sim.walking ? 'p-walk' : 'p-idle'}-${v}`;
+      const key = sim.walking ? (cast === 'student' ? 'student-walk-fast' : `${cast}-walk`) : `${cast}-idle`;
       if (key !== animKey) { animKey = key; sprite.play(key, true); }
       if (fade) {
         fade.t += dt;
