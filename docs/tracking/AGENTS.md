@@ -8,21 +8,19 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `e2e/` | 1 | 10 | 274 | Claude Sonnet 5.5 (8) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `e2e/acceptance` | 10 | 274 | 2026-10-25 00:54 | 2026-10-25 02:26 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 176 |
+| (no trailer) | 181 |
 | Claude Haiku 5.5 | 10 |
 | Claude Sonnet 5.5 | 460 |
 
@@ -30,12 +28,13 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Area | Commits |
 |---|---:|
-| (other) | 86 |
+| (other) | 89 |
 | Initial commit | 1 |
 | Merge batch 1 | 1 |
 | Merge batch 10 | 1 |
 | Merge batch 11 | 1 |
 | Merge batch 12 | 1 |
+| Merge batch 13 | 1 |
 | Merge batch 2 | 1 |
 | Merge batch 3 | 1 |
 | Merge batch 4 | 1 |
@@ -59,7 +58,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | deploy | 5 |
 | design | 18 |
 | docs | 23 |
-| e2e | 19 |
+| e2e | 27 |
 | fix | 19 |
 | hub | 5 |
 | inspector | 13 |
@@ -72,6 +71,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | merge batch10 | 1 |
 | merge batch11 | 3 |
 | merge batch12 | 2 |
+| merge batch13 | 3 |
 | merge batch2 | 7 |
 | merge batch3 | 3 |
 | merge batch4 | 3 |
@@ -110,5 +110,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Author | Commits |
 |---|---:|
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 354 |
+| Vaibav | 359 |
 | vaibav03 | 26 |
