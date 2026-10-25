@@ -114,7 +114,9 @@ describe('thread rendering', () => {
     const a = setup(GROUP_ID, { demo: true });
     await screen.findAllByTestId('chat-message');
     expect(screen.getAllByTestId('chat-demo-label').length).toBeGreaterThan(0);
-    expect(screen.getByTestId('chat-demo-notice').textContent).toContain('GEMINI_API_KEY');
+    expect(screen.getByTestId('chat-demo-notice').textContent).toContain(
+      'Practice mode: example answers, not real AI',
+    );
     fireEvent.click(
       within(screen.getByTestId('chat-demo-notice')).getByRole('button', { name: 'Dismiss' }),
     );

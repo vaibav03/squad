@@ -13,6 +13,7 @@ import type { ChatCitation, ChatCitationExcerpt, ChatSummary } from '@squad/core
 import { EmptyState, ErrorState } from '../../primitives/EmptyState';
 import { Icon } from '../../primitives/Icon';
 import { Notice } from '../../primitives/Notice';
+import { statusSentence } from '../../lib/state-labels';
 import { Sheet } from '../../primitives/Sheet';
 import { Skeleton } from '../../primitives/Skeleton';
 import { StatusDot, type Status } from '../../primitives/StatusDot';
@@ -42,10 +43,8 @@ const readDismissed = (): string | null => {
 /** Demo notice (dismissable for the session; every bot bubble still carries its own label) and connection notices. */
 export function ChatBanners({ ctl, className }: { ctl: ChatController; className?: string }) {
   const [dismissed, setDismissed] = useState(readDismissed);
-  // always the hub's own words; a changed notice (say, credits ran out) shows again after a dismissal
-  const demo = ctl.status?.demo
-    ? (ctl.status.notice ?? 'Demo mode: answers come from a built-in demo model.')
-    : null;
+  // customer wording mapped from the server's reason code; a changed notice (say, credits ran out) shows again after a dismissal
+  const demo = ctl.status?.demo ? statusSentence(ctl.status) : null;
   const expired = ctl.phase === 'expired' || ctl.conn === 'expired';
   return (
     <div className={`sqc-banners${className ? ` ${className}` : ''}`}>

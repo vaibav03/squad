@@ -83,3 +83,19 @@ export function truthFromStatus(s: HubStatusLike | null | undefined): {
   if (reason) return { state: 'partial', reason };
   return { state: 'practice' };
 }
+
+/**
+ * The server's `notice`/`reason` codes -> customer wording. Never show the server's own notice string: it can name
+ * environment variables. `no_key` and `no_gemini_key` mean the Gemini key is missing.
+ */
+export function statusSentence(
+  s: (HubStatusLike & { notice?: string }) | null | undefined,
+): string {
+  if (!s) return TRUTH_LABELS.checking.sentence;
+  if (s.probing) return TRUTH_LABELS.checking.sentence;
+  if (s.reason === 'no_key' || s.reason === 'no_gemini_key' || s.reason === 'missing_key')
+    return notSetUp('the Gemini key');
+  const t = truthFromStatus(s);
+  if (t.state === 'partial' && t.reason) return `${TRUTH_LABELS.partial.sentence} (${t.reason})`;
+  return TRUTH_LABELS[t.state].sentence;
+}

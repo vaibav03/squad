@@ -45,6 +45,8 @@ export function Overview({ status, courses, onRetry, onNew, onSample }: Overview
       width="wide"
       eyebrow="Library"
       title="Courses"
+      lede="The classes your squad studies. Course files and chapters are what your study agents learn from."
+      next="Add your course files, or open the sample course to see how it looks."
       actions={
         <Button variant="primary" iconStart="plus" onClick={onNew} data-testid="new-course">
           New course
@@ -73,7 +75,7 @@ export function Overview({ status, courses, onRetry, onNew, onSample }: Overview
           <StateBlock
             kind="error"
             title="Your courses did not load"
-            body="The hub did not answer. Nothing was changed. Try again."
+            body="Squad did not answer. Nothing was changed. Try again."
             onRetry={onRetry}
           />
         </div>
