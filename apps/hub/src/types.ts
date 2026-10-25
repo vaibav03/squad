@@ -14,6 +14,7 @@ import type {
 } from '@squad/core';
 import type { CouncilService } from '@squad/brain';
 import type { TripViewV2 } from '@squad/core';
+import type { TripService } from './trips/service';
 import type { HubConfig } from './config';
 import type { Logger } from './log';
 import type { Ports } from './ports';
@@ -307,7 +308,7 @@ export interface HubDeps {
   ledger: LedgerStore;
   trips: TripStore;
   /** Collaborative trip service (routes, chat intents, mesh constraint runs). */
-  tripSvc: import('./trips/service').TripService;
+  tripSvc: TripService;
   calls: CallRegistry;
   broker: Broker;
   state: SquadState;
