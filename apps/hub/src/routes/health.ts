@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { requireUser } from '../auth';
+import { contextServiceFor } from '../context/service';
 import { registerAllHealthChecks } from '../health/checks';
 import { runHealth } from '../health/registry';
 import { normalizeOrigin } from '../web-origin';
@@ -26,6 +27,9 @@ export function createHealthRoutes(deps: HubDeps): HubApp {
         served = null;
       }
     }
+    // Same as listing connections: renew or expire credentials whose clock ran out, so the probes see the truth.
+    const svc = contextServiceFor(deps);
+    for (const x of svc.store.connectionsOf(id)) await svc.tick(x.id);
     const report = await runHealth(deps, { studentId: id, squadIds }, served, deps.now());
     c.header('Cache-Control', 'no-store');
     return c.json(report);

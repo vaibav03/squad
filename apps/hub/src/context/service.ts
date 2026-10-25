@@ -213,6 +213,7 @@ export function createContextService(
       createLiveGoogleConnector({
         ...(opts.fetch ? { fetch: opts.fetch } : {}),
         ...(oauth ? { oauth } : {}),
+        now: deps.now,
       }),
   };
   const accounts = createAccountStore(deps.db);

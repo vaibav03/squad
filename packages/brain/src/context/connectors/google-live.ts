@@ -205,8 +205,9 @@ const dueMs = (w: CourseWork): number | null =>
     : null;
 
 export function createLiveGoogleConnector(
-  opts: { fetch?: typeof fetch; oauth?: GoogleOAuthConfig } = {},
+  opts: { fetch?: typeof fetch; oauth?: GoogleOAuthConfig; now?: () => number } = {},
 ): GoogleConnector {
+  const clock = opts.now ?? Date.now;
   const f: typeof fetch = opts.fetch ?? ((...a) => fetch(...a));
   const has = (a: GoogleAuth, s: string) => a.scopes.includes(s);
   const getJson = async <T>(
@@ -247,7 +248,7 @@ export function createLiveGoogleConnector(
     async listItems(a, _courseId, o?: ListOpts) {
       content.clear();
       const out: ConnectorItem[] = [];
-      const now = Date.now();
+      const now = clock();
       const from = new Date(o?.windowFrom ?? now - 120 * 86_400_000).toISOString();
       const to = new Date(o?.windowTo ?? now + 180 * 86_400_000).toISOString();
 
@@ -399,7 +400,7 @@ export function createLiveGoogleConnector(
       }
       return {
         accessToken: json.access_token,
-        expiresAt: Date.now() + Math.max(30, json.expires_in ?? 3600) * 1000,
+        expiresAt: clock() + Math.max(30, json.expires_in ?? 3600) * 1000,
       };
     },
   };
