@@ -22,6 +22,7 @@ import {
   tally,
 } from './logic';
 import { handleTripChat } from './chat';
+import { demoTripsEnabled } from '../config';
 import { MIN_GROUP } from './limits';
 import { buildTripView, isActive } from './view';
 
@@ -88,6 +89,8 @@ export interface TripService {
   vote(v: Viewer, id: string, body: { ranking: string[]; baseRev?: number }): Res;
   confirm(v: Viewer, id: string, body: { optionId?: string; yes: boolean; baseRev?: number }): Res;
   closeVoting(v: Viewer, id: string): Res;
+  /** Demo mode only: auto-accept every member and confirm. */
+  demoGo(v: Viewer, id: string): Res;
   retry(v: Viewer, id: string): Promise<Res>;
   continueWithout(v: Viewer, id: string): Res;
   reopen(v: Viewer, id: string): Res;
@@ -130,7 +133,11 @@ export function createTripService(
   const outstanding = new Set<string>();
 
   const view = (t: TripRecord, v: Viewer) =>
-    buildTripView(t, v, { directory: deps.directory, now: now() });
+    buildTripView(t, v, {
+      directory: deps.directory,
+      now: now(),
+      demo: demoTripsEnabled(deps.config),
+    });
   const touch = (t: TripRecord) => void deps.ingest.x('x.trip.touch', { tripId: t.tripId });
   const save = (t: TripRecord) => {
     deps.trips.put(t);
@@ -595,6 +602,72 @@ export function createTripService(
     }
   }
 
+  /** Demo only: the organizer's ranking becomes everyone's vote, then confirm for all. Budget vetoes are waived. */
+  function demoAutoConfirm(t: TripRecord, v: Viewer, ranking: string[] = []): Res {
+    const c = t.collab!;
+    const ids = new Set(t.options.map((o) => o.id));
+    if (ranking.some((x) => !ids.has(x))) return fail(400, 'invalid_request', 'unknown option');
+    t.vetoed = t.vetoed.filter((q) => !q.reason.startsWith('Over at least one private budget'));
+    if (ranking.some((x) => t.vetoed.some((q) => q.optionId === x)))
+      return fail(400, 'invalid_request', 'option was dropped by the group limits');
+    if (t.status === 'planning') {
+      t.status = 'voting';
+      c.constraints.state = c.constraints.state === 'skipped' ? 'skipped' : 'done';
+    }
+    if (t.status === 'confirming') t.status = 'voting';
+    if (!ranking.length) {
+      const mine = t.votes.find((x) => x.student === c.organizer)?.ranking;
+      const first = mine?.find((x) => ids.has(x)) ?? live(t)[0]?.id ?? t.options[0]?.id;
+      if (!first) return fail(409, 'no_option', 'No option is left to choose from.');
+      ranking = [first];
+    }
+    syncMembers(t);
+    const seen = [...new Set(ranking)];
+    const full = [
+      ...seen,
+      ...live(t)
+        .map((o) => o.id)
+        .filter((x) => !seen.includes(x)),
+    ];
+    t.votes = t.confirmations.map((r) => ({ student: r.student, ranking: [...full] }));
+    const top = tally(t, perOf(t))[0];
+    if (!top) return fail(409, 'no_option', 'No option is left to choose from.');
+    const opt = t.options.find((o) => o.id === top.optionId)!;
+    const meta = c.optionMeta[opt.id]!;
+    const run = c.constraints.overlapDays
+      ? earliestRun(c.constraints.overlapDays, meta.days)
+      : null;
+    c.chosen = { optionId: opt.id, dates: run ? fmtRange(run) : null };
+    t.dates = c.chosen.dates;
+    t.confirmations = t.confirmations.map((r) => ({
+      student: r.student,
+      confirmed: true,
+      optionId: opt.id,
+    }));
+    c.declined = [];
+    c.demoAuto = true;
+    c.confirmedAt = now();
+    t.status = 'confirmed';
+    dropCards(t, 'vote');
+    bump(t);
+    log(t, c.organizer, `Demo: all members auto-accepted ${opt.label}`, opt.id);
+    setReco(t);
+    save(t);
+    for (const r of t.confirmations)
+      deps.ingest.village({
+        t: 'confirm.done',
+        student: r.student,
+        taskId: t.taskId,
+        question: 'Confirm trip',
+      });
+    deps.ingest.village({ t: 'trip.confirmed', taskId: t.taskId, squadId: t.squadId });
+    mirror(
+      t,
+      `Trip confirmed by all ${t.confirmations.length}: ${opt.label}${c.chosen.dates ? `, ${c.chosen.dates}` : ''}, ${money(meta.perPerson)} each. Demo: all members auto-accepted. Watch the cutscene in the village.`,
+    );
+    return { ok: true, trip: view(deps.trips.get(t.tripId)!, v)! };
+  }
+
   // ---------- conflict helper ----------
   function conflict(t: TripRecord, optionId: string | undefined, msg: string): Fail {
     const c = t.collab!;
@@ -795,7 +868,10 @@ export function createTripService(
       log(t, v.studentId, `${nameOf(v.studentId)} proposed ${body.label}`, id2);
       setReco(t);
       save(t);
-      mirror(t, `${nameOf(v.studentId)} proposed ${body.label} (${plural(days, 'day')}, ${money(p)} each).`);
+      mirror(
+        t,
+        `${nameOf(v.studentId)} proposed ${body.label} (${plural(days, 'day')}, ${money(p)} each).`,
+      );
       // A second live option is what makes a ballot possible: members without a card get one now.
       if (t.status === 'voting') promptVotes(t);
       rerun(t);
@@ -882,6 +958,15 @@ export function createTripService(
         deps.trips.put(t);
         return fail(409, 'expired', 'This trip expired.');
       }
+      const demoOrg = demoTripsEnabled(deps.config) && t.collab?.organizer === v.studentId;
+      if (demoOrg && t.status === 'confirmed' && t.collab?.demoAuto)
+        return { ok: true, trip: view(t, v)! };
+      if (
+        demoOrg &&
+        ['planning', 'voting'].includes(t.status) &&
+        t.confirmations.some((x) => x.student === v.studentId)
+      )
+        return demoAutoConfirm(t, v, body.ranking);
       if (t.status !== 'voting')
         return fail(
           409,
@@ -947,6 +1032,19 @@ export function createTripService(
         return { ok: true, trip: view(t, v)! };
       applyConfirm(t, v.studentId, optId, body.yes);
       return { ok: true, trip: view(deps.trips.get(t.tripId)!, v)! };
+    },
+
+    demoGo(v, id) {
+      if (!demoTripsEnabled(deps.config))
+        return fail(403, 'demo_only', 'Only available in demo mode.');
+      const r = load(v, id);
+      if ('ok' in r) return r;
+      const t = r.t;
+      if (!t.collab) return fail(404, 'not_found', 'Trip not found.');
+      if (t.status === 'confirmed') return { ok: true, trip: view(t, v)! };
+      if (!['planning', 'voting', 'confirming'].includes(t.status))
+        return fail(409, 'not_open', 'This trip is closed.');
+      return demoAutoConfirm(t, v);
     },
 
     closeVoting(v, id) {

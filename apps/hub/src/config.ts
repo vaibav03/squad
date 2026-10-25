@@ -133,3 +133,7 @@ export function describeHubConfig(c: HubConfig): Record<string, unknown> {
     codeSender: c.codeSender,
   };
 }
+
+/** Demo trips shortcut: organizer's ranking auto-accepts every member. Off unless demo mode (or HUB_DEMO_TRIPS=1). */
+export const demoTripsEnabled = (config: { demoCode?: string | undefined }): boolean =>
+  !!config.demoCode || process.env.HUB_DEMO_TRIPS === '1';

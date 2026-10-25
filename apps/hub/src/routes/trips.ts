@@ -118,6 +118,9 @@ export function createTripRoutes(deps: HubDeps): HubApp {
     return out(c, svc().confirm(v, id, p.data));
   });
 
+  r.post('/v1/trips/:tripId/demo-go', need, (c) =>
+    out(c, svc().demoGo(c.get('viewer'), resolve(c.req.param('tripId')))),
+  );
   r.post('/v1/trips/:tripId/close-voting', need, (c) =>
     out(c, svc().closeVoting(c.get('viewer'), resolve(c.req.param('tripId')))),
   );
