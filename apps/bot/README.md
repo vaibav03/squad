@@ -16,6 +16,10 @@ pnpm --filter @squad/bot test                 # unit, property and adversarial s
 
 Env: `TRANSPORT` (cli default), `FAKE_LLM=1`, `STUB_SKILLS=1` (adds demo skills: unprompted-quiz, confirm-demo, crasher), `GEMINI_API_KEY` (+ optional `GEMINI_MODEL_*`), `HUB_BASE_URL`, `INTERNAL_EVENTS_SECRET`, `DB_PATH` (default `data/squad.db` under apps/bot), `CONFIRM_TIMEOUT_MS`, `LOG_LEVEL`, `DISCORD_TOKEN`. Secrets are read from `.env` and never logged (logger redacts `*key*`, `*secret*`, `*token*`).
 
+### Internal confirm endpoint
+
+`POST http://127.0.0.1:$BOT_PORT/internal/confirm` (default port 8790, started by `main.ts` for every transport) lets standalone agents ask a student to confirm. Header `X-Nook-Internal: $INTERNAL_EVENTS_SECRET` (else 401). Body `{ "student": "s_ana", "question": "...", "options": ["Yes","No"], "taskId": "t1" }`; replies `{ "answer": "Yes" }` or `{ "answer": "timeout" }` after 10 min. Details in `docs/spine-api.md`.
+
 ### Fake-chat REPL
 
 `/as <student>`, `/group <name>`, `/dm`, `/script <file>` (see `fixtures/scripts/*.json`), `/record <file>` ... `/record stop` (writes a replay JSON validated by `@squad/core`), `/checkpoint <name>`, `/decisions [n]` (glass-box: every skill score, the chosen skill, why it spoke or stayed quiet), `/help`, `/quit`. `@cubbie ...` or `cubbie, ...` mentions the bot; every DM does.
