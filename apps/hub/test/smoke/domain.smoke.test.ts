@@ -88,7 +88,7 @@ describe('ledger and trips', () => {
 
   it('tasks lists the study and trip tasks', async () => {
     const r = await get<{ tasks: { taskId: string; kind: string }[] }>(url, '/v1/tasks', t.s_chi);
-    expect(r.body.tasks.map((x) => x.taskId).sort()).toEqual(['task_study_ch5', 'task_trip_cabo']);
+    expect(r.body.tasks.map((x) => x.taskId).sort()).toEqual(['task_study_ch6', 'task_trip_cabo']);
   });
 });
 

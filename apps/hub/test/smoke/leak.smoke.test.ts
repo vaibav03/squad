@@ -131,13 +131,13 @@ describe('sentinel leak', () => {
       '/v1/squad/state',
       '/v1/tasks',
       '/v1/ledger/task_trip_cabo',
-      '/v1/ledger/task_study_ch5',
+      '/v1/ledger/task_study_ch6',
       '/v1/trips/trip_cabo',
-      '/v1/mastery/cse310',
+      '/v1/mastery/demo',
       '/v1/personas',
       '/v1/voices',
       '/v1/squad/courses',
-      '/v1/quiz/qz_ch5_1',
+      '/v1/quiz/qz_ch6_1',
       '/v1/me',
     ];
     for (const id of OTHERS) {

@@ -47,7 +47,7 @@
         "t": "agent.message",
         "from": "student:s_ana",
         "to": "commons",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "kind": "task.open",
         "shared": ["study plan opened", "3 members"]
       }
@@ -82,7 +82,7 @@
         "t": "agent.message",
         "from": "student:s_ana",
         "to": "commons",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "kind": "psi.blind",
         "shared": ["168 blinded tokens (padded)"]
       }
@@ -91,7 +91,7 @@
       "at": 8300,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "student": "s_ana",
         "field": "calendar",
         "shared": "168 blinded tokens (padded)",
@@ -104,7 +104,7 @@
         "t": "agent.message",
         "from": "student:s_ben",
         "to": "commons",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "kind": "psi.blind",
         "shared": ["168 blinded tokens (padded)"]
       }
@@ -113,7 +113,7 @@
       "at": 8900,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "student": "s_ben",
         "field": "calendar",
         "shared": "168 blinded tokens (padded)",
@@ -126,7 +126,7 @@
         "t": "agent.message",
         "from": "student:s_chi",
         "to": "commons",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "kind": "psi.blind",
         "shared": ["168 blinded tokens (padded)"]
       }
@@ -135,7 +135,7 @@
       "at": 9500,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "student": "s_chi",
         "field": "calendar",
         "shared": "168 blinded tokens (padded)",
@@ -148,7 +148,7 @@
         "t": "agent.message",
         "from": "student:s_ana",
         "to": "mediator",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "kind": "psi.tokens",
         "shared": ["168 blinded tokens"]
       }
@@ -159,7 +159,7 @@
         "t": "agent.message",
         "from": "student:s_ben",
         "to": "mediator",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "kind": "psi.tokens",
         "shared": ["168 blinded tokens"]
       }
@@ -170,7 +170,7 @@
         "t": "agent.message",
         "from": "student:s_chi",
         "to": "mediator",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "kind": "psi.tokens",
         "shared": ["168 blinded tokens"]
       }
@@ -181,7 +181,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "kind": "psi.common",
         "shared": ["0 common slots"]
       }
@@ -192,7 +192,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "kind": "conflict",
         "shared": ["no slot works for everyone"]
       }
@@ -203,7 +203,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "kind": "result",
         "shared": ["plan proposed"]
       }
@@ -221,7 +221,7 @@
       "event": {
         "t": "confirm.pending",
         "student": "s_ben",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "question": "Move gym to make Wed 7 PM work?"
       }
     },
@@ -230,7 +230,7 @@
       "event": {
         "t": "confirm.done",
         "student": "s_ben",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "question": "Move gym to make Wed 7 PM work?"
       }
     },
@@ -248,7 +248,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "kind": "result",
         "shared": ["plan found"]
       }
@@ -281,7 +281,7 @@
       "at": 33000,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "student": "s_ana",
         "field": "calendar",
         "shared": "busy 3",
@@ -292,7 +292,7 @@
       "at": 34500,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "student": "s_ben",
         "field": "calendar",
         "shared": "busy 4",
@@ -303,7 +303,7 @@
       "at": 36000,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_ch5",
+        "taskId": "task_study_ch6",
         "student": "s_chi",
         "field": "calendar",
         "shared": "busy 2",

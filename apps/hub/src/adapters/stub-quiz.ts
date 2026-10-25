@@ -13,28 +13,28 @@ interface Def {
 const DEFS: Def[] = [
   {
     payload: {
-      quizId: 'qz_ch5_1',
-      chapter: 'ch5',
-      question: 'Which structure gives O(1) average-time lookup by key?',
+      quizId: 'qz_ch6_1',
+      chapter: 'ch6',
+      question: 'What are the mean and standard deviation of the standard normal distribution?',
       choices: [
-        { id: 'a', text: 'Sorted array' },
-        { id: 'b', text: 'Hash table' },
-        { id: 'c', text: 'Linked list' },
-        { id: 'd', text: 'Binary heap' },
+        { id: 'a', text: 'Mean 1, standard deviation 0' },
+        { id: 'b', text: 'Mean 0, standard deviation 1' },
+        { id: 'c', text: 'Mean 0, standard deviation 0' },
+        { id: 'd', text: 'Mean 1, standard deviation 1' },
       ],
     },
     isCorrect: (a) => a.choice === 'b',
-    explanation: 'A hash table maps keys to buckets, so lookups are O(1) on average.',
+    explanation: 'The standard normal distribution is centered at 0 with a spread of 1.',
   },
   {
     payload: {
-      quizId: 'qz_ch5_2',
-      chapter: 'ch5',
-      question: 'In your own words, why does amortized analysis matter for dynamic arrays?',
+      quizId: 'qz_ch6_2',
+      chapter: 'ch6',
+      question: 'In your own words, what does a z-score tell you about a value?',
     },
     target: BEN,
-    isCorrect: (a) => /amortiz|average|resiz|double/i.test(a.text ?? ''),
-    explanation: 'Occasional O(n) resizes are spread across many O(1) appends.',
+    isCorrect: (a) => /standard dev|deviation|distance|how many|far/i.test(a.text ?? ''),
+    explanation: 'A z-score counts how many standard deviations a value sits from the mean.',
   },
 ];
 

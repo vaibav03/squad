@@ -15,4 +15,4 @@ Validated by `scripts/demo/lib/schema.ts` (zod, strict) on every `pnpm demo:seed
 - Study: no two-hour window is common to all four before the Thursday midterm (tested). Ben has labs, Ana has a private shift. Wednesday 19:00 works only if Ben moves his gym (event `s_ben-4`).
 - Trip: Ben's cap is $80, Ana tells friends $200. The Flagstaff cabin ($64) fits everyone, Cabo ($310) fits no one, so the group sees only "option dropped: budget".
 - Sentinels (`@squad/core` `SENTINELS`): `$180` is Ana's real hard cap, written in her private `budget.note` (what she tells friends is the $200 `comfortableUsd`). `therapy` is the title of a private event on Chi's calendar. They live only in private fields, so any appearance in an event, log or UI is a leak. `pnpm demo:preflight` scans the public view and both replays for them.
-- Hub constants (`study task_study_ch5`, `expert:ch5`) come from the hub's own seed; this pack's chapters are the brain fixtures' ch2/ch3/ch6/ch12.
+- Hub constants (`study task_study_ch6`, `expert:ch6`) come from the hub's own seed; this pack's chapters are the brain fixtures' ch2/ch3/ch6/ch12.

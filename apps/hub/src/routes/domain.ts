@@ -27,7 +27,7 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
         .map((taskId) => ({
           taskId,
           kind: 'study' as const,
-          title: taskId === 'task_study_ch5' ? 'Chapter 5 study plan' : taskId,
+          title: taskId === 'task_study_ch6' ? 'Chapter 6 study plan' : taskId,
           status: 'active',
           updatedAt: deps.now(),
         })),

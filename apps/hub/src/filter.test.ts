@@ -31,7 +31,7 @@ describe('filter', () => {
     const e: VillageEvent[] = [
       { t: 'confirm.pending', student: 's_ana', taskId: 't', question: 'q' },
       { t: 'confirm.done', student: 's_ana', taskId: 't', question: 'q' },
-      { t: 'mastery.changed', student: 's_ana', chapter: 'ch5', box: 1 },
+      { t: 'mastery.changed', student: 's_ana', chapter: 'ch6', box: 1 },
     ];
     for (const ev of e) {
       expect(filterVillageEvent(ev, v('s_ana'), c)).toEqual(ev);
@@ -69,7 +69,7 @@ describe('filter', () => {
 
   it('call captions go to the call owner only, public calls to all, unknown calls to nobody', () => {
     const c = ctx();
-    const cap: VillageEvent = { t: 'call.caption', agent: 'expert:ch5', callId: 'c1', text: 'hi' };
+    const cap: VillageEvent = { t: 'call.caption', agent: 'expert:ch6', callId: 'c1', text: 'hi' };
     expect(filterVillageEvent(cap, v('s_ana'), c)).toBeNull();
     c.calls.noteOwner('c1', 's_ana');
     expect(filterVillageEvent(cap, v('s_ana'), c)).toEqual(cap);

@@ -188,7 +188,7 @@ Ports never emit raw withheld values and never decide visibility; the hub applie
 
 ## 12. Sim and seed (dev only, `HUB_SIM=1`)
 
-Seed: students `s_ana`, `s_ben`, `s_chi`, `s_dev` (squad `sq_demo`, 4 members), a study task, trip `trip_cabo`, quizzes `qz_ch5_1`, `qz_ch5_2`, private ledger rows holding the sentinels `$180` and `therapy` (they must never leave through anything except the owner's `GET /v1/ledger`).
+Seed: students `s_ana`, `s_ben`, `s_chi`, `s_dev` (squad `sq_demo`, 4 members), a study task, trip `trip_cabo`, quizzes `qz_ch6_1`, `qz_ch6_2`, private ledger rows holding the sentinels `$180` and `therapy` (they must never leave through anything except the owner's `GET /v1/ledger`).
 
 - `POST /__sim/squad/demo-run` `{ speed?: number }` -> `{ ok: true, events: n }`: plays a scripted run of every event type onto the live stream.
 - `POST /__sim/squad/reset` -> clears log, state and reseeds.

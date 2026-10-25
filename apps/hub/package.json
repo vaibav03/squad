@@ -16,7 +16,10 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.5",
+    "@squad/brain": "workspace:*",
     "@squad/core": "workspace:*",
+    "@squad/media": "workspace:*",
+    "@squad/mesh": "workspace:*",
     "hono": "^4.13.13",
     "ws": "^8.22.0",
     "zod": "^4.6.7"

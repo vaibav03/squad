@@ -1,5 +1,5 @@
 {
-  "courseId": "cse310",
+  "courseId": "demo",
   "title": "Introductory Statistics (OpenStax excerpt)",
   "groupName": "Stats Midterm Grind",
   "packRef": "packages/brain/fixtures/course.json",

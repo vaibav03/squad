@@ -2,9 +2,9 @@ import { parseAgentId, type Citation } from '@squad/core';
 import type { CallPort, CallSession, CallTurn } from '../ports';
 
 const cite = (page: number, quote: string): Citation => ({
-  courseId: 'cse310',
-  chapter: 'ch5',
-  file: 'ch5.pdf',
+  courseId: 'demo',
+  chapter: 'ch6',
+  file: 'ch6.pdf',
   page,
   quote,
 });
@@ -12,23 +12,23 @@ const cite = (page: number, quote: string): Citation => ({
 const REPLIES: CallTurn[][] = [
   [
     {
-      text: 'Good question. A hash table hashes the key to a bucket, so a lookup touches one bucket on average.',
-      cite: cite(12, 'average-case constant time lookup'),
+      text: 'Good question. A z-score tells you how many standard deviations a value sits from the mean.',
+      cite: cite(12, 'z-score'),
     },
   ],
   [
     {
-      text: 'Think of resizing like doubling a bookshelf: rare, expensive, but spread over many cheap shelving moves.',
+      text: 'Think of the normal curve as a bell: most values cluster near the mean and thin out in the tails.',
     },
     {
-      text: 'That spreading is exactly what amortized analysis measures.',
-      cite: cite(14, 'amortized cost per operation'),
+      text: 'About 68 percent of values fall within one standard deviation.',
+      cite: cite(14, 'empirical rule'),
     },
   ],
   [
     {
-      text: 'Try stating it as an invariant first, then check the base case. Want a practice question?',
-      cite: cite(9, 'loop invariants'),
+      text: 'Try standardizing the value first, then read the area from the table. Want a practice question?',
+      cite: cite(9, 'standardizing'),
     },
   ],
 ];
@@ -54,7 +54,7 @@ export function createStubCall(): CallPort {
         greeting: () =>
           seq([
             {
-              text: `Hi, I am ${agent}. Ask me anything about chapter 5.`,
+              text: `Hi, I am ${agent}. Ask me anything about chapter 6.`,
               cite: cite(1, 'chapter overview'),
             },
           ]),

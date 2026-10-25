@@ -56,7 +56,7 @@ export function demoSteps(): Step[] {
       at: 700,
       x: [
         'x.ingest.progress',
-        { student: ANA, courseId: 'cse310', file: 'ch1-8.pdf', status: 'embedding', pct: 60 },
+        { student: ANA, courseId: 'demo', file: 'ch1-8.pdf', status: 'embedding', pct: 60 },
       ],
     },
     {
@@ -97,19 +97,19 @@ export function demoSteps(): Step[] {
         dissenter: 'grind',
       },
     },
-    { at: 1700, village: { t: 'quiz.question', quizId: QUIZ_IDS[0], chapter: 'ch5', target: ANA } },
-    { at: 2000, village: { t: 'quiz.answer', quizId: QUIZ_IDS[0], chapter: 'ch5', student: ANA } },
+    { at: 1700, village: { t: 'quiz.question', quizId: QUIZ_IDS[0], chapter: 'ch6', target: ANA } },
+    { at: 2000, village: { t: 'quiz.answer', quizId: QUIZ_IDS[0], chapter: 'ch6', student: ANA } },
     {
       at: 2200,
       village: {
         t: 'quiz.result',
         quizId: QUIZ_IDS[0],
-        chapter: 'ch5',
+        chapter: 'ch6',
         student: ANA,
         correct: true,
       },
     },
-    { at: 2400, village: { t: 'mastery.changed', student: ANA, chapter: 'ch5', box: 2 } },
+    { at: 2400, village: { t: 'mastery.changed', student: ANA, chapter: 'ch6', box: 2 } },
     { at: 2600, village: { t: 'agent.state', agent: EXPERT_AGENT, state: 'in_call' } },
     { at: 2650, village: { t: 'call.start', agent: EXPERT_AGENT, callId: CALL_ID, student: ANA } },
     {
@@ -123,7 +123,7 @@ export function demoSteps(): Step[] {
         agent: EXPERT_AGENT,
         callId: CALL_ID,
         text: 'A hash table maps keys to buckets, so lookups are constant time on average.',
-        cite: { courseId: 'cse310', chapter: 'ch5', file: 'ch5.pdf', page: 12 },
+        cite: { courseId: 'demo', chapter: 'ch6', file: 'ch6.pdf', page: 12 },
       },
     },
     { at: 3400, village: { t: 'call.end', agent: EXPERT_AGENT, callId: CALL_ID } },

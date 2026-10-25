@@ -1,20 +1,20 @@
 import type { BrainPort, CourseStatus } from '../ports';
 import { COURSE_ID, STUDENT_IDS } from '../cast';
 
-const CONCEPTS = ['Hashing', 'Collisions', 'Amortized cost', 'Load factor', 'Resizing'];
+const CONCEPTS = ['ch2', 'ch3', 'ch6', 'ch12'];
 const SCORES: Record<string, number[]> = {
-  s_ana: [0.9, 0.7, 0.4, 0.8, 0.6],
-  s_ben: [0.5, 0.6, 0.3, 0.7, 0.5],
-  s_chi: [0.8, 0.9, 0.7, 0.6, 0.8],
-  s_dev: [0.6, 0.4, 0.5, 0.5, 0.9],
+  s_ana: [0.9, 0.7, 0.4, 0.8],
+  s_ben: [0.5, 0.6, 0.3, 0.7],
+  s_chi: [0.8, 0.9, 0.7, 0.6],
+  s_dev: [0.6, 0.4, 0.5, 0.5],
 };
 
 export function createStubBrain(): BrainPort {
   const courses = new Map<string, CourseStatus[]>();
   const seeded = (): CourseStatus => ({
     courseId: COURSE_ID,
-    title: 'CSE 310 Data Structures',
-    file: 'ch1-8.pdf',
+    title: 'Introductory Statistics (OpenStax excerpt)',
+    file: 'intro-stats-excerpt.pdf',
     status: 'ready',
   });
   return {

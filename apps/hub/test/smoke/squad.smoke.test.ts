@@ -133,7 +133,7 @@ describe('viewer filtering', () => {
       taskId: 't1',
       question: 'Share your budget?',
     });
-    await emit(url, { t: 'mastery.changed', student: 's_ana', chapter: 'ch5', box: 3 });
+    await emit(url, { t: 'mastery.changed', student: 's_ana', chapter: 'ch6', box: 3 });
     await emit(url, {
       t: 'ledger.entry',
       taskId: 't1',
@@ -158,20 +158,20 @@ describe('viewer filtering', () => {
   });
 
   it('quiz payload and answer omit correct by default', async () => {
-    const q = await get<Record<string, unknown>>(url, '/v1/quiz/qz_ch5_1', ana);
+    const q = await get<Record<string, unknown>>(url, '/v1/quiz/qz_ch6_1', ana);
     expect(q.status).toBe(200);
     expect(JSON.stringify(q.body)).not.toMatch(/correct|explanation|answer/i);
     const a = await post<Record<string, unknown>>(
       url,
-      '/v1/quiz/qz_ch5_1/answer',
+      '/v1/quiz/qz_ch6_1/answer',
       { choice: 'b' },
       ana,
     );
     expect(a.status).toBe(200);
     expect(a.body).toEqual({ recorded: true });
-    const again = await post(url, '/v1/quiz/qz_ch5_1/answer', { choice: 'b' }, ana);
+    const again = await post(url, '/v1/quiz/qz_ch6_1/answer', { choice: 'b' }, ana);
     expect(again.status).toBe(409);
-    const both = await post(url, '/v1/quiz/qz_ch5_2/answer', { choice: 'a', text: 'x' }, ben);
+    const both = await post(url, '/v1/quiz/qz_ch6_2/answer', { choice: 'a', text: 'x' }, ben);
     expect(both.status).toBe(400);
   });
 
@@ -183,7 +183,7 @@ describe('viewer filtering', () => {
     const c = await login(url, 's_chi');
     const a = await post<{ correct: boolean; explanation: string }>(
       url,
-      '/v1/quiz/qz_ch5_1/answer',
+      '/v1/quiz/qz_ch6_1/answer',
       { choice: 'b' },
       c,
     );
@@ -234,7 +234,7 @@ describe('trip.confirmed and mastery', () => {
         members: ['s_ana', 's_ben'],
       });
       const t = await login(small.url, 's_ana');
-      const m = await get<{ squadAvg: unknown }>(small.url, '/v1/mastery/cse310', t);
+      const m = await get<{ squadAvg: unknown }>(small.url, '/v1/mastery/demo', t);
       expect(m.body.squadAvg).toBeNull();
       expect(JSON.stringify(m.body)).not.toContain('"squad"');
       const st = await get<{ squad: { memberCount: unknown } }>(small.url, '/v1/squad/state', t);
@@ -252,8 +252,8 @@ describe('trip.confirmed and mastery', () => {
   });
 
   it('a squad of 4 gets averages', async () => {
-    const m = await get<{ squadAvg: number[] }>(url, '/v1/mastery/cse310', ana);
-    expect(m.body.squadAvg).toHaveLength(5);
+    const m = await get<{ squadAvg: number[] }>(url, '/v1/mastery/demo', ana);
+    expect(m.body.squadAvg).toHaveLength(4);
   });
 });
 
@@ -284,11 +284,11 @@ describe('calls', () => {
     const start = await post<{ callId: string; wsUrl: string; ticket: string }>(
       url,
       '/v1/call/start',
-      { agentId: 'expert:ch5' },
+      { agentId: 'expert:ch6' },
       ana,
     );
     expect(start.status).toBe(200);
-    const again = await post(url, '/v1/call/start', { agentId: 'expert:ch5' }, ana);
+    const again = await post(url, '/v1/call/start', { agentId: 'expert:ch6' }, ana);
     expect(again.status).toBe(409);
     const ws = new WebSocket(
       `${url.replace('http', 'ws')}/v1/call/ws/${start.body.callId}?st=${start.body.ticket}`,
@@ -315,7 +315,7 @@ describe('calls', () => {
     const start = await post<{ callId: string; ticket: string }>(
       url,
       '/v1/call/start',
-      { agentId: 'expert:ch5' },
+      { agentId: 'expert:ch6' },
       ana,
     );
     const ws = new WebSocket(
