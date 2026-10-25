@@ -1,0 +1,171 @@
+/* Squad Village design tokens. Single source of truth for DOM chrome.
+   Mirror: tokens.ts (same values, plus bezier functions for Phaser). Rationale: DESIGN.md.
+   Naming: shadcn-style semantic names (--background, --card, --primary, --muted ...) match the Nook clone's
+   styles.css so integration is a rename-free import; palette and scene tokens use the --sq- prefix.
+   The 28 art colors are --sq-* below. Chrome-only tints (marked "derived") exist only for light mode paper. */
+
+:root {
+  /* ---------- 1. Master palette (28). Scene art uses ONLY these. Names = assets/pixel/composed/scripts/palette.py ---------- */
+  --sq-ink: #070f1f;        --sq-sky-deep: #0b1d38;   --sq-sky-mid: #0a3a63;    --sq-sky-low: #0c6e9e;
+  --sq-cloud-lo: #6fa3b8;   --sq-cloud-hi: #b4d6da;   --sq-moon: #fff2c4;
+  --sq-hill-far: #4a7695;   --sq-hill-mid: #2f5f84;   --sq-hill-near: #1c4466;  --sq-ground: #122b3f;
+  --sq-leaf-dark: #0d3a4f;  --sq-leaf-lit: #22808a;
+  --sq-wall-lit: #c9d4e4;   --sq-wall-mid: #8c9bb8;   --sq-wall-shade: #56648a;
+  --sq-roof-wine: #7a3552;  --sq-roof-shade: #4a2440;
+  --sq-wood-lit: #b07a52;   --sq-wood: #6e4a3c;       --sq-wood-dark: #3a2634;
+  --sq-glow-core: #fff0a8;  --sq-glow: #ffc857;       --sq-ember: #f08a3a;
+  --sq-alert: #e0485a;      --sq-ok: #5fcf8a;         --sq-skin-lt: #f3cfae;    --sq-violet: #8f7bff;
+
+  /* ---------- 2. Semantic color: DARK is the default (the village is a night world) ---------- */
+  color-scheme: dark;
+  --background: var(--sq-ink);                 /* page behind everything */
+  --foreground: #eef3f8;                       /* derived: moon-tinted white, 15.8:1 on --background */
+  --card: var(--sq-sky-deep);                  /* panels, cards, call panel, quiz card */
+  --card-foreground: var(--foreground);
+  --popover: #102a4a;                          /* derived: sky-deep +6% toward sky-mid; menus, toasts */
+  --popover-foreground: var(--foreground);
+  --primary: var(--sq-glow);                   /* lantern amber: the one brand accent, primary buttons */
+  --primary-foreground: var(--sq-ink);
+  --secondary: #12335a;                        /* derived: quiet buttons, chips at rest */
+  --secondary-foreground: var(--foreground);
+  --muted: var(--sq-ground);
+  --muted-foreground: #8fb0c4;                 /* derived: 6.4:1 on --card; secondary text */
+  --accent: #174a73;                           /* derived: hover/selected rows */
+  --accent-foreground: var(--foreground);
+  --border: #1d4163;                           /* derived: hairlines on --card */
+  --input: #1d4163;
+  --ring: var(--sq-cloud-hi);                  /* focus ring, always 2px + 2px offset */
+  --destructive: var(--sq-alert);
+  --destructive-text: #ff7d8b;                 /* alert as TEXT on dark (7:1); --destructive is for fills, icons, borders */
+  --success: var(--sq-ok);
+  --warning: var(--sq-ember);
+  --info: var(--sq-violet);                    /* council / magic / "thinking" */
+  --scrim: rgb(7 15 31 / 0.62);                /* behind modal sheets over the canvas */
+  --hud-bg: rgb(11 29 56 / 0.78);              /* HUD glass over the canvas; blur 8px */
+  --hud-border: rgb(180 214 218 / 0.18);
+
+  /* agent state colors (chips, dots, lists). Never color alone: each has an icon + label */
+  --state-idle: var(--sq-cloud-lo);
+  --state-studying: var(--sq-glow);
+  --state-call: var(--sq-ok);
+  --state-waiting: var(--sq-ember);
+  --state-conflict: var(--sq-alert);
+  --state-offline: var(--sq-hill-mid);
+
+  /* ---------- 3. Typography (final families confirmed in typography.md) ---------- */
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-pixel: "Pixelify Sans", "Silkscreen", "NinjaAdventure", ui-monospace, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --text-xs: 0.75rem;   --lh-xs: 1rem;       /* 12/16 labels, chip meta */
+  --text-sm: 0.875rem;  --lh-sm: 1.25rem;    /* 14/20 secondary UI */
+  --text-base: 1rem;    --lh-base: 1.5rem;   /* 16/24 body, captions, quiz answers */
+  --text-lg: 1.125rem;  --lh-lg: 1.75rem;    /* 18/28 panel titles */
+  --text-xl: 1.375rem;  --lh-xl: 1.875rem;   /* 22/30 card headings */
+  --text-2xl: 1.75rem;  --lh-2xl: 2.125rem;  /* 28/34 page titles */
+  --text-pixel-sm: 1rem;     --lh-pixel-sm: 1rem;     /* 16/16 pixel labels (8px grid x2) */
+  --text-pixel-md: 1.5rem;   --lh-pixel-md: 1.5rem;   /* 24/24 (8px grid x3) */
+  --text-pixel-lg: 2rem;     --lh-pixel-lg: 2rem;     /* 32/32 hero numerals, titles */
+  --tracking-pixel: 0;         --tracking-ui: -0.005em;  --tracking-caps: 0.06em;
+
+  /* ---------- 4. Spacing (4px base), radius, border, shadow ---------- */
+  --space-0: 0; --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px;
+  --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px;
+  --gutter: 16px;                                   /* page side gutter at 390; 24px at >=768 */
+  --radius: 0.625rem;                               /* 10px, same as Nook */
+  --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-pill: 999px;
+  --border-w: 1px; --border-w-pixel: 2px;           /* pixel-bordered widgets (chips, bubbles) use 2px ink */
+  --shadow-1: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 1px 2px rgb(7 15 31 / 0.5);
+  --shadow-2: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 8px 24px -8px rgb(7 15 31 / 0.7), 0 2px 6px rgb(7 15 31 / 0.4);
+  --shadow-3: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 24px 48px -12px rgb(7 15 31 / 0.8), 0 4px 12px rgb(7 15 31 / 0.5);
+  --shadow-glow: 0 0 0 1px rgb(255 200 87 / 0.35), 0 0 16px rgb(255 200 87 / 0.25);   /* lit/selected, warm */
+  --pixel-outline: 0 0 0 2px var(--sq-ink);          /* the game-feel outline on HUD chips and buttons */
+  --touch-min: 44px;                                 /* minimum hit target */
+
+  /* ---------- 5. Layers (z-index) ---------- */
+  --z-canvas: 0; --z-scene-dom: 1; --z-hud: 10; --z-panel: 20; --z-dock: 20; --z-scrim: 30;
+  --z-overlay: 40; --z-toast: 50; --z-tooltip: 60; --z-cutscene-skip: 70;
+
+  /* ---------- 6. Motion: exactly three curves (08-village-motion.md). No others. Never ease-in. ---------- */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);       /* entering, exiting */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);   /* moving on screen */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);    /* panels sliding from an edge */
+  --dur-press: 100ms; --dur-fast: 150ms; --dur-base: 200ms; --dur-panel: 280ms;   /* UI stays under 300ms */
+  --dur-world-bubble: 160ms; --dur-camera: 400ms;   /* world animations may exceed UI limits */
+  --spring-duration: 0.5; --spring-bounce: 0.2;     /* rare delight only, via JS spring (see tokens.ts) */
+
+  /* ---------- 7. Pixel scale (set by JS from the canvas integer zoom: 2 at <=600px wide, 3 at >=900px, else 2) ---------- */
+  --px: 3px;                                         /* one art pixel in CSS px. Pixel-font sizes and sprite <img> use multiples of this */
+  --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px); --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* Light theme: pages (ledger, trip, mastery, setup, personas). The village HUD and overlays stay night (see .sq-scene).
+   Applies by OS preference, or force with data-theme="light" / "dark" on <html>. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --background: #f4f1e8;                     /* derived: moon-cream paper */
+    --foreground: #0b1d38;                     /* sky-deep, 15:1 */
+    --card: #fbf9f3; --card-foreground: var(--foreground);
+    --popover: #ffffff; --popover-foreground: var(--foreground);
+    --primary: #0b1d38; --primary-foreground: #fff2c4;   /* light mode: navy button, moon text */
+    --secondary: #e8e6dc; --secondary-foreground: var(--foreground);
+    --muted: #ece9de; --muted-foreground: #4b6275;       /* 5.6:1 on --card */
+    --accent: #e0e6ea; --accent-foreground: var(--foreground);
+    --border: #d6d3c6; --input: #d6d3c6; --ring: #0c6e9e;
+    --destructive: #b8283c; --destructive-text: #b8283c; --success: #1d7a4b; --warning: #a24e0c; --info: #5b46d6;
+    --scrim: rgb(11 29 56 / 0.45);
+    --shadow-1: 0 1px 2px rgb(11 29 56 / 0.08);
+    --shadow-2: 0 8px 24px -8px rgb(11 29 56 / 0.18), 0 2px 6px rgb(11 29 56 / 0.08);
+    --shadow-3: 0 24px 48px -12px rgb(11 29 56 / 0.28), 0 4px 12px rgb(11 29 56 / 0.1);
+    --shadow-glow: 0 0 0 1px rgb(12 110 158 / 0.4), 0 0 12px rgb(12 110 158 / 0.2);
+    --state-idle: #4b6275; --state-studying: #8a5c00; --state-call: #1d7a4b; --state-waiting: #a24e0c; --state-conflict: #b8283c; --state-offline: #8a9aa8;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f4f1e8; --foreground: #0b1d38;
+  --card: #fbf9f3; --card-foreground: var(--foreground); --popover: #ffffff; --popover-foreground: var(--foreground);
+  --primary: #0b1d38; --primary-foreground: #fff2c4;
+  --secondary: #e8e6dc; --secondary-foreground: var(--foreground);
+  --muted: #ece9de; --muted-foreground: #4b6275; --accent: #e0e6ea; --accent-foreground: var(--foreground);
+  --border: #d6d3c6; --input: #d6d3c6; --ring: #0c6e9e;
+  --destructive: #b8283c; --destructive-text: #b8283c; --success: #1d7a4b; --warning: #a24e0c; --info: #5b46d6; --scrim: rgb(11 29 56 / 0.45);
+  --shadow-1: 0 1px 2px rgb(11 29 56 / 0.08);
+  --shadow-2: 0 8px 24px -8px rgb(11 29 56 / 0.18), 0 2px 6px rgb(11 29 56 / 0.08);
+  --shadow-3: 0 24px 48px -12px rgb(11 29 56 / 0.28), 0 4px 12px rgb(11 29 56 / 0.1);
+  --shadow-glow: 0 0 0 1px rgb(12 110 158 / 0.4), 0 0 12px rgb(12 110 158 / 0.2);
+  --state-idle: #4b6275; --state-studying: #8a5c00; --state-call: #1d7a4b; --state-waiting: #a24e0c; --state-conflict: #b8283c; --state-offline: #8a9aa8;
+}
+
+/* The village page and anything over the canvas is ALWAYS night, in either theme. Wrap HUD/overlays in .sq-scene. */
+.sq-scene {
+  color-scheme: dark;
+  --background: var(--sq-ink); --foreground: #eef3f8;
+  --card: var(--sq-sky-deep); --card-foreground: #eef3f8; --popover: #102a4a; --popover-foreground: #eef3f8;
+  --primary: var(--sq-glow); --primary-foreground: var(--sq-ink);
+  --secondary: #12335a; --secondary-foreground: #eef3f8; --muted: var(--sq-ground); --muted-foreground: #8fb0c4;
+  --accent: #174a73; --accent-foreground: #eef3f8; --border: #1d4163; --input: #1d4163; --ring: var(--sq-cloud-hi);
+  --destructive: var(--sq-alert); --destructive-text: #ff7d8b; --success: var(--sq-ok); --warning: var(--sq-ember); --info: var(--sq-violet);
+  --scrim: rgb(7 15 31 / 0.62);
+  --shadow-1: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 1px 2px rgb(7 15 31 / 0.5);
+  --shadow-2: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 8px 24px -8px rgb(7 15 31 / 0.7), 0 2px 6px rgb(7 15 31 / 0.4);
+  --shadow-3: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 24px 48px -12px rgb(7 15 31 / 0.8), 0 4px 12px rgb(7 15 31 / 0.5);
+  --shadow-glow: 0 0 0 1px rgb(255 200 87 / 0.35), 0 0 16px rgb(255 200 87 / 0.25);
+  --state-idle: var(--sq-cloud-lo); --state-studying: var(--sq-glow); --state-call: var(--sq-ok);
+  --state-waiting: var(--sq-ember); --state-conflict: var(--sq-alert); --state-offline: var(--sq-hill-mid);
+}
+
+/* Nook compatibility aliases (Nook's styles.css names). Safe to delete once integrated. */
+:root { --nook-bg: var(--background); --nook-surface: var(--card); --nook-ink: var(--foreground);
+  --nook-ink-soft: var(--muted-foreground); --nook-line: var(--border); --nook-accent: var(--primary);
+  --nook-accent-ink: var(--primary-foreground); --nook-ring: var(--ring); --nook-danger: var(--destructive);
+  --nook-radius: calc(var(--radius) * 1.4); --nook-gap: 16px; --nook-font: var(--font-sans); }
+
+/* Global rules every surface inherits */
+.sq-pixelated, .sq-sprite { image-rendering: pixelated; image-rendering: crisp-edges; }
+.sq-pixel-text { font-family: var(--font-pixel); -webkit-font-smoothing: none; font-smooth: never; text-rendering: optimizeSpeed; letter-spacing: var(--tracking-pixel); }
+@media (min-width: 768px) { :root { --gutter: 24px; } }
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-press: 0ms; --dur-fast: 100ms; --dur-base: 120ms; --dur-panel: 120ms; --dur-camera: 0ms; }
+}
