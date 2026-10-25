@@ -16,6 +16,7 @@ import { Sheet } from '../primitives/Sheet';
 import { Skeleton } from '../primitives/Skeleton';
 import { Spinner } from '../primitives/Spinner';
 import { StatusDot } from '../primitives/StatusDot';
+import { StatusChip } from '../primitives/StatusChip';
 import { Stepper } from '../primitives/Stepper';
 import { Switch } from '../primitives/Switch';
 import { TabPanel, Tabs } from '../primitives/Tabs';
@@ -218,8 +219,8 @@ export default function Gallery() {
             <Badge count={3} />
             <Badge count={12} tone="ember" />
             <Badge count={140} tone="alert" />
-            <Badge dot tone="ok" label="Online" />
-            <Badge dot tone="violet" label="Thinking" />
+            <StatusChip status="ok" label="Online" />
+            <StatusChip status="working" label="Thinking" />
           </Row>
         </Section>
 
