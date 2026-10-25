@@ -27,3 +27,12 @@ Identical canonical messages twice are rejected by the ReplayGuard: every reques
 6. Query: asker's agent -> target `query {about, target}`; target's gate `answerQuery` -> `query.denied`; events: agent.message kind query (from student asker to target), then from 'mediator' kind query_denied, plus blocked ledger entry.
    Min group (<3): mediator publishes no counts anywhere (events, results, payload `counts:null`).
    Failure: offline peer / timeout (peerMs) => flow outcome failed/no_plan, tasks `failed`, agent.state idle, no trip.confirmed.
+
+## Implementation notes (as built)
+- Two principals per coordinator process: the agent's own gate (`self = studentId`) and a mediator gate (`self = 'mediator'`, no private fields).
+  Mediator-origin messages are `from: 'mediator'`; member replies to the mediator are `to: 'mediator'` and validated by the mediator gate.
+  `task.open` is sent from the coordinator's student id to each peer, and delivered to the mediator gate locally.
+- Requests carry empty arrays (`points`, `share`, `sum`); PSI collects all initial sets first, then relays each set around the ring.
+- Confirms are asynchronous: the proposal reply is `input-required`; the member later sends `confirm.result` to the mediator.
+- Failure: any peer failure => `result {stage:'none'}` best effort to the rest, outcome failed/no_plan, never trip.confirmed.
+- Option dates are derived: the proposer's `dates` span encodes the trip length; actual days are the earliest common run.
