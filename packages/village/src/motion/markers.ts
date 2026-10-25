@@ -23,7 +23,11 @@ export function conflictMarker(
   return rt.tween(
     marker,
     { alpha: 1, scale: 1 },
-    { duration: DURATION.conflictPop, curve: spring({ duration: 0.35, bounce: 0.2 }), from: { alpha: 0, scale: 0.6 } },
+    {
+      duration: DURATION.conflictPop,
+      curve: spring({ duration: 0.35, bounce: 0.2 }),
+      from: { alpha: 0, scale: 0.6 },
+    },
   );
 }
 
@@ -94,20 +98,24 @@ export function ringToCheck(
   o.check.visible = true;
   o.check.setReveal(0);
   const dummy = { x: 0, y: 0, alpha: 0, scaleX: 1, scaleY: 1 };
-  return rt.tween(dummy, { alpha: 1 }, {
-    duration: DURATION.checkReveal,
-    curve: CURVES.easeOut,
-    onUpdate: (t) => {
-      const c = CURVES.easeOut(t);
-      o.check.setReveal(c);
-      o.ring.alpha = Math.min(o.ring.alpha, 1 - c);
-      if (!swapped && t >= 0.5) {
-        swapped = true;
-        o.lock?.setFrame(o.lock.openFrame);
-      }
+  return rt.tween(
+    dummy,
+    { alpha: 1 },
+    {
+      duration: DURATION.checkReveal,
+      curve: CURVES.easeOut,
+      onUpdate: (t) => {
+        const c = CURVES.easeOut(t);
+        o.check.setReveal(c);
+        o.ring.alpha = Math.min(o.ring.alpha, 1 - c);
+        if (!swapped && t >= 0.5) {
+          swapped = true;
+          o.lock?.setFrame(o.lock.openFrame);
+        }
+      },
+      onComplete: end,
     },
-    onComplete: end,
-  });
+  );
 }
 
 /** confirm.done: a small tick, drawn by mask in 200 ms ease-out. Reduced: instant. */
@@ -120,12 +128,16 @@ export function confirmTick(rt: MotionRuntime, tick: Animatable & Revealable): M
   }
   tick.setReveal(0);
   const d = { x: 0, y: 0, alpha: 0, scaleX: 1, scaleY: 1 };
-  return rt.tween(d, { alpha: 1 }, {
-    duration: DURATION.checkReveal,
-    curve: CURVES.easeOut,
-    onUpdate: (t) => tick.setReveal(CURVES.easeOut(t)),
-    onComplete: () => tick.setReveal(1),
-  });
+  return rt.tween(
+    d,
+    { alpha: 1 },
+    {
+      duration: DURATION.checkReveal,
+      curve: CURVES.easeOut,
+      onUpdate: (t) => tick.setReveal(CURVES.easeOut(t)),
+      onComplete: () => tick.setReveal(1),
+    },
+  );
 }
 
 /** Row 13. Three frames over 2 s with eased alpha. Reduced: steady red lantern. */

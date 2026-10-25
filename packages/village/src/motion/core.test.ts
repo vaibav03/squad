@@ -90,7 +90,11 @@ describe('runtime tween', () => {
     const rt = createRuntime();
     const t = a();
     let done = false;
-    rt.tween(t, { x: 100.4, alpha: 0 }, { duration: 200, curve: CURVES.linear, onComplete: () => (done = true) });
+    rt.tween(
+      t,
+      { x: 100.4, alpha: 0 },
+      { duration: 200, curve: CURVES.linear, onComplete: () => (done = true) },
+    );
     rt.step(100);
     expect(t.x).toBe(50);
     expect(t.alpha).toBeCloseTo(0.5, 5);
@@ -104,7 +108,11 @@ describe('runtime tween', () => {
   it('delay and from', () => {
     const rt = createRuntime();
     const t = a();
-    rt.tween(t, { alpha: 1 }, { duration: 100, curve: CURVES.linear, delay: 50, from: { alpha: 0 } });
+    rt.tween(
+      t,
+      { alpha: 1 },
+      { duration: 100, curve: CURVES.linear, delay: 50, from: { alpha: 0 } },
+    );
     expect(t.alpha).toBe(0);
     rt.step(50);
     expect(t.alpha).toBe(0);

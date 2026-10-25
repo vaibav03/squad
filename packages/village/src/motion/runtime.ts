@@ -127,10 +127,22 @@ export class MotionRuntime {
 
   private advance(dt: number): void {
     this.t += dt;
+    let settled = this.pass(dt);
+    // Sequencers chain inside the same step: when something finished, run zero-dt passes so the
+    // next step starts in the same frame instead of one frame late (bounded, no unbounded loops).
+    for (let i = 0; i < 4 && settled; i++) settled = this.pass(0);
+  }
+
+  private pass(dt: number): boolean {
+    let anyDone = false;
     for (const h of [...this.handles]) {
       if (h.done) continue;
-      if (h.job.update(dt)) h.complete();
+      if (h.job.update(dt)) {
+        h.complete();
+        anyDone = true;
+      }
     }
+    return anyDone;
   }
 
   /** Register a custom job. Primitives are built on this. */
@@ -217,7 +229,7 @@ export class MotionRuntime {
       opts.onComplete?.();
     };
     // `from` is applied immediately so a delayed enter does not flash at its old pose.
-    if (opts.from && wait > 0) begin();
+    if (opts.from) begin();
     return this.spawn({
       update: (dt) => {
         if (wait > 0) {
@@ -240,7 +252,9 @@ export class MotionRuntime {
   }
 }
 
-export function createRuntime(opts: { reduced?: boolean; calm?: boolean; maxDeltaMs?: number } = {}): MotionRuntime {
+export function createRuntime(
+  opts: { reduced?: boolean; calm?: boolean; maxDeltaMs?: number } = {},
+): MotionRuntime {
   const prefs = createMotionPrefs({ storage: null, matchMedia: null });
   if (opts.reduced) prefs.setReducedOverride(true);
   if (opts.calm) prefs.setCalm(true);

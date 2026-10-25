@@ -1,0 +1,143 @@
+/*
+ * Squad DOM motion (spec 08, rows 15, 16, 18, 19, 21).
+ * Only transform and opacity (clip-path for the check draw). Three curves, no ease-in,
+ * no `transition: all`, no scale(0), hover only on real pointers. Reduced motion applies
+ * under the OS media query AND under Calm mode (`data-calm`) or the Lab override.
+ * The --ease-* values are the same as docs/design/tokens.css and the canvas curves in
+ * packages/village/src/motion/curves.ts; fallbacks keep this file usable standalone.
+ */
+:root {
+  --m-ease-out: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+  --m-ease-in-out: var(--ease-in-out, cubic-bezier(0.77, 0, 0.175, 1));
+  --m-ease-drawer: var(--ease-drawer, cubic-bezier(0.32, 0.72, 0, 1));
+  --m-dur-press: 100ms;
+  --m-dur-chip: 150ms;
+  --m-dur-panel: 240ms;
+  --m-dur-fade: 200ms;
+  --m-dur-check: 200ms;
+}
+
+/* Row 16: overlay panels (call, quiz, ledger). translateY(8px) + opacity, exit mirrors entry. */
+.m-panel {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition:
+    opacity var(--m-dur-panel) var(--m-ease-drawer),
+    transform var(--m-dur-panel) var(--m-ease-drawer),
+    visibility 0s linear 0s;
+}
+@starting-style {
+  .m-panel {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.m-panel[data-state='closed'] {
+  opacity: 0;
+  transform: translateY(8px);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity var(--m-dur-panel) var(--m-ease-drawer),
+    transform var(--m-dur-panel) var(--m-ease-drawer),
+    visibility 0s linear var(--m-dur-panel);
+}
+
+/* Row 19: button press and camera buttons. */
+.m-press {
+  transition:
+    transform var(--m-dur-press) var(--m-ease-out),
+    opacity var(--m-dur-press) var(--m-ease-out);
+}
+.m-press:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .m-press:hover {
+    opacity: 0.92;
+  }
+}
+
+/* Row 18: HUD portrait chip state change. Plain `ease` per the spec. */
+.m-chip {
+  transition:
+    color var(--m-dur-chip) ease,
+    opacity var(--m-dur-chip) ease;
+}
+
+/* Row 21: Replay/Live badge. */
+.m-badge {
+  transition: opacity var(--m-dur-chip) ease;
+}
+
+/* Row 11 (DOM twin) and the call check-mark: clip-path reveal. */
+.m-check {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path var(--m-dur-check) var(--m-ease-out);
+}
+.m-check[data-state='shown'] {
+  clip-path: inset(0 0 0 0);
+}
+
+/* Row 15 (DOM half): building enter/leave fade. */
+.m-fade {
+  opacity: 1;
+  transition: opacity var(--m-dur-fade) var(--m-ease-out);
+}
+@starting-style {
+  .m-fade {
+    opacity: 0;
+  }
+}
+.m-fade[data-state='closed'] {
+  opacity: 0;
+}
+
+/* Reduced motion: fewer and gentler, not zero. */
+@media (prefers-reduced-motion: reduce) {
+  .m-panel,
+  .m-panel[data-state='closed'] {
+    transform: none;
+  }
+  .m-press:active {
+    transform: none;
+    opacity: 0.8;
+  }
+  .m-fade {
+    transition-duration: 120ms;
+  }
+  .m-check {
+    clip-path: inset(0 0 0 0);
+    opacity: 0;
+    transition: opacity var(--m-dur-chip) ease;
+  }
+  .m-check[data-state='shown'] {
+    opacity: 1;
+  }
+}
+:root[data-calm='true'] .m-panel,
+:root[data-calm='true'] .m-panel[data-state='closed'],
+:root[data-reduced-motion='true'] .m-panel,
+:root[data-reduced-motion='true'] .m-panel[data-state='closed'] {
+  transform: none;
+}
+:root[data-calm='true'] .m-press:active,
+:root[data-reduced-motion='true'] .m-press:active {
+  transform: none;
+  opacity: 0.8;
+}
+:root[data-calm='true'] .m-fade,
+:root[data-reduced-motion='true'] .m-fade {
+  transition-duration: 120ms;
+}
+:root[data-calm='true'] .m-check,
+:root[data-reduced-motion='true'] .m-check {
+  clip-path: inset(0 0 0 0);
+  opacity: 0;
+  transition: opacity var(--m-dur-chip) ease;
+}
+:root[data-calm='true'] .m-check[data-state='shown'],
+:root[data-reduced-motion='true'] .m-check[data-state='shown'] {
+  opacity: 1;
+}

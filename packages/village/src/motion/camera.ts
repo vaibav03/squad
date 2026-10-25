@@ -1,5 +1,5 @@
 import { easeInOut, easeOut } from './curves';
-import { allHandles, doneHandle, type MotionRuntime } from './runtime';
+import { doneHandle, type MotionRuntime } from './runtime';
 import { DURATION } from './tokens';
 import type { Animatable, CameraLike, MotionHandle } from './types';
 
@@ -60,40 +60,40 @@ export function buildingTransition(
 ): MotionHandle {
   const total = rt.reduced ? DURATION.buildingFadeReduced : DURATION.buildingFade;
   const half = total / 2;
+  let elapsed = 0;
+  let mid = false;
   o.overlay.alpha = 0;
   o.overlay.visible = true;
-  let mid = false;
   const fireMid = (): void => {
     if (mid) return;
     mid = true;
     o.onMidpoint?.();
   };
-  const cover = rt.tween(o.overlay, { alpha: 1 }, { duration: half, curve: easeOut, onComplete: fireMid });
-  let uncover: MotionHandle | null = null;
-  const start = (): MotionHandle => rt.tween(o.overlay, { alpha: 0 }, {
-    duration: half,
-    curve: easeOut,
-    onComplete: () => {
-      o.overlay.visible = false;
-    },
-  });
-  // chain: begin the uncover after the cover completes
-  const chain = rt.spawn({
-    update: () => {
-      if (!cover.done) return false;
-      uncover ??= start();
-      return uncover.done;
+  const end = (): void => {
+    o.overlay.alpha = 0;
+    o.overlay.visible = false;
+  };
+  return rt.spawn({
+    update: (dt) => {
+      elapsed += dt;
+      if (elapsed >= total) {
+        fireMid();
+        end();
+        return true;
+      }
+      if (elapsed < half) {
+        o.overlay.alpha = easeOut(elapsed / half);
+      } else {
+        o.overlay.alpha = 1;
+        fireMid();
+        o.overlay.alpha = 1 - easeOut((elapsed - half) / half);
+      }
+      return false;
     },
     finish: () => {
-      cover.skip();
+      o.overlay.alpha = 1;
       fireMid();
-      uncover ??= start();
-      uncover.skip();
-    },
-    abort: () => {
-      cover.cancel();
-      uncover?.cancel();
+      end();
     },
   });
-  return allHandles([chain]);
 }

@@ -1,7 +1,10 @@
 import type { MotionRuntime } from './runtime';
 
 /** Pause the runtime while the tab is hidden; resume without catching up. Returns detach. */
-export function pauseWhenHidden(runtime: MotionRuntime, doc: Document | undefined = typeof document === 'undefined' ? undefined : document): () => void {
+export function pauseWhenHidden(
+  runtime: MotionRuntime,
+  doc: Document | undefined = typeof document === 'undefined' ? undefined : document,
+): () => void {
   return pauseWhenHiddenWith({ runtime, onHide: () => {}, onShow: () => {}, doc });
 }
 

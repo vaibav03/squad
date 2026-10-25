@@ -82,7 +82,13 @@ function play(
 
   const useFallback = rt.reduced && fb !== null;
   const list: Entry[] = useFallback
-    ? [{ kind: 'step', name: 'fallback', run: (r) => (fb as (r: MotionRuntime) => MotionHandle)(r) }]
+    ? [
+        {
+          kind: 'step',
+          name: 'fallback',
+          run: (r) => (fb as (r: MotionRuntime) => MotionHandle)(r),
+        },
+      ]
     : entries;
 
   const startEntry = (e: Entry): void => {
@@ -194,30 +200,46 @@ export function tripCutscene(
   return cutscene(rt)
     .step('drive', (r) =>
       allHandles([
-        r.tween(roadProxy, { x: road0 + dist }, {
-          duration: DURATION.tripScroll,
-          curve: CURVES.easeInOut,
-          pixelSnap: true,
-          onUpdate: () => {
-            o.road.tilePositionX = roadProxy.x;
+        r.tween(
+          roadProxy,
+          { x: road0 + dist },
+          {
+            duration: DURATION.tripScroll,
+            curve: CURVES.easeInOut,
+            pixelSnap: true,
+            onUpdate: () => {
+              o.road.tilePositionX = roadProxy.x;
+            },
           },
-        }),
-        r.tween(o.vehicle, { x: o.vehicle.x + travel }, { duration: DURATION.tripScroll, curve: CURVES.linear }),
+        ),
+        r.tween(
+          o.vehicle,
+          { x: o.vehicle.x + travel },
+          { duration: DURATION.tripScroll, curve: CURVES.linear },
+        ),
       ]),
     )
     .step('door', (r) =>
-      r.tween(o.tripDoor, { alpha: 1, scale: 1 }, {
-        duration: DURATION.tripDoorPop,
-        curve: spring({ duration: 0.5, bounce: 0.2 }),
-        from: { alpha: 0, scale: 0.6 },
-      }),
+      r.tween(
+        o.tripDoor,
+        { alpha: 1, scale: 1 },
+        {
+          duration: DURATION.tripDoorPop,
+          curve: spring({ duration: 0.5, bounce: 0.2 }),
+          from: { alpha: 0, scale: 0.6 },
+        },
+      ),
     )
     .fallback((r) => {
       o.tripDoor.alpha = 1;
       o.tripDoor.scaleX = 1;
       o.tripDoor.scaleY = 1;
       if (!o.card) return doneHandle();
-      return r.tween(o.card, { alpha: 1 }, { duration: DURATION.tripCardFade, curve: CURVES.easeOut, from: { alpha: 0 } });
+      return r.tween(
+        o.card,
+        { alpha: 1 },
+        { duration: DURATION.tripCardFade, curve: CURVES.easeOut, from: { alpha: 0 } },
+      );
     })
     .play({ skippable: true });
 }
