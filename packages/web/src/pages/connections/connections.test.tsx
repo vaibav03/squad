@@ -353,3 +353,40 @@ describe('revoked / expired grants offer Reconnect with an honest message (V3, V
     expect(screen.getByRole('button', { name: 'Reconnect' })).toBeTruthy();
   });
 });
+
+describe('Canvas routes: extension first, token optional', () => {
+  afterEach(() => document.documentElement.removeAttribute(EXT_ATTR));
+  it('orders extension, then .ics feed, then collapsed Advanced; token never required', async () => {
+    const connectFeed = vi.fn(async () => conn());
+    const connectToken = vi.fn(async () => conn());
+    render(<ConnectionsView {...props({}, { connectFeed, connectToken })} />);
+    const text = document.body.textContent ?? '';
+    const ext = text.indexOf('Connect with the Squad browser extension');
+    const ics = text.indexOf('Or paste your Canvas calendar feed (.ics) URL');
+    const adv = text.indexOf('Advanced (optional)');
+    expect(ext).toBeGreaterThan(-1);
+    expect(ics).toBeGreaterThan(ext);
+    expect(adv).toBeGreaterThan(ics);
+    expect(text).toContain('Recommended: uses your signed-in Canvas session');
+    expect(text).toContain('Some schools do not allow');
+    const details = screen.getByText('Advanced (optional)').closest('details')!;
+    expect(details.hasAttribute('open')).toBe(false);
+    const tokenField = screen.getByLabelText(/Student API token \(optional\)/) as HTMLInputElement;
+    expect(tokenField.required).toBe(false);
+    expect(text).not.toMatch(/token (is )?required|requires a token/i);
+    // feed connect works with an empty token field
+    fireEvent.change(screen.getByLabelText('Canvas calendar feed URL'), {
+      target: { value: 'https://canvas.school.test/feeds/calendars/user_x.ics' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Connect feed' }));
+    await waitFor(() => expect(connectFeed).toHaveBeenCalled());
+    expect(connectToken).not.toHaveBeenCalled();
+  });
+  it('Check again re-detects the extension', async () => {
+    render(<ConnectionsView {...props()} />);
+    expect(screen.getByText('Extension not detected')).toBeTruthy();
+    document.documentElement.setAttribute(EXT_ATTR, '1');
+    fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
+    await waitFor(() => expect(screen.queryByText('Extension not detected')).toBeNull());
+  });
+});
