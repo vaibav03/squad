@@ -5,6 +5,7 @@ import { noteCouncilResult } from '../overlays/inspector/bridge';
 import { LvIcon } from '../overlays/kit/icons';
 import { usePrefersReducedMotion } from '../overlays/kit/hooks';
 import { councilErrorCopy, getCouncil } from './council-client';
+import { ResultBoardButton, RunStrip } from './RunStrip';
 import { ErrorBlock, MemberCard, MessageBlock, RankingBlock, VerdictBlock } from './parts';
 
 /**
@@ -16,11 +17,13 @@ export function CouncilCard({
   defaultExpanded = false,
   calm,
   onRetry,
+  hub,
 }: {
   result: CouncilResult;
   defaultExpanded?: boolean;
   calm?: boolean;
   onRetry?: () => void;
+  hub?: HubCtx | null;
 }) {
   const [open, setOpen] = useState(defaultExpanded);
   const regionId = useId();
@@ -38,6 +41,7 @@ export function CouncilCard({
         <span className="cn-eyebrow">You asked</span>
         {result.question}
       </p>
+      <RunStrip result={result} compact showMode={!result.verdict || stopped} />
       {stopped ? (
         <MessageBlock result={result} onRetry={onRetry} />
       ) : result.verdict ? (
@@ -47,6 +51,7 @@ export function CouncilCard({
           The council is still thinking.
         </p>
       )}
+      <ResultBoardButton result={result} hub={hub ?? null} calm={calm} />
       {hasMembers && (
         <>
           <button
@@ -107,8 +112,8 @@ export function CouncilChatCard({
         if (ac.signal.aborted) return;
         setLoad({ s: 'ready', r });
         // A run that is still going is polled gently until it is done.
-        if (r.status === 'running' && polls < 60)
-          timer = setTimeout(() => void run(polls + 1), 2500);
+        if (r.status === 'running' && polls < 150)
+          timer = setTimeout(() => void run(polls + 1), 1500);
       } catch (e) {
         if (!ac.signal.aborted) setLoad({ s: 'error', msg: councilErrorCopy(e) });
       }
@@ -135,5 +140,5 @@ export function CouncilChatCard({
         <ErrorBlock message={load.msg} onRetry={retry} />
       </div>
     );
-  return <CouncilCard result={load.r} calm={calm} onRetry={retry} />;
+  return <CouncilCard result={load.r} calm={calm} onRetry={retry} hub={hub} />;
 }

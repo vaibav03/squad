@@ -95,17 +95,27 @@ export async function main(): Promise<number> {
     brain,
     courseId: () => 'demo',
     agents,
-    members: ['skeptic', 'teacher'], // 3 real agents including the chair
+    members: (env.COUNCIL_SMOKE_MEMBERS ?? 'skeptic,teacher')
+      .split(',')
+      .map((m) => m.trim())
+      .filter(Boolean), // default: 3 real agents including the chair
   });
   const t0 = Date.now();
   const h = svc.ask({
     question:
+      env.COUNCIL_SMOKE_QUESTION ??
       'When a data set is skewed, is the mean or the median the better measure of the center, and why?',
     askedBy: 's_smoke',
     chatId: 'group:smoke',
   });
   const r = await h.done;
   const ms = Date.now() - t0;
+  if (env.COUNCIL_SMOKE_JSON) {
+    // machine-readable summary line for aggregating several runs
+    console.log(
+      `RESULT ${JSON.stringify({ status: r.status, mode: r.mode, ms, calls: meter.calls, inTok: meter.inTok, outTok: meter.outTok, usd: Number(usd().toFixed(4)), answered: r.members.filter((m) => m.status === 'answered').length, members: r.members.length })}`,
+    );
+  }
 
   const stages = events
     .filter((e) => e.t === 'council.stage')

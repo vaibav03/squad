@@ -41,6 +41,7 @@ describe('council card on the web transport', () => {
       from: 's_ana',
       text: '@cubbie council B or C?',
     });
+    // the run card goes out first, so the board can be opened while the council works
     const msg = out.find((o) => o.card?.type === 'council');
     expect(msg).toBeDefined();
     expect(msg!.chatId).toBe('group:sq_demo');
@@ -48,8 +49,14 @@ describe('council card on the web transport', () => {
       type: 'council',
       runId: expect.stringMatching(/^cn_[a-z0-9]{12}$/),
     });
-    expect(msg!.text).toContain('Council verdict:');
-    expect(msg!.text).not.toContain('(council run');
+    expect(out.indexOf(msg!)).toBeLessThan(
+      out.findIndex((o) => /Council verdict:/.test(o.text ?? '')),
+    );
+    // the verdict text follows as a plain message, without a footer or a second card
+    const verdict = out.find((o) => /Council verdict:/.test(o.text ?? ''));
+    expect(verdict).toBeDefined();
+    expect(verdict!.card).toBeUndefined();
+    expect(verdict!.text).not.toContain('(council run');
     const runId = (msg!.card as { runId: string }).runId;
     expect(council.get(runId)?.status).toBe('done');
   });

@@ -6,6 +6,8 @@ export interface ConnectionsState {
   view: 'loading' | 'ready' | 'offline' | 'demo';
   connections: Connection[];
   squadId: string | null;
+  /** Squad names by id: the page shows these, never raw ids. */
+  squadNames: Record<string, string>;
   error: string | null;
   client: HubClient | null;
   reload: () => Promise<void>;
@@ -26,6 +28,7 @@ export function useConnections(clientOverride?: HubClient): ConnectionsState {
   );
   const [connections, setConnections] = useState<Connection[]>([]);
   const [squadId, setSquadId] = useState<string | null>(null);
+  const [squadNames, setSquadNames] = useState<Record<string, string>>({});
   const [view, setView] = useState<ConnectionsState['view']>(client ? 'loading' : 'demo');
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +53,7 @@ export function useConnections(clientOverride?: HubClient): ConnectionsState {
     }
     void reload();
     client.activeSquad().then(setSquadId, () => setSquadId(null));
+    client.squadNames().then(setSquadNames, () => setSquadNames({}));
   }, [client, reload]);
 
   // While a sync is running, poll until it settles.
@@ -80,6 +84,7 @@ export function useConnections(clientOverride?: HubClient): ConnectionsState {
     view,
     connections,
     squadId,
+    squadNames,
     error,
     client,
     reload,

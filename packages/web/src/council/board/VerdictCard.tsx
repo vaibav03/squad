@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { BoardRun } from '@squad/village/council';
 import { CitationChip } from '../../components/source-viewer';
+import type { ActionKind, ActionOutcome } from './actions-api';
 import { ModeBadge } from './ModeBadge';
 import { confidenceWord } from './common';
 
@@ -8,19 +9,21 @@ export interface VerdictCardProps {
   run: BoardRun;
   /** Scroll the feed to the message behind a dissent. */
   onJump(messageId: string): void;
-  /** Sends text into the squad chat (the existing chat-send helper); absent when sending is not possible. */
-  send?: ((text: string) => Promise<boolean>) | undefined;
-  /** Why sending is off, shown as plain text. */
+  /** Runs an action item through the hub (`actions/plan` or `actions/chat`); absent when that is not possible. */
+  act?: ((actionId: string, kind: ActionKind) => Promise<ActionOutcome>) | undefined;
+  /** Why the buttons are off, shown as plain text. */
   sendOffReason?: string;
 }
 
-type Sent = { text: string; kind: 'chat' | 'plan'; ok: boolean } | null;
+/** Per item and kind: pending, or the outcome. Absent = idle. */
+type ItemState = { state: 'pending' } | ({ state: 'done' } & ActionOutcome);
+const keyOf = (i: number, kind: ActionKind) => `${i}:${kind}`;
 
 /** The chair's verdict: the call, confidence in words, the dissent linked to its message, action items. */
-export function VerdictCard({ run, onJump, send, sendOffReason }: VerdictCardProps) {
+export function VerdictCard({ run, onJump, act, sendOffReason }: VerdictCardProps) {
   const v = run.verdict;
-  const [sent, setSent] = useState<Sent>(null);
-  const [busy, setBusy] = useState(false);
+  const [states, setStates] = useState<Record<string, ItemState>>({});
+  const [lastMsg, setLastMsg] = useState('');
   if (!v)
     return (
       <section className="cb-verdict cb-verdict--wait" aria-label="Verdict">
@@ -31,13 +34,18 @@ export function VerdictCard({ run, onJump, send, sendOffReason }: VerdictCardPro
       </section>
     );
   const conf = confidenceWord(v.confidence);
-  const act = async (text: string, kind: 'chat' | 'plan') => {
-    if (!send || busy) return;
-    setBusy(true);
-    const phrase = kind === 'plan' ? `@cubbie add to my study plan: ${text}` : text;
-    const ok = await send(phrase);
-    setBusy(false);
-    setSent({ text, kind, ok });
+  const run_ = async (i: number, id: string, kind: ActionKind) => {
+    if (!act || states[keyOf(i, kind)]?.state === 'pending') return;
+    setStates((m) => ({ ...m, [keyOf(i, kind)]: { state: 'pending' } }));
+    const out = await act(id, kind);
+    setStates((m) => ({ ...m, [keyOf(i, kind)]: { state: 'done', ...out } }));
+    setLastMsg(out.message);
+  };
+  const label = (i: number, kind: ActionKind, idle: string, done: string): string => {
+    const st = states[keyOf(i, kind)];
+    if (st?.state === 'pending') return kind === 'plan' ? 'Adding...' : 'Sending...';
+    if (st?.state === 'done') return st.ok ? done : 'Try again';
+    return idle;
   };
   return (
     <section className="cb-verdict" aria-label="Verdict" data-testid="cb-verdict">
@@ -89,44 +97,45 @@ export function VerdictCard({ run, onJump, send, sendOffReason }: VerdictCardPro
           <p className="cb-dim">No action items yet.</p>
         ) : (
           <ul className="cb-actions__list">
-            {v.actions.map((a, i) => (
-              <li key={i} className="cb-action">
-                <span className="cb-action__text">{a}</span>
+            {v.actionItems.map((a, i) => (
+              <li key={a.id ?? i} className="cb-action">
+                <span className="cb-action__text">{a.text}</span>
                 <span className="cb-action__btns">
-                  <button
-                    type="button"
-                    className="lv-btn lv-btn--ghost"
-                    disabled={!send || busy}
-                    onClick={() => void act(a, 'chat')}
-                    aria-label={`Send to chat: ${a}`}
-                  >
-                    Send to chat
-                  </button>
-                  <button
-                    type="button"
-                    className="lv-btn lv-btn--ghost"
-                    disabled={!send || busy}
-                    onClick={() => void act(a, 'plan')}
-                    aria-label={`Add to plan: ${a}`}
-                  >
-                    Add to plan
-                  </button>
+                  {(['chat', 'plan'] as const).map((kind) => {
+                    const st = states[keyOf(i, kind)];
+                    const done = st?.state === 'done' && st.ok;
+                    return (
+                      <button
+                        key={kind}
+                        type="button"
+                        className="lv-btn lv-btn--ghost"
+                        data-state={
+                          st?.state === 'done'
+                            ? st.ok
+                              ? 'success'
+                              : 'failure'
+                            : (st?.state ?? 'idle')
+                        }
+                        disabled={!act || !a.id || st?.state === 'pending' || done}
+                        onClick={() => void run_(i, a.id!, kind)}
+                        aria-label={`${kind === 'chat' ? 'Send to chat' : 'Add to plan'}: ${a.text}`}
+                      >
+                        {kind === 'chat'
+                          ? label(i, kind, 'Send to chat', 'Sent')
+                          : label(i, kind, 'Add to plan', 'Added')}
+                      </button>
+                    );
+                  })}
                 </span>
               </li>
             ))}
           </ul>
         )}
-        {!send && v.actions.length > 0 && sendOffReason ? (
+        {!act && v.actions.length > 0 && sendOffReason ? (
           <p className="cb-dim cb-actions__off">{sendOffReason}</p>
         ) : null}
         <p className="cb-actions__status" role="status">
-          {sent
-            ? sent.ok
-              ? sent.kind === 'plan'
-                ? 'Asked Cubbie to add that to your plan.'
-                : 'Sent to the squad chat.'
-              : 'Could not send that. Open Chat and say it there.'
-            : ''}
+          {lastMsg}
         </p>
       </div>
     </section>

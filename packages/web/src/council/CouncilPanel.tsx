@@ -13,6 +13,7 @@ import { noteCouncilResult, setPendingVoices } from '../overlays/inspector/bridg
 import { OverlayFrame } from '../overlays/kit/OverlayFrame';
 import { LvIcon } from '../overlays/kit/icons';
 import { usePrefersReducedMotion } from '../overlays/kit/hooks';
+import { ResultBoardButton, RunStrip } from './RunStrip';
 import { hubTransport, type CouncilTransport } from './council-client';
 import { useCouncilRun } from './useCouncilRun';
 import {
@@ -280,6 +281,8 @@ export function CouncilPanel(props: CouncilPanelProps) {
               {announce}
             </div>
 
+            {result ? <RunStrip result={result} showMode={!view.verdict} /> : null}
+
             {(status === 'error' || status === 'offline') && run.error && (
               <ErrorBlock message={run.error} offline={status === 'offline'} onRetry={run.retry} />
             )}
@@ -314,6 +317,8 @@ export function CouncilPanel(props: CouncilPanelProps) {
             {result && stopped && <MessageBlock result={result} onRetry={run.retry} />}
 
             <div ref={endRef} />
+
+            {result && !idle ? <ResultBoardButton result={result} hub={hub} calm={calm} /> : null}
 
             <div className="cn-actions">
               {canSkip && (

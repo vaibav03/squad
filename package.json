@@ -26,6 +26,8 @@
     "live:verify": "tsx scripts/live/verify.ts",
     "live:council-probe": "tsx scripts/live/council-probe.ts",
     "live:council-smoke": "tsx scripts/live/council-smoke.ts",
+    "live:council-scan": "tsx scripts/live/council-stream-scan.ts",
+    "live:council-others": "tsx scripts/live/council-others.ts",
     "live:images": "python3 scripts/live/make_images.py",
     "doctor": "tsx scripts/doctor.ts",
     "squad:doctor": "tsx scripts/doctor.ts",

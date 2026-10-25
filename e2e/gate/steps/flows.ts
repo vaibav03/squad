@@ -32,6 +32,8 @@ export interface ConnView {
   canSync: boolean;
   sources: { total: number; byKind: Record<string, number> };
   sharedWithSquads: string[];
+  needsReconnect?: boolean;
+  stale?: boolean;
   [k: string]: unknown;
 }
 export interface SourceRow {

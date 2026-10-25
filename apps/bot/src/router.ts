@@ -5,6 +5,7 @@ import {
   mentionHelpText,
   shouldHelpUnknown,
   parseMentions,
+  plannerIntent,
   type AgentAlias,
   type ChatId,
   type InboundMessage,
@@ -200,6 +201,22 @@ export function createRouter(d: RouterDeps) {
           { ...decision, reason: 'mentioned', unprompted: false },
           messageId,
         );
+      }
+      if (agent.id === 'planner' && plannerIntent(rest) === 'studyplan') {
+        // The planner persona routes a study-plan request to the shared study-plan flow (trips are started by the hub).
+        const plan = bySkill.get('sharedPlan');
+        if (plan) {
+          const m2 = { ...m, text: `@cubbie ${rest}`, mentionsBot: true };
+          const decision: Decision = {
+            action: 'run',
+            reason: 'mentioned',
+            skill: plan.name,
+            scores: [],
+            mentioned: true,
+            unprompted: false,
+          };
+          return await runSkill(m2, decision, messageId);
+        }
       }
       if (agent.kind === 'persona') {
         const p = getPersona(agent.personaId);

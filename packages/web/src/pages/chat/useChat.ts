@@ -13,8 +13,10 @@ import {
   chatLoadReason,
   isExpired,
   type ChatApi,
+  type ChatSyncEvent,
   type StreamState,
 } from './api';
+import { applySyncPatch } from './sync/applySyncPatch';
 import { isOwn, mergeMessages, quizAnswerText, TYPING_TTL_MS, type ThreadItem } from './model';
 
 /**
@@ -90,6 +92,7 @@ type Action =
   | { t: 'conn'; conn: ChatConn }
   | { t: 'msg'; m: ChatMessage; unread: boolean; own: boolean }
   | { t: 'card'; chatId: string; messageId: string; card: ChatCard }
+  | { t: 'sync'; e: ChatSyncEvent }
   | { t: 'typing'; ty: ChatTyping; now: number }
   | { t: 'prune'; now: number }
   | { t: 'bucket'; chatId: string; patch: Partial<Bucket> }
@@ -177,6 +180,11 @@ function reducer(s: State, a: Action): State {
         unread: a.unread ? { ...n.unread, [m.chatId]: (n.unread[m.chatId] ?? 0) + 1 } : n.unread,
       };
     }
+    case 'sync':
+      return withBucket(s, a.e.chatId, (b) => ({
+        ...b,
+        items: applySyncPatch(b.items, a.e.messageId, a.e.patch),
+      }));
     case 'card':
       return withBucket(s, a.chatId, (b) => ({
         ...b,
@@ -312,6 +320,8 @@ export interface ChatController {
   arrivedAt(messageId: string): number | undefined;
   retry(chatId: string, localId: string): Promise<boolean>;
   discard(chatId: string, localId: string): void;
+  /** Retry a failed iMessage delivery; the new state arrives as a `chat.sync` event. */
+  retryDelivery(messageId: string): Promise<boolean>;
   reload(): void;
   quizAnswer(messageId: string): string | undefined;
   answerQuiz(chatId: string, messageId: string, choice: string): Promise<boolean>;
@@ -440,6 +450,7 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
             },
             onUpdate: (u) =>
               dispatch({ t: 'card', chatId: u.chatId, messageId: u.messageId, card: u.card }),
+            onSync: (e) => dispatch({ t: 'sync', e }),
             onTyping: (ty) => dispatch({ t: 'typing', ty, now: Date.now() }),
             onResync: () => {
               void api.chats().then(
@@ -665,6 +676,11 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
     },
     [doSend],
   );
+  const retryDelivery = useCallback(
+    (messageId: string) =>
+      api?.retryImessage ? api.retryImessage(messageId) : Promise.resolve(false),
+    [api],
+  );
   const discard = useCallback(
     (chatId: string, localId: string) => dispatch({ t: 'pendDrop', chatId, localId }),
     [],
@@ -744,6 +760,7 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
     confirm,
     arrivedAt: (id) => arrived.current.get(id),
     retry,
+    retryDelivery,
     discard,
     reload,
     quizAnswer: (id) => quizRef.current[id],

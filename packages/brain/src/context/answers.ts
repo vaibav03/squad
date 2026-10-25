@@ -32,6 +32,13 @@ export function fmtDue(ms: number | null | undefined, now: number): string {
 const fileType = (s: ContextSource): 'ppt' | 'pdf' | null =>
   /\.(pptx?|key)$/i.test(s.title) ? 'ppt' : /\.pdf$/i.test(s.title) ? 'pdf' : null;
 
+const CONNECTABLE_RE =
+  /\b(canvas|google|drive|docs?|classroom|calendar|syllabus|assignments?|homework|hw\d*|due|deadlines?|slides?|lectures?|quiz(?:zes)?|exams?|midterms?|grades?|my courses?)\b/i;
+/** True when the question is about content only a connected source could hold (Canvas, Drive, Calendar, coursework). */
+export function isConnectableQuestion(text: string): boolean {
+  return CONNECTABLE_RE.test(text) || isCanvasQuestion(text);
+}
+
 export function isCanvasQuestion(text: string): boolean {
   return FILES_RE.test(text) || DEADLINE_RE.test(text);
 }

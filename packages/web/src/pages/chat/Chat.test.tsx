@@ -376,6 +376,95 @@ describe('citations', () => {
     expect(await screen.findByTestId('chat-council-card')).toBeTruthy();
   });
 
+  describe('iMessage sync (S7)', () => {
+    const imsg = (api: FakeChatApi, over: Record<string, unknown> = {}) =>
+      api.pushMessage({
+        chatId: GROUP_ID,
+        ts: Date.now(),
+        sender: { kind: 'student', id: 's_rhea', name: 'Rhea' },
+        text: 'Hello from the group iMessage',
+        private: false,
+        attachments: [],
+        citations: [],
+        demo: false,
+        transport: 'imessage',
+        externalId: 'GUID-1',
+        ...over,
+      });
+    const bubble = (id: string) =>
+      screen
+        .getAllByTestId('chat-message')
+        .find((m) => m.getAttribute('data-message-id') === id) as HTMLElement;
+
+    it('shows "via iMessage" and a masked sender label on a mirrored message', async () => {
+      const { api } = setup();
+      await screen.findAllByTestId('chat-message');
+      const m = imsg(api, {
+        sender: { kind: 'student', id: 's_unlinked', name: '•••• 4567' },
+        senderLabel: '•••• 4567 (not linked)',
+      });
+      await waitFor(() => expect(bubble(m.id)).toBeTruthy());
+      expect(within(bubble(m.id)).getByText('via iMessage')).toBeTruthy();
+      expect(within(bubble(m.id)).getByText('•••• 4567 (not linked)')).toBeTruthy();
+      expect(bubble(m.id).textContent).not.toMatch(/\+?\d{10}/);
+    });
+
+    it('updates the delivery state live from chat.sync events', async () => {
+      const { api } = setup();
+      await screen.findAllByTestId('chat-message');
+      const m = imsg(api, {
+        sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+        deliveryState: { state: 'queued', label: 'Sending to iMessage', updatedAt: 1 },
+      });
+      await waitFor(() => expect(bubble(m.id)).toBeTruthy());
+      expect(within(bubble(m.id)).getByText('Sending to iMessage')).toBeTruthy();
+      for (const [state, label] of [
+        ['sent', 'Sent to iMessage'],
+        ['delivered', 'Delivered'],
+        ['dry_run', 'Dry run, not sent'],
+        ['web_only', 'Web only, not sent to iMessage'],
+      ] as const) {
+        act(() =>
+          api.pushSync({
+            chatId: GROUP_ID,
+            messageId: m.id,
+            patch: { deliveryState: { state, label, updatedAt: 2 } },
+          }),
+        );
+        await waitFor(() => expect(within(bubble(m.id)).getByText(label)).toBeTruthy());
+      }
+    });
+
+    it('a failed delivery offers Retry, which calls the hub retry route', async () => {
+      const { api } = setup();
+      await screen.findAllByTestId('chat-message');
+      const m = imsg(api, {
+        sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+        deliveryState: { state: 'queued', label: 'Sending to iMessage', updatedAt: 1 },
+      });
+      await waitFor(() => expect(bubble(m.id)).toBeTruthy());
+      act(() =>
+        api.pushSync({
+          chatId: GROUP_ID,
+          messageId: m.id,
+          patch: {
+            deliveryState: { state: 'failed', label: 'Failed: transport error', updatedAt: 2 },
+          },
+        }),
+      );
+      const retry = await within(bubble(m.id)).findByRole('button', { name: 'Retry' });
+      fireEvent.click(retry);
+      await waitFor(() => expect(api.retried).toEqual([m.id]));
+    });
+
+    it('a plain web message shows no iMessage chrome', async () => {
+      setup();
+      await screen.findAllByTestId('chat-message');
+      expect(screen.queryByText('via iMessage')).toBeNull();
+      expect(screen.queryByLabelText('iMessage sync')).toBeNull();
+    });
+  });
+
   it('renders a study plan card with an Open plan link', async () => {
     const { api } = setup();
     api.pushMessage({

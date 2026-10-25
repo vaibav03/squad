@@ -703,3 +703,46 @@
     bottom: calc(var(--lv-s4) + 116px);
   }
 }
+
+/* run strip: mode badge, current step, who is on the council */
+.cn-strip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+}
+.cn-strip__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+.cn-strip__stage {
+  color: var(--lv-text-dim);
+  font: 500 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
+}
+.cn-strip__agents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cn-strip__agent {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border: 1px solid var(--lv-line);
+  border-radius: var(--lv-r3);
+  font: 500 var(--text-xs, 12px) / 1.4 var(--lv-font-ui);
+}
+.cn-strip__agent[data-state='failed'] {
+  border-style: dashed;
+}
+.cn-strip__state {
+  color: var(--lv-text-dim);
+}
+.cn-board-btn {
+  align-self: flex-start;
+}

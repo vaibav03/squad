@@ -4,6 +4,8 @@ One squad-scoped, versioned plan object lives in the hub. Chat, the village pane
 
 Code: contract `packages/core/src/plan.ts`; hub `apps/hub/src/plans/{logic,service,store,routes,context,port}.ts`; chat skill `apps/bot/src/plan/{skill,port,nudges}.ts`; web `packages/web/src/overlays/plan/`; village landmark `packages/village/src/scenes/plan.ts`.
 
+Chat entry points: `@cubbie study plan for the exam on <date>`, and `@planner study plan ...` (the planner persona routes plan intents: `study plan` starts this flow, `trip` starts the trip flow in docs/trip-planning.md; other `@planner` messages stay a persona answer).
+
 ## Object model
 
 `Plan` (table `hub_plans`, one JSON row, written through on every change)

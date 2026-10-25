@@ -63,7 +63,7 @@ export function createCouncilSkill(service: CouncilService, opts: CouncilSkillOp
       if (q === null) return 0;
       return m.mentionsBot ? 0.97 : 0.3;
     },
-    async handle(m): Promise<OutboundMessage[]> {
+    async handle(m, ctx): Promise<OutboundMessage[]> {
       const question = councilQuestion(m.text);
       if (!question || question.length < 3) return [{ chatId: m.chatId, text: COUNCIL_USAGE }];
       try {
@@ -73,8 +73,28 @@ export function createCouncilSkill(service: CouncilService, opts: CouncilSkillOp
           chatId: m.chatId,
           ...(opts.courseId ? { courseId: opts.courseId(m) } : {}),
         });
+        // The run card goes out at once so the board can be opened and watched while the council works. The card
+        // keeps itself current from the run; the closing text then needs no footer (and no second card).
+        let early = false;
+        try {
+          if (typeof ctx?.send !== 'function') throw new Error('no early send');
+          await ctx.send({
+            chatId: m.chatId,
+            text: 'The council is meeting. Open the board to watch who is asked what, step by step.',
+            card: { type: 'council', runId: run.id },
+          });
+          early = true;
+        } catch {
+          // no early card: the closing reply carries the run footer as before
+        }
         const r = await run.done;
-        return [{ chatId: m.chatId, text: formatCouncilReply(r) }];
+        const text = formatCouncilReply(r);
+        return [
+          {
+            chatId: m.chatId,
+            text: early ? text.replace(/\n?\(council run cn_[a-z0-9]{12}\)\s*$/, '') : text,
+          },
+        ];
       } catch (e) {
         if (e instanceof CouncilBusyError)
           return [{ chatId: m.chatId, text: e.code === 'busy' ? COUNCIL_BUSY : COUNCIL_RATE }];

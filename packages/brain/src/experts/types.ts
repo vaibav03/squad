@@ -23,9 +23,14 @@ export interface ExpertAnswer {
   claims: Claim[]; // the verified claims the text was assembled from (empty when ungrounded)
   chapters: string[]; // chapter ids consulted
   struck: number; // claims dropped by the checker (for logs/evals)
+  /** Set when the answer is the honest "nothing is connected" reply instead of a not-in-the-materials refusal. */
+  reason?: 'nothing_connected';
 }
 
 export const NOT_IN_MATERIALS = 'Not in the materials. Ask the TA.';
+/** The honest reply to a course/Canvas/Drive question when the asker has connected nothing (V1). */
+export const NOTHING_CONNECTED =
+  'Nothing is connected yet: connect Canvas or Google in [Connections](/squad/connections).';
 
 /** One claim the expert model asserts, to be verified in code. */
 export interface Claim {

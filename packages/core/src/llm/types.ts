@@ -50,6 +50,13 @@ export interface LlmRequest {
   temperature?: number;
   maxTokens?: number;
   maxToolRounds?: number; // default 5
+  /**
+   * Function-calling mode. `any` forces a function call (Gemini mode ANY), optionally limited to `allow` names;
+   * `auto` (default) lets the model answer in text.
+   */
+  toolChoice?: { mode: 'auto' | 'any' | 'none'; allow?: string[] };
+  /** Reasoning effort hint (Gemini 3 thinkingLevel). Thinking text is never returned either way. */
+  thinking?: 'minimal' | 'low' | 'medium' | 'high';
   signal?: AbortSignal;
 }
 

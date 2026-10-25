@@ -18,7 +18,8 @@ import { verifyQuote } from './quote';
 const enc = (s: string) => new TextEncoder().encode(s);
 
 describe('config guard', () => {
-  const prod = (env: Record<string, string>) => loadHubConfig({ NODE_ENV: 'production', ...env });
+  const prod = (env: Record<string, string>) =>
+    loadHubConfig({ NODE_ENV: 'production', SESSION_SECRET: 's'.repeat(32), ...env });
   it('refuses default secrets, seed, sim and wildcard CORS in production', () => {
     const codes = checkConfig(prod({}))
       .filter((p) => p.level === 'fatal')

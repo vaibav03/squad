@@ -40,7 +40,6 @@ const delegateAll = () =>
       call('delegate', { to: k, question: `Plan as ${k}`, why: `ask ${k}` }),
     ),
   );
-const plan = () => submit({ summary: 'Asked the planners.', stance: 'waiting' });
 const verdict = () =>
   submit({
     summary: 'Here is the checked plan.',
@@ -54,7 +53,7 @@ const rank = () => submit({ summary: 'Fits the limits.', stance: 'ranked', order
 
 function happy(): FakeTransport {
   return new FakeTransport()
-    .script(ID('chairman'), delegateAll(), plan(), verdict())
+    .script(ID('chairman'), delegateAll(), verdict())
     .script(ID('chill'), opinion(3), rank())
     .script(ID('grind'), opinion(5), rank())
     .script(ID('advisor'), opinion(4), rank());
@@ -132,7 +131,7 @@ describe('round table on the agent runtime', () => {
 
   it('402 mid-run: that planner is degraded, no scripted text, the plan is still checked', async () => {
     const real = new FakeTransport()
-      .script(ID('chairman'), delegateAll(), plan(), verdict())
+      .script(ID('chairman'), delegateAll(), verdict())
       .script(ID('chill'), opinion(3), rank())
       .script(ID('grind'), new LlmError('credits_depleted', 'prepay', 402))
       .script(ID('advisor'), opinion(4), rank());
@@ -153,7 +152,7 @@ describe('round table on the agent runtime', () => {
   it('every planner failing yields a rules plan labelled degraded, not scripted', async () => {
     const e = new LlmError('credits_depleted', 'prepay', 402);
     const real = new FakeTransport()
-      .script(ID('chairman'), delegateAll(), plan(), verdict())
+      .script(ID('chairman'), delegateAll(), verdict())
       .script(ID('chill'), e)
       .script(ID('grind'), e)
       .script(ID('advisor'), e);
@@ -168,7 +167,7 @@ describe('round table on the agent runtime', () => {
   it('chair failure: code delegates, the checked plan still ships, chair is degraded', async () => {
     const t = Object.assign(new Error('timeout'), { name: 'TimeoutError' });
     const real = new FakeTransport()
-      .script(ID('chairman'), t, t)
+      .script(ID('chairman'), t, t, t, t)
       .script(ID('chill'), opinion(3), rank())
       .script(ID('grind'), opinion(5), rank())
       .script(ID('advisor'), opinion(4), rank());
@@ -191,24 +190,26 @@ describe('round table on the agent runtime', () => {
           call('delegate', { to: 'chill', question: 'q2', why: 'w' }),
           call('delegate', { to: 'nobody', question: 'q', why: 'w' }),
         ),
-        plan(),
         verdict(),
       )
       .script(ID('chill'), opinion(3))
       .script(ID('grind'), opinion(5))
       .script(ID('advisor'), opinion(4));
-    const { agents, emit } = setup(real);
+    const { agents, emit, events } = setup(real);
     await runCoursePlanAgents({ emit, agents }, input);
-    const results = JSON.stringify(real.inputsOf(ID('chairman'))[1]);
-    expect(results).toMatch(/already delegated to chill/);
-    expect(results).toMatch(/unknown specialist/);
+    // the duplicate and the unknown target were refused by code: exactly one delegation to chill, none to nobody
+    const delegations = events.flatMap((e) =>
+      e.t === 'a2a.message' && e.msg.kind === 'delegate' ? [e.msg] : [],
+    );
+    expect(delegations.filter((m) => m.to === ID('chill'))).toHaveLength(1);
+    expect(delegations.some((m) => m.to.includes('nobody'))).toBe(false);
     // chill answered once only
     expect(real.queues.get(ID('chill'))).toHaveLength(0);
   });
 
   it('privacy sentinels never reach any public text or envelope', async () => {
     const real = new FakeTransport()
-      .script(ID('chairman'), delegateAll(), plan(), verdict())
+      .script(ID('chairman'), delegateAll(), verdict())
       .script(
         ID('chill'),
         step(call('mastery_summary', {})),

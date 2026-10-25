@@ -101,9 +101,11 @@ describe('http chat api', () => {
     const got: number[] = [];
     const states: string[] = [];
     const resync = vi.fn();
+    const syncs: string[] = [];
     const h: StreamHandlers = {
       onMessage: (m) => got.push(m.seq),
       onUpdate: () => {},
+      onSync: (e) => syncs.push(`${e.messageId}:${e.patch.deliveryState?.state}`),
       onTyping: () => {},
       onResync: resync,
       onState: (s) => states.push(s),
@@ -120,6 +122,15 @@ describe('http chat api', () => {
     sources[0]!.listeners.get('chat.resync')!({
       data: JSON.stringify({ seq: 11 }),
     } as MessageEvent);
+    sources[0]!.listeners.get('chat.sync')!({
+      data: JSON.stringify({
+        chatId: 'group:sq_demo',
+        messageId: 'm_9',
+        patch: { deliveryState: { state: 'delivered', label: 'Delivered', updatedAt: 3 } },
+      }),
+    } as MessageEvent);
+    sources[0]!.listeners.get('chat.sync')!({ data: '{"bad":1}' } as MessageEvent);
+    expect(syncs).toEqual(['m_9:delivered']);
     expect(got).toEqual([9]);
     expect(resync).toHaveBeenCalledWith(11);
     // the browser gave up (stale stream token): reopen with a fresh token after the last seq we saw
