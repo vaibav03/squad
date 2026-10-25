@@ -18,7 +18,7 @@ const msg = (
     sender:
       kind === 'student'
         ? { kind, id: 's_ana', name: 'Ana' }
-        : { kind, id: 'cubbie', name: 'Cubbie' },
+        : { kind, id: 'cubbie', name: 'Squad' },
     text,
     private: false,
     attachments: [],
@@ -112,5 +112,32 @@ describe('collapseRepeatedPairs', () => {
       msg('persona', 'A different explanation.', 2100),
     ]);
     expect(out).toHaveLength(4);
+  });
+
+  it('a dry-run answer and a later live answer with identical text stay two events with their own status', () => {
+    const dry = { transport: 'imessage' as const, deliveryState: { state: 'dry_run' as const, label: 'Dry run, not sent', updatedAt: 1100 } };
+    const live = { transport: 'imessage' as const, provider: 'sendblue' as const, externalId: 'sb-1', deliveryState: { state: 'delivered' as const, label: 'Delivered', updatedAt: 9100 } };
+    const out = collapseRepeatedPairs([
+      msg('student', '@cubbie plan', 1000),
+      msg('persona', 'plan A', 1100, dry),
+      msg('student', '@cubbie plan', 9000),
+      msg('persona', 'plan A', 9100, live),
+    ]);
+    expect(out).toHaveLength(4);
+    expect(out[1]!.deliveryState!.state).toBe('dry_run');
+    expect(out[3]!.deliveryState!.state).toBe('delivered');
+    expect(out.some((m) => m.repeat)).toBe(false);
+  });
+  it('web and imessage copies of the same text are not merged; identical web re-asks still are', () => {
+    const out = collapseRepeatedPairs([
+      msg('student', 'hi', 1000, { transport: 'web' }),
+      msg('persona', 'yo', 1100),
+      msg('student', 'hi', 2000, { transport: 'imessage', externalId: 'x' }),
+      msg('persona', 'yo', 2100),
+      msg('student', 'hi', 3000, { transport: 'web' }),
+      msg('persona', 'yo', 3100),
+    ]);
+    expect(out.map((m) => m.text)).toEqual(['hi', 'yo', 'hi', 'yo']);
+    expect(out[0]!.repeat).toBe(2);
   });
 });

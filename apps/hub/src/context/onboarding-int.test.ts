@@ -211,7 +211,7 @@ describe('course records, account card, scope words', () => {
     expect(hit.courseCode).toBe('HIST 140');
     expect(hit.citation.source.courseName).toBe('HIST 140: Modern World History');
     expect(courseLabel(hit)).toBe('HIST 140: Modern World History');
-    // Ask Cubbie ref
+    // Ask Squad ref
     const ref = (await call('GET', `/v1/chat/context-ref?sourceId=${hit.sourceId}`, 's_ana')).json;
     if (ref?.ref) expect(ref.ref.courseName).toBe('HIST 140: Modern World History');
     // demo due dates: >= 2 within 1-6 days, the rest within 8-14

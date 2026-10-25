@@ -1,4 +1,4 @@
-// "Ask Cubbie": an imported item attached to a chat message is verified by the hub, answered from with real-vs-fixture
+// "Ask Squad": an imported item attached to a chat message is verified by the hub, answered from with real-vs-fixture
 // citations, never leaks a private calendar event to the squad, and the same imports seed a persisted, cited study plan.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ChatMessageSchema, type ChatMessage, type PlanView } from '@squad/core';

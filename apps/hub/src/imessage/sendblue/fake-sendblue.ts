@@ -45,6 +45,7 @@ export interface FakeSendblue {
     headers?: Record<string, string>;
     secret?: string | null;
     raw?: (body: string) => string;
+    path?: string;
   }): Promise<Response>;
   /** A status callback for a message handle. */
   status(h: {
@@ -176,7 +177,7 @@ export async function startFakeSendblue(o: FakeSendOptions): Promise<FakeSendblu
         sendblue_number: '+15550009999',
       };
       const body = (m.raw ?? ((b) => b))(JSON.stringify(payload));
-      return deliver('/v1/webhooks/sendblue', body, m.secret, m.headers);
+      return deliver(m.path ?? '/v1/webhooks/sendblue', body, m.secret, m.headers);
     },
     status(h) {
       const body = JSON.stringify({

@@ -31,7 +31,7 @@ const msg = (
     chatId: 'group:g',
     ts,
     sender:
-      kind === 'student' ? { kind, id: 'me', name: 'Me' } : { kind, id: 'cubbie', name: 'Cubbie' },
+      kind === 'student' ? { kind, id: 'me', name: 'Me' } : { kind, id: 'cubbie', name: 'Squad' },
     text,
     private: false,
     attachments: [],
@@ -68,7 +68,7 @@ describe('ChatCouncilCard', () => {
     fireEvent.click(first);
     expect(rows[0]!.textContent).toContain(f.done.members[0]!.text.slice(0, 20));
     fireEvent.click(within(card).getByTestId('council-follow-up'));
-    expect(fill).toHaveBeenCalledWith('@cubbie ask the council: ');
+    expect(fill).toHaveBeenCalledWith('@squad ask the council: ');
   });
 
   it('is the only visible text: the plain verdict is screen-reader only', () => {
@@ -89,7 +89,7 @@ describe('ChatCouncilCard', () => {
 
 describe('redelivery and waiting', () => {
   it('hides the same z-score answer delivered three times for one trigger', () => {
-    const q = msg('student', '@cubbie what is a z-score?', 1000);
+    const q = msg('student', '@squad what is a z-score?', 1000);
     const a = (i: number) =>
       msg('persona', 'A z-score is a distance in standard deviations.', 1100 + i, {
         replyTo: q.message.id,
@@ -107,7 +107,7 @@ describe('redelivery and waiting', () => {
     expect(out.map((i) => i.message.text)).toEqual(['q', 'same', 'different']);
   });
   it('drops a "Not in the materials" fallback that trails a cited answer for the same trigger', () => {
-    const q = msg('student', '@cubbie what is a z-score?', 1000);
+    const q = msg('student', '@squad what is a z-score?', 1000);
     const real = msg('persona', 'A z-score is a distance in standard deviations.', 1100, {
       replyTo: q.message.id,
       citations: [{ file: 'ch6.pdf', page: 2, label: 'ch6.pdf p.2' }],
@@ -121,8 +121,8 @@ describe('redelivery and waiting', () => {
     expect(dropRedelivered([q, fb])).toHaveLength(2);
   });
   it('one waiting entry per unanswered trigger, none once answered', () => {
-    const q1 = msg('student', '@cubbie one', Date.now() - 1000, { clientId: 'c1' });
-    const q2 = msg('student', '@cubbie two', Date.now() - 500, { clientId: 'c2' });
+    const q1 = msg('student', '@squad one', Date.now() - 1000, { clientId: 'c1' });
+    const q2 = msg('student', '@squad two', Date.now() - 500, { clientId: 'c2' });
     const w = waitingTriggers([q1, q2], 'me', false, Date.now());
     expect(w.map((x) => x.clientId)).toEqual(['c1', 'c2']);
     const ans = msg('persona', 'hi', Date.now(), { replyTo: q1.message.id });
@@ -146,12 +146,12 @@ describe('AnswerWait', () => {
     vi.useFakeTimers();
     try {
       const t0 = Date.now();
-      const q = msg('student', '@cubbie what is a z-score?', t0, { clientId: 'c_1' });
+      const q = msg('student', '@squad what is a z-score?', t0, { clientId: 'c_1' });
       const retryAnswer = vi.fn(async () => true);
       const ctl = { me: 'me', online: true, retryAnswer } as unknown as ChatController;
       render(<AnswerWait chat={chat} ctl={ctl} items={[q]} reduced typing={[]} />);
       expect(screen.getAllByTestId('chat-wait')).toHaveLength(1);
-      expect(screen.getByTestId('chat-wait-text').textContent).toBe('Cubbie is thinking…');
+      expect(screen.getByTestId('chat-wait-text').textContent).toBe('Squad is thinking…');
       expect(screen.queryByTestId('chat-wait-retry')).toBeNull();
       await act(async () => {
         vi.advanceTimersByTime(9000);
@@ -172,7 +172,7 @@ describe('AnswerWait', () => {
     }
   });
   it('a failed retry shows one "Could not get an answer" row', async () => {
-    const q = msg('student', '@cubbie hi', Date.now() - 20000, { clientId: 'c_2' });
+    const q = msg('student', '@squad hi', Date.now() - 20000, { clientId: 'c_2' });
     const ctl = {
       me: 'me',
       online: true,

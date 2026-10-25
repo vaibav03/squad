@@ -85,7 +85,7 @@ export function SendblueSetup({ info }: { info: SendblueSetupInfo }) {
         </li>
         <li>
           In the iMessage group send <code>join &lt;invite code&gt;</code>; then{' '}
-          <code>@cubbie</code> messages appear in the same Squad thread.
+          <code>@squad</code> messages appear in the same Squad thread.
         </li>
       </ol>
       {isLocal(info.webhookUrl) ? (

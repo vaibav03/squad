@@ -98,7 +98,7 @@ describe('repl', () => {
     await repl.execute('/nope');
     await repl.execute('/help');
     const text = out.join('\n');
-    expect(text).toMatch(/\[group:test\] .*Cubbie: hey there/);
+    expect(text).toMatch(/\[group:test\] .*Squad: hey there/);
     expect(text).toMatch(/RUN \(mentioned\) -> chat/);
     expect(text).toMatch(/unknown command \/nope/);
     expect(text).toMatch(/\/record <file>/);
@@ -109,7 +109,7 @@ describe('repl', () => {
     await repl.execute('/group study');
     expect(repl.prompt()).toBe('s_ben@group:study> ');
     await repl.execute('just banter');
-    expect(out.filter((l) => l.includes('Cubbie'))).toHaveLength(0);
+    expect(out.filter((l) => l.includes('Squad'))).toHaveLength(0);
     await repl.execute('/dm');
     await repl.execute('hi');
     expect(out.join('\n')).toMatch(/\[dm -> s_ben\]/);

@@ -111,7 +111,7 @@ export function ContextGate({
             {GATE_TITLE}
           </h2>
           <p style={{ margin: 0 }}>
-            Cubbie reads your courses, assignments and calendar, read-only, and shares nothing with
+            Squad reads your courses, assignments and calendar, read-only, and shares nothing with
             your squad unless you choose.
           </p>
           <p style={{ margin: 0 }}>

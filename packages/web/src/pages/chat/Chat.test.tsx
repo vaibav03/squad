@@ -141,20 +141,20 @@ describe('thread rendering', () => {
     const { container, api } = setup();
     await screen.findAllByTestId('chat-message');
     expect(container.querySelector('.sqc--reduced')).toBeTruthy();
-    act(() => api.pushTyping({ chatId: GROUP_ID, personaId: 'cubbie', name: 'Cubbie', on: true }));
-    expect((await screen.findByTestId('chat-typing')).textContent).toContain('Cubbie is thinking');
+    act(() => api.pushTyping({ chatId: GROUP_ID, personaId: 'cubbie', name: 'Squad', on: true }));
+    expect((await screen.findByTestId('chat-typing')).textContent).toContain('Squad is thinking');
   });
 
   it('typing dots clear when the bot answers', async () => {
     const { api } = setup();
     await screen.findAllByTestId('chat-message');
-    act(() => api.pushTyping({ chatId: GROUP_ID, personaId: 'cubbie', name: 'Cubbie', on: true }));
+    act(() => api.pushTyping({ chatId: GROUP_ID, personaId: 'cubbie', name: 'Squad', on: true }));
     await screen.findByTestId('chat-typing');
     act(() => {
       api.pushMessage({
         chatId: GROUP_ID,
         ts: Date.now(),
-        sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+        sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
         text: 'done',
         private: false,
         attachments: [],
@@ -168,9 +168,9 @@ describe('thread rendering', () => {
   it('shows an empty thread with quick prompts that fill the composer', async () => {
     setup(GROUP_ID, { empty: true });
     const chips = await screen.findAllByTestId('chat-prompt');
-    expect(chips.map((c) => c.textContent)).toContain('@cubbie what is a z-score?');
+    expect(chips.map((c) => c.textContent)).toContain('@squad what is a z-score?');
     fireEvent.click(chips[0]!);
-    await waitFor(async () => expect((await input()).value).toBe('@cubbie what is a z-score?'));
+    await waitFor(async () => expect((await input()).value).toBe('@squad what is a z-score?'));
   });
 
   it('shows the designed offline state with no hub', () => {
@@ -277,7 +277,7 @@ describe('composer', () => {
     const list = await screen.findByRole('listbox');
     const opts = within(list).getAllByRole('option');
     expect(opts.map((o) => o.textContent)).toEqual([
-      expect.stringContaining('@cubbie'),
+      expect.stringContaining('@squad'),
       expect.stringContaining('@squad'),
     ]);
     expect(box.getAttribute('aria-activedescendant')).toBe(opts[0]!.id);
@@ -294,7 +294,7 @@ describe('composer', () => {
     await userEvent.type(box, '@cu');
     expect(within(await screen.findByRole('listbox')).getAllByRole('option')).toHaveLength(1);
     await userEvent.keyboard('{Tab}');
-    expect(box.value).toBe('@cubbie ');
+    expect(box.value).toBe('@squad ');
     // the caret is restored on the next frame; a person cannot type faster than that
     await new Promise((r) => requestAnimationFrame(() => r(null)));
     await userEvent.type(box, ' and @');
@@ -365,7 +365,7 @@ describe('citations', () => {
     api.pushMessage({
       chatId: GROUP_ID,
       ts: Date.now(),
-      sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+      sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
       text: 'The council answered.',
       private: false,
       attachments: [],
@@ -413,7 +413,7 @@ describe('citations', () => {
       const { api } = setup();
       await screen.findAllByTestId('chat-message');
       const m = imsg(api, {
-        sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+        sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
         deliveryState: { state: 'queued', label: 'Sending to iMessage', updatedAt: 1 },
       });
       await waitFor(() => expect(bubble(m.id)).toBeTruthy());
@@ -439,7 +439,7 @@ describe('citations', () => {
       const { api } = setup();
       await screen.findAllByTestId('chat-message');
       const m = imsg(api, {
-        sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+        sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
         deliveryState: { state: 'queued', label: 'Sending to iMessage', updatedAt: 1 },
       });
       await waitFor(() => expect(bubble(m.id)).toBeTruthy());
@@ -470,7 +470,7 @@ describe('citations', () => {
     api.pushMessage({
       chatId: GROUP_ID,
       ts: Date.now(),
-      sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+      sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
       text: 'Proposed a study plan.',
       private: false,
       attachments: [],
@@ -489,7 +489,7 @@ describe('citations', () => {
     api.pushMessage({
       chatId: GROUP_ID,
       ts: Date.now(),
-      sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+      sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
       text: 'See [ch9.pdf p.2]',
       private: false,
       attachments: [],
@@ -512,7 +512,7 @@ describe('cards', () => {
     const { api } = setup();
     const b = await screen.findByTestId('chat-quiz-choice-B');
     fireEvent.click(b);
-    await waitFor(() => expect(api.sent).toMatchObject([{ chatId: GROUP_ID, text: '@cubbie B' }]));
+    await waitFor(() => expect(api.sent).toMatchObject([{ chatId: GROUP_ID, text: '@squad B' }]));
     const sent = await screen.findByTestId('chat-quiz-sent');
     expect(sent.textContent).toContain('Answer sent, feedback in your DM');
     expect((screen.getByTestId('chat-quiz-choice-A') as HTMLButtonElement).disabled).toBe(true);
@@ -587,7 +587,7 @@ describe('unread', () => {
       api.pushMessage({
         chatId: DM_ID,
         ts: Date.now(),
-        sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+        sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
         text: 'ping',
         private: true,
         attachments: [],
@@ -638,7 +638,7 @@ describe('village dock', () => {
 const botMsg = (text: string, extra: Record<string, unknown> = {}) => ({
   chatId: GROUP_ID,
   ts: Date.now(),
-  sender: { kind: 'persona' as const, id: 'cubbie', name: 'Cubbie' },
+  sender: { kind: 'persona' as const, id: 'cubbie', name: 'Squad' },
   text,
   private: false,
   attachments: [],
@@ -734,7 +734,7 @@ describe('review fixes', () => {
     const own = msgs.find((m) => m.getAttribute('data-own'))!;
     expect(own.querySelector('.sq-sr-only')?.textContent).toBe('You: ');
     const bot = msgs.find((m) => m.getAttribute('data-sender-id') === 'cubbie')!;
-    expect(bot.querySelector('.sq-sr-only')?.textContent).toBe('Cubbie, bot: ');
+    expect(bot.querySelector('.sq-sr-only')?.textContent).toBe('Squad, bot: ');
     const chip = screen.getAllByTestId('chat-citation-chip')[0]!;
     expect(chip.getAttribute('aria-label')).toBe('Source: chapter 6, page 4');
   });

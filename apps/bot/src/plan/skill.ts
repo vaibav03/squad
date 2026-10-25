@@ -1,4 +1,4 @@
-// `@cubbie study plan for the exam on <date>` in a group creates a shared plan; numbered replies and `done <item>` update it.
+// `@squad study plan for the exam on <date>` in a group creates a shared plan; numbered replies and `done <item>` update it.
 // The group never waits on a private DM: a progress line goes out first, then the card or a clear error.
 import {
   parseDoneReport,
@@ -114,7 +114,7 @@ export function createSharedPlanSkill(deps: SharedPlanSkillDeps): Skill {
         // propose
         if (!m.isGroup) {
           const note =
-            'Study plans are shared with your whole squad, so start one in the squad chat: "@cubbie study plan for the exam on Nov 4". Here I can show your own part: say "show plan".';
+            'Study plans are shared with your whole squad, so start one in the squad chat: "@squad study plan for the exam on Nov 4". Here I can show your own part: say "show plan".';
           return [{ chatId: m.chatId, text: note }];
         }
         const clause = EXAM_CLAUSE.exec(m.text)?.[1] ?? ON_CLAUSE.exec(m.text)?.[1];
@@ -123,7 +123,7 @@ export function createSharedPlanSkill(deps: SharedPlanSkillDeps): Skill {
           return [
             {
               chatId: m.chatId,
-              text: `I could not read "${clause.trim()}" as a date. Try "@cubbie study plan for the exam on Nov 4" or an ISO date like 2026-11-04.`,
+              text: `I could not read "${clause.trim()}" as a date. Try "@squad study plan for the exam on Nov 4" or an ISO date like 2026-11-04.`,
             },
           ];
         // progress first, so the group never sits on "thinking" with nothing to read

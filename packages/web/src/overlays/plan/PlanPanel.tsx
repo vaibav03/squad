@@ -221,7 +221,7 @@ export function PlanPanel(props: PlanPanelProps) {
           <section className="rr-sec" data-testid="plan-empty">
             <h3 className="rr-sec__h">No study plan yet</h3>
             <p className="rr-sec__p rr-dim">
-              Propose one here or ask Cubbie in the group chat, for example "@cubbie study plan for
+              Propose one here or ask Squad in the group chat, for example "@squad study plan for
               the exam on 10 Nov". The whole squad gets the proposal to accept.
             </p>
             {props.onPropose && <ProposeForm busy={busy} onPropose={props.onPropose} />}
@@ -241,11 +241,11 @@ export function PlanPanel(props: PlanPanelProps) {
                 className="lv-btn lv-btn--primary"
                 data-testid="plan-ask"
                 onClick={() => {
-                  props.onAsk?.('@cubbie study plan');
+                  props.onAsk?.('@squad study plan');
                   onClose();
                 }}
               >
-                Ask Cubbie to plan
+                Ask Squad to plan
               </button>
             )}
           </section>

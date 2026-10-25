@@ -16,12 +16,12 @@ const chapter = (n: 1 | 2 | 3 | 4): RoomInfo => ({
       name: 'Chapter expert',
       does: 'Asks questions built from your slides and tells you if your answer is right.',
     },
-    { name: 'Cubbie', does: 'Remembers what you missed and brings it back later so it sticks.' },
+    { name: 'Squad', does: 'Remembers what you missed and brings it back later so it sticks.' },
   ],
   how: {
-    phrase: `@cubbie quiz me on ch${n}`,
+    phrase: `@squad quiz me on ch${n}`,
     steps: [
-      `Type the phrase in your squad chat (or DM Cubbie).`,
+      `Type the phrase in your squad chat (or DM Squad).`,
       'Answer each question with a letter or a few words.',
       'Walk in to read the questions and answers as they happen.',
     ],
@@ -54,7 +54,7 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       },
     ],
     how: {
-      phrase: '@cubbie quiz me on ch2',
+      phrase: '@squad quiz me on ch2',
       steps: [
         'Ask for a quiz as usual; the hall works in the background when a new question is made.',
         'It only runs when answer-key checking is switched on for your squad.',
@@ -82,17 +82,17 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       },
     ],
     how: {
-      phrase: '@cubbie debate should exams be open book?',
+      phrase: '@squad debate should exams be open book?',
       steps: [
-        'Type the phrase with any question worth arguing, or "@cubbie debate this" for the last message.',
-        'Watch the two sides speak, then vote in the confirm card Cubbie sends you.',
+        'Type the phrase with any question worth arguing, or "@squad debate this" for the last message.',
+        'Watch the two sides speak, then vote in the confirm card Squad sends you.',
         'Read the chairman verdict in the room or in chat.',
       ],
     },
     outcome:
       'Both arguments, how the room voted, and the chairman verdict with the reason, plus any dissent. Course topics cite the page; others are labelled general reasoning.',
     privacy:
-      'Only the question and the arguments are shared. Each vote is a private reply to Cubbie; the squad sees only the totals.',
+      'Only the question and the arguments are shared. Each vote is a private reply to Squad; the squad sees only the totals.',
   },
   'round-table': {
     slot: 'round-table',
@@ -106,7 +106,7 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       { name: 'Chairman', does: 'Merges the three views into one plan.' },
     ],
     how: {
-      phrase: '@cubbie plan my next semester',
+      phrase: '@squad plan my next semester',
       steps: [
         'Type the phrase in chat and list the courses you are considering.',
         'Watch the advisors speak in turn, then rank each other.',
@@ -129,19 +129,19 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
         name: 'Freshman',
         does: 'Plays a curious beginner and asks up to two naive follow-up questions.',
       },
-      { name: 'Cubbie', does: 'Gives you short written feedback on your explanation at the end.' },
+      { name: 'Squad', does: 'Gives you short written feedback on your explanation at the end.' },
     ],
     how: {
-      phrase: '@cubbie feynman ch3 gradient descent',
+      phrase: '@squad feynman ch3 gradient descent',
       steps: [
         'Type the phrase with your chapter and the idea you want to explain.',
         'Reply with your explanation, then answer the follow-ups.',
-        'Read the feedback Cubbie sends back.',
+        'Read the feedback Squad sends back.',
       ],
     },
     outcome:
       'Follow-up questions at the spots where your explanation was fuzzy, then feedback on what to tighten. The porch lights up while you are working through it.',
-    privacy: 'Your explanation is private to your chat with Cubbie; the squad is not shown it.',
+    privacy: 'Your explanation is private to your chat with Squad; the squad is not shown it.',
   },
   'panic-booth': {
     slot: 'panic-booth',
@@ -151,7 +151,7 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       'When you and a friend got different answers, find the first step where your working diverges.',
     who: [
       {
-        name: 'Cubbie',
+        name: 'Squad',
         does: 'Reads the photos of your handwritten steps and lines them up against each other.',
       },
       {
@@ -160,17 +160,17 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       },
     ],
     how: {
-      phrase: '@cubbie diff',
+      phrase: '@squad diff',
       steps: [
-        'Say it in the group chat; two of you then DM Cubbie a photo of your work.',
+        'Say it in the group chat; two of you then DM Squad a photo of your work.',
         'Add the word private to compare without showing any steps.',
-        'Cubbie replies once both photos are in.',
+        'Squad replies once both photos are in.',
       ],
     },
     outcome:
       'The first step where your two solutions differ, not who is right. That concept is queued for both of you to review.',
     privacy:
-      'Photos stay between you and Cubbie. The group only sees the step number where you split.',
+      'Photos stay between you and Squad. The group only sees the step number where you split.',
   },
   'exam-oracle': {
     slot: 'exam-oracle',
@@ -185,7 +185,7 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       },
     ],
     how: {
-      phrase: '@cubbie exam oracle',
+      phrase: '@squad exam oracle',
       steps: [
         'Type the phrase in chat, or ask "what should I study next".',
         'Read the ranked chapters and the three topics, each with a mock question.',
@@ -211,7 +211,7 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       },
     ],
     how: {
-      phrase: '@cubbie oral exam',
+      phrase: '@squad oral exam',
       steps: [
         'Type the phrase in chat, then walk in and press Call.',
         'Answer out loud or type if you have no microphone; captions always show the questions.',
@@ -237,16 +237,16 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       },
     ],
     how: {
-      phrase: '@cubbie rubric check',
+      phrase: '@squad rubric check',
       steps: [
         'Type the phrase with your answer, or attach a photo or PDF of it.',
-        'Paste the rubric, or let Cubbie find it in your syllabus or assignment.',
+        'Paste the rubric, or let Squad find it in your syllabus or assignment.',
         'Read the feedback in chat and in the courthouse.',
       ],
     },
     outcome:
       'A tick or cross for Clarity, Accuracy and Gaps with a comment and a quote from your answer. Feedback only: no grade, and your answer is never rewritten.',
-    privacy: 'Your answer stays between you and Cubbie. The squad sees only that you checked one.',
+    privacy: 'Your answer stays between you and Squad. The squad sees only that you checked one.',
   },
 
   'devils-ta': {
@@ -262,11 +262,11 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       },
     ],
     how: {
-      phrase: "@cubbie devil's TA ch2",
+      phrase: "@squad devil's TA ch2",
       steps: [
-        'Type the phrase with your chapter, or say "@cubbie find my mistake".',
+        'Type the phrase with your chapter, or say "@squad find my mistake".',
         'Reply with the line number or the wrong words. You get two tries.',
-        'Cubbie then reveals the error, explains it and cites the page.',
+        'Squad then reveals the error, explains it and cites the page.',
       ],
     },
     outcome:

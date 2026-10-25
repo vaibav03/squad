@@ -144,7 +144,7 @@ describe('mentions', () => {
     expect(activeMention('hey @cu', 7)).toEqual({ start: 4, query: 'cu' });
     expect(activeMention('@', 1)).toEqual({ start: 0, query: '' });
     expect(activeMention('mail me@cu', 10)).toBeNull();
-    expect(activeMention('hey @cubbie what', 16)).toBeNull();
+    expect(activeMention('hey @squad what', 16)).toBeNull();
   });
   it('matches by prefix and applies with a trailing space', () => {
     expect(matchMentions('').map((o) => o.id)).toEqual(['cubbie', 'squad']);
@@ -153,17 +153,17 @@ describe('mentions', () => {
     const text = 'hey @cu now';
     const mq = activeMention(text, 7)!;
     const r = applyMention(text, 7, mq, matchMentions('cu')[0]!);
-    expect(r.text).toBe('hey @cubbie now');
-    expect(r.caret).toBe(12);
+    expect(r.text).toBe('hey @squad now');
+    expect(r.caret).toBe(11);
   });
   it('sends quiz answers with the mention in a group and bare in a DM', () => {
-    expect(quizAnswerText('group:sq_demo', 'B')).toBe('@cubbie B');
+    expect(quizAnswerText('group:sq_demo', 'B')).toBe('@squad B');
     expect(quizAnswerText('dm:s_ana', 'B')).toBe('B');
   });
   it('knows when the bot is addressed', () => {
     expect(mentionsBot('@Cubbie help')).toBe(true);
     expect(mentionsBot('hello @squad!')).toBe(true);
-    expect(mentionsBot('email@cubbie.org')).toBe(false);
+    expect(mentionsBot('email@squad.org')).toBe(false);
   });
 });
 
@@ -197,7 +197,7 @@ describe('small helpers', () => {
     expect(previewLine({ ...base, last: { text: 'hi', ts: 1, senderName: 'Ben', seq: 1 } })).toBe(
       'Ben: hi',
     );
-    expect(previewLine({ ...base, id: 'dm:s_ana', kind: 'dm' })).toBe('Only you and Cubbie');
+    expect(previewLine({ ...base, id: 'dm:s_ana', kind: 'dm' })).toBe('Only you and Squad');
     expect(
       previewLine({ ...base, last: { text: 'hi', ts: 1, senderName: 'Ana', seq: 1 } }, 'Ana'),
     ).toBe('You: hi');

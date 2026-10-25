@@ -51,7 +51,7 @@ export function AnswerWait({
     if (!ok)
       setFailed((f) => ({
         ...f,
-        [id]: ctl.online ? 'the connection to Cubbie did not respond' : 'you are offline',
+        [id]: ctl.online ? 'the connection to Squad did not respond' : 'you are offline',
       }));
   };
   return (
@@ -79,10 +79,10 @@ export function AnswerWait({
               </>
             ) : phase === 'slow' ? (
               <span data-testid="chat-wait-text">
-                Cubbie is thinking… {secs}s. This is taking longer than usual
+                Squad is thinking… {secs}s. This is taking longer than usual
               </span>
             ) : (
-              <span data-testid="chat-wait-text">Cubbie is thinking…</span>
+              <span data-testid="chat-wait-text">Squad is thinking…</span>
             )}
             {phase !== 'thinking' ? (
               <button

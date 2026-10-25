@@ -12,7 +12,7 @@ export interface ContextAskOptions {
 
 const CAL = new Set(['gcal_event', 'canvas_event']);
 const stripBot = (t: string) =>
-  t.replace(/@cubbie?\b/gi, '').replace(/^\s*(?:hey|hi)\s+cubbie?\b[\s,:;-]*/i, '').trim();
+  t.replace(/@(?:cubbie?|squad)\b/gi, '').replace(/^\s*(?:hey|hi)\s+cubbie?\b[\s,:;-]*/i, '').trim();
 
 const day = (ms: number) =>
   new Date(ms).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' });
@@ -61,7 +61,7 @@ function describe(src: ContextSource, ref: ChatContextRef, text: string, now: nu
 }
 
 /**
- * "Ask Cubbie" handoff: a message carrying hub-verified context refs (structured, never parsed from the text) is
+ * "Ask Squad" handoff: a message carrying hub-verified context refs (structured, never parsed from the text) is
  * answered from exactly those sources, with one citation chip per source carrying title, course/event, location and
  * real-vs-fixture provenance. A private calendar event attached in a group is never described there: the group gets an
  * aggregate sentence and the owner gets the details in their DM.
@@ -118,7 +118,7 @@ export function createContextAskSkill(store: ContextStore, opts: ContextAskOptio
               maxTokens: 300,
               temperature: 0.2,
               system:
-                'You are Cubbie, a study buddy. Answer ONLY from the SOURCE below. 2 to 4 short sentences, plain text, no markdown. If the source does not answer, say so. Never invent dates, scores or details.',
+                'You are Squad, a study buddy. Answer ONLY from the SOURCE below. 2 to 4 short sentences, plain text, no markdown. If the source does not answer, say so. Never invent dates, scores or details.',
               messages: `SOURCE (${fixture ? 'simulated demo data' : 'imported from the student\'s own account'}): ${src.title}\n${text.slice(0, 2500)}\n\nStudent: ${question || 'What should I focus on?'}`,
             });
             if (r.text.trim()) say = `${r.text.trim()}\n\nSource: ${src.title}${ref.courseName ? `, ${ref.courseName}` : ''}${ref.location?.label ? `, ${ref.location.label}` : ''} (${fixture ? 'Fixture, simulated' : 'Real'}).`;

@@ -17,8 +17,8 @@ if (!process.env.PATH?.includes('/opt/homebrew/bin'))
 
 const REFUSAL = 'Not in the materials. Ask the TA.';
 const tick = () => new Promise((r) => setTimeout(r, 5));
-// replies carry the persona prefix ("🐻 Cubbie: ")
-const bare = (s: string | undefined) => (s ?? '').replace(/^\S+ Cubbie: /, '');
+// replies carry the persona prefix ("🐻 Squad: ")
+const bare = (s: string | undefined) => (s ?? '').replace(/^\S+ Squad: /, '');
 const texts = (ms: OutboundMessage[]) => ms.map((m) => bare(m.text)).join('\n');
 // the course itself talks about z-scores, so strip that vocabulary before checking for game words
 const gamey = (s: string) =>

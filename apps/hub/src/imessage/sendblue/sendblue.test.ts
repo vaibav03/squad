@@ -379,7 +379,7 @@ describe('unconfigured and degraded states', () => {
       c.hub.deps.chat.postBot({
         chatId: `group:${c.squadId}`,
         personaId: 'cubbie',
-        personaName: 'Cubbie',
+        personaName: 'Squad',
         text: `note ${i}`,
         citations: [],
         attachments: [],
@@ -463,7 +463,7 @@ describe('inbound: same thread, mapping, dedupe, replay', () => {
     });
   });
   it.each(['@cubbie', '@Cubbie', '@cubbi', '@Cubbi'])(
-    '%s dispatches to Cubbie once; the answer is in the same thread and mirrored out through Sendblue to the group',
+    '%s dispatches to Squad once; the answer is in the same thread and mirrored out through Sendblue to the group',
     async (tag) => {
       await bind();
       const gid = `group:${c.squadId}`;
@@ -477,10 +477,10 @@ describe('inbound: same thread, mapping, dedupe, replay', () => {
       await waitFor(() => personaPosts(gid).length >= 1);
       await settle();
       expect(personaPosts(gid)).toHaveLength(1);
-      expect(personaPosts(gid)[0]!.sender.name).toBe('Cubbie');
+      expect(personaPosts(gid)[0]!.sender.name).toBe('Squad');
       const out = groupSends().slice(before);
       expect(out.length).toBeGreaterThan(0);
-      expect(out[0]).toMatch(/^\u{1F43B} Cubbie: /u);
+      expect(out[0]).toMatch(/^\u{1F43B} Squad: /u);
       expect(c.fake.sent.every((s) => s.endpoint === 'send-group-message')).toBe(true);
     },
   );
@@ -515,7 +515,7 @@ describe('inbound: same thread, mapping, dedupe, replay', () => {
     const unknown = await c.fake.inbound({ from: ZED, content: 'hello?' });
     await settle();
     expect(unknown.status).toBe(200);
-    expect(dmSends(ZED).join(' ')).toMatch(/Squad study bot/);
+    expect(dmSends(ZED).join(' ')).toMatch(/study bot/);
     const sent = c.fake.sent.length;
     await c.fake.inbound({ from: NEWN, content: 'hello?' });
     await settle();
@@ -565,7 +565,7 @@ describe('outbound: allowlist, dry run, kill switch BEFORE any network call', ()
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Cubbie',
+      personaName: 'Squad',
       text: 'study at 7',
       citations: [],
       attachments: [],
@@ -582,7 +582,7 @@ describe('outbound: allowlist, dry run, kill switch BEFORE any network call', ()
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Cubbie',
+      personaName: 'Squad',
       text: 'only for allowed',
       citations: [],
       attachments: [],
@@ -647,7 +647,7 @@ describe('outbound: allowlist, dry run, kill switch BEFORE any network call', ()
       c.hub.deps.chat.postBot({
         chatId: `group:${c.squadId}`,
         personaId: 'cubbie',
-        personaName: 'Cubbie',
+        personaName: 'Squad',
         text: `m${i}`,
         citations: [],
         attachments: [],
@@ -664,7 +664,7 @@ describe('delivery, read and failure status callbacks', () => {
     const m = c.hub.deps.chat.postBot({
       chatId: gid,
       personaId: 'cubbie',
-      personaName: 'Cubbie',
+      personaName: 'Squad',
       text,
       citations: [],
       attachments: [],
@@ -682,6 +682,53 @@ describe('delivery, read and failure status callbacks', () => {
     expect(state()).toMatchObject({ state: 'delivered', label: 'Delivered' });
     await c.fake.status({ handle: rec.handle, status: 'READ' });
     expect(state()).toMatchObject({ state: 'read', label: 'Read' });
+  });
+  describe('status_callback URL token (Sendblue sends no sb-signing-secret on it)', () => {
+    const tokenPath = (rec: { body: Record<string, unknown> }) => {
+      const u = new URL(String(rec.body.status_callback));
+      return `${u.pathname}${u.search}`;
+    };
+    it('the send carries a signed callback URL; a valid token updates delivery state without the header', async () => {
+      const { rec, state } = await sendOne('token ok');
+      const path = tokenPath(rec);
+      expect(path).toMatch(/^\/v1\/webhooks\/sendblue\/status\?t=[0-9a-f]+\.\d+\.[0-9a-f]{32}$/);
+      expect(path).not.toContain(WH);
+      const r = await c.fake.status({ handle: rec.handle, status: 'DELIVERED', secret: null, path });
+      expect(r.status).toBe(200);
+      expect(state()).toMatchObject({ state: 'delivered', label: 'Delivered' });
+      const e = await c.fake.status({ handle: rec.handle, status: 'ERROR', errorCode: 4001, secret: null, path });
+      expect(e.status).toBe(200);
+    });
+    it('missing, wrong, tampered, expired or other-message token is 401 (and the header path still works)', async () => {
+      const a = await sendOne('token a');
+      const b = await sendOne('token b');
+      const path = tokenPath(a.rec);
+      const bad = [
+        '/v1/webhooks/sendblue/status',
+        '/v1/webhooks/sendblue/status?t=',
+        '/v1/webhooks/sendblue/status?t=abc',
+        path.replace(/.$/, (ch) => (ch === '0' ? '1' : '0')),
+        path.replace(/\.(\d+)\./, (_m, n) => `.${Number(n) + 1}.`),
+      ];
+      for (const p of bad) {
+        const r = await c.fake.status({ handle: a.rec.handle, status: 'DELIVERED', secret: null, path: p });
+        expect(r.status).toBe(401);
+      }
+      // a's token cannot be used for b's message handle
+      const cross = await c.fake.status({ handle: b.rec.handle, status: 'DELIVERED', secret: null, path });
+      expect(cross.status).toBe(401);
+      expect(b.state().state).toBe('sent');
+      expect(a.state().state).toBe('sent');
+      // header secret on the status route is unchanged
+      expect((await c.fake.status({ handle: b.rec.handle, status: 'DELIVERED' })).status).toBe(200);
+      expect(b.state().state).toBe('delivered');
+    });
+    it('a status token never authorizes the inbound route', async () => {
+      const { rec } = await sendOne('token inbound');
+      const t = new URL(String(rec.body.status_callback)).search;
+      const r = await c.fake.inbound({ from: ANA, content: 'sneaky', groupId: GID1, secret: null, path: `/v1/webhooks/sendblue${t}` } as any);
+      expect(r.status).toBe(401);
+    });
   });
   it('out-of-order and duplicate callbacks never move a state backwards', async () => {
     const { rec, state } = await sendOne('order check');
@@ -716,7 +763,7 @@ describe('delivery, read and failure status callbacks', () => {
     const m = c.hub.deps.chat.postBot({
       chatId: gid,
       personaId: 'cubbie',
-      personaName: 'Cubbie',
+      personaName: 'Squad',
       text: 'doomed',
       citations: [],
       attachments: [],
@@ -737,7 +784,7 @@ describe('delivery, read and failure status callbacks', () => {
     const m = c.hub.deps.chat.postBot({
       chatId: gid,
       personaId: 'cubbie',
-      personaName: 'Cubbie',
+      personaName: 'Squad',
       text: 'early bird',
       citations: [],
       attachments: [],
@@ -841,7 +888,7 @@ describe('attachments and links', () => {
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Cubbie',
+      personaName: 'Squad',
       text: 'see the **notes**',
       citations: [],
       attachments: [],
@@ -868,7 +915,7 @@ describe('isolation and privacy', () => {
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Cubbie',
+      personaName: 'Squad',
       text: 'for squad one only',
       citations: [],
       attachments: [],
@@ -895,7 +942,7 @@ describe('isolation and privacy', () => {
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Cubbie',
+      personaName: 'Squad',
       text: 'Ana paid $180 for therapy',
       citations: [],
       attachments: [],
@@ -921,7 +968,7 @@ describe('secrets never leak', () => {
     c.hub.deps.chat.postBot({
       chatId: `group:${c.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Cubbie',
+      personaName: 'Squad',
       text: 'trigger a failure',
       citations: [],
       attachments: [],
@@ -1074,6 +1121,6 @@ describe('status exposes dry run, allowlist and kill switch; @cubbie parity with
     expect(im.provenance?.kind).toBe(web.provenance?.kind);
     expect(im.provenance?.mode).toBe(web.provenance?.mode);
     expect(!!im.provenance).toBe(true);
-    expect(groupSends().some((t) => /Cubbie: /.test(t))).toBe(true); // and the answer reached iMessage
+    expect(groupSends().some((t) => /Squad: /.test(t))).toBe(true); // and the answer reached iMessage
   }, 30_000);
 });

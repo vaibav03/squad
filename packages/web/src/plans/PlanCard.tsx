@@ -88,7 +88,7 @@ export function PlanCard(p: PlanCardProps) {
             data-testid="plan-ask-cubbie"
             onClick={p.actions.ask}
           >
-            <Icon name="sparkle" size={14} /> Ask Cubbie
+            <Icon name="sparkle" size={14} /> Ask Squad
           </button>
         ) : null}
       </div>

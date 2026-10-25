@@ -1,4 +1,4 @@
-// "Ask Cubbie": turns a source id the client names into a VERIFIED ChatContextRef. The client's own title, course,
+// "Ask Squad": turns a source id the client names into a VERIFIED ChatContextRef. The client's own title, course,
 // provenance, etc. are never trusted: everything is re-read from the store through the viewer's read gate.
 import type { ChatContextRef } from '@squad/core';
 import type { ContextSource, ContextStore, ContextViewer } from '@squad/brain';

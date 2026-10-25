@@ -367,7 +367,7 @@ export interface MentionOption {
   hint: string;
 }
 export const MENTION_OPTIONS: readonly MentionOption[] = [
-  { id: 'cubbie', insert: '@cubbie', hint: 'Ask your study buddy' },
+  { id: 'cubbie', insert: '@squad', hint: 'Ask your study buddy' },
   { id: 'squad', insert: '@squad', hint: 'Ask the squad helpers' },
 ];
 
@@ -413,10 +413,10 @@ export function textRepeatsCard(text: string, card: { type: string; question?: s
 }
 
 export const QUICK_PROMPTS_GROUP = [
-  '@cubbie what is a z-score?',
-  '@cubbie quiz me on chapter 6',
-  '@cubbie podcast ch6',
-  '@cubbie study plan',
+  '@squad what is a z-score?',
+  '@squad quiz me on chapter 6',
+  '@squad podcast ch6',
+  '@squad study plan',
 ] as const;
 export const QUICK_PROMPTS_DM = [
   'am I behind?',
@@ -426,7 +426,7 @@ export const QUICK_PROMPTS_DM = [
 
 /** What a quiz answer is sent as: a group needs the mention so the bot always runs; a DM never does. */
 export const quizAnswerText = (chatId: string, answer: string): string =>
-  chatId.startsWith('dm:') ? answer : `@cubbie ${answer}`;
+  chatId.startsWith('dm:') ? answer : `@squad ${answer}`;
 
 // ------------------------------------------------------------------ misc
 
@@ -456,7 +456,7 @@ export function uploadProblem(file: { type: string; size: number }): string | nu
 
 /** Chat list preview line: "Ana: text", attachments and cards read as words. */
 export function previewLine(c: ChatSummary, meName?: string): string {
-  if (!c.last) return c.kind === 'dm' ? 'Only you and Cubbie' : 'No messages yet';
+  if (!c.last) return c.kind === 'dm' ? 'Only you and Squad' : 'No messages yet';
   const text = c.last.text.replace(/\s+/g, ' ').trim() || 'Sent an attachment';
   if (meName && c.last.senderName === meName) return `You: ${text}`;
   return c.kind === 'group' ? `${c.last.senderName}: ${text}` : text;

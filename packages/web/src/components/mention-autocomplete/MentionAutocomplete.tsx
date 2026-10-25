@@ -12,7 +12,7 @@ export interface MentionAutocompleteProps {
 /**
  * A standalone @-mention popup. Integration point for the chat composer (not wired yet, see docs/agent-aliases.md):
  * render `<MentionAutocomplete text caret onSelect />` above the textarea and call `mentionKey(e.key, ...)` from onKeyDown.
- * Renders nothing unless the caret is inside an `@word`. Cubbie is always the first row for `@`, `@cub` and `@cubbi`.
+ * Renders nothing unless the caret is inside an `@word`. Squad is always the first row for `@`, `@cub` and `@cubbi`.
  */
 export function MentionAutocomplete(p: MentionAutocompleteProps) {
   const items = mentionSuggestions(p.text, p.caret);

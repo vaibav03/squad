@@ -3,8 +3,8 @@ import type { InboundMessage } from '@squad/core';
 /** Removes "@cubbie", "hey cubbie," or "cubbie," from the start of a message. */
 export function stripMention(text: string): string {
   return text
-    .replace(/^\s*(?:hey\s+|hi\s+)?@?cubbie\b[\s,:;-]*/i, '')
-    .replace(/@cubbie\b/gi, '')
+    .replace(/^\s*(?:hey\s+|hi\s+)?(?:@(?:cubbie|squad)|cubbie)\b[\s,:;-]*/i, '')
+    .replace(/@(?:cubbie|squad)\b/gi, '')
     .trim();
 }
 

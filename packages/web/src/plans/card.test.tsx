@@ -30,7 +30,7 @@ const msg = (
     seq,
     chatId: 'group:sq',
     ts: 1_000 * seq,
-    sender: { kind: 'persona', id: 'cubbie', name: 'Cubbie' },
+    sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
     text,
     private: false,
     attachments: [],
@@ -105,7 +105,7 @@ describe('truth and status words', () => {
 });
 
 describe('PlanCard', () => {
-  it('renders status, provenance, privacy, revisions and Ask Cubbie', async () => {
+  it('renders status, provenance, privacy, revisions and Ask Squad', async () => {
     const ask = vi.fn();
     render(
       <PlanCard
@@ -134,7 +134,7 @@ describe('PlanCard', () => {
 });
 
 describe('TripChatCard', () => {
-  it('loads the trip, shows Vote when allowed and attaches the plan via Ask Cubbie', async () => {
+  it('loads the trip, shows Vote when allowed and attaches the plan via Ask Squad', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(JSON.stringify(tripVoting), { status: 200 })),

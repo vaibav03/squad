@@ -89,7 +89,7 @@ describe('MasteryPanel', () => {
     const onClose = vi.fn();
     render(<MasteryPanel {...base} onClose={onClose} onPractise={onPractise} />);
     fireEvent.click(screen.getByRole('button', { name: 'Practise this: Chapter 1' }));
-    expect(onPractise).toHaveBeenCalledWith('@cubbie quiz me on chapter 1');
+    expect(onPractise).toHaveBeenCalledWith('@squad quiz me on chapter 1');
     expect(onClose).toHaveBeenCalled();
   });
   it('offers Copy instead of sending when there is no chat (replay)', () => {

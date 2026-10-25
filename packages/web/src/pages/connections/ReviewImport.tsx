@@ -33,7 +33,7 @@ const where = (r: SourceRow): string | null => {
   return t ? `${r.dueAt ? 'Due' : 'Starts'} ${new Date(t).toISOString().slice(0, 16).replace('T', ' ')} UTC` : null;
 };
 
-/** Review what was imported before anything is shared: counts, citations, sharing, Ask Cubbie, Change source. */
+/** Review what was imported before anything is shared: counts, citations, sharing, Ask Squad, Change source. */
 export function ReviewImport(p: ReviewImportProps) {
   const live = useConnections();
   const s = p.state ?? live;
@@ -150,7 +150,7 @@ function ProviderReview({ provider, s, now, navigate }: { provider: Provider; s:
             data-testid={`review-ask-primary-${provider}`}
             onClick={() => askCubbie(s.squadId!, pickAskItems(rows, now), navigate)}
           >
-            Ask Cubbie with this
+            Ask Squad with this
           </Button>
         ) : null}
       </div>
@@ -197,7 +197,7 @@ function ProviderReview({ provider, s, now, navigate }: { provider: Provider; s:
                 ) : null}
                 {s.squadId ? (
                   <Button size="sm" variant="secondary" data-testid="ask-cubbie" onClick={() => askCubbie(s.squadId!, r, navigate)}>
-                    Ask Cubbie
+                    Ask Squad
                   </Button>
                 ) : null}
               </div>
