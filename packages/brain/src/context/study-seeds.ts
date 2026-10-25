@@ -56,7 +56,6 @@ export function deriveStudySeeds(
     }
   }
   return out.sort(
-    (a, b) =>
-      (a.dueAt ?? '9').localeCompare(b.dueAt ?? '9') || a.title.localeCompare(b.title),
+    (a, b) => (a.dueAt ?? '9').localeCompare(b.dueAt ?? '9') || a.title.localeCompare(b.title),
   );
 }

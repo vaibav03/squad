@@ -29,6 +29,7 @@ import {
   type MasteryStore,
 } from '@squad/brain';
 import { contextServiceFor } from '../context/service';
+import { contextBusyBlocks } from '../context/busy';
 import {
   createAudioServices,
   createCallPort,
@@ -331,6 +332,11 @@ function createRealBrainPort(
       const blocks = stripBusyTitles(
         input.demo ? demoBusyBlocks(deps.now()) : parseIcsBusy(input.ics ?? ''),
       );
+      // connected calendars (Google/Canvas events) contribute derived intervals too, never titles
+      const known = new Set(blocks.map((b) => `${b.start}|${b.end}`));
+      for (const b of contextBusyBlocks(deps, student))
+        if (!known.has(`${b.start}|${b.end}`)) blocks.push(b);
+      blocks.sort((a, b) => a.start.localeCompare(b.start));
       const tx = deps.db.transaction(() => {
         deps.db.prepare('DELETE FROM hub_busy_blocks WHERE student=?').run(student);
         const ins = deps.db.prepare(

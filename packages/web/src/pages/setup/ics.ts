@@ -71,7 +71,8 @@ export function parseIcs(text: string): BusyBlock[] {
 export function redactedIcs(blocks: BusyBlock[]): string {
   const f = (iso: string) => iso.replace(/[-:]/g, '').replace(/\.\d+/, '');
   const ev = blocks.map(
-    (b) => `BEGIN:VEVENT\r\nDTSTART:${f(b.start)}\r\nDTEND:${f(b.end)}\r\nSUMMARY:busy\r\nEND:VEVENT`,
+    (b) =>
+      `BEGIN:VEVENT\r\nDTSTART:${f(b.start)}\r\nDTEND:${f(b.end)}\r\nSUMMARY:busy\r\nEND:VEVENT`,
   );
   return `BEGIN:VCALENDAR\r\nVERSION:2.0\r\n${ev.join('\r\n')}\r\nEND:VCALENDAR`;
 }

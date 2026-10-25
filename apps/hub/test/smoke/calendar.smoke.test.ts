@@ -65,7 +65,9 @@ describe('calendar import in the real brain port', () => {
     expect(pushes[0]!.secret).toBe(hub.deps.config.internalSecret);
     expect(pushes[0]!.body.events).toHaveLength(2);
     // data export carries no titles either
-    const exp = await fetch(`${hub.url}/v1/me/export`, { headers: { authorization: `Bearer ${token}` } });
+    const exp = await fetch(`${hub.url}/v1/me/export`, {
+      headers: { authorization: `Bearer ${token}` },
+    });
     if (exp.status === 200) expect(await exp.text()).not.toMatch(/Stats lecture|Office hours/);
     // other students are untouched
     expect(busyBlocksOf(hub.deps, 's_ben')).toEqual([]);

@@ -5,7 +5,7 @@ export interface BusyInterval {
   start: string;
   end: string;
 }
-export interface DueItem {
+export interface TripDueItem {
   courseId: string | null;
   dueAt: string;
   /** Present only when the owner explicitly shared this source with the planning squad. */
@@ -14,7 +14,7 @@ export interface DueItem {
 export interface StudentConstraints {
   studentId: string;
   busy: BusyInterval[];
-  due: DueItem[];
+  due: TripDueItem[];
 }
 
 const iso = (ms: number) => new Date(ms).toISOString().replace('.000', '');
@@ -37,7 +37,7 @@ export function deriveTripConstraints(
       squadIds: opts.squadId ? [opts.squadId] : [],
     });
     const busy: BusyInterval[] = [];
-    const due: DueItem[] = [];
+    const due: TripDueItem[] = [];
     for (const s of own) {
       if ((s.kind === 'gcal_event' || s.kind === 'canvas_event') && s.startsAt !== null) {
         const end = s.endsAt ?? s.startsAt + 3_600_000;

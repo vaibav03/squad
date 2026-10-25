@@ -38,11 +38,25 @@ function setup(db = openMemoryDb()) {
     kind: SourceKind,
     externalId: string,
     title: string,
-    extra: { dueAt?: number; startsAt?: number; endsAt?: number; text?: string; url?: string; courseId?: string; modifiedAt?: number } = {},
+    extra: {
+      dueAt?: number;
+      startsAt?: number;
+      endsAt?: number;
+      text?: string;
+      url?: string;
+      courseId?: string;
+      modifiedAt?: number;
+    } = {},
   ) => {
     if (!store.connection(`conn_${owner}`)) store.upsertConnection(conn(owner));
     const { source, pieces } = normalizeItem(
-      { ownerId: owner, connectionId: `conn_${owner}`, provider: 'canvas', mode: 'fixture', now: T0 },
+      {
+        ownerId: owner,
+        connectionId: `conn_${owner}`,
+        provider: 'canvas',
+        mode: 'fixture',
+        now: T0,
+      },
       {
         externalId,
         kind,
@@ -71,11 +85,18 @@ describe('canvasAnswer (Nook canvas-answers port)', () => {
     expect(canvasAnswer('what is due?', [], T0)).toBe(NOT_SYNCED);
     expect(canvasAnswer('hello there', [], T0)).toBeNull();
     add('s_ana', 'canvas_file', 'f1', 'Old notes.docx');
-    expect(canvasAnswer('what is due?', ownList(store), T0)).toBe("Nothing due. You're all caught up.");
+    expect(canvasAnswer('what is due?', ownList(store), T0)).toBe(
+      "Nothing due. You're all caught up.",
+    );
     add('s_ana', 'canvas_assignment', 'a1', 'HW 1', { dueAt: T0 - 3 * 3_600_000 });
     add('s_ana', 'canvas_assignment', 'a2', 'HW 2', { dueAt: T0 + DAY });
     add('s_ana', 'canvas_assignment', 'a0', 'Ancient', { dueAt: T0 - 5 * DAY });
-    const out = canvasAnswer('what are my deadlines', ownList(store), T0, new Map([['c1', 'STAT 101']]))!;
+    const out = canvasAnswer(
+      'what are my deadlines',
+      ownList(store),
+      T0,
+      new Map([['c1', 'STAT 101']]),
+    )!;
     expect(out).toContain('Next 2 due:');
     expect(out).toContain('HW 1 (STAT 101): Mon, Nov 2 9:00 AM UTC (past)');
     expect(out).toContain('HW 2 (STAT 101)');
@@ -85,11 +106,25 @@ describe('canvasAnswer (Nook canvas-answers port)', () => {
   it('lists slides and pdfs, latest first, with links, and honest empties', () => {
     const { store, add } = setup();
     add('s_ana', 'canvas_assignment', 'a1', 'HW 1', { dueAt: T0 + DAY });
-    expect(canvasAnswer('send me the slides', ownList(store), T0)).toBe('No slides found in your synced Canvas files.');
-    expect(canvasAnswer('any files?', ownList(store), T0)).toBe('No files found in your synced Canvas.');
-    add('s_ana', 'canvas_file', 'f1', 'Week1.pptx', { modifiedAt: 1, url: 'https://c.example/f1', text: 'week one intro slides' });
-    add('s_ana', 'canvas_file', 'f2', 'Week2.pptx', { modifiedAt: 2, text: 'week two inference slides' });
-    add('s_ana', 'canvas_file', 'f3', 'Syllabus.pdf', { modifiedAt: 3, text: 'syllabus grading policy text' });
+    expect(canvasAnswer('send me the slides', ownList(store), T0)).toBe(
+      'No slides found in your synced Canvas files.',
+    );
+    expect(canvasAnswer('any files?', ownList(store), T0)).toBe(
+      'No files found in your synced Canvas.',
+    );
+    add('s_ana', 'canvas_file', 'f1', 'Week1.pptx', {
+      modifiedAt: 1,
+      url: 'https://c.example/f1',
+      text: 'week one intro slides',
+    });
+    add('s_ana', 'canvas_file', 'f2', 'Week2.pptx', {
+      modifiedAt: 2,
+      text: 'week two inference slides',
+    });
+    add('s_ana', 'canvas_file', 'f3', 'Syllabus.pdf', {
+      modifiedAt: 3,
+      text: 'syllabus grading policy text',
+    });
     const slides = canvasAnswer('send me the slides', ownList(store), T0)!;
     expect(slides.startsWith('2 files:')).toBe(true);
     expect(slides.indexOf('Week2')).toBeLessThan(slides.indexOf('Week1'));
@@ -112,7 +147,10 @@ function ownList(store: ReturnType<typeof createContextStore>, who = 's_ana') {
 describe('trip constraints', () => {
   it('returns busy intervals without titles and withholds unshared due titles', () => {
     const { store, add } = setup();
-    add('s_ana', 'gcal_event', 'e1', 'Therapy session', { startsAt: T0 + DAY, endsAt: T0 + DAY + 3_600_000 });
+    add('s_ana', 'gcal_event', 'e1', 'Therapy session', {
+      startsAt: T0 + DAY,
+      endsAt: T0 + DAY + 3_600_000,
+    });
     add('s_ana', 'gcal_event', 'e2', 'Outside window', { startsAt: T0 + 90 * DAY });
     const hw = add('s_ana', 'canvas_assignment', 'a1', 'Secret HW', { dueAt: T0 + 2 * DAY });
     add('s_ben', 'canvas_event', 'e3', 'Ben shift', { startsAt: T0 + 3 * DAY });
@@ -134,7 +172,9 @@ describe('study seeds', () => {
     const { store, add } = setup();
     add('s_ana', 'canvas_assignment', 'a1', 'Problem Set 4', { dueAt: T0 + 5 * DAY });
     add('s_ana', 'canvas_assignment', 'a-old', 'Past PS', { dueAt: T0 - DAY });
-    add('s_ana', 'canvas_file', 'f1', 'Lecture 7 Sampling.pdf', { text: '# Sampling\n\nThe mean of samples varies.' });
+    add('s_ana', 'canvas_file', 'f1', 'Lecture 7 Sampling.pdf', {
+      text: '# Sampling\n\nThe mean of samples varies.',
+    });
     add('s_ben', 'canvas_assignment', 'b1', 'Ben private', { dueAt: T0 + DAY });
     const seeds = deriveStudySeeds(store, ana, T0);
     expect(seeds.map((s) => [s.kind, s.title])).toEqual(
@@ -146,7 +186,9 @@ describe('study seeds', () => {
     expect(seeds.find((s) => s.title === 'Past PS')).toBeUndefined();
     expect(JSON.stringify(seeds)).not.toContain('Ben private');
     expect(seeds[0]!.kind).toBe('due');
-    expect(seeds.find((s) => s.kind === 'due')!.sourceUri).toMatch(/^source:\/\/canvas_assignment\//);
+    expect(seeds.find((s) => s.kind === 'due')!.sourceUri).toMatch(
+      /^source:\/\/canvas_assignment\//,
+    );
   });
 });
 

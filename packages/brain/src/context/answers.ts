@@ -21,7 +21,11 @@ export function fmtDue(ms: number | null | undefined, now: number): string {
     day: 'numeric',
     timeZone: 'UTC',
   });
-  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
+  const time = d.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  });
   return `${day} ${time} UTC${ms < now ? ' (past)' : ''}`;
 }
 
@@ -47,10 +51,15 @@ export function canvasAnswer(
   const courseOf = (id: string | null) => (id ? (courseNames.get(id) ?? '') : '');
   const suffix = (id: string | null) => (courseOf(id) ? ` (${courseOf(id)})` : '');
 
-  if (wantsFiles && !(wantsDeadlines && !/\b(slides?|ppts?|pptx|powerpoints?|pdfs?)\b/i.test(text))) {
+  if (
+    wantsFiles &&
+    !(wantsDeadlines && !/\b(slides?|ppts?|pptx|powerpoints?|pdfs?)\b/i.test(text))
+  ) {
     const type = PDF_RE.test(text) ? 'pdf' : SLIDES_RE.test(text) ? 'ppt' : null;
     let files = canvas.filter((s) => s.kind === 'canvas_file' && (!type || fileType(s) === type));
-    const named = [...courseNames].filter(([, n]) => n && text.toLowerCase().includes(n.toLowerCase()));
+    const named = [...courseNames].filter(
+      ([, n]) => n && text.toLowerCase().includes(n.toLowerCase()),
+    );
     if (named.length) files = files.filter((f) => named.some(([id]) => id === f.courseId));
     if (files.length === 0)
       return type

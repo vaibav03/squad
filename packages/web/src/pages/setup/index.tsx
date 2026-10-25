@@ -528,7 +528,10 @@ function CalendarStep({
     if (cfg.mode !== 'mock' && cfg.hubUrl) {
       setBusy(true);
       try {
-        await postCalendar({ hubUrl: cfg.hubUrl, token: cfg.token }, { ics: redactedIcs(blocks), name: f.name });
+        await postCalendar(
+          { hubUrl: cfg.hubUrl, token: cfg.token },
+          { ics: redactedIcs(blocks), name: f.name },
+        );
       } catch (err) {
         setError(
           err instanceof HubError && err.code === 'offline'
