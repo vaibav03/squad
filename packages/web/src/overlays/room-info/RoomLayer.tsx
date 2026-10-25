@@ -6,7 +6,7 @@ import { OutcomeCard } from './OutcomeCard';
 import { RoomInfoPanel } from './RoomInfoPanel';
 import { RoomTranscript } from './RoomTranscript';
 import { RoomExtras } from '../../council/board/Launchers';
-import { CouncilRoomStatus } from '../../council/last-run/components';
+import { CouncilDock } from '../../council/dock/CouncilDock';
 import { HALL_KEYS, ROUND_TABLE_KEYS } from '../../council/last-run/store';
 import './room-info.css';
 
@@ -163,23 +163,29 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
             )}
           </div>
         ) : null}
-        {slot === 'council-hall' ? (
-          <CouncilRoomStatus keys={HALL_KEYS} councilIds={['council:ask']} />
-        ) : slot === 'round-table' ? (
-          <CouncilRoomStatus
-            keys={ROUND_TABLE_KEYS}
-            councilIds={['council:roundtable', 'council:planner']}
-            noun="Round Table"
-            onConvene={conveneRoundTable}
+        {slot === 'council-hall' || slot === 'round-table' ? (
+          <CouncilDock
+            keys={slot === 'council-hall' ? HALL_KEYS : ROUND_TABLE_KEYS}
+            councilIds={
+              slot === 'council-hall'
+                ? ['council:ask']
+                : ['council:roundtable', 'council:planner']
+            }
+            {...(slot === 'round-table' ? { noun: 'Round Table', onConvene: conveneRoundTable } : {})}
+            entries={entries}
+            outcome={outcome}
+            info={info}
+            onRun={run}
           />
-        ) : null}
-        <RoomTranscript
-          entries={entries}
-          outcome={outcome}
-          info={info}
-          onRun={run}
-          compact={!!outcome && planShown}
-        />
+        ) : (
+          <RoomTranscript
+            entries={entries}
+            outcome={outcome}
+            info={info}
+            onRun={run}
+            compact={!!outcome && planShown}
+          />
+        )}
       </div>
 
       {info ? (
