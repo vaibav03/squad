@@ -271,3 +271,9 @@
   margin: 0;
   color: var(--text-muted, inherit);
 }
+.sq-home__next .sq-btn {
+  max-width: 100%;
+  height: auto;
+  white-space: normal;
+  text-align: left;
+}
