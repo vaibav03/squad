@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { AgentIdSchema } from './agent-id';
 import { CitationSchema } from './types';
+import { DiscussionEvent } from './live';
 
 const StudentId = z.string().min(1);
 const AgentId = AgentIdSchema;
@@ -117,6 +118,7 @@ export const VillageEventSchema = z.discriminatedUnion('t', [
   CallEvent,
   TripConfirmedEvent,
   MasteryChangedEvent,
+  DiscussionEvent,
 ]);
 
 export type VillageEvent = z.infer<typeof VillageEventSchema>;
@@ -140,6 +142,11 @@ export const VILLAGE_EVENT_TYPES = [
   'call.end',
   'trip.confirmed',
   'mastery.changed',
+  'discussion.started',
+  'discussion.turn',
+  'discussion.interrupted',
+  'discussion.takeaway',
+  'discussion.ended',
 ] as const satisfies readonly VillageEventType[];
 
 /** Live (SSE) or replay (JSON script). Returns an unsubscribe function. */
