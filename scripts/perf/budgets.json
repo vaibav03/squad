@@ -1,0 +1,21 @@
+{
+  "_note": "Regression guards sized just above the 2026-10 baseline (docs/perf/REPORT.md). fps/heap use the target values; fps is warn-only on software GL (headless chromium), enforce with STRICT_FPS=1 on a GPU machine.",
+  "bundle": {
+    "phaserGzipKb": 350,
+    "largestAppChunkGzipKb": 200,
+    "totalJsGzipKb": 680,
+    "totalJsBrotliKb": 570
+  },
+  "routes": {
+    "nonVillageJsKb": 620,
+    "villageJsKb": 2400,
+    "phaserOnlyOnVillage": true
+  },
+  "village": {
+    "readyMs": 6000,
+    "lcpMs": 2500,
+    "cls": 0.5,
+    "fpsP5Min": 55,
+    "heapGrowthMbMax": 10
+  }
+}
