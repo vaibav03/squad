@@ -110,6 +110,7 @@ export function MessageBubble(p: BubbleProps) {
           ...(title ? { title } : {}),
           ...(url ? { url } : {}),
         } as NonNullable<Parameters<typeof openSource>[0]['source']>,
+        ...(c.quote ? { quote: c.quote } : {}),
       });
     } else p.onCite(c, m.text);
   };

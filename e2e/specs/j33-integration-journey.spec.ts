@@ -148,7 +148,9 @@ test('5 Ask Cubbie: group chat opens with a removable context chip, prompt prefi
   await step('ask-cubbie', async () => {
     const page = ana.page;
     const before = (await history(ana.token, GROUP)).length;
-    await page.getByTestId('ask-cubbie').first().click();
+    // a non-calendar item: an unshared calendar event is (correctly) redacted in the group chat
+    const row = () => page.locator('[data-testid="imported-item"]:not([data-kind$="_event"])').first();
+    await row().getByTestId('ask-cubbie').click();
     await page.waitForURL(/\/squad\/chat/, { timeout: 20_000 });
     const chip = page.getByTestId('composer-context-chip');
     await expect(chip).toBeVisible({ timeout: 20_000 });
@@ -160,7 +162,7 @@ test('5 Ask Cubbie: group chat opens with a removable context chip, prompt prefi
     await page.getByTestId('composer-context-chip-remove').click();
     await expect(chip).toHaveCount(0);
     await page.goto('/squad/connections');
-    await page.getByTestId('ask-cubbie').first().click();
+    await row().getByTestId('ask-cubbie').click();
     await expect(page.getByTestId('composer-context-chip')).toBeVisible({ timeout: 20_000 });
   });
 });
@@ -176,7 +178,8 @@ test('6 @cubbie answers from the attached context with provenance + the source v
     await expect(page.getByTestId('chat-citation-location').first()).toBeVisible();
     await snap(ana, '4-cited-answer');
     await cite.click();
-    await expect(page.getByTestId('chat-citation-excerpt').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId('source-fixture').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Verified quote').first()).toBeVisible();
     const msgs = await history(ben.token, GROUP);
     expect(msgs.filter(isBot).length).toBeGreaterThan(0);
   });

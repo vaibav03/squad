@@ -32,6 +32,13 @@ function snippet(text: string, max = 280): string {
   return cut.slice(0, Math.max(cut.lastIndexOf('. ') + 1, cut.lastIndexOf(' '))).trim() + '...';
 }
 
+/** A verbatim prefix (cut at a word boundary, no ellipsis) so the source viewer can verify it against the page. */
+function verbatim(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  return cut.slice(0, Math.max(cut.lastIndexOf(' '), 1)).trim();
+}
+
 function describe(src: ContextSource, ref: ChatContextRef, text: string, now: number): string {
   const where = [ref.courseName, ref.eventLabel, ref.location?.label].filter(Boolean).join(', ');
   const head = `${src.title}${where ? ` (${where})` : ''}`;
@@ -101,7 +108,7 @@ export function createContextAskSkill(store: ContextStore, opts: ContextAskOptio
               ? { locationLabel: (ref.location?.label ?? ref.eventLabel) as string }
               : {}),
           },
-          ...(body(text) ? { quote: snippet(body(text), 200) } : {}),
+          ...(body(text) ? { quote: verbatim(body(text), 200) } : {}),
         };
         let say = describe(src, ref, text, now());
         if (opts.llm && opts.llmIsReal?.()) {
