@@ -8,6 +8,8 @@ import {
   modeInfo,
   playCouncilFixture,
   stageIndex,
+  statusLine,
+  syncResultToBoard,
   threadPath,
   worstMode,
 } from './index';
@@ -43,6 +45,8 @@ describe('council board model', () => {
     const msg = run.messages.find((m) => m.id === v.dissents[0]!.messageId)!;
     expect(msg.from).toBe('council:ask-skeptic');
     expect(v.actions).toHaveLength(2);
+    expect(v.actionItems.map((a) => a.text)).toEqual(v.actions);
+    expect(v.actionItems.every((a) => !!a.id)).toBe(true);
   });
   it('fixtures are Demo and say so', () => {
     const run = load().store.run()!;
@@ -121,5 +125,98 @@ describe('mode', () => {
     expect(modeInfo(undefined).tier).toBe('demo');
     expect(worstMode(['live', 'degraded:timeout'])).toBe('degraded:timeout');
     expect(worstMode(['live', 'demo'])).toBe('demo');
+  });
+});
+
+describe('board from a CouncilResult snapshot and the status line', () => {
+  it('statusLine shows the verdict once decided, never the opening line', () => {
+    const run = load().store.run()!;
+    const line = statusLine(run);
+    expect(line).not.toMatch(/Question received|Planning who to ask/);
+    expect(line).toBe((run.verdict!.answer ?? run.verdict!.summary).trim());
+  });
+  it('statusLine names the current step while running', () => {
+    expect(statusLine({ stage: 'delegation', agents: [] })).toMatch(/who to ask/);
+    expect(
+      statusLine({
+        stage: 'opinions',
+        agents: [{ role: 'specialist', status: 'working', name: 'Teacher' } as never],
+      }),
+    ).toBe('Waiting for Teacher.');
+  });
+  it('a result snapshot builds the run, is idempotent, and advances the stage on later polls', () => {
+    const msg = (
+      id: string,
+      seq: number,
+      stage: string,
+      from: string,
+      to: string,
+      kind: string,
+    ) => ({
+      id,
+      correlationId: 'cn_1',
+      seq,
+      from,
+      to,
+      kind,
+      stage,
+      status: 'done',
+      mode: 'live',
+      source: 'model',
+      redaction: 'public',
+      ts: 1,
+      summary: `s${seq}`,
+    });
+    const store = createCouncilBoardStore();
+    const r = {
+      id: 'cn_1',
+      question: 'Mean or median?',
+      mode: 'live',
+      stage: 'opinions',
+      messages: [
+        msg('am_1', 0, 'question', 'council:roundtable-chairman', 'room', 'status'),
+        msg(
+          'am_2',
+          1,
+          'delegation',
+          'council:roundtable-chairman',
+          'council:roundtable-chill',
+          'delegate',
+        ),
+      ],
+    };
+    syncResultToBoard(store, r);
+    syncResultToBoard(store, r);
+    let run = store.run()!;
+    expect(run.messages).toHaveLength(2);
+    expect(run.question).toBe('Mean or median?');
+    expect(run.stage).toBe('opinions');
+    expect(run.mode).toBe('live');
+    expect(run.councilName).toBe('Roundtable council');
+    // cast portraits for the Round Table cast
+    expect(run.agents.map((a) => [a.name, a.cast])).toEqual([
+      ['Chairman', 'chair'],
+      ['Chill', 'chill'],
+    ]);
+    syncResultToBoard(store, { ...r, stage: 'verdict' });
+    run = store.run()!;
+    expect(run.stage).toBe('verdict');
+  });
+});
+
+describe('stage never regresses', () => {
+  it('a stale snapshot with an earlier stage does not move a finished run back', () => {
+    const store = createCouncilBoardStore({ now: () => 1 });
+    const ev = (stage: string) => ({
+      t: 'council.stage',
+      councilId: 'council:ask',
+      correlationId: 'cn_aaaaaaaaaaaa',
+      stage,
+      mode: 'live',
+    });
+    store.apply(ev('opinions'));
+    store.apply(ev('done'));
+    store.apply(ev('actions')); // a poll answered late
+    expect(store.run()?.stage).toBe('done');
   });
 });

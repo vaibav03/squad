@@ -222,6 +222,7 @@ export async function runCoursePlanAgents(
         to: 'room',
         depth: 0,
         temperature: 0.2,
+        endAfterTools: { summary: `Delegated to ${list(members.map((m) => m.displayName))}.` },
         context: planCtx,
         prompt: `A student wants a ${input.term} plan. ${brief.split('\n')[1] ?? ''}\n\nDelegate now to chill, grind and advisor (one delegate call each), then submit your plan summary.`,
       });

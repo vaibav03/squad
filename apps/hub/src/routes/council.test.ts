@@ -295,3 +295,119 @@ describe('privacy (sentinels)', () => {
     }
   });
 });
+
+describe('council action items: plan + chat', () => {
+  const ACTION = { id: 'am_a1b2c3d4e5f6', title: 'Write the two state equations and solve them.' };
+  const planFor = (hub: Hub, squadId: string, over: Record<string, unknown> = {}) => {
+    const members = hub.deps.directory.members(squadId);
+    hub.deps.plans.store.save({
+      id: 'pl_test000001',
+      squadId,
+      courseId: 'demo',
+      title: 'Study plan',
+      status: 'active',
+      organizerId: members[0]!.id,
+      examDate: null,
+      examLabel: 'Exam',
+      rev: 3,
+      items: [],
+      members: members.map((m) => ({
+        id: m.id,
+        name: m.name,
+        optedIn: true,
+        response: 'accepted' as const,
+      })),
+      conflicts: [],
+      citations: [],
+      generator: { mode: 'demo', source: 'test', note: '' },
+      createdAt: 1,
+      updatedAt: 1,
+      log: [],
+      ...over,
+    });
+  };
+  const run = async (s: ReturnType<typeof setup>, sub = 's_ana') => {
+    const { json } = await s.ask(sub, {
+      question: 'what is x?',
+      chatId: `group:${s.hub.deps.directory.squadOf(sub)}`,
+    });
+    s.fake.step(json.id, { actions: [ACTION], status: 'done', phase: 'done' });
+    return json.id;
+  };
+
+  it('plan: adds the item through the plan service (rev bumps, no duplicate, said in chat)', async () => {
+    const s = setup();
+    const squad = s.hub.deps.directory.squadOf('s_ana')!;
+    planFor(s.hub, squad);
+    const id = await run(s);
+    const res = await s.call(`/v1/council/${id}/actions/plan`, 's_ana', { actionId: ACTION.id });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({
+      ok: true,
+      added: true,
+      planId: 'pl_test000001',
+      rev: 4,
+    });
+    const p = s.hub.deps.plans.store.get('pl_test000001')!;
+    expect(p.items).toHaveLength(1);
+    expect(p.items[0]).toMatchObject({
+      title: ACTION.title,
+      ownerId: 's_ana',
+      rev: 4,
+      status: 'todo',
+    });
+    const again = await s.call(`/v1/council/${id}/actions/plan`, 's_ana', { actionId: ACTION.id });
+    expect(await again.json()).toMatchObject({ ok: true, added: false, rev: 4 });
+    expect(s.hub.deps.plans.store.get('pl_test000001')!.items).toHaveLength(1);
+  });
+
+  it('plan: no plan yet is a clear 409 no_plan; a closed plan is refused too', async () => {
+    const s = setup();
+    const id = await run(s);
+    const res = await s.call(`/v1/council/${id}/actions/plan`, 's_ana', { actionId: ACTION.id });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ ok: false, error: { code: 'no_plan' } });
+    planFor(s.hub, s.hub.deps.directory.squadOf('s_ana')!, { status: 'cancelled' });
+    const closed = await s.call(`/v1/council/${id}/actions/plan`, 's_ana', { actionId: ACTION.id });
+    expect(closed.status).toBe(409);
+  });
+
+  it('chat: posts the item to the squad chat thread', async () => {
+    const s = setup();
+    const squad = s.hub.deps.directory.squadOf('s_ana')!;
+    const seen: string[] = [];
+    s.hub.deps.chat.onBotPost((m) => void seen.push(`${m.chatId}|${m.text}`));
+    const id = await run(s);
+    const res = await s.call(`/v1/council/${id}/actions/chat`, 's_ana', { actionId: ACTION.id });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ ok: true });
+    expect(seen.some((x) => x.startsWith(`group:${squad}|`) && x.includes(ACTION.title))).toBe(
+      true,
+    );
+  });
+
+  it('auth, validation and scoping: 401, 400, unknown action 404, other squad / private run 404', async () => {
+    const s = setup();
+    const id = await run(s);
+    for (const kind of ['plan', 'chat']) {
+      const path = `/v1/council/${id}/actions/${kind}`;
+      expect((await s.call(path, null, { actionId: ACTION.id })).status).toBe(401);
+      expect((await s.call(path, 's_ana', {})).status).toBe(400);
+      expect((await s.call(path, 's_ana', { actionId: ACTION.id, text: 'evil' })).status).toBe(400);
+      const nope = await s.call(path, 's_ana', { actionId: 'am_zzzzzzzzzzzz' });
+      expect(nope.status).toBe(404);
+      expect(await nope.json()).toEqual({ error: { code: 'action_not_found' } });
+      expect((await s.call(path, 's_zed', { actionId: ACTION.id })).status).toBe(404);
+      expect(
+        (await s.call('/v1/council/cn_000000000099/actions/' + kind, 's_ana', { actionId: 'x' }))
+          .status,
+      ).toBe(404);
+    }
+    const priv = await s.ask('s_ana', { question: 'private one?', chatId: 'dm:s_ana' });
+    s.fake.step(priv.json.id, { actions: [ACTION] });
+    const r = await s.call(`/v1/council/${priv.json.id}/actions/chat`, 's_ben', {
+      actionId: ACTION.id,
+    });
+    expect(r.status).toBe(404);
+  });
+});

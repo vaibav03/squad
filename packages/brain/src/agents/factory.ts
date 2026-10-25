@@ -7,6 +7,8 @@ import { createCouncilRuntime } from './runtime';
 import { createStreamTextTransport } from './stream-transport';
 import type { AgentTransport } from './types';
 
+const THINKING = new Set(['off', 'minimal', 'low', 'medium', 'high']);
+
 export interface CouncilAgentsDeps {
   /**
    * The RAW real model (GeminiLlm), never the ResilientLlm: a live council must not silently swap to the hub's
@@ -47,6 +49,9 @@ export function createCouncilAgents(d: CouncilAgentsDeps): CouncilAgents {
     emit: d.emit,
     budget,
     hourly,
+    ...(THINKING.has(env.COUNCIL_THINKING ?? '')
+      ? { thinking: env.COUNCIL_THINKING as 'off' | 'minimal' | 'low' | 'medium' | 'high' }
+      : {}),
     ...(d.now ? { now: d.now } : {}),
   });
   return {

@@ -7,6 +7,7 @@ import {
   type A2aMessage,
   type VillageEvent,
 } from '@squad/core';
+import { councilRunOwner } from '@squad/core';
 import { createCouncilAgents } from '../agents/factory';
 import { FakeTransport, submit } from '../agents/test-kit';
 import type { QuestionDraft } from '../quiz/types';
@@ -128,5 +129,22 @@ describe('quiz-key council on agents', () => {
     expect(ms.length).toBeGreaterThan(3);
     expect(ms.every((m) => m.source === 'script' && m.mode.startsWith('demo'))).toBe(true);
     expect(ms.find((m) => m.kind === 'verdict')!.summary).toContain('nothing was verified');
+  });
+
+  it('registers the run owner (the first student of the round) for the hub per-viewer filter', async () => {
+    const t = new FakeTransport();
+    for (const k of ['solver-a', 'solver-b', 'solver-c']) t.script(S(k), solve('1'));
+    const s = setup(t);
+    await s.verifier.verify(choice(1), { ...ctx, askedBy: 's_ana' });
+    const id = s.msgs()[0]!.correlationId;
+    expect(councilRunOwner(id)).toEqual({ askedBy: 's_ana', private: false });
+  });
+
+  it('without a student there is no owner (the hub drops the envelopes, legacy events still flow)', async () => {
+    const t = new FakeTransport();
+    for (const k of ['solver-a', 'solver-b', 'solver-c']) t.script(S(k), solve('1'));
+    const s = setup(t);
+    await s.verifier.verify(choice(1), ctx);
+    expect(councilRunOwner(s.msgs()[0]!.correlationId)).toBeUndefined();
   });
 });

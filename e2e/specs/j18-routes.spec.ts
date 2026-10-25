@@ -142,4 +142,30 @@ test.describe('j18 routes never render a blank shell', () => {
     await expectSettled(page, 'Trip');
     await ctx.close();
   });
+
+  test('hub answering 429 shows "Too many requests" with Retry, never "You are offline"', async ({
+    browser,
+  }) => {
+    const { ctx, page } = await freshPage(browser, token);
+    await ctx.route(`${HUB}/v1/me`, (route) =>
+      route.fulfill({
+        status: 429,
+        contentType: 'application/json',
+        headers: {
+          'access-control-allow-origin': WEB,
+          'access-control-allow-credentials': 'true',
+          'access-control-expose-headers': 'retry-after',
+          'retry-after': '30',
+        },
+        body: '{"error":{"code":"rate_limited","retryAfterS":30}}',
+      }),
+    );
+    await page.goto('/squad');
+    await expect(page.getByText(/Too many requests, retrying in \d+ s/)).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole('button', { name: 'Retry now' })).toBeVisible();
+    await expect(page.getByText(/you are offline/i)).toHaveCount(0);
+    await ctx.close();
+  });
 });
