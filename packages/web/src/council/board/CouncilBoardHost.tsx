@@ -26,7 +26,7 @@ export function CouncilBoardHost({
   returnFocusTo?: HTMLElement | null;
 }) {
   const store = useBoardStoreRef();
-  const { open, agent, runId } = useBoardOpen();
+  const { open, agent } = useBoardOpen();
   const param = useMemo(() => new URLSearchParams(location.search).get('board'), []);
 
   useEffect(() => {
@@ -61,7 +61,6 @@ export function CouncilBoardHost({
       open={open}
       onClose={closeBoard}
       {...(agent ? { focusAgent: agent } : {})}
-      {...(runId ? {} : {})}
       calm={calm}
       hub={hub}
       returnFocusTo={returnFocusTo}
