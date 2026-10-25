@@ -1,0 +1,33 @@
+{
+  "squadId": "squad_1",
+  "window": {
+    "from": "2026-11-20",
+    "to": "2026-11-30"
+  },
+  "options": [
+    {
+      "id": "cabo",
+      "label": "Cabo",
+      "days": 4,
+      "perPerson": 650
+    },
+    {
+      "id": "barcrawl",
+      "label": "BarCrawl",
+      "days": 1,
+      "perPerson": 60
+    },
+    {
+      "id": "flagstaff",
+      "label": "Flagstaff",
+      "days": 3,
+      "perPerson": 142
+    },
+    {
+      "id": "lake",
+      "label": "LakeDay",
+      "days": 2,
+      "perPerson": 90
+    }
+  ]
+}

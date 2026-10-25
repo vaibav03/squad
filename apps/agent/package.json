@@ -10,9 +10,20 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --dir src --passWithNoTests",
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
-    "dev": "echo \"@squad/agent: dev not implemented yet\""
+    "dev": "tsx src/main.ts",
+    "start": "tsx src/main.ts",
+    "mesh": "tsx scripts/dev-mesh.ts",
+    "demo:study": "tsx scripts/demo-study.ts",
+    "demo:trip": "tsx scripts/demo-trip.ts"
   },
   "dependencies": {
-    "@squad/core": "workspace:*"
+    "@squad/core": "workspace:*",
+    "@squad/mesh": "workspace:*",
+    "@hono/node-server": "^2.1.5",
+    "hono": "^4.13.13",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43"
   }
 }

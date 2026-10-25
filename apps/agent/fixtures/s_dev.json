@@ -1,0 +1,34 @@
+{
+  "tz": "UTC",
+  "workHours": {
+    "startHour": 9,
+    "endHour": 18
+  },
+  "topics": {
+    "canTeach": [],
+    "weak": ["dynamic-programming", "graphs"]
+  },
+  "hardNos": [
+    {
+      "optionId": "barcrawl",
+      "reason": "under 21"
+    }
+  ],
+  "id": "s_dev",
+  "name": "Dev",
+  "venmo": "dev-p",
+  "calendar": [
+    {
+      "start": "2026-11-21T00:00:00Z",
+      "end": "2026-11-22T00:00:00Z",
+      "title": "family"
+    }
+  ],
+  "hourCost": {
+    "10": 0,
+    "14": 2,
+    "15": 2
+  },
+  "budget": 700,
+  "tripRanking": ["flagstaff", "lake", "cabo"]
+}

@@ -1,0 +1,6 @@
+{
+  "s_ana": "http://localhost:4101",
+  "s_ben": "http://localhost:4102",
+  "s_cam": "http://localhost:4103",
+  "s_dev": "http://localhost:4104"
+}
