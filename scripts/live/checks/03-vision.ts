@@ -56,7 +56,7 @@ export const visionCheck: Check = {
       const d = r2.divergence;
       if (d.split !== 2)
         throw new Error(
-          `first divergence at step ${d.split}, expected 2 (14 - 6 vs 14 + 6). matchedThrough=${d.matchedThrough}; A=${clip(JSON.stringify(d.stepA), 200)} B=${clip(JSON.stringify(d.stepB), 200)}`,
+          `first divergence at step ${d.split}, expected 2 (14 - 6 vs 14 + 6). matchedThrough=${d.matchedThrough}; A=${clip(JSON.stringify(d.stepA ?? null), 200)} B=${clip(JSON.stringify(d.stepB ?? null), 200)}`,
         );
       const prose = r2.message
         .split('\n')
@@ -82,11 +82,15 @@ export const visionCheck: Check = {
         const pages = await extractPages(pdf, { llm: ctx.llm });
         const text = normalizeText(pages[0] ?? '');
         if (!text.includes('one quarter') || !text.includes('independent'))
-          throw new Error(`vision text misses the page content: raw=${JSON.stringify(pages[0] ?? '')}`);
+          throw new Error(
+            `vision text misses the page content: raw=${JSON.stringify(pages[0] ?? '')}`,
+          );
         // end-to-end for the citation checker: a punctuated, mixed-case quote of the OCR'd page verifies
         const quote = 'Two independent flips both land heads with probability one quarter.';
         if (!quoteOnPage(quote, pages[0] ?? ''))
-          throw new Error(`a verbatim quote of the scanned page fails quote verification: ${JSON.stringify(pages[0])}`);
+          throw new Error(
+            `a verbatim quote of the scanned page fails quote verification: ${JSON.stringify(pages[0])}`,
+          );
         return `text layer ${bareLen} chars -> vision ${text.length} chars: ${clip(text, 100)}`;
       },
     );

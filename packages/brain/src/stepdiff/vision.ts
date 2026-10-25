@@ -11,7 +11,8 @@ const StepsSchema = z.object({
 
 const LABEL = /^\s*(?:step\s*)?\(?\d+[).:]\s*/i;
 /** A leading problem statement or title ("Solve: 2x + 6 = 14") is the question, not a step. */
-const HEADING = /^\s*(?:solve|problem|question|given|find|prove|show|evaluate|simplify|q\d*)\b[^=]*[:.]/i;
+const HEADING =
+  /^\s*(?:solve|problem|question|given|find|prove|show|evaluate|simplify|q\d*)\b[^=]*[:.]/i;
 
 /** Drops the "1)" labels and a leading title line so two photos align on the real steps. */
 export function cleanSteps(raw: readonly Step[]): Step[] {
