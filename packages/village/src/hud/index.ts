@@ -10,7 +10,7 @@ import type {
   AgentRegistry,
 } from '../world/api';
 import { nearestInteractable } from '../world/interact';
-import { STATE_GLYPH, STATE_LABEL, chipOrder, formatClock, initialOf } from './math';
+import { STATE_GLYPH, STATE_LABEL, chipOrder, formatClock, initialOf, portraitFor } from './math';
 import { HUD_CSS } from './style';
 
 export interface HudDeps {
@@ -223,9 +223,12 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
       let c = chipEls.get(a.id);
       if (!c) {
         c = el('button', 'sqv-chip', { type: 'button', role: 'listitem' });
-        const tex = a.portraitKey;
+        const tex = a.portraitKey ?? portraitFor(a);
         if (tex) {
-          const img = el('img', undefined, { alt: '', src: d.assetUrl(tex) });
+          const img = el('img', undefined, { alt: '', src: d.assetUrl(tex), width: '32', height: '32' });
+          img.addEventListener('error', () => {
+            img.replaceWith(el('span', 'sqv-initial', {}, initialOf(a.name)));
+          });
           c.appendChild(img);
         } else c.appendChild(el('span', 'sqv-initial', {}, initialOf(a.name)));
         c.appendChild(el('span', 'sqv-glyph', { 'aria-hidden': 'true' }));

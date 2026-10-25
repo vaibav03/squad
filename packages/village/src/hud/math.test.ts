@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { portraitFor, describe, expect, it } from 'vitest';
 import type { AgentInfo } from '../world/api';
 import { chipOrder, formatClock, initialOf } from './math';
 
@@ -26,5 +26,15 @@ describe('hud math', () => {
   it('initial skips articles', () => {
     expect(initialOf('The Dean')).toBe('D');
     expect(initialOf('')).toBe('?');
+  });
+});
+
+describe('portraitFor', () => {
+  it('maps every agent kind to a cast portrait path, stable per id', () => {
+    for (const kind of ['student', 'dean', 'council', 'expert', 'mediator'] as const) {
+      const p = portraitFor({ id: `${kind}:x`, kind });
+      expect(p).toMatch(/^assets\/pixel\/composed\/characters\/[a-z-]+\/portrait\.png$/);
+      expect(portraitFor({ id: `${kind}:x`, kind })).toBe(p);
+    }
   });
 });

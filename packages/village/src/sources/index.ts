@@ -13,3 +13,4 @@ export { createReplaySource, loadReplay } from './replay';
 export type { ReplaySource, ReplaySourceOptions, ReplayStatus, ReplaySpeed } from './replay';
 export type { Clock, EventMeta, SourceLogger, Unsubscribe } from './types';
 export { systemClock } from './types';
+export { withTripCutscene, tripCutsceneFromQuery } from './cutscene';

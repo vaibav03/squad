@@ -26,6 +26,9 @@ export function computeScale(
   const cw = Math.max(1, containerW);
   const ch = Math.max(1, containerH);
   let zoom = cw >= 900 ? 3 : 2;
+  // Phone portrait: pick the integer zoom whose view fills the container height (the art layer is 270 tall), so the
+  // world meets the top bar and the dock instead of floating in a dark band. 195 art px at 2x gives way to 130 at 3x.
+  if (cw < 560 && ch > cw) zoom = Math.min(3, Math.max(2, Math.ceil(ch / LOGICAL_H)));
   while (zoom > 1 && Math.floor(ch / zoom) < MIN_VIEW_H) zoom--;
   zoom += extraZoom; // the HUD Zoom button: one integer step closer (3x -> 4x), never a fractional camera zoom
   const k = Math.max(zoom, Math.round(zoom * dpr));
