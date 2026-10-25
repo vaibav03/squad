@@ -181,7 +181,7 @@ export function createTestMesh(o: MeshOptions = {}): TestMesh {
     surface: () => ({
       events: emitter.events,
       logs,
-      ledger: Object.values(ledgers).flatMap((l) => l.list()),
+      ledger: Object.values(ledgers).flatMap((l) => l.list().map((r) => ({ ...r, ts: undefined }))),
     }),
   };
 }
