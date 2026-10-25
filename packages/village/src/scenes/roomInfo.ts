@@ -254,7 +254,12 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       ],
     },
     outcome:
-      'Feedback only, no score: whether you caught it, then the wrong line, the correct statement and the page it comes from. A missed chapter is queued for review.',
+      'Feedback only: whether you caught it, then the wrong line, the correct statement and the page it comes from. A missed chapter is queued for review.',
     privacy: 'Only you see whether you caught the mistake. Nothing is shared with your squad.',
   },
 };
+
+export const roomInfo = (slot: string): RoomInfo | undefined =>
+  (ROOM_INFO as Record<string, RoomInfo | undefined>)[slot];
+
+export const ROOM_INFO_SLOTS: readonly RoomSlot[] = ROOM_SLOTS;
