@@ -204,7 +204,7 @@ test('7 shared study plan seeded from imports persists across reload; trip avail
     const mode = plan.plan!.generator?.mode;
     expect(['live', 'degraded', 'demo', 'fixture']).toContain(mode);
     // survives reload, mode badge shown honestly
-    await ana.page.goto('/squad/home');
+    await ana.page.goto('/squad');
     await ana.page.reload();
     await expect(ana.page.getByTestId('plan-mode-badge')).toBeVisible({ timeout: 20_000 });
     await expect(ana.page.getByTestId('home-plan-saved')).toBeVisible();
@@ -253,6 +253,6 @@ test('9 disconnect purges and flips the chain; reconnect works', async () => {
     const items = (await (await api(ana.token, '/v1/connections/items')).json()) as { items: { provider: string }[] };
     expect(items.items.some((i) => i.provider === 'google')).toBe(false);
     await ana.page.goto('/squad/connections');
-    await expect(ana.page.getByTestId('google-not-connected')).toBeVisible({ timeout: 20_000 });
+    await expect(ana.page.getByTestId('connect-google')).toBeVisible({ timeout: 20_000 }); // the connect panel returns after disconnect
   });
 });

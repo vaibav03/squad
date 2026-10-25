@@ -237,16 +237,17 @@ export const hub = (ctx: Ctx) => ({
       provider === 'canvas'
         ? {
             provider,
-            variant: 'feed' as const,
-            scopes: ['canvas.calendar_feed'],
-            feedUrl: 'https://canvas.demo.invalid/feeds/calendars/demo.ics',
+            variant: 'demo' as const,
+            scopes: ['canvas.demo_workspace'],
           }
         : {
             provider,
+            variant: 'demo' as const,
             scopes: [
               'https://www.googleapis.com/auth/calendar.readonly',
               'https://www.googleapis.com/auth/classroom.courses.readonly',
               'https://www.googleapis.com/auth/classroom.coursework.me.readonly',
+              'https://www.googleapis.com/auth/drive.file',
             ],
           };
     return toConnection((await call(ctx, 'POST', '/v1/connections', One, body)).connection);
