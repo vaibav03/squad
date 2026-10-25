@@ -5,11 +5,17 @@ import { CAST_ATLAS } from './assets';
 import { agentName } from '../adapter';
 import { pixelText, snap, tween } from './util';
 
-const WALK_PX_PER_S = 48; // constant speed, never eased (spec 08 row 3)
+const WALK_PX_PER_S = 36; // constant speed like the player, never eased (spec 08 row 3)
 const STOP_PX = 4;
 const STOP_MS = 80;
 
-export function personaFor(agentId: string): string {
+/** Student agents must not look like the viewer's own character (the 'student' cast): stable pick by first sight. */
+const AGENT_CASTS = ['ta', 'freshman', 'expert'] as const;
+
+export function personaFor(
+  agentId: string,
+  studentCast: (id: string) => string = () => 'freshman',
+): string {
   const { kind, ref } = parseAgentId(agentId);
   switch (kind) {
     case 'dean':
@@ -25,7 +31,7 @@ export function personaFor(agentId: string): string {
       return k[h % k.length]!;
     }
     case 'student':
-      return 'student';
+      return studentCast(agentId);
     default:
       return 'freshman';
   }
@@ -52,6 +58,18 @@ export interface ActorManager {
   destroy(): void;
 }
 
+function ensureShadow(ctx: VillageContext): void {
+  const sc = ctx.scene;
+  if (sc.textures.exists('mv-shadow')) return;
+  const t = sc.textures.createCanvas('mv-shadow', 18, 6);
+  if (!t) return;
+  const c = t.getContext();
+  c.fillStyle = 'rgba(7,15,31,0.42)'; // same soft contact shadow as the player
+  c.fillRect(3, 0, 12, 6);
+  c.fillRect(1, 1, 16, 4);
+  t.refresh();
+}
+
 function ensureAnims(ctx: VillageContext, persona: string): void {
   const a = ctx.scene.anims;
   const mk = (name: string, count: number, fps: number) => {
@@ -75,9 +93,15 @@ function ensureAnims(ctx: VillageContext, persona: string): void {
 export function createActors(ctx: VillageContext): ActorManager {
   const g = ctx.layout.groundY;
   const actors = new Map<string, Actor>();
+  const seen: string[] = [];
+  const studentCast = (id: string) => {
+    let i = seen.indexOf(id);
+    if (i < 0) i = seen.push(id) - 1;
+    return AGENT_CASTS[i % AGENT_CASTS.length]!;
+  };
 
   const create = (id: string, homeX: number): Actor => {
-    const persona = personaFor(id);
+    const persona = personaFor(id, studentCast);
     ensureAnims(ctx, persona);
     const sprite = ctx.scene.add
       .sprite(homeX, g, CAST_ATLAS.key, `${persona}/idle/0`)
@@ -85,7 +109,13 @@ export function createActors(ctx: VillageContext): ActorManager {
       .setDepth(ctx.depth.actors)
       .setAlpha(0);
     sprite.play(`mv-${persona}-idle`);
-    tween(ctx, sprite, { alpha: 1 }, { ms: 180 });
+    ensureShadow(ctx);
+    const shadow = ctx.scene.add
+      .image(homeX, g, 'mv-shadow')
+      .setOrigin(0.5, 0.5)
+      .setDepth(ctx.depth.actors - 1)
+      .setAlpha(0);
+    tween(ctx, [sprite, shadow], { alpha: 1 }, { ms: 180 });
     const tag = pixelText(ctx, agentName(id), { color: 'wallLit', size: 9.333 })
       .setDepth(ctx.depth.actorFx)
       .setVisible(false);
@@ -171,10 +201,12 @@ export function createActors(ctx: VillageContext): ActorManager {
         if (on) placeTag();
       },
       update() {
+        shadow.setPosition(sprite.x, g).setAlpha(sprite.alpha);
         if (tagOn) placeTag();
       },
       destroy() {
         moving?.stop();
+        shadow.destroy();
         tag.destroy();
         sprite.destroy();
       },
