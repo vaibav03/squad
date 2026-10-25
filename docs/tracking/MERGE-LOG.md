@@ -505,3 +505,17 @@ Branch `merge/batch15` (worktree `squad-wt/merge15`), landed as a true `--no-ff`
 
 - Landing merge commit: `ef8fbf2c06ce39553034adee36dd7e5db0c6e213` (parents `449ae511cbe474aec9e25a2919032914187a63fd` = tag `pre-merge-batch15`, `18d0ca662211eee9588335da72cadbdb68b89ac0` = origin/merge/batch15; diff empty).
 - Rollback: `git revert -m 1 ef8fbf2c06ce39553034adee36dd7e5db0c6e213`.
+
+## Batch 16: fix/e2e-round2 into main
+
+Branch `merge/batch16` (worktree `squad-wt/merge16`), landed as a true `--no-ff` merge.
+
+- Merged cleanly (11 commits): setup ready-state fix, `.ics` posting, `s_cam` to `s_chi` across scripts/docker/env/e2e, Home checklist from real state, live-source late-subscriber catch-up so rooms unlock, Esc/focus return in rooms, e2e harness fixes.
+- `s_cam` grep after the merge: no references left in `scripts/`, docker files, `.env.example`, `apps/agent`, `packages/mesh`, `apps/hub` or `e2e/`. Stragglers fixed in this batch: the status page fixture agent list (`packages/web/src/pages/status/fixtures.ts`), `docs/DEPLOY.md`, `docs/specs/04-agent-mesh-trip-planner.md`, the open note in `docs/INTEGRATION.md`, and the `E2E-003` row in `docs/qa/E2E-BUGS.md` (now marked fixed). Deliberately left: `s_cam` as a made-up member of the bot's and brain's own unit-test chat casts (`apps/bot/**`, `packages/brain/**`, `packages/village` director test, their fixtures), which are not the demo stack ids, plus historical text in `docs/qa` reports and `docs/tracking`.
+- Verification: `pnpm check` exit status 0, `pnpm demo:live` OK, hub smoke 102 of 102, agent smoke 4 of 4. Browser (hub :18916, web :15316, with the four agents up and also without): village 1280x800 and 390x844, courses and chat show no page errors; Council Hall: entering through the door, floor click opens nothing, chair and member clicks open the inspector with the room conversation, Esc closes the inspector, the room stays open and focus returns to the village stage. Frames in `docs/design/shots/merge16/`.
+- Observation (not from this batch): the inspector opens a council agent on the Thinking tab, not Chat, since the names batch (`397aa63`, "Thinking/Chat content" for council agents). The branch spec `e2e/specs/j17-room-inspector.spec.ts` still asserts that the Chat tab is selected, so it will fail until the spec or the default tab is aligned.
+
+### Landing (batch 16)
+
+- Landing merge commit: `75f73ad7a506c7c54e90f04e9bb2107dc67e0b75` (parents `acd78466ac90c1ef495098341a7381f0ab16a66f` = tag `pre-merge-batch16`, `e414427d72078171e614e1e0ef9109d2231b5780` = origin/merge/batch16; diff empty).
+- Rollback: `git revert -m 1 75f73ad7a506c7c54e90f04e9bb2107dc67e0b75`.
