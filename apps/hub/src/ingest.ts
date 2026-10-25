@@ -150,8 +150,9 @@ export function createIngestor(deps: HubDeps): Ingestor {
         case 'x.trip.limits': {
           const p = TripLimits.safeParse(data);
           if (!p.success) return { ok: false, issues: issues(p.error) };
-          const t = deps.trips.get(p.data.tripId);
-          if (!t || !deps.trips.mergeLimits(p.data.tripId, p.data.student, p.data.limits))
+          // A collaborative trip's constraint runs post limits under the run's task id.
+          const t = deps.trips.get(p.data.tripId) ?? deps.trips.byTask(p.data.tripId);
+          if (!t || !deps.trips.mergeLimits(t.tripId, p.data.student, p.data.limits))
             return bad('tripId', 'unknown_trip');
           return commit('x', 'x.trip.updated', { tripId: t.tripId }, t.squadId);
         }

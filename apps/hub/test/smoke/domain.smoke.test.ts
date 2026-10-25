@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { VILLAGE_EVENT_TYPES } from '@squad/core';
 import type { RunningHub } from '../../src/server';
 import { playDemoRun, isDemoRunning } from '../../src/sim/demo-run';
-import { auth, boot, emit, get, login, openSse, post } from '../helpers';
+import { auth, boot, emit, get, login, NOT_IN_PLAIN_RUN, openSse, post } from '../helpers';
 
 let hub: RunningHub;
 let url: string;
@@ -65,16 +65,19 @@ describe('ledger and trips', () => {
     await post(url, '/v1/session/projector', { on: false }, t.s_ana);
   });
 
-  it('the ballot is secret: only your own ranking, plus n of m progress', async () => {
+  it('the ballot is secret: only your own ranking; counts appear only from 3 voters', async () => {
     const bad = await post(url, '/v1/trips/trip_cabo/vote', { ranking: ['mars'] }, t.s_ana);
     expect(bad.status).toBe(400);
     await post(url, '/v1/trips/trip_cabo/vote', { ranking: ['vegas', 'cabo'] }, t.s_ana);
     await post(url, '/v1/trips/trip_cabo/vote', { ranking: ['cabo', 'vegas'] }, t.s_ben);
+    const two = await get<Record<string, unknown>>(url, '/v1/trips/trip_cabo', t.s_ben);
+    expect(two.body.voteProgress).toBeNull(); // 2 voters: counts would identify them
+    await post(url, '/v1/trips/trip_cabo/vote', { ranking: ['cabo', 'vegas'] }, t.s_chi);
     await post(url, '/v1/trips/trip_cabo/confirm', { optionId: 'vegas', yes: true }, t.s_ana);
     const v = await get<Record<string, unknown>>(url, '/v1/trips/trip_cabo', t.s_ben);
     expect(v.body.status).toBe('confirming');
     expect(v.body.myVote).toEqual(['cabo', 'vegas']);
-    expect(v.body.voteProgress).toEqual({ voted: 2, of: 4 });
+    expect(v.body.voteProgress).toEqual({ voted: 3, of: 4 });
     expect(v.body).not.toHaveProperty('votes');
     expect(v.body).not.toHaveProperty('tallies');
   });
@@ -215,7 +218,9 @@ describe('sim and shutdown', () => {
     for (const e of log) seen.add(e.type);
     // discussion.* events are scoped to a live run's squad (ingest drops them for an unknown run), so they never
     // reach a plain stream or the demo log; their delivery is covered by src/live/engine.test.ts and routes/live.test.ts
-    for (const type of VILLAGE_EVENT_TYPES.filter((x) => !x.startsWith('discussion.')))
+    for (const type of VILLAGE_EVENT_TYPES.filter(
+      (x) => !x.startsWith('discussion.') && !NOT_IN_PLAIN_RUN.has(x),
+    ))
       expect(seen.has(type), type).toBe(true);
     expect(log.filter((e) => e.type === 'trip.confirmed')).toHaveLength(1);
     // running it twice works: the stage is reset at the start of each run

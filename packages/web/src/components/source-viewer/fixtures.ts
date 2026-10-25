@@ -1,4 +1,4 @@
-import type { SourceExcerpt, SourceLine } from './types';
+import type { ExternalSourceExcerpt, SourceCitation, SourceExcerpt, SourceLine } from './types';
 
 export const SAMPLE_FILE = 'openstax-biology.pdf';
 const PAGE_COUNT = 40;
@@ -46,6 +46,46 @@ export function mockExcerpt(c: {
   };
 }
 
+const ASSIGNMENT_LINES = [
+  'Due: 2026-11-02T23:59:00Z',
+  'Worth 40 points.',
+  'Simulate drawing 500 samples of size 30 from the provided skewed population and plot the distribution of the sample means.',
+  'Submit one PDF. Late work loses 10 percent per day.',
+];
+
+/** Mock-mode data for non-PDF citations. Magic ids: *removed* -> removed, *revoked* -> revoked, *missing* -> not_found. */
+export function mockExternalExcerpt(
+  c: Pick<SourceCitation, 'source' | 'quote' | 'courseId'>,
+): SourceExcerpt {
+  const src = c.source!;
+  if (/revoked/i.test(src.id)) return { ok: false, reason: 'revoked' };
+  if (/removed/i.test(src.id)) return { ok: false, reason: 'removed' };
+  if (/missing|unknown/i.test(src.id)) return { ok: false, reason: 'not_found' };
+  const q = c.quote ? norm(c.quote) : '';
+  const lines: SourceLine[] = ASSIGNMENT_LINES.map((text, i) => ({
+    n: i + 1,
+    text,
+    hit: !!q && norm(text).includes(q),
+  }));
+  return {
+    ok: true,
+    sourceKind: src.kind,
+    sourceId: src.id,
+    title: src.title ?? 'Assignment 3: Sampling Distributions',
+    courseId: c.courseId ?? 'stat-101',
+    anchor: src.anchor ?? 's1',
+    section: null,
+    lines,
+    quote: c.quote ?? null,
+    quoteVerified: lines.some((l) => l.hit),
+    externalUrl: src.url ?? 'https://canvas.fixture.invalid/courses/stat101/assignments/a301',
+    provider: src.kind.startsWith('canvas') ? 'canvas' : 'google',
+    provenance: 'fixture',
+    fetchedAt: 0,
+    shared: false,
+  } satisfies ExternalSourceExcerpt;
+}
+
 export const sourceFixtures = {
   verified: mockExcerpt({
     file: SAMPLE_FILE,
@@ -60,4 +100,19 @@ export const sourceFixtures = {
   removed: mockExcerpt({ file: 'removed-notes.pdf', page: 3 }),
   notFound: mockExcerpt({ file: 'missing.pdf', page: 1 }),
   pageMissing: mockExcerpt({ file: SAMPLE_FILE, page: 999 }),
+  canvasVerified: mockExternalExcerpt({
+    source: {
+      kind: 'canvas_assignment',
+      id: 'src_a301',
+      anchor: 's1',
+      title: 'Assignment 3: Sampling Distributions',
+    },
+    quote: 'Late work loses 10 percent per day',
+  }),
+  canvasUnverified: mockExternalExcerpt({
+    source: { kind: 'canvas_assignment', id: 'src_a301', anchor: 's1' },
+    quote: 'Late work is forgiven for everyone',
+  }),
+  revoked: mockExternalExcerpt({ source: { kind: 'canvas_assignment', id: 'src_revoked' } }),
+  externalRemoved: mockExternalExcerpt({ source: { kind: 'gdoc', id: 'src_removed' } }),
 };

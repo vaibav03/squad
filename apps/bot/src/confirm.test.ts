@@ -20,6 +20,23 @@ describe('askConfirm', () => {
     expect(await p2).toBe('Yes');
   });
 
+  it('cancel drops a pending card and a queued one; the next card then starts', async () => {
+    const t = createTestBot();
+    const first = t.bot.ctx.askConfirm('s_ana', 'One?', ['a', 'b'], 'A');
+    const second = t.bot.ctx.askConfirm('s_ana', 'Two?', ['c', 'd'], 'B');
+    const third = t.bot.ctx.askConfirm('s_ana', 'Three?', ['e', 'f'], 'C');
+    await tick();
+    expect(t.bot.confirms.cancel('s_ana', 'B')).toBe(true); // queued
+    expect(t.bot.confirms.cancel('s_ana', 'A')).toBe(true); // active
+    expect(t.bot.confirms.cancel('s_ana', 'nope')).toBe(false);
+    expect(await first).toBe('timeout');
+    expect(await second).toBe('timeout');
+    await tick();
+    expect(t.sent.at(-1)!.text).toContain('Three?');
+    await t.answerConfirm('s_ana', '2');
+    expect(await third).toBe('f');
+  });
+
   it('emits agent.state + confirm.pending before the DM, confirm.done after, with taskId', async () => {
     const t = createTestBot();
     const p = t.bot.ctx.askConfirm('s_ana', 'Q?', ['a', 'b'], 'T9');

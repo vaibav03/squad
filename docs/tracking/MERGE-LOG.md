@@ -567,3 +567,36 @@ Branch `merge/batch20` (worktree `squad-wt/merge20`), each branch its own `--no-
 
 - Landing merge commit: `2f8b2707eeb63305acc98454e3ba5e4f9aee2dd2` (parents `cb9d7085f415957053166258a04500ac21563772` = tag `pre-merge-batch20`, `947f008f` = merge/batch20).
 - Rollback: `git revert -m 1 2f8b2707eeb63305acc98454e3ba5e4f9aee2dd2`.
+
+## Batch 21 (B): w0-a2a-contracts, typed-mentions, nook-parity (+context-store), imessage-sync, study-plan into main
+
+Branch `merge/batch21` (worktree `squad-wt/merge21`), one `--no-ff` merge commit per branch in this order, `pnpm check` exit 0 after each, then landed as one true merge.
+
+- feature/w0-a2a-contracts: clean.
+- feature/typed-mentions: clean. `@cubbie` and `@cubbi` both route to Cubbie in the group-shaped fixtures (apps/bot `mentions.test.ts` + `mention.test.ts` 55/55, hub `mentions-engine.test.ts` + iMessage `bridge.test.ts` 64/64, core `mentions.test.ts`).
+- feature/nook-parity (its base feature/context-store lands with it, which is now an ancestor): conflict in `packages/core/src/index.ts`, kept both exports (`./a2a` and `stripBusyTitles`, `BUSY_TITLE` from `./ics`). A `pnpm install --frozen-lockfile` was needed for the new `apps/extension` workspace.
+- feature/imessage-sync: conflicts in `packages/core/src/chat.ts` (kept both imports) and `apps/hub/src/imessage/bridge.ts` (kept typed-mentions' `handles.set` for the unknown-tag help DM plus imessage-sync's `relay(..., h)` handling and `postUnlinked`).
+- feature/study-plan: three additive conflicts, kept both sides: `apps/hub/src/app.ts` (`createConnectionRoutes` + `createPlanRoutes`), `packages/core/src/index.ts` (`./mentions` + `./plan`), `packages/core/src/types.ts` (`CitationSourceSchema` + `ChatCard` imports).
+- Interaction fix (test only, flagged for the w0 lead): the hub smokes `domain.smoke` ("demo run ingests every VillageEvent type") and `squad.smoke` ("every event type round-trips") failed on `a2a.message` (and would on `council.stage`): those kinds are council-run-only and the plain demo run and smoke emitter never produce them. They now skip a shared `NOT_IN_PLAIN_RUN` set in `apps/hub/test/helpers.ts` (as `discussion.*` already is); delivery and filtering stay covered by `filter-a2a.test.ts` and the core a2a tests. No production code changed.
+- Checks on the final tree: `pnpm check` exit 0; `pnpm demo:live` OK; hub smoke 121/121; browser smoke (fresh Playwright context, hub :8960 / web :5360 / agents 4831+, `pnpm dev:all` with agents, new account and squad `summa`): /squad, /squad/setup, /squad/village render header and content, build marker web sha equals hub sha, floating chat loads, sends and gets a Cubbie answer, 0 page errors.
+- Follow-ups (not done, deliberately): (1) iMessage bridge `detectMention` call sites need no switch: `@squad/bot`'s `detectMention` is already a wrapper over the shared `parseMentions` (plus the "hey cubbie" lead-in rule), and replacing it with the bare parser would drop that rule. (2) `MentionAutocomplete` is not wired into the composer: `packages/web/src/pages/chat/Composer.tsx` already has its own working, test-id'd mention picker (`activeMention` / `matchMentions`), so swapping is a behaviour change to the fixed chat, not a small additive one. Follow-up: unify the two pickers.
+
+### Landing (batch 21)
+
+- Landing merge commit: `09494f1274503d1e2bec2cfb3d56f074d5b09afe` (parents `64aef4d85469208361014a617f17221bc2d23adb` = tag `pre-merge-batch21`, `5f7c724c09c759860d002a638c50546b0796d71f` = merge/batch21; only tracker docs differ).
+- Rollback: `git revert -m 1 09494f1274503d1e2bec2cfb3d56f074d5b09afe`.
+
+## Batch 22 (C): feature/trip-collab (+ two requested wirings) into main
+
+Branch `merge/batch22` (worktree `squad-wt/merge22`), landed as a true `--no-ff` merge. trip-collab head `b6b66e40` (lead reported `pnpm check` 0 and j21 8 steps).
+
+- Conflicts: `apps/hub/src/app.ts` and `packages/core/src/index.ts` (kept both: plans + tripSvc, plan + trip exports). `packages/web/src/pages/trip/TripView.tsx` and `useTrip.ts`: took trip-collab's rewrite (it supersedes main's single-vote page and the empty-state "Plan a trip" onPlan prompt, which is dropped from `trip/index.tsx`) and kept blank-shell's `timedFetch` on every hub call in `useTrip`.
+- Interaction fix in `useTrip`: main's stream-retry kit made `refresh` run again after a blip and flipped a shown trip to the error state (the lead's "failed poll keeps the view" test failed after the merge). A failed refresh now keeps a trip that is already on screen; the first load still shows the error.
+- Wiring 1 (done): `deps.tripSvc.setBeforeConstraints(...)` in the hub app calls the new `refreshBusyForTrip(deps, members)` (`apps/hub/src/context/busy.ts`), i.e. `mergeContextBusy` from nook-parity: connected Canvas/Google calendars feed the constraints check, busy blocks only, titles never stored. Test in `context/wiring.test.ts`.
+- Wiring 2 (done): the trip chat intents' own `@cubbie|cubbi|squad|planner|council` regex is replaced by `addressesTrip()` over the shared `parseMentions` (agents cubbie, planner, council). Behaviour change by design: tags inside quotes, code, URLs and emails no longer address the trip. Test `trips/chat.test.ts` (11 cases).
+- Checks: `pnpm check` exit 0 (after the merge and again after the wirings); `pnpm demo:live` OK; hub smoke 138/138; browser smoke (fresh Playwright context, hub :8970 / web :5370 / agents 4841+, new squad `summa`): 3 routes render, build marker equal, chat sends and answers, `@cubbie plan a trip to Cabo in March` is answered in chat and /squad/trips then shows "Cabo in March" in Voting, 0 page errors.
+
+### Landing (batch 22)
+
+- Landing merge commit: `1b90bb305f422a6faee2696a0cfd1bad6801fc2a` (parents `7437d77c545d8bf66986250cda161258fc03f054` = tag `pre-merge-batch22`, `66c4bb2aa19c579283903ea9edf0115134207276` = merge/batch22; only tracker docs differ).
+- Rollback: `git revert -m 1 1b90bb305f422a6faee2696a0cfd1bad6801fc2a`.

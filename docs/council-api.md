@@ -116,3 +116,8 @@ curl -s -X POST localhost:8788/v1/council/ask -H "authorization: Bearer $TOKEN" 
 pnpm --filter @squad/hub test         # route tests with a fake service
 pnpm --filter @squad/hub test:smoke   # real service + demo model end to end
 ```
+
+## A2A envelope (additive, not emitted yet)
+
+Council runs will also publish `a2a.message` and `council.stage` village events and an optional `mode` on the legacy
+council events. See `docs/a2a.md` for the envelope, the privacy rules and the replay fixtures.

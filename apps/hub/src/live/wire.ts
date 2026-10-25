@@ -6,7 +6,8 @@ import { GeminiLive } from './gemini-client';
 import { FakeLive } from './fake-client';
 import { liveLimitsFromEnv } from './env';
 import type { EngineDeps } from './engine';
-import { createBrainGrounder, createFakeGrounder, withDemoFallback } from './grounder';
+import { createBrainGrounder, createFakeGrounder, withContext, withDemoFallback } from './grounder';
+import { contextServiceFor } from '../context/service';
 import type { Grounder } from './types';
 import { createLiveService, type LiveService } from './service';
 import { createLlmTakeaways, heuristicBuilder } from './takeaways';
@@ -23,9 +24,10 @@ export function liveServiceFor(deps: HubDeps): LiveService {
   if (deps.live) return deps.live;
   const env = process.env;
   const w = deps.liveWiring;
-  const grounder: Grounder = w?.brain
+  const course: Grounder = w?.brain
     ? withDemoFallback(createBrainGrounder(w.brain, w.courseId))
     : createFakeGrounder();
+  const grounder: Grounder = withContext(course, contextServiceFor(deps).store);
   const realTakeaways = w?.llm ? createLlmTakeaways(w.llm) : heuristicBuilder;
   const engine: EngineDeps = {
     now: () => deps.now(),

@@ -8,47 +8,34 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `feature/` | 10 | 70 | 422 | Claude Sonnet 5.5 (61) |
-| `fix/` | 2 | 24 | 108 | Claude Sonnet 5.5 (20) |
-| `nook-ext/` | 1 | 2 | 21 | Claude Sonnet 5.5 (2) |
-| `nook-ui/` | 1 | 1 | 11 | Claude Sonnet 5.5 (1) |
-| `nook-wire/` | 1 | 3 | 41 | Claude Sonnet 5.5 (3) |
+| `feature/` | 4 | 42 | 345 | Claude Sonnet 5.5 (33) |
+| `fix/` | 1 | 3 | 37 | Claude Sonnet 5.5 (3) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `feature/context-store` | 6 | 50 | 2026-10-25 03:47 | 2026-10-25 04:07 | Vaibav |
-| `feature/imessage-sync` | 5 | 32 | 2026-10-25 04:07 | 2026-10-25 04:39 | Vaibav |
-| `feature/nook-parity` | 11 | 35 | 2026-10-25 04:22 | 2026-10-25 04:32 | Vaibav |
-| `feature/release-gate` | 1 | 25 | 2026-10-25 04:07 | 2026-10-25 04:07 | Vaibav |
-| `feature/study-plan` | 15 | 71 | 2026-10-25 03:51 | 2026-10-25 04:41 | Vaibav |
+| `feature/release-gate` | 7 | 68 | 2026-10-25 04:07 | 2026-10-25 05:25 | Vaibav |
 | `feature/trip-collab` | 12 | 77 | 2026-10-25 04:07 | 2026-10-25 05:05 | Vaibav |
-| `feature/typed-mentions` | 8 | 44 | 2026-10-25 03:43 | 2026-10-25 04:16 | Vaibav |
-| `feature/w0-a2a-contracts` | 6 | 28 | 2026-10-25 03:52 | 2026-10-25 04:14 | Vaibav |
-| `feature/w1-council-runtime` | 2 | 19 | 2026-10-25 03:49 | 2026-10-25 04:07 | Vaibav |
-| `feature/w5-council-board` | 4 | 41 | 2026-10-25 03:53 | 2026-10-25 04:07 | Vaibav |
-| `fix/blank-shell` | 13 | 65 | 2026-10-25 03:24 | 2026-10-25 04:46 | Vaibav, Claude |
-| `fix/floating-chat` | 11 | 43 | 2026-10-25 03:37 | 2026-10-25 04:57 | Vaibav |
-| `nook-ext` | 2 | 21 | 2026-10-25 04:18 | 2026-10-25 04:22 | Vaibav |
-| `nook-ui` | 1 | 11 | 2026-10-25 04:24 | 2026-10-25 04:24 | Vaibav |
-| `nook-wire` | 3 | 41 | 2026-10-25 04:20 | 2026-10-25 04:26 | Vaibav |
+| `feature/w1-council-runtime` | 12 | 111 | 2026-10-25 03:49 | 2026-10-25 05:25 | Vaibav |
+| `feature/w5-council-board` | 11 | 89 | 2026-10-25 03:53 | 2026-10-25 05:29 | Vaibav |
+| `fix/blank-shell-2` | 3 | 37 | 2026-10-25 05:21 | 2026-10-25 05:32 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 229 |
+| (no trailer) | 237 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 572 |
+| Claude Sonnet 5.5 | 607 |
 
 ## Commits landed on main by area (subject prefix)
 
 | Area | Commits |
 |---|---:|
-| (other) | 102 |
+| (other) | 122 |
 | Initial commit | 1 |
 | Merge batch 1 | 1 |
 | Merge batch 10 | 1 |
@@ -62,6 +49,8 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Merge batch 18 | 1 |
 | Merge batch 19 | 1 |
 | Merge batch 2 | 1 |
+| Merge batch 20 | 1 |
+| Merge batch 21 | 1 |
 | Merge batch 3 | 1 |
 | Merge batch 4 | 1 |
 | Merge batch 5 | 1 |
@@ -70,31 +59,38 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Merge batch 8 | 1 |
 | Merge batch 9 | 1 |
 | a11y | 1 |
+| a2a | 4 |
 | accounts | 5 |
 | bot | 1 |
 | brain-answers | 7 |
 | brain-quiz | 7 |
 | castart | 4 |
 | chat | 18 |
+| chore | 2 |
 | ci | 2 |
+| context | 4 |
 | core | 4 |
 | council | 6 |
 | courses | 8 |
 | demo | 7 |
 | deploy | 5 |
 | design | 18 |
-| docs | 25 |
+| docs | 28 |
 | e2e | 27 |
-| fix | 34 |
+| feat | 1 |
+| fix | 42 |
 | hub | 5 |
 | imessage | 3 |
+| imsync | 4 |
 | inspector | 14 |
 | integration | 41 |
 | interior-engine | 9 |
+| lint | 1 |
 | live | 36 |
 | mastery | 5 |
 | media-art | 18 |
 | media-audio | 7 |
+| mentions | 8 |
 | merge batch1 | 2 |
 | merge batch10 | 1 |
 | merge batch11 | 3 |
@@ -117,9 +113,10 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | mesh-crypto | 13 |
 | mesh-flows | 8 |
 | motion | 10 |
+| nook | 17 |
 | obs | 3 |
 | perf | 2 |
-| plan | 1 |
+| plan | 14 |
 | proactive | 7 |
 | qa | 10 |
 | repo | 4 |
@@ -129,6 +126,8 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | security | 4 |
 | spine | 13 |
 | status | 3 |
+| test | 2 |
+| test(hub) | 1 |
 | ux | 7 |
 | village | 1 |
 | village-mesh | 22 |
@@ -137,6 +136,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | web-host | 2 |
 | web-live | 10 |
 | web-shell | 8 |
+| wip | 8 |
 | wire-bot | 7 |
 | wire-hub | 8 |
 | wire-web | 11 |
@@ -147,5 +147,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 |---|---:|
 | Claude | 1 |
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 518 |
+| Vaibav | 561 |
 | vaibav03 | 26 |

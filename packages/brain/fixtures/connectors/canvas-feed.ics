@@ -1,0 +1,27 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Squad fixture//Canvas feed//EN
+BEGIN:VEVENT
+UID:event-assignment-a301
+SUMMARY:Assignment 3: Sampling Distributions [STAT 101]
+DTSTART:20261102T235900Z
+DTEND:20261102T235900Z
+DESCRIPTION:Due at 11:59 pm. Simulate 500 samples of size 30 and plot the distribution of the sample means.
+URL:https://canvas.fixture.invalid/courses/stat101/assignments/a301
+END:VEVENT
+BEGIN:VEVENT
+UID:event-calendar-event-77
+SUMMARY:STAT 101 midterm review session [STAT 101]
+DTSTART:20261029T160000Z
+DTEND:20261029T170000Z
+DESCRIPTION:Review session in room 214. Bring a calculator.
+URL:https://canvas.fixture.invalid/calendar?event_id=77
+END:VEVENT
+BEGIN:VEVENT
+UID:event-assignment-a111
+SUMMARY:Lab Report 2: Osmosis in Potato Cores [BIO 110]
+DTSTART:20261105T170000Z
+DESCRIPTION:Due at 5 pm.
+URL:https://canvas.fixture.invalid/courses/bio110/assignments/a111
+END:VEVENT
+END:VCALENDAR

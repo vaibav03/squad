@@ -46,7 +46,10 @@ const BOT_PREFIX = /^\s*\p{Extended_Pictographic}️?\s*[\p{L}][\p{L} ]{0,20}:\s
 
 export interface Safety {
   readonly config: IMessageConfig;
-  admitInbound(m: IMessageMessageLike): { ok: true } | { ok: false; reason: DropReason };
+  admitInbound(
+    m: IMessageMessageLike,
+    o?: { backfill?: boolean },
+  ): { ok: true } | { ok: false; reason: DropReason };
   admitOutbound(to: string): OutboundVerdict;
   /** Record a send so that its echo (chat.db lag, any sender) is dropped. */
   noteSent(to: string, text: string): void;
@@ -88,11 +91,12 @@ export function createSafety(o: SafetyOptions): Safety {
 
   return {
     config: c,
-    admitInbound(m) {
+    admitInbound(m, opts) {
       if (!c.enabled) return { ok: false, reason: 'disabled' };
       if (m.isFromMe) return { ok: false, reason: 'own_message' };
       if (m.reaction) return { ok: false, reason: 'reaction' };
-      if (m.kind && m.kind !== 'text') return { ok: false, reason: 'not_text' };
+      if (m.kind && m.kind !== 'text' && !m.attachments?.length)
+        return { ok: false, reason: 'not_text' };
       if (!m.chatId) return { ok: false, reason: 'no_chat' };
       const group = m.chatKind ? m.chatKind === 'group' : isGroupGuid(m.chatId);
       const sender = senderOf(m);
@@ -108,6 +112,8 @@ export function createSafety(o: SafetyOptions): Safety {
       for (const [k, at] of sent) if (t - at > ECHO_MS) sent.delete(k);
       if (sent.has(`${key(group ? m.chatId : sender)}\n${text}`))
         return { ok: false, reason: 'echo' };
+      // backfill replays history at machine speed: the flood guard is for live traffic
+      if (opts?.backfill) return { ok: true };
       // another bot (or a runaway client) talking fast: mute that sender for a while
       if ((muted.get(n) ?? 0) > t) return { ok: false, reason: 'flood' };
       const times = (burst.get(n) ?? []).filter((x) => t - x < FLOOD_WINDOW_MS);

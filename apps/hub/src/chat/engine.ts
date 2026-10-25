@@ -1,5 +1,6 @@
 // Mounts the bot in-process: the SAME router, speaking policy, confirm flow and skills as iMessage, over the web
 // Transport. One process serves chat: shared db, one emit (the hub's own ingest), one brain and mastery store.
+import { contextServiceFor } from '../context/service';
 import { liveServiceFor } from '../live/wire';
 import {
   createResilientLlm,
@@ -19,6 +20,7 @@ import {
   createScheduler,
   createSkills,
   detectMention,
+  registerPlanNudges,
   registerMediaPersonas,
   type Bot,
   type EventPublisher,
@@ -26,6 +28,7 @@ import {
   type Scheduler,
 } from '@squad/bot';
 import { COURSE_ID } from '../cast';
+import { createPlanPort } from '../plans/port';
 import type { HubDeps } from '../types';
 import { wireRealPorts } from '../wire';
 import { dmChatId } from './access';
@@ -145,10 +148,16 @@ export async function attachChatEngine(
   const skills = await createSkills({
     ...(scheduler ? { proactive: scheduler } : {}),
     llm,
+    plans: createPlanPort(deps),
     db: deps.db,
     emit: (e) => events.publish(e),
     ...(media ? { media } : {}),
     courseId: () => courseId,
+    context: {
+      store: contextServiceFor(deps).store,
+      // membership comes from the hub directory, never from message text
+      viewerFor: (m) => ({ studentId: m.from, squadIds: deps.directory.squadsOf(m.from) }),
+    },
     live: {
       start: async ({ topic, askedBy, chatId }) => {
         const squadId = deps.directory.squadOf(askedBy);
@@ -197,10 +206,17 @@ export async function attachChatEngine(
     roster,
     events,
     log: quietLog(deps),
+    // typed mentions: a human-name tag (`@jamie`) must not get the help DM
+    memberNames: (chatId, from) =>
+      (chatId.startsWith('group:')
+        ? (deps.directory.squad(chatId.slice(6))?.members ?? [from])
+        : [from]
+      ).map((id) => deps.directory.student(id)?.name ?? ''),
   });
   await bot.start();
   if (scheduler) {
     scheduler.bind(bot.ctx);
+    deps.plans.setNudges(registerPlanNudges(scheduler, deps.db));
     scheduler.start();
   }
 
@@ -223,6 +239,20 @@ export async function attachChatEngine(
         ? { ok: true }
         : { ok: false, code: 'invalid_request', message: 'answer this one by number in the chat' };
     },
+  });
+
+  // Trips: member DMs ("Trip vote: where to?") are ordinary numbered confirm cards, answered by number in the chat,
+  // on the web card or by the village sheet; the council narrator uses the same resilient model as every skill.
+  deps.tripSvc.setAsk(
+    (student, question, options, taskId) =>
+      bot.ctx
+        .askConfirm(student, question, options, taskId)
+        .then((a) => (typeof a === 'string' ? a : 'timeout')),
+    (student, taskId) => void bot.confirms.cancel(student, taskId),
+  );
+  deps.tripSvc.setNarrator({
+    narrate: async (prompt) => (await llm.complete({ messages: prompt })).text,
+    real: () => llm.status().llm === 'real',
   });
 
   const store = createCourseStore(deps.db);

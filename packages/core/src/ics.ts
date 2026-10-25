@@ -46,3 +46,9 @@ export function parseIcsBusy(text: string): BusyBlock[] {
   }
   return out.sort((a, b) => a.start.localeCompare(b.start));
 }
+
+/** Privacy: planning needs only when a student is busy. Titles are replaced by this constant before storage or push. */
+export const BUSY_TITLE = 'busy';
+export function stripBusyTitles(blocks: readonly BusyBlock[]): BusyBlock[] {
+  return blocks.map((b) => ({ start: b.start, end: b.end, title: BUSY_TITLE }));
+}
