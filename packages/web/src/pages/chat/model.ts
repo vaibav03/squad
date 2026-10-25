@@ -1,3 +1,4 @@
+import { displayAssistantName } from './legacy-brand';
 import type { ChatCitation, ChatMessage, ChatSender, ChatSummary } from '@squad/core';
 
 /** Pure chat logic: grouping, labels, citation markers, mentions, small formatters. No React, no DOM. */
@@ -496,7 +497,7 @@ export function attachmentLabel(
 
 /** Name a screen reader hears at the start of a message. */
 export const senderSpeech = (s: ChatSender, me: string | null | undefined): string =>
-  isOwn(s, me) ? 'You' : s.kind === 'persona' ? `${s.name}, bot` : s.name;
+  isOwn(s, me) ? 'You' : s.kind === 'persona' ? `${displayAssistantName(s.name, s.id)}, bot` : s.name;
 
 /** Host to show next to a link whose text hides where it goes (URL-looking text, or text without the host). */
 export function linkHost(text: string, href: string): string | null {

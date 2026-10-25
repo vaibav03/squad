@@ -1,3 +1,4 @@
+import { displayAssistantName, displayAssistantText, displayLegacyMentions } from './legacy-brand';
 import { useLayoutEffect, useRef } from 'react';
 import {
   messageTruth,
@@ -168,7 +169,7 @@ export function MessageBubble(p: BubbleProps) {
           <div className="sqc-msg__head">
             {!row.own ? (
               <span className="sqc-msg__name" data-user-content aria-hidden="true">
-                {sender.name}
+                {sender.kind === 'persona' ? displayAssistantName(sender.name, sender.id) : sender.name}
               </span>
             ) : null}
             {tag ? (
@@ -225,7 +226,13 @@ export function MessageBubble(p: BubbleProps) {
             title={timeLabel(m.ts)}
             onClick={cites.length ? onBubbleClick : undefined}
           >
-            {text ? <Markdown>{bot ? withInlineCites(text, m.citations) : text}</Markdown> : null}
+            {text ? (
+              <Markdown>
+                {bot
+                  ? withInlineCites(displayAssistantText(text), m.citations)
+                  : displayLegacyMentions(text)}
+              </Markdown>
+            ) : null}
             {attachments.map((a) =>
               a.kind === 'image' ? (
                 <ImageAttachment

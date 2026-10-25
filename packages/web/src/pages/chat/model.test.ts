@@ -252,7 +252,7 @@ describe('review fixes: labels, links, merge', () => {
     expect(attachmentLabel({ kind: 'image' }, ana, 's_ana')).toBe('Image you sent');
     expect(attachmentLabel({ kind: 'image' }, ana, 's_ben')).toBe('Image from Ana');
     expect(senderSpeech(ana, 's_ana')).toBe('You');
-    expect(senderSpeech(bot, 's_ana')).toBe('Cubbie, bot');
+    expect(senderSpeech(bot, 's_ana')).toBe('Nook, bot');
     expect(senderSpeech(ana, 's_ben')).toBe('Ana');
   });
   it('shows the host when link text hides where the link goes', () => {
