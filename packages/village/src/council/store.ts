@@ -154,8 +154,8 @@ export function createCouncilBoardStore(opts: CouncilBoardOptions = {}): Council
         });
       if (linkLog.length > 60) linkLog.splice(0, linkLog.length - 60);
     }
-    if (msg.kind === 'status' && msg.stage === 'question' && msg.summary && !run.question)
-      run.question = msg.summary;
+    // a question only ever comes from the stage event or the run result; the opening status line
+    // ("Question received...", "Council convened.") is progress text, not the question.
   };
 
   const legacyMessage = (ev: Record<string, unknown>): void => {

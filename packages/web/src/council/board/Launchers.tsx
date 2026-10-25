@@ -7,11 +7,12 @@ import { openBoard, useBoardOpen, useBoardStoreRef, useBoardVersion } from './br
  * `RoomExtras` goes under a council room's panel header: the honest mode of that room's latest session (when
  * there is one) and the button. `HudButton` floats in the village while a council session exists.
  */
-export function RoomExtras({ councilId }: { councilId: string }) {
+export function RoomExtras({ councilId }: { councilId: string | string[] }) {
+  const ids = Array.isArray(councilId) ? councilId : [councilId];
   const store = useBoardStoreRef();
   useBoardVersion(store);
   if (!store) return null;
-  const runs = store.runs().filter((r) => r.councilId === councilId);
+  const runs = store.runs().filter((r) => ids.includes(r.councilId));
   const run = runs[runs.length - 1];
   return (
     <div className="cb-room-extras">

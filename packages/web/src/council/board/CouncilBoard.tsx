@@ -3,6 +3,7 @@ import {
   ASK_FIXTURE,
   STEPS,
   messageHeadline,
+  statusLine,
   playCouncilFixture,
   type BoardRun,
   type CouncilBoardStore,
@@ -124,6 +125,12 @@ export function CouncilBoard({
         <div className="cb-head__side">
           {run ? <ModeBadge mode={run.mode} /> : <ModeBadge mode="demo" />}
           {runs.length > 1 ? (
+          {run ? (
+            <p className="cb-status" data-stage={run.stage} role="status">
+              <span className="cb-status__k">{run.stage === 'done' ? 'Result' : 'Now'}</span>{' '}
+              {statusLine(run)}
+            </p>
+          ) : null}
             <label className="cb-field">
               <span className="cb-field__k">Session</span>
               <select

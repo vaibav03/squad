@@ -751,3 +751,17 @@
     bottom: calc(var(--lv-s4) + 116px + 112px);
   }
 }
+
+/* header: the current state of the run (the verdict once decided) */
+.cb-status {
+  margin: var(--space-1) 0 0;
+  max-width: 62ch;
+  font: 500 var(--text-sm) / var(--lh-sm) var(--font-sans);
+}
+.cb-status__k {
+  color: var(--muted-foreground);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: var(--text-xs, 12px);
+  letter-spacing: 0.04em;
+}

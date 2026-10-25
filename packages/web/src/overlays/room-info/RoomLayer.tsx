@@ -184,7 +184,7 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
             slot === 'council-hall' ? (
               <RoomExtras councilId="council:ask" />
             ) : slot === 'round-table' ? (
-              <RoomExtras councilId="council:planner" />
+              <RoomExtras councilId={['council:roundtable', 'council:planner']} />
             ) : undefined
           }
           returnFocusTo={helpRef.current}
