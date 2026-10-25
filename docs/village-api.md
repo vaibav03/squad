@@ -3,10 +3,10 @@
 Source of truth for types: `packages/village/src/world/api.ts` (type-only, safe to import). World map: `packages/village/src/world/layout.ts`. Everything here is stable; additions are backwards compatible. Questions or change requests go to the village-world lead.
 
 ## 1. Coordinate system
-- Logical resolution: height **180 px**, width varies (320 on 16:9, ~195 on a 390 px phone). The canvas buffer is logical size and is shown at an **integer CSS zoom** (2x at 390 px wide, 3x at 1280 px, 4x on large screens) with `image-rendering: pixelated`. Every game object sits on **whole logical pixels** (roundPixels is on; never use fractional x/y for sprites).
-- World is one strip, `WORLD_W = 2560` px. `GROUND_Y = 148` is the feet line; place buildings and actors with **origin (0.5, 1) at y = GROUND_Y** (props that stand on the ground do the same).
-- Regions: Left 0..800 (study), Mid 800..1760 (council + landmark row), Right 1760..2560 (mesh view, trip road).
-- **Slot x positions (current, ids are stable, x may be tuned: always read `layout.slot(id)`):** chapter-1 160, chapter-2 290, chapter-3 420, chapter-4 550, exam-oracle 680, feynman-porch 790, debate-stage 920, round-table 1040, council-hall 1190 (w112), panic-booth 1320, devils-ta 1430, oral-exam-hut 1540, rubric-courthouse 1670 (w96), notice-board 1800, commons 1930, home-1 2060, home-2 2180, home-3 2300, trip-road 2500, spawn 1255. Camera presets: left 400, mid 1240, right 2060 (the Right preset shows board + campfire + neighbours in one screen).
+- Art layer set is **270 px tall** (docs/design/DESIGN.md section 2). World y: 0 = top of sky, 270 = bottom. The camera is **bottom-anchored**: the view is `viewH <= 270` tall and shows y in [270 - viewH, 270] (240 at 1280x720, 270 on phones), so author everything in world coordinates and never in screen coordinates. View width varies (195 on a 390 px phone, 426 at 1280x720). Zoom is 3x at css width >= 900 else 2x (integer, with device-pixel alignment for fractional DPR); `image-rendering: pixelated`. Every game object sits on **whole art pixels**.
+- World is one strip, `WORLD_W = 2800` px. **`GROUND_Y = 250`** is where actors' feet and building bases sit (the grass edge and fence line are at y = 240; the dirt path is y 240..270). Place buildings and actors with **origin (0.5, 1) at y = GROUND_Y**, or use the character atlas anchor (16,31) of its 32x32 cell.
+- Regions: Left 0..850 (study), Mid 850..1760 (council + landmark row), Right 1760..2800 (mesh view, trip road).
+- **Slot x positions (current; ids are stable, x may be tuned: always read `layout.slot(id)`):** chapter-1 120, chapter-2 270, chapter-3 420, chapter-4 570, exam-oracle 690, feynman-porch 795, debate-stage 910, round-table 1020, council-hall 1170 (w112), panic-booth 1290, devils-ta 1375, oral-exam-hut 1475, rubric-courthouse 1610 (w96), notice-board 1800, commons 1930, home-1 2095, home-2 2245, home-3 2395 (houses are 128 px wide, 145-150 px pitch), trip-road 2540, spawn 1235. `WORLD_W` is 2800. Camera presets: left 380, mid 1120, right 2040.
 - **Slots** (`layout.slot('council-hall')`) are the hand-placed anchors: `chapter-1..4`, `exam-oracle`, `feynman-porch`, `debate-stage`, `round-table`, `council-hall`, `commons`, `panic-booth`, `devils-ta`, `oral-exam-hut`, `rubric-courthouse`, `notice-board`, `home-1..3`, `trip-road`, `spawn`. Each has centre `x`, footprint `w`, optional `door.x`, a `label`. **Render into slots; do not invent x values.** If a slot needs to move or a slot is missing, ask the world lead (the layout file is world-owned).
 - Depth: `DEPTH` bands in api.ts (`buildings`=40, `props`=50, `actors`=60, `actorFx`=70, `foreground`=80, `lighting`=90, `worldUi`=100). Never use raw numbers.
 
@@ -37,7 +37,7 @@ export default mod;   // a single module or an array
 ## 3. Events, commands, overlays
 - Pipeline: `VillageSource.subscribe(e)` -> world emits `bus 'villageEvent'` -> optional adapter (`src/adapter/module.ts` default-exports `{ createAdapter({me}) -> { adapt(e): SceneCommand[] } }`, `AdapterModule` in api.ts) -> each `SceneCommand` is emitted on `bus 'command'` and delivered to every module's `onCommand`. Commands are `{ type: string, ...}`; the command catalogue is owned by village-mesh (`docs/village-events.md`). Unknown commands are ignored.
 - World itself handles `agent.state` (updates `ctx.agents`, so HUD chips move without any module) and nothing else; everything visual is a module's job.
-- Overlays: any module emits `bus.emit('overlay', {type:'openCall'|'openQuiz'|'openLedger'|'focusAgent'|'closeOverlay', ...})`. The world forwards it to `opts.onOverlay`, locks input and pauses key capture until the host calls `handle.overlayClosed()`.
+- Overlays: any module emits `bus.emit('overlay', {type:'openCall'|'openQuiz'|'openLedger'|'openConfirm'|'focusAgent'|'closeOverlay', ...})`. The world forwards it to `opts.onOverlay`, locks input and pauses key capture until the host calls `handle.overlayClosed()`.
 - Calm mode / reduced motion: read `ctx.calm` (live) or listen on `bus 'calm'`. World parallax, walking teleport-with-fade, etc. follow it; modules apply their own reduced variants (docs/specs/08-village-motion.md).
 - Withheld values: `bus 'villageEvent'` carries whatever the source gave; the adapter/modules must never render anything but `field`, `shared`, `'hidden'`.
 
@@ -56,5 +56,8 @@ await h.ready; h.setCamera('mid'); h.setCalm(true); h.overlayClosed(); h.destroy
 `mountVillage` is synchronous (returns the handle immediately; Phaser is imported lazily inside, `ready` resolves on first rendered frame). `destroy()` is safe at any time (React strict-mode double mount) and removes canvas, HUD, listeners and unsubscribes from the source. Spec text calls the signature `mountVillage(el, opts)`; the call `mountVillage(el, opts)` is also accepted and equals `{parent: el, ...opts}`.
 Inside `parent` the world creates: the canvas (integer zoom, `role="img"` + label), the HUD (state chips, Left/Mid/Right/Zoom, Calm, clock; DOM, tap targets >= 44 px), and a visually hidden live region (`bus 'announce'`).
 
-## 6. Test hooks
+## 6. Overlay events
+`OverlayEvent` = `openCall {agent, callId}` | `openQuiz {quizId, chapter}` | `openLedger {taskId}` | `openConfirm {taskId, question}` | `focusAgent {agent}` | `closeOverlay`.
+
+## 7. Test hooks
 `handle.debug.ctx()` returns the live `VillageContext`; `handle.debug.fps()` the smoothed fps. Dev harness URL params: `?time=night|dusk|dawn|day|auto`, `?calm=1`, `?cam=mid`.

@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import type { CameraApi, CameraMode, MotionTokens, PlayerApi, VillageBus, WorldLayout } from '../world/api';
-import { BLEND_MS, blend, clampCenter, scrollForCenter } from './math';
+import { BLEND_MS, blend, clampCenter, scrollForCenter, scrollYBottom } from './math';
+import { LOGICAL_H } from '../world/api';
 
 export interface CameraDeps {
   layout: WorldLayout;
@@ -17,7 +18,7 @@ const ZOOM_FACTOR = 2; // integer only: pixels stay crisp
 export function createCamera(scene: Phaser.Scene, d: CameraDeps): CameraImpl {
   const cam = scene.cameras.main;
   cam.setRoundPixels(true);
-  cam.setBounds(-2000, 0, d.layout.width + 4000, d.layout.height); // we clamp ourselves
+  cam.removeBounds(); // we clamp ourselves (x) and bottom-anchor (y)
   let mode: CameraMode = (d.registry.get('cameraMode') as CameraMode | undefined) ?? 'follow';
   let fixedCenter: number | null = null; // preset / panTo target
   let returnMode: CameraMode = 'follow';
@@ -63,19 +64,19 @@ export function createCamera(scene: Phaser.Scene, d: CameraDeps): CameraImpl {
         const target = targetScroll();
         const k = blend(elapsed, d.motion.easeInOut);
         const sx = fixedCenter === null && settled ? target : Math.round(from + (target - from) * k);
-        cam.setScroll(sx, 0);
+        cam.setScroll(sx, scrollYBottom(cam.height, zoom(), LOGICAL_H));
         if (panDone && elapsed >= BLEND_MS) {
           holdLeft -= dt;
           if (holdLeft <= 0) { const r = panDone; panDone = null; fixedCenter = null; mode = returnMode; r(); begin(); }
         }
       } else {
-        started = true; cam.setZoom(zoom()); cam.setScroll(targetScroll(), 0); elapsed = BLEND_MS;
+        started = true; cam.setZoom(zoom()); cam.setScroll(targetScroll(), scrollYBottom(cam.height, zoom(), LOGICAL_H)); elapsed = BLEND_MS;
       }
     },
     destroy() { finishPan(); },
   };
   function finishPan() { if (panDone) { const r = panDone; panDone = null; r(); } }
   if (mode === 'left' || mode === 'mid' || mode === 'right') fixedCenter = d.layout.cameraPresets[mode];
-  cam.setZoom(zoom()); cam.setScroll(targetScroll(), 0); started = true; elapsed = BLEND_MS; walkedAtSet = d.player.x; from = cam.scrollX;
+  cam.setZoom(zoom()); cam.setScroll(targetScroll(), scrollYBottom(cam.height, zoom(), LOGICAL_H)); started = true; elapsed = BLEND_MS; walkedAtSet = d.player.x; from = cam.scrollX;
   return api;
 }
