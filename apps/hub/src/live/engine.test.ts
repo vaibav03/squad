@@ -361,3 +361,28 @@ describe('demo polish', () => {
     expect(s.turns.at(-1)?.text).toMatch(/^To wrap up, we settled/);
   });
 });
+
+describe('demo grounding', () => {
+  it('a demo run carries verified citation chips and course-grounded takeaways', async () => {
+    const { run } = await runToEnd(
+      { topic: 'How do I prepare before Friday?' },
+      makeKit({ hasKey: false }),
+    );
+    const s = run.snapshot();
+    expect(s.demo).toBe(true);
+    const cited = s.turns.filter((t) => t.citations.length > 0);
+    expect(cited.length).toBeGreaterThanOrEqual(2);
+    expect(s.turns.every((t) => !t.text.includes('['))).toBe(true);
+    expect(s.takeaways.sources.length).toBeGreaterThan(0);
+    expect(s.takeaways.grounding).toBe('course');
+  });
+
+  it('demo falls back to the fixture course when retrieval finds nothing; real runs do not', async () => {
+    const { withDemoFallback } = await import('./grounder');
+    const grounder = withDemoFallback({ ground: () => Promise.resolve({ pages: [] }) });
+    const demo = await runToEnd({}, makeKit({ hasKey: false, grounder, limits: { maxTurns: 4 } }));
+    expect(demo.run.snapshot().takeaways.sources.length).toBeGreaterThan(0);
+    const real = await runToEnd({}, makeKit({ grounder, limits: { maxTurns: 4 } }));
+    expect(real.run.snapshot().takeaways.sources.length).toBe(0);
+  });
+});

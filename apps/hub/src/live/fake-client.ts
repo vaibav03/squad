@@ -77,7 +77,9 @@ export function scriptFor(persona: LivePersonaId, p: ParsedRelay): string {
       ])}${hand}`;
     case 'planner':
       return `${pick([
-        `Here is a plan: first re-read the source${cite}, then try three practice problems.`,
+        src
+          ? `Here is a plan: first re-read ${src.phrase}${cite}, then try three practice problems.`
+          : 'Here is a plan: first re-read the source, then try three practice problems.',
         'Next, schedule a short review tomorrow and write a one-line summary in your own words.',
         'Then book a mock quiz at the end of the week to check what stuck.',
       ])}${hand}`;
@@ -85,7 +87,9 @@ export function scriptFor(persona: LivePersonaId, p: ParsedRelay): string {
       return `${pick([
         `A test would ask: in your own words, what does ${topic} mean and when does it apply?`,
         'A test would ask: what changes in the answer if the data has one extreme outlier?',
-        'A test would ask: how would you check this claim against the course notes?',
+        src
+          ? `A test would ask: what does the course mean by ${src.phrase}${cite}?`
+          : 'A test would ask: how would you check this claim against the course notes?',
       ])}${hand}`;
   }
 }

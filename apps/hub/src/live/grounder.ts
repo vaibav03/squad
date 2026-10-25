@@ -76,3 +76,16 @@ export function createFakeGrounder(): Grounder {
 
 /** No materials at all: the agents say it is general reasoning. */
 export const noGrounder: Grounder = { ground: () => Promise.resolve({ pages: [] }) };
+
+/** Demo runs always end up with sources: when retrieval finds nothing, use the fixture course pages. Real runs never do. */
+export function withDemoFallback(
+  primary: Grounder,
+  fixture: Grounder = createFakeGrounder(),
+): Grounder {
+  return {
+    async ground(q, o) {
+      const r = await primary.ground(q, o);
+      return r.pages.length > 0 || !o?.demo ? r : fixture.ground(q, o);
+    },
+  };
+}

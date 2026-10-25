@@ -335,7 +335,7 @@ export class LiveRun {
 
   private async reground(query: string): Promise<void> {
     try {
-      const { pages } = await this.d.grounder.ground(query);
+      const { pages } = await this.d.grounder.ground(query, { demo: this.snap.demo });
       for (const p of pages) this.pages.set(`${p.file}#${p.page}`, p);
       this.lastPages = pages.length > 0 ? pages : this.lastPages;
     } catch {

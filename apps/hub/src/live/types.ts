@@ -54,7 +54,8 @@ export interface LivePage {
   text: string;
 }
 export interface Grounder {
-  ground(query: string): Promise<{ pages: LivePage[] }>;
+  /** `demo`: the run is on FakeLive; a grounder may then fall back to the fixture course. */
+  ground(query: string, opts?: { demo: boolean }): Promise<{ pages: LivePage[] }>;
 }
 
 export const NOTE_FOR_KIND: Record<LiveErrorKind, string> = {
