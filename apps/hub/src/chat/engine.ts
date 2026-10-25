@@ -197,6 +197,12 @@ export async function attachChatEngine(
     roster,
     events,
     log: quietLog(deps),
+    // typed mentions: a human-name tag (`@jamie`) must not get the help DM
+    memberNames: (chatId, from) =>
+      (chatId.startsWith('group:')
+        ? (deps.directory.squad(chatId.slice(6))?.members ?? [from])
+        : [from]
+      ).map((id) => deps.directory.student(id)?.name ?? ''),
   });
   await bot.start();
   if (scheduler) {

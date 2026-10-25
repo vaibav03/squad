@@ -737,3 +737,165 @@ describe('store', () => {
     expect(c.hub.deps.imessage.linksOf(dan.id)).toHaveLength(0);
   });
 });
+
+// ---------- typed mentions (docs/agent-aliases.md) over a real-shaped group thread ----------
+describe('typed mentions in a bound group', () => {
+  const personaPosts = (gid: string) => history(gid).filter((m) => m.sender.kind === 'persona');
+
+  it('a realistic thread: every @cubbie / @cubbi mention is answered once, banter stays silent, replies stay in the thread', async () => {
+    await bind();
+    const gid = `group:${c.squadId}`;
+    await api(c.hub, 'POST', '/v1/invites/join', c.tok.Cy, { code: c.inviteCode });
+    const before = sentTo(G1).length;
+    const thread: { from: string; text: string; guid: string; mention: boolean }[] = [
+      { from: BEN, text: 'anyone done the reading?', guid: 'GUID-1', mention: false },
+      { from: ANA, text: 'hey @cubbie what is a z-score?', guid: 'GUID-2', mention: true },
+      { from: CY, text: 'lol same', guid: 'GUID-3', mention: false },
+      { from: BEN, text: '@Cubbi quiz me on ch6', guid: 'GUID-4', mention: true },
+      { from: ANA, text: 'thanks @cubbie!', guid: 'GUID-5', mention: true },
+      {
+        from: CY,
+        text: 'ok so I think @CUBBI could explain the normal distribution better',
+        guid: 'GUID-6',
+        mention: true,
+      },
+      { from: BEN, text: 'cubbie is slow today', guid: 'GUID-7', mention: false },
+      { from: ANA, text: 'see @cubbies tomorrow', guid: 'GUID-8', mention: false },
+    ];
+    let expected = 0;
+    for (const t of thread) {
+      await c.sdk.group(G1, t.from, t.text, { id: t.guid, createdAt: new Date(c.clock.t) });
+      if (t.mention) {
+        expected++;
+        await waitFor(() => personaPosts(gid).length >= expected);
+      }
+      await settle();
+      c.clock.t += 5000;
+    }
+    expect(personaPosts(gid)).toHaveLength(expected);
+    // everything went to the same group thread, nothing to any other target
+    const out = c.sdk.sent.filter((s) => s.to !== G1);
+    expect(out).toEqual([]);
+    expect(sentTo(G1).length).toBeGreaterThan(before);
+    for (const m of personaPosts(gid)) expect(m.sender.name).toBe('Cubbie');
+  });
+
+  it.each(['@cubbie', '@Cubbie', '@CUBBIE', '@cubbi', '@Cubbi'])(
+    '%s routes to Cubbie exactly once, in the group thread',
+    async (tag) => {
+      await bind();
+      const gid = `group:${c.squadId}`;
+      await c.sdk.group(G1, ANA, `${tag} what is a z-score?`, { id: `V-${tag}` });
+      await waitFor(() => personaPosts(gid).length >= 1);
+      await settle();
+      expect(personaPosts(gid)).toHaveLength(1);
+      expect(personaPosts(gid)[0]!.sender.name).toBe('Cubbie');
+      expect(c.sdk.sent.filter((x) => x.to !== G1)).toEqual([]);
+    },
+  );
+
+  it.each(['@jamie are you coming', '@priya can you send notes'])(
+    'human-name tag stays silent: %s',
+    async (text) => {
+      await bind();
+      const gid = `group:${c.squadId}`;
+      await c.sdk.group(G1, ANA, text);
+      await settle();
+      expect(personaPosts(gid)).toHaveLength(0);
+      expect(sentTo(ANA)).toHaveLength(0);
+    },
+  );
+
+  it('the same message GUID redelivered does not answer twice', async () => {
+    await bind();
+    const gid = `group:${c.squadId}`;
+    await c.sdk.group(G1, ANA, '@cubbie what is a z-score?', { id: 'DUP-1' });
+    await waitFor(() => personaPosts(gid).length >= 1);
+    await settle();
+    const n = personaPosts(gid).length;
+    await c.sdk.group(G1, ANA, '@cubbie what is a z-score?', { id: 'DUP-1' });
+    await settle();
+    expect(personaPosts(gid)).toHaveLength(n);
+  });
+
+  it('an alias (@tutor) in a bound group is answered by that persona, in the group', async () => {
+    await bind();
+    const gid = `group:${c.squadId}`;
+    await c.sdk.group(G1, ANA, '@tutor explain the normal distribution');
+    await waitFor(() => personaPosts(gid).length >= 1);
+    await settle();
+    expect(personaPosts(gid)[0]!.sender.name).toBe('Tutor');
+    expect(sentTo(G1).some((t) => /Tutor: /.test(t))).toBe(true);
+  });
+
+  it('a bare @cubbi asks what is needed', async () => {
+    await bind();
+    const gid = `group:${c.squadId}`;
+    await c.sdk.group(G1, ANA, '@cubbi');
+    await waitFor(() => personaPosts(gid).length >= 1);
+    await settle();
+    expect(personaPosts(gid)[0]!.text).toContain('What do you need?');
+  });
+
+  it('an unknown tag gets a help DM to the sender, and the group only sees "Sent you a DM"', async () => {
+    await bind();
+    const gid = `group:${c.squadId}`;
+    await c.sdk.group(G1, ANA, '@tutr help');
+    await waitFor(() => sentTo(ANA).length > 0);
+    await settle();
+    expect(sentTo(ANA)[0]).toContain("I don't know @tutr");
+    expect(sentTo(ANA)[0]).toContain('@tutor');
+    const groupTexts = sentTo(G1).filter((t) => !t.includes('linked to Stats Crew'));
+    expect(groupTexts.join('\n')).toContain('Sent you a DM');
+    expect(groupTexts.join('\n')).not.toContain('tutr help');
+    expect(groupTexts.join('\n')).not.toContain('@tutor');
+    // rate limited: a second unknown tag right away stays quiet
+    const n = sentTo(ANA).length;
+    await c.sdk.group(G1, ANA, '@cubie hello');
+    await settle();
+    expect(sentTo(ANA)).toHaveLength(n);
+    expect(personaPosts(gid).filter((m) => m.text.includes('Sent you a DM'))).toHaveLength(1);
+  });
+
+  it('a thread member name or a human-name tag never triggers help', async () => {
+    await bind();
+    const gid = `group:${c.squadId}`;
+    await c.sdk.group(G1, ANA, '@ben can you send notes');
+    await c.sdk.group(G1, ANA, 'hi @jamie are you coming');
+    await settle();
+    expect(personaPosts(gid)).toHaveLength(0);
+    expect(sentTo(ANA)).toHaveLength(0);
+  });
+
+  it('a typo of an alias gets the help DM', async () => {
+    await bind();
+    await c.sdk.group(G1, ANA, 'so @tutr explain z');
+    await waitFor(() => sentTo(ANA).length > 0);
+    expect(sentTo(ANA)[0]).toContain("I don't know @tutr");
+  });
+
+  it('near-misses, emails and code stay silent', async () => {
+    await bind();
+    const gid = `group:${c.squadId}`;
+    for (const t of [
+      '@cubbies are cute',
+      'cubbie is slow',
+      '@cub',
+      'mail me@cubbi.com',
+      'use `@cubbie` in code',
+      'he said "@cubbie hi"',
+    ]) {
+      await c.sdk.group(G1, ANA, t);
+      await settle();
+    }
+    expect(personaPosts(gid)).toHaveLength(0);
+    expect(sentTo(ANA)).toHaveLength(0);
+  });
+
+  it('an alias in an unbound group gets the join hint', async () => {
+    await c.sdk.group(G1, ANA, '@tutor explain z-scores');
+    await c.im.bridge.flush();
+    expect(sentTo(G1)).toHaveLength(1);
+    expect(sentTo(G1)[0]).toContain('join <invite code>');
+  });
+});

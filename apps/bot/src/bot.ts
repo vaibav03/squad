@@ -66,6 +66,10 @@ export function createBot(opts: BotOptions): Bot {
     now,
     policy: opts.policy,
     scoreTimeoutMs: opts.scoreTimeoutMs,
+    memberNames: (chatId, from) => [
+      ...roster.students.map((x) => x.name),
+      ...(opts.memberNames?.(chatId, from) ?? []),
+    ],
   });
 
   return {
