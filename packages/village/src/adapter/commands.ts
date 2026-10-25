@@ -87,6 +87,8 @@ export type SceneCommand =
       readonly type: 'chalkboard';
       readonly chapter: string;
       readonly mark: 'question' | 'tick' | 'cross' | 'none';
+      /** True when the event is about the viewer (target of the question, or the answering student). */
+      readonly mine?: boolean;
     }
   | {
       readonly type: 'callPortrait';

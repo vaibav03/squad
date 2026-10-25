@@ -1,4 +1,4 @@
-/* global process, window, console */
+/* global process, window, URLSearchParams, location, console */
 // Usage: node capture.mjs <port> <outDir> <w> <h> <query> <t1,t2,...ms> [prefix]
 // Plays the mesh story and screenshots at the given story times (wall clock = story clock at 1x).
 import { chromium } from 'playwright';
@@ -21,6 +21,10 @@ await page.waitForFunction(() => window.__village, null, { timeout: 20000 });
 await page.evaluate(() => window.__village.ready);
 await page.waitForTimeout(1500); // assets, font
 await page.evaluate(() => window.__replay.play());
+if (new URLSearchParams(query).get('start'))
+  await page.evaluate(() =>
+    window.__replay.seek(Number(new URLSearchParams(location.search).get('start'))),
+  );
 const start = Date.now();
 for (const t of times.split(',').map(Number)) {
   const wait = t - (Date.now() - start);

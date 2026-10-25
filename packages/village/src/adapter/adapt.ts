@@ -1,4 +1,4 @@
-import { safeParseVillageEvent } from '@squad/core';
+import { parseAgentId, safeParseVillageEvent } from '@squad/core';
 import type { VillageEvent } from '@squad/core';
 import type { AdapterContext, Place, SceneCommand } from './commands';
 import { agentName, chapterName, dwellMs, kindWords, shortCaption, studentName } from './labels';
@@ -18,6 +18,11 @@ const isAlertKind = (k: string): k is 'conflict' | 'option_dropped' | 'query_den
 const COMMONS: Place = { kind: 'commons' };
 const door = (agent: string): Place => ({ kind: 'door', agent });
 const studentAgent = (student: string) => `student:${student}`;
+/** StudentId of a student agent id, else 'mediator' (a non-student, non-mediator sender never names a person). */
+const studentOfAgent = (agent: string): string => {
+  const { kind, ref } = parseAgentId(agent);
+  return kind === 'student' && ref ? ref : 'mediator';
+};
 
 export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] {
   switch (event.t) {
@@ -42,7 +47,7 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       const fromMediator = event.from === 'mediator';
       const alert = isAlertKind(event.kind) ? event.kind : undefined;
       const out: SceneCommand[] = [];
-      const id = `env:${event.taskId}:${event.from}:${event.to}:${event.kind}`;
+      const id = `env:${event.taskId}:${event.from}:${event.to}:${event.kind}:${event.shared.join('|')}`;
       if (!fromMediator) {
         out.push({
           type: 'spawnEnvelope',
@@ -76,7 +81,7 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
         out.push({
           type: 'ledgerCard',
           taskId: event.taskId,
-          student: fromMediator ? 'mediator' : event.from,
+          student: fromMediator ? 'mediator' : studentOfAgent(event.from),
           card: { kind: 'blocked', field: 'request' },
         });
       }
@@ -147,9 +152,11 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
     }
 
     case 'confirm.pending': {
+      // The hub only sends another student's confirm to that student; if one arrives anyway, drop it.
+      if (event.student !== ctx.me) return [];
       const agent = studentAgent(event.student);
       const out: SceneCommand[] = [{ type: 'ring', agent, on: true }];
-      if (event.student === ctx.me) {
+      {
         out.push({
           type: 'openOverlay',
           request: { overlay: 'openConfirm', taskId: event.taskId, question: event.question },
@@ -164,12 +171,13 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
     }
 
     case 'confirm.done': {
+      if (event.student !== ctx.me) return [];
       const agent = studentAgent(event.student);
       const out: SceneCommand[] = [
         { type: 'ring', agent, on: false },
         { type: 'tick', at: door(agent) },
       ];
-      if (event.student === ctx.me) {
+      {
         out.push({
           type: 'openOverlay',
           request: { overlay: 'close', which: 'confirm', taskId: event.taskId },
@@ -237,7 +245,12 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
 
     case 'quiz.question': {
       const out: SceneCommand[] = [
-        { type: 'chalkboard', chapter: event.chapter, mark: 'question' },
+        {
+          type: 'chalkboard',
+          chapter: event.chapter,
+          mark: 'question',
+          mine: event.target === ctx.me,
+        },
       ];
       if (event.target === ctx.me) {
         out.push({
@@ -253,25 +266,19 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
       return out;
     }
 
-    case 'quiz.answer': {
-      const mark = event.correct === undefined ? 'none' : event.correct ? 'tick' : 'cross';
-      return [
-        { type: 'chalkboard', chapter: event.chapter, mark },
-        {
-          type: 'announce',
-          text: `A quiz answer came in for ${chapterName(event.chapter)}.`,
-          politeness: 'polite',
-        },
-      ];
-    }
-
+    case 'quiz.answer':
     case 'quiz.result': {
-      const mark = event.correct === undefined ? 'none' : event.correct ? 'tick' : 'cross';
+      const mine = event.student !== undefined && event.student === ctx.me;
+      const mark =
+        mine && event.correct !== undefined ? (event.correct ? 'tick' : 'cross') : 'none';
       return [
-        { type: 'chalkboard', chapter: event.chapter, mark },
+        { type: 'chalkboard', chapter: event.chapter, mark, mine },
         {
           type: 'announce',
-          text: `Quiz round finished for ${chapterName(event.chapter)}.`,
+          text:
+            event.t === 'quiz.answer'
+              ? `A quiz answer came in for ${chapterName(event.chapter)}.`
+              : `Quiz round finished for ${chapterName(event.chapter)}.`,
           politeness: 'polite',
         },
       ];

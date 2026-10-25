@@ -6,6 +6,7 @@ export type {
   LiveSource,
   LiveSourceOptions,
   LiveStatus,
+  LiveErrorKind,
   SquadSnapshot,
   EventSourceLike,
 } from './live';

@@ -10,10 +10,13 @@ import { createEnvelopes } from './envelopes';
 import { createHomes } from './homes';
 import { createPlaceResolver } from './places';
 import { createBoard, createCampfire } from './props';
+import { nextStagger } from './util';
 
 const BUBBLE_LANE_COMMONS = 'commons';
 const BUBBLE_LANE_BOARD = 'board';
 const RETURN_DELAY_MS = 900;
+/** The stage: campfire, board and the viewer's house share one 427 px view when centred here. */
+const STAGE_DX = 40;
 
 /**
  * The mesh view: neighbour houses with locked doors, campfire commons, envelopes carried and handed
@@ -36,18 +39,22 @@ export function createMeshView(
   let pinIndex = 0;
   let destroyed = false;
   let lastPan = -Infinity;
+  const handOffStarts: number[] = []; // concurrent hand-offs stagger by 60 ms each (spec 08 row 7)
 
   /**
-   * Mesh activity can happen off-screen. Pan there (400 ms ease-in-out, owned by the world camera) when the
-   * focus is outside the view, the student is not walking, and at most once per 6 s.
+   * Mesh activity can happen off-screen. When the focus is outside the view and the student is not walking
+   * (never fights keyboard input, spec 08 row 3), bring it into view at most once per 6 s: the stage (campfire,
+   * board, the viewer's house) is the world's Right preset, which holds until the student walks again; a single
+   * door gets a 400 ms ease-in-out pan.
    */
-  const focus = (x: number): void => {
+  const focus = (x: number, stage = false): void => {
     const cam = ctx.scene.cameras.main;
     const now = ctx.scene.time.now;
     if (ctx.player.isWalking || now - lastPan < 6000) return;
     if (x > cam.scrollX + 40 && x < cam.scrollX + cam.width - 40) return;
     lastPan = now;
-    void ctx.camera.panTo(Math.round(x), { holdMs: 5000 });
+    if (stage) ctx.camera.setMode('right');
+    else void ctx.camera.panTo(Math.round(x), { holdMs: 6000 });
   };
 
   const actorFor = (agentId: string): Actor | undefined => {
@@ -58,7 +65,7 @@ export function createMeshView(
   const markerPos = (at: Place): { x: number; y: number } | undefined => {
     if (at.kind === 'commons') return { x: camp.x, y: g - 34 };
     const p = places.resolve(at);
-    return p ? { x: p.x, y: g - 92 } : undefined;
+    return p ? { x: p.x, y: g - 138 } : undefined; // above the roof ridge: clear of the name sign
   };
 
   const bubbleAnchor = (
@@ -88,7 +95,7 @@ export function createMeshView(
         const x = places.doorX(cmd.agent);
         if (cmd.on) {
           actorFor(cmd.agent); // the agent steps out to its door while waiting
-          focus(x);
+          if (homes.isMine(cmd.agent)) focus(camp.x + STAGE_DX, true); // the viewer's own yes is the one to watch
         }
         fx.ring(cmd.agent, x, cmd.on);
         break;
@@ -105,7 +112,7 @@ export function createMeshView(
       case 'spawnEnvelope': {
         const carrier = actorFor(cmd.from);
         const at = { x: places.doorX(cmd.from), y: g - 33 };
-        focus((places.doorX(cmd.from) + camp.x) / 2);
+        focus(camp.x + STAGE_DX, true);
         envs.spawn(
           cmd.id,
           cmd.to,
@@ -146,6 +153,7 @@ export function createMeshView(
           ...(cmd.lines ? { lines: cmd.lines } : {}),
           minMs: cmd.minMs,
           ...(cmd.tone ? { tone: cmd.tone } : {}),
+          ...(cmd.tone && cmd.at.kind === 'commons' ? { icon: false } : {}),
           anchor: bubbleAnchor(cmd.at),
           ...(cmd.at.kind === 'commons'
             ? { lane: BUBBLE_LANE_COMMONS }
@@ -162,7 +170,7 @@ export function createMeshView(
       case 'marker': {
         const p = markerPos(cmd.at);
         if (p) {
-          focus(p.x);
+          if (cmd.at.kind === 'commons') focus(camp.x + STAGE_DX, true);
           fx.marker(cmd.key, p.x, p.y);
         }
         break;
@@ -172,7 +180,7 @@ export function createMeshView(
         break;
 
       case 'ledgerCard': {
-        focus((board.x + camp.x) / 2);
+        focus(camp.x + STAGE_DX, true);
         board.pin(cmd.card);
         const who = studentName(cmd.student);
         const c = cmd.card;
@@ -203,16 +211,22 @@ export function createMeshView(
 
   /** Envelope arrives with its carrier at the commons: pin at the fire, or glide to the recipient's door. */
   const handOff = (env: ReturnType<typeof envs.get> & object, carrier: Actor) => {
+    const staggerIndex = nextStagger(handOffStarts, ctx.scene.time.now);
     if (env.to === 'commons') {
       envs.glide(env, camp.pinSpot(pinIndex++), {
         rest: true,
+        staggerIndex,
         onDone: () => carrier.showTag(false),
       });
       return;
     }
     const dx = places.doorX(env.to);
     actorFor(env.to); // recipient steps out to receive
-    envs.glide(env, { x: dx, y: g - 36 }, { rest: false, onDone: () => carrier.showTag(false) });
+    envs.glide(
+      env,
+      { x: dx, y: g - 36 },
+      { rest: false, staggerIndex, onDone: () => carrier.showTag(false) },
+    );
   };
 
   return {

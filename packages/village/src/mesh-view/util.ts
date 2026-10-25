@@ -55,3 +55,26 @@ export function pixelText(
 export function clip(s: string, max: number): string {
   return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
+
+export const BUBBLE_MAX_CHARS = 60;
+export const BUBBLE_MAX_LINES = 3;
+
+/** Displayed bubble body: at most 60 characters over at most 3 lines (DESIGN 8.10); the rest lives in the DOM feed. */
+export function bubbleBody(text: string, lines: readonly string[] = [], bullets = true): string {
+  const parts = [
+    clip(text, BUBBLE_MAX_CHARS),
+    ...lines.map((l) => (bullets ? `- ${clip(l, BUBBLE_MAX_CHARS)}` : clip(l, BUBBLE_MAX_CHARS))),
+  ].slice(0, BUBBLE_MAX_LINES);
+  return clip(parts.join('\n'), BUBBLE_MAX_CHARS);
+}
+
+/**
+ * Stagger row for a hand-off starting at `now`: how many hand-offs started within the last `windowMs`.
+ * Records `now` in `starts` (and drops expired entries).
+ */
+export function nextStagger(starts: number[], now: number, windowMs = 400): number {
+  while (starts.length && now - starts[0]! > windowMs) starts.shift();
+  const idx = starts.length;
+  starts.push(now);
+  return idx;
+}

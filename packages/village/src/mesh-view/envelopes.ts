@@ -5,6 +5,8 @@ import { snap, tween } from './util';
 
 const ABOVE_HEAD = 33;
 const MAX_PINNED = 3;
+/** An envelope that never gets a walkTo (recipient only, dropped event) fades away instead of floating forever. */
+const UNGLIDED_MS = 20000;
 
 export interface Envelope {
   readonly id: string;
@@ -12,6 +14,9 @@ export interface Envelope {
   carrier?: Actor;
   sprite: Phaser.GameObjects.Sprite;
   popped: boolean;
+  /** Set once glide() has started; an envelope that never glides is cleaned up after UNGLIDED_MS. */
+  gliding?: boolean;
+  idle?: Phaser.Time.TimerEvent;
 }
 
 export interface EnvelopeManager {
@@ -41,19 +46,28 @@ export function createEnvelopes(ctx: VillageContext): EnvelopeManager {
   }
 
   const destroyEnv = (e: Envelope) => {
+    e.idle?.remove(false);
+    sc.tweens.killTweensOf(e.sprite);
     e.sprite.destroy();
-    all.delete(e.id);
+    if (all.get(e.id) === e) all.delete(e.id);
+    const pi = pinned.indexOf(e);
+    if (pi >= 0) pinned.splice(pi, 1);
   };
 
   return {
     spawn(id, to, at, carrier) {
-      all.get(id)?.sprite.destroy();
+      const dup = all.get(id);
+      if (dup) destroyEnv(dup);
       const sprite = sc.add
         .sprite(snap(at.x), snap(at.y), 'mv-env-pop', 0)
         .setOrigin(0.5, 1)
         .setDepth(ctx.depth.actorFx + 2);
       const env: Envelope = { id, to, sprite, popped: false, ...(carrier ? { carrier } : {}) };
       all.set(id, env);
+      env.idle = sc.time.delayedCall(UNGLIDED_MS, () => {
+        if (env.gliding || all.get(id) !== env) return;
+        tween(ctx, sprite, { alpha: 0 }, { ms: 200, onComplete: () => destroyEnv(env) });
+      });
       if (ctx.calm) {
         // reduced motion: no pop; the envelope fades in at the door
         sprite.setTexture('mv-envelope').setAlpha(0);
@@ -71,11 +85,14 @@ export function createEnvelopes(ctx: VillageContext): EnvelopeManager {
     get: (id) => all.get(id),
     glide(env, to, o) {
       delete env.carrier;
+      env.gliding = true;
+      env.idle?.remove(false);
       const done = () => {
         if (o.rest) {
           pinned.push(env);
           while (pinned.length > MAX_PINNED) {
             const old = pinned.shift()!;
+            sc.tweens.killTweensOf(old.sprite);
             tween(ctx, old.sprite, { alpha: 0 }, { ms: 200, onComplete: () => destroyEnv(old) });
           }
         } else {
@@ -119,7 +136,7 @@ export function createEnvelopes(ctx: VillageContext): EnvelopeManager {
       }
     },
     destroy() {
-      for (const e of all.values()) e.sprite.destroy();
+      for (const e of [...all.values()]) destroyEnv(e);
       all.clear();
       pinned.length = 0;
     },

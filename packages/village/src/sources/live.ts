@@ -1,8 +1,9 @@
-import { safeParseVillageEvent } from '@squad/core';
+import { VILLAGE_EVENT_TYPES, safeParseVillageEvent } from '@squad/core';
 import type { VillageEvent, VillageSource } from '@squad/core';
 import type { Clock, EventMeta, SourceLogger, Unsubscribe } from './types';
 import { consoleLogger, systemClock } from './types';
 
+export type LiveErrorKind = 'snapshot' | 'stream';
 export type LiveStatus = 'connecting' | 'live' | 'reconnecting' | 'polling' | 'closed';
 
 /** Minimal EventSource surface (browser or fake). */
@@ -49,6 +50,8 @@ export interface LiveSource extends VillageSource {
   onStatus(fn: (s: LiveStatus) => void): Unsubscribe;
   /** Raw snapshot (trips confirmed so far etc.) for hosts that want to skip a cutscene on late join. */
   onSnapshot(fn: (s: SquadSnapshot) => void): Unsubscribe;
+  /** Reports failures ('snapshot' or 'stream') without any values. */
+  onError(fn: (kind: LiveErrorKind) => void): Unsubscribe;
   start(): Promise<void>;
   close(): void;
 }
@@ -95,7 +98,8 @@ export function snapshotToEvents(s: SquadSnapshot, me?: string): VillageEvent[] 
 
 /**
  * Hub stream client (docs/hub-api.md section 5): snapshot first, then SSE with Last-Event-ID resume,
- * polling fallback after repeated errors. Nothing here runs at import time.
+ * state polling (GET /v1/squad/state) after repeated errors while the stream keeps retrying.
+ * Nothing here runs at import time.
  */
 export function createLiveSource(opts: LiveSourceOptions): LiveSource {
   const clock = opts.clock ?? systemClock;
@@ -104,24 +108,46 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
   const errorsBeforePolling = opts.errorsBeforePolling ?? 2;
   const maxBackoff = opts.maxBackoffMs ?? 15000;
   const base = opts.baseUrl.replace(/\/$/, '');
+  const SNAPSHOT_RETRIES = 3;
 
   const subs = new Set<(e: VillageEvent, m?: EventMeta) => void>();
   const statusSubs = new Set<(s: LiveStatus) => void>();
   const snapSubs = new Set<(s: SquadSnapshot) => void>();
+  const errorSubs = new Set<(k: LiveErrorKind) => void>();
   let status: LiveStatus = 'connecting';
   let lastId = 0;
   let errors = 0;
   let es: EventSourceLike | undefined;
   let retryTimer: unknown;
   let pollTimer: unknown;
+  let snapTimer: unknown;
   let backoff = 1000;
   let closed = false;
   let started = false;
+  let polling = false;
+  let inFlight = false;
+  let loading = 0; // snapshots in flight: stream frames are buffered meanwhile
+  let buffer: { data: string; id: string | undefined; kind: string | undefined }[] = [];
+  let seen = new Set<string>(); // JSON of the synthesized events at the last snapshot/poll
 
+  /** Call a subscriber; a throwing one is logged generically and never stops delivery. */
+  const call = <A extends unknown[]>(fn: (...a: A) => void, ...a: A) => {
+    try {
+      fn(...a);
+    } catch {
+      log.warn('a subscriber threw');
+    }
+  };
+  const emit = (e: VillageEvent, m?: EventMeta) => {
+    for (const fn of [...subs]) call(fn, e, m);
+  };
+  const reportError = (k: LiveErrorKind) => {
+    for (const fn of [...errorSubs]) call(fn, k);
+  };
   const setStatus = (s: LiveStatus) => {
     if (status === s || closed) return;
     status = s;
-    statusSubs.forEach((f) => f(s));
+    for (const fn of [...statusSubs]) call(fn, s);
   };
   const f = () => opts.fetch ?? fetch;
   const headers = async (): Promise<Record<string, string>> => {
@@ -133,8 +159,12 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
 
   /** Deliver one wire event: validate, dedupe by seq, never throw. */
   const deliver = (data: string, id: string | undefined, kind?: string) => {
+    if (loading > 0) {
+      buffer.push({ data, id, kind });
+      return;
+    }
     if (kind?.startsWith('x.')) {
-      if (kind === 'x.resync') void loadSnapshot();
+      if (kind === 'x.resync') void loadSnapshot(true);
       return;
     }
     const seq = id !== undefined && /^\d+$/.test(id) ? Number(id) : undefined;
@@ -158,21 +188,61 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
       );
       return;
     }
-    subs.forEach((fn) => fn(r.data, id !== undefined ? { id } : undefined));
+    emit(r.data, id !== undefined ? { id } : undefined);
   };
 
-  async function loadSnapshot(): Promise<void> {
-    try {
-      const res = await f()(`${base}/v1/squad/state`, { headers: await headers() });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const snap = (await res.json()) as SquadSnapshot;
-      if (typeof snap.seq === 'number') lastId = Math.max(lastId, snap.seq);
-      snapSubs.forEach((fn) => fn(snap));
-      for (const e of snapshotToEvents(snap, opts.me))
-        subs.forEach((fn) => fn(e, { snapshot: true }));
-    } catch (err) {
-      log.warn('snapshot unavailable, continuing with the stream', String(err));
+  const flushBuffer = () => {
+    const pending = buffer;
+    buffer = [];
+    for (const b of pending) {
+      if (closed) return;
+      deliver(b.data, b.id, b.kind);
     }
+  };
+
+  async function fetchState(): Promise<SquadSnapshot> {
+    const res = await f()(`${base}/v1/squad/state`, { headers: await headers() });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as SquadSnapshot;
+  }
+
+  /** Fetch the snapshot and deliver its events; stream frames that arrive meanwhile are held back, in order. */
+  async function loadSnapshot(resync = false): Promise<boolean> {
+    loading++;
+    let ok = false;
+    try {
+      const snap = await fetchState();
+      if (closed) return false;
+      // a hub restart resets seq, so the snapshot always wins over what we had
+      if (typeof snap.seq === 'number') lastId = snap.seq;
+      const events = snapshotToEvents(snap, opts.me);
+      seen = new Set(events.map((e) => JSON.stringify(e)));
+      for (const fn of [...snapSubs]) call(fn, snap);
+      const meta: EventMeta = resync ? { snapshot: true, resync: true } : { snapshot: true };
+      for (const e of events) emit(e, { ...meta });
+      ok = true;
+    } catch (err) {
+      if (!closed) {
+        log.warn('snapshot unavailable, continuing with the stream', String(err));
+        reportError('snapshot');
+      }
+    } finally {
+      loading--;
+      if (loading === 0 && !closed) flushBuffer();
+    }
+    return ok;
+  }
+
+  function retrySnapshot(attempt: number) {
+    if (closed || attempt > SNAPSHOT_RETRIES) return;
+    const wait = Math.min(maxBackoff, 1000 * 2 ** (attempt - 1));
+    snapTimer = clock.setTimeout(() => {
+      snapTimer = undefined;
+      if (closed) return;
+      void loadSnapshot().then((ok) => {
+        if (!ok) retrySnapshot(attempt + 1);
+      });
+    }, wait);
   }
 
   async function streamToken(): Promise<string | undefined> {
@@ -196,10 +266,12 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
       return;
     }
     const st = await streamToken();
+    if (closed) return;
     const q = new URLSearchParams();
     if (st) q.set('st', st);
     if (lastId > 0) q.set('lastEventId', String(lastId));
-    const url = `${base}/v1/squad/stream${q.size ? `?${q}` : ''}`;
+    const qs = q.toString();
+    const url = `${base}/v1/squad/stream${qs ? `?${qs}` : ''}`;
     es?.close();
     const src = new ES(url);
     es = src;
@@ -218,6 +290,7 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
       src.close();
       if (es === src) es = undefined;
       if (closed) return;
+      reportError('stream');
       if (errors >= errorsBeforePolling) startPolling();
       else setStatus('reconnecting');
       scheduleRetry();
@@ -232,30 +305,47 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
     retryTimer = clock.setTimeout(() => void openStream(), wait);
   }
 
+  /** One polling chain at most: `polling` is the on/off switch, `inFlight` guards a request in progress. */
   function startPolling() {
-    if (closed || pollTimer !== undefined) return;
+    if (closed || polling) return;
+    polling = true;
     setStatus('polling');
-    const poll = async () => {
+    if (!inFlight) schedulePoll(0);
+  }
+
+  function schedulePoll(ms: number) {
+    clock.clearTimeout(pollTimer);
+    pollTimer = clock.setTimeout(() => {
       pollTimer = undefined;
-      if (closed || status !== 'polling') return;
-      try {
-        const res = await f()(`${base}/v1/squad/events?after=${lastId}`, {
-          headers: await headers(),
-        });
-        if (res.ok) {
-          const body = (await res.json()) as { events?: { seq: number; event: unknown }[] };
-          for (const row of body.events ?? []) deliver(JSON.stringify(row.event), String(row.seq));
-        }
-      } catch (err) {
-        log.warn('poll failed', String(err));
+      void poll();
+    }, ms);
+  }
+
+  async function poll() {
+    if (closed || !polling || inFlight) return;
+    inFlight = true;
+    try {
+      const snap = await fetchState();
+      if (closed || !polling) return;
+      if (typeof snap.seq === 'number') lastId = snap.seq;
+      const now = new Set<string>();
+      for (const e of snapshotToEvents(snap, opts.me)) {
+        const key = JSON.stringify(e);
+        now.add(key);
+        if (!seen.has(key)) emit(e, { snapshot: true });
       }
-      if (!closed && status === 'polling') pollTimer = clock.setTimeout(() => void poll(), pollMs);
-    };
-    pollTimer = clock.setTimeout(() => void poll(), 0);
+      seen = now;
+    } catch (err) {
+      if (!closed) log.warn('poll failed', String(err));
+    } finally {
+      inFlight = false;
+    }
+    if (!closed && polling && pollTimer === undefined) schedulePoll(pollMs);
   }
 
   function stopPolling() {
-    if (pollTimer !== undefined) clock.clearTimeout(pollTimer);
+    polling = false;
+    clock.clearTimeout(pollTimer);
     pollTimer = undefined;
   }
 
@@ -275,43 +365,35 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
       snapSubs.add(fn);
       return () => snapSubs.delete(fn);
     },
+    onError(fn) {
+      errorSubs.add(fn);
+      return () => errorSubs.delete(fn);
+    },
     async start() {
       if (started || closed) return;
       started = true;
       setStatus('connecting');
-      await loadSnapshot();
+      const ok = await loadSnapshot();
+      if (closed) return;
+      if (!ok) retrySnapshot(1);
       await openStream();
     },
     close() {
       closed = true;
       status = 'closed';
       clock.clearTimeout(retryTimer);
+      clock.clearTimeout(snapTimer);
       stopPolling();
       es?.close();
       es = undefined;
-      statusSubs.forEach((f2) => f2('closed'));
+      buffer = [];
+      for (const fn of [...statusSubs]) call(fn, 'closed' as LiveStatus);
       subs.clear();
       statusSubs.clear();
       snapSubs.clear();
+      errorSubs.clear();
     },
   };
 }
 
-const VILLAGE_T = [
-  'agent.state',
-  'agent.message',
-  'ledger.entry',
-  'confirm.pending',
-  'confirm.done',
-  'council.opinion',
-  'council.rank',
-  'council.verdict',
-  'quiz.question',
-  'quiz.answer',
-  'quiz.result',
-  'call.start',
-  'call.caption',
-  'call.end',
-  'trip.confirmed',
-  'mastery.changed',
-] as const;
+const VILLAGE_T = VILLAGE_EVENT_TYPES; // the hub names SSE frames by event type; derived so new types are never missed

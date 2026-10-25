@@ -2,7 +2,7 @@ import type Phaser from 'phaser';
 import type { Glow, VillageContext } from '../world/api';
 import { agentName } from '../adapter';
 import { parseAgentId } from '@squad/core';
-import { ensureLocked } from './locked';
+import { ensureLocked, ensureOwnLit } from './locked';
 import type { LockedScene } from './locked';
 import { pixelText, tween } from './util';
 
@@ -54,6 +54,7 @@ export function createHomes(ctx: VillageContext): HomeManager {
   const scene = ctx.scene as unknown as LockedScene;
   ensureLocked(scene, 'mv-hut-dark', 'mv-hut-locked-dim', false);
   ensureLocked(scene, 'mv-hut-lit', 'mv-hut-locked-lit', true);
+  ensureOwnLit(scene, 'mv-hut-lit', 'mv-hut-own-lit');
 
   if (!ctx.scene.anims.exists('mv-smoke')) {
     ctx.scene.anims.create({
@@ -96,7 +97,7 @@ export function createHomes(ctx: VillageContext): HomeManager {
   const tex = (h: Home) =>
     h.mine
       ? h.lit
-        ? 'mv-hut-lit'
+        ? 'mv-hut-own-lit'
         : 'mv-hut-dark'
       : h.lit
         ? 'mv-hut-locked-lit'
@@ -143,21 +144,46 @@ export function createHomes(ctx: VillageContext): HomeManager {
   for (const a of ctx.agents.list())
     if (parseAgentId(a.id).kind === 'student') assign(a.id, a.id === me);
 
+  const addWindowGlow = (h: Home) => {
+    const sgn = h.flip ? -1 : 1;
+    h.glow = ctx.lighting.addGlow({
+      x: h.slotX + sgn * HUT.window.x,
+      y: g + HUT.window.y,
+      radius: 18,
+      color: 0xffc857,
+      intensity: 0.8,
+      flicker: !ctx.calm,
+    });
+    h.glow.setIntensity(1);
+  };
+
+  const syncSmoke = () => {
+    for (const h of homes) {
+      if (!h.smoke?.visible) continue;
+      if (ctx.calm && h.smoke.anims.isPlaying) h.smoke.anims.stop();
+      else if (!ctx.calm && !h.smoke.anims.isPlaying) h.smoke.play('mv-smoke');
+    }
+  };
+
+  // Calm is read live: the glow handle has no flicker setter, so a lit window gets a fresh glow
+  const offCalm = ctx.bus.on('calm', () => {
+    for (const h of homes) {
+      if (h.glow && h.lit) {
+        h.glow.destroy();
+        addWindowGlow(h);
+      }
+    }
+    syncSmoke();
+  });
+
   const applyLit = (h: Home, lit: boolean) => {
     if (h.lit === lit) return;
     h.lit = lit;
     h.house.setTexture(tex(h));
     const sgn = h.flip ? -1 : 1;
     if (lit) {
-      h.glow ??= ctx.lighting.addGlow({
-        x: h.slotX + sgn * HUT.window.x,
-        y: g + HUT.window.y,
-        radius: 18,
-        color: 0xffc857,
-        intensity: 0.8,
-        flicker: !ctx.calm,
-      });
-      h.glow.setIntensity(1);
+      if (h.glow) h.glow.setIntensity(1);
+      else addWindowGlow(h);
       if (!h.smoke) {
         h.smoke = ctx.scene.add
           .sprite(h.slotX + sgn * HUT.chimney.x - 6, g + HUT.chimney.y - 35, 'mv-smoke', 0)
@@ -193,15 +219,11 @@ export function createHomes(ctx: VillageContext): HomeManager {
       h.relock = ctx.scene.time.delayedCall(1600, () => lock.setTexture('mv-padlock'));
     },
     isMine: (agentId) => byAgent.get(agentId)?.mine ?? false,
-    update() {
-      for (const h of homes) {
-        if (!h.smoke?.visible) continue;
-        if (ctx.calm && h.smoke.anims.isPlaying) h.smoke.anims.stop();
-        else if (!ctx.calm && !h.smoke.anims.isPlaying) h.smoke.play('mv-smoke');
-      }
-    },
+    update: syncSmoke,
     destroy() {
+      offCalm();
       for (const h of homes) {
+        ctx.scene.tweens.killTweensOf([h.label, h.house]);
         h.relock?.remove(false);
         h.glow?.destroy();
         h.smoke?.destroy();

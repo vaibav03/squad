@@ -60,12 +60,6 @@ export function createCampfire(ctx: VillageContext): Campfire {
   );
   add(
     sc.add
-      .image(x - 54, g + 1, 'mv-bench')
-      .setOrigin(0.5, 1)
-      .setDepth(ctx.depth.props - 1),
-  );
-  add(
-    sc.add
       .image(x + 46, g + 1, 'mv-stump')
       .setOrigin(0.5, 1)
       .setDepth(ctx.depth.props - 1),
@@ -104,7 +98,7 @@ export function createCampfire(ctx: VillageContext): Campfire {
 
   return {
     x,
-    visitorSpot: (i) => x + [-30, -48, 18, -14, 10, -62][i % 6]!,
+    visitorSpot: (i) => x + [-38, -58, 32, -78, 56, -98][i % 6]!,
     pinSpot: (i) => ({ x: x + 36 + (i % 3) * 10, y: g - 23 }),
     update() {
       const wantsAnim = !ctx.calm;
@@ -144,7 +138,10 @@ export function createBoard(ctx: VillageContext): Board {
     pin(card) {
       const i = next++ % SLOTS.length;
       const [sx, sy] = SLOTS[i]!;
-      cards[i]?.destroy();
+      if (cards[i]) {
+        sc.tweens.killTweensOf(cards[i]!);
+        cards[i]!.destroy();
+      }
       const key =
         card.kind === 'shared'
           ? 'mv-card-shared'
@@ -165,7 +162,11 @@ export function createBoard(ctx: VillageContext): Board {
     anchor: () => ({ x, y: top + 2 }),
     destroy() {
       img.destroy();
-      cards.forEach((c) => c?.destroy());
+      cards.forEach((c) => {
+        if (!c) return;
+        sc.tweens.killTweensOf(c);
+        c.destroy();
+      });
     },
   };
 }

@@ -5,11 +5,24 @@ import { CAST_ATLAS } from './assets';
 import { agentName } from '../adapter';
 import { pixelText, snap, tween } from './util';
 
-const WALK_PX_PER_S = 48; // constant speed, never eased (spec 08 row 3)
-const STOP_PX = 4;
+const WALK_PX_PER_S = 48; // constant speed, never eased (spec 08 row 3; motion-api default)
 const STOP_MS = 80;
+/**
+ * Stop segment (spec 08 row 3: "80 ms ease-out stop, whole pixels"). The ease-out curve must stay one of the
+ * three tokens, so instead of a new curve the distance is chosen to match velocity: cubic-bezier(.23,1,.32,1)
+ * starts at slope y1/x1 = 1/.23, so the stop begins at STOP_PX*4.35/STOP_MS px per ms. Setting that equal to the
+ * walking speed gives STOP_PX = 48*0.08/4.35 = 0.88 px, which rounds to one whole pixel: no speed jump between
+ * the constant walk and the stop (the previous 4 px stop started at ~4x the walking speed, a visible lurch).
+ */
+const STOP_PX = Math.max(1, Math.round((WALK_PX_PER_S * (STOP_MS / 1000)) / (1 / 0.23)));
 
-export function personaFor(agentId: string): string {
+/** Student agents must not look like the viewer's own character (the 'student' cast): stable pick by first sight. */
+const AGENT_CASTS = ['ta', 'freshman', 'expert'] as const;
+
+export function personaFor(
+  agentId: string,
+  studentCast: (id: string) => string = () => 'freshman',
+): string {
   const { kind, ref } = parseAgentId(agentId);
   switch (kind) {
     case 'dean':
@@ -25,7 +38,7 @@ export function personaFor(agentId: string): string {
       return k[h % k.length]!;
     }
     case 'student':
-      return 'student';
+      return studentCast(agentId);
     default:
       return 'freshman';
   }
@@ -52,6 +65,18 @@ export interface ActorManager {
   destroy(): void;
 }
 
+function ensureShadow(ctx: VillageContext): void {
+  const sc = ctx.scene;
+  if (sc.textures.exists('mv-shadow')) return;
+  const t = sc.textures.createCanvas('mv-shadow', 18, 6);
+  if (!t) return;
+  const c = t.getContext();
+  c.fillStyle = 'rgba(7,15,31,0.42)'; // same soft contact shadow as the player
+  c.fillRect(3, 0, 12, 6);
+  c.fillRect(1, 1, 16, 4);
+  t.refresh();
+}
+
 function ensureAnims(ctx: VillageContext, persona: string): void {
   const a = ctx.scene.anims;
   const mk = (name: string, count: number, fps: number) => {
@@ -75,9 +100,15 @@ function ensureAnims(ctx: VillageContext, persona: string): void {
 export function createActors(ctx: VillageContext): ActorManager {
   const g = ctx.layout.groundY;
   const actors = new Map<string, Actor>();
+  const seen: string[] = [];
+  const studentCast = (id: string) => {
+    let i = seen.indexOf(id);
+    if (i < 0) i = seen.push(id) - 1;
+    return AGENT_CASTS[i % AGENT_CASTS.length]!;
+  };
 
   const create = (id: string, homeX: number): Actor => {
-    const persona = personaFor(id);
+    const persona = personaFor(id, studentCast);
     ensureAnims(ctx, persona);
     const sprite = ctx.scene.add
       .sprite(homeX, g, CAST_ATLAS.key, `${persona}/idle/0`)
@@ -85,14 +116,29 @@ export function createActors(ctx: VillageContext): ActorManager {
       .setDepth(ctx.depth.actors)
       .setAlpha(0);
     sprite.play(`mv-${persona}-idle`);
-    tween(ctx, sprite, { alpha: 1 }, { ms: 180 });
-    const tag = pixelText(ctx, agentName(id), { color: 'wallLit', size: 9.333 })
+    ensureShadow(ctx);
+    const shadow = ctx.scene.add
+      .image(homeX, g, 'mv-shadow')
+      .setOrigin(0.5, 0.5)
+      .setDepth(ctx.depth.actors - 1)
+      .setAlpha(0);
+    tween(ctx, [sprite, shadow], { alpha: 1 }, { ms: 180 });
+    const tag = pixelText(ctx, agentName(id), { color: 'cloudHi', size: 9.333 })
+      .setShadow(1, 1, '#070f1f', 0, false, true)
       .setDepth(ctx.depth.actorFx)
       .setVisible(false);
     let chain: Promise<void> = Promise.resolve();
     let moving: Phaser.Tweens.Tween | undefined;
     let tagOn = false;
-    const placeTag = () => tag.setPosition(snap(sprite.x - tag.width / 2), snap(sprite.y + 3));
+    let walking = false;
+    const placeTag = () => {
+      const cam = ctx.scene.cameras.main;
+      const x = Math.min(
+        Math.max(sprite.x - tag.width / 2, cam.scrollX + 4),
+        cam.scrollX + cam.width - 4 - tag.width,
+      );
+      tag.setPosition(snap(x), snap(sprite.y + 2));
+    };
 
     const walk = (to: number) =>
       new Promise<void>((resolve) => {
@@ -117,9 +163,11 @@ export function createActors(ctx: VillageContext): ActorManager {
           );
           return;
         }
+        walking = true;
         sprite.play(`mv-${persona}-walk`, true);
         const lead = Math.max(0, dist - STOP_PX);
         const finish = () => {
+          walking = false;
           sprite.play(`mv-${persona}-idle`, true);
           resolve();
         };
@@ -171,10 +219,20 @@ export function createActors(ctx: VillageContext): ActorManager {
         if (on) placeTag();
       },
       update() {
+        // Calm is read live: no idle breathing, a still first frame; it resumes when Calm turns off
+        if (!walking) {
+          if (ctx.calm && sprite.anims.isPlaying) {
+            sprite.anims.stop();
+            sprite.setFrame(`${persona}/idle/0`);
+          } else if (!ctx.calm && !sprite.anims.isPlaying) sprite.play(`mv-${persona}-idle`);
+        }
+        shadow.setPosition(sprite.x, g).setAlpha(sprite.alpha);
         if (tagOn) placeTag();
       },
       destroy() {
         moving?.stop();
+        ctx.scene.tweens.killTweensOf([sprite, shadow, tag]);
+        shadow.destroy();
         tag.destroy();
         sprite.destroy();
       },

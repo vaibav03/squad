@@ -6,6 +6,8 @@ export interface EventMeta {
   fast?: boolean;
   /** Synthesised from the late-joiner snapshot. */
   snapshot?: boolean;
+  /** Synthesised from a snapshot refetched after x.resync (implies snapshot). */
+  resync?: boolean;
   /** Hub seq (live) or `${name}:${index}` (replay). */
   id?: string;
 }

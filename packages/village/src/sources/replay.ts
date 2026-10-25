@@ -54,13 +54,22 @@ export function createReplaySource(
   let next = 0; // index of next event to emit
   let timer: unknown = undefined;
   let closed = false;
+  let gen = 0; // bumped by pause/seek/restart/close so an in-progress emit loop can notice
 
   const setStatus = (s: ReplayStatus) => {
     if (status === s) return;
     status = s;
     statusSubs.forEach((f) => f(s));
   };
-  const emit = (e: VillageEvent, m?: EventMeta) => subs.forEach((f) => f(e, m));
+  const emit = (e: VillageEvent, m?: EventMeta) => {
+    for (const f of [...subs]) f(e, m);
+  };
+  const SPEEDS: readonly number[] = [0.5, 1, 2];
+  const checkSpeed = (s: number) => {
+    if (!SPEEDS.includes(s))
+      throw new RangeError(`invalid replay speed ${String(s)}; use 0.5, 1 or 2`);
+  };
+  const MIN_LOOP_MS = 16;
   const clear = () => {
     if (timer !== undefined) clock.clearTimeout(timer);
     timer = undefined;
@@ -73,7 +82,9 @@ export function createReplaySource(
     const nxt = events[next];
     if (!nxt) {
       // nothing left: end (or loop) when the script duration is reached
-      const wait = Math.max(0, (duration - current()) / speed);
+      let wait = Math.max(0, (duration - current()) / speed);
+      // a (near) zero-length looping script must not spin
+      if (script.loop && duration / speed < MIN_LOOP_MS) wait = Math.max(wait, MIN_LOOP_MS);
       timer = clock.setTimeout(finish, wait);
       return;
     }
@@ -85,11 +96,19 @@ export function createReplaySource(
     timer = undefined;
     if (status !== 'playing') return;
     const now = current();
-    while (next < events.length && events[next]!.at <= now + 1e-6) {
-      const item = events[next++]!;
-      emit(item.event, { id: `${script.name}:${next - 1}` });
+    const g = gen;
+    // a subscriber may pause, close or seek mid-loop: stop as soon as that happens
+    while (
+      status === 'playing' &&
+      !closed &&
+      g === gen &&
+      next < events.length &&
+      events[next]!.at <= now + 1e-6
+    ) {
+      const idx = next++;
+      emit(events[idx]!.event, { id: `${script.name}:${idx}` });
     }
-    schedule();
+    if (g === gen) schedule();
   };
 
   const finish = () => {
@@ -106,6 +125,7 @@ export function createReplaySource(
     setStatus('ended');
   };
 
+  if (opts.speed !== undefined) checkSpeed(opts.speed);
   const src: ReplaySource = {
     subscribe(fn) {
       subs.add(fn);
@@ -126,18 +146,26 @@ export function createReplaySource(
     pause() {
       if (status !== 'playing') return;
       pos = current();
+      gen++;
       clear();
       setStatus('paused');
     },
     restart() {
+      if (closed) return;
       clear();
+      gen++;
       pos = 0;
       next = 0;
       lastWall = clock.now();
+      if (status === 'playing') {
+        schedule();
+        return;
+      }
       if (status === 'ended') setStatus('paused');
       src.play();
     },
     setSpeed(s) {
+      checkSpeed(s);
       if (status === 'playing') {
         pos = current();
         lastWall = clock.now();
@@ -148,9 +176,12 @@ export function createReplaySource(
     seek(target, o) {
       const ms = typeof target === 'string' ? script.checkpoints[target] : target;
       if (ms === undefined) throw new Error(`unknown checkpoint "${String(target)}"`);
+      if (typeof ms !== 'number' || !Number.isFinite(ms))
+        throw new Error('seek target must be a finite number of ms or a checkpoint name');
       const to = Math.max(0, Math.min(duration, ms));
       const wasPlaying = status === 'playing';
       clear();
+      gen++;
       let i = 0;
       while (i < events.length && events[i]!.at < to) {
         if (o?.replayState) emit(events[i]!.event, { fast: true, id: `${script.name}:${i}` });
@@ -185,6 +216,7 @@ export function createReplaySource(
     },
     close() {
       closed = true;
+      gen++;
       clear();
       subs.clear();
       statusSubs.clear();

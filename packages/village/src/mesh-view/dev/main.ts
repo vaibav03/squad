@@ -43,5 +43,7 @@ h.ready.then(() => {
   const x = q.get('x');
   if (x) h.debug.ctx()?.player.teleport(Number(x));
   h.setCamera((q.get('cam') as 'right') ?? (x ? 'follow' : 'right'));
+  const start = q.get('start');
+  if (start) replay.seek(Number(start));
   if (q.get('paused') !== '1') replay.play();
 });

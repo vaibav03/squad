@@ -27,7 +27,6 @@ export const IMAGES: Record<string, string> = {
   'mv-camp-base': `${C}/fx/campfire-base.png`,
   'mv-camp-light': `${C}/fx/campfire-light.png`,
   'mv-stump': `${C}/props/stump.png`,
-  'mv-bench': `${C}/props/bench.png`,
   'mv-lamp-halo': `${C}/props/lamp-halo.png`,
   'mv-emote-alert': `${C}/ui/emote-alert.png`,
 };
