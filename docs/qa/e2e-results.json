@@ -1,0 +1,217 @@
+{
+ "demo": {
+  "at": "2026-10-25T07:40:51.605Z",
+  "rows": [
+   {
+    "title": "J1 sign in as Ana through the sign-in screen",
+    "status": "pass",
+    "note": "",
+    "ms": 1188
+   },
+   {
+    "title": "J1 sign in as Ben through the sign-in screen",
+    "status": "pass",
+    "note": "",
+    "ms": 1135
+   },
+   {
+    "title": "J1 sign in as Chi through the sign-in screen",
+    "status": "pass",
+    "note": "",
+    "ms": 1148
+   },
+   {
+    "title": "J1 sign in as Dev through the sign-in screen",
+    "status": "pass",
+    "note": "",
+    "ms": 1153
+   },
+   {
+    "title": "J1 setup: phone, PDFs, .ics, persona (Ana, through the UI)",
+    "status": "fail",
+    "note": "Error: E2E-001: Continue should enable once the hub accepted the PDFsBUG-E2E: Continue stays disabled after a successful live upload",
+    "ms": 6956
+   },
+   {
+    "title": "J1 chapters appear after ingest (hub courses + mastery)",
+    "status": "pass",
+    "note": "courses: [{\"courseId\":\"demo\",\"title\":\"Introductory Statistics (OpenStax excerpt)\",\"file\":\"ch2-descriptive-statistics.pdf\",\"status\":\"ready\",\"pct\":100},{\"courseId\":\"ch3_probability_topics\",\"title\":\"ch3_probability_topics\",\"file\":\"ch3_probability_topics.pdf\",\"status\":\"ready\",\"pct\":100},{\"courseId\":\"ch12_linear_; mastery 200: {\"courseId\":\"demo\",\"concepts\":[\"ch2\",\"ch3\",\"ch6\",\"ch12\"],\"mine\":[0,0,0,0],\"squadAvg\":[0,0,0,0]}",
+    "ms": 21
+   },
+   {
+    "title": "J1 other students ingest + calendars through the API (needed by later journeys)",
+    "status": "pass",
+    "note": "",
+    "ms": 160
+   },
+   {
+    "title": "J2 group chat: grounded cubbie answer with citation chip, visible to Ana and Ben",
+    "status": "blocked",
+    "note": "blocked: not merged yet: chat/web",
+    "ms": 3
+   },
+   {
+    "title": "J3 private DM: \"am I behind?\" goes to Ana's DM only, group gets a pointer",
+    "status": "blocked",
+    "note": "blocked: not merged yet: chat/web",
+    "ms": 2
+   },
+   {
+    "title": "J3 privacy sentinels: Ana's \"$180 therapy\" never reaches Ben, Chi or Dev",
+    "status": "blocked",
+    "note": "blocked: not merged yet: chat/web",
+    "ms": 2
+   },
+   {
+    "title": "J4 quiz round in group chat: card, private plain feedback, no gamification words",
+    "status": "blocked",
+    "note": "blocked: not merged yet: chat/web",
+    "ms": 2
+   },
+   {
+    "title": "J5 ask the council in chat: three members, ranking, verdict, copy button",
+    "status": "blocked",
+    "note": "blocked: not merged yet: chat/web",
+    "ms": 1
+   },
+   {
+    "title": "J8 trip planner: all four students (members as the hub knows them) reach a confirmed trip",
+    "status": "fail",
+    "note": "Error: E2E-003: dev:all starts agents for s_cam, but the hub squad member is s_chi; a trip with s_chi cannot completetrip with hub ids: {\"flow\":\"trip\",\"status\":\"no_plan\",\"reason\":\"offline\"}",
+    "ms": 63
+   },
+   {
+    "title": "J8 trip flow end to end: slots negotiated, DM confirms, trip.confirmed exactly once, calendars never leave the device",
+    "status": "pass",
+    "note": "trip outcome {\"flow\":\"trip\",\"status\":\"confirmed\",\"optionId\":\"flagstaff\",\"dates\":[\"2026-11-22\",\"2026-11-23\",\"2026-11-24\"],\"perPerson\":142,\"venmo\":[\"https://venmo.com/ana-s?txn=charge&amount=142.00&note=Flagstaff%20trip\",\"https://venmo.com/ana-s?txn=charge&amount=142.00&note=Flagstaff%20trip\",\"https://venmo.com/ana-s?txn=charge&amount=142.00&note=Flagstaff%20trip\"]}; s_ana saw trip.confirmed x1; s_ben saw trip.confirmed x1; s_chi saw trip.confirmed x1; s_dev saw trip.confirmed x1",
+    "ms": 3834
+   },
+   {
+    "title": "J8 trip page shows options and confirmations from the hub",
+    "status": "pass",
+    "note": "",
+    "ms": 2783
+   },
+   {
+    "title": "J8 shuttle cutscene deep link plays once and is skippable",
+    "status": "pass",
+    "note": "session flags [\"squad:trip-played:task_e2e_trip_1792913772390_ok\"]",
+    "ms": 8764
+   },
+   {
+    "title": "J8 hub trip: secret vote then every student confirms, trip.confirmed fires exactly once",
+    "status": "pass",
+    "note": "trip view keys tripId,taskId,status,options,dates,myVote,voteProgress,vetoed,confirmations,myLimits",
+    "ms": 2020
+   },
+   {
+    "title": "J8 private study scheduling across 4 agents returns slots without exposing calendars",
+    "status": "pass",
+    "note": "study 200 {\"flow\":\"study\",\"status\":\"scheduled\",\"slot\":\"2026-11-02T12\",\"coverage\":[{\"topic\":\"dynamic-programming\",\"weak\":3,\"lead\":null},{\"topic\":\"graphs\",\"weak\":3,\"lead\":n",
+    "ms": 2272
+   },
+   {
+    "title": "J9 ledger: others see static withheld bars, never the values",
+    "status": "pass",
+    "note": "",
+    "ms": 1870
+   },
+   {
+    "title": "J9 ledger: the owner sees their own rows unblurred and marked as kept private",
+    "status": "pass",
+    "note": "",
+    "ms": 1027
+   },
+   {
+    "title": "J10 village loads live and the camera presets change the view",
+    "status": "pass",
+    "note": "",
+    "ms": 10976
+   },
+   {
+    "title": "J10 enter every room, read it, leave with Esc",
+    "status": "fail",
+    "note": "Error: walk prompt for Exam Oracledemo-run 200; still inside after Esc: Council Hall; still inside after Esc: Debate Stage; still inside after Esc: Round Table; still inside after Esc: Feynman Porch; still inside after Esc: Panic Line",
+    "ms": 170797
+   },
+   {
+    "title": "J10 replay track2 plays with a Replay badge",
+    "status": "pass",
+    "note": "replays: {\"replays\":[{\"name\":\"track2\",\"durationMs\":108500,\"eventCount\":80},{\"name\":\"track3\",\"durationMs\":114300,\"eventCount\":50}]",
+    "ms": 6722
+   },
+   {
+    "title": "J10 replay track3 plays with a Replay badge",
+    "status": "pass",
+    "note": "replays: {\"replays\":[{\"name\":\"track2\",\"durationMs\":108500,\"eventCount\":80},{\"name\":\"track3\",\"durationMs\":114300,\"eventCount\":50}]",
+    "ms": 6828
+   },
+   {
+    "title": "J10 overlays (call, quiz, confirm) appear when the hub emits events",
+    "status": "pass",
+    "note": "demo-run 200",
+    "ms": 3391
+   },
+   {
+    "title": "J12 every page fits a 390x844 phone with no horizontal scroll and no page errors",
+    "status": "pass",
+    "note": "pages checked: home, village, setup, personas, ledger, trip, mastery",
+    "ms": 16252
+   },
+   {
+    "title": "J12 keyboard only: skip link, tab to the village, camera buttons, back out",
+    "status": "fail",
+    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+    "ms": 10265
+   },
+   {
+    "title": "J13 hub killed mid-session: state persists and the stream resumes with Last-Event-ID, no duplicates",
+    "status": "fail",
+    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m",
+    "ms": 9553
+   },
+   {
+    "title": "J13 agent offline: hub stays healthy when the owner agent cannot be reached",
+    "status": "pass",
+    "note": "calendar upload with agent offline -> 200",
+    "ms": 1063
+   },
+   {
+    "title": "J13 credits depleted (HTTP 402): banner status, then recovery path",
+    "status": "fail",
+    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22mstatus at boot: fake no_key; status after traffic: fake no_key",
+    "ms": 9072
+   },
+   {
+    "title": "J14 /v1/status reflects reality",
+    "status": "pass",
+    "note": "status {\"llm\":\"fake\",\"demo\":true,\"reason\":\"forced_fake\",\"tts\":\"none\"}",
+    "ms": 17
+   },
+   {
+    "title": "J14 pnpm run doctor prints a sane report and never a key value",
+    "status": "pass",
+    "note": "",
+    "ms": 833
+   },
+   {
+    "title": "J15 unauthenticated and forged requests are rejected",
+    "status": "pass",
+    "note": "",
+    "ms": 10
+   },
+   {
+    "title": "J15 CORS does not reflect a foreign origin",
+    "status": "pass",
+    "note": "",
+    "ms": 2
+   },
+   {
+    "title": "J15 no secrets in responses, bundles, source maps or logs",
+    "status": "pass",
+    "note": "",
+    "ms": 8361
+   }
+  ]
+ }
+}

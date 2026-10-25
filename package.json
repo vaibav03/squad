@@ -37,7 +37,9 @@
     "perf:runtime": "node scripts/perf/runtime.mjs",
     "perf:hub": "tsx scripts/perf/hub-bench.ts",
     "perf:psi": "tsx scripts/perf/psi-profile.ts",
-    "a11y:check": "tsx scripts/a11y/check.ts"
+    "a11y:check": "tsx scripts/a11y/check.ts",
+    "e2e": "node e2e/run.mjs",
+    "e2e:live": "LIVE=1 node e2e/run.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
