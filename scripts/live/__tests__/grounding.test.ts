@@ -1,3 +1,4 @@
+import type { Llm } from '@squad/core';
 import { describe, expect, it } from 'vitest';
 import { OracleLlm, loadGolden, type Mode } from '../../../packages/brain/evals/oracle';
 import { groundingCheck } from '../checks/02-grounding';
@@ -49,7 +50,7 @@ describe('check 2 (grounding) against scripted models', () => {
       env: { SQUAD_LIVE: '1' },
       checks: [groundingCheck],
       limits: { maxCalls: 400, maxTokens: 1e7 },
-      injected: { llm: gullible(new OracleLlm(loadGolden(), 'honest')) },
+      injected: { llm: gullible(new OracleLlm(loadGolden(), 'honest')) as unknown as Llm },
     });
     const bad = report.checks.find((c) => c.id === 2)!.steps.find((x) => x.name.includes('zorblax'))!;
     expect(bad.status).toBe('FAIL');
