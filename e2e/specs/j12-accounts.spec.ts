@@ -30,7 +30,9 @@ async function typeCode(page: Page, code: string) {
 async function sendCode(page: Page, email: string): Promise<string> {
   await page.getByRole('radio', { name: 'Email' }).click();
   await page.getByRole('textbox', { name: 'Email' }).fill(email);
-  const started = page.waitForResponse((r) => r.url().endsWith('/v1/auth/start') && r.request().method() === 'POST');
+  const started = page.waitForResponse(
+    (r) => r.url().endsWith('/v1/auth/start') && r.request().method() === 'POST',
+  );
   await page.getByRole('button', { name: 'Send code' }).click();
   const body = (await (await started).json()) as { devCode?: string };
   expect(body.devCode, 'hub returns devCode when HUB_DEV_LOGIN=1').toMatch(/^\d{6}$/);
@@ -41,7 +43,9 @@ async function sendCode(page: Page, email: string): Promise<string> {
 /** Runs the welcome flow from the name step to a verified session. */
 async function signUp(page: Page, who: { name: string; email: string }) {
   await page.goto('/welcome');
-  await expect(page.getByRole('heading', { name: 'What should your squad call you?' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'What should your squad call you?' }),
+  ).toBeVisible();
   await page.getByLabel('Your name').fill(who.name);
   await page.getByRole('button', { name: 'Continue' }).click();
   const code = await sendCode(page, who.email);
@@ -49,12 +53,20 @@ async function signUp(page: Page, who: { name: string; email: string }) {
 }
 
 test.describe.serial('accounts journeys', () => {
-  test('J12a sign up at /welcome with name and email, verify the devCode, land signed in', async ({ browser }) => {
-    ctxA = await browser.newContext({ baseURL: WEB, viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+  test('J12a sign up at /welcome with name and email, verify the devCode, land signed in', async ({
+    browser,
+  }) => {
+    ctxA = await browser.newContext({
+      baseURL: WEB,
+      viewport: { width: 1280, height: 800 },
+      reducedMotion: 'reduce',
+    });
     await ctxA.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: WEB });
     pageA = await ctxA.newPage();
     await pageA.goto('/welcome');
-    await expect(pageA.getByRole('heading', { name: 'What should your squad call you?' })).toBeVisible();
+    await expect(
+      pageA.getByRole('heading', { name: 'What should your squad call you?' }),
+    ).toBeVisible();
     await shot(pageA, J, 'j12a-01-welcome-name');
     await pageA.getByLabel('Your name').fill(maya.name);
     await pageA.getByRole('button', { name: 'Continue' }).click();
@@ -94,8 +106,14 @@ test.describe.serial('accounts journeys', () => {
     expect(me.squads.map((s) => s.name)).toContain(squadOne.name);
   });
 
-  test('J12c second student opens the invite, signs up, joins, and both show on /squad/members', async ({ browser }) => {
-    ctxB = await browser.newContext({ baseURL: WEB, viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+  test('J12c second student opens the invite, signs up, joins, and both show on /squad/members', async ({
+    browser,
+  }) => {
+    ctxB = await browser.newContext({
+      baseURL: WEB,
+      viewport: { width: 1280, height: 800 },
+      reducedMotion: 'reduce',
+    });
     pageB = await ctxB.newPage();
     await pageB.goto(new URL(inviteLink).pathname);
     await expect(pageB.getByRole('heading', { name: squadOne.name })).toBeVisible();
@@ -133,15 +151,23 @@ test.describe.serial('accounts journeys', () => {
     const first = pageA.getByRole('radio', { name: new RegExp(squadOne.name) });
     await expect(first).toBeVisible();
     // A successful switch closes the sheet, so check the server's active squad rather than the radio.
-    const activated = pageA.waitForResponse((r) => /\/v1\/squads\/[^/]+\/activate$/.test(r.url()) && r.request().method() === 'POST');
+    const activated = pageA.waitForResponse(
+      (r) => /\/v1\/squads\/[^/]+\/activate$/.test(r.url()) && r.request().method() === 'POST',
+    );
     await first.click();
     expect((await activated).status()).toBe(200);
     await expect
-      .poll(async () => ((await (await ctxA.request.get(`${HUB}/v1/me`)).json()) as { activeSquadId: string }).activeSquadId)
+      .poll(
+        async () =>
+          ((await (await ctxA.request.get(`${HUB}/v1/me`)).json()) as { activeSquadId: string })
+            .activeSquadId,
+      )
       .toBe(squadOneId);
     await expect(pageA.getByRole('radio', { name: new RegExp(squadOne.name) })).toBeHidden();
     // The host remounts pages on a squad change: the shell must come back on its own.
-    await expect(pageA.getByRole('navigation', { name: 'Main' }).first()).toBeVisible({ timeout: 10_000 });
+    await expect(pageA.getByRole('navigation', { name: 'Main' }).first()).toBeVisible({
+      timeout: 10_000,
+    });
     await shot(pageA, J, 'j12d-01-switched-squad');
 
     await pageA.getByRole('button', { name: `Account menu for ${maya.name}` }).click();
@@ -162,14 +188,18 @@ test.describe.serial('accounts journeys', () => {
     await pageA.keyboard.press('Escape');
   });
 
-  test('J12e squad isolation: a student in another squad cannot read squad one', async ({ browser }) => {
+  test('J12e squad isolation: a student in another squad cannot read squad one', async ({
+    browser,
+  }) => {
     const ctxC = await browser.newContext({ baseURL: WEB });
     const pageC = await ctxC.newPage();
     await signUp(pageC, riley);
     await expect(pageC).toHaveURL(/\/welcome\/choose/);
 
     // Riley owns her own squad. Calls below use her session cookie.
-    const created = await ctxC.request.post(`${HUB}/v1/squads`, { data: { name: `Riley Own ${stamp}` } });
+    const created = await ctxC.request.post(`${HUB}/v1/squads`, {
+      data: { name: `Riley Own ${stamp}` },
+    });
     expect(created.status()).toBe(201);
 
     // Positive control: Maya is a member of squad one, so she can read it.
@@ -198,7 +228,9 @@ test.describe.serial('accounts journeys', () => {
     });
     const pageM = await ctxM.newPage();
     await pageM.goto('/welcome');
-    await expect(pageM.getByRole('heading', { name: 'What should your squad call you?' })).toBeVisible();
+    await expect(
+      pageM.getByRole('heading', { name: 'What should your squad call you?' }),
+    ).toBeVisible();
     await shot(pageM, J, 'j12f-01-welcome-390');
     await ctxM.close();
 
@@ -209,8 +241,12 @@ test.describe.serial('accounts journeys', () => {
     ] as const) {
       await pageA.goto(path);
       await pageA.waitForLoadState('networkidle');
-      const overflow = await pageA.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      expect.soft(overflow, `${path} has no horizontal page scroll at 390px`).toBeLessThanOrEqual(0);
+      const overflow = await pageA.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect
+        .soft(overflow, `${path} has no horizontal page scroll at 390px`)
+        .toBeLessThanOrEqual(0);
       await shot(pageA, J, step);
     }
     await pageA.setViewportSize({ width: 1280, height: 800 });

@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import type { Browser } from '@playwright/test';
 import path from 'node:path';
 import { FIXTURE_PDFS, REPO } from '../lib/env';
 import { actor, api, apiLogin, expect, test, type Actor } from '../lib/helpers';
@@ -8,7 +9,6 @@ import { actor, api, apiLogin, expect, test, type Actor } from '../lib/helpers';
  * so they run in file order on one worker: a -> b -> c -> d -> f -> e (f must run while the
  * course still exists; e deletes it).
  */
-const J = 'j13-courses';
 const SHOT_DIR = path.join(REPO, 'docs/design/shots/courses');
 const SAMPLE_ID = 'demo';
 const SAMPLE_TITLE = 'Introductory Statistics (OpenStax excerpt)';
@@ -27,12 +27,14 @@ async function snap(a: Actor, name: string, w: number, h: number) {
   await a.page.screenshot({ path: path.join(SHOT_DIR, `${name}-${w}x${h}.png`) });
 }
 
-async function anaCtx(browser: import('@playwright/test').Browser): Promise<Actor> {
+async function anaCtx(browser: Browser): Promise<Actor> {
   if (!ana) ana = await actor(browser, 's_ana');
   return ana;
 }
 
-test('J13a open /squad/courses and see the OpenStax sample with CC BY and chapters', async ({ browser }) => {
+test('J13a open /squad/courses and see the OpenStax sample with CC BY and chapters', async ({
+  browser,
+}) => {
   const a = await anaCtx(browser);
   await a.page.goto('/squad/courses');
   const card = a.page.getByTestId('course-card').filter({ hasText: SAMPLE_TITLE });
@@ -51,7 +53,9 @@ test('J13a open /squad/courses and see the OpenStax sample with CC BY and chapte
   expect(a.pageErrors, 'no uncaught page errors').toEqual([]);
 });
 
-test('J13b upload a PDF through the dropzone, see ingest progress, then chapters', async ({ browser }) => {
+test('J13b upload a PDF through the dropzone, see ingest progress, then chapters', async ({
+  browser,
+}) => {
   const a = await anaCtx(browser);
   await a.page.goto('/squad/courses');
   await a.page.getByTestId('new-course').click();
@@ -63,7 +67,8 @@ test('J13b upload a PDF through the dropzone, see ingest progress, then chapters
 
   await expect(a.page.getByTestId('dropzone')).toBeVisible();
   const upload = a.page.waitForResponse(
-    (r) => r.url().includes(`/v1/library/courses/${courseId}/files`) && r.request().method() === 'POST',
+    (r) =>
+      r.url().includes(`/v1/library/courses/${courseId}/files`) && r.request().method() === 'POST',
   );
   await a.page.getByTestId('file-input').setInputFiles(UPLOAD_PDF);
   expect((await upload).status()).toBe(202);
@@ -74,9 +79,12 @@ test('J13b upload a PDF through the dropzone, see ingest progress, then chapters
   await snap(a, 'j13b-ingesting', 1280, 800);
 
   // Ingest reaches ready (the stack runs the real parser on the fixture).
-  await expect(row.getByTestId('file-status')).toHaveAttribute('data-status', 'ready', { timeout: 90_000 });
+  await expect(row.getByTestId('file-status')).toHaveAttribute('data-status', 'ready', {
+    timeout: 90_000,
+  });
   await expect(a.page.getByTestId('chapter-item').first()).toBeVisible({ timeout: 15_000 });
-  firstChapterId = (await a.page.getByTestId('chapter-item').first().getAttribute('data-chapter-id')) ?? '';
+  firstChapterId =
+    (await a.page.getByTestId('chapter-item').first().getAttribute('data-chapter-id')) ?? '';
   expect(firstChapterId).toBeTruthy();
   await snap(a, 'j13b-ready-chapters', 1280, 800);
 });
@@ -107,7 +115,9 @@ test('J13d open a chapter source in the source viewer', async ({ browser }) => {
   await item.getByTestId('chapter-open').click();
   const sheet = a.page.getByRole('dialog');
   await expect(sheet).toBeVisible();
-  await expect(sheet.locator('.sq-source__text, .sq-source__line').first()).toBeVisible({ timeout: 15_000 });
+  await expect(sheet.locator('.sq-source__text, .sq-source__line').first()).toBeVisible({
+    timeout: 15_000,
+  });
   await snap(a, 'j13d-source-viewer', 1280, 800);
   await a.page.keyboard.press('Escape');
   await expect(sheet).toBeHidden();
@@ -164,7 +174,9 @@ test('J13 mobile pass (390x844): library and sample detail', async ({ browser })
   await a.page.goto('/squad/courses');
   await expect(a.page.getByTestId('course-card').filter({ hasText: SAMPLE_TITLE })).toBeVisible();
   await snap(a, 'j13-library-mobile', 390, 844);
-  const overflow = await a.page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  const overflow = await a.page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  );
   expect(overflow, 'no horizontal page scroll at 390px').toBeLessThanOrEqual(0);
 
   await a.page.goto(`/squad/courses/${SAMPLE_ID}`);

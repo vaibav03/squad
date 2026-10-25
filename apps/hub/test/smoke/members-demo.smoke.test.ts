@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RunningHub } from '../../src/server';
-import { auth, boot, get, login, post } from '../helpers';
+import { boot, get, login, post } from '../helpers';
 
 let hub: RunningHub;
 let ana: string;
