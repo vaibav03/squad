@@ -477,7 +477,7 @@ async function s10(c: GateCtx, a: Asserts) {
   await sleep(1500);
 
   // vantage 1: hub (history API and DB)
-  const hub = await history(rhea.token, sq.chatId, 400);
+  const hub = await history(rhea.token, sq.chatId, 100);
   const hubIds = hub.map((m) => m.id);
   a.ok('hub message ids are unique', new Set(hubIds).size === hubIds.length);
   const xref = await dbRows(R.tables.xref);

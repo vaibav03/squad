@@ -81,7 +81,16 @@ export class Asserts {
   /** No raw id, handle, or GUID in text a person reads. */
   noRawIds(surface: string, text: string) {
     const hits = RAW_ID_PATTERNS.filter(([, re]) => re.test(text)).map(([n]) => n);
-    this.ok(`no raw ids in ${surface}`, hits.length === 0, `found: ${hits.join(', ')}`);
+    // the shape of the first match, digits and letters masked, so a false positive can be diagnosed without echoing text
+    const shape = RAW_ID_PATTERNS.map(([, re]) => re.exec(text)?.[0])
+      .filter((x): x is string => !!x)
+      .map((x) => x.replace(/\d/g, '#').replace(/[a-z]/gi, 'x'))
+      .slice(0, 2);
+    this.ok(
+      `no raw ids in ${surface}`,
+      hits.length === 0,
+      `found: ${hits.join(', ')} shape ${shape.join(' | ')}`,
+    );
   }
 
   /** The surface says honestly whether it is a demo model: demo labelled when llm is fake, never when it is real. */

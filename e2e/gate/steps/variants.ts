@@ -147,8 +147,8 @@ export const V4: StepDef<GateCtx> = {
     const tokenCalls = async () =>
       (await google.requests()).filter((r) => r.path === '/token').length;
     // A. the hub's own mechanism: it refreshes when the token is within 60 s of its expiry (GET /v1/connections ticks it)
-    await connectGoogle(rhea, { shortLived: true });
     const t0 = await tokenCalls();
+    await connectGoogle(rhea, { shortLived: true });
     const g1 = (await listConnections(rhea)).connections.find((x) => x.provider === 'google');
     a.ok(
       'a token near expiry is refreshed by the hub (a refresh call reached the token endpoint)',

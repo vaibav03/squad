@@ -1,11 +1,11 @@
 # Release gate report
 
-Generated 2026-10-25T13:10:57.927Z by `pnpm gate` (tree feature/release-gate@9dffecd3, origin/main@2835a43d).
+Generated 2026-10-25T13:15:11.298Z by `pnpm gate` (tree feature/release-gate@c7a11eef, origin/main@2835a43d).
 Mode: LLM fake model, labelled **Demo**; real integrations not requested.
 
 ## Verdict: RED (a BUILT step failed)
 
-Fixture steps: 13 PASS, 9 FAIL, 0 NOT_BUILT, 0 not run, of 22. A NOT_BUILT step is never a PASS: its owner branch is not on origin/main.
+Fixture steps: 14 PASS, 8 FAIL, 0 NOT_BUILT, 0 not run, of 22. A NOT_BUILT step is never a PASS: its owner branch is not on origin/main.
 
 ## Journey (one world, one chain)
 
@@ -18,9 +18,9 @@ Fixture steps: 13 PASS, 9 FAIL, 0 NOT_BUILT, 0 not run, of 22. A NOT_BUILT step 
 | S5 | Route to the correct live agent with the same grounded context | PASS (fixture) | BLOCKED(llm_credits, [runbook](RELEASE-GATE.md#gemini-credits-live-and-elevenlabs-plan)) |  |
 | S6 | Reply delivered into the same iMessage group | PASS (fixture) | BLOCKED(apple_unverified, [runbook](RELEASE-GATE.md#apple-behaviour-and-permissions)) | `docs/design/shots/gate/s6-01-delivery-state.png` |
 | S7 | Web chat shows the complete ordered conversation (and mirrors back) | FAIL: iMessage-origin message carries a "via iMessage" tag | SKIPPED(real_not_requested) | `docs/design/shots/gate/s7-01-web-mirror-rhea.png`<br>`docs/design/shots/gate/s7-02-web-mirror-ben.png` |
-| S8 | Conversation continues into a collaborative trip plan | FAIL: at least two live options | SKIPPED(real_not_requested) | `docs/design/shots/gate/s8-01-trip-voting.png`<br>`docs/design/shots/gate/s8-02-trip-cutscene.png`<br>`docs/design/shots/gate/s8-03-trip-agent-offline.png` |
-| S9 | ... and a shared study plan | FAIL: iMessage lists Rhea's 3 items | SKIPPED(real_not_requested) | `docs/design/shots/gate/s9-01-plan-proposed.png` |
-| S10 | Decisions, updates, failures and agent activity stay synchronized in web and iMessage | FAIL: S8/S9 recorded a trip.vote decision | SKIPPED(real_not_requested) |  |
+| S8 | Conversation continues into a collaborative trip plan | PASS (fixture (demo labelled)) | SKIPPED(real_not_requested) | `docs/design/shots/gate/s8-01-trip-voting.png`<br>`docs/design/shots/gate/s8-02-trip-cutscene.png`<br>`docs/design/shots/gate/s8-03-trip-agent-offline.png` |
+| S9 | ... and a shared study plan | FAIL: iMessage lists Rhea's 2 items | SKIPPED(real_not_requested) | `docs/design/shots/gate/s9-01-plan-proposed.png` |
+| S10 | Decisions, updates, failures and agent activity stay synchronized in web and iMessage | FAIL: no raw ids in web thread | SKIPPED(real_not_requested) |  |
 
 ## Variants
 
@@ -29,12 +29,12 @@ Fixture steps: 13 PASS, 9 FAIL, 0 NOT_BUILT, 0 not run, of 22. A NOT_BUILT step 
 | V1 | Fresh setup: connecting is optional and asking before connecting is honest | FAIL: and says nothing is connected and offers a way to connect | SKIPPED(real_not_requested) | `docs/design/shots/gate/v1-01-fresh-connections.png` |
 | V2 | Reconnect: purge on disconnect, same ids on reconnect, chat untouched | PASS (fixture) | SKIPPED(real_not_requested) |  |
 | V3 | Revoked auth: needs reconnect, data marked not deleted, the other source keeps working | FAIL: the label says to reconnect in words | SKIPPED(real_not_requested) |  |
-| V4 | Expired access token: transparent refresh; refresh failure falls to V3 | FAIL: a token near expiry is refreshed by the hub (a refresh call reached the token endpoint) | SKIPPED(real_not_requested) |  |
+| V4 | Expired access token: transparent refresh; refresh failure falls to V3 | FAIL: a refused refresh ends needing reconnect | SKIPPED(real_not_requested) |  |
 | V5 | Canvas upstream gone: degraded with the last good items, never a silent empty | PASS (fixture) | SKIPPED(real_not_requested) |  |
 | V6 | Duplicate events | PASS (fixture) | SKIPPED(real_not_requested) |  |
 | V7 | Offline gap, backfill and hub restart | PASS (fixture) | SKIPPED(real_not_requested) |  |
 | V8 | Outbound failure and retry | PASS (fixture) | SKIPPED(real_not_requested) |  |
-| V9 | Conflicting edits (trip field, plan chapter) and an agent going offline | FAIL: web thread shows both outcomes | SKIPPED(real_not_requested) |  |
+| V9 | Conflicting edits (trip field, plan chapter) and an agent going offline | FAIL: iMessage summary lists the item under the picked owner | SKIPPED(real_not_requested) | `docs/design/shots/gate/v9-01-trip-agent-offline.png` |
 | V10 | Multiple group threads | PASS (fixture) | SKIPPED(real_not_requested) |  |
 | V11 | Degraded model is labelled Demo everywhere | PASS (fixture/degraded) | BLOCKED(llm_credits, [runbook](RELEASE-GATE.md#gemini-credits-live-and-elevenlabs-plan)) |  |
 | V12 | Wrong person tags @cubbie | PASS (fixture) | BLOCKED(needs_second_person, [runbook](RELEASE-GATE.md#real-multi-person-imessage-group)) |  |
@@ -43,15 +43,7 @@ Fixture steps: 13 PASS, 9 FAIL, 0 NOT_BUILT, 0 not run, of 22. A NOT_BUILT step 
 
 ### S10 (fixture) Decisions, updates, failures and agent activity stay synchronized in web and iMessage
 
-- S8/S9 recorded a trip.vote decision: have: none
-- S8/S9 recorded a trip.confirm decision: have: none
-- S8/S9 recorded a plan.accept decision: have: none
-- S8/S9 recorded a plan.swap decision: have: none
 - no raw ids in web thread: found: phone number
-- failure.plan-edit m_55: in the hub
-- trip id is stable and present in the trip card text
-- plan id is stable on the plan card
-- agent offline notice was recorded
 
 ### S2 (fixture) Ingest and normalize permitted context
 
@@ -61,16 +53,11 @@ Fixture steps: 13 PASS, 9 FAIL, 0 NOT_BUILT, 0 not run, of 22. A NOT_BUILT step 
 
 - iMessage-origin message carries a "via iMessage" tag
 
-### S8 (fixture) Conversation continues into a collaborative trip plan
-
-- at least two live options: 1 live
-- Ben's ranking is not in Rhea's trip payload
-
 ### S9 (fixture) ... and a shared study plan
 
-- iMessage lists Rhea's 3 items: expected 3, got 0
+- iMessage lists Rhea's 2 items: expected 2, got 0
 - iMessage lists Ben's 1 items: expected 1, got 0
-- iMessage lists Cy's 1 items: expected 1, got 0
+- iMessage lists Cy's 2 items: expected 2, got 0
 
 ### V1 (fixture) Fresh setup: connecting is optional and asking before connecting is honest
 
@@ -83,19 +70,13 @@ Fixture steps: 13 PASS, 9 FAIL, 0 NOT_BUILT, 0 not run, of 22. A NOT_BUILT step 
 
 ### V4 (fixture) Expired access token: transparent refresh; refresh failure falls to V3
 
-- a token near expiry is refreshed by the hub (a refresh call reached the token endpoint)
 - a refused refresh ends needing reconnect: state live
 - a 401 on sync triggers one refresh and a retry (no user-visible failure): sync 200, state revoked, refresh calls 0
 
 ### V9 (fixture) Conflicting edits (trip field, plan chapter) and an agent going offline
 
-- web thread shows both outcomes
-- web actor for trip page: not opened
-- web thread shows both
 - iMessage summary lists the item under the picked owner:  / want ch12 (Oct 26)
 - and under nobody else: expected 0, got 1
-- web actor for plan panel: not opened
-- web actor for trip page: not opened
 
 
 ## External blockers (code cannot fix these)

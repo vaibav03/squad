@@ -199,7 +199,10 @@ export async function ensureOpenTrip(
 export const norm = (s: string) =>
   s
     .replace(/^🐻\s*Cubbie:\s*/i, '')
-    .replace(/\s+/g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .split('\n')
+    .map((l) => l.trim())
+    .join('\n')
     .trim();
 export const groupHistory = (u: WorldUser, chatId: string, limit = 100) =>
   history(u.token, chatId, limit);
