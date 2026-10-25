@@ -7,7 +7,7 @@ export function cleanPageText(raw: string): string {
   return raw
     .replace(/\r\n?/g, '\n')
     .replace(/(\p{L})-\n(\p{Ll})/gu, '$1$2') // end-of-line hyphenation
-    .replace(/[ \t ]+/g, ' ')
+    .replace(/[ \t\u00a0]+/g, ' ')
     .replace(/ *\n */g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();

@@ -1,6 +1,6 @@
 import type { Marker } from './types';
 
-const MARKER = /\[([^\[\]\n]+?)\s+p\.\s*(\d+)\]/g;
+const MARKER = /\[([^[\]\n]+?)\s+p\.\s*(\d+)\]/g;
 
 /** Parses `[file p.N]` markers. */
 export function parseMarkers(text: string): Marker[] {

@@ -159,6 +159,10 @@ describe('sentence splitting and gate', () => {
     ['Use e.g. the mean. Then stop.', ['Use e.g. the mean.', 'Then stop.']],
     ['Pi is 3.14 roughly. Next.', ['Pi is 3.14 roughly.', 'Next.']],
     ['See Fig. 2.3 for details. Done!', ['See Fig. 2.3 for details.', 'Done!']],
+    [
+      'The 2 comes from the power rule. (ch3.pdf p.2) Next claim. (ch3.pdf p.5)',
+      ['The 2 comes from the power rule. (ch3.pdf p.2)', 'Next claim. (ch3.pdf p.5)'],
+    ],
     ['', []],
     ['One sentence without end', ['One sentence without end']],
     ['Really? Yes. Okay!', ['Really?', 'Yes.', 'Okay!']],

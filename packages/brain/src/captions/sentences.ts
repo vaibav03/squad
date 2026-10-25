@@ -17,6 +17,9 @@ export function splitSentences(text: string): string[] {
     // swallow closing quotes/brackets after the terminator
     let end = i + 1;
     while (end < t.length && /["')\]”’]/.test(t[end]!)) end++;
+    // keep a trailing "(file p.N)" citation with the sentence it supports
+    const cite = /^ ?\([^()\n]*\sp\.\d+\)/.exec(t.slice(end));
+    if (cite) end += cite[0].length;
     const next = t[end];
     if (next !== undefined && next !== ' ') continue; // decimal 3.14, "p.7", "U.S."
     const before = t.slice(start, i + 1);

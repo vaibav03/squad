@@ -1,12 +1,11 @@
 import { z } from 'zod';
-import type { Llm } from '@squad/core';
+import type { CacheHandle, Llm } from '@squad/core';
 import { renderAnswer, verifyClaims } from '../citations';
 import type { CourseStore } from '../ingest/types';
 import { BrainUnavailableError } from './errors';
 import { loadPrompt } from './prompts';
 import { expertAgent, withAgentState } from './emit';
 import {
-  NOT_IN_MATERIALS,
   type ChapterExpert,
   type Claim,
   type ContextProvider,
@@ -42,7 +41,7 @@ export interface ExpertDeps {
 async function askModel(
   llm: Llm,
   system: string | undefined,
-  cache: import('@squad/core').CacheHandle | undefined,
+  cache: CacheHandle | undefined,
   question: string,
 ) {
   let last: unknown;

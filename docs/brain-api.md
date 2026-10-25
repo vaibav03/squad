@@ -17,7 +17,7 @@ SQLite tables (created by `createCourseStore(db)`, idempotent): `courses(id, tit
 
 ## Brain
 ```ts
-createBrain(deps: { llm: Llm; db: Db; emit?: Emit; now?: () => number }): Brain
+createBrain(deps: { llm: Llm; db: Db; emit?: Emit; now?: () => number }): Brain   // builds the CourseStore, ingest and captions itself
 interface Brain {
   store: CourseStore;
   ingestPdf(courseId, path, opts?): Promise<number /* pages ingested */>;
@@ -27,11 +27,12 @@ interface Brain {
   captions: CaptionPipeline;                            // see below
   emit: Emit;                                           // the event sink every skill must use
 }
-interface ExpertAnswer { text; citations: Citation[]; grounded: boolean; chapters: string[]; struck: number }
+interface ExpertAnswer { text; citations: Citation[]; grounded: boolean; claims: Claim[] /* verified */; chapters: string[]; struck: number }
 const NOT_IN_MATERIALS = 'Not in the materials. Ask the TA.'
 ```
 `grounded=false` => `text === NOT_IN_MATERIALS`, `citations === []`.
-Fixture course: `loadFixtureCourse(brain, 'demo')` ingests the committed OpenStax sample (3-4 chapters) and returns the `Course`; id `demo` by default. `FIXTURE_DIR` exported.
+Fixture course: `loadFixtureCourse({ store: brain.store, llm? }, 'demo')` ingests the committed OpenStax sample (4 chapters: ch2, ch3, ch6, ch12; 50 pages; `packages/brain/fixtures/`) and returns the `Course`; id `demo` by default; works offline. `FIXTURE_DIR` exported. The cited page number is the 1-based page index inside the excerpt PDF (see fixtures/README.md), not the printed book page.
+Errors: a model/quota failure throws `BrainUnavailableError` (skills catch it and say so; nothing is fabricated).
 
 ## Events (all through `Emit`, default core `postEvent`)
 - Doubt/expert: `agent.state {agent:'expert:<chapter>', state:'studying'}` while answering, then `idle` (also on error; `finally`).
@@ -52,10 +53,10 @@ interface CaptionPipeline {
 Media (05) calls `run` with the student's text (already transcribed) and speaks `CaptionLine.text` as lines arrive via `onLine`. The hub owns call.start/call.end.
 
 ## Skills (register in apps/bot skills registry)
-`doubtSkill`, `behindSkill`, `hwPolicySkill`: factories `(brain: Brain) => Skill`, exported from `@squad/brain` as `createDoubtSkill`, `createBehindSkill`, `createHwPolicySkill`. `ingestSkill` is not in my slice.
+`createDoubtSkill(brain)`, `createBehindSkill(brain)`, `createHwPolicySkill(brain)` (names `doubt`, `behind`, `hwpolicy`) or all three at once: `answerSkills(brain, courseId?)`, in priority order, ready for `buildRegistry([...], brainSkills, ...)`. Course id defaults to `'demo'`; pass a resolver for real squads. `behind` replies by `ctx.dm` and says only "Sent you a DM." in a group; the spine already emits `agent.state` for `student:<id>` around any Skill run, so these skills do not repeat it. `ingestSkill` is not in my slice.
 
 ## Citation checker (pure, no Llm)
 `verifyClaims(claims: Claim[], pages: Page[]): { verified: Claim[]; struck: Claim[] }`, `quoteOnPage(quote, pageText)` (whitespace/case/punctuation-normalised substring), `parseMarkers(text)` for `[file p.N]`, `renderAnswer`. Exported from `@squad/brain`.
 
 ## Status
-Types + this doc: done. Implementations in progress; see README section for run commands and the handoff report for what landed.
+All of the above is implemented on ws/brain-answers (see packages/brain/README.md for commands). Real Gemini behavior (cache hits, model ids) is unverified without a key in this worktree; the flagged script `pnpm --filter @squad/brain eval:real` checks it.

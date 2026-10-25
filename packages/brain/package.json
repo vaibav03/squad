@@ -8,10 +8,10 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run --dir src --passWithNoTests",
+    "test": "vitest run --dir src --passWithNoTests && vitest run --dir evals --passWithNoTests",
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests",
     "eval": "vitest run --dir evals --passWithNoTests",
-    "eval:real": "BRAIN_REAL_EVAL=1 tsx evals/real-key-eval.ts"
+    "eval:real": "BRAIN_REAL_EVAL=1 tsx --env-file=../../.env evals/real-key-eval.ts"
   },
   "dependencies": {
     "@squad/core": "workspace:*",

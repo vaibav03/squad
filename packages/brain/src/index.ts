@@ -1,6 +1,16 @@
 export const PACKAGE_NAME = '@squad/brain';
-export * from './ingest/types';
+export * from './ingest';
 export * from './experts/types';
 export * from './experts/emit';
+export * from './experts/errors';
+export * from './experts/intent';
+export { createContextProvider } from './experts/context';
+export { createChapterExpert } from './experts/expert';
+export { assembleBrain } from './experts/brain';
+export * from './dean';
 export * from './citations';
-// Implementations are wired below as each module lands (ingest, dean, experts, captions, skills).
+export * from './captions';
+export * from './skills/doubt';
+export * from './skills/behind';
+export * from './skills/hwpolicy';
+export * from './create';

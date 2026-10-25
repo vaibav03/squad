@@ -1,5 +1,5 @@
 import type { CacheHandle, Citation, Db, Llm, StudentId, VillageEvent } from '@squad/core';
-import type { CourseStore } from '../ingest/types';
+import type { CourseStore, Page } from '../ingest/types';
 
 /** Every event goes through this. Default: `postEvent` from @squad/core. Tests pass a collector. */
 export type Emit = (e: VillageEvent) => void | Promise<unknown>;
@@ -39,7 +39,7 @@ export interface ChapterContext {
   system: string; // stable system prompt (grounding rules + chapter block), byte-identical per chapter
   block: string; // chapter text with [file p.N] markers
   cache?: CacheHandle; // from Llm.createCache; absent for tiny chapters or if caching failed
-  pages: import('../ingest/types').Page[];
+  pages: Page[];
 }
 
 export interface ContextProvider {

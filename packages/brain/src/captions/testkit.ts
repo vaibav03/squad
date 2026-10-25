@@ -1,4 +1,4 @@
-import { FakeLlm, type VillageEvent } from '@squad/core';
+import type { FakeLlm, VillageEvent } from '@squad/core';
 import { openMemoryDb } from '@squad/core/node';
 import { createContextProvider } from '../experts/context';
 import { makeKit } from '../experts/testkit';
