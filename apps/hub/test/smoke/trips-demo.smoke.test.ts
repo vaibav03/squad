@@ -157,6 +157,47 @@ describe.each([true, false])('trip organizer vote, demo=%s', (demo) => {
   });
 });
 
+describe.each([true, false])('trip demo-go, demo=%s', (demo) => {
+  it(demo ? 'accepts everyone without any ranking, idempotent' : 'is 403 demo_only', async () => {
+    outcome = defaultOutcome;
+    const { h, t } = await run(demo);
+    const created = await post(
+      h.url,
+      '/v1/trips',
+      { destination: 'Truck Demo', perPerson: 500 },
+      t.s_ana,
+    );
+    expect(created.status).toBeLessThan(300);
+    const cur = async (as: string) =>
+      (await get<{ trip: TripViewV2 | null }>(h.url, '/v1/trips/current', t[as])).body.trip;
+    const trip = (await cur('s_ben'))!;
+    expect(trip.demoGo).toBe(demo ? true : undefined);
+    const msgs = () =>
+      h.deps.chat.store
+        .history(GROUP, { limit: 100 })
+        .messages.filter((m) => /confirmed by all/.test(m.text));
+    const go = () =>
+      post<{ trip: TripViewV2 }>(h.url, `/v1/trips/${trip.tripId}/demo-go`, {}, t.s_ben);
+    const r = await go();
+    if (!demo) {
+      expect(r.status).toBe(403);
+      expect((await cur('s_ben'))!.status).not.toBe('confirmed');
+    } else {
+      expect(r.status).toBe(200);
+      const after = (await cur('s_chi'))!;
+      expect(after.status).toBe('confirmed');
+      expect(after.demoAuto).toBe(true);
+      expect(after.confirmations.every((c) => c.confirmed)).toBe(true);
+      expect(msgs()).toHaveLength(1);
+      expect((await go()).status).toBe(200);
+      expect(msgs()).toHaveLength(1);
+      expect((await post(h.url, `/v1/trips/nope/demo-go`, {}, t.s_ben)).status).toBe(404);
+      expect((await post(h.url, `/v1/trips/${trip.tripId}/demo-go`, {})).status).toBe(401);
+    }
+    await h.stop();
+  });
+});
+
 afterAll(() => {
   for (const s of servers) s.close();
 });

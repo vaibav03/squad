@@ -89,6 +89,8 @@ export interface TripService {
   vote(v: Viewer, id: string, body: { ranking: string[]; baseRev?: number }): Res;
   confirm(v: Viewer, id: string, body: { optionId?: string; yes: boolean; baseRev?: number }): Res;
   closeVoting(v: Viewer, id: string): Res;
+  /** Demo mode only: auto-accept every member and confirm. */
+  demoGo(v: Viewer, id: string): Res;
   retry(v: Viewer, id: string): Promise<Res>;
   continueWithout(v: Viewer, id: string): Res;
   reopen(v: Viewer, id: string): Res;
@@ -131,7 +133,11 @@ export function createTripService(
   const outstanding = new Set<string>();
 
   const view = (t: TripRecord, v: Viewer) =>
-    buildTripView(t, v, { directory: deps.directory, now: now() });
+    buildTripView(t, v, {
+      directory: deps.directory,
+      now: now(),
+      demo: demoTripsEnabled(deps.config),
+    });
   const touch = (t: TripRecord) => void deps.ingest.x('x.trip.touch', { tripId: t.tripId });
   const save = (t: TripRecord) => {
     deps.trips.put(t);
@@ -597,7 +603,7 @@ export function createTripService(
   }
 
   /** Demo only: the organizer's ranking becomes everyone's vote, then confirm for all. Budget vetoes are waived. */
-  function demoAutoConfirm(t: TripRecord, v: Viewer, ranking: string[]): Res {
+  function demoAutoConfirm(t: TripRecord, v: Viewer, ranking: string[] = []): Res {
     const c = t.collab!;
     const ids = new Set(t.options.map((o) => o.id));
     if (ranking.some((x) => !ids.has(x))) return fail(400, 'invalid_request', 'unknown option');
@@ -607,6 +613,13 @@ export function createTripService(
     if (t.status === 'planning') {
       t.status = 'voting';
       c.constraints.state = c.constraints.state === 'skipped' ? 'skipped' : 'done';
+    }
+    if (t.status === 'confirming') t.status = 'voting';
+    if (!ranking.length) {
+      const mine = t.votes.find((x) => x.student === c.organizer)?.ranking;
+      const first = mine?.find((x) => ids.has(x)) ?? live(t)[0]?.id ?? t.options[0]?.id;
+      if (!first) return fail(409, 'no_option', 'No option is left to choose from.');
+      ranking = [first];
     }
     syncMembers(t);
     const seen = [...new Set(ranking)];
@@ -1019,6 +1032,19 @@ export function createTripService(
         return { ok: true, trip: view(t, v)! };
       applyConfirm(t, v.studentId, optId, body.yes);
       return { ok: true, trip: view(deps.trips.get(t.tripId)!, v)! };
+    },
+
+    demoGo(v, id) {
+      if (!demoTripsEnabled(deps.config))
+        return fail(403, 'demo_only', 'Only available in demo mode.');
+      const r = load(v, id);
+      if ('ok' in r) return r;
+      const t = r.t;
+      if (!t.collab) return fail(404, 'not_found', 'Trip not found.');
+      if (t.status === 'confirmed') return { ok: true, trip: view(t, v)! };
+      if (!['planning', 'voting', 'confirming'].includes(t.status))
+        return fail(409, 'not_open', 'This trip is closed.');
+      return demoAutoConfirm(t, v);
     },
 
     closeVoting(v, id) {

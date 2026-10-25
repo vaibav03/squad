@@ -8,6 +8,9 @@ import { revisionsOf } from './dedupe';
 import { usePlanActions } from './context';
 import type { ChatCard } from '@squad/core';
 
+/** Replaceable in tests: full navigation to the Village so the forced cutscene URL is read on load. */
+export const nav = { go: (url: string) => window.location.assign(url) };
+
 type TripCard = Extract<ChatCard, { type: 'trip' }>;
 
 /** privacy line for a trip: never names who voted unless the hub already revealed participation (3+ voters). */
@@ -45,6 +48,34 @@ export function TripChatCard({
     };
   }, [hub?.hubUrl, hub?.token, card.tripId, card.rev, card.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [going, setGoing] = useState(false);
+  const goOnTrip = async () => {
+    if (!hub || going) return;
+    setGoing(true);
+    try {
+      const r = await timedFetch(
+        `${hub.hubUrl}/v1/trips/${encodeURIComponent(card.tripId)}/demo-go`,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            ...(hub.token ? { Authorization: `Bearer ${hub.token}` } : {}),
+          },
+          body: '{}',
+        },
+      );
+      const j = r.ok ? ((await r.json()) as { trip?: unknown }) : null;
+      const v = j ? parseTripView(j.trip) : undefined;
+      if (v) {
+        setTrip(v);
+        nav.go(cutsceneHref(v.taskId));
+        return;
+      }
+    } catch {
+      /* fall through: button re-enables */
+    }
+    setGoing(false);
+  };
   const title = trip?.title ?? 'Group trip';
   const status = trip ? tripCardStatus(trip) : (card.status ?? 'Planning');
   const truth = trip
@@ -85,6 +116,21 @@ export function TripChatCard({
                   onClick={open}
                 >
                   {trip.can.confirm ? 'Confirm' : 'Vote'}
+                </button>
+              ),
+            }
+          : {}),
+        ...(trip?.demoGo && trip.status !== 'confirmed'
+          ? {
+              watch: (
+                <button
+                  type="button"
+                  className="sqp-btn sqp-btn--primary"
+                  data-testid="trip-go-demo"
+                  disabled={going}
+                  onClick={() => void goOnTrip()}
+                >
+                  Go on a trip
                 </button>
               ),
             }

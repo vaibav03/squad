@@ -4,7 +4,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ChatMessage } from '@squad/core';
 import { PlanCard, planCardText } from './PlanCard';
-import { TripChatCard, tripPrivacyLine } from './TripChatCard';
+import { TripChatCard, nav, tripPrivacyLine } from './TripChatCard';
 import { PlanActionsContext } from './context';
 import { collapsePlanCards, revisionsOf } from './dedupe';
 import { tripCardStatus, tripTruth } from '../lib/truth-labels';
@@ -188,6 +188,61 @@ describe('TripChatCard demo auto-accept', () => {
       'Demo: all members auto-accepted',
     );
     expect(screen.getByTestId('plan-watch-trip')).toBeTruthy();
+    vi.unstubAllGlobals();
+  });
+});
+
+describe('TripChatCard Go on a trip (demo)', () => {
+  const mount = () =>
+    render(
+      <PlanActionsContext.Provider value={{ askCubbie: vi.fn(), openPlan: vi.fn() }}>
+        <TripChatCard
+          hub={{ hubUrl: 'http://h', token: 't' }}
+          card={{ type: 'trip', tripId: 'trip_cabo', rev: 1 }}
+        />
+      </PlanActionsContext.Provider>,
+    );
+  it('is hidden without demoGo and after confirmation', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify(tripVoting), { status: 200 })),
+    );
+    mount();
+    await waitFor(() => expect(screen.getByTestId('plan-card-status')).toBeTruthy());
+    expect(screen.queryByTestId('trip-go-demo')).toBeNull();
+    cleanup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ ...tripConfirmed, demoGo: true }), { status: 200 }),
+      ),
+    );
+    mount();
+    await waitFor(() => expect(screen.getByTestId('plan-watch-trip')).toBeTruthy());
+    expect(screen.queryByTestId('trip-go-demo')).toBeNull();
+    vi.unstubAllGlobals();
+  });
+  it('posts demo-go and navigates to the village cutscene', async () => {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (u: string, init?: RequestInit) => {
+        calls.push(`${init?.method ?? 'GET'} ${u}`);
+        const body =
+          init?.method === 'POST' ? { trip: tripConfirmed } : { ...tripVoting, demoGo: true };
+        return new Response(JSON.stringify(body), { status: 200 });
+      }),
+    );
+    const go = vi.spyOn(nav, 'go').mockImplementation(() => undefined);
+    mount();
+    await userEvent.click(await screen.findByTestId('trip-go-demo'));
+    await waitFor(() => expect(go).toHaveBeenCalled());
+    expect(calls.some((c) => c.startsWith('POST') && c.endsWith('/demo-go'))).toBe(true);
+    expect(go.mock.calls[0]![0]).toBe(
+      `/squad/village?cutscene=trip&task=${encodeURIComponent(tripConfirmed.taskId)}`,
+    );
+    go.mockRestore();
     vi.unstubAllGlobals();
   });
 });

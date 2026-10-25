@@ -27,7 +27,7 @@ export function tripMembers(t: TripRecord): string[] {
 export function buildTripView(
   t: TripRecord,
   viewer: Viewer,
-  ctx: { directory: Directory; now?: number },
+  ctx: { directory: Directory; now?: number; demo?: boolean },
 ): TripViewV2 | null {
   if (t.squadId !== viewer.squadId) return null;
   const now = ctx.now ?? Date.now();
@@ -118,6 +118,9 @@ export function buildTripView(
       };
     }),
     ...(c?.demoAuto ? { demoAuto: true } : {}),
+    ...(ctx.demo && c && !viewer.projector && ['planning', 'voting', 'confirming'].includes(status)
+      ? { demoGo: true }
+      : {}),
     confirmations: t.confirmations.map((r) => ({ student: r.student, confirmed: r.confirmed })),
     vetoed: t.vetoed.map((v) => ({ optionId: v.optionId, by: v.by, reason: v.reason })),
     myLimits: mine && !viewer.projector ? { ...mine } : null,

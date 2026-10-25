@@ -98,6 +98,8 @@ export const TripViewV2Schema = z.object({
   members: z.array(TripMemberSchema),
   /** Demo mode: every member was auto-accepted. */
   demoAuto: z.boolean().optional(),
+  /** Demo mode: the viewer may use the one-click 'Go on a trip' shortcut. */
+  demoGo: z.boolean().optional(),
   confirmations: z.array(z.object({ student: z.string(), confirmed: z.boolean() })),
   vetoed: z.array(z.object({ optionId: z.string(), by: z.string(), reason: z.string() })),
   myLimits: z.record(z.string(), z.string()).nullable(),
