@@ -1,6 +1,7 @@
 import { useId, useState, type ReactNode } from 'react';
 import { ConnectionBadge, LvIcon, StateBlock } from '../../overlays/kit';
 import { Button, Icon, Page, Skeleton, TextField } from '../../primitives';
+import { LinkButton } from '../../primitives/LinkButton';
 import { WEB_BUILD, formatBuiltAt, isStaleBuild } from '../../lib/build';
 import {
   countLabel,
@@ -218,9 +219,7 @@ function Ready({ s, now }: { s: AdminStatus; now: number }) {
         ) : demo && s.llm.fix ? (
           <Fix text={s.llm.fix} />
         ) : (
-          <p className="st-quiet">
-            Nothing to fix. The hub reports here the moment credits run out.
-          </p>
+          <p className="st-quiet">Nothing to fix. Squad reports here the moment credits run out.</p>
         )}
       </Panel>
 
@@ -282,14 +281,14 @@ function Ready({ s, now }: { s: AdminStatus; now: number }) {
         </ul>
         {s.agents.length === 0 ? (
           <p className="st-quiet">
-            No mesh agents are configured (AGENT_PEERS is empty), so nothing to probe.
+            No partner agents are set up yet, so there is nothing to check.
           </p>
         ) : null}
       </Panel>
 
       <Panel title="Live stream and events" className="st-sse">
         <dl className="st-stats">
-          <Stat label="SSE subscribers" value={s.sse.subscribers} />
+          <Stat label="Live viewers" value={s.sse.subscribers} />
           <Stat
             label="Queue drops"
             value={s.sse.drops}
@@ -320,7 +319,7 @@ function Ready({ s, now }: { s: AdminStatus; now: number }) {
             unit="per minute"
           />
           <Spark
-            title="SSE subscribers"
+            title="Live viewers"
             values={s.series.sse_subscribers ?? []}
             total={String(seriesLast(s.series.sse_subscribers))}
             unit="now"
@@ -356,7 +355,7 @@ function Ready({ s, now }: { s: AdminStatus; now: number }) {
         note={s.errors.sentry ? 'Also sent to Sentry' : 'Kept in memory only'}
       >
         {s.errors.recent.length === 0 ? (
-          <p className="st-quiet">No errors since the hub started.</p>
+          <p className="st-quiet">No errors since the server started.</p>
         ) : (
           <ol className="st-errlist">
             {s.errors.recent.map((e) => (
@@ -432,7 +431,7 @@ function Ready({ s, now }: { s: AdminStatus; now: number }) {
         </dl>
         {isStaleBuild(WEB_BUILD.sha, s.gitSha) ? (
           <p className="st-stale" role="status" data-testid="stale-build">
-            Stale build: this page is web <code>{WEB_BUILD.sha}</code> but the hub runs{' '}
+            Stale build: this page is web <code>{WEB_BUILD.sha}</code> but the server runs{' '}
             <code>{s.gitSha}</code>. Restart the web dev server, then reload.
           </p>
         ) : null}
@@ -464,7 +463,7 @@ function Denied({ token, setToken }: { token: string; setToken: (t: string) => v
           onChange={setDraft}
           autoComplete="off"
         />
-        <Button type="submit" variant="primary" disabled={!draft.trim()}>
+        <Button type="submit" variant="secondary" disabled={!draft.trim()}>
           Unlock
         </Button>
       </form>
@@ -484,8 +483,10 @@ export function StatusPage(p: StatusPageProps) {
     <Page
       className="st-page"
       eyebrow="Operations"
-      title="Status"
-      width="wide"
+      title="System status"
+      lede="This page is for whoever runs Squad. It shows whether Squad is healthy and, if answers are scripted, why."
+      next="If you are a student, go back to Home; nothing here needs your action."
+      width="default"
       actions={
         <span className="st-actions">
           <ConnectionBadge connection={connection} />
@@ -494,13 +495,15 @@ export function StatusPage(p: StatusPageProps) {
               Refresh
             </Button>
           ) : null}
+          <LinkButton to="/squad" variant="primary" size="sm">
+            Back to Home
+          </LinkButton>
         </span>
       }
     >
       <p className="st-lede">
-        Is Squad healthy, and if answers are scripted, why. Nothing here contains student messages
-        or private values.
-        {p.sample ? ' Showing sample data: connect a hub to see the real thing.' : ''}
+        Nothing here contains student messages or private values.
+        {p.sample ? ' Showing sample data: sign in to see the real thing.' : ''}
       </p>
       {p.view === 'loading' && (
         <div className="st-skel" role="status" aria-busy="true">
@@ -513,8 +516,8 @@ export function StatusPage(p: StatusPageProps) {
       {p.view === 'error' && (
         <StateBlock
           kind="error"
-          title="The hub did not answer"
-          body="Status could not be read. If the hub is down, start it with pnpm dev:all; see docs/ops/RUNBOOK.md, section Hub down."
+          title="Squad did not answer"
+          body="Status could not be read. If the server is down, start it with pnpm dev:all; see docs/ops/RUNBOOK.md, section Hub down."
           onRetry={p.refresh}
         />
       )}

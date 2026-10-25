@@ -19,7 +19,7 @@ export const sampleStatus: AdminStatus = {
     since: NOW - 11 * 60_000,
     lastProbeAt: NOW - 18_000,
     nextProbeAt: NOW + 42_000,
-    fix: 'Top up Gemini credits in Google AI Studio (Billing). The hub rechecks every 60 seconds and switches back to the real model by itself, no restart needed.',
+    fix: 'Top up Gemini credits in Google AI Studio (Billing). Squad rechecks every 60 seconds and switches back to the real model by itself, no restart needed.',
     demoSeconds: 1980,
     calls: { ok: 412, fallback: 57, failed: 3 },
     tokens: 238_400,
@@ -27,7 +27,7 @@ export const sampleStatus: AdminStatus = {
   },
   credits: {
     state: 'depleted',
-    fix: 'Top up Gemini credits in Google AI Studio (Billing). The hub rechecks every 60 seconds and switches back to the real model by itself, no restart needed.',
+    fix: 'Top up Gemini credits in Google AI Studio (Billing). Squad rechecks every 60 seconds and switches back to the real model by itself, no restart needed.',
   },
   tts: { state: 'on', characters: 18_240 },
   ports: 'real',

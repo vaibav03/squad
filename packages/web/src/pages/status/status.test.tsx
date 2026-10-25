@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { cleanup, render, screen } from '@testing-library/react';
 import { StatusPage } from './StatusView';
 import { sampleEmpty, sampleReal, sampleStatus } from './fixtures';
@@ -37,7 +38,9 @@ describe('status model', () => {
 
 describe('StatusPage', () => {
   it('shows demo mode, reason, next probe and the exact fix', () => {
-    render(<StatusPage {...base} view="ready" data={sampleStatus} now={sampleStatus.now} />);
+    render(<StatusPage {...base} view="ready" data={sampleStatus} now={sampleStatus.now} />, {
+      wrapper: MemoryRouter,
+    });
     expect(screen.getByTestId('llm-mode').textContent).toBe('Demo mode');
     expect(screen.getByTestId('next-probe').textContent).toBe('in 42 s');
     expect(screen.getAllByText(/Top up Gemini credits/).length).toBeGreaterThan(0);
@@ -47,6 +50,7 @@ describe('StatusPage', () => {
   it('real model, empty, and non-ready states', () => {
     const { rerender } = render(
       <StatusPage {...base} view="ready" data={sampleReal} now={sampleReal.now} />,
+      { wrapper: MemoryRouter },
     );
     expect(screen.getByTestId('llm-mode').textContent).toBe('Real model');
     rerender(<StatusPage {...base} view="ready" data={sampleEmpty} now={sampleEmpty.now} />);
@@ -54,7 +58,7 @@ describe('StatusPage', () => {
     rerender(<StatusPage {...base} view="denied" now={0} />);
     expect(screen.getByText('Operators only')).toBeTruthy();
     rerender(<StatusPage {...base} view="error" now={0} />);
-    expect(screen.getByText('The hub did not answer')).toBeTruthy();
+    expect(screen.getByText('Squad did not answer')).toBeTruthy();
     rerender(<StatusPage {...base} view="offline" now={0} />);
     expect(screen.getByText('You are offline')).toBeTruthy();
     rerender(<StatusPage {...base} view="loading" now={0} />);

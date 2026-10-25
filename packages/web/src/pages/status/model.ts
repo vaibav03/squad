@@ -133,7 +133,7 @@ export function explainDemo(s: AdminStatus): DemoExplainer {
       heading: 'Running on the real model',
       what: 'Answers come from Gemini.',
       why: 'If credits run out, the key is rejected or Gemini rate limits, Squad switches to the scripted demo model on its own so nothing breaks.',
-      how: 'While in demo mode the hub probes the real model with one tiny request (every 60 s, every 10 min for a bad key) and switches back as soon as it answers.',
+      how: 'While in demo mode Squad probes the real model with one tiny request (every 60 s, every 10 min for a bad key) and switches back as soon as it answers.',
     };
   const r = s.llm.reason ?? 'no_key';
   return {
@@ -142,7 +142,7 @@ export function explainDemo(s: AdminStatus): DemoExplainer {
     why: REASON_TITLE[r] ?? 'The real model is unavailable.',
     how:
       r === 'no_key' || r === 'forced_fake'
-        ? 'This does not recover by itself. Follow the fix below, then restart the hub.'
-        : 'The hub keeps probing the real model and switches back by itself, no restart needed.',
+        ? 'This does not recover by itself. Follow the fix below, then restart the server.'
+        : 'Squad keeps probing the real model and switches back by itself, no restart needed.',
   };
 }
