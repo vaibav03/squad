@@ -1,0 +1,171 @@
+/* Mini chat dock over the village. Positions inside .sq-world; clears the HUD dock on phones. */
+.sqd {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) calc(var(--space-4) + 56px);
+  color: var(--foreground);
+}
+.sqd > * {
+  pointer-events: auto;
+}
+.sqd-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hud-border);
+  background: var(--hud-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--foreground);
+  box-shadow: var(--pixel-outline), var(--shadow-2);
+  font: 600 var(--text-sm) / 1 var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--dur-press) var(--ease-out);
+}
+.sqd-pill:active {
+  transform: scale(0.97);
+}
+.sqd-pill svg {
+  color: var(--primary);
+}
+.sqd-panel {
+  display: flex;
+  flex-direction: column;
+  width: 360px;
+  height: min(480px, calc(100% - 72px));
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--hud-border);
+  background: var(--card);
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+  animation: sqd-in 200ms var(--ease-out) both;
+}
+.sqd-panel .sqc-thread {
+  min-height: 0;
+}
+.sqd-panel .sqc-head {
+  min-height: 52px;
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-4);
+}
+.sqd-panel .sqc-head__title {
+  font-size: var(--text-base);
+}
+/* a private chat shows a lock and the short word, never the long badge */
+.sqd-panel .sqc-privacy {
+  white-space: nowrap;
+}
+.sqd-panel .sqc-privacy__long {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.sqd-panel .sqc-privacy__short {
+  display: inline;
+}
+.sqd-panel :focus-visible {
+  outline-offset: -1px;
+}
+.sqd-handle,
+.sqd-scrim {
+  display: none;
+}
+.sqd-state {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  align-items: center;
+}
+.sqd-state .sq-skeleton {
+  width: 100%;
+}
+.sqd-panel.sqc--reduced,
+:root[data-calm='true'] .sqd-panel {
+  animation: none;
+}
+@keyframes sqd-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (max-width: 767px) {
+  .sqd {
+    padding: 0 var(--space-3) calc(var(--space-3) + 80px);
+  }
+  .sqd:has(.sqd-panel) {
+    padding: 0;
+    gap: 0;
+    align-items: stretch;
+  }
+  .sqd:has(.sqd-panel) .sqd-pill {
+    position: absolute;
+    right: -9999px;
+  }
+  .sqd-panel {
+    position: relative;
+    width: 100%;
+    height: min(80%, 560px);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: 0;
+    /* the composer clears the tab bar and the home indicator */
+    padding-bottom: calc(var(--space-2) + var(--safe-bottom));
+  }
+  /* drag handle, 36x4 (DESIGN.md); decorative, the close button is the way out */
+  .sqd-handle {
+    display: block;
+    flex: none;
+    width: 36px;
+    height: 4px;
+    margin: var(--space-2) auto 0;
+    border-radius: var(--radius-pill);
+    background: var(--border);
+  }
+  .sqd-scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: var(--scrim);
+    pointer-events: none;
+  }
+  .sqd-panel {
+    z-index: 1;
+  }
+}
+@media (min-width: 768px) {
+  .sqd {
+    padding-bottom: calc(var(--space-4) + 56px);
+  }
+}
+
+/* The demo notice stays honest but compact inside the dock: two lines at most. */
+.sqd-panel .sqc-banners .sq-notice {
+  padding: var(--space-1) var(--space-3);
+  gap: var(--space-2);
+}
+.sqd-panel .sqc-banners .sq-notice__text {
+  font-size: 12px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}

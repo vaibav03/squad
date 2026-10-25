@@ -28,7 +28,7 @@ import { wireRealPorts } from '@squad/hub/real';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const fx = (f: string) => join(root, 'apps/agent/fixtures', f);
-const STUDENTS = ['s_ana', 's_ben', 's_cam', 's_dev'] as const;
+const STUDENTS = ['s_ana', 's_ben', 's_chi', 's_dev'] as const;
 const SQUAD = 'sq_demo';
 const SECRET = 'demo-live-secret';
 const QUIZ_EXPLANATION = 'The median ignores extremes.';

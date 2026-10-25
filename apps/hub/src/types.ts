@@ -11,9 +11,11 @@ import type {
   LlmStatus,
   VillageEvent,
 } from '@squad/core';
+import type { CouncilService } from '@squad/brain';
 import type { HubConfig } from './config';
 import type { Logger } from './log';
 import type { Ports } from './ports';
+import type { ChatHub } from './chat/hub-chat';
 
 export type LedgerEntryEventT = Extract<VillageEvent, { t: 'ledger.entry' }>;
 
@@ -235,6 +237,8 @@ export interface LedgerStore {
   /** Rows for a task as the viewer may see them (owner: raw withheld unless projector; others: 'hidden'). */
   entries(taskId: string, viewer: Viewer): LedgerEntry[];
   taskIds(squadId: string, directory: Directory): string[];
+  /** Every raw withheld value (for leak guards only; never sent anywhere). */
+  privateValues(): string[];
   clear(): void;
 }
 
@@ -253,6 +257,10 @@ export interface HubDeps {
   state: SquadState;
   ingest: Ingestor;
   ports: Ports;
+  /** Ask-the-council service. Built with the real ports, or lazily (demo model) by the council routes. */
+  council?: CouncilService;
+  /** Web chat: store, files, SSE fan-out; the bot engine attaches later (`attachChatEngine`). */
+  chat: ChatHub;
   /** students with projector mode on (server-side session flag) */
   projector: Set<StudentId>;
   filterCtx: FilterCtx;

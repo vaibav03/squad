@@ -33,6 +33,12 @@ import {
   Sun,
   Moon,
   Menu,
+  SendHorizontal,
+  ImagePlus,
+  MessageCircle,
+  RefreshCw,
+  ArrowDown,
+  Search,
 } from 'lucide-react';
 import type { IconName } from './icon-names';
 
@@ -70,6 +76,12 @@ const MAP: Record<IconName, LucideIcon> = {
   sun: Sun,
   moon: Moon,
   menu: Menu,
+  send: SendHorizontal,
+  image: ImagePlus,
+  message: MessageCircle,
+  refresh: RefreshCw,
+  'arrow-down': ArrowDown,
+  search: Search,
 };
 
 export interface IconProps {

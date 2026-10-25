@@ -2,7 +2,7 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { MiddlewareHandler } from 'hono';
 import type { HubDeps, HubEnv, Viewer } from './types';
 
-export type TokenKind = 'bearer' | 'stream' | 'call';
+export type TokenKind = 'bearer' | 'stream' | 'call' | 'file';
 interface Claims {
   k: TokenKind;
   sub: string; // student id

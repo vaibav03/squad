@@ -41,11 +41,13 @@ The bot listens on `127.0.0.1:${BOT_PORT:-8790}`; callers use `${BOT_URL}/intern
 ## 3. Transport interface (internal; only the spine and its adapters implement it)
 ```ts
 interface Transport {
-  name: 'imessage' | 'discord' | 'cli';
+  name: 'imessage' | 'discord' | 'cli' | 'web';
   start(onMsg: (m: InboundMessage) => void | Promise<void>): Promise<void>;
   stop(): Promise<void>;
   send(o: OutboundMessage): Promise<void>;     // text and/or attachments
   dmChatId(s: StudentId): ChatId;
+  confirmPrompt?(student, { taskId, question, options }): Promise<void>;  // web: a card instead of numbered text
+  confirmResolved?(student, taskId, answer): void;
 }
 ```
 Selected by `TRANSPORT=imessage|discord|cli` (default `cli`). Adapters drop their own messages, map unknown senders to `s_<last4 of handle>`, and rate limit sends to 1/s. `ChatId` for iMessage is the imessage-kit chat id, for Discord the channel id, for the CLI `group:<name>` and `dm:<student>`.

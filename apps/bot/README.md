@@ -78,3 +78,7 @@ If it fails, nothing else changes: set `TRANSPORT=discord` (`DISCORD.md`).
 ### What is verified and what is not
 
 Verified here with mocks and the dry run: normalization (group, DM, attachments, null text, own messages, reactions), mention rules, send validation, 1 msg/s limiter, the verification script flows and exit codes. Typings of `@photon-ai/imessage-kit@3.0.0` were read directly (differences from the spec: `chatId` can be null, there is `onIncomingMessage`, attachments expose `localPath`/`mimeType`, reactions arrive as rows). **Not verified:** a real send/receive on macOS 27 and its text decoding. That is exactly what `verify-imessage.ts` proves once you do steps 1-5; if the model ids in `@squad/core` are stale, that is a one-line `GEMINI_MODEL_*` change.
+
+## Web transport (`src/transports/web.ts`)
+
+The third transport next to iMessage and Discord. The hub mounts it in process (`apps/hub/src/chat/engine.ts`), so web messages go through the same router, speaking policy, confirm flow and skills. Group chat ids are `group:<squadId>`, DMs `dm:<studentId>`. `@squad` is an alias of `@cubbie`. Structured output: the persona prefix is stripped (the UI shows the persona), `(file p.N)` citations are normalised to `[file p.N]` and listed, quiz text becomes a quiz card, and confirms use the optional `Transport.confirmPrompt/confirmResolved` hooks (a card instead of numbered text). Demo model for no-key runs: `src/demo/`. See `docs/chat-api.md`.

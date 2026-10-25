@@ -204,3 +204,7 @@ curl -s -XPOST localhost:8788/internal/events -H 'X-Nook-Internal: change-me' -H
   -d '{"t":"agent.state","agent":"student:s_ana","state":"studying"}'
 curl -N "localhost:8788/v1/squad/stream?st=$ST" -H 'Last-Event-ID: 41'
 ```
+
+## 14. Chat
+
+Group/DM chat, `GET /v1/status`, uploads and files: see `docs/chat-api.md`.

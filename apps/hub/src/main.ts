@@ -1,30 +1,23 @@
 import { startHub } from './server';
-import { agentUrlsFromEnv, resilientLlmFromEnv, wireRealPorts } from './wire';
+import { attachChatEngine } from './chat/engine';
+import { agentUrlsFromEnv } from './wire';
 
 const hub = await startHub();
-const llm = resilientLlmFromEnv(
-  process.env,
-  (reason) =>
-    hub.deps.log.warn(`llm: serving the fake demo model (${reason}); GET /v1/status shows why`),
-  () => hub.deps.log.info('llm: real Gemini is back'),
+const agentUrls = agentUrlsFromEnv();
+hub.deps.confirms.setAgentUrls(agentUrls);
+// One process serves the village and the chat: one resilient model (Gemini, or the demo model when there is no key
+// or the credits are gone), one brain, one mastery store. GET /v1/status says which one is answering.
+const chat = await attachChatEngine(hub, { realPorts: true, agentUrls });
+const st = hub.deps.runtime!.llm();
+hub.deps.log.info(
+  `ports: ${hub.deps.runtime!.ports()}, llm: ${st.llm}${st.reason ? ` (${st.reason})` : ''}; GET /v1/status shows why`,
 );
-// Real ports (brain, quiz, media) whenever there is a key; FORCE_FAKE_LLM=1 keeps them on the fake model.
-const real = Boolean(process.env.GEMINI_API_KEY) || process.env.FORCE_FAKE_LLM === '1';
-if (real) {
-  await wireRealPorts(hub, { llm, agentUrls: agentUrlsFromEnv() });
-  hub.deps.log.info(`ports: real (brain, quiz, media), llm: ${llm.status().llm}`);
-} else {
-  hub.deps.log.info('ports: stubs (GEMINI_API_KEY is not set)');
-}
-hub.deps.confirms.setAgentUrls(agentUrlsFromEnv());
-hub.deps.runtime = {
-  llm: () => llm.status(),
-  tts: () => real && Boolean(process.env.ELEVENLABS_API_KEY),
-  ports: () => (real ? 'real' : 'stub'),
-};
 for (const sig of ['SIGINT', 'SIGTERM'] as const) {
   process.once(sig, () => {
-    void hub.stop().then(() => process.exit(0));
+    void chat
+      .stop()
+      .then(() => hub.stop())
+      .then(() => process.exit(0));
     setTimeout(() => process.exit(1), 5000).unref();
   });
 }

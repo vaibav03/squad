@@ -238,3 +238,29 @@ describe('createResilientLlm (injected client, no network)', () => {
     expect(generateContent).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('createResilientLlm cache portability', () => {
+  it('a cache made by the real model is portable to the fake: its context becomes the system prompt', async () => {
+    const seen: { system?: string; cache?: unknown }[] = [];
+    const fake = new FakeLlm({
+      fallback: (req) => {
+        const r = req as { system?: string; cache?: unknown };
+        seen.push({ system: r.system, cache: r.cache });
+        return 'ok';
+      },
+    });
+    const real: any = {
+      createCache: async () => ({ id: 'real-cache-1', provider: 'gemini', model: 'main' }),
+      complete: async () => {
+        throw CREDITS;
+      },
+      json: async () => {
+        throw CREDITS;
+      },
+    };
+    const llm = createResilientLlm({ real, fake });
+    const h = await llm.createCache({ system: 'CHAPTER TEXT' });
+    await llm.complete({ messages: 'q', cache: h });
+    expect(seen).toEqual([{ system: 'CHAPTER TEXT', cache: undefined }]);
+  });
+});
