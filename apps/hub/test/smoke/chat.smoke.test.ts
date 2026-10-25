@@ -305,6 +305,53 @@ describe('confirm and quiz cards', () => {
     );
   });
 
+  it('a debate-style confirm (custom options, not a trip) previews, resolves the bot promise, then 409s', async () => {
+    const options = ['For: open book', 'Against: open book'];
+    const p = engine.bot.ctx.askConfirm(
+      's_dev',
+      'Debate: should exams be open book?\nWhich side argued better?',
+      options,
+      'task_debate_1',
+    );
+    await waitMsg(
+      streams.s_dev!,
+      (m) => m.card?.type === 'confirm' && m.card.taskId === 'task_debate_1',
+    );
+    // viewer-scoped preview: another student and unknown tasks fail closed
+    expect((await get(url, '/v1/confirms/task_debate_1', tok.s_ben)).status).toBe(404);
+    expect((await get(url, '/v1/confirms/task_nope', tok.s_dev)).status).toBe(404);
+    const pv = await get<{ options: string[]; kind: string; mode: string; question: string }>(
+      url,
+      '/v1/confirms/task_debate_1',
+      tok.s_dev,
+    );
+    expect(pv.status).toBe(200);
+    expect(pv.body).toMatchObject({ options, kind: 'bot', mode: 'pick' });
+    // the asker picks side 2: the bot promise resolves with exactly that option
+    const r = await post(
+      url,
+      '/v1/confirms/task_debate_1',
+      { yes: true, optionId: options[1] },
+      tok.s_dev,
+    );
+    expect(r.status).toBe(200);
+    expect(await p).toBe(options[1]);
+    // a second answer is "already answered", and others still see nothing
+    expect(
+      (
+        await post(
+          url,
+          '/v1/confirms/task_debate_1',
+          { yes: true, optionId: options[0] },
+          tok.s_dev,
+        )
+      ).status,
+    ).toBe(409);
+    expect((await post(url, '/v1/confirms/task_debate_1', { yes: true }, tok.s_ben)).status).toBe(
+      404,
+    );
+  });
+
   it('a quiz question is a card in the group; feedback comes privately', async () => {
     await send('s_chi', GROUP, '@cubbie quiz me on chapter 6');
     await waitMsg(streams.s_dev!, (m) => m.card?.type === 'quiz', 12_000);
