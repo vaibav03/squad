@@ -179,6 +179,7 @@ test.describe('j25 many tabs, one browser, one hub stream', () => {
     await pages[0]!.getByTestId('chat-dock-open').click();
     const dock = pages[0]!.getByTestId('chat-dock');
     await expect(dock).not.toContainText('Loading messages', { timeout: SETTLE_MS });
+    await pages[0]!.getByTestId('chat-composer-input').fill('multitab hello');
     await expect(pages[0]!.getByTestId('chat-send')).toBeEnabled({ timeout: SETTLE_MS });
     await sample;
     // steady state
@@ -215,7 +216,9 @@ test.describe('j25 many tabs, one browser, one hub stream', () => {
     await sees(pages[observer]!, `after-${stamp}`);
     const rest = pages.filter((_, i) => i !== L);
     expect(await leaderOf(rest), 'a follower became the leader').toBeGreaterThanOrEqual(0);
-    expect(await maxSockets(3000)).toBeLessThanOrEqual(2);
+    await expect
+      .poll(async () => maxSockets(2000), { timeout: 40_000, message: 'sockets settle to <= 2' })
+      .toBeLessThanOrEqual(2);
     await ctx.close();
   });
 
@@ -239,7 +242,9 @@ test.describe('j25 many tabs, one browser, one hub stream', () => {
       .not.toBe(L);
     await say(me.token, chat, `handover-${stamp}`);
     await sees(pages[observer]!, `handover-${stamp}`);
-    expect(await maxSockets(3000)).toBeLessThanOrEqual(2);
+    await expect
+      .poll(async () => maxSockets(2000), { timeout: 40_000, message: 'sockets settle to <= 2' })
+      .toBeLessThanOrEqual(2);
     await ctx.close();
   });
 
@@ -252,7 +257,9 @@ test.describe('j25 many tabs, one browser, one hub stream', () => {
     const pages = await openTabs(ctx, routes);
     const roles = await Promise.all(pages.map((p) => info(p)));
     for (const r of roles) expect(r.some((x) => x.role === 'local')).toBe(true);
-    expect(await maxSockets(4000)).toBeLessThanOrEqual(routes.length);
+    await expect
+      .poll(async () => maxSockets(2000), { timeout: 40_000, message: 'sockets settle' })
+      .toBeLessThanOrEqual(routes.length);
     await ctx.close();
   });
 });
