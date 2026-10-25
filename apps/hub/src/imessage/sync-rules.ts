@@ -55,6 +55,9 @@ export function sniffAttachment(b: Uint8Array): string | undefined {
 const DECLARED_OK =
   /^(image\/(png|jpeg|webp|gif)|application\/pdf|audio\/(mp4|x-m4a|mpeg|wav|x-wav))$/;
 
+export const isRenderableType = (declared: string): boolean =>
+  DECLARED_OK.test(declared.toLowerCase());
+
 /** Type and size caps. `declared` is what Apple says; the bytes decide. */
 export function classifyAttachment(
   declared: string,

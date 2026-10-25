@@ -10,6 +10,7 @@ import {
   ATTACH_MAX_PER_MESSAGE,
   backoffFor,
   classifyAttachment,
+  isRenderableType,
   MAX_ATTEMPTS,
   OUT_EXPIRE_MS,
   RATE_RETRY_MS,
@@ -281,6 +282,11 @@ export function createImessageSync(o: SyncOptions): ImessageSync {
         };
         if (attachments.length >= ATTACH_MAX_PER_MESSAGE) {
           skipped.push({ ...base, reason: 'too_large' });
+          continue;
+        }
+        // a type we never render is a placeholder without touching the file
+        if (!isRenderableType(a.mime)) {
+          skipped.push({ ...base, reason: 'unsupported_type' });
           continue;
         }
         try {
