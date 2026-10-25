@@ -73,7 +73,7 @@ export function QuizCard(props: QuizCardProps) {
               <span className="lv-quiz__chip">{quiz.chapter}</span>
               {quiz.label && <span className="lv-quiz__label">{quiz.label}</span>}
             </>
-          ) : (
+          ) : phase === 'error' ? null : (
             <span className="lv-skel" style={{ width: 96 }} />
           )}
         </header>

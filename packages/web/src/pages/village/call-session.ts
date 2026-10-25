@@ -21,36 +21,89 @@ type Frame =
   | { type: 'ready' }
   | { type: 'caption'; speaker: 'agent' | 'you'; text: string; cite?: Citation }
   | { type: 'audio'; mime: string; base64: string }
+  | { type: 'audio.meta'; mime: string }
   | { type: 'ended'; reason?: string }
   | { type: 'error'; code?: string };
 
+const ERROR_TEXT: Record<string, string> = {
+  agent_failed: 'The agent lost its thread. Ask again.',
+  audio_unsupported: 'Voice replies are not available for this agent yet.',
+  invalid_message: 'That message was not understood.',
+};
+
+/** The hub advertises its own base URL in `wsUrl`; the page already reaches the hub at `hubUrl`, so keep the path only. */
+export function callSocketUrl(hubUrl: string, wsUrl: string, ticket: string): string {
+  let path = '';
+  try {
+    path = new URL(wsUrl).pathname;
+  } catch {
+    path = wsUrl;
+  }
+  const origin = hubUrl.replace(/\/+$/, '').replace(/^http/, 'ws');
+  return `${origin}${path}?st=${encodeURIComponent(ticket)}`;
+}
+
 /**
  * Starts a call on the hub (`POST /v1/call/start`) and joins its websocket with the one-time ticket. Captions arrive
- * whole; agent audio plays as it lands; the mic streams only while unmuted and a muted flip ends the turn.
+ * whole; agent audio plays in order as it lands. The mic streams only while unmuted: muting flushes the last chunk, then
+ * sends `audio.end`, which is the hub's cue to transcribe and answer that turn.
  */
 export async function openHubCall(ctx: HubCtx, agentId: string, sinks: CallSinks): Promise<CallSession> {
   const { callId, wsUrl, ticket } = await startCall(ctx, agentId);
-  const ws = new WebSocket(`${wsUrl}?st=${encodeURIComponent(ticket)}`);
+  const ws = new WebSocket(callSocketUrl(ctx.hubUrl, wsUrl, ticket));
+  ws.binaryType = 'blob';
   let done = false;
   let recorder: MediaRecorder | undefined;
   let stream: MediaStream | undefined;
+  let pendingMime = 'audio/mpeg';
+  let micChain: Promise<void> = Promise.resolve();
+  const audioQueue: string[] = [];
   let playing: HTMLAudioElement | undefined;
 
   const send = (o: unknown) => ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(o));
-  const stopMic = () => {
-    try {
-      if (recorder && recorder.state !== 'inactive') recorder.stop();
-    } catch {
-      /* already stopped */
-    }
-    stream?.getTracks().forEach((t) => t.stop());
+  const playNext = () => {
+    if (done || playing || !audioQueue.length) return;
+    const a = new Audio(audioQueue.shift());
+    playing = a;
+    const next = () => {
+      playing = undefined;
+      sinks.level(0.08);
+      playNext();
+    };
+    a.onplay = () => sinks.level(0.6);
+    a.onended = next;
+    a.onerror = next;
+    void a.play().catch(next);
+  };
+  const enqueue = (url: string) => {
+    audioQueue.push(url);
+    playNext();
+  };
+  const stopMic = (endTurn: boolean) => {
+    const r = recorder;
+    const tracks = stream?.getTracks() ?? [];
     recorder = undefined;
     stream = undefined;
+    const release = () => tracks.forEach((t) => t.stop());
+    if (!r || r.state === 'inactive') return release();
+    r.onstop = () => {
+      // ondataavailable fired before stop; wait for queued chunk sends, then close the turn.
+      void micChain.then(() => {
+        release();
+        if (endTurn) send({ type: 'audio.end' });
+      });
+    };
+    try {
+      r.stop();
+    } catch {
+      release();
+    }
   };
   const finish = (s: 'ended' | 'error', message?: string) => {
     if (done) return;
     done = true;
-    stopMic();
+    stopMic(false);
+    audioQueue.length = 0;
     playing?.pause();
     sinks.level(0);
     sinks.status(s, message);
@@ -58,22 +111,23 @@ export async function openHubCall(ctx: HubCtx, agentId: string, sinks: CallSinks
 
   sinks.status('connecting');
   ws.onmessage = (ev) => {
+    if (typeof ev.data !== 'string') {
+      // binary audio frame announced by audio.meta
+      enqueue(URL.createObjectURL(ev.data as Blob));
+      return;
+    }
     let f: Frame;
     try {
-      f = JSON.parse(String(ev.data)) as Frame;
+      f = JSON.parse(ev.data) as Frame;
     } catch {
       return;
     }
     if (f.type === 'ready') sinks.status('live');
     else if (f.type === 'caption') sinks.caption({ speaker: f.speaker, text: f.text, ...(f.cite ? { cite: f.cite } : {}) });
-    else if (f.type === 'audio') {
-      const a = new Audio(`data:${f.mime};base64,${f.base64}`);
-      playing = a;
-      a.onplay = () => sinks.level(0.6);
-      a.onended = () => sinks.level(0.08);
-      void a.play().catch(() => sinks.level(0.08));
-    } else if (f.type === 'ended') finish('ended');
-    else if (f.type === 'error' && f.code === 'agent_failed') sinks.status('live', 'The agent lost its thread. Ask again.');
+    else if (f.type === 'audio.meta') pendingMime = f.mime;
+    else if (f.type === 'audio') enqueue(`data:${f.mime || pendingMime};base64,${f.base64}`);
+    else if (f.type === 'ended') finish('ended');
+    else if (f.type === 'error') sinks.status('live', ERROR_TEXT[f.code ?? ''] ?? 'Something went wrong. Ask again.');
   };
   ws.onerror = () => finish('error', 'The call could not stay connected.');
   ws.onclose = () => finish('ended');
@@ -82,17 +136,14 @@ export async function openHubCall(ctx: HubCtx, agentId: string, sinks: CallSinks
     callId,
     setMuted(muted) {
       if (done) return;
-      if (muted) {
-        stopMic();
-        send({ type: 'mute', muted: true });
-        return;
-      }
+      if (muted) return stopMic(true);
       void (async () => {
         try {
           stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           recorder = new MediaRecorder(stream);
           recorder.ondataavailable = (e) => {
-            if (e.data.size && ws.readyState === WebSocket.OPEN) void e.data.arrayBuffer().then((b) => ws.send(b));
+            if (!e.data.size) return;
+            micChain = micChain.then(() => e.data.arrayBuffer()).then((b) => void (ws.readyState === WebSocket.OPEN && ws.send(b)));
           };
           recorder.start(250);
           sinks.level(0.4);

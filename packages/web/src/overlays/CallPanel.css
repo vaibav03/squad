@@ -34,11 +34,13 @@
 .lv-call__portrait > img,
 .lv-call__tile {
   position: absolute;
-  inset: 8px;
-  width: calc(100% - 16px);
-  height: calc(100% - 16px);
+  /* 64px = exactly 2x the 32px pixel portrait: integer scale only */
+  inset: 16px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   object-fit: cover;
+  image-rendering: pixelated;
   background: var(--sq-sky-deep);
   border: 2px solid var(--sq-ink);
 }

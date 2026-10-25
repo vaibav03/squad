@@ -1,0 +1,55 @@
+/* World host page chrome only. Nothing here styles a particular world; overlays bring their own kit styles. */
+.sq-world {
+  --sq-world-chrome: calc(48px + var(--safe-top, 0px) + 64px + var(--safe-bottom, 0px));
+  position: relative;
+  width: 100%;
+  height: calc(100dvh - var(--sq-world-chrome));
+  min-height: 320px;
+  overflow: hidden;
+  background: var(--background);
+}
+@media (min-width: 1024px) {
+  .sq-world {
+    height: calc(100dvh - 48px - var(--safe-top, 0px));
+  }
+}
+.sq-world__stage {
+  position: absolute;
+  inset: 0;
+}
+.sq-world--empty {
+  display: grid;
+  place-items: center;
+}
+.sq-world__loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-3);
+  background: var(--background);
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  pointer-events: none;
+}
+.sq-world__loading--error {
+  pointer-events: auto;
+}
+.sq-world__badge {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 3;
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hud-border);
+  background: var(--hud-bg);
+  color: var(--foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
