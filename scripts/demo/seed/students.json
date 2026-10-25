@@ -1,0 +1,72 @@
+{
+  "squadId": "sq_demo",
+  "chatId": "chat_demo",
+  "students": [
+    {
+      "id": "s_ana",
+      "name": "Ana Reyes",
+      "handle": "+15555550101",
+      "personaId": "p_bear",
+      "calendar": "calendars/s_ana.ics",
+      "private": {
+        "budget": {
+          "comfortableUsd": 200,
+          "hardCapUsd": 180,
+          "note": "Tells friends she is fine up to $200, but her real hard cap is $180 per person including gas."
+        },
+        "hardNos": [
+          { "topic": "red-eye travel", "reason": "works the early shift the next morning" }
+        ],
+        "weakTopics": ["ch12 regression", "ch6 normal distribution"]
+      }
+    },
+    {
+      "id": "s_ben",
+      "name": "Ben Okafor",
+      "handle": "+15555550102",
+      "personaId": "p_owl",
+      "calendar": "calendars/s_ben.ics",
+      "private": {
+        "budget": {
+          "comfortableUsd": 80,
+          "hardCapUsd": 80,
+          "note": "Hard cap of 80 dollars per person for any trip; no exceptions until the next paycheck."
+        },
+        "hardNos": [{ "topic": "flights", "reason": "cannot afford the fare this month" }],
+        "weakTopics": ["ch3 probability", "ch12 regression"]
+      }
+    },
+    {
+      "id": "s_chi",
+      "name": "Chi Tran",
+      "handle": "chi.tran@example.com",
+      "personaId": "p_ninja",
+      "calendar": "calendars/s_chi.ics",
+      "private": {
+        "budget": {
+          "comfortableUsd": 120,
+          "hardCapUsd": 120,
+          "note": "Up to 120 dollars per person if the plan is worth it."
+        },
+        "hardNos": [{ "topic": "hostels", "reason": "light sleeper, needs a private room" }],
+        "weakTopics": ["ch2 descriptive statistics", "ch3 probability"]
+      }
+    },
+    {
+      "id": "s_dev",
+      "name": "Dev Patel",
+      "handle": "dev.patel@example.com",
+      "personaId": "p_teacher",
+      "calendar": "calendars/s_dev.ics",
+      "private": {
+        "budget": {
+          "comfortableUsd": 150,
+          "hardCapUsd": 150,
+          "note": "Up to 150 dollars per person, splits gas with whoever drives."
+        },
+        "hardNos": [{ "topic": "camping", "reason": "back injury, needs a real bed" }],
+        "weakTopics": ["ch6 normal distribution"]
+      }
+    }
+  ]
+}

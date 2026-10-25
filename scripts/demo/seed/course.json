@@ -1,0 +1,22 @@
+{
+  "courseId": "cse310",
+  "title": "Introductory Statistics (OpenStax excerpt)",
+  "groupName": "Stats Midterm Grind",
+  "packRef": "packages/brain/fixtures/course.json",
+  "license": { "name": "CC BY 4.0", "url": "https://creativecommons.org/licenses/by/4.0/" },
+  "attribution": "Introductory Statistics 2e by Barbara Illowsky and Susan Dean (OpenStax), licensed CC BY 4.0, https://openstax.org/details/books/introductory-statistics-2e. Excerpts only.",
+  "chapters": [
+    { "id": "ch2", "title": "Descriptive Statistics: center and spread" },
+    { "id": "ch3", "title": "Probability Topics" },
+    { "id": "ch6", "title": "The Normal Distribution" },
+    { "id": "ch12", "title": "Linear Regression and Correlation" }
+  ],
+  "exam": { "name": "Midterm", "at": "2026-11-05T14:00", "tz": "America/Phoenix" },
+  "studyWindow": {
+    "from": "2026-11-02T09:00",
+    "to": "2026-11-05T13:00",
+    "dayStartHour": 9,
+    "dayEndHour": 22,
+    "durationHours": 2
+  }
+}

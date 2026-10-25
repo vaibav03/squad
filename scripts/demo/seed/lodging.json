@@ -1,0 +1,40 @@
+{
+  "trip": {
+    "tripId": "trip_cabo",
+    "taskId": "task_trip_cabo",
+    "name": "Weekend away after the midterm",
+    "from": "2026-11-13",
+    "to": "2026-11-15",
+    "nights": 2,
+    "origin": "Tempe, AZ"
+  },
+  "options": [
+    {
+      "id": "opt_cabo",
+      "label": "Cabo San Lucas beach rental",
+      "place": "Cabo San Lucas, MX",
+      "kind": "rental",
+      "perPersonUsd": 310,
+      "demoOutcome": "dropped_budget",
+      "notes": "Flights plus a beachfront rental. The group only ever sees: option dropped, budget."
+    },
+    {
+      "id": "opt_flagstaff_cabin",
+      "label": "Flagstaff pine cabin",
+      "place": "Flagstaff, AZ",
+      "kind": "cabin",
+      "perPersonUsd": 64,
+      "demoOutcome": "chosen",
+      "notes": "Two-hour drive, cabin for four, split four ways. The confirm prompt reads: Hold the cabin at $64/person?"
+    },
+    {
+      "id": "opt_sedona_glamp",
+      "label": "Sedona glamping domes",
+      "place": "Sedona, AZ",
+      "kind": "glamping",
+      "perPersonUsd": 72,
+      "demoOutcome": "runner_up",
+      "notes": "Second choice if the cabin falls through."
+    }
+  ]
+}
