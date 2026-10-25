@@ -1,0 +1,29 @@
+.lv-wave {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+  height: 48px;
+  padding: 0 var(--lv-s1);
+}
+.lv-wave__bar {
+  flex: 1 1 0;
+  height: 100%;
+  min-width: 3px;
+  max-width: 6px;
+  border-radius: 2px;
+  background: var(--lv-text-dim);
+  transform-origin: center;
+  transform: scaleY(0.12);
+  opacity: 0.7;
+  will-change: transform;
+  transition: background-color var(--dur-fast) var(--lv-ease-out), opacity var(--dur-fast) var(--lv-ease-out);
+}
+.lv-wave[data-tone='agent'] .lv-wave__bar {
+  background: var(--lv-accent);
+  opacity: 1;
+}
+.lv-wave[data-tone='you'] .lv-wave__bar {
+  background: var(--lv-ok);
+  opacity: 1;
+}
