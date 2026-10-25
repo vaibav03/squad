@@ -120,7 +120,7 @@ describe('shared study plan', () => {
 
   it('mirrors decisions into the group chat thread as plain text', async () => {
     const sq = (await call('GET', '/v1/plans/current', 's_ana')).body.plan!.squadId;
-    const texts = hub.deps.chat.store.history(`group:${sq}`, { limit: 100 }).map((m) => m.text);
+    const texts = hub.deps.chat.store.history(`group:${sq}`, { limit: 100 }).messages.map((m) => m.text);
     expect(texts.some((t) => /accepted|active|finished|conflict|Study plan/i.test(t))).toBe(true);
     expect(texts.join('\n')).not.toMatch(/\$180|therapy/i);
   });
