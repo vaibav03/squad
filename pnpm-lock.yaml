@@ -143,6 +143,9 @@ importers:
       '@squad/web':
         specifier: workspace:*
         version: link:../../packages/web
+      agentation:
+        specifier: ^3.1.2
+        version: 3.1.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react:
         specifier: ^19.0.0
         version: 19.3.1
@@ -364,6 +367,27 @@ importers:
       '@types/better-sqlite3':
         specifier: ^7.6.0
         version: 7.6.13
+
+  scripts/live:
+    dependencies:
+      '@google/genai':
+        specifier: ^1.0.0
+        version: 1.52.0
+      '@squad/brain':
+        specifier: workspace:*
+        version: link:../../packages/brain
+      '@squad/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@squad/hub':
+        specifier: workspace:*
+        version: link:../../apps/hub
+      '@squad/media':
+        specifier: workspace:*
+        version: link:../../packages/media
+      zod:
+        specifier: ^4.0.0
+        version: 4.6.7
 
 packages:
 
@@ -1623,6 +1647,17 @@ packages:
   agent-base@7.1.4:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
+
+  agentation@3.1.2:
+    resolution: {integrity: sha512-ZZr6PRgX3ussGbvC9NVh5vFfKKFkQyHL6KuxOfBAAM/mJS3bM2XyhZ7wLPakDwU3pqkzq7u6vEfLikFsCOu5+Q==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   ajv@6.15.0:
     resolution: {integrity: sha512-fgFx7Hfoq60ytK2c7DhnF8jIvzYgOMxfugjLOSMHjLIPgenqa7S7oaagATUq99mV6IYvN2tRmC0wnTYX6iPbMw==}
@@ -4038,6 +4073,11 @@ snapshots:
   acorn@8.19.0: {}
 
   agent-base@7.1.4: {}
+
+  agentation@3.1.2(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
+    optionalDependencies:
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
 
   ajv@6.15.0:
     dependencies:

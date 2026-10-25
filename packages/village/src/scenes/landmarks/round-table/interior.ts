@@ -27,11 +27,11 @@ const TABLE = { cx: 90, cy: 113, rx: 62, ry: 13 };
 const CHAIR = { x: 196, feet: 113 };
 
 const PERSONA: Record<string, string> = {
-  chill: 'council-chill',
-  grind: 'council-hard',
-  advisor: 'council-balance',
+  chill: 'cast-chill',
+  grind: 'cast-grind',
+  advisor: 'cast-advisor',
 };
-const BY_SEAT = ['council-chill', 'council-hard', 'council-balance'];
+const BY_SEAT = ['cast-chill', 'cast-grind', 'cast-advisor'];
 export const personaOf = (member: string, seat: number): string =>
   PERSONA[member] ?? BY_SEAT[seat % 3]!;
 const DEFAULT_MEMBERS = ['chill', 'grind', 'advisor'] as const;
@@ -263,8 +263,8 @@ export function paintInterior(s: RoundTableState, o: PaintOpts): Raster {
   const standT = s.verdict ? (o.calm ? 1 : easeOut(progress(o.t, s.verdict.since, 240))) : 0;
   const rise = standing ? Math.round(6 * standT) : 0;
   const chairFrame = standing
-    ? A.frame('chairman', 'talk', frameAt(o.t, 8, o.calm))
-    : A.frame('chairman', 'sit', frameAt(o.t, 2, o.calm));
+    ? A.frame('cast-chair', 'talk', frameAt(o.t, 5, o.calm, 4))
+    : A.frame('cast-chair', 'sit', frameAt(o.t, 2, o.calm));
   put(r, chairFrame, CHAIR.x, CHAIR.feet - rise, { flipX: true });
   drawTextCentered(r, CHAIR.x, 117, 'CHAIR', 'wood-lit');
 
@@ -274,8 +274,8 @@ export function paintInterior(s: RoundTableState, o: PaintOpts): Raster {
     const member = seatedMembers.find((m) => m.seat === seat)?.member ?? DEFAULT_MEMBERS[seat]!;
     const { x, flip } = SEATS[seat]!;
     const talking = open && speakerWho === member;
-    const anim = talking ? 'talk' : thinking.has(member) ? 'idle' : 'sit';
-    const n = talking ? frameAt(o.t, 8, o.calm) : frameAt(o.t, 2, o.calm);
+    const anim = talking ? 'talk' : thinking.has(member) ? 'think' : 'sit';
+    const n = anim === 'sit' ? frameAt(o.t, 2, o.calm) : frameAt(o.t, 5, o.calm, 4);
     put(r, A.frame(personaOf(member, seat), anim, n), x, SEAT_FEET + (anim === 'sit' ? 0 : -1), {
       flipX: flip,
     });

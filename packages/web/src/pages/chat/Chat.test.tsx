@@ -47,11 +47,16 @@ const memStorage = (): Storage => {
   };
 };
 beforeEach(() => {
+  // Fixed clock (local noon) so "Today" and "Yesterday" separators never depend on the time of day the suite runs.
+  // Only Date is faked: timers stay real so Testing Library's polling keeps working.
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 9, 15, 12, 0, 0));
   vi.stubGlobal('localStorage', memStorage());
   vi.stubGlobal('sessionStorage', memStorage());
 });
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   delete document.documentElement.dataset.calm;
 });
@@ -70,6 +75,22 @@ describe('thread rendering', () => {
     expect(screen.getAllByText('Chi')).toHaveLength(2);
     const own = msgs.find((m) => m.getAttribute('data-sender-id') === ME)!;
     expect(own.getAttribute('data-own')).toBe('true');
+  });
+
+  it.each([
+    ['00:30, just after midnight', new Date(2026, 9, 15, 0, 30, 0)],
+    ['23:59, just before midnight', new Date(2026, 9, 15, 23, 59, 0)],
+  ])('keeps day separators and message order stable at %s', async (_label, at) => {
+    // Fixtures are relative to "now" (the newest is about an hour old), so at 00:30 they cross midnight.
+    vi.setSystemTime(at);
+    setup();
+    await screen.findAllByTestId('chat-message');
+    const ids = screen.getAllByTestId('chat-message').map((m) => m.getAttribute('data-message-id'));
+    expect(ids[0]).toBe('m_1');
+    expect(screen.getAllByText('Yesterday').length).toBeGreaterThan(0);
+    expect(screen.getByText('Today')).toBeTruthy();
+    const separators = screen.getAllByText(/^(Today|Yesterday)$/).map((e) => e.textContent);
+    expect(separators.lastIndexOf('Yesterday')).toBeLessThan(separators.indexOf('Today'));
   });
 
   it('the thread is a polite log', async () => {

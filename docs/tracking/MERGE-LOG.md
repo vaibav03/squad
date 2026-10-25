@@ -245,3 +245,128 @@ Frames: `docs/design/shots/merge5/`.
 
 - Landing merge commit: `52c9a73d794ff74e397ce110a44d7f5fdea6d548` (parents `3e21a141b0ae13eee9e02125dffd949830b66c05` = tag `pre-merge-batch5`, `eaa24679759e4d631f48827c34c92d702e89d4c0` = origin/merge/batch5; the only diff vs the batch tip is tracker docs that moved on main).
 - Rollback: `git revert -m 1 52c9a73d794ff74e397ce110a44d7f5fdea6d548`.
+
+## Batch 6 (verification and docs): ops/live-verify, audit/perf, audit/a11y, docs/guide, e2e/acceptance into main
+
+Branch `merge/batch6` (worktree `squad-wt/merge6`), landed as a true `--no-ff` merge.
+
+### Manual resolutions
+
+1. Root `package.json`: the only conflict, hit on every merge; union of scripts (`live:verify`, `live:images`, `perf:*`, `a11y:check`, `e2e`, `e2e:live` on top of main's).
+2. Lint errors that the audit and e2e branches brought (unused `shotN`/`statSync`, `import()` type annotations, `any` in the a11y lib, async promise executor in `perf/hub-bench.ts`, empty catch in `perf/runtime.mjs`): fixed at the source, not suppressed; Prettier run over `e2e`, `scripts/{a11y,perf,docs,live}` and README.
+3. Docs status boxes refreshed to match main (rooms/a, rooms/b, council/ask, chat/web, qa/web are on main): `docs/guide/ROOMS.md` (status box, table, notes 1 and 2, keeping-honest note), `docs/guide/USER-GUIDE.md`, `README.md`, `docs/FAQ.md`, `docs/SUBMISSION-STORY.md`, `docs/qa/E2E-README.md`, `docs/security/FINDINGS.md` (CHAT-1 now says rerun). The Council Hall row stays Partial: `@cubbie council <question>` works, but the quiz answer-key verifier is still not wired by default.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` (0 lint errors), `pnpm test:smoke all`, `pnpm demo:live` | pass |
+| `scripts/docs/check-links.ts` | 9 files, 85 relative links, ok |
+| Browser (hub :18866, web :15266) | village 1280x800 and 390x844, /squad/courses, /squad/chat: 0 page errors, 0 HTTP >= 400; chat answered in demo mode |
+
+Frames: `docs/design/shots/merge6/`. Not run: `pnpm e2e` (Playwright acceptance suite), `perf:*`, `a11y:check`, `live:verify` (needs keys); only their code and unit tests landed.
+
+### Known gaps
+
+- Acceptance, perf and a11y suites are on main but were not executed in this merge.
+- A nested `scripts/a11y/package.json` and `package-lock.json` came from audit/a11y (outside the pnpm workspace).
+- web-host security headers (HDR-1) still open (see batch 5).
+
+### Landing (batch 6)
+
+- Landing merge commit: `8f5f49ec6629ade9f5397ce8dbd334edf33ef398` (parents `d9c8d349e8c9746c8aeb326e0cc19e6f29546f99` = tag `pre-merge-batch6`, `10198617d3112c08c986f218dd7253b34170f875` = origin/merge/batch6; only tracker docs differ).
+- Rollback: `git revert -m 1 8f5f49ec6629ade9f5397ce8dbd334edf33ef398`.
+
+## Batch 7: fix/e2e-bugs, e2e/accounts, e2e/courses, e2e/ops, e2e/rooms into main
+
+Branch `merge/batch7` (worktree `squad-wt/merge7`), landed as a true `--no-ff` merge. Not merged on purpose: e2e/acceptance, feature/agent-inspector, feature/live-discussion, feature/council-cast-art (still being built).
+
+### Manual resolutions
+
+1. e2e/accounts, e2e/courses, e2e/ops and e2e/rooms each added their own copy of the shared e2e harness (`e2e/lib/*`, `e2e/specs/j01..j05,j09,j15`, `stack-up.sh`, `stack-down.sh`), so every merge gave add/add conflicts in those files. Main's copy (newer, already formatted, with the agent ports and the secret patterns) was kept; each branch's own specs (`j06`, `j08`, `j10`..`j14`), screenshots and `docs/qa/E2E-BUGS-*.md` came in untouched. `docs/qa/E2E-REPORT.md` and `e2e-results.json` (conflict with e2e/rooms) kept main's.
+2. e2e/ops carried an older copy of the security and observability code; its `apps/hub/src/app.ts` conflict was resolved with main's (already merged in batch 5), so nothing of ops was lost: its unique commits are the harness reuse, screenshots and the defect log.
+3. `packages/web/src/pages/chat/Chat.test.tsx` ("Yesterday" separator depended on the time of day): the suite now runs on a fixed clock (`vi.useFakeTimers({ toFake: ['Date'] })`, local noon on 2026-10-15; timers stay real). Not skipped.
+4. Members page 404 for the dev-login demo user: cause was that the seeded `sq_demo` existed only in the in-memory directory, not in the accounts store, so `GET /v1/squads/sq_demo/invites` returned `not_found` and the page showed "Something went wrong" (it also showed s_ana as a plain member). Fix: new `SquadsStore.adopt(squadId)` turns the seeded demo squad into a real squad at boot (squads row, member rows, first member `s_ana` as owner; idempotent), called from `createHub` right after `seedDemo` when seeding. Test: `apps/hub/test/smoke/members-demo.smoke.test.ts` (s_ana is owner, members and roles load, an invite is created and listed with its link; a non-owner member sees the squad but gets 403 on invites).
+5. Lint: unused vars and `import()` types in the courses e2e spec; the new smoke test.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` (0 lint errors) | pass |
+| `pnpm demo:live` | `demo:live OK` |
+| `pnpm test:smoke hub` | 99 tests pass (97 before plus the 2 new ones) |
+| Browser (hub :18877, web :15277, `--no-agents`) | /squad/members as s_ana: 0 page errors, 0 HTTP >= 400, shows "Demo squad", Ana (you) Owner, Ben/Chi/Dev Member with Make owner / Remove, Invite people with "New invite link"; village 1280x800 and 390x844, courses, chat: 0 errors, chat answered |
+
+Frames: `docs/design/shots/merge7/`. The e2e suites themselves (`pnpm e2e`) were not run here.
+
+### Known gaps
+
+- With the demo squad adopted, "Leave squad" or removing members on the demo squad acts on real rows (it persists in the hub database file across restarts).
+- The merged e2e specs from the four branches were not executed in this merge.
+
+### Landing (batch 7)
+
+- Landing merge commit: `c853f56bcddc7e4a9b10a0b2e939206569574b19` (parents `c074a130806e19b87435d3ae2fdab924c0df76f0` = tag `pre-merge-batch7`, `5c636fe2545045b2c38e6acc11591d3b2891e9f2` = origin/merge/batch7; only tracker docs differ).
+- Rollback: `git revert -m 1 c853f56bcddc7e4a9b10a0b2e939206569574b19`.
+
+## Batch 8: feature/council-cast-art + feature/agent-inspector into main
+
+Branch `merge/batch8` (worktree `squad-wt/merge8`), landed as a true `--no-ff` merge. Not merged: feature/live-discussion and e2e/acceptance (leads still running; both had new pushes while this batch ran).
+
+### Manual resolutions
+
+1. Both branches merged cleanly (no conflicts, in the order cast art, then inspector).
+2. Flaky brain test: `packages/brain/src/library/library.test.ts` "same name, different bytes gets a suffix" asserted `listChapters` order `['n', 'n-2']`, but the two uploads are processed concurrently so the listing order is not part of the contract. The test (code unchanged by cast art, so the same flake exists on main; it did not fail in 3 sequential runs here) now sorts the ids before comparing and passes 6 of 6 parallel runs. Not skipped.
+3. The date-dependent Chat test was already fixed on main in batch 7.
+
+## Honest status (fix/honest-status into main), run as a follow-up to batch 7
+
+Branch `merge/honest-status` (worktree `squad-wt/merge-honest`). Naming note: "batch 7" and `pre-merge-batch7` were already taken on main by the e2e batch (`c853f56`), and `merge/batch8` / `squad-wt/merge8` belong to another captain's castart merge, so this run uses its own names (`merge/honest-status`, tag `pre-merge-honest-status`). Landed as a true `--no-ff` merge; no squash, no rebase, no fast-forward, no force.
+
+### Manual resolutions
+
+1. `packages/core/src/llm/resilient.ts` (content conflict, 3 hunks): kept both sides. Main's `failedTier` (probe with the tier that hit the quota) and `run(f, tier)` signature stay; the branch's `probeTimeoutMs`/`withTimeout` and `startupProbe()` are added; the recovery probe is now `withTimeout(real.complete({ ..., model: failedTier ?? 'fast' }))`. `resilient.test.ts` auto-merged and passes.
+2. `assets/pixel/composed/scripts/__pycache__/palette.cpython-314.pyc` (binary, a tracked-then-gitignored build artefact that both sides had regenerated): kept main's copy.
+3. Chat day-separator test: main already carried the fixed-clock fix from the e2e batch (`vi.useFakeTimers({ toFake: ['Date'] })` plus `setSystemTime` at local noon), so only the second half of the request was needed: two explicit boundary cases (00:30 and 23:59) added to `Chat.test.tsx`, asserting that Yesterday/Today separators stay in order and the first message stays first. Grep of all tests for `Date.now() +/-`, `new Date()`, `getHours`, `toLocale*String` found no other time-of-day-dependent assertions (remaining hits are elapsed-time and timeout arithmetic).
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` (after cast art, and again after the inspector merge; mesh gate test did not flake) | pass |
+| `pnpm demo:live`, `pnpm test:smoke hub` (99 tests) | pass |
+| Round Table help panel (room-info dev harness): Chill, Grind, Advisor, Chairman render as four 64px `CastAvatar`s with the `ca-frames` animation, 0 page errors | pass (screenshot looked at: four distinct pixel busts with names and "Listening" chips) |
+| Fresh hub, `?replay=track2` and `?replay=track3` at 1280x800 | both play, 0 page errors, 0 HTTP >= 400 (no 500 from the new `thought`/`message`/`work` fields) |
+| Click a character in the replayed village | inspector opens with tabs Doing, Thinking, Chat, Agents (Ana: Studying, "Keeping calendar hidden", Model badges, Recent list) |
+
+Frames: `docs/design/shots/merge8/`. "Clicking the ground does not move the player" is by code (`packages/village/src/inspector/module.ts`, ground click only closes the inspector) and was not checked separately in a browser. A hub started before this batch rejects the new replays, so the demo stack must be restarted after it.
+
+### Landing (batch 8)
+
+- Landing merge commit: `b94b5ec922a333d36025d030d74b6a4dff0b4a94` (parents `1cf2c30c201f45d8d6845f11cd5672d5254253aa` = tag `pre-merge-batch8`, `bc0337724f0e784ad4ef9da18a477bc7a9b4062c` = origin/merge/batch8; diff empty).
+- Rollback: `git revert -m 1 b94b5ec922a333d36025d030d74b6a4dff0b4a94` (reverts both branches). The branch merges inside the batch are `git log --merges --oneline 1cf2c30..bc03377`.
+
+| `pnpm install --frozen-lockfile` | pass |
+| `pnpm check` (typecheck, eslint + prettier, every package's tests) | exit 0, fully green |
+| `pnpm test` with `TZ=Pacific/Kiritimati` and `TZ=Etc/GMT+12` (shifts the day boundary by 26 h) | pass both; `Chat.test.tsx` also pass under default TZ and `America/Los_Angeles` (49/49) |
+| `pnpm test:smoke all` | first run failed once: `apps/bot` multi-skill smoke hit its 5 s timeout while the machine load average was about 77 (parallel captains); passed on 2 of 2 reruns |
+| `pnpm demo:live` | OK |
+| `pnpm run doctor`, no keys (no `.env` in the worktree; not copied) | reports Gemini and ElevenLabs missing, voice caption-only |
+| `pnpm run doctor` with deliberately invalid keys | Gemini FAIL (HTTP 400, API_KEY_INVALID, fix text); ElevenLabs FAIL `key_restricted` with the exact permission fix. The real 402 / free-plan path was NOT run live (no real keys used); it is covered by `packages/media/src/tts/health.test.ts`, `resilient.test.ts` and `apps/hub/test/smoke/squad.smoke.test.ts` |
+| Hub with invalid keys (`/v1/status`) | first `probing:true`, notice "Checking services..."; about 1 s later `reason:invalid_key`, fix and notice text, `ttsReason:key_restricted` |
+| Browser (Playwright, dev:all hub :18877 web :15277, no keys, signed in via dev-login) | /squad (redirects to welcome until signed in, then lands), /squad/village?replay=track2 renders, Round Table room panel opens by keyboard and Esc closes it, /squad/chat: `@cubbie what is a z-score?` and `@cubbie council ...` answered with Bot + Demo labels and a council verdict card; /squad/personas shows "Voice previews are off: no ElevenLabs key is set"; 0 page errors, 0 HTTP >= 400 |
+
+Frames: `docs/design/shots/merge7/` (01-06 happy path, 07/08 status banner attempts).
+
+### Known gaps
+
+- Not demonstrated in a browser: the sentence "Voices need an ElevenLabs plan that allows API voices" (needs a real free-plan key; the hub cannot be pointed at a stub, `ELEVEN_BASE` is a constant) and the "Checking services..." banner (the UI shows it only while the hub reports `probing:true`, which lasts about a second with a key set; hub behaviour was shown by polling `/v1/status`, UI by unit tests). With no keys the banners correctly show the no-key demo reasons instead.
+- Doctor was not run against the real Gemini (402) and restricted ElevenLabs keys, per the no-`.env` rule.
+- `/squad/personas` voice play with no key shows the no-key notice, not the plan notice, for the same reason.
+- The browser run used Playwright from another project's `playwright-core` 1.64.1 because the repo's e2e deps are not installed in this worktree; `pnpm e2e` was not run.
+
+### Landing (honest status)
+
+- Landing merge commit: `753b212` (parents `a026ecc` = tag `pre-merge-honest-status`, `0f57097` = origin/merge/honest-status). Main had moved by batch 8 (cast art, agent inspector, 149 files) after the branch was verified on `1cf2c30`; the only merge conflict was this log (both sides appended, both kept), and `pnpm typecheck`, `pnpm lint` and `pnpm test` were re-run on the combined tree: all exit 0. The browser run and smoke/demo/doctor were not repeated on the combined tree.
+- Rollback: `git revert -m 1 753b212`.

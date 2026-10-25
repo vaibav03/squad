@@ -137,15 +137,15 @@ export function Overview({ status, courses, onRetry, onNew, onSample }: Overview
           {mine.length === 0 && (
             <Notice
               tone="info"
-              title="You have not added a course yet"
+              title="No courses of your own yet"
               action={
                 <Button variant="secondary" iconStart="upload" onClick={onNew}>
                   Upload your own
                 </Button>
               }
             >
-              Start with the sample below to see how chapters and sources work, then add your own
-              materials.
+              The sample course below shows how chapters and sources work. Upload your own materials
+              when you are ready.
             </Notice>
           )}
           <ul

@@ -4,7 +4,7 @@ import { openMemoryDb } from '@squad/core/node';
 import type { HandlerCtx, JobRecord } from '../nudges/api';
 import { createFakeProactive } from '../nudges/fakeProactive';
 import { formatLocal, zonedParts, zonedToUtc } from '../nudges/time';
-import { createPactSkill, parseDeadline, registerPactHandlers } from './index';
+import { createPactSkill, parseCommitment, parseDeadline, registerPactHandlers } from './index';
 import { ownPacts } from './store';
 
 const NY = 'America/New_York';
@@ -321,5 +321,18 @@ describe('privacy and silence', () => {
       '@cubbie what is a z-score',
     ])
       expect((await t.say(l)).score).toBe(0);
+  });
+});
+
+describe('parseCommitment', () => {
+  it('keeps the task intact around "pinky promise"', () => {
+    for (const t of [
+      'I will finish the essay by Friday',
+      'I pinky promise to finish the essay by Friday',
+      '@cubbie pinky promise I will finish the essay by Friday',
+      'I will pinky promise to finish the essay by Friday',
+    ]) {
+      expect(parseCommitment(t)?.task, t).toBe('finish the essay by Friday');
+    }
   });
 });

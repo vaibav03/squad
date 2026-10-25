@@ -15,6 +15,9 @@ import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
 import { ChatDock } from '../chat/ChatDock';
 import { RoomLayer } from '../../overlays/room-info';
+import { InspectorPanel } from '../../overlays/inspector';
+import { SourceViewerHost } from '../../components/source-viewer';
+import { createInspectorStore, type InspectorStore } from '@squad/village/inspector';
 import { CouncilHall } from '../../council';
 import { useToast } from '../../primitives/Toast';
 import { sendPhraseToChat } from './chat-send';
@@ -43,6 +46,7 @@ export default function VillagePage({ world }: { world?: string }) {
   calmRef.current = calm;
   const [state, setState] = useState<'loading' | 'ready' | { error: string }>('loading');
   const [event, setEvent] = useState<OverlayEvent | null>(null);
+  const [inspector, setInspector] = useState<InspectorStore | null>(null);
   const q = new URLSearchParams(location.search);
   const replayName = q.get('replay');
   const worldId = world ?? q.get('world') ?? DEFAULT_WORLD;
@@ -85,12 +89,28 @@ export default function VillagePage({ world }: { world?: string }) {
           );
           feed = { source: l, me, close: () => l.close() };
         }
+        // The inspector store listens to the same filtered stream, from the first event, and drives the panel.
+        const store = createInspectorStore({ ...(feed.me ? { me: feed.me } : {}) });
+        const offStore = store.attach(feed.source);
+        const prevClose = feed.close;
+        feed.close = () => {
+          offStore();
+          prevClose();
+        };
+        setInspector(store);
         const mount = await loadWorld(worldId);
         if (dead || !stage.current) return feed.close();
         // `?cutscene=trip&task=<id>`: the world plays the cutscene once per task (any key skips it).
         const trip = tripCutsceneFromQuery(location.search);
         const source = trip ? withTripCutscene(feed.source, trip) : feed.source;
-        const h = mount({ parent: stage.current, source, me: feed.me, calm, onOverlay: setEvent });
+        const h = mount({
+          parent: stage.current,
+          source,
+          me: feed.me,
+          calm,
+          onOverlay: setEvent,
+          inspector: store,
+        });
         handle.current = h;
         if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__world = h;
         await h.ready;
@@ -107,6 +127,7 @@ export default function VillagePage({ world }: { world?: string }) {
       handle.current?.destroy();
       handle.current = null;
       setEvent(null);
+      setInspector(null);
     };
     // calm is applied live through setCalm; the world is not remounted for it.
   }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable]);
@@ -201,6 +222,16 @@ export default function VillagePage({ world }: { world?: string }) {
         returnFocusTo={stage.current?.querySelector<HTMLElement>('.sqv-stage')}
         onClosed={onClosed}
       />
+      {inspector && (
+        <InspectorPanel
+          store={inspector}
+          calm={calm}
+          hub={replayName ? null : hub}
+          mode={mode}
+          returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
+        />
+      )}
+      <SourceViewerHost />
       <ChatDock enabled={live && !replayName} />
       <CouncilHall
         hub={hub}

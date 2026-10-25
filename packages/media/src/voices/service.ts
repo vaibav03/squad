@@ -17,6 +17,8 @@ export interface VoiceServiceOptions {
   store: VoiceStore;
   /** Stock voice used when a persona has no saved voice. Env ELEVENLABS_FALLBACK_VOICE_ID overrides. */
   fallbackVoiceId: string;
+  /** A voice proven usable with this key (from the startup probe); wins over `fallbackVoiceId` when set. */
+  provenVoice?: () => string | undefined;
   /** Per-persona runtime overrides, e.g. Persona.voiceId from the registry or Student.voiceId. */
   overrides?: (personaId: string) => string | undefined;
   engine?: ElevenLabsEngine;
@@ -39,7 +41,11 @@ export class VoiceService {
     const override = this.o.overrides?.(personaId);
     const saved =
       override ?? this.o.store.get(personaId) ?? this.o.store.get(resolveProfileKey(personaId));
-    return { voiceId: saved ?? this.o.fallbackVoiceId, isFallback: !saved, profile };
+    return {
+      voiceId: saved ?? this.o.provenVoice?.() ?? this.o.fallbackVoiceId,
+      isFallback: !saved,
+      profile,
+    };
   }
 
   private need(): ElevenLabsEngine {

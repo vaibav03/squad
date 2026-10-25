@@ -8,6 +8,7 @@ import {
   type VillageEvent,
 } from '@squad/core';
 import { GeminiLlm, loadConfig } from '@squad/core/node';
+import { ttsHealthFromConfig, type TtsHealth } from '@squad/media';
 import { createCourseStore, type Brain, type MasteryStore } from '@squad/brain';
 import {
   WebTransport,
@@ -90,13 +91,25 @@ export async function attachChatEngine(
       fake: o.demo ?? createDemoLlm(),
       forceFake: forced,
       ...(o.now ? { now: o.now } : {}),
+      // prove the key works before any status claims it does (background; never delays serving)
+      probeOnStart: !!real && !forced && !o.noProbe,
     });
   const llm = o.instrument ? o.instrument(built) : built;
   const wantRealPorts = !!o.realPorts && (!!real || env.FORCE_FAKE_LLM === '1' || !!o.llm);
+  // One shared speech probe per key (also used by the audio services the ports and skills build).
+  const ttsHealth: TtsHealth | undefined =
+    useEleven && !o.noProbe ? ttsHealthFromConfig(cfg.elevenLabsApiKey!) : undefined;
+  ttsHealth?.status(); // start the first probe now, in the background
   deps.runtime ??= {
     // topped-up credits are noticed without a restart: a stale failure re-probes in the background
     llm: () => llm.status(),
-    tts: () => useEleven,
+    tts: () => (ttsHealth ? ttsHealth.status().tts === 'elevenlabs' : useEleven && !!o.noProbe),
+    ttsStatus: () =>
+      ttsHealth
+        ? ttsHealth.status()
+        : useEleven
+          ? { tts: 'elevenlabs', reason: 'ok' } // probes skipped (tests that count calls)
+          : { tts: 'none', reason: 'no_key' },
     ports: () => (wantRealPorts ? 'real' : 'stub'),
   };
   if (real && !o.noProbe) llm.status(); // starts a probe when a stale failure is on record

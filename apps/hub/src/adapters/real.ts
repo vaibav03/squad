@@ -9,6 +9,7 @@ import {
   type BusyBlock,
   type Llm,
   type StudentId,
+  VoicesUnavailableError,
   type VillageEvent,
 } from '@squad/core';
 import {
@@ -442,14 +443,14 @@ function createAudioPorts(
   // No speech engine: captions only (a failing TTS yields text-only turns), previews unavailable.
   const noTts = {
     speak: async () => {
-      throw new Error('tts unavailable');
+      throw new VoicesUnavailableError('no_key');
     },
   };
   const store = new MemoryVoiceStore();
   return {
     media: createMediaPort({
       personas: () => listPersonas(),
-      tts: { speakVoice: async () => Promise.reject(new Error('tts unavailable')) },
+      tts: { speakVoice: async () => Promise.reject(new VoicesUnavailableError('no_key')) },
       store,
     }),
     call: createCallPort({ tts: noTts, answer, knownAgent, agentFor, personaFor }),

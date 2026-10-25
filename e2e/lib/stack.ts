@@ -1,7 +1,19 @@
 import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { AGENT_IDS, AGENT_PORT, AGENT_URL, HUB, HUB_PORT, LIVE, REPO, SECRET, TMP, WEB, WEB_PORT } from './env';
+import {
+  AGENT_IDS,
+  AGENT_PORT,
+  AGENT_URL,
+  HUB,
+  HUB_PORT,
+  LIVE,
+  REPO,
+  SECRET,
+  TMP,
+  WEB,
+  WEB_PORT,
+} from './env';
 
 /**
  * The e2e stack is booted here instead of `pnpm dev:all` so that it owns its ports (hub, web host and agents on
@@ -58,7 +70,11 @@ export function portBusy(port: number): boolean {
     return false;
   }
 }
-export const ownPorts = () => [HUB_PORT, WEB_PORT, ...(process.env.E2E_NO_AGENTS === '1' ? [] : AGENT_IDS.map(AGENT_PORT))];
+export const ownPorts = () => [
+  HUB_PORT,
+  WEB_PORT,
+  ...(process.env.E2E_NO_AGENTS === '1' ? [] : AGENT_IDS.map(AGENT_PORT)),
+];
 
 function launch(name: string, args: string[], env: NodeJS.ProcessEnv): number {
   const log = fs.openSync(path.join(TMP, `${name}.log`), 'a');
@@ -81,20 +97,28 @@ export function startStack(): void {
         FAKE_LLM: LIVE ? '0' : '1',
         CONFIRM_MODE: 'scripted',
       });
-  pids.web = launch('web', ['--filter', '@squad/web-host', 'exec', 'vite', '--port', String(WEB_PORT), '--strictPort'], baseEnv());
+  pids.web = launch(
+    'web',
+    ['--filter', '@squad/web-host', 'exec', 'vite', '--port', String(WEB_PORT), '--strictPort'],
+    baseEnv(),
+  );
   fs.writeFileSync(path.join(TMP, 'stack.pids'), JSON.stringify(pids));
 }
 
 export async function stackUp(ms = 90_000): Promise<boolean> {
   const checks = [`${HUB}/health`, `${WEB}/`];
-  if (process.env.E2E_NO_AGENTS !== '1') for (const id of AGENT_IDS) checks.push(`${AGENT_URL(id)}/healthz`);
+  if (process.env.E2E_NO_AGENTS !== '1')
+    for (const id of AGENT_IDS) checks.push(`${AGENT_URL(id)}/healthz`);
   return (await Promise.all(checks.map((u) => waitFor(u, ms)))).every(Boolean);
 }
 
 /** Kills the process groups this module started, then anything still listening on this stack's own ports. */
 export function stopStack(): void {
   try {
-    const pids = JSON.parse(fs.readFileSync(path.join(TMP, 'stack.pids'), 'utf8')) as Record<string, number>;
+    const pids = JSON.parse(fs.readFileSync(path.join(TMP, 'stack.pids'), 'utf8')) as Record<
+      string,
+      number
+    >;
     for (const pid of Object.values(pids)) {
       try {
         process.kill(-pid, 'SIGTERM');

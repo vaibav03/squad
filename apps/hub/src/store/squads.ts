@@ -92,6 +92,11 @@ export interface SquadsStore {
   hydrate(): void;
   /** Re-mirrors one squad's membership into the directory. */
   sync(squadId: string): void;
+  /**
+   * Turns a directory-only squad (the seeded demo) into a real one: a squads row and member rows, the first
+   * member as owner, so the Members page, invites and roles work for the demo user. Idempotent.
+   */
+  adopt(squadId: string): void;
   audit(
     squadId: string,
     action: string,
@@ -351,6 +356,18 @@ export function createSquadsStore(
           };
         })
         .filter((x): x is SquadSummary => x !== null);
+    },
+    adopt(squadId) {
+      if (squadRow(squadId)) return;
+      const d = directory.squad(squadId);
+      if (!d || d.members.length === 0) return;
+      db.transaction(() => {
+        db.prepare(
+          'INSERT INTO squads(id,name,course,created_at,created_by) VALUES(?,?,?,?,?)',
+        ).run(d.id, d.name, null, now(), d.members[0]!);
+        d.members.forEach((id, i) => addMember(d.id, id, i === 0 ? 'owner' : 'member'));
+        audit(d.id, 'create', d.members[0]!, d.members[0]!, { adopted: true });
+      })();
     },
     isMember: (squadId, userId) => directory.squad(squadId)?.members.includes(userId) ?? false,
     roleOf,

@@ -145,8 +145,8 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
       scheduler,
     });
     await repl.run(process.stdin, process.stdout);
-    internal.close();
-    await bot.stop();
+    // the scheduler timer and stdin keep the event loop alive: stop everything and exit after /quit
+    await stop();
   } else {
     console.log(`[bot] ${kind} running. Ctrl+C to stop.`);
   }

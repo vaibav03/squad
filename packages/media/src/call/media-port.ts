@@ -1,4 +1,6 @@
-import type { Persona } from '@squad/core';
+import { VoicesUnavailableError, type Persona } from '@squad/core';
+import { classifyTtsError } from '../tts/health';
+import { TtsHttpError } from '../tts/types';
 import type { TtsService } from '../tts/service';
 import { VOICE_PROFILES } from '../voices/profiles';
 import type { VoiceStore } from '../voices/store';
@@ -58,7 +60,18 @@ export function createMediaPort(o: MediaPortOptions): MediaPort {
     async preview(voiceId, text) {
       const t = text.trim().slice(0, MAX_PREVIEW_CHARS);
       if (!voiceId || !t) return null;
-      const r = await o.tts.speakVoice(voiceId, t);
+      let r;
+      try {
+        r = await o.tts.speakVoice(voiceId, t);
+      } catch (e) {
+        // an ElevenLabs refusal that means "your plan or key cannot do this" is an honest 'unavailable', not a crash
+        if (e instanceof TtsHttpError) {
+          const v = classifyTtsError(e);
+          if (v === 'paid_plan_required' || v === 'key_restricted' || v === 'rate_limited')
+            throw new VoicesUnavailableError(v);
+        }
+        throw e;
+      }
       const { readFile } = await import('node:fs/promises');
       return { mime: r.mime, data: new Uint8Array(await readFile(r.path)) };
     },

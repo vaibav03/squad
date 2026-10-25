@@ -20,10 +20,14 @@ test('J9 ledger: others see static withheld bars, never the values', async ({ br
   await ben.ctx.close();
 });
 
-test('J9 ledger: the owner sees their own rows unblurred and marked as kept private', async ({ browser }) => {
+test('J9 ledger: the owner sees their own rows unblurred and marked as kept private', async ({
+  browser,
+}) => {
   const ana = await actor(browser, 's_ana');
   await ana.page.goto(`/squad/ledger/${TASK}`);
-  await expect(ana.page.getByText('You kept this private').first()).toBeVisible({ timeout: 20_000 });
+  await expect(ana.page.getByText('You kept this private').first()).toBeVisible({
+    timeout: 20_000,
+  });
   expect(await ana.page.locator('.lv-row[data-mine][data-blurred]').count()).toBe(0);
   await shot(ana.page, J, 'ana-own-rows');
   // API: only the owner can read raw values

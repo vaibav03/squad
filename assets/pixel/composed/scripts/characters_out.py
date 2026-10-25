@@ -2,9 +2,9 @@ import os, json
 from PIL import Image, ImageDraw
 from palette import RGB
 ANIMS = {'idle': ('idle', 2, -1), 'walk': ('walk', 8, -1), 'talk': ('talk', 8, -1), 'sit': ('sit', 2, -1), 'wave': ('wave', 4, -1)}
-SEQ = ['idle', 'walk', 'talk', 'sit', 'wave']
+SEQ = ['idle', 'walk', 'talk', 'sit', 'wave', 'think']
 LABEL = {'student': 'student', 'dean': 'dean', 'expert': 'expert', 'council-chill': 'chill', 'council-hard': 'hard', 'council-balance': 'balance',
-         'chairman': 'chairman', 'examiner': 'examiner', 'freshman': 'freshman', 'mediator': 'mediator', 'ta': 'ta'}
+         'cast-chill': 'Chill', 'cast-grind': 'Grind', 'cast-advisor': 'Advisor', 'cast-chair': 'Chair', 'chairman': 'chairman', 'examiner': 'examiner', 'freshman': 'freshman', 'mediator': 'mediator', 'ta': 'ta'}
 SCR = '/private/tmp/claude-501/-Users-vaibav/6a4226af-e5c0-4256-97da-e402049434bd/scratchpad/chars/'
 def bg_tile(w, h, kind='night'):
     im = Image.new('RGBA', (w, h), RGB['sky-deep'] + (255,)); d = ImageDraw.Draw(im)
@@ -16,25 +16,29 @@ def stars(im, seed=3):
     for _ in range(im.width * im.height // 500):
         x, y = r.randrange(im.width), r.randrange(int(im.height * .5))
         px[x, y] = RGB['moon'] + (255,) if r.random() < .5 else RGB['cloud-hi'] + (255,)
-def build(frames, ports, OUT, ROOT, meta):
+def build(frames, ports, OUT, ROOT, meta, busts=None):
     import make_characters as M
     from characters_data import ORDER
     atlas_frames = []; N = len(ORDER)
-    cols = sum(len(frames[ORDER[0]][k]) for k in SEQ) + 1
+    cols = max(sum(len(frames[n][k]) for k in SEQ if k in frames[n]) for n in ORDER) + 1
     atlas = Image.new('RGBA', (cols * 32, N * 32), (0, 0, 0, 0)); jf = {}; anims = {}
     for r, n in enumerate(ORDER):
         d = os.path.join(OUT, n); os.makedirs(d, exist_ok=True)
-        for k in SEQ: M.strip(frames[n][k]).save(os.path.join(d, k + '.png')); M.verify(M.strip(frames[n][k]), n + k)
+        for k in SEQ:
+            if k in frames[n]: M.strip(frames[n][k]).save(os.path.join(d, k + '.png'))
         ports[n].save(os.path.join(d, 'portrait.png')); M.verify(ports[n], n + 'portrait')
+        if busts and n in busts: build_bust(busts[n], d)
         x = 0; anims[n] = {}
         for k in SEQ:
+            if k not in frames[n]: continue
             names = []
             for i, f in enumerate(frames[n][k]):
                 fn = f'{n}/{k}/{i}'; atlas.alpha_composite(f, (x * 32, r * 32))
                 jf[fn] = dict(frame=dict(x=x * 32, y=r * 32, w=32, h=32), rotated=False, trimmed=False, spriteSourceSize=dict(x=0, y=0, w=32, h=32),
                               sourceSize=dict(w=32, h=32), pivot=dict(x=0.5, y=1.0))
                 names.append(fn); x += 1
-            fps = {'idle': 2, 'walk': 8, 'talk': 8, 'sit': 2, 'wave': 4}[k]
+            fps = {'idle': 2, 'walk': 8, 'talk': 8, 'sit': 2, 'wave': 4, 'think': 4}[k]
+            if n.startswith('cast-') and k in ('idle', 'talk', 'think'): fps = 5
             anims[n][k] = dict(frames=names, frameRate=fps, repeat=-1)
         fn = f'{n}/portrait'; atlas.alpha_composite(ports[n], (x * 32, r * 32))
         jf[fn] = dict(frame=dict(x=x * 32, y=r * 32, w=32, h=32), rotated=False, trimmed=False, spriteSourceSize=dict(x=0, y=0, w=32, h=32), sourceSize=dict(w=32, h=32))
@@ -45,9 +49,16 @@ def build(frames, ports, OUT, ROOT, meta):
     prov = dict(license_note='Characters are hand-pixeled/procedurally drawn for Squad Village (original art, palette-only). Proportions, outline weight and chibi head/body ratio studied from Autumn Town player/NPC sheets (assets/pixel/characters/autumn-town-*, see assets/pixel/LICENSES.md); no source pixels copied.',
                 cell=[32, 32], anchor=dict(x=16, y=31), facing='right', walk=dict(frames=4, pattern='contact,passing,contact,passing', stride_px_per_frame=3, note='planted foot moves 3px/frame: set ground speed = 3*fps px/s (24 px/s @8fps) to avoid foot sliding'),
                 animations=dict(idle=dict(frames=2, fps=2), walk=dict(frames=4, fps=8), talk=dict(frames=2, fps=8), sit=dict(frames=2, fps=2), wave=dict(frames=2, fps=4)),
+                council_cast_animations=dict(idle=dict(frames=4, fps=5), walk=dict(frames=4, fps=8), talk=dict(frames=4, fps=5), think=dict(frames=4, fps=5), sit=dict(frames=2, fps=2), wave=dict(frames=2, fps=4)),
                 portrait=dict(size=[32, 32], note='opaque tile (sky-mid bg, ink frame), show at 2x/3x'), characters=meta)
     json.dump(prov, open(os.path.join(OUT, 'provenance.json'), 'w'), indent=1)
     contact(frames, ports, ROOT); preview(frames, ROOT)
+BUST_ROWS = ('idle', 'talk', 'think')
+def build_bust(b, d):
+    im = Image.new('RGBA', (32 * 4, 32 * 3), (0, 0, 0, 0))
+    for r, k in enumerate(BUST_ROWS):
+        for i, f in enumerate(b[k]): im.alpha_composite(f, (32 * i, 32 * r))
+    import make_characters as M; M.verify(im, 'bust'); im.save(os.path.join(d, 'bust.png'))
 def contact(frames, ports, ROOT):
     from characters_data import ORDER
     S = 3; N = len(ORDER)

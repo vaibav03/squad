@@ -3,7 +3,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { LIVE, REPO } from './env';
 
-type Row = { title: string; status: 'pass' | 'fail' | 'blocked' | 'skipped'; note: string; ms: number };
+type Row = {
+  title: string;
+  status: 'pass' | 'fail' | 'blocked' | 'skipped';
+  note: string;
+  ms: number;
+};
 const JOURNEY_TITLES: Record<string, string> = {
   J1: 'Sign in and setup (phone, PDFs, .ics, persona)',
   J2: 'Group chat grounded answer with citation chip',
@@ -74,10 +79,18 @@ function render(all: Record<string, { at: string; rows: Row[] }>): string {
     const m = all[mode];
     out.push(`## Mode: ${mode}${m ? ` (last run ${m.at})` : ''}`, '');
     if (!m) {
-      out.push(mode === 'live' ? '_Not run (needs `LIVE=1` and a Gemini key with credits)._' : '_Not run._', '');
+      out.push(
+        mode === 'live'
+          ? '_Not run (needs `LIVE=1` and a Gemini key with credits)._'
+          : '_Not run._',
+        '',
+      );
       continue;
     }
-    out.push('| Journey | Result | pass | fail | blocked | skipped | Evidence |', '|---|---|---|---|---|---|---|');
+    out.push(
+      '| Journey | Result | pass | fail | blocked | skipped | Evidence |',
+      '|---|---|---|---|---|---|---|',
+    );
     for (let i = 1; i <= 15; i++) {
       const j = `J${i}`;
       const rows = m.rows.filter((r) => jid(r.title) === j);
@@ -90,10 +103,14 @@ function render(all: Record<string, { at: string; rows: Row[] }>): string {
         else if (c('blocked')) res = 'blocked';
         else res = 'skipped';
       }
-      out.push(`| ${j} ${JOURNEY_TITLES[j]} | ${res} | ${c('pass')} | ${c('fail')} | ${c('blocked')} | ${c('skipped')} | \`docs/design/shots/e2e/${j.toLowerCase()}-*/\` |`);
+      out.push(
+        `| ${j} ${JOURNEY_TITLES[j]} | ${res} | ${c('pass')} | ${c('fail')} | ${c('blocked')} | ${c('skipped')} | \`docs/design/shots/e2e/${j.toLowerCase()}-*/\` |`,
+      );
     }
     out.push('', '### Step results', '', '| Step | Result | Detail |', '|---|---|---|');
-    for (const r of m.rows.sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true })))
+    for (const r of m.rows.sort((a, b) =>
+      a.title.localeCompare(b.title, undefined, { numeric: true }),
+    ))
       out.push(`| ${r.title} | ${r.status} | ${r.note} |`);
     out.push('');
   }

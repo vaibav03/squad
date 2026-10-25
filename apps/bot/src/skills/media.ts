@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import type { InboundMessage, OutboundMessage, Skill, StudentId } from '@squad/core';
-import { MIN_GROUP_SIZE } from '@squad/core';
+import { MIN_GROUP_SIZE, VoicesUnavailableError } from '@squad/core';
 import type { CourseStore, MasteryStore } from '@squad/brain';
 import {
   makeExplainer,
@@ -151,8 +151,14 @@ export function createMediaSkills(deps: MediaSkillDeps): Skill[] {
           return m.isGroup ? [{ chatId: m.chatId, text: 'Sent you a DM.' }] : [];
         }
         return [r.message];
-      } catch {
-        return [{ chatId: m.chatId, text: MEDIA_UNAVAILABLE }];
+      } catch (e) {
+        // speech is known to be off (plan, key, quota): say that instead of a generic failure
+        return [
+          {
+            chatId: m.chatId,
+            text: e instanceof VoicesUnavailableError ? e.message : MEDIA_UNAVAILABLE,
+          },
+        ];
       }
     },
   };
