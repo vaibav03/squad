@@ -1,5 +1,7 @@
 import type {
+  A2aMessage,
   CouncilAskResponse,
+  CouncilRunRecord,
   CouncilMemberResult,
   CouncilResult,
   CouncilVerdict,
@@ -225,5 +227,159 @@ export function fixtureTransport(
       );
       return () => timers.forEach(clearTimeout);
     },
+  };
+}
+
+// ---------- stored runs (GET /v1/council/runs) ----------
+
+const am = (n: number): string => `am_${String(n).padStart(12, '0')}`;
+export const STORED_RUN_ID = 'cn_stored000001';
+
+/**
+ * A finished stored Ask council (chair + Skeptic + Teacher) with a delegation tree, answers, a verdict and two action
+ * items. `mode`/`transport` choose the honest label; `startedAt` is the run time.
+ */
+export function storedRunFixture(
+  o: {
+    mode?: string;
+    kind?: 'stream-text' | 'live-audio' | 'demo';
+    startedAt?: number;
+    status?: CouncilRunRecord['status'];
+    councilKey?: string;
+    id?: string;
+  } = {},
+): CouncilRunRecord {
+  const mode = o.mode ?? 'live';
+  const kind = o.kind ?? (mode.startsWith('demo') ? 'demo' : 'stream-text');
+  const t0 = o.startedAt ?? Date.now() - 4 * 60_000;
+  const id = o.id ?? STORED_RUN_ID;
+  const key = o.councilKey ?? 'ask';
+  const chair = `council:${key}-chair`;
+  const sk = `council:${key}-skeptic`;
+  const te = `council:${key}-teacher`;
+  const script = mode.startsWith('demo') ? 'script' : 'model';
+  const base = (n: number, p: Partial<A2aMessage>): A2aMessage =>
+    ({
+      id: am(n),
+      correlationId: id,
+      seq: n,
+      status: 'done',
+      mode,
+      source: script,
+      redaction: 'public',
+      ts: t0 + n * 1000,
+      ...p,
+    }) as A2aMessage;
+  const messages: A2aMessage[] = [
+    base(1, {
+      from: chair,
+      to: 'room',
+      kind: 'status',
+      stage: 'question',
+      summary: 'Council convened.',
+      source: 'code',
+    }),
+    base(2, {
+      from: chair,
+      to: sk,
+      kind: 'delegate',
+      stage: 'delegation',
+      summary: 'Check the weak step.',
+      parentMessageId: am(1),
+    }),
+    base(3, {
+      from: chair,
+      to: te,
+      kind: 'delegate',
+      stage: 'delegation',
+      summary: 'Explain from the course.',
+      parentMessageId: am(1),
+    }),
+    base(4, {
+      from: sk,
+      to: chair,
+      kind: 'answer',
+      stage: 'opinions',
+      summary: 'Condition on the first toss; it avoids the tails trap.',
+      stance: 'Cautious',
+      answer: 'Condition on the first toss',
+      parentMessageId: am(2),
+    }),
+    base(5, {
+      from: te,
+      to: chair,
+      kind: 'answer',
+      stage: 'opinions',
+      summary: 'Chapter 6 uses two states and one equation each.',
+      stance: 'Steady',
+      answer: 'Recursion on states',
+      parentMessageId: am(3),
+    }),
+    base(6, {
+      from: chair,
+      to: 'room',
+      kind: 'verdict',
+      stage: 'verdict',
+      summary: 'Use the two-state recursion, then check it by conditioning.',
+      answer: 'Recursion on states',
+      confidence: 'fairly_sure',
+      dissentRefs: [am(4)],
+      parentMessageId: am(1),
+    }),
+    base(7, {
+      from: chair,
+      to: 'room',
+      kind: 'status',
+      stage: 'actions',
+      summary: 'Try the recursion on problem 3.',
+      parentMessageId: am(6),
+      source: 'code',
+    }),
+    base(8, {
+      from: chair,
+      to: 'room',
+      kind: 'status',
+      stage: 'actions',
+      summary: 'Ask your TA about the Skeptic view.',
+      parentMessageId: am(6),
+      source: 'code',
+    }),
+  ];
+  const names: Record<string, string> = { [chair]: 'Chair', [sk]: 'Skeptic', [te]: 'Teacher' };
+  return {
+    id: id as CouncilRunRecord['id'],
+    councilKey: key,
+    question: FIXTURE_QUESTION,
+    status: o.status ?? 'done',
+    mode: mode as CouncilRunRecord['mode'],
+    transport: {
+      kind,
+      label:
+        kind === 'demo'
+          ? 'Demo (scripted, not Gemini)'
+          : kind === 'live-audio'
+            ? 'Gemini Live (audio + transcript)'
+            : 'Gemini streaming text',
+      ...(kind === 'demo' ? {} : { models: [{ who: 'chair', model: 'gemini-3.8-flash' }] }),
+    },
+    stage: o.status === 'running' ? 'opinions' : 'done',
+    startedAt: t0,
+    askedBy: 'u_fixture',
+    private: false,
+    agents: [chair, sk, te].map((aid) => ({
+      id: aid,
+      role: aid === chair ? 'chair' : 'specialist',
+      ...(aid === chair ? {} : { parent: chair }),
+      displayName: names[aid]!,
+      mode: mode as CouncilRunRecord['mode'],
+      transport: kind,
+      status: 'done' as const,
+    })),
+    messages,
+    actions: [
+      { id: am(7), title: 'Try the recursion on problem 3.' },
+      { id: am(8), title: 'Ask your TA about the Skeptic view.' },
+    ],
+    counters: { messages: 8, delegations: 2 },
   };
 }

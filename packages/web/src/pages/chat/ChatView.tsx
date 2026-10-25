@@ -9,6 +9,7 @@ import type { ComposerHandle } from './Composer';
 import { ChatBanners, ThreadPane } from './Thread';
 import type { ChatController } from './useChat';
 import './chat.css';
+import { useChatPrefill } from './prefill';
 
 export interface ChatViewProps {
   ctl: ChatController;
@@ -54,6 +55,7 @@ export function ChatView({
   const picked = controlled !== undefined ? controlled : own;
   const setPicked = (id: string | null) => (onActiveChange ? onActiveChange(id) : setOwn(id));
   useKeyboardInset(root);
+  useChatPrefill((text) => composer.current?.fill(text));
 
   const chats = ctl.chats;
   const activeId =

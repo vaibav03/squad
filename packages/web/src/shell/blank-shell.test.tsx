@@ -166,6 +166,7 @@ const CONCRETE: Record<string, string> = {
   '/squad/trips/:tripId?': '/squad/trips',
   '/squad/mastery/:courseId?': '/squad/mastery',
   '/squad/courses/:courseId?': '/squad/courses',
+  '/squad/welcome-tour/:step?': '/squad/welcome-tour/connect',
 };
 // mastery has no page of its own: it redirects into the village overlay (covered by its own test below)
 const TOP = squadRouteMeta
@@ -224,7 +225,7 @@ async function expectRoute(path: string, title: string) {
 describe('router location drives title, landmark and content', () => {
   it('routeTitleFor resolves every route to its own title', () => {
     for (const t of TOP) expect(routeTitleFor(t.path)).toBe(t.title);
-    expect(routeTitleFor('/squad/ledger/task_1')).toBe('Ledger');
+    expect(routeTitleFor('/squad/ledger/task_1')).toBe('Privacy ledger');
     expect(routeTitleFor('/welcome')).toBe('Welcome');
   });
 
@@ -233,7 +234,7 @@ describe('router location drives title, landmark and content', () => {
       mount(t.path);
       await expectRoute(t.path, t.title);
       const active = document.querySelector('.sq-shell__navlink.is-active, .is-active');
-      if (['home', 'village', 'chat', 'ledger'].includes(t.key)) expect(active).toBeTruthy();
+      if (['home', 'village', 'chat'].includes(t.key)) expect(active).toBeTruthy();
     }, 30000);
   }
 
@@ -263,8 +264,9 @@ describe('router location drives title, landmark and content', () => {
       Array.from(document.querySelectorAll('[aria-current="page"]')).map((e) => e.textContent);
     expect(cur().some((t) => /Chat/.test(t ?? ''))).toBe(true);
     await go('/squad/ledger');
-    await expectRoute('/squad/ledger', 'Ledger');
-    expect(cur().some((t) => /Ledger/.test(t ?? ''))).toBe(true);
+    await expectRoute('/squad/ledger', 'Privacy ledger');
+    // a secondary destination highlights its parent: the More button
+    expect(document.querySelector('.sq-shell__morebtn.is-active')).toBeTruthy();
     expect(cur().some((t) => /Chat/.test(t ?? ''))).toBe(false);
   }, 60000);
 });

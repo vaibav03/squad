@@ -60,6 +60,8 @@ export interface PlanSource {
   file?: string;
   page?: number;
   chapter?: string;
+  /** Imported Canvas / Google Classroom item this was seeded from (only when its owner shared it with the squad). */
+  source?: { kind: string; id: string; anchor?: string; title?: string };
 }
 
 export interface PlanItem {
@@ -181,7 +183,7 @@ export interface PlanView extends Omit<Plan, 'log'> {
   /** Where the last decision went: said in the squad chat, and how its iMessage mirror is doing. */
   sync: {
     posted: { at: number; text: string } | null;
-    imessage: 'off' | 'web_only' | 'queued' | 'sent' | 'delivered' | 'dry_run' | 'failed';
+    imessage: 'off' | 'web_only' | 'queued' | 'sent' | 'delivered' | 'read' | 'dry_run' | 'failed';
   };
 }
 

@@ -11,11 +11,12 @@ import {
   type DragEvent,
   type KeyboardEvent,
 } from 'react';
-import type { ChatAttachment } from '@squad/core';
+import type { ChatAttachment, ChatContextRef } from '@squad/core';
 import { Icon } from '../../primitives/Icon';
 import { Spinner } from '../../primitives/Spinner';
 import type { ChatApi } from './api';
 import { chatErrorText } from './api';
+import { defaultPrefill, provenanceBadge, takePendingAsk } from './ask-cubbie';
 import { parseDiscussTrigger } from '../../live/trigger';
 import { PlusMenu } from '../../plans/PlusMenu';
 import { chipPrefix, type PlanContextRef } from '../../plans/context';
@@ -64,7 +65,13 @@ interface Draft {
 export interface ComposerProps {
   api: ChatApi | null;
   chatKind: 'group' | 'dm';
-  onSend: (input: { text: string; files: ChatAttachment[] }) => Promise<boolean> | boolean | void;
+  /** This composer's chat id: a queued "Ask Cubbie" for exactly this chat is attached on mount. */
+  chatId?: string;
+  onSend: (input: {
+    text: string;
+    files: ChatAttachment[];
+    context?: ChatContextRef[];
+  }) => Promise<boolean> | boolean | void;
   /** sending is paused (offline, session over); drafting still works */
   paused?: string | null;
   compact?: boolean;
@@ -79,7 +86,7 @@ export interface ComposerProps {
 const MAX_H = 144;
 
 export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
-  { api, chatKind, onSend, paused, compact, onDiscuss, onPlan, leading },
+  { api, chatKind, chatId, onSend, paused, compact, onDiscuss, onPlan, leading },
   ref,
 ) {
   const [text, setText] = useState('');
@@ -90,6 +97,8 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   const [drag, setDrag] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [chips, setChips] = useState<PlanContextRef[]>([]);
+  const [ctx, setCtx] = useState<ChatContextRef[]>([]);
+  const askRef = useRef<ReturnType<typeof takePendingAsk>>(null);
   const area = useRef<HTMLTextAreaElement>(null);
   const file = useRef<HTMLInputElement>(null);
   const draftsRef = useRef(drafts);
@@ -129,6 +138,41 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
       });
     },
   }));
+
+  // "Ask Cubbie": take the queued item for this chat, verify it with the hub, show the chip, prefill (never send).
+  useEffect(() => {
+    if (!api?.contextRef || !chatId) return;
+    // StrictMode (and a re-run when `api` arrives) runs this effect twice: the ask is taken once and kept in a ref
+    const ask = askRef.current?.chatId === chatId ? askRef.current : takePendingAsk(chatId);
+    if (!ask) return;
+    askRef.current = ask;
+    let dead = false;
+    void Promise.all(ask.sourceIds.map((s) => api.contextRef!(s.sourceId, s.anchor))).then(
+      (rs) => {
+        if (dead) return;
+        askRef.current = null; // attached: a later re-run must not attach it again
+        const refs = rs.map((r) => (chatKind === 'group' ? r.groupView : r.ref));
+        setCtx(refs);
+        const t = ask.prefill ?? defaultPrefill(refs[0]?.title ?? 'this');
+        setText((cur) => cur || t);
+        setPickerOff(true);
+        requestAnimationFrame(() => {
+          const el = area.current;
+          if (el) {
+            el.focus();
+            const n = el.value.length;
+            el.setSelectionRange(n, n);
+          }
+        });
+      },
+      (e) => {
+        if (!dead) setProblem(chatErrorText(e, 'That imported item could not be attached.'));
+      },
+    );
+    return () => {
+      dead = true;
+    };
+  }, [api, chatId, chatKind]);
 
   // auto-grow
   useLayoutEffect(() => {
@@ -213,7 +257,9 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     for (const d of drafts)
       if (d.preview && typeof URL.revokeObjectURL === 'function') URL.revokeObjectURL(d.preview);
     setDrafts([]);
-    void onSend({ text: body, files });
+    const context = ctx;
+    setCtx([]);
+    void onSend({ text: body, files, ...(context.length ? { context } : {}) });
     requestAnimationFrame(() => area.current?.focus());
   };
 
@@ -303,6 +349,47 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           {paused}
         </p>
       ) : null}
+      {ctx.length ? (
+        <ul className="sqc-ctxchips" aria-label="Attached context" data-testid="composer-context">
+          {ctx.map((c) => (
+            <li
+              key={c.sourceId}
+              className="sqc-ctxchip"
+              data-testid="composer-context-chip"
+              data-source-id={c.sourceId}
+              data-provenance={c.provenance}
+            >
+              <span className="sqc-ctxchip__main">
+                <Icon name="file" size={14} />
+                <strong className="sqc-ctxchip__title">{c.title}</strong>
+                <span className="sqc-ctxchip__meta">
+                  {[c.courseName, c.eventLabel, c.location?.label].filter(Boolean).join(' · ')}
+                </span>
+              </span>
+              <span
+                className={`sqc-ctxchip__prov is-${c.provenance}`}
+                data-testid="composer-context-provenance"
+                title={
+                  c.provenance === 'fixture'
+                    ? 'Simulated data, not your account'
+                    : 'Imported from your own account'
+                }
+              >
+                {provenanceBadge(c.provenance)}
+              </span>
+              <button
+                type="button"
+                className="sqc-draft__x sqc-ctxchip__x"
+                data-testid="composer-context-chip-remove"
+                aria-label={`Remove ${c.title} from this message`}
+                onClick={() => setCtx((l) => l.filter((x) => x.sourceId !== c.sourceId))}
+              >
+                <Icon name="x" size={12} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {drafts.length ? (
         <ul className="sqc-drafts" aria-label="Attached images">
           {drafts.map((d) => (
@@ -331,9 +418,9 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
         </ul>
       ) : null}
       {chips.length ? (
-        <ul className="sqc-ctxchips" aria-label="Attached plans" data-testid="composer-chips">
+        <ul className="sqp-chips" aria-label="Attached plans" data-testid="composer-chips">
           {chips.map((c) => (
-            <li key={c.id} className="sqc-ctxchip" data-testid="composer-chip">
+            <li key={c.id} className="sqp-chip" data-testid="composer-chip">
               <span>Plan: {c.label}</span>
               <button
                 type="button"

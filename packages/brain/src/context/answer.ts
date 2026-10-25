@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { Llm } from '@squad/core';
 import { renderSourceAnswer, verifySourceClaims, type SourceClaim } from '../citations/sources';
 import { NOT_IN_MATERIALS, type ExpertAnswer } from '../experts/types';
+import { bestQuote } from './retrieve';
 import type { ContextChunk, ContextSource } from './types';
 import { sourceUri } from '@squad/core';
 
@@ -54,7 +55,13 @@ export async function answerFromContext(
       quote: c.quote,
     }));
   } catch {
-    claims = [];
+    // The model is unavailable (demo stand-in, outage): answer from retrieval alone. The top chunk's best sentence is
+    // copied verbatim, so it passes the same verification as a model claim and the chat labels it Demo.
+    const top = hits[0]!;
+    const quote = bestQuote(top.chunk.text, question).slice(0, 300);
+    claims = quote
+      ? [{ text: `Closest match in your connected sources: "${quote}"`, source: label(top), quote }]
+      : [];
   }
   const { verified, struck } = verifySourceClaims(
     claims,

@@ -12,7 +12,7 @@ import { LvIcon } from '../kit';
 import { useDmHistory, type InspectorHub } from './useDmHistory';
 import { RoomChat, VoiceChat } from './RoomChat';
 
-const ARROW = { out: '→', in: '←', seen: '↔' } as const;
+const ARROW = { out: 'arrow-right', in: 'arrow-left', seen: 'arrow-left-right' } as const;
 const KIND_WORDS: Record<string, string> = {
   council: 'Council answer',
   rank: 'Anonymous ranking',
@@ -63,7 +63,7 @@ function ThreadItem({ l, store, now }: { l: ThreadLine; store: InspectorStore; n
                 : 'with'
           }
         >
-          {ARROW[l.direction]}
+          <LvIcon name={ARROW[l.direction]} size={14} />
         </span>
         <PartyChip p={l.to} store={store} />
         <time>{relTime(l.at, now)}</time>

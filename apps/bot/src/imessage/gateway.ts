@@ -86,7 +86,11 @@ export interface IMessageGateway {
   capabilities(): Promise<GatewayCapabilities>;
   /** Delivery receipts from transports that have them (matched by the guid `sendOne` returned). */
   onReceipt(
-    fn: (r: { guid: string; state: 'delivered' | 'failed'; reason?: string }) => void,
+    fn: (r: {
+      guid: string;
+      state: 'sent' | 'delivered' | 'read' | 'failed';
+      reason?: string;
+    }) => void,
   ): void;
   /**
    * Fetch what a chat received since `since` and feed it to the inbound handler, flagged `late`. Safety, dedupe and

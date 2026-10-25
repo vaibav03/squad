@@ -41,7 +41,13 @@ describe('collapseRepeatedPairs', () => {
   });
   it('collapses repeated quiz prompts whose cards differ only by ids, and folds unanswered copies', () => {
     const quiz = (qid: string) =>
-      ({ type: 'quiz', index: 0, question: 'What is a z-score?', input: 'free', _id: qid }) as never;
+      ({
+        type: 'quiz',
+        index: 0,
+        question: 'What is a z-score?',
+        input: 'free',
+        _id: qid,
+      }) as never;
     const out = collapseRepeatedPairs([
       msg('student', '@cubbie quiz me', 1000),
       msg('student', '@cubbie quiz me', 1500),

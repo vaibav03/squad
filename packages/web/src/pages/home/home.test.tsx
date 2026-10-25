@@ -30,6 +30,7 @@ beforeEach(() => {
     'fetch',
     vi.fn((url: string) => {
       const path = url.replace(HUB, '');
+      if (path === '/health') return Promise.resolve(new Response('{"ok":true}', { status: 200 }));
       calls.push(path);
       const a = answers[path];
       if (a === 'hang') return new Promise(() => {});
@@ -73,8 +74,12 @@ const live = { provider: 'google', mode: 'live', status: 'live' };
 describe('setup readers (server state only)', () => {
   it('phone: done only with a linked handle', async () => {
     answers['/v1/imessage/link'] = { links: [] };
+    answers['/v1/me'] = { user: { id: 'u' }, phoneVerified: false };
     expect(await phoneDone(ctx)).toBe(false);
     answers['/v1/imessage/link'] = { links: [{ hint: '•••• 0077', linkedAt: 1 }] };
+    expect(await phoneDone(ctx)).toBe(true);
+    answers['/v1/imessage/link'] = { links: [] };
+    answers['/v1/me'] = { user: { id: 'u' }, phoneVerified: true };
     expect(await phoneDone(ctx)).toBe(true);
   });
   it('courses: sample-only or still-ingesting is not done; an own ready course is', async () => {
@@ -116,10 +121,10 @@ describe('setup readers (server state only)', () => {
 });
 
 describe('Home checklist', () => {
-  it('unknown -> checking, never Done or To do', () => {
+  it('unknown -> checking, never Done or To do', async () => {
     answers = Object.fromEntries(Object.keys(allEmpty()).map((k) => [k, 'hang']));
     mount();
-    expect(screen.getAllByText('Checking…').length).toBeGreaterThanOrEqual(4);
+    expect((await screen.findAllByText('Checking…')).length).toBeGreaterThanOrEqual(4);
     expect(screen.queryByText('Done')).toBeNull();
     expect(screen.queryByText('To do')).toBeNull();
   });
@@ -143,9 +148,9 @@ describe('Home checklist', () => {
     mount();
     await waitFor(() => expect(screen.getByText('4 of 4 done')).toBeTruthy());
     for (const t of [
-      'Link your phone',
-      'Add your course PDFs',
-      'Share your busy times',
+      'Connect iMessage via Sendblue',
+      'Connect Canvas or Google Classroom',
+      'Connect Google Calendar',
       'Pick your study buddy',
     ])
       expect(within(row(t)).getByText('Done')).toBeTruthy();
@@ -158,8 +163,10 @@ describe('Home checklist', () => {
       '/v1/library/courses': { courses: [course({ sample: true, role: 'viewer' })] },
     };
     mount();
-    await waitFor(() => expect(within(row('Link your phone')).getByText('Done')).toBeTruthy());
-    expect(within(row('Add your course PDFs')).getByText('To do')).toBeTruthy();
+    await waitFor(() =>
+      expect(within(row('Connect iMessage via Sendblue')).getByText('Done')).toBeTruthy(),
+    );
+    expect(within(row('Connect Canvas or Google Classroom')).getByText('To do')).toBeTruthy();
   });
 
   it('a hanging read does not block the others; Retry re-reads only the failed item', async () => {
@@ -172,15 +179,19 @@ describe('Home checklist', () => {
     await waitFor(() =>
       expect(within(row('Pick your study buddy')).getByText('To do')).toBeTruthy(),
     );
-    expect(within(row('Add your course PDFs')).getByText('Checking…')).toBeTruthy();
+    expect(within(row('Connect Canvas or Google Classroom')).getByText('Checking…')).toBeTruthy();
     await waitFor(() =>
-      expect(within(row('Link your phone')).getByText('Could not check')).toBeTruthy(),
+      expect(
+        within(row('Connect iMessage via Sendblue')).getByText('Could not check'),
+      ).toBeTruthy(),
     );
     expect(screen.getByRole('alert')).toBeTruthy();
     answers['/v1/imessage/link'] = { links: [{ hint: 'x', linkedAt: 1 }] };
     const before = calls.filter((c) => c === '/v1/me').length;
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    await waitFor(() => expect(within(row('Link your phone')).getByText('Done')).toBeTruthy());
+    await waitFor(() =>
+      expect(within(row('Connect iMessage via Sendblue')).getByText('Done')).toBeTruthy(),
+    );
     expect(calls.filter((c) => c === '/v1/me').length).toBe(before);
     expect(screen.queryByRole('alert')).toBeNull();
   });

@@ -20,6 +20,11 @@ export function TripFullPage() {
   const t = useTrip(tripId);
   const seen = useRef<{ id: string; status: string } | null>(null);
 
+  // an id that does not exist (a stale link) falls back to the squad's current trip / 'No trip planned yet'
+  useEffect(() => {
+    if (tripId && t.notFound) navigate('/squad/trips', { replace: true });
+  }, [tripId, t.notFound, navigate]);
+
   const view = t.view;
   useEffect(() => {
     if (!view) return;

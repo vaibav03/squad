@@ -46,6 +46,15 @@ const RawConnection = z.looseObject({
   sources: z.object({ total: z.number(), byKind: z.record(z.string(), z.number()) }),
   sharedWithSquads: z.array(z.string()).default([]),
   needsReconnect: z.boolean().optional(),
+  /** The CHOSEN account, already masked by the hub (e.g. `a***@gmail.com`; Canvas host + signed-in user name). */
+  account: z
+    .looseObject({
+      label: z.string(),
+      name: z.string().nullish(),
+      host: z.string().nullish(),
+    })
+    .nullish(),
+  grantedScopes: z.array(z.string()).optional(),
 });
 
 export interface Connection {
@@ -69,6 +78,11 @@ export interface Connection {
   sharedWithSquads: string[];
   /** The grant is gone or could not be renewed: show a Reconnect button. */
   needsReconnect: boolean;
+  /** The provider rejected the credential but it has not expired by the clock. */
+  degraded?: boolean;
+  account: { label: string; name: string | null; host: string | null } | null;
+  /** Scopes Google/Canvas actually granted (falls back to the requested scopes). */
+  grantedScopes: string[];
 }
 
 /** Only the allow-listed fields are kept: anything else the hub might send (it should send no secrets) is dropped. */
@@ -101,11 +115,37 @@ export function toConnection(raw: z.infer<typeof RawConnection>): Connection {
     sources: raw.sources,
     sharedWithSquads: raw.sharedWithSquads,
     needsReconnect: raw.needsReconnect ?? (state === 'expired' || state === 'revoked'),
+    degraded: raw.degraded === true,
+    account: raw.account
+      ? { label: raw.account.label, name: raw.account.name ?? null, host: raw.account.host ?? null }
+      : null,
+    grantedScopes: raw.grantedScopes ?? raw.scopes,
   };
 }
 
+/** Lenient list parse for other surfaces (Home): invalid rows are skipped, never invented. */
+export function parseConnections(json: unknown): Connection[] {
+  const rows = (json as { connections?: unknown } | null)?.connections;
+  if (!Array.isArray(rows)) return [];
+  return rows.flatMap((r) => {
+    const p = RawConnection.safeParse({
+      id: 'unknown',
+      scopes: [],
+      lastSyncAt: null,
+      sources: { total: 0, byKind: {} },
+      sharedWithSquads: [],
+      ...(r as object),
+    });
+    return p.success ? [toConnection(p.data)] : [];
+  });
+}
+
 const ErrorBody = z.looseObject({ error: z.looseObject({ code: z.string() }) });
-const List = z.looseObject({ connections: z.array(RawConnection) });
+const List = z.looseObject({
+  connections: z.array(RawConnection),
+  /** `live` once a Google OAuth client is configured on the hub; otherwise Google is the labelled demo. */
+  mode: z.enum(['live', 'fixture']).optional(),
+});
 const One = z.looseObject({ connection: RawConnection });
 const Squads = z.looseObject({
   activeSquadId: z.string().nullable().optional(),
@@ -124,6 +164,13 @@ const SourceRows = z.looseObject({
       kind: z.string(),
       title: z.string(),
       sharedWith: z.array(z.string()).default([]),
+      courseId: z.string().nullish(),
+      dueAt: z.number().nullish(),
+      startsAt: z.number().nullish(),
+      modifiedAt: z.number().nullish(),
+      fetchedAt: z.number().nullish(),
+      provenance: z.string().nullish(),
+      url: z.string().nullish(),
     }),
   ),
 });
@@ -132,6 +179,12 @@ export interface SourceRow {
   kind: string;
   title: string;
   sharedWith: string[];
+  courseId: string | null;
+  dueAt: number | null;
+  startsAt: number | null;
+  fetchedAt: number | null;
+  /** `fixture` is simulated data, never the person's account. */
+  provenance: 'real' | 'fixture';
 }
 
 async function call<T>(
@@ -170,6 +223,35 @@ export const hub = (ctx: Ctx) => ({
   async list(): Promise<Connection[]> {
     return (await call(ctx, 'GET', '/v1/connections', List)).connections.map(toConnection);
   },
+  /** Connections plus whether the hub has a real Google OAuth client (`googleLive`). */
+  async overview(): Promise<{ connections: Connection[]; googleLive: boolean }> {
+    const r = await call(ctx, 'GET', '/v1/connections', List);
+    return { connections: r.connections.map(toConnection), googleLive: r.mode === 'live' };
+  },
+  /**
+   * The labelled demo workspace for a provider. Uses fixture-mode connect until the hub's `variant: 'demo'` lands;
+   * the connection comes back with mode `fixture` and is shown as Demo data everywhere.
+   */
+  async connectDemo(provider: 'canvas' | 'google'): Promise<Connection> {
+    const body =
+      provider === 'canvas'
+        ? {
+            provider,
+            variant: 'demo' as const,
+            scopes: ['canvas.demo_workspace'],
+          }
+        : {
+            provider,
+            variant: 'demo' as const,
+            scopes: [
+              'https://www.googleapis.com/auth/calendar.readonly',
+              'https://www.googleapis.com/auth/classroom.courses.readonly',
+              'https://www.googleapis.com/auth/classroom.coursework.me.readonly',
+              'https://www.googleapis.com/auth/drive.file',
+            ],
+          };
+    return toConnection((await call(ctx, 'POST', '/v1/connections', One, body)).connection);
+  },
   async activeSquad(): Promise<string | null> {
     return (await call(ctx, 'GET', '/v1/squads', Squads)).activeSquadId ?? null;
   },
@@ -193,7 +275,22 @@ export const hub = (ctx: Ctx) => ({
     return r.purged ?? { sources: 0, chunks: 0 };
   },
   async sources(id: string): Promise<SourceRow[]> {
-    return (await call(ctx, 'GET', `/v1/connections/${enc(id)}/sources`, SourceRows)).sources;
+    // Adapter: when the hub ships GET /v1/connections/items this is the one place to switch.
+    return (await call(ctx, 'GET', `/v1/connections/${enc(id)}/sources`, SourceRows)).sources.map(
+      (s) => ({
+        id: s.id,
+        kind: s.kind,
+        title: s.title,
+        sharedWith: s.sharedWith,
+        courseId: s.courseId ?? null,
+        dueAt: s.dueAt ?? null,
+        startsAt: s.startsAt ?? null,
+        fetchedAt: s.fetchedAt ?? null,
+        provenance: (s.provenance ?? '').endsWith(':fixture')
+          ? ('fixture' as const)
+          : ('real' as const),
+      }),
+    );
   },
   async share(
     id: string,
@@ -216,6 +313,24 @@ export const hub = (ctx: Ctx) => ({
     );
     return toConnection(r.connection);
   },
+  /** Optional advanced fallback: a student-generated Canvas API token (some schools do not allow tokens). */
+  async connectToken(baseUrl: string, token: string): Promise<Connection> {
+    const r = await call(
+      ctx,
+      'POST',
+      '/v1/connections',
+      z.looseObject({ connection: RawConnection }),
+      {
+        provider: 'canvas',
+        variant: 'token',
+        mode: 'live',
+        scopes: ['canvas.api_token.read'],
+        baseUrl,
+        token,
+      },
+    );
+    return toConnection(r.connection);
+  },
   async pair() {
     return call(ctx, 'POST', '/v1/connections/extension/pair', Pair, {});
   },
@@ -223,7 +338,7 @@ export const hub = (ctx: Ctx) => ({
     return call(
       ctx,
       'GET',
-      `/v1/connections/google/authorize?return_to=${enc(returnTo)}`,
+      `/v1/connections/google/authorize?return_to=${enc(returnTo)}&return_origin=${enc(typeof window === 'undefined' ? '' : window.location.origin)}`,
       Authorize,
     );
   },

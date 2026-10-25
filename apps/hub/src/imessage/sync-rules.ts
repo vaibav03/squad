@@ -98,8 +98,30 @@ const REASON_TEXT: Record<string, string> = {
   no_handle: 'no iMessage number is known for this chat yet',
   receipt_failed: 'iMessage reported it undelivered',
 };
-export const reasonText = (r: string | null | undefined): string =>
-  r ? (REASON_TEXT[r] ?? 'unknown error') : 'unknown error';
+/** Sendblue error codes (docs.sendblue.com/getting-started/sending-messages, "Error Codes"). */
+const SENDBLUE_CODES: Record<string, string> = {
+  '4000': 'Sendblue rejected the message (validation)',
+  '4001': 'Sendblue rate limit exceeded',
+  '4002': 'Sendblue blocked this number',
+  '4007': 'Sendblue pre-reply limit: no links or media before the first reply',
+  '4008': 'Sendblue pre-reply limit: message too long',
+  '4009': 'Sendblue pre-reply limit: 6 messages already sent without a reply',
+  '4010': 'Sendblue pre-reply override already used today',
+  '5000': 'Sendblue internal error',
+  '5003': 'Sendblue server rate exceeded',
+  '5509': 'Sendblue rate limit window exceeded',
+  '10001': 'Sendblue could not send the message',
+  '10002': 'Sendblue could not resolve the message status',
+  OPTED_OUT: 'the recipient opted out',
+};
+export const reasonText = (r: string | null | undefined): string => {
+  if (!r) return 'unknown error';
+  if (r.startsWith('receipt:')) {
+    const code = r.slice(8);
+    return SENDBLUE_CODES[code] ? `${SENDBLUE_CODES[code]} (${code})` : `error ${code}`;
+  }
+  return REASON_TEXT[r] ?? 'unknown error';
+};
 
 /** One delivery state for a hub message from all its (target, part) rows. */
 export function aggregateDelivery(
@@ -139,7 +161,8 @@ export function aggregateDelivery(
   }
   if (rows.every((r) => r.state === 'dry_run'))
     return { ...base, state: 'dry_run', label: 'Dry run, not sent' };
-  if (rows.every((r) => r.state === 'delivered'))
+  if (rows.every((r) => r.state === 'read')) return { ...base, state: 'read', label: 'Read' };
+  if (rows.every((r) => r.state === 'delivered' || r.state === 'read'))
     return { ...base, state: 'delivered', label: 'Delivered' };
   return { ...base, state: 'sent', label: 'Sent to iMessage' };
 }

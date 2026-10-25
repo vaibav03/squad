@@ -240,12 +240,12 @@
 .sqp-truth--live {
   border-color: var(--primary);
 }
-.sqc-ctxchips {
+.sqp-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
-.sqc-ctxchip {
+.sqp-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -254,7 +254,7 @@
   border-radius: 999px;
   font-size: var(--text-xs);
 }
-.sqc-ctxchip button {
+.sqp-chip button {
   border: 0;
   background: transparent;
   color: inherit;

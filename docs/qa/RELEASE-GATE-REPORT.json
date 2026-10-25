@@ -1,24 +1,95 @@
 {
-  "generatedAt": "2026-10-25T13:33:15.595Z",
+  "generatedAt": "2026-10-25T14:20:19.275Z",
   "tree": {
-    "branch": "fix/gate-findings",
-    "head": "d86d6a86",
-    "originMain": "29bb0842"
+    "branch": "fix/home-onboarding-catalogue",
+    "head": "d0b9a169",
+    "originMain": "344db094"
   },
   "mode": {
     "live": false,
     "real": false
   },
-  "verdict": "FIXTURE-GREEN / REAL-BLOCKED",
+  "verdict": "RED (a BUILT step failed)",
   "summary": {
-    "fixtureFail": 0,
+    "fixtureFail": 2,
     "realFail": 0,
     "notBuilt": 0,
-    "blocked": 7,
-    "fixturePass": 22,
-    "total": 22
+    "blocked": 8,
+    "fixturePass": 24,
+    "total": 26
   },
   "fixture": [
+    {
+      "id": "S0",
+      "title": "Home cards resolve and bootstrap without false offline",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "Home shows the cards and checklist rows",
+          "pass": true
+        },
+        {
+          "name": "no card links to a hard-coded demo id",
+          "pass": true
+        },
+        {
+          "name": "the trip card is a real trip or the honest \"Plan a trip\"",
+          "pass": true
+        },
+        {
+          "name": "\"Link your phone\" (/squad/setup/phone) renders and is not a not-found page",
+          "pass": true
+        },
+        {
+          "name": "\"Add your course PDFs\" (/squad/setup/courses) renders and is not a not-found page",
+          "pass": true
+        },
+        {
+          "name": "\"Share your busy times\" (/squad/setup/calendar) renders and is not a not-found page",
+          "pass": true
+        },
+        {
+          "name": "\"Pick your study buddy\" (/squad/personas) renders and is not a not-found page",
+          "pass": true
+        },
+        {
+          "name": "\"Glass Box\" (/squad/ledger) renders and is not a not-found page",
+          "pass": true
+        },
+        {
+          "name": "\"Plan a trip\" (/squad/trips) renders and is not a not-found page",
+          "pass": true
+        },
+        {
+          "name": "\"Mastery map\" (/squad/mastery) renders and is not a not-found page",
+          "pass": true
+        },
+        {
+          "name": "\"Study plan\" (/squad/village?plan=1) renders and is not a not-found page",
+          "pass": true
+        },
+        {
+          "name": "\"Courses\" (/squad/courses) renders and is not a not-found page",
+          "pass": true
+        },
+        {
+          "name": "Home settled on every cold load with a late hub",
+          "pass": true
+        },
+        {
+          "name": "\"offline\" never appeared while the hub was reachable",
+          "pass": true
+        }
+      ],
+      "evidence": [
+        "docs/design/shots/gate/s0-01-s0-home.png"
+      ],
+      "notes": [],
+      "label": "fixture",
+      "ms": 37985,
+      "at": "2026-10-25T14:13:56.544Z"
+    },
     {
       "id": "S1",
       "title": "Connect Canvas and Google Workspace with minimal permissions",
@@ -371,8 +442,105 @@
       ],
       "notes": [],
       "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
-      "ms": 1295,
-      "at": "2026-10-25T13:32:00.236Z"
+      "ms": 7989,
+      "at": "2026-10-25T14:14:35.370Z"
+    },
+    {
+      "id": "S1b",
+      "title": "phone link verified (dev code / iMessage allowlist)",
+      "mode": "fixture",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "name": "before linking the phone is not verified",
+          "pass": false,
+          "detail": "expected false, got true"
+        },
+        {
+          "name": "start answers with an honest delivery channel",
+          "pass": true
+        },
+        {
+          "name": "dev delivery is labelled, not pretended to be a text",
+          "pass": true
+        },
+        {
+          "name": "a dev code is returned and labelled as such",
+          "pass": true
+        },
+        {
+          "name": "a wrong code is refused",
+          "pass": true
+        },
+        {
+          "name": "still not verified after the wrong code",
+          "pass": false,
+          "detail": "expected false, got true"
+        },
+        {
+          "name": "the right code verifies",
+          "pass": true
+        },
+        {
+          "name": "GET /v1/me now says phoneVerified",
+          "pass": true
+        },
+        {
+          "name": "the session was not swapped (same account)",
+          "pass": true
+        },
+        {
+          "name": "the iMessage handle mapping is linked to this account",
+          "pass": true
+        },
+        {
+          "name": "Home marks the phone done only after verification",
+          "pass": true
+        }
+      ],
+      "evidence": [
+        "docs/design/shots/gate/s1b-01-phone-done.png"
+      ],
+      "notes": [],
+      "label": "fixture",
+      "ms": 2426,
+      "at": "2026-10-25T14:14:44.676Z",
+      "reason": "before linking the phone is not verified"
+    },
+    {
+      "id": "S1c",
+      "title": "catalogue rows complete",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "the planner catalogue has rows",
+          "pass": true
+        },
+        {
+          "name": "every row has code, title, credits, days, start, end and term",
+          "pass": true
+        },
+        {
+          "name": "the panel renders rows",
+          "pass": true
+        },
+        {
+          "name": "no blank code/title/credits/days/time cell in the panel",
+          "pass": true
+        },
+        {
+          "name": "no row is flagged Missing days/time",
+          "pass": true
+        }
+      ],
+      "evidence": [
+        "docs/design/shots/gate/s1c-01-catalogue.png"
+      ],
+      "notes": [],
+      "label": "fixture",
+      "ms": 2497,
+      "at": "2026-10-25T14:14:47.672Z"
     },
     {
       "id": "S2",
@@ -630,218 +798,27 @@
       ],
       "notes": [],
       "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
-      "ms": 1182,
-      "at": "2026-10-25T13:32:01.608Z"
+      "ms": 10077,
+      "at": "2026-10-25T14:14:50.625Z"
     },
     {
       "id": "S3",
       "title": "Agents retrieve permitted context with verified citations",
       "mode": "fixture",
-      "status": "PASS",
+      "status": "FAIL",
       "assertions": [
         {
-          "name": "GET /v1/context/search is 200",
-          "pass": true
-        },
-        {
-          "name": "the shared lecture-notes chunk is retrieved for the squad member",
-          "pass": true
-        },
-        {
-          "name": "hit is marked shared and live-sourced from Google",
-          "pass": true
-        },
-        {
-          "name": "hit citation quote is a verbatim sentence of the chunk",
-          "pass": true
-        },
-        {
-          "name": "citation names the hit source",
-          "pass": true
-        },
-        {
-          "name": "the citation resolves through GET /v1/context/source",
-          "pass": true
-        },
-        {
-          "name": "the quote is verified verbatim by the hub",
-          "pass": true
-        },
-        {
-          "name": "the quoted line is highlighted",
-          "pass": true
-        },
-        {
-          "name": "viewer says live provenance and names the provider",
-          "pass": true
-        },
-        {
-          "name": "viewer links to the Drive document",
-          "pass": true
-        },
-        {
-          "name": "viewer tells the member it is shared by someone else",
-          "pass": true
-        },
-        {
-          "name": "the lecture sentence itself is verified on its page",
-          "pass": true
-        },
-        {
-          "name": "a forged quote is NOT verified",
-          "pass": true
-        },
-        {
-          "name": "a wrong kind is a miss, not a leak",
-          "pass": true
-        },
-        {
-          "name": "no sentinel in source viewer response",
-          "pass": true
-        },
-        {
-          "name": "the private-title calendar event Rhea did not share is 404 for Ben",
-          "pass": true
-        },
-        {
-          "name": "retrieval returns nothing for an unsupported question",
-          "pass": true
-        },
-        {
-          "name": "private string not retrievable by the squad (SENTINEL_UNPIC...)",
-          "pass": true
-        },
-        {
-          "name": "private string not retrievable by the squad (Private notes ...)",
-          "pass": true
-        },
-        {
-          "name": "private string not retrievable by the squad (SENTINEL_CAL_T...)",
-          "pass": true
-        },
-        {
-          "name": "a bot answer arrived for the due question",
-          "pass": true
-        },
-        {
-          "name": "answer lists the assignments from Rhea's synced Canvas, in due order",
-          "pass": true
-        },
-        {
-          "name": "answer carries the first due date in UTC",
-          "pass": true
-        },
-        {
-          "name": "no sentinel in due answer",
-          "pass": true
-        },
-        {
-          "name": "no raw ids in due answer",
-          "pass": true
-        },
-        {
-          "name": "answer demo flag matches the model mode",
-          "pass": true
-        },
-        {
-          "name": "demo label visible on due answer",
-          "pass": true
-        },
-        {
-          "name": "a bot answer arrived for the content question",
-          "pass": true
-        },
-        {
-          "name": "no citation names a private source",
-          "pass": true
-        },
-        {
-          "name": "no sentinel in content answer",
-          "pass": true
-        },
-        {
-          "name": "no raw ids in content answer",
-          "pass": true
-        },
-        {
-          "name": "answer demo flag matches the model mode",
-          "pass": true
-        },
-        {
-          "name": "demo label visible on content answer",
-          "pass": true
-        },
-        {
-          "name": "a bot answer arrived for the unsupported question",
-          "pass": true
-        },
-        {
-          "name": "answer is the not-in-materials refusal",
-          "pass": true
-        },
-        {
-          "name": "no citation is invented",
-          "pass": true
-        },
-        {
-          "name": "no sentinel in refusal",
-          "pass": true
-        },
-        {
-          "name": "web chat opens the squad thread",
-          "pass": true
-        },
-        {
-          "name": "the due answer is visible in the web chat",
-          "pass": true
-        },
-        {
-          "name": "the web bubble shows the assignment list",
-          "pass": true
-        },
-        {
-          "name": "no sentinel in web chat bubble",
-          "pass": true
-        },
-        {
-          "name": "Demo label visible on the demo-model answer",
-          "pass": true
-        },
-        {
-          "name": "the content answer is visible in the web chat",
-          "pass": true
-        },
-        {
-          "name": "one citation chip per chat citation",
-          "pass": true
-        },
-        {
-          "name": "the chip opens the excerpt sheet",
-          "pass": true
-        },
-        {
-          "name": "the excerpt is not an error",
-          "pass": true
-        },
-        {
-          "name": "no sentinel in excerpt sheet",
-          "pass": true
-        },
-        {
-          "name": "no sentinel in web chat thread",
-          "pass": true
+          "name": "step threw",
+          "pass": false,
+          "detail": "fetch failed"
         }
       ],
-      "evidence": [
-        "docs/design/shots/gate/s3-01-citation-excerpt.png",
-        "docs/design/shots/gate/s3-02-cubbie-answers.png"
-      ],
-      "notes": [
-        "demo model: the context-claims prompt is not served by the demo LLM, so a context-grounded chat answer cannot be produced without LIVE=1; retrieval and the viewer are asserted above"
-      ],
+      "evidence": [],
+      "notes": [],
       "label": "fixture (retrieval and source viewer asserted at the API; chat answers use the demo model unless LIVE=1)",
-      "ms": 1760,
-      "at": "2026-10-25T13:32:02.962Z"
+      "ms": 3034,
+      "at": "2026-10-25T14:15:02.625Z",
+      "reason": "step threw"
     },
     {
       "id": "S4",
@@ -945,8 +922,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 2723,
-      "at": "2026-10-25T13:32:04.944Z"
+      "ms": 6700,
+      "at": "2026-10-25T14:15:07.898Z"
     },
     {
       "id": "S5",
@@ -1013,8 +990,8 @@
         "@planner: the demo model cannot ground a content answer; citations are asserted with LIVE=1"
       ],
       "label": "fixture",
-      "ms": 231,
-      "at": "2026-10-25T13:32:07.828Z"
+      "ms": 2865,
+      "at": "2026-10-25T14:15:16.303Z"
     },
     {
       "id": "S6",
@@ -1084,8 +1061,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 2987,
-      "at": "2026-10-25T13:32:08.251Z"
+      "ms": 7058,
+      "at": "2026-10-25T14:15:21.332Z"
     },
     {
       "id": "S7",
@@ -1172,8 +1149,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 7069,
-      "at": "2026-10-25T13:32:11.355Z"
+      "ms": 14048,
+      "at": "2026-10-25T14:15:30.022Z"
     },
     {
       "id": "S8",
@@ -1437,8 +1414,8 @@
       ],
       "notes": [],
       "label": "fixture (demo labelled)",
-      "ms": 10704,
-      "at": "2026-10-25T13:32:18.536Z"
+      "ms": 46273,
+      "at": "2026-10-25T14:15:45.682Z"
     },
     {
       "id": "S9",
@@ -1523,11 +1500,11 @@
           "pass": true
         },
         {
-          "name": "iMessage lists Rhea's 2 items",
+          "name": "iMessage lists Rhea's 3 items",
           "pass": true
         },
         {
-          "name": "iMessage lists Ben's 2 items",
+          "name": "iMessage lists Ben's 1 items",
           "pass": true
         },
         {
@@ -1539,11 +1516,11 @@
           "pass": true
         },
         {
-          "name": "web panel shows Rhea on 2 items",
+          "name": "web panel shows Rhea on 3 items",
           "pass": true
         },
         {
-          "name": "web panel shows Ben on 2 items",
+          "name": "web panel shows Ben on 1 items",
           "pass": true
         },
         {
@@ -1614,8 +1591,8 @@
         "mastery hidden for squads under 3 members is not exercised: the world squad has 3 members"
       ],
       "label": "fixture (demo labelled)",
-      "ms": 2379,
-      "at": "2026-10-25T13:32:29.438Z"
+      "ms": 3689,
+      "at": "2026-10-25T14:16:32.866Z"
     },
     {
       "id": "S10",
@@ -1676,263 +1653,263 @@
           "pass": true
         },
         {
-          "name": "trip.created m_25: in the hub",
+          "name": "trip.created m_19: in the hub",
           "pass": true
         },
         {
-          "name": "trip.created m_25: on the web with the same id",
+          "name": "trip.created m_19: on the web with the same id",
           "pass": true
         },
         {
-          "name": "trip.created m_25: queued and sent to iMessage under the same id",
+          "name": "trip.created m_19: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "trip.created m_25: readable text in the iMessage log",
+          "name": "trip.created m_19: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "trip.created m_25: web and iMessage say the same thing",
+          "name": "trip.created m_19: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "trip.vote m_30: in the hub",
+          "name": "trip.vote m_24: in the hub",
           "pass": true
         },
         {
-          "name": "trip.vote m_30: on the web with the same id",
+          "name": "trip.vote m_24: on the web with the same id",
           "pass": true
         },
         {
-          "name": "trip.vote m_30: queued and sent to iMessage under the same id",
+          "name": "trip.vote m_24: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "trip.vote m_30: readable text in the iMessage log",
+          "name": "trip.vote m_24: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "trip.vote m_30: web and iMessage say the same thing",
+          "name": "trip.vote m_24: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "trip.vote m_31: in the hub",
+          "name": "trip.vote m_25: in the hub",
           "pass": true
         },
         {
-          "name": "trip.vote m_31: on the web with the same id",
+          "name": "trip.vote m_25: on the web with the same id",
           "pass": true
         },
         {
-          "name": "trip.vote m_31: queued and sent to iMessage under the same id",
+          "name": "trip.vote m_25: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "trip.vote m_31: readable text in the iMessage log",
+          "name": "trip.vote m_25: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "trip.vote m_31: web and iMessage say the same thing",
+          "name": "trip.vote m_25: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "trip.vote m_32: in the hub",
+          "name": "trip.vote m_26: in the hub",
           "pass": true
         },
         {
-          "name": "trip.vote m_32: on the web with the same id",
+          "name": "trip.vote m_26: on the web with the same id",
           "pass": true
         },
         {
-          "name": "trip.vote m_32: queued and sent to iMessage under the same id",
+          "name": "trip.vote m_26: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "trip.vote m_32: readable text in the iMessage log",
+          "name": "trip.vote m_26: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "trip.vote m_32: web and iMessage say the same thing",
+          "name": "trip.vote m_26: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "trip.confirm m_37: in the hub",
+          "name": "trip.confirm m_31: in the hub",
           "pass": true
         },
         {
-          "name": "trip.confirm m_37: on the web with the same id",
+          "name": "trip.confirm m_31: on the web with the same id",
           "pass": true
         },
         {
-          "name": "trip.confirm m_37: queued and sent to iMessage under the same id",
+          "name": "trip.confirm m_31: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "trip.confirm m_37: readable text in the iMessage log",
+          "name": "trip.confirm m_31: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "trip.confirm m_37: web and iMessage say the same thing",
+          "name": "trip.confirm m_31: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "trip.confirm m_39: in the hub",
+          "name": "trip.confirm m_33: in the hub",
           "pass": true
         },
         {
-          "name": "trip.confirm m_39: on the web with the same id",
+          "name": "trip.confirm m_33: on the web with the same id",
           "pass": true
         },
         {
-          "name": "trip.confirm m_39: queued and sent to iMessage under the same id",
+          "name": "trip.confirm m_33: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "trip.confirm m_39: readable text in the iMessage log",
+          "name": "trip.confirm m_33: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "trip.confirm m_39: web and iMessage say the same thing",
+          "name": "trip.confirm m_33: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "trip.confirm m_40: in the hub",
+          "name": "trip.confirm m_34: in the hub",
           "pass": true
         },
         {
-          "name": "trip.confirm m_40: on the web with the same id",
+          "name": "trip.confirm m_34: on the web with the same id",
           "pass": true
         },
         {
-          "name": "trip.confirm m_40: queued and sent to iMessage under the same id",
+          "name": "trip.confirm m_34: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "trip.confirm m_40: readable text in the iMessage log",
+          "name": "trip.confirm m_34: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "trip.confirm m_40: web and iMessage say the same thing",
+          "name": "trip.confirm m_34: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "failure.agent-offline m_42: in the hub",
+          "name": "failure.agent-offline m_36: in the hub",
           "pass": true
         },
         {
-          "name": "failure.agent-offline m_42: on the web with the same id",
+          "name": "failure.agent-offline m_36: on the web with the same id",
           "pass": true
         },
         {
-          "name": "failure.agent-offline m_42: queued and sent to iMessage under the same id",
+          "name": "failure.agent-offline m_36: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "failure.agent-offline m_42: readable text in the iMessage log",
+          "name": "failure.agent-offline m_36: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "failure.agent-offline m_42: web and iMessage say the same thing",
+          "name": "failure.agent-offline m_36: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "plan.proposed m_51: in the hub",
+          "name": "plan.proposed m_45: in the hub",
           "pass": true
         },
         {
-          "name": "plan.proposed m_51: on the web with the same id",
+          "name": "plan.proposed m_45: on the web with the same id",
           "pass": true
         },
         {
-          "name": "plan.proposed m_51: queued and sent to iMessage under the same id",
+          "name": "plan.proposed m_45: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "plan.proposed m_51: readable text in the iMessage log",
+          "name": "plan.proposed m_45: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "plan.proposed m_51: web and iMessage say the same thing",
+          "name": "plan.proposed m_45: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "plan.accept m_52: in the hub",
+          "name": "plan.accept m_46: in the hub",
           "pass": true
         },
         {
-          "name": "plan.accept m_52: on the web with the same id",
+          "name": "plan.accept m_46: on the web with the same id",
           "pass": true
         },
         {
-          "name": "plan.accept m_52: queued and sent to iMessage under the same id",
+          "name": "plan.accept m_46: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "plan.accept m_52: readable text in the iMessage log",
+          "name": "plan.accept m_46: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "plan.accept m_52: web and iMessage say the same thing",
+          "name": "plan.accept m_46: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "plan.accept m_55: in the hub",
+          "name": "plan.accept m_49: in the hub",
           "pass": true
         },
         {
-          "name": "plan.accept m_55: on the web with the same id",
+          "name": "plan.accept m_49: on the web with the same id",
           "pass": true
         },
         {
-          "name": "plan.accept m_55: queued and sent to iMessage under the same id",
+          "name": "plan.accept m_49: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "plan.accept m_55: readable text in the iMessage log",
+          "name": "plan.accept m_49: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "plan.accept m_55: web and iMessage say the same thing",
+          "name": "plan.accept m_49: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "plan.swap m_56: in the hub",
+          "name": "plan.swap m_50: in the hub",
           "pass": true
         },
         {
-          "name": "plan.swap m_56: on the web with the same id",
+          "name": "plan.swap m_50: on the web with the same id",
           "pass": true
         },
         {
-          "name": "plan.swap m_56: queued and sent to iMessage under the same id",
+          "name": "plan.swap m_50: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "plan.swap m_56: readable text in the iMessage log",
+          "name": "plan.swap m_50: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "plan.swap m_56: web and iMessage say the same thing",
+          "name": "plan.swap m_50: web and iMessage say the same thing",
           "pass": true
         },
         {
-          "name": "failure.plan-edit m_58: in the hub",
+          "name": "failure.plan-edit m_52: in the hub",
           "pass": true
         },
         {
-          "name": "failure.plan-edit m_58: on the web with the same id",
+          "name": "failure.plan-edit m_52: on the web with the same id",
           "pass": true
         },
         {
-          "name": "failure.plan-edit m_58: queued and sent to iMessage under the same id",
+          "name": "failure.plan-edit m_52: queued and sent to iMessage under the same id",
           "pass": true
         },
         {
-          "name": "failure.plan-edit m_58: readable text in the iMessage log",
+          "name": "failure.plan-edit m_52: readable text in the iMessage log",
           "pass": true
         },
         {
-          "name": "failure.plan-edit m_58: web and iMessage say the same thing",
+          "name": "failure.plan-edit m_52: web and iMessage say the same thing",
           "pass": true
         },
         {
@@ -1989,8 +1966,8 @@
         "live typing/thinking is transient with the scripted model; only \"not stuck\" is asserted"
       ],
       "label": "fixture (demo labelled)",
-      "ms": 5879,
-      "at": "2026-10-25T13:32:31.948Z"
+      "ms": 6698,
+      "at": "2026-10-25T14:16:37.507Z"
     },
     {
       "id": "V1",
@@ -2036,8 +2013,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 1758,
-      "at": "2026-10-25T13:32:38.065Z"
+      "ms": 2950,
+      "at": "2026-10-25T14:16:57.338Z"
     },
     {
       "id": "V2",
@@ -2073,8 +2050,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 111,
-      "at": "2026-10-25T13:32:39.926Z"
+      "ms": 788,
+      "at": "2026-10-25T14:17:00.665Z"
     },
     {
       "id": "V3",
@@ -2120,8 +2097,8 @@
         "after revoke: state=revoked label=Google access was revoked. Imported data was removed. Reconnect to import again. status=revoked degraded=false"
       ],
       "label": "fixture",
-      "ms": 119,
-      "at": "2026-10-25T13:32:40.111Z"
+      "ms": 711,
+      "at": "2026-10-25T14:17:01.667Z"
     },
     {
       "id": "V4",
@@ -2185,8 +2162,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 342,
-      "at": "2026-10-25T13:32:40.325Z"
+      "ms": 737,
+      "at": "2026-10-25T14:17:02.826Z"
     },
     {
       "id": "V5",
@@ -2222,8 +2199,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 196,
-      "at": "2026-10-25T13:32:40.783Z"
+      "ms": 515,
+      "at": "2026-10-25T14:17:04.055Z"
     },
     {
       "id": "V6",
@@ -2255,8 +2232,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 2630,
-      "at": "2026-10-25T13:32:41.128Z"
+      "ms": 2918,
+      "at": "2026-10-25T14:17:04.923Z"
     },
     {
       "id": "V7",
@@ -2300,8 +2277,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 3422,
-      "at": "2026-10-25T13:32:43.860Z"
+      "ms": 8800,
+      "at": "2026-10-25T14:17:08.029Z"
     },
     {
       "id": "V8",
@@ -2349,8 +2326,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 9095,
-      "at": "2026-10-25T13:32:47.332Z"
+      "ms": 9576,
+      "at": "2026-10-25T14:17:17.194Z"
     },
     {
       "id": "V9",
@@ -2595,8 +2572,8 @@
         "fewer than two members pending: the simultaneous-accept check was skipped"
       ],
       "label": "fixture",
-      "ms": 14404,
-      "at": "2026-10-25T13:32:56.567Z"
+      "ms": 77239,
+      "at": "2026-10-25T14:17:27.754Z"
     },
     {
       "id": "V10",
@@ -2642,8 +2619,8 @@
         "1:1 squad disambiguation (\"Which squad?\") is not part of feature/imessage-sync today (docs/imessage.md); a DM stays private to Cubbie."
       ],
       "label": "fixture",
-      "ms": 2976,
-      "at": "2026-10-25T13:33:11.240Z"
+      "ms": 4064,
+      "at": "2026-10-25T14:18:47.614Z"
     },
     {
       "id": "V11",
@@ -2673,8 +2650,8 @@
         "iMessage text has no literal \"Demo\" marker (only the web label); recorded, not asserted"
       ],
       "label": "fixture/degraded",
-      "ms": 117,
-      "at": "2026-10-25T13:33:14.319Z"
+      "ms": 803,
+      "at": "2026-10-25T14:18:52.656Z"
     },
     {
       "id": "V12",
@@ -2702,11 +2679,62 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 103,
-      "at": "2026-10-25T13:33:14.545Z"
+      "ms": 1154,
+      "at": "2026-10-25T14:18:54.358Z"
+    },
+    {
+      "id": "V13",
+      "title": "Home late hub",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "late hub: Home settled on all 3 cold loads",
+          "pass": true
+        },
+        {
+          "name": "late hub: no false \"offline\"",
+          "pass": true
+        },
+        {
+          "name": "slow hub: Home settled on all 3 cold loads",
+          "pass": true
+        },
+        {
+          "name": "slow hub: no false \"offline\"",
+          "pass": true
+        },
+        {
+          "name": "flap hub: Home settled on all 3 cold loads",
+          "pass": true
+        },
+        {
+          "name": "flap hub: no false \"offline\"",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [],
+      "label": "fixture",
+      "ms": 64422,
+      "at": "2026-10-25T14:18:56.391Z"
     }
   ],
   "real": [
+    {
+      "id": "S0",
+      "title": "Home cards resolve and bootstrap without false offline",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 818,
+      "at": "2026-10-25T14:14:34.543Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
     {
       "id": "S1",
       "title": "Connect Canvas and Google Workspace with minimal permissions",
@@ -2716,10 +2744,38 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 74,
-      "at": "2026-10-25T13:32:01.533Z",
+      "ms": 1308,
+      "at": "2026-10-25T14:14:43.360Z",
       "reason": "no_google_client",
       "runbook": "#google-oauth-client-and-consent-screen"
+    },
+    {
+      "id": "S1b",
+      "title": "phone link verified (dev code / iMessage allowlist)",
+      "mode": "real",
+      "status": "BLOCKED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 552,
+      "at": "2026-10-25T14:14:47.107Z",
+      "reason": "apple_unverified",
+      "runbook": "#apple-behaviour-and-permissions"
+    },
+    {
+      "id": "S1c",
+      "title": "catalogue rows complete",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 443,
+      "at": "2026-10-25T14:14:50.173Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
     },
     {
       "id": "S2",
@@ -2730,8 +2786,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 171,
-      "at": "2026-10-25T13:32:02.791Z",
+      "ms": 1919,
+      "at": "2026-10-25T14:15:00.706Z",
       "reason": "no_google_client",
       "runbook": "#google-oauth-client-and-consent-screen"
     },
@@ -2744,8 +2800,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 221,
-      "at": "2026-10-25T13:32:04.722Z",
+      "ms": 2223,
+      "at": "2026-10-25T14:15:05.666Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2758,8 +2814,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 159,
-      "at": "2026-10-25T13:32:07.668Z",
+      "ms": 1681,
+      "at": "2026-10-25T14:15:14.605Z",
       "reason": "apple_unverified",
       "runbook": "#apple-behaviour-and-permissions"
     },
@@ -2772,8 +2828,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 188,
-      "at": "2026-10-25T13:32:08.060Z",
+      "ms": 2126,
+      "at": "2026-10-25T14:15:19.197Z",
       "reason": "llm_credits",
       "runbook": "#gemini-credits-live-and-elevenlabs-plan"
     },
@@ -2786,8 +2842,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 115,
-      "at": "2026-10-25T13:32:11.238Z",
+      "ms": 1565,
+      "at": "2026-10-25T14:15:28.451Z",
       "reason": "apple_unverified",
       "runbook": "#apple-behaviour-and-permissions"
     },
@@ -2800,8 +2856,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 110,
-      "at": "2026-10-25T13:32:18.425Z",
+      "ms": 1607,
+      "at": "2026-10-25T14:15:44.074Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2814,8 +2870,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 196,
-      "at": "2026-10-25T13:32:29.241Z",
+      "ms": 907,
+      "at": "2026-10-25T14:16:31.957Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2828,8 +2884,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 130,
-      "at": "2026-10-25T13:32:31.817Z",
+      "ms": 950,
+      "at": "2026-10-25T14:16:36.556Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2842,8 +2898,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 111,
-      "at": "2026-10-25T13:32:37.828Z",
+      "ms": 517,
+      "at": "2026-10-25T14:16:44.206Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2856,8 +2912,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 91,
-      "at": "2026-10-25T13:32:39.823Z",
+      "ms": 333,
+      "at": "2026-10-25T14:17:00.291Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2870,8 +2926,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 60,
-      "at": "2026-10-25T13:32:40.038Z",
+      "ms": 155,
+      "at": "2026-10-25T14:17:01.454Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2884,8 +2940,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 86,
-      "at": "2026-10-25T13:32:40.230Z",
+      "ms": 427,
+      "at": "2026-10-25T14:17:02.379Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2898,8 +2954,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 96,
-      "at": "2026-10-25T13:32:40.669Z",
+      "ms": 462,
+      "at": "2026-10-25T14:17:03.564Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2912,8 +2968,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 134,
-      "at": "2026-10-25T13:32:40.979Z",
+      "ms": 294,
+      "at": "2026-10-25T14:17:04.571Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2926,8 +2982,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 91,
-      "at": "2026-10-25T13:32:43.759Z",
+      "ms": 155,
+      "at": "2026-10-25T14:17:07.841Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2940,8 +2996,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 32,
-      "at": "2026-10-25T13:32:47.282Z",
+      "ms": 325,
+      "at": "2026-10-25T14:17:16.830Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2954,8 +3010,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 60,
-      "at": "2026-10-25T13:32:56.428Z",
+      "ms": 511,
+      "at": "2026-10-25T14:17:26.772Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2968,8 +3024,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 232,
-      "at": "2026-10-25T13:33:10.971Z",
+      "ms": 2193,
+      "at": "2026-10-25T14:18:44.998Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2982,8 +3038,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 90,
-      "at": "2026-10-25T13:33:14.217Z",
+      "ms": 812,
+      "at": "2026-10-25T14:18:51.679Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2996,8 +3052,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 95,
-      "at": "2026-10-25T13:33:14.437Z",
+      "ms": 771,
+      "at": "2026-10-25T14:18:53.463Z",
       "reason": "llm_credits",
       "runbook": "#gemini-credits-live-and-elevenlabs-plan"
     },
@@ -3010,10 +3066,24 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 94,
-      "at": "2026-10-25T13:33:14.648Z",
+      "ms": 666,
+      "at": "2026-10-25T14:18:55.511Z",
       "reason": "needs_second_person",
       "runbook": "#real-multi-person-imessage-group"
+    },
+    {
+      "id": "V13",
+      "title": "Home late hub",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 367,
+      "at": "2026-10-25T14:20:00.800Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
     }
   ],
   "blockers": [
@@ -3076,7 +3146,6 @@
   ],
   "branches": [],
   "keyScreenshots": [
-    "docs/design/shots/gate/key-s3-01-citation-excerpt.png",
     "docs/design/shots/gate/key-s6-01-delivery-state.png",
     "docs/design/shots/gate/key-s7-01-web-mirror-rhea.png",
     "docs/design/shots/gate/key-s8-01-trip-voting.png",

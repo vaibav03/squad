@@ -15,24 +15,6 @@
   color: var(--lv-text);
   transition: opacity var(--dur-fast) var(--lv-ease-out);
 }
-.lv-conn__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--state-idle);
-}
-.lv-conn[data-tone='ok'] .lv-conn__dot {
-  background: var(--lv-ok);
-}
-.lv-conn[data-tone='info'] .lv-conn__dot {
-  background: var(--lv-info);
-}
-.lv-conn[data-tone='warn'] .lv-conn__dot {
-  background: var(--lv-warn);
-}
-.lv-conn[data-tone='bad'] .lv-conn__dot {
-  background: var(--lv-alert);
-}
 
 .lv-seg {
   display: inline-flex;

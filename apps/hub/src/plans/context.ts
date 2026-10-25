@@ -27,10 +27,11 @@ export interface PlanContextSources {
 export function createDefaultPlanContext(
   db: Db,
   defaultCourse: string,
-  sources?: PlanContextSources,
+  sources?: PlanContextSources & Pick<PlanContext, 'contextDue'>,
 ): PlanContext {
   const courses = createCourseStore(db);
   return {
+    ...(sources?.contextDue ? { contextDue: sources.contextDue } : {}),
     defaultCourse: () => defaultCourse,
     courseTitle: (id) => courses.getCourse(id)?.title ?? id,
     chapters: (id) =>

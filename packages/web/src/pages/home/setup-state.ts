@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { timedFetch } from '../../lib/http';
+import { parseConnections } from '../connections/api';
+import { calendarUsable } from '../connections/connection-state';
 
 /**
  * The Home "Get set up" checklist is derived ONLY from what the hub says about the signed-in viewer.
@@ -16,7 +18,7 @@ export interface HubCtx {
   token: string | null;
 }
 
-async function getJson(ctx: HubCtx, path: string): Promise<unknown> {
+export async function getJson(ctx: HubCtx, path: string): Promise<unknown> {
   if (!ctx.hubUrl) throw new Error('no_hub');
   const res = await timedFetch(`${ctx.hubUrl.replace(/\/+$/, '')}${path}`, {
     headers: ctx.token ? { Authorization: `Bearer ${ctx.token}` } : {},
@@ -25,19 +27,31 @@ async function getJson(ctx: HubCtx, path: string): Promise<unknown> {
   return res.json();
 }
 
-const obj = (v: unknown): Record<string, unknown> =>
+export const obj = (v: unknown): Record<string, unknown> =>
   v && typeof v === 'object' ? (v as Record<string, unknown>) : {};
-const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+export const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 
 /** GET /v1/imessage/link: the viewer's linked handles. Only the count is used, never the masked hint. */
 export async function phoneDone(ctx: HubCtx): Promise<boolean> {
-  return arr(obj(await getJson(ctx, '/v1/imessage/link')).links).length > 0;
+  if (arr(obj(await getJson(ctx, '/v1/imessage/link')).links).length > 0) return true;
+  // A phone verified at sign-up (no iMessage link yet) is also real server state: GET /v1/me phoneVerified.
+  return obj(await getJson(ctx, '/v1/me')).phoneVerified === true;
 }
 
 /** GET /v1/library/courses: at least one of the viewer's own, non-sample courses whose ingest finished (status ready). */
 export async function coursesDone(ctx: HubCtx): Promise<boolean> {
   const courses = arr(obj(await getJson(ctx, '/v1/library/courses')).courses).map(obj);
-  return courses.some((c) => c.sample !== true && c.status === 'ready');
+  if (courses.some((c) => c.sample !== true && c.status === 'ready')) return true;
+  // Connecting Canvas for real is the lead way to add courses: a live (not practice) Canvas connection counts.
+  try {
+    return arr(obj(await getJson(ctx, '/v1/connections')).connections)
+      .map(obj)
+      .some(
+        (c) => c.provider === 'canvas' && c.mode === 'live' && (c.state ?? c.status) === 'live',
+      );
+  } catch {
+    return false;
+  }
 }
 
 /** A live (not fixture, not expired/revoked) Google calendar or Canvas calendar feed, or a real .ics ingested. */
@@ -48,15 +62,8 @@ export async function calendarDone(ctx: HubCtx): Promise<boolean> {
   ]);
   if (ics.status === 'fulfilled' && obj(ics.value).ics === true) return true;
   if (conns.status === 'fulfilled') {
-    const live = arr(obj(conns.value).connections)
-      .map(obj)
-      .some(
-        (c) =>
-          c.mode === 'live' &&
-          (c.state ?? c.status) === 'live' &&
-          (c.provider === 'google' || c.variant === 'feed'),
-      );
-    if (live) return true;
+    // the same state machine as the Connections page: a real, usable (connected or syncing) calendar source
+    if (calendarUsable(parseConnections(conns.value))) return true;
   }
   // Not provably done: only report "to do" when both reads answered, otherwise surface the failure.
   if (conns.status === 'rejected') throw conns.reason as Error;
@@ -80,21 +87,29 @@ const READERS: Record<SetupKey, (ctx: HubCtx) => Promise<boolean>> = {
 const ALL = (s: ItemState): SetupStates => ({ phone: s, courses: s, calendar: s, persona: s });
 
 /** Each item settles on its own; one slow or failing read never holds back the others. */
-export function useSetupChecklist(ctx: HubCtx): {
+export function useSetupChecklist(
+  ctx: HubCtx,
+  /** The shared hub bootstrap has not finished: stay `loading` instead of reporting `todo` for a missing session. */
+  waiting = false,
+): {
   states: SetupStates;
   retry: () => void;
   anyError: boolean;
 } {
   const live = !!ctx.hubUrl && !!ctx.token;
-  const [states, setStates] = useState<SetupStates>(() => ALL(live ? 'loading' : 'todo'));
+  const [states, setStates] = useState<SetupStates>(() =>
+    ALL(live || waiting ? 'loading' : 'todo'),
+  );
   const gen = useRef<Record<SetupKey, number>>({ phone: 0, courses: 0, calendar: 0, persona: 0 });
   const { hubUrl, token } = ctx;
+  const waitingRef = useRef(waiting);
+  waitingRef.current = waiting;
 
   const load = useCallback(
     (keys: readonly SetupKey[]) => {
       if (!hubUrl || !token) {
         for (const k of keys) gen.current[k]++;
-        setStates(ALL('todo')); // no hub session: nothing server-side can be done yet
+        setStates(ALL(waitingRef.current ? 'loading' : 'todo')); // no hub session: nothing server-side can be done yet
         return;
       }
       setStates((prev) => {

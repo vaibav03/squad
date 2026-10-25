@@ -15,6 +15,8 @@ import { loadHubConfig, type HubConfig } from './config';
 import { createChatHub } from './chat/hub-chat';
 import { createChatRoutes } from './chat/routes';
 import { createConnectionRoutes } from './routes/connections';
+import { createHealthRoutes } from './routes/health';
+import { createOnboardingRoutes } from './routes/onboarding';
 import { createConfirmRouter } from './confirms';
 import { createIngestor } from './ingest';
 import { applySecurity, type SecurityOptions } from './middleware';
@@ -22,11 +24,13 @@ import { createLogger } from './log';
 import { installObservability, type ObsOptions } from './observability';
 import type { Ports } from './ports';
 import { createAuthRoutes } from './routes/auth';
+import { createPhoneRoutes } from './routes/phone';
 import { createInviteRoutes } from './routes/invites';
 import { createMemberRoutes } from './routes/members';
 import { createSquadRoutes } from './routes/squads';
 import { createCallRoutes } from './routes/call';
 import { createCouncilRoutes } from './routes/council';
+import { createCouncilRunStore } from './council/run-store';
 import { createDomainRoutes } from './routes/domain';
 import { createInternalRoutes } from './routes/internal';
 import { createLiveRoutes } from './routes/live';
@@ -34,6 +38,7 @@ import { createLibraryRoutes } from './routes/library';
 import { createMediaRoutes } from './routes/media';
 import { createPlanRoutes } from './plans/routes';
 import { refreshBusyForTrip } from './context/busy';
+import { contextDueFor } from './context/plan';
 import { createDefaultPlanContext } from './plans/context';
 import { createPlanService } from './plans/service';
 import { contextServiceFor } from './context/service';
@@ -52,6 +57,7 @@ import { createDirectory } from './store/directory';
 import { createSquadsStore } from './store/squads';
 import { createImessageStore } from './imessage/store';
 import { createImessageRoutes } from './imessage/routes';
+import { createSendblueWebhookRoutes } from './imessage/sendblue/webhook';
 import { createEventLog } from './store/eventlog';
 import { createLedgerStore } from './store/ledger';
 import { createSquadState } from './store/state';
@@ -127,6 +133,12 @@ export function createHub(opts: HubOptions = {}): Hub {
   deps.ledger = createLedgerStore(deps.db);
   deps.trips = createTripStore(deps.db);
   deps.calls = createCallRegistry(now);
+  deps.councilRuns = createCouncilRunStore(
+    deps.db,
+    () => deps.filterCtx,
+    (student) => deps.directory.squadOf(student as StudentId),
+    now,
+  );
   deps.filterCtx = {
     directory: deps.directory,
     calls: deps.calls,
@@ -135,7 +147,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     councils: {
       ownerOf: (correlationId) => {
         const o = deps.council?.ownerOf?.(correlationId) ?? councilRunOwner(correlationId);
-        if (!o) return undefined;
+        if (!o) return deps.councilRuns?.ownerOf(correlationId); // persisted runs survive a restart
         const squadId = deps.directory.squadOf(o.askedBy as StudentId);
         return squadId ? { askedBy: o.askedBy, squadId, private: o.private } : undefined;
       },
@@ -156,6 +168,7 @@ export function createHub(opts: HubOptions = {}): Hub {
   deps.plans = createPlanService(
     deps,
     createDefaultPlanContext(deps.db, COURSE_ID, {
+      contextDue: (squadId, members, from, to) => contextDueFor(deps, squadId, members, from, to),
       store: () => contextServiceFor(deps).store,
       squadsOf: (id) => deps.directory.squadsOf(id),
     }),
@@ -206,10 +219,12 @@ export function createHub(opts: HubOptions = {}): Hub {
 
   for (const routes of [
     createAuthRoutes(deps),
+    createPhoneRoutes(deps),
     createSquadRoutes(deps),
     createMemberRoutes(deps),
     createInviteRoutes(deps),
     createImessageRoutes(deps),
+    createSendblueWebhookRoutes(deps),
     createInternalRoutes(deps),
     createStatusRoutes(deps),
     createStateRoutes(deps),
@@ -224,6 +239,8 @@ export function createHub(opts: HubOptions = {}): Hub {
     createCouncilRoutes(deps),
     createLiveRoutes(deps),
     createChatRoutes(deps),
+    createHealthRoutes(deps),
+    createOnboardingRoutes(deps),
     createConnectionRoutes(deps),
     createPlanRoutes(deps),
     ...(config.sim ? [createSimRoutes(deps)] : []),

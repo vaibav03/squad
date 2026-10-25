@@ -1,21 +1,33 @@
-export const HOME_CHECKLIST = [
-  {
-    key: 'phone',
-    title: 'Link your phone',
-    body: 'So your agent can text you in iMessage.',
-    to: '/squad/setup/phone',
-  },
+export interface ChecklistItem {
+  key: 'phone' | 'courses' | 'calendar' | 'persona';
+  title: string;
+  body: string;
+  /** The exact next step this row opens. */
+  to: string;
+  /** The other way to do the same thing (after the lead way). */
+  alt?: { label: string; to: string };
+}
+
+export const HOME_CHECKLIST: readonly ChecklistItem[] = [
   {
     key: 'courses',
-    title: 'Add your course PDFs',
-    body: 'Your experts learn from these chapters.',
-    to: '/squad/setup/courses',
+    title: 'Connect Canvas or Google Classroom',
+    body: 'Your agents learn from your real courses.',
+    to: '/squad/connections#canvas',
+    alt: { label: 'or upload course PDFs', to: '/squad/setup/courses' },
   },
   {
     key: 'calendar',
-    title: 'Share your busy times',
-    body: 'Only free or busy leaves your device.',
-    to: '/squad/setup/calendar',
+    title: 'Connect Google Calendar',
+    body: 'Only free or busy leaves your account, never event titles.',
+    to: '/squad/connections#google',
+    alt: { label: 'or import a calendar file', to: '/squad/setup/calendar' },
+  },
+  {
+    key: 'phone',
+    title: 'Connect iMessage via Sendblue',
+    body: 'So your agent can text you.',
+    to: '/squad/setup/phone',
   },
   {
     key: 'persona',
@@ -23,25 +35,29 @@ export const HOME_CHECKLIST = [
     body: 'Choose a voice and a face you like.',
     to: '/squad/personas',
   },
-] as const;
+];
 
-export const HOME_LINKS = [
+/**
+ * Static Home cards. The trip card is NOT here: its target is resolved at render time from the squad's real
+ * current trip (see home-links.ts), never from a hard-coded trip id.
+ */
+export const HOME_STATIC_LINKS = [
   {
     to: '/squad/ledger',
     icon: 'ledger',
-    title: 'Glass Box',
-    body: 'See exactly what each agent shared, and what it kept private.',
-  },
-  {
-    to: '/squad/trips/spring-break',
-    icon: 'plane',
-    title: 'Spring break trip',
-    body: 'Vote on options and confirm when you are in.',
+    title: 'Privacy ledger',
+    body: 'What agents shared, and what they kept private.',
   },
   {
     to: '/squad/mastery',
     icon: 'book',
     title: 'Mastery map',
     body: 'Your progress by chapter, next to the squad average.',
+  },
+  {
+    to: '/squad/courses',
+    icon: 'book',
+    title: 'Courses',
+    body: 'Your course library and the chapters your experts learn from.',
   },
 ] as const;

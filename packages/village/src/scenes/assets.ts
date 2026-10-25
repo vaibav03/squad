@@ -1,4 +1,5 @@
 import type { Raster } from './pixel/raster';
+import type { LoadedSkin } from './skins/runtime';
 
 /** Manifest entry subset the scenes need (assets/asset-manifest.json). */
 export interface ManifestAsset {
@@ -31,6 +32,8 @@ export interface AssetLib {
   image(id: string, variant?: string): AssetInfo;
   frame(persona: string, anim: string, n: number): AssetInfo;
   sheet(id: string, n: number): AssetInfo;
+  /** The optional art skin for a scene (assets/vendor/interiors, local licensed art), or undefined for the classic art. */
+  skin?(scene: string): LoadedSkin | undefined;
 }
 
 export type PngLoader = (repoPath: string) => Raster;
@@ -40,6 +43,7 @@ export function createAssetLib(
   manifest: { assets: ManifestAsset[] },
   atlasJson: { frames: Record<string, { frame: { x: number; y: number; w: number; h: number } }> },
   load: PngLoader,
+  skins: ReadonlyMap<string, LoadedSkin> = new Map(),
 ): AssetLib {
   const byId = new Map(manifest.assets.map((a) => [a.id, a]));
   const png = new Map<string, Raster>();
@@ -59,6 +63,7 @@ export function createAssetLib(
     return a;
   };
   return {
+    skin: (scene) => skins.get(scene),
     has: (id, variant) => {
       const a = byId.get(id);
       return !!a && (!variant || !!a.variants?.[variant]);

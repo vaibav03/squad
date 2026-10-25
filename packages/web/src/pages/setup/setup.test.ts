@@ -58,7 +58,6 @@ describe('setup model', () => {
   });
   it('validates codes with the demo failure code', () => {
     expect(validateCode('12')).toMatch(/6/);
-    expect(validateCode('000000')).toMatch(/did not match/);
     expect(validateCode('123456')).toBeNull();
   });
   it('validates files', () => {

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { Llm } from './llm/types';
 import { CitationSourceSchema } from './context';
 import type { ChatCard, ChatCitation } from './chat';
+import type { ChatContextRef } from './chat-context';
 import type { ProvenanceHint } from './provenance';
 
 export type StudentId = string; // stable id, e.g. "s_ana"
@@ -36,6 +37,8 @@ export interface InboundMessage {
   mentionsBot: boolean;
   ts: number;
   replyTo?: string;
+  /** Hub-verified items the student attached with "Ask Cubbie" (structured; never parsed from the text). */
+  context?: ChatContextRef[];
 }
 
 export interface OutboundMessage {

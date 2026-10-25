@@ -29,6 +29,7 @@ import {
   rebalance,
   resolveConflict,
   ymd,
+  type ContextDueLite,
   type DueLite,
   type PlanChapter,
 } from './logic';
@@ -46,6 +47,8 @@ export interface PlanContext {
   busyDays(studentId: string): Set<string>;
   /** Course-wide due items only (never one student's calendar). */
   due(courseId: string, from: number, to: number): DueLite[];
+  /** Members' imported Canvas / Google Classroom due dates (title only when its owner shared it with the squad). */
+  contextDue?(squadId: string, memberIds: string[], from: number, to: number): ContextDueLite[];
   /** Text of one course page (the planner's quotes are checked against it). */
   pageText?(courseId: string, file: string, page: number): string | undefined;
   /** Canvas/Google items the viewer may read (own and squad-shared), through the context store's read gate. */
@@ -422,6 +425,14 @@ export function createPlanService(
             boxes,
             busyDays,
             due,
+            contextDue: (
+              ctx.contextDue?.(
+                v.squadId,
+                roster.map((m) => m.id),
+                now,
+                horizon,
+              ) ?? []
+            ).filter((d) => !examDate || ymd(d.dueAt) <= examDate),
             examDate,
             newId: id10,
           });

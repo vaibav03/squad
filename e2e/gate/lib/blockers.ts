@@ -34,15 +34,10 @@ export const RUNBOOKS: Record<string, { code: string; reason: string; anchor: st
     anchor: '#google-oauth-client-and-consent-screen',
   },
   canvas_feed: {
-    code: 'no_canvas_feed',
+    code: 'no_canvas_session_or_feed',
     reason:
-      "GATE_CANVAS_FEED_URL / GATE_OWN_CANVAS_HOST are not set: no Canvas calendar feed of the user's own to read.",
-    anchor: '#canvas-institution-token-or-feed',
-  },
-  canvas_token: {
-    code: 'token_disabled_or_missing',
-    reason: 'No Canvas personal access token (many institutions disable student tokens).',
-    anchor: '#canvas-institution-token-or-feed',
+      "No Canvas route of your own is set up: real Canvas needs your signed-in Canvas SESSION via the extension (install the unpacked extension from apps/extension, sign in to Canvas, GATE_CANVAS_SESSION_VERIFIED=1) OR an .ics calendar-feed URL (GATE_CANVAS_FEED_URL + GATE_OWN_CANVAS_HOST). A student API token is optional and never the blocker.",
+    anchor: '#canvas-session-or-feed',
   },
   apple: {
     code: 'apple_unverified',
@@ -55,6 +50,18 @@ export const RUNBOOKS: Record<string, { code: string; reason: string; anchor: st
     reason:
       'A real multi-participant group needs other consenting people; Apple has no API to create groups.',
     anchor: '#real-multi-person-imessage-group',
+  },
+  sendblue: {
+    code: 'no_sendblue_env',
+    reason:
+      'Sendblue is not configured for a real run: SENDBLUE_API_KEY, SENDBLUE_API_SECRET, SENDBLUE_FROM_NUMBER, SENDBLUE_WEBHOOK_SECRET and an allowlisted own test number (GATE_SENDBLUE_TEST_NUMBER in IMESSAGE_ALLOWED_HANDLES) are all required.',
+    anchor: '#sendblue',
+  },
+  sendblue_real_send: {
+    code: 'real_send_not_confirmed',
+    reason:
+      'The single real Sendblue smoke message needs the explicit confirmation GATE_REAL_SEND=1 (one message, to your own allowlisted number).',
+    anchor: '#sendblue',
   },
   llm: {
     code: 'llm_credits',
@@ -99,17 +106,31 @@ export async function blockerFor(key: string): Promise<Blocker | undefined> {
     case 'google_account':
       return names.has('GATE_OWN_GOOGLE_EMAIL') ? undefined : b('google_account');
     case 'canvas_feed':
-      return names.has('GATE_CANVAS_FEED_URL') && names.has('GATE_OWN_CANVAS_HOST')
+      return (names.has('GATE_CANVAS_FEED_URL') && names.has('GATE_OWN_CANVAS_HOST')) ||
+        names.has('GATE_CANVAS_SESSION_VERIFIED')
         ? undefined
         : b('canvas_feed');
-    case 'canvas_token':
-      return names.has('GATE_CANVAS_TOKEN') ? undefined : b('canvas_token');
     case 'apple':
       return names.has('GATE_APPLE_VERIFIED') && names.has('IMESSAGE_ALLOWED_CHATS')
         ? undefined
         : b('apple');
     case 'second_person':
       return process.env.GATE_REAL_GROUP_HAS_OTHERS === '1' ? undefined : b('second_person');
+    case 'sendblue': {
+      const need = [
+        'SENDBLUE_API_KEY',
+        'SENDBLUE_API_SECRET',
+        'SENDBLUE_FROM_NUMBER',
+        'SENDBLUE_WEBHOOK_SECRET',
+        'GATE_SENDBLUE_TEST_NUMBER',
+        'IMESSAGE_ALLOWED_HANDLES',
+      ].filter((n) => !names.has(n));
+      if (!need.length) return undefined;
+      const r = b('sendblue');
+      return { ...r, code: `BLOCKED(missing env: ${need.join(', ')})` };
+    }
+    case 'sendblue_real_send':
+      return process.env.GATE_REAL_SEND === '1' ? undefined : b('sendblue_real_send');
     case 'llm': {
       const s = await hubStatus();
       return s?.llm === 'gemini' ? undefined : b('llm');

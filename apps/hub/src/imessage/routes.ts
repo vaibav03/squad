@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { requireUser } from '../auth';
 import { createLimiter, readBody } from '../http';
 import { MIRROR_MODES } from './store';
+import { bridgeState, healthReport } from './sendblue/health';
+import { sendblueConfigFromEnv, missingSendblueEnv } from './sendblue/config';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 
 const LinkBody = z.strictObject({ code: z.string().trim().min(4).max(12) });
@@ -83,8 +85,17 @@ export function createImessageRoutes(deps: HubDeps): HubApp {
         mirror: deps.imessage.syncSettings(squadId).mirror,
       };
     });
+    const bridge = bridgeState(deps);
     if (!st || !sync)
-      return c.json({ enabled: false, mode: 'off', killSwitch: true, squads, lastSyncAt: null });
+      return c.json({
+        enabled: false,
+        mode: 'off',
+        killSwitch: true,
+        squads,
+        lastSyncAt: null,
+        provider: bridge.provider,
+        bridge,
+      });
     const mode = st.fixture ? 'fixture' : st.dryRun ? 'dry_run' : 'live';
     return c.json({
       enabled: true,
@@ -108,6 +119,23 @@ export function createImessageRoutes(deps: HubDeps): HubApp {
         null,
       ),
       squads,
+      provider: bridge.provider,
+      bridge,
+    });
+  });
+
+  // Integration health for the iMessage provider (consumed by the shared Integration Health page). Never sends.
+  r.get('/v1/imessage/health', user, async (c) => c.json(await healthReport(deps)));
+
+  // The Connections card: exact missing env names, the webhook URL to paste, the allowlist instructions.
+  r.get('/v1/imessage/setup', user, (c) => {
+    const cfg = sendblueConfigFromEnv(deps.imessageInfo?.env ?? process.env, deps.config.baseUrl);
+    return c.json({
+      provider: bridgeState(deps).provider,
+      missingEnv: missingSendblueEnv(cfg),
+      webhookUrl: `${cfg.publicUrl || deps.config.baseUrl}/v1/webhooks/sendblue`,
+      statusUrl: `${cfg.publicUrl || deps.config.baseUrl}/v1/webhooks/sendblue/status`,
+      secretHeader: cfg.secretHeader,
     });
   });
 

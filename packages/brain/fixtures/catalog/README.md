@@ -5,8 +5,12 @@ Everything in this folder is **invented sample data** for the Course-Planning Ro
 schedule; do not present it as one.
 
 - `catalog.json`: 39 courses. `id`, `title`, `credits` (1-4), `prereqs` (AND list of course ids),
-  optional `coreqs`, `workload` (typical hours per week, a number), `offered` terms
+  optional `coreqs`, `days` (Mon..Sun), `start` / `end` (`HH:MM`, 24h), `workload` (typical hours per week, a number), `offered` terms
   (`fall` / `spring` / `summer`), `area` tag.
+  Every row has code, title, credits, days, start/end, prerequisites and term; a golden test pins this.
+  The planner council never puts two overlapping meetings in one term (`time-conflict`, a code-level
+  check like the prerequisite check). Imported catalogues (CSV `code|id,title,credits,days,start,end`
+  or JSON) reject rows missing days/time (`missing_days_time`); stored older rows show "Missing days/time".
 - `degree.json`: a lite 90-credit degree (documented choice, not 120): required core ids, elective
   groups and gen-ed buckets (pick N credits from an `area`), max 18 credits per term, 12 minimum
   for full time. Group credits plus core credits add up to exactly 90.

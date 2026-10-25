@@ -16,8 +16,22 @@ export const ImessageSquadStatusSchema = z.object({
 export type ImessageSquadStatus = z.infer<typeof ImessageSquadStatusSchema>;
 
 /** `GET /v1/imessage/status`. Additive: older hubs return only `{ enabled }` (or `{ enabled, transport, queued, ... }`). */
+/** The provider's own bridge state (Sendblue): the exact header line, computed by the hub. */
+export const ImessageBridgeSchema = z.object({
+  provider: z.enum(['off', 'fake', 'local', 'sendblue']),
+  state: z.enum(['connected', 'not_configured', 'degraded', 'fixture', 'dry_run', 'off', 'local']),
+  label: z.string(),
+  missingEnv: z.array(z.string()).optional(),
+  lastInboundAt: z.number().optional(),
+  lastStatusAt: z.number().optional(),
+  queued: z.number().int().nonnegative().optional(),
+});
+export type ImessageBridge = z.infer<typeof ImessageBridgeSchema>;
+
 export const ImessageStatusSchema = z.object({
   enabled: z.boolean(),
+  provider: z.enum(['off', 'fake', 'local', 'sendblue']).optional(),
+  bridge: ImessageBridgeSchema.optional(),
   mode: z.enum(IMESSAGE_MODES).optional(),
   /** IMESSAGE_ENABLED is not 1. */
   killSwitch: z.boolean().optional(),
@@ -89,6 +103,28 @@ export function imessageIndicator(
       detail: 'The iMessage bridge status is not available.',
       setup: false,
     };
+  // Sendblue: the hub computed the exact line (connected / not configured with the env names / degraded / dry run)
+  if (status.provider === 'sendblue' && status.bridge) {
+    const b = status.bridge;
+    const state: Record<ImessageBridge['state'], ImessageIndicatorState> = {
+      connected: 'connected',
+      not_configured: 'not_connected',
+      degraded: 'degraded',
+      fixture: 'fixture',
+      dry_run: 'dry_run',
+      off: 'not_connected',
+      local: 'connected',
+    };
+    return {
+      state: state[b.state],
+      label: b.label,
+      detail:
+        b.state === 'not_configured'
+          ? `Set ${b.missingEnv?.join(', ') ?? 'the SENDBLUE_* env'} in the hub environment, then restart it.`
+          : 'Messages in the bound group are carried by Sendblue. Private chats never leave the web.',
+      setup: b.state === 'not_configured' || b.state === 'off',
+    };
+  }
   const sq = status.squads?.find((s) => s.squadId === thread.squadId) ?? status.squads?.[0];
   const bound = sq?.bound ?? 0;
   if (!status.enabled || status.mode === 'off')
