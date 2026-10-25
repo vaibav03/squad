@@ -231,7 +231,7 @@ export function createRubricSkill(deps: RubricSkillDeps): Skill {
           t: 'council.opinion',
           councilId: RUBRIC_COUNCIL_ID,
           member: r.key,
-          text: rubricClip(`${r.label}: ${r.met ? 'Met' : 'Not yet'}. ${r.comment}`, 220),
+          text: rubricClip(`${r.met ? 'Met' : 'Not yet'}. ${r.comment}`, 220),
         });
         await emit({
           t: 'quiz.result',

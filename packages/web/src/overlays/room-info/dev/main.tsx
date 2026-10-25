@@ -32,7 +32,10 @@ const replay = q.get('replay') === '1';
 async function playReplay(s: ReturnType<typeof createRoomSession>) {
   const data = (await (await fetch('/rooms-b-replay.json')).json()) as Record<string, VillageEvent[]>;
   s.enter(room);
-  for (const e of data[room] ?? []) s.record(room, e, Date.now());
+  const evs = data[room] ?? [];
+  // ?stop=talk plays only the spoken lines (no verdict), to shoot the transcript strip.
+  const upto = q.get('stop') === 'talk' ? evs.filter((e) => e.t !== 'council.verdict') : evs;
+  for (const e of upto) s.record(room, e, Date.now());
 }
 
 function script(s: ReturnType<typeof createRoomSession>) {
