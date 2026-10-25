@@ -19,6 +19,7 @@ const moduleFiles = import.meta.glob<{ default: SceneModule | SceneModule[] }>([
   '../mesh-view/module.ts',
   '../cutscene/module.ts',
   '../a11y/module.ts',
+  '../inspector/module.ts',
   '../overlay-bridge/module.ts',
   '../motion/module.ts',
 ]);

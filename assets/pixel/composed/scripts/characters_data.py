@@ -187,3 +187,7 @@ CAST = {
     acc=dict(torso=ta_torso, head=ta_head)),
 }
 ORDER = ['student', 'dean', 'expert', 'council-chill', 'council-hard', 'council-balance', 'chairman', 'examiner', 'freshman', 'mediator', 'ta']
+
+# council cast art (Chill / Grind / Advisor / Chair), see characters_council.py
+from characters_council import register as _reg_council
+_reg_council(CAST, ORDER)

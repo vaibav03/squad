@@ -54,7 +54,14 @@
       "event": {
         "t": "agent.state",
         "agent": "dean",
-        "state": "studying"
+        "state": "studying",
+        "thought": "Reviewing the term plan before the week starts",
+        "work": {
+          "tier": "main",
+          "demo": true,
+          "thinking": true,
+          "skill": "Dean"
+        }
       }
     },
     {
@@ -62,7 +69,14 @@
       "event": {
         "t": "agent.state",
         "agent": "student:s_ana",
-        "state": "studying"
+        "state": "studying",
+        "thought": "Reading chapter 6 notes to prepare for the regression quiz",
+        "work": {
+          "tier": "fast",
+          "demo": true,
+          "thinking": true,
+          "skill": "Study"
+        }
       }
     },
     {
@@ -70,7 +84,14 @@
       "event": {
         "t": "agent.state",
         "agent": "expert:ch6",
-        "state": "studying"
+        "state": "studying",
+        "thought": "Comparing two examples of correlation to explain r",
+        "work": {
+          "tier": "fast",
+          "demo": true,
+          "thinking": true,
+          "skill": "Study"
+        }
       }
     },
     {
@@ -78,7 +99,8 @@
       "event": {
         "t": "agent.state",
         "agent": "expert:ch6",
-        "state": "idle"
+        "state": "idle",
+        "thought": "Finished the chapter 6 pass; nothing is unclear"
       }
     },
     {
@@ -103,7 +125,14 @@
         "t": "call.start",
         "agent": "expert:ch12",
         "callId": "call_ch12_1",
-        "student": "s_ana"
+        "student": "s_ana",
+        "thought": "Ana asked about r squared, so I will start from the formula",
+        "work": {
+          "tier": "main",
+          "demo": true,
+          "thinking": true,
+          "skill": "Expert call"
+        }
       }
     },
     {
@@ -135,6 +164,13 @@
           "file": "ch12-linear-regression.pdf",
           "page": 13,
           "quote": "strength and direction of the linear association"
+        },
+        "thought": "Citing the chapter 6 page on correlation strength",
+        "work": {
+          "tier": "main",
+          "demo": true,
+          "thinking": true,
+          "skill": "Expert call"
         }
       }
     },
@@ -151,6 +187,13 @@
           "file": "ch12-linear-regression.pdf",
           "page": 14,
           "quote": "r2 is called the coefficient of determination"
+        },
+        "thought": "Moving from r to r squared with one worked number",
+        "work": {
+          "tier": "main",
+          "demo": true,
+          "thinking": true,
+          "skill": "Expert call"
         }
       }
     },
@@ -167,6 +210,13 @@
           "file": "ch12-linear-regression.pdf",
           "page": 13,
           "quote": "r2 = 0.43969 and r = 0.663"
+        },
+        "thought": "Checking that the example uses the same numbers as the page",
+        "work": {
+          "tier": "main",
+          "demo": true,
+          "thinking": false,
+          "skill": "Expert call"
         }
       }
     },
@@ -199,7 +249,14 @@
       "event": {
         "t": "agent.state",
         "agent": "expert:ch6",
-        "state": "studying"
+        "state": "studying",
+        "thought": "Preparing a short quiz on regression for Ana and Ben",
+        "work": {
+          "tier": "fast",
+          "demo": true,
+          "thinking": true,
+          "skill": "Quiz"
+        }
       }
     },
     {
@@ -208,7 +265,14 @@
         "t": "quiz.question",
         "quizId": "qz_ch6_1",
         "chapter": "ch6",
-        "target": "s_ana"
+        "target": "s_ana",
+        "thought": "Picking a question that tests the idea, not the formula",
+        "work": {
+          "tier": "fast",
+          "demo": true,
+          "thinking": false,
+          "skill": "Quiz"
+        }
       }
     },
     {
@@ -226,7 +290,14 @@
         "t": "quiz.answer",
         "quizId": "qz_ch6_1",
         "chapter": "ch6",
-        "student": "s_ana"
+        "student": "s_ana",
+        "thought": "Marking the answer against the chapter, not guessing",
+        "work": {
+          "tier": "fast",
+          "demo": true,
+          "thinking": true,
+          "skill": "Quiz"
+        }
       }
     },
     {
@@ -337,7 +408,8 @@
       "event": {
         "t": "agent.state",
         "agent": "student:s_ana",
-        "state": "waiting_for_student"
+        "state": "waiting_for_student",
+        "thought": "Waiting for Ana to confirm the plan"
       }
     },
     {
@@ -372,7 +444,15 @@
         "t": "council.opinion",
         "councilId": "council:planner",
         "member": "chill",
-        "text": "Two short evenings are enough if the quiz went well."
+        "text": "Two short evenings are enough if the quiz went well.",
+        "thought": "Two short evenings may be enough if the quiz went well",
+        "work": {
+          "tier": "fast",
+          "demo": true,
+          "thinking": true,
+          "skill": "Council"
+        },
+        "message": "Two short evenings are enough if the quiz went well."
       }
     },
     {
@@ -381,7 +461,15 @@
         "t": "council.opinion",
         "councilId": "council:planner",
         "member": "grind",
-        "text": "Regression needs a third pass before the exam."
+        "text": "Regression needs a third pass before the exam.",
+        "thought": "Regression needs a third pass, so I disagree",
+        "work": {
+          "tier": "fast",
+          "demo": true,
+          "thinking": true,
+          "skill": "Council"
+        },
+        "message": "I disagree: regression needs a third pass before the exam."
       }
     },
     {
@@ -390,7 +478,15 @@
         "t": "council.rank",
         "councilId": "council:planner",
         "member": "advisor",
-        "order": ["grind", "chill"]
+        "order": ["grind", "chill"],
+        "thought": "Weighing both views against the exam date",
+        "work": {
+          "tier": "chair",
+          "demo": true,
+          "thinking": true,
+          "skill": "Council"
+        },
+        "message": "I ranked the answers without names: the cautious one first, the short one second."
       }
     },
     {
@@ -400,7 +496,15 @@
         "councilId": "council:planner",
         "member": "advisor",
         "dissent": true,
-        "dissenter": "chill"
+        "dissenter": "chill",
+        "thought": "Going with a middle plan, but the grind voice is unconvinced",
+        "work": {
+          "tier": "chair",
+          "demo": true,
+          "thinking": false,
+          "skill": "Council"
+        },
+        "message": "My verdict is a middle plan: two evenings plus a short third pass. One member disagreed and that is on record."
       }
     },
     {

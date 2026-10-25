@@ -30,6 +30,7 @@ export function createMeshView(
   const homes = createHomes(ctx);
   const places = createPlaceResolver(ctx, (id) => homes.doorXFor(id));
   const actors = createActors(ctx);
+  ctx.registry.set('mv.actors', actors);
   const bubbles = createBubbles(ctx);
   const fx = createEffects(ctx);
   const envs = createEnvelopes(ctx);

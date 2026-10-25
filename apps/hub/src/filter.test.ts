@@ -26,6 +26,33 @@ const logged = (payload: VillageEvent, squadId: string | null = 'sq'): LoggedEve
 });
 
 describe('filter', () => {
+  it('thought never rides on quiz answers or results, and ledger entries drop it', () => {
+    const answer: VillageEvent = {
+      t: 'quiz.answer',
+      quizId: 'q',
+      chapter: 'c',
+      student: 's_ben',
+      thought: 'therapy $180',
+    };
+    expect(filterVillageEvent(answer, v('s_ana'), ctx())).not.toHaveProperty('thought');
+    const led: VillageEvent = {
+      t: 'ledger.entry',
+      taskId: 't',
+      student: 's_ben',
+      field: 'budget',
+      withheld: 'hidden',
+      thought: 'therapy $180',
+    };
+    expect(filterVillageEvent(led, v('s_ana'), ctx())).not.toHaveProperty('thought');
+    const st: VillageEvent = {
+      t: 'agent.state',
+      agent: 'student:s_ben',
+      state: 'studying',
+      thought: 'Comparing two public options',
+    };
+    expect(filterVillageEvent(st, v('s_ana'), ctx())).toEqual(st);
+  });
+
   it('confirm and mastery go to the owner only', () => {
     const c = ctx();
     const e: VillageEvent[] = [

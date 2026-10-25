@@ -1,5 +1,6 @@
 import type { VillageSource } from '@squad/core';
 import type { OverlayEvent } from '@squad/village';
+import type { InspectorStore } from '@squad/village/inspector';
 
 /**
  * World registry for the host page. A "world" is anything that renders the squad's VillageEvents into a canvas and
@@ -13,6 +14,8 @@ export interface WorldMountOptions {
   me?: string;
   calm?: boolean;
   onOverlay: (e: OverlayEvent) => void;
+  /** Agent Inspector store shared with the host's inspector panel (worlds that have no characters ignore it). */
+  inspector?: InspectorStore;
 }
 export interface WorldHandle {
   destroy(): void;
@@ -47,6 +50,7 @@ registerWorld('village', async () => {
       me: o.me,
       calm: o.calm,
       onOverlay: o.onOverlay,
+      ...(o.inspector ? { inspector: o.inspector } : {}),
     });
 });
 

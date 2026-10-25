@@ -814,13 +814,13 @@
    "file": "assets/pixel/composed/characters/atlas.png",
    "kind": "atlas",
    "size": [
-    416,
-    352
+    672,
+    480
    ],
    "frame": {
     "w": 32,
     "h": 32,
-    "count": 143
+    "count": 315
    },
    "anchor": [
     16,
@@ -836,7 +836,7 @@
    "notes": "Frame keys \"<persona>/<anim>/<n>\" and \"<persona>/portrait\"; atlas.json also carries Phaser `animations` with frameRate/repeat. All frames 32x32, pivot (0.5,1.0). Art faces RIGHT: flipX for left. Walk: planted foot moves 3px/frame so ground speed = 3*fps = 24 px/s at 8 fps.",
    "atlasJson": "assets/pixel/composed/characters/atlas.json",
    "facing": "right",
-   "frameCount": 143,
+   "frameCount": 227,
    "animations": {
     "idle": {
      "frames": 2,
@@ -1539,6 +1539,382 @@
     "wave": {
      "frames": 2,
      "fps": 4
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.cast-chill",
+   "group": "persona",
+   "need": "council cast: Chill (green hoodie, tea, moon charm)",
+   "file": "assets/pixel/composed/characters/cast-chill/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/cast-chill/walk.png",
+    "idle": "assets/pixel/composed/characters/cast-chill/idle.png",
+    "talk": "assets/pixel/composed/characters/cast-chill/talk.png",
+    "sit": "assets/pixel/composed/characters/cast-chill/sit.png",
+    "wave": "assets/pixel/composed/characters/cast-chill/wave.png",
+    "think": "assets/pixel/composed/characters/cast-chill/think.png",
+    "bust": "assets/pixel/composed/characters/cast-chill/bust.png",
+    "portrait": "assets/pixel/composed/characters/cast-chill/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"cast-chill/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=council cast: Chill; palette skin=skin-lt hair=wood outfit=ok. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": [
+      "cast-chill/idle/0",
+      "cast-chill/idle/1",
+      "cast-chill/idle/2",
+      "cast-chill/idle/3"
+     ],
+     "fps": 5
+    },
+    "walk": {
+     "frames": [
+      "cast-chill/walk/0",
+      "cast-chill/walk/1",
+      "cast-chill/walk/2",
+      "cast-chill/walk/3"
+     ],
+     "fps": 8
+    },
+    "talk": {
+     "frames": [
+      "cast-chill/talk/0",
+      "cast-chill/talk/1",
+      "cast-chill/talk/2",
+      "cast-chill/talk/3"
+     ],
+     "fps": 5
+    },
+    "sit": {
+     "frames": [
+      "cast-chill/sit/0",
+      "cast-chill/sit/1"
+     ],
+     "fps": 2
+    },
+    "wave": {
+     "frames": [
+      "cast-chill/wave/0",
+      "cast-chill/wave/1"
+     ],
+     "fps": 4
+    },
+    "think": {
+     "frames": [
+      "cast-chill/think/0",
+      "cast-chill/think/1",
+      "cast-chill/think/2",
+      "cast-chill/think/3"
+     ],
+     "fps": 5
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.cast-grind",
+   "group": "persona",
+   "need": "council cast: Grind (orange headband, books, coffee)",
+   "file": "assets/pixel/composed/characters/cast-grind/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/cast-grind/walk.png",
+    "idle": "assets/pixel/composed/characters/cast-grind/idle.png",
+    "talk": "assets/pixel/composed/characters/cast-grind/talk.png",
+    "sit": "assets/pixel/composed/characters/cast-grind/sit.png",
+    "wave": "assets/pixel/composed/characters/cast-grind/wave.png",
+    "think": "assets/pixel/composed/characters/cast-grind/think.png",
+    "bust": "assets/pixel/composed/characters/cast-grind/bust.png",
+    "portrait": "assets/pixel/composed/characters/cast-grind/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"cast-grind/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=council cast: Grind; palette skin=wood hair=wood-dark outfit=ember. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": [
+      "cast-grind/idle/0",
+      "cast-grind/idle/1",
+      "cast-grind/idle/2",
+      "cast-grind/idle/3"
+     ],
+     "fps": 5
+    },
+    "walk": {
+     "frames": [
+      "cast-grind/walk/0",
+      "cast-grind/walk/1",
+      "cast-grind/walk/2",
+      "cast-grind/walk/3"
+     ],
+     "fps": 8
+    },
+    "talk": {
+     "frames": [
+      "cast-grind/talk/0",
+      "cast-grind/talk/1",
+      "cast-grind/talk/2",
+      "cast-grind/talk/3"
+     ],
+     "fps": 5
+    },
+    "sit": {
+     "frames": [
+      "cast-grind/sit/0",
+      "cast-grind/sit/1"
+     ],
+     "fps": 2
+    },
+    "wave": {
+     "frames": [
+      "cast-grind/wave/0",
+      "cast-grind/wave/1"
+     ],
+     "fps": 4
+    },
+    "think": {
+     "frames": [
+      "cast-grind/think/0",
+      "cast-grind/think/1",
+      "cast-grind/think/2",
+      "cast-grind/think/3"
+     ],
+     "fps": 5
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.cast-advisor",
+   "group": "persona",
+   "need": "council cast: Advisor (purple, glasses, clipboard)",
+   "file": "assets/pixel/composed/characters/cast-advisor/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/cast-advisor/walk.png",
+    "idle": "assets/pixel/composed/characters/cast-advisor/idle.png",
+    "talk": "assets/pixel/composed/characters/cast-advisor/talk.png",
+    "sit": "assets/pixel/composed/characters/cast-advisor/sit.png",
+    "wave": "assets/pixel/composed/characters/cast-advisor/wave.png",
+    "think": "assets/pixel/composed/characters/cast-advisor/think.png",
+    "bust": "assets/pixel/composed/characters/cast-advisor/bust.png",
+    "portrait": "assets/pixel/composed/characters/cast-advisor/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"cast-advisor/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=council cast: Advisor; palette skin=skin-lt hair=wood outfit=violet. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": [
+      "cast-advisor/idle/0",
+      "cast-advisor/idle/1",
+      "cast-advisor/idle/2",
+      "cast-advisor/idle/3"
+     ],
+     "fps": 5
+    },
+    "walk": {
+     "frames": [
+      "cast-advisor/walk/0",
+      "cast-advisor/walk/1",
+      "cast-advisor/walk/2",
+      "cast-advisor/walk/3"
+     ],
+     "fps": 8
+    },
+    "talk": {
+     "frames": [
+      "cast-advisor/talk/0",
+      "cast-advisor/talk/1",
+      "cast-advisor/talk/2",
+      "cast-advisor/talk/3"
+     ],
+     "fps": 5
+    },
+    "sit": {
+     "frames": [
+      "cast-advisor/sit/0",
+      "cast-advisor/sit/1"
+     ],
+     "fps": 2
+    },
+    "wave": {
+     "frames": [
+      "cast-advisor/wave/0",
+      "cast-advisor/wave/1"
+     ],
+     "fps": 4
+    },
+    "think": {
+     "frames": [
+      "cast-advisor/think/0",
+      "cast-advisor/think/1",
+      "cast-advisor/think/2",
+      "cast-advisor/think/3"
+     ],
+     "fps": 5
+    }
+   },
+   "loadVariants": false,
+   "depthZ": 30
+  },
+  {
+   "id": "persona.cast-chair",
+   "group": "persona",
+   "need": "council cast: Chairman (pale grey-blue, crest, gavel)",
+   "file": "assets/pixel/composed/characters/cast-chair/walk.png",
+   "kind": "atlas",
+   "size": [
+    128,
+    32
+   ],
+   "frame": {
+    "w": 32,
+    "h": 32,
+    "count": 4,
+    "fps": 8
+   },
+   "anchor": [
+    16,
+    31
+   ],
+   "originFrac": [
+    0.5,
+    1.0
+   ],
+   "variants": {
+    "walk": "assets/pixel/composed/characters/cast-chair/walk.png",
+    "idle": "assets/pixel/composed/characters/cast-chair/idle.png",
+    "talk": "assets/pixel/composed/characters/cast-chair/talk.png",
+    "sit": "assets/pixel/composed/characters/cast-chair/sit.png",
+    "wave": "assets/pixel/composed/characters/cast-chair/wave.png",
+    "think": "assets/pixel/composed/characters/cast-chair/think.png",
+    "bust": "assets/pixel/composed/characters/cast-chair/bust.png",
+    "portrait": "assets/pixel/composed/characters/cast-chair/portrait.png"
+   },
+   "depthHint": "actors",
+   "license": "original, CC0-dedicated by Squad; style reference Autumn Town (free to use)",
+   "source": "redrawn original, make_characters.py; proportions studied from Autumn Town player/NPC sheets (no pixels copied)",
+   "notes": "Load through atlas.characters (frames \"cast-chair/<anim>/<n>\"). Per-animation PNG strips in `variants` are for reference/tools only. role=council cast: Chairman; palette skin=wood-lit hair=wood-dark outfit=wall-lit. Portrait is an opaque 32x32 tile (show at 2x/3x in UI).",
+   "loadVia": "atlas.characters",
+   "animations": {
+    "idle": {
+     "frames": [
+      "cast-chair/idle/0",
+      "cast-chair/idle/1",
+      "cast-chair/idle/2",
+      "cast-chair/idle/3"
+     ],
+     "fps": 5
+    },
+    "walk": {
+     "frames": [
+      "cast-chair/walk/0",
+      "cast-chair/walk/1",
+      "cast-chair/walk/2",
+      "cast-chair/walk/3"
+     ],
+     "fps": 8
+    },
+    "talk": {
+     "frames": [
+      "cast-chair/talk/0",
+      "cast-chair/talk/1",
+      "cast-chair/talk/2",
+      "cast-chair/talk/3"
+     ],
+     "fps": 5
+    },
+    "sit": {
+     "frames": [
+      "cast-chair/sit/0",
+      "cast-chair/sit/1"
+     ],
+     "fps": 2
+    },
+    "wave": {
+     "frames": [
+      "cast-chair/wave/0",
+      "cast-chair/wave/1"
+     ],
+     "fps": 4
+    },
+    "think": {
+     "frames": [
+      "cast-chair/think/0",
+      "cast-chair/think/1",
+      "cast-chair/think/2",
+      "cast-chair/think/3"
+     ],
+     "fps": 5
     }
    },
    "loadVariants": false,
@@ -5296,8 +5672,8 @@
   "missingFiles": [],
   "offPalette": [],
   "notes": [
-   "atlas.json: 143 frames = 11 personas x (12 animation frames + 1 portrait); 132 animation frame refs, all inside the 416x352 atlas.",
-   "palette check ran on 243 distinct PNGs referenced by the manifest.",
+   "atlas.json: 227 frames = 11 personas x (12 animation frames + 1 portrait); 212 animation frame refs, all inside the 672x480 atlas.",
+   "palette check ran on 275 distinct PNGs referenced by the manifest.",
    "Two lamp posts exist: props/lamp-post(.lit) 24x64 and buildings/props/lamp_post_lit 23x95 (different heights, different folders); manifest keeps both with distinct ids.",
    "props/flower.png duplicates props/flower-1.png (same 5x7 size).",
    "1 building PNGs have transparent padding (bbox != full canvas): windmill_sails_strip.png",
@@ -5305,6 +5681,6 @@
    "Windmill hub [21,25] checked by eye on windmill_lit.png: it lands on the wooden roof beam/hub block, so it is published (windmill meta is not part of the stale set).",
    "Interior anchors (floor_y 112, seats, desks) are in an untrimmed 224x128 canvas and are published as-is; only size was cross-checked, positions were not visually verified."
   ],
-  "assetCount": 164
+  "assetCount": 168
  }
 }
