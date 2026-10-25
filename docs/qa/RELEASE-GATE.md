@@ -72,22 +72,22 @@ its own ports is busy.
 exactly those. It never kills by port or by name pattern. A hub restart (variant V7) and an agent going offline (S8, V9)
 stop and start exactly the recorded PID.
 
-### Findings the gate currently reports (all features landed except the council integration)
+### Findings the gate reported and how they were resolved
 
-These are real differences between the plan and what is on main, not harness noise. Each stays a FAIL until the owner
-fixes it or the plan changes:
+The first full run (17 of 22 fixture steps) found these real differences between the plan and what was on main. All five
+are fixed on `fix/gate-findings`; the rows stay as the record of what the gate caught and the decision taken:
 
-| Step | Finding | Owner |
+| Step | Finding | Resolution |
 |---|---|---|
-| S2 | the Connections page shows raw squad ids in "Shared with" | nook-parity web |
-| S7 | an iMessage-origin message has no "via iMessage" tag and no delivery label in the web chat: `SyncBadge` exists but is not mounted in the chat bubble | imessage-sync web |
-| V1 | asking `@cubbie` before anything is connected answers "Not in the materials. Ask the TA." instead of saying nothing is connected and offering the link | context / chat |
-| V3 | a grant revoked at Google makes the hub delete all imported data ("Disconnected"); the plan wanted stale-but-kept items and a reconnect prompt | nook-parity |
-| V4 | a 401 on sync with a token that died early at Google ends the connection `revoked` (data purged) instead of one refresh and a retry; a refused refresh after a short-lived token stays `live` | nook-parity |
+| S2 | the Connections page showed raw squad ids in "Shared with" | names come from the roster (`GET /v1/squads`), never ids; the no-raw-ids scan covers the page |
+| S7 | an iMessage-origin message had no "via iMessage" tag and no delivery label in the web chat | `SyncBadge` is mounted in the bubble; the chat client consumes `chat.sync` and updates the state live; failed sends offer Retry (`POST /v1/imessage/messages/:id/retry`) |
+| V1 | asking `@cubbie` before anything is connected answered "Not in the materials. Ask the TA." | course/Canvas/Drive questions with no readable source answer "Nothing is connected yet: connect Canvas or Google in Connections" with a link; the exact refusal stays for questions outside the materials when sources exist |
+| V3 | a grant revoked at Google makes the hub delete all imported data | kept on purpose (privacy first, a documented difference from Nook): state `revoked`, "Google access was revoked. Imported data was removed. Reconnect to import again." and a Reconnect button. The gate and the plan now assert this |
+| V4 | a 401 on sync ended the connection `revoked`; a refused refresh after a short-lived token stayed `live` | a 401 refreshes once and retries; `invalid_grant` is `revoked` (V3), any other refusal is `expired` with the data kept, sync stopped, retrieval flagged stale and a Reconnect prompt; the hub no longer stretches a short-lived token to an hour |
 
-Notes on behaviour the harness adapted to: `@planner` and `@studyplan` do not start a trip or a study plan (the plan and
-trip are started by `@cubbie plan a trip to <place> ...` and `@cubbie study plan ...`); persona aliases answer as the
-persona only. The demo model cannot ground a content answer, so citation assertions on persona answers run with
+Notes on behaviour the harness adapted to: `@planner plan a trip to <place>` / `@planner ... trip ...` starts the trip flow and
+`@planner study plan ...` starts the study-plan flow (the same flows `@cubbie` starts); other `@planner` messages and the
+other persona aliases answer as the persona only. The demo model cannot ground a content answer, so citation assertions on persona answers run with
 `LIVE=1`; the fixture run asserts citations at the retrieval and source-viewer API instead. The live council
 (`feature/council-integration`) is not on main: when it lands, S5 gains its assertions (probe `P.council`).
 
@@ -161,8 +161,8 @@ badges (Demo shown exactly when the model is the stand-in).
 |---|---|
 | V1 fresh setup | an empty account sees optional, skippable connect offers; asking before connecting says nothing is connected; no error toast |
 | V2 reconnect | disconnect then reconnect: derived data is purged, a new sync recreates the same ids and content hashes; chat history untouched |
-| V3 revoked auth | Google revokes the grant: `needs_reauth`, stale items kept but marked, answers say which source is stale |
-| V4 expired token | access token expires mid-sync: transparent refresh, no user-visible failure; refresh failure falls to V3 |
+| V3 revoked auth | Google revokes the grant: state `revoked`, imported data purged on purpose (privacy first), "Google access was revoked. Imported data was removed. Reconnect to import again." and a Reconnect button |
+| V4 expired token | access token expires mid-sync: one refresh and retry, no user-visible failure; refresh refused with `invalid_grant` falls to V3, any other refusal is `expired` with data kept, sync stopped, retrieval flagged stale |
 | V5 Canvas feed gone | 404/410/moved: degraded with the last good items and a last-synced time, never a silent empty |
 | V6 duplicate events | the same GUID x3, a replayed OAuth callback, a replayed sync: one message, one reply, one connection, one outbound |
 | V7 offline/backfill | watcher dropped, messages arrive in chat.db, hub restart: both appear once, in message-time order, flagged late, one reply |

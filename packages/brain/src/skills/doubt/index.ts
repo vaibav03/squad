@@ -44,7 +44,7 @@ export function createDoubtSkill(brain: Brain, opts: DoubtOptions = {}): Skill {
           question,
           viewer ? { viewer, contextCourseId: null } : undefined,
         );
-        text = a.grounded ? a.text : NOT_IN_MATERIALS;
+        text = a.grounded || a.reason === 'nothing_connected' ? a.text : NOT_IN_MATERIALS;
       } catch {
         // Any failure is answered honestly; nothing is invented from model memory.
         text = UNAVAILABLE_TEXT;

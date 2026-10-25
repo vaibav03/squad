@@ -8,33 +8,39 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `feature/` | 2 | 26 | 198 | Claude Sonnet 5.5 (21) |
-| `fix/` | 2 | 10 | 60 | Claude Sonnet 5.5 (9) |
+| `feature/` | 4 | 10 | 114 | Claude Sonnet 5.5 (10) |
+| `fix/` | 6 | 15 | 127 | Claude Sonnet 5.5 (13) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `feature/council-integration` | 9 | 57 | 2026-10-25 05:53 | 2026-10-25 06:19 | Vaibav |
-| `feature/release-gate` | 17 | 141 | 2026-10-25 04:07 | 2026-10-25 06:21 | Vaibav |
-| `fix/blank-shell-2` | 8 | 49 | 2026-10-25 05:21 | 2026-10-25 06:07 | Vaibav |
-| `fix/gate-findings` | 2 | 11 | 2026-10-25 06:22 | 2026-10-25 06:25 | Vaibav |
+| `feature/council-chamber-skin` | 1 | 19 | 2026-10-25 07:00 | 2026-10-25 07:00 | Vaibav |
+| `feature/council-followup` | 4 | 37 | 2026-10-25 06:37 | 2026-10-25 06:50 | Vaibav |
+| `feature/council-live-ux-stage` | 3 | 37 | 2026-10-25 06:47 | 2026-10-25 07:03 | Vaibav |
+| `feature/council-live-ux` | 2 | 21 | 2026-10-25 07:02 | 2026-10-25 07:07 | Vaibav |
+| `fix/connection-budget` | 6 | 34 | 2026-10-25 06:47 | 2026-10-25 06:56 | Vaibav |
+| `fix/demo-serve` | 1 | 7 | 2026-10-25 06:52 | 2026-10-25 06:52 | Vaibav |
+| `fix/home-onboarding-catalogue` | 4 | 22 | 2026-10-25 06:52 | 2026-10-25 06:59 | Vaibav |
+| `fix/oauth-redirect-context-proof` | 2 | 39 | 2026-10-25 06:54 | 2026-10-25 07:07 | Vaibav |
+| `fix/panels-semantics-dedupe` | 1 | 19 | 2026-10-25 06:55 | 2026-10-25 06:55 | Vaibav |
+| `fix/provenance-plan-sync` | 1 | 6 | 2026-10-25 06:59 | 2026-10-25 06:59 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 241 |
+| (no trailer) | 244 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 639 |
+| Claude Sonnet 5.5 | 690 |
 
 ## Commits landed on main by area (subject prefix)
 
 | Area | Commits |
 |---|---:|
-| (other) | 125 |
+| (other) | 133 |
 | Initial commit | 1 |
 | Merge batch 1 | 1 |
 | Merge batch 10 | 1 |
@@ -52,6 +58,9 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Merge batch 21 | 1 |
 | Merge batch 22 | 1 |
 | Merge batch 23 | 1 |
+| Merge batch 24 | 1 |
+| Merge batch 25 | 1 |
+| Merge batch 26 | 1 |
 | Merge batch 3 | 1 |
 | Merge batch 4 | 1 |
 | Merge batch 5 | 1 |
@@ -72,22 +81,23 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | ci | 2 |
 | context | 4 |
 | core | 4 |
-| council | 17 |
+| council | 30 |
 | courses | 8 |
 | demo | 7 |
 | deploy | 5 |
 | design | 18 |
-| docs | 30 |
+| docs | 34 |
 | e2e | 27 |
 | feat | 1 |
-| fix | 42 |
+| fix | 56 |
+| gate | 17 |
 | hub | 5 |
 | imessage | 3 |
 | imsync | 4 |
 | inspector | 14 |
 | integration | 41 |
 | interior-engine | 9 |
-| lint | 1 |
+| lint | 2 |
 | live | 36 |
 | mastery | 5 |
 | media-art | 18 |
@@ -128,8 +138,9 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | security | 4 |
 | spine | 13 |
 | status | 3 |
+| style | 2 |
 | test | 2 |
-| test(hub) | 1 |
+| test(hub) | 2 |
 | trip wiring | 1 |
 | trip | 11 |
 | ux | 7 |
@@ -140,7 +151,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | web-host | 2 |
 | web-live | 10 |
 | web-shell | 8 |
-| wip | 11 |
+| wip | 13 |
 | wire-bot | 7 |
 | wire-hub | 8 |
 | wire-web | 11 |
@@ -151,5 +162,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 |---|---:|
 | Claude | 1 |
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 597 |
+| Vaibav | 651 |
 | vaibav03 | 26 |

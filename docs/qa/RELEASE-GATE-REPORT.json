@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-10-25T13:18:16.916Z",
+  "generatedAt": "2026-10-25T13:33:15.595Z",
   "tree": {
-    "branch": "feature/release-gate",
-    "head": "a94bcfb2",
-    "originMain": "1bef7af7"
+    "branch": "fix/gate-findings",
+    "head": "d86d6a86",
+    "originMain": "29bb0842"
   },
   "mode": {
     "live": false,
     "real": false
   },
-  "verdict": "RED (a BUILT step failed)",
+  "verdict": "FIXTURE-GREEN / REAL-BLOCKED",
   "summary": {
-    "fixtureFail": 5,
+    "fixtureFail": 0,
     "realFail": 0,
     "notBuilt": 0,
     "blocked": 7,
-    "fixturePass": 17,
+    "fixturePass": 22,
     "total": 22
   },
   "fixture": [
@@ -371,14 +371,14 @@
       ],
       "notes": [],
       "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
-      "ms": 1210,
-      "at": "2026-10-25T13:16:59.749Z"
+      "ms": 1295,
+      "at": "2026-10-25T13:32:00.236Z"
     },
     {
       "id": "S2",
       "title": "Ingest and normalize permitted context",
       "mode": "fixture",
-      "status": "FAIL",
+      "status": "PASS",
       "assertions": [
         {
           "name": "3 canvas_assignment source(s) imported",
@@ -622,8 +622,7 @@
         },
         {
           "name": "no raw squad or student ids on the Connections page after sharing",
-          "pass": false,
-          "detail": "found: squad id"
+          "pass": true
         }
       ],
       "evidence": [
@@ -631,9 +630,8 @@
       ],
       "notes": [],
       "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
-      "ms": 1133,
-      "at": "2026-10-25T13:17:01.034Z",
-      "reason": "no raw squad or student ids on the Connections page after sharing"
+      "ms": 1182,
+      "at": "2026-10-25T13:32:01.608Z"
     },
     {
       "id": "S3",
@@ -842,8 +840,8 @@
         "demo model: the context-claims prompt is not served by the demo LLM, so a context-grounded chat answer cannot be produced without LIVE=1; retrieval and the viewer are asserted above"
       ],
       "label": "fixture (retrieval and source viewer asserted at the API; chat answers use the demo model unless LIVE=1)",
-      "ms": 1625,
-      "at": "2026-10-25T13:17:02.253Z"
+      "ms": 1760,
+      "at": "2026-10-25T13:32:02.962Z"
     },
     {
       "id": "S4",
@@ -947,8 +945,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 2536,
-      "at": "2026-10-25T13:17:04.018Z"
+      "ms": 2723,
+      "at": "2026-10-25T13:32:04.944Z"
     },
     {
       "id": "S5",
@@ -1015,8 +1013,8 @@
         "@planner: the demo model cannot ground a content answer; citations are asserted with LIVE=1"
       ],
       "label": "fixture",
-      "ms": 220,
-      "at": "2026-10-25T13:17:06.701Z"
+      "ms": 231,
+      "at": "2026-10-25T13:32:07.828Z"
     },
     {
       "id": "S6",
@@ -1086,14 +1084,14 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 2954,
-      "at": "2026-10-25T13:17:07.070Z"
+      "ms": 2987,
+      "at": "2026-10-25T13:32:08.251Z"
     },
     {
       "id": "S7",
       "title": "Web chat shows the complete ordered conversation (and mirrors back)",
       "mode": "fixture",
-      "status": "FAIL",
+      "status": "PASS",
       "assertions": [
         {
           "name": "one hub message after 3 duplicate GUID deliveries",
@@ -1129,7 +1127,7 @@
         },
         {
           "name": "iMessage-origin message carries a \"via iMessage\" tag",
-          "pass": false
+          "pass": true
         },
         {
           "name": "bot replies are attributed to a persona",
@@ -1174,9 +1172,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 7086,
-      "at": "2026-10-25T13:17:10.090Z",
-      "reason": "iMessage-origin message carries a \"via iMessage\" tag"
+      "ms": 7069,
+      "at": "2026-10-25T13:32:11.355Z"
     },
     {
       "id": "S8",
@@ -1440,8 +1437,8 @@
       ],
       "notes": [],
       "label": "fixture (demo labelled)",
-      "ms": 10515,
-      "at": "2026-10-25T13:17:17.332Z"
+      "ms": 10704,
+      "at": "2026-10-25T13:32:18.536Z"
     },
     {
       "id": "S9",
@@ -1617,8 +1614,8 @@
         "mastery hidden for squads under 3 members is not exercised: the world squad has 3 members"
       ],
       "label": "fixture (demo labelled)",
-      "ms": 2363,
-      "at": "2026-10-25T13:17:28.010Z"
+      "ms": 2379,
+      "at": "2026-10-25T13:32:29.438Z"
     },
     {
       "id": "S10",
@@ -1992,14 +1989,14 @@
         "live typing/thinking is transient with the scripted model; only \"not stuck\" is asserted"
       ],
       "label": "fixture (demo labelled)",
-      "ms": 6336,
-      "at": "2026-10-25T13:17:30.669Z"
+      "ms": 5879,
+      "at": "2026-10-25T13:32:31.948Z"
     },
     {
       "id": "V1",
       "title": "Fresh setup: connecting is optional and asking before connecting is honest",
       "mode": "fixture",
-      "status": "FAIL",
+      "status": "PASS",
       "assertions": [
         {
           "name": "a new account has no connections",
@@ -2015,8 +2012,7 @@
         },
         {
           "name": "and says nothing is connected and offers a way to connect",
-          "pass": false,
-          "detail": "reply does not mention connecting"
+          "pass": true
         },
         {
           "name": "with no citations",
@@ -2040,9 +2036,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 1802,
-      "at": "2026-10-25T13:17:37.970Z",
-      "reason": "and says nothing is connected and offers a way to connect"
+      "ms": 1758,
+      "at": "2026-10-25T13:32:38.065Z"
     },
     {
       "id": "V2",
@@ -2078,30 +2073,38 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 138,
-      "at": "2026-10-25T13:17:40.304Z"
+      "ms": 111,
+      "at": "2026-10-25T13:32:39.926Z"
     },
     {
       "id": "V3",
-      "title": "Revoked auth: needs reconnect, data marked not deleted, the other source keeps working",
+      "title": "Revoked auth: state revoked, imported data purged (deliberate, privacy first), honest reconnect message, the other source keeps working",
       "mode": "fixture",
-      "status": "FAIL",
+      "status": "PASS",
       "assertions": [
         {
-          "name": "Google is no longer live",
+          "name": "Google items exist before the revoke",
           "pass": true
         },
         {
-          "name": "the label says to reconnect in words",
-          "pass": false
+          "name": "Google connection state is revoked",
+          "pass": true
+        },
+        {
+          "name": "the label states what happened and what to do",
+          "pass": true
+        },
+        {
+          "name": "the API asks for a reconnect",
+          "pass": true
+        },
+        {
+          "name": "imported Google data is purged (privacy first; documented difference from Nook)",
+          "pass": true
         },
         {
           "name": "Canvas is unaffected",
           "pass": true
-        },
-        {
-          "name": "Google-derived items are kept (stale), not deleted",
-          "pass": false
         },
         {
           "name": "retrieval still answers from the valid source",
@@ -2114,18 +2117,17 @@
       ],
       "evidence": [],
       "notes": [
-        "after revoke: state=revoked label=Disconnected: imported data deleted status=revoked degraded=false note=Disconnected. All imported data was deleted."
+        "after revoke: state=revoked label=Google access was revoked. Imported data was removed. Reconnect to import again. status=revoked degraded=false"
       ],
       "label": "fixture",
-      "ms": 169,
-      "at": "2026-10-25T13:17:40.518Z",
-      "reason": "the label says to reconnect in words"
+      "ms": 119,
+      "at": "2026-10-25T13:32:40.111Z"
     },
     {
       "id": "V4",
-      "title": "Expired access token: transparent refresh; refresh failure falls to V3",
+      "title": "Expired access token: one refresh and retry; a refused refresh is revoked (provider says so) or expired with data kept, never live",
       "mode": "fixture",
-      "status": "FAIL",
+      "status": "PASS",
       "assertions": [
         {
           "name": "a token near expiry is refreshed by the hub (a refresh call reached the token endpoint)",
@@ -2140,22 +2142,51 @@
           "pass": true
         },
         {
-          "name": "a refused refresh ends needing reconnect",
-          "pass": false,
-          "detail": "state live"
+          "name": "a refused refresh never leaves the state live",
+          "pass": true
+        },
+        {
+          "name": "invalid_grant ends revoked with the honest message",
+          "pass": true
         },
         {
           "name": "a 401 on sync triggers one refresh and a retry (no user-visible failure)",
-          "pass": false,
-          "detail": "sync 200, state revoked, refresh calls 0"
+          "pass": true
+        },
+        {
+          "name": "exactly one refresh for that 401",
+          "pass": true
+        },
+        {
+          "name": "Google data was imported before the refusal",
+          "pass": true
+        },
+        {
+          "name": "a refused refresh (not invalid_grant) ends expired, never live",
+          "pass": true
+        },
+        {
+          "name": "and asks for a reconnect",
+          "pass": true
+        },
+        {
+          "name": "imported data is kept",
+          "pass": true
+        },
+        {
+          "name": "sync is stopped (409 connection_expired)",
+          "pass": true
+        },
+        {
+          "name": "retrieval still answers from the kept data and flags it stale",
+          "pass": true
         }
       ],
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 156,
-      "at": "2026-10-25T13:17:41.375Z",
-      "reason": "a refused refresh ends needing reconnect"
+      "ms": 342,
+      "at": "2026-10-25T13:32:40.325Z"
     },
     {
       "id": "V5",
@@ -2191,8 +2222,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 240,
-      "at": "2026-10-25T13:17:42.050Z"
+      "ms": 196,
+      "at": "2026-10-25T13:32:40.783Z"
     },
     {
       "id": "V6",
@@ -2224,8 +2255,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 2665,
-      "at": "2026-10-25T13:17:42.429Z"
+      "ms": 2630,
+      "at": "2026-10-25T13:32:41.128Z"
     },
     {
       "id": "V7",
@@ -2269,8 +2300,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 4004,
-      "at": "2026-10-25T13:17:45.210Z"
+      "ms": 3422,
+      "at": "2026-10-25T13:32:43.860Z"
     },
     {
       "id": "V8",
@@ -2318,8 +2349,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 9234,
-      "at": "2026-10-25T13:17:49.339Z"
+      "ms": 9095,
+      "at": "2026-10-25T13:32:47.332Z"
     },
     {
       "id": "V9",
@@ -2564,8 +2595,8 @@
         "fewer than two members pending: the simultaneous-accept check was skipped"
       ],
       "label": "fixture",
-      "ms": 13634,
-      "at": "2026-10-25T13:17:58.773Z"
+      "ms": 14404,
+      "at": "2026-10-25T13:32:56.567Z"
     },
     {
       "id": "V10",
@@ -2611,8 +2642,8 @@
         "1:1 squad disambiguation (\"Which squad?\") is not part of feature/imessage-sync today (docs/imessage.md); a DM stays private to Cubbie."
       ],
       "label": "fixture",
-      "ms": 2999,
-      "at": "2026-10-25T13:18:12.733Z"
+      "ms": 2976,
+      "at": "2026-10-25T13:33:11.240Z"
     },
     {
       "id": "V11",
@@ -2642,8 +2673,8 @@
         "iMessage text has no literal \"Demo\" marker (only the web label); recorded, not asserted"
       ],
       "label": "fixture/degraded",
-      "ms": 91,
-      "at": "2026-10-25T13:18:15.834Z"
+      "ms": 117,
+      "at": "2026-10-25T13:33:14.319Z"
     },
     {
       "id": "V12",
@@ -2671,8 +2702,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 74,
-      "at": "2026-10-25T13:18:16.011Z"
+      "ms": 103,
+      "at": "2026-10-25T13:33:14.545Z"
     }
   ],
   "real": [
@@ -2685,8 +2716,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 72,
-      "at": "2026-10-25T13:17:00.961Z",
+      "ms": 74,
+      "at": "2026-10-25T13:32:01.533Z",
       "reason": "no_google_client",
       "runbook": "#google-oauth-client-and-consent-screen"
     },
@@ -2699,8 +2730,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 83,
-      "at": "2026-10-25T13:17:02.169Z",
+      "ms": 171,
+      "at": "2026-10-25T13:32:02.791Z",
       "reason": "no_google_client",
       "runbook": "#google-oauth-client-and-consent-screen"
     },
@@ -2713,8 +2744,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 140,
-      "at": "2026-10-25T13:17:03.878Z",
+      "ms": 221,
+      "at": "2026-10-25T13:32:04.722Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2727,8 +2758,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 144,
-      "at": "2026-10-25T13:17:06.554Z",
+      "ms": 159,
+      "at": "2026-10-25T13:32:07.668Z",
       "reason": "apple_unverified",
       "runbook": "#apple-behaviour-and-permissions"
     },
@@ -2741,8 +2772,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 147,
-      "at": "2026-10-25T13:17:06.922Z",
+      "ms": 188,
+      "at": "2026-10-25T13:32:08.060Z",
       "reason": "llm_credits",
       "runbook": "#gemini-credits-live-and-elevenlabs-plan"
     },
@@ -2755,8 +2786,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 64,
-      "at": "2026-10-25T13:17:10.025Z",
+      "ms": 115,
+      "at": "2026-10-25T13:32:11.238Z",
       "reason": "apple_unverified",
       "runbook": "#apple-behaviour-and-permissions"
     },
@@ -2769,8 +2800,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 154,
-      "at": "2026-10-25T13:17:17.177Z",
+      "ms": 110,
+      "at": "2026-10-25T13:32:18.425Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2783,8 +2814,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 161,
-      "at": "2026-10-25T13:17:27.848Z",
+      "ms": 196,
+      "at": "2026-10-25T13:32:29.241Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2797,8 +2828,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 294,
-      "at": "2026-10-25T13:17:30.374Z",
+      "ms": 130,
+      "at": "2026-10-25T13:32:31.817Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2811,8 +2842,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 297,
-      "at": "2026-10-25T13:17:37.013Z",
+      "ms": 111,
+      "at": "2026-10-25T13:32:37.828Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2825,8 +2856,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 96,
-      "at": "2026-10-25T13:17:39.774Z",
+      "ms": 91,
+      "at": "2026-10-25T13:32:39.823Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2839,36 +2870,36 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 64,
-      "at": "2026-10-25T13:17:40.444Z",
+      "ms": 60,
+      "at": "2026-10-25T13:32:40.038Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
     {
       "id": "V3",
-      "title": "Revoked auth: needs reconnect, data marked not deleted, the other source keeps working",
+      "title": "Revoked auth: state revoked, imported data purged (deliberate, privacy first), honest reconnect message, the other source keeps working",
       "mode": "real",
       "status": "SKIPPED",
       "assertions": [],
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 155,
-      "at": "2026-10-25T13:17:40.688Z",
+      "ms": 86,
+      "at": "2026-10-25T13:32:40.230Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
     {
       "id": "V4",
-      "title": "Expired access token: transparent refresh; refresh failure falls to V3",
+      "title": "Expired access token: one refresh and retry; a refused refresh is revoked (provider says so) or expired with data kept, never live",
       "mode": "real",
       "status": "SKIPPED",
       "assertions": [],
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 70,
-      "at": "2026-10-25T13:17:41.534Z",
+      "ms": 96,
+      "at": "2026-10-25T13:32:40.669Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2881,8 +2912,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 104,
-      "at": "2026-10-25T13:17:42.292Z",
+      "ms": 134,
+      "at": "2026-10-25T13:32:40.979Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2895,8 +2926,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 104,
-      "at": "2026-10-25T13:17:45.094Z",
+      "ms": 91,
+      "at": "2026-10-25T13:32:43.759Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2909,8 +2940,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 88,
-      "at": "2026-10-25T13:17:49.219Z",
+      "ms": 32,
+      "at": "2026-10-25T13:32:47.282Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2923,8 +2954,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 81,
-      "at": "2026-10-25T13:17:58.574Z",
+      "ms": 60,
+      "at": "2026-10-25T13:32:56.428Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2937,8 +2968,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 285,
-      "at": "2026-10-25T13:18:12.407Z",
+      "ms": 232,
+      "at": "2026-10-25T13:33:10.971Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2951,8 +2982,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 86,
-      "at": "2026-10-25T13:18:15.733Z",
+      "ms": 90,
+      "at": "2026-10-25T13:33:14.217Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2965,8 +2996,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 71,
-      "at": "2026-10-25T13:18:15.930Z",
+      "ms": 95,
+      "at": "2026-10-25T13:33:14.437Z",
       "reason": "llm_credits",
       "runbook": "#gemini-credits-live-and-elevenlabs-plan"
     },
@@ -2979,8 +3010,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 60,
-      "at": "2026-10-25T13:18:16.085Z",
+      "ms": 94,
+      "at": "2026-10-25T13:33:14.648Z",
       "reason": "needs_second_person",
       "runbook": "#real-multi-person-imessage-group"
     }

@@ -11,6 +11,7 @@ import { createHash } from 'node:crypto';
 import {
   ConnectorAuthError,
   ConnectorExpiredError,
+  ConnectorRevokedError,
   ConnectorRateLimitError,
   GOOGLE_SCOPES,
   type ConnectorCourse,
@@ -389,7 +390,10 @@ export function createLiveGoogleConnector(
       const json = (await res.json().catch(() => ({}))) as TokenBody;
       if (res.status === 429) throw new ConnectorRateLimitError(retryAfterMs(res));
       if (!res.ok || !json.access_token) {
-        if (json.error === 'invalid_grant' || res.status === 400 || res.status === 401)
+        // invalid_grant is Google saying the grant is revoked/removed; any other refusal only means "could not renew".
+        if (json.error === 'invalid_grant')
+          throw new ConnectorRevokedError('google_refresh_failed:invalid_grant');
+        if (res.status === 400 || res.status === 401)
           throw new ConnectorExpiredError('google_refresh_failed:' + (json.error ?? res.status));
         throw new Error(`google_refresh_failed:${json.error ?? res.status}`);
       }

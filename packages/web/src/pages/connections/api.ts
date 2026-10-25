@@ -45,6 +45,7 @@ const RawConnection = z.looseObject({
   syncVia: z.enum(['extension', 'hub']).optional(),
   sources: z.object({ total: z.number(), byKind: z.record(z.string(), z.number()) }),
   sharedWithSquads: z.array(z.string()).default([]),
+  needsReconnect: z.boolean().optional(),
 });
 
 export interface Connection {
@@ -66,6 +67,8 @@ export interface Connection {
   syncVia: 'extension' | 'hub';
   sources: { total: number; byKind: Record<string, number> };
   sharedWithSquads: string[];
+  /** The grant is gone or could not be renewed: show a Reconnect button. */
+  needsReconnect: boolean;
 }
 
 /** Only the allow-listed fields are kept: anything else the hub might send (it should send no secrets) is dropped. */
@@ -97,13 +100,17 @@ export function toConnection(raw: z.infer<typeof RawConnection>): Connection {
     syncVia: raw.syncVia ?? (raw.variant === 'session' ? 'extension' : 'hub'),
     sources: raw.sources,
     sharedWithSquads: raw.sharedWithSquads,
+    needsReconnect: raw.needsReconnect ?? (state === 'expired' || state === 'revoked'),
   };
 }
 
 const ErrorBody = z.looseObject({ error: z.looseObject({ code: z.string() }) });
 const List = z.looseObject({ connections: z.array(RawConnection) });
 const One = z.looseObject({ connection: RawConnection });
-const Squads = z.looseObject({ activeSquadId: z.string().nullable().optional() });
+const Squads = z.looseObject({
+  activeSquadId: z.string().nullable().optional(),
+  squads: z.array(z.looseObject({ id: z.string(), name: z.string() })).default([]),
+});
 const Purge = z.looseObject({
   purged: z.object({ sources: z.number(), chunks: z.number() }).optional(),
   removed: z.boolean().optional(),
@@ -165,6 +172,11 @@ export const hub = (ctx: Ctx) => ({
   },
   async activeSquad(): Promise<string | null> {
     return (await call(ctx, 'GET', '/v1/squads', Squads)).activeSquadId ?? null;
+  },
+  /** The viewer's squads by id, so the page can show names, never raw ids. */
+  async squadNames(): Promise<Record<string, string>> {
+    const r = await call(ctx, 'GET', '/v1/squads', Squads);
+    return Object.fromEntries(r.squads.map((x) => [x.id, x.name]));
   },
   async sync(id: string): Promise<Connection> {
     return toConnection(
