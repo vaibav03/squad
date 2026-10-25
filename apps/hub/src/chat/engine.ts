@@ -166,6 +166,9 @@ export async function attachChatEngine(
     emit: (e) => events.publish(e),
     ...(media ? { media } : {}),
     courseId: () => courseId,
+    // the library routes (created later) publish the store; until then every plan is the labelled sample fallback
+    catalogueFor: (student) =>
+      (deps as { catalogueFor?: (s: string) => unknown }).catalogueFor?.(student),
     context: {
       store: contextServiceFor(deps).store,
       // membership comes from the hub directory, never from message text
