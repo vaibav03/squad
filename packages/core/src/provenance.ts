@@ -105,6 +105,19 @@ export function composeProvenance(i: ComposeInput): { citations: ChatCitation[];
     seen.add(key);
     if (i.verify(c)) verified.push(c);
   }
+  // background-only sources (`relation: related`) are shown but never count as grounding
+  const related = verified.filter((c) => c.source?.relation === 'related');
+  if (related.length > 0 && related.length === verified.length)
+    return {
+      citations: related,
+      provenance: {
+        kind: 'no_sources',
+        label: i.hint?.label ?? 'No source covers this: the closest one is shown as related only',
+        sources: 0,
+        mode: i.mode,
+        ...(i.via ? { via: i.via } : {}),
+      },
+    };
   const fixture = verified.some((c) => (i.isFixture ? i.isFixture(c) : c.source?.provenance === 'fixture'));
   const base = {
     sources: verified.length,

@@ -28,6 +28,8 @@ export const CitationSourceSchema = z.strictObject({
   courseName: z.string().max(300).optional(),
   /** Page or item location inside the source (`Due Fri 12 Oct`, `p.3`, `section 2`). */
   locationLabel: z.string().max(200).optional(),
+  /** `related`: shown only as background, the source is NOT about what was asked (chip reads `Related, not about this`). */
+  relation: z.literal('related').optional(),
 });
 export type CitationSource = z.infer<typeof CitationSourceSchema>;
 

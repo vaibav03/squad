@@ -308,6 +308,11 @@ export function MessageBubble(p: BubbleProps) {
                   {i + 1}
                 </span>
                 {c.label}
+                {c.source?.relation === 'related' ? (
+                  <span className="sqc-cite__prov is-related" data-testid="chat-citation-related">
+                    Related, not about this
+                  </span>
+                ) : null}
                 {c.source?.provenance ? (
                   <span
                     className={`sqc-cite__prov is-${c.source.provenance}`}

@@ -202,3 +202,12 @@ describe('mode follows the sources: simulated data is never Live', () => {
     expect(composeProvenance({ ...base, citations: [real('a')], isFixture: () => true }).provenance.mode).toBe('demo');
   });
 });
+
+describe('related-only sources are not grounding', () => {
+  it('a related chip alone yields no_sources with zero count', () => {
+    const rel: ChatCitation = { ...src, source: { ...src.source!, relation: 'related' } };
+    const r = composeProvenance({ ...base, citations: [rel] });
+    expect(r.provenance).toMatchObject({ kind: 'no_sources', sources: 0 });
+    expect(r.citations).toHaveLength(1);
+  });
+});
