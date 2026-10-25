@@ -452,7 +452,8 @@
           "thinking": true,
           "skill": "Council"
         },
-        "message": "Two short evenings are enough if the quiz went well."
+        "message": "Two short evenings are enough if the quiz went well.",
+        "mode": "demo"
       }
     },
     {
@@ -469,7 +470,8 @@
           "thinking": true,
           "skill": "Council"
         },
-        "message": "I disagree: regression needs a third pass before the exam."
+        "message": "I disagree: regression needs a third pass before the exam.",
+        "mode": "demo"
       }
     },
     {
@@ -486,7 +488,8 @@
           "thinking": true,
           "skill": "Council"
         },
-        "message": "I ranked the answers without names: the cautious one first, the short one second."
+        "message": "I ranked the answers without names: the cautious one first, the short one second.",
+        "mode": "demo"
       }
     },
     {
@@ -504,7 +507,8 @@
           "thinking": false,
           "skill": "Council"
         },
-        "message": "My verdict is a middle plan: two evenings plus a short third pass. One member disagreed and that is on record."
+        "message": "My verdict is a middle plan: two evenings plus a short third pass. One member disagreed and that is on record.",
+        "mode": "demo"
       }
     },
     {
