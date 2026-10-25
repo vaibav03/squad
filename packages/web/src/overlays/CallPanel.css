@@ -80,7 +80,8 @@
   min-width: 0;
 }
 .lv-call__name {
-  font: 400 var(--text-pixel-md) / var(--lh-pixel-md) var(--lv-font-pixel);
+  font: 600 var(--text-lg) / var(--lh-lg) var(--lv-font-ui);
+  letter-spacing: var(--tracking-ui);
   color: var(--lv-text);
   overflow-wrap: anywhere;
 }

@@ -60,7 +60,7 @@
   --btn-fg: var(--foreground);
 }
 .sq-btn--danger {
-  --btn-bg: var(--destructive);
+  --btn-bg: color-mix(in oklab, var(--destructive) 78%, black);
   --btn-fg: #fff;
   --btn-border: transparent;
   --btn-hover: color-mix(in oklab, var(--destructive) 88%, white);

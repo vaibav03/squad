@@ -93,12 +93,8 @@
   image-rendering: crisp-edges;
 }
 .sq-avatar__initials {
-  font: 400 calc(var(--s) * 0.42)/1 var(--font-pixel);
+  font: 600 max(12px, calc(var(--s) * 0.4))/1 var(--font-sans);
   color: var(--sq-moon);
-  -webkit-font-smoothing: none;
-}
-.sq-avatar--xs .sq-avatar__initials {
-  font-size: 12px;
 }
 .sq-avatar__ring {
   position: absolute;
