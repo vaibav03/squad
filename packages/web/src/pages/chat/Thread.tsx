@@ -356,13 +356,14 @@ function MessageList({
         ) : bucket.error && !bucket.loaded ? (
           <ErrorState
             title="Messages did not load"
-            error="Check your connection and try again."
+            error={bucket.errorText}
+            retryLabel="Retry"
             onRetry={() => void ctl.loadHistory(chat.id)}
           />
         ) : rows.length === 0 ? (
           <EmptyState
             icon="message"
-            title={chat.kind === 'dm' ? 'A private chat with Cubbie' : 'Nothing here yet'}
+            title={chat.kind === 'dm' ? 'A private chat with Cubbie' : 'No messages yet, say hi'}
             body={
               chat.kind === 'dm'
                 ? 'Only you can see this. Ask about your progress, your notes, or a chapter.'

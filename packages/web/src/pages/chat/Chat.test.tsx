@@ -196,7 +196,7 @@ describe('thread rendering', () => {
     render(<Harness api={api} active={GROUP_ID} />);
     expect(await screen.findByText('Chat did not load')).toBeTruthy();
     api.failChats = false;
-    fireEvent.click(screen.getByRole('button', { name: /try again/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^retry$/i }));
     await screen.findAllByTestId('chat-message');
   });
 
@@ -349,7 +349,7 @@ describe('optimistic send', () => {
     await userEvent.type(await input(), 'fast{Enter}');
     const a = await screen.findByRole('alert');
     expect(a.textContent).toContain('too fast');
-    fireEvent.click(within(a).getByRole('button', { name: 'Remove' }));
+    fireEvent.click(within(a).getByRole('button', { name: 'Delete' }));
     expect(screen.queryByText('fast')).toBeNull();
   });
 });
