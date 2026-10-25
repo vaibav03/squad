@@ -11,7 +11,7 @@
 //   /squad/village additionally: a <canvas> with non-zero size exists, the text "Loading the village" is gone and the
 //                HUD roster chips are rendered (text "Mediator").
 // Transferred bytes = sum of CDP Network encodedDataLength (wire bytes: after compression) for web-origin responses.
-// --cpu N applies CDP Emulation.setCPUThrottlingRate (N=1 is no throttle). --no-cors launches Chrome with
+// --no-webaudio hides AudioContext from the page (experiment, see docs/perf). --cpu N applies CDP Emulation.setCPUThrottlingRate (N=1 is no throttle). --no-cors launches Chrome with
 // --disable-web-security, only for when the hub under test does not allow the web origin (changes nothing else).
 import { createRequire } from 'node:module';
 import { loadavg } from 'node:os';
@@ -65,6 +65,12 @@ async function once(browser, route, cpu) {
     },
     [seed, login.token],
   );
+  if (argv.includes('--no-webaudio'))
+    // experiment: what the load costs without Phaser's AudioContext creation
+    await ctx.addInitScript(() => {
+      delete window.AudioContext;
+      delete window.webkitAudioContext;
+    });
   const page = await ctx.newPage();
   const cdp = await ctx.newCDPSession(page);
   await cdp.send('Network.enable');
@@ -147,13 +153,14 @@ const result = {
 };
 for (const route of routes)
   for (const cpu of cpus) {
-    await once(browser, route, cpu).catch(() => null); // not counted: lets the OS file cache and the server warm up equally
+    const first = await once(browser, route, cpu).catch(() => null); // not in the stats: first request after server start (dev: Vite compiles on demand)
     const rows = [];
     for (let i = 0; i < runs; i++) rows.push(await once(browser, route, cpu));
     const ok = rows.filter((r) => r.settledAt !== null);
     const s = ok.map((r) => r.settledAt);
     const key = `${route} cpu${cpu}x`;
     result.cases[key] = {
+      firstRunMs: first?.settledAt === null || !first ? null : Math.round(first.settledAt),
       ok: ok.length,
       timeouts: rows.length - ok.length,
       settleMs: s.length
