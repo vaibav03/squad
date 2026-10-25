@@ -239,13 +239,14 @@ describe('trip.confirmed and mastery', () => {
       expect(JSON.stringify(m.body)).not.toContain('"squad"');
       const st = await get<{ squad: { memberCount: unknown } }>(small.url, '/v1/squad/state', t);
       expect(st.body.squad.memberCount).toBeNull();
-      const trip = await get<{ tallies: unknown; votes: unknown }>(
+      const trip = await get<{ voteProgress: unknown; votes?: unknown; tallies?: unknown }>(
         small.url,
         '/v1/trips/trip_cabo',
         t,
       );
-      expect(trip.body.tallies).toBeNull();
-      expect(trip.body.votes).toBeNull();
+      expect(trip.body.voteProgress).toBeNull(); // squads under 3 get no counts
+      expect(trip.body.tallies).toBeUndefined(); // the ballot is secret: no tallies, no other rankings
+      expect(trip.body.votes).toBeUndefined();
     } finally {
       await small.stop();
     }
