@@ -229,6 +229,20 @@ describe('Ask council v2: live happy path', () => {
     expect(r.rankings).toHaveLength(3);
     expect(events.filter((e) => e.t === 'council.rank')).toHaveLength(3);
     expect(r.stage).toBe('done');
+
+    // action items: one chair `status` envelope per item at stage `actions`, mirrored in result.actions
+    const actionMsgs = msgs.filter((m) => m.stage === 'actions');
+    expect(actionMsgs.length).toBeGreaterThanOrEqual(2);
+    expect(actionMsgs.length).toBeLessThanOrEqual(4);
+    for (const m of actionMsgs) {
+      expect(m.from).toBe(CHAIR);
+      expect(m.kind).toBe('status');
+      expect(m.source).toBe('code');
+      expect(m.parentMessageId).toBe(verdict.id);
+    }
+    expect(r.actions?.map((a) => a.id)).toEqual(actionMsgs.map((m) => m.id));
+    expect(r.actions?.[0]?.title).toContain('Try B on a small example');
+    expect(r.actions?.some((a) => /Ask your TA about Practitioner/.test(a.title))).toBe(true);
   });
 });
 

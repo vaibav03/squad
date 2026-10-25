@@ -6,6 +6,8 @@ import {
   A2A_STAGES,
   A2A_SUMMARY_MAX,
   A2aMessageSchema,
+  CouncilActionSchema,
+  CouncilResultSchema,
   AgentModeSchema,
   PUBLIC_TURN_KEYS,
   PublicTurnSchema,
@@ -320,6 +322,34 @@ describe('findUnwrappedScripted (CI lint pattern)', () => {
       { helper: 'stock', line: 5 },
       { helper: 'fallbackQuestion', line: 7 },
     ]);
+  });
+});
+
+describe('action items convention', () => {
+  it('an actions-stage status envelope is a valid envelope', () => {
+    const m = base({
+      from: 'council:ask-chair',
+      to: 'room',
+      kind: 'status',
+      stage: 'actions',
+      summary: 'Write the two state equations and solve them.',
+      source: 'code',
+    });
+    expect(A2aMessageSchema.safeParse(m).success).toBe(true);
+  });
+  it('CouncilActionSchema is strict, capped and refuses thought-like keys', () => {
+    const ok = { id: 'am_a1b2c3d4e5f6', title: 'Do the thing', detail: 'why' };
+    expect(CouncilActionSchema.safeParse(ok).success).toBe(true);
+    expect(CouncilActionSchema.safeParse({ ...ok, title: 'x'.repeat(121) }).success).toBe(false);
+    expect(CouncilActionSchema.safeParse({ ...ok, detail: 'x'.repeat(201) }).success).toBe(false);
+    expect(CouncilActionSchema.safeParse({ ...ok, thought: 'hmm' }).success).toBe(false);
+    expect(Object.keys(CouncilActionSchema.shape).some((k) => A2A_BANNED_KEY.test(k))).toBe(false);
+  });
+  it('CouncilResult.actions is optional and capped at 4', () => {
+    const a = { id: 'am_a1b2c3d4e5f6', title: 'T' };
+    expect(CouncilResultSchema.shape.actions.safeParse(undefined).success).toBe(true);
+    expect(CouncilResultSchema.shape.actions.safeParse([a, a, a, a]).success).toBe(true);
+    expect(CouncilResultSchema.shape.actions.safeParse([a, a, a, a, a]).success).toBe(false);
   });
 });
 

@@ -1,5 +1,8 @@
 import {
+  COUNCIL_ACTIONS_MAX,
+  type AgentId,
   type AgentMode,
+  type CouncilAction,
   type CouncilConfidence,
   type CouncilMemberResult,
   type CouncilResult,
@@ -478,7 +481,9 @@ export async function runAskV2(
     }
 
     await R.stage('actions');
+    const actions = await publishActionItems(R, chair.id, verdict, verdictMsgId, topTurn.citations);
     change((x) => {
+      if (actions.length) x.actions = actions;
       x.verdict = verdict;
       x.status = 'done';
       x.phase = 'done';
@@ -516,4 +521,42 @@ export async function runAskV2(
       final.close();
     }
   }
+}
+
+/**
+ * Action items for the `actions` stage: derived by CODE from the verdict (next step sentences, the dissent, the
+ * strongest cited page), so `source` is `code` and no extra model call is made. One `status` envelope per item.
+ */
+async function publishActionItems(
+  R: AgentRun,
+  chairId: AgentId,
+  v: CouncilVerdict,
+  verdictMsgId: string | undefined,
+  cites: { label: string }[],
+): Promise<CouncilAction[]> {
+  const sentenceList = (v.next.match(/[^.!?]+[.!?]?/g) ?? [])
+    .map((x) => x.trim())
+    .filter((x) => x.length > 3 && !/^check this with your ta/i.test(x));
+  const items: string[] = [...sentenceList.slice(0, 2)];
+  if (v.dissent) items.push(`Ask your TA about ${v.dissent.member}'s different view.`);
+  const page = cites[0]?.label;
+  if (page) items.push(`Re-read ${page} and check it against the answer.`);
+  const out: CouncilAction[] = [];
+  for (const raw of [...new Set(items)].slice(0, COUNCIL_ACTIONS_MAX)) {
+    const title = cut(raw, 120);
+    try {
+      const m = await R.publishCode({
+        from: chairId,
+        to: 'room',
+        kind: 'status',
+        stage: 'actions',
+        summary: title,
+        ...(verdictMsgId ? { parentMessageId: verdictMsgId } : {}),
+      });
+      out.push({ id: m.id, title });
+    } catch {
+      // an action item that cannot be published is skipped; the verdict stands
+    }
+  }
+  return out;
 }
