@@ -6,7 +6,7 @@
 @media (min-width: 640px) {
   .lv-ovl[data-placement='dock'] .lv-call {
     align-self: flex-end;
-    max-height: calc(100% - var(--lv-s4) * 2);
+    max-height: 100%;
   }
 }
 .lv-call__head {

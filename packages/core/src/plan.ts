@@ -60,6 +60,8 @@ export interface PlanSource {
   file?: string;
   page?: number;
   chapter?: string;
+  /** Imported Canvas / Google Classroom item this was seeded from (only when its owner shared it with the squad). */
+  source?: { kind: string; id: string; anchor?: string; title?: string };
 }
 
 export interface PlanItem {

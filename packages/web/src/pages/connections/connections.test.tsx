@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import type { ReactElement } from 'react';
 import { ConnectionsView, type ViewProps } from './ConnectionsView';
 import { toConnection, type Connection, type HubClient } from './api';
 import { errorCopy, oauthReturn, STATES } from './model';
 import { EXT_ATTR, MSG, extensionPresent, onExtensionReady } from './bridge';
+
+const render = (ui: ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
 
 afterEach(() => {
   cleanup();
@@ -31,6 +35,8 @@ const conn = (o: Partial<Connection> = {}): Connection => ({
   sources: { total: 3, byKind: { canvas_assignment: 2, canvas_file: 1 } },
   sharedWithSquads: [],
   needsReconnect: false,
+  account: null,
+  grantedScopes: ['canvas.browser_session.read'],
   ...o,
 });
 function props(over: Partial<ViewProps> = {}, client: Partial<HubClient> = {}): ViewProps {
@@ -66,8 +72,8 @@ describe('state badges', () => {
       />,
     );
     expect(screen.getByText(`label-${state}`)).toBeTruthy();
-    if (state === 'fixture') expect(screen.getByText('Demo data, not a real account')).toBeTruthy();
-    else expect(screen.queryByText('Demo data, not a real account')).toBeNull();
+    if (state === 'fixture') expect(screen.getAllByText('Fixture (simulated, not your account)').length).toBeGreaterThan(0);
+    else expect(screen.queryByText('Fixture (simulated, not your account)')).toBeNull();
     if (state === 'rate_limited') expect(screen.getByText(/Will retry in/)).toBeTruthy();
   });
   it('derives state when the hub has not sent one yet', () => {
@@ -351,5 +357,42 @@ describe('revoked / expired grants offer Reconnect with an honest message (V3, V
       />,
     );
     expect(screen.getByRole('button', { name: 'Reconnect' })).toBeTruthy();
+  });
+});
+
+describe('Canvas routes: extension first, token optional', () => {
+  afterEach(() => document.documentElement.removeAttribute(EXT_ATTR));
+  it('orders extension, then .ics feed, then collapsed Advanced; token never required', async () => {
+    const connectFeed = vi.fn(async () => conn());
+    const connectToken = vi.fn(async () => conn());
+    render(<ConnectionsView {...props({}, { connectFeed, connectToken })} />);
+    const text = document.body.textContent ?? '';
+    const ext = text.indexOf('Connect with the Squad browser extension');
+    const ics = text.indexOf('Or paste your Canvas calendar feed (.ics) URL');
+    const adv = text.indexOf('Advanced (optional)');
+    expect(ext).toBeGreaterThan(-1);
+    expect(ics).toBeGreaterThan(ext);
+    expect(adv).toBeGreaterThan(ics);
+    expect(text).toContain('Recommended: uses your signed-in Canvas session');
+    expect(text).toContain('Some schools do not allow');
+    const details = screen.getByText('Advanced (optional)').closest('details')!;
+    expect(details.hasAttribute('open')).toBe(false);
+    const tokenField = screen.getByLabelText(/Student API token \(optional\)/) as HTMLInputElement;
+    expect(tokenField.required).toBe(false);
+    expect(text).not.toMatch(/token (is )?required|requires a token/i);
+    // feed connect works with an empty token field
+    fireEvent.change(screen.getByLabelText('Canvas calendar feed URL'), {
+      target: { value: 'https://canvas.school.test/feeds/calendars/user_x.ics' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Connect feed' }));
+    await waitFor(() => expect(connectFeed).toHaveBeenCalled());
+    expect(connectToken).not.toHaveBeenCalled();
+  });
+  it('Check again re-detects the extension', async () => {
+    render(<ConnectionsView {...props()} />);
+    expect(screen.getByText('Extension not detected')).toBeTruthy();
+    document.documentElement.setAttribute(EXT_ATTR, '1');
+    fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
+    await waitFor(() => expect(screen.queryByText('Extension not detected')).toBeNull());
   });
 });

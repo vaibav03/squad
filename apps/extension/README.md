@@ -4,6 +4,15 @@ Port of the Nook dev extension. It reads the student's own Canvas with their log
 (`credentials: "include"`, no OAuth, no developer key, no API token) and pushes courses, assignments and file
 metadata to the Squad hub. No credentials are shipped in this package.
 
+## Routes to Canvas (in order)
+
+1. **Squad browser extension (recommended, primary).** Uses your signed-in Canvas session; nothing is stored on
+   the Squad side except what you choose to import. Install steps below. The Connections page shows
+   "Extension not detected" with a Check again button until it is installed.
+2. **Canvas calendar feed (.ics) URL.** Paste it on the Connections page (due dates and events only).
+3. **Student API token (optional, advanced).** Collapsed under "Advanced (optional)". Never required; some
+   schools do not allow students to create tokens.
+
 ## Build and install (unpacked)
 
 1. `pnpm --filter @squad/extension build` (override hosts with `SQUAD_HUB_URL`, `SQUAD_WEB_ORIGIN`; defaults are

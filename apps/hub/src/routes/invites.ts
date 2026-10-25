@@ -2,6 +2,7 @@ import { InviteCreateBodySchema, InviteJoinBodySchema, parseInviteInput } from '
 import { Hono } from 'hono';
 import { requireUser } from '../auth';
 import { clientIp, createLimiter, fail, rateLimited, readBody } from '../http';
+import { webBaseFor } from '../web-origin';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 import { activateSquad, announceMember } from './squads';
 
@@ -11,8 +12,7 @@ export function createInviteRoutes(deps: HubDeps): HubApp {
   const limit = createLimiter(deps.now);
 
   /** Links point at the web origin that asked, when it is a listed origin; else HUB_WEB_URL. */
-  const webBase = (origin: string | undefined) =>
-    origin && deps.config.corsOrigins.includes(origin) ? origin : deps.config.webUrl;
+  const webBase = (origin: string | undefined) => webBaseFor(deps.config, origin);
 
   r.post('/v1/squads/:id/invites', user, async (c) => {
     const b = await readBody(c, InviteCreateBodySchema);

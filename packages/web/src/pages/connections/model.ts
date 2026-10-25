@@ -13,17 +13,27 @@ export const STATE_TONE: Record<ConnState, StateTone> = {
   error: 'alert',
 };
 
+/** The one-line state a card leads with: real | fixture | disconnected, never a generic success badge. */
+export const STATE_HEADLINE: Record<ConnState, string> = {
+  live: 'Real account',
+  fixture: 'Fixture',
+  expired: 'Expired',
+  revoked: 'Disconnected',
+  rate_limited: 'Rate limited',
+  error: 'Error',
+};
+
 /** Fallback copy when the hub sends no `stateLabel`. */
 export const STATE_COPY: Record<ConnState, string> = {
   live: 'Connected',
-  fixture: 'Demo data',
+  fixture: 'Fixture (simulated, not your account)',
   expired: 'Expired: reconnect to resume syncing',
   revoked: 'Disconnected: imported data deleted',
   rate_limited: 'Paused: the provider asked us to slow down',
   error: 'Error: showing the last imported data',
 };
 
-export const FIXTURE_LABEL = 'Demo data, not a real account';
+export const FIXTURE_LABEL = 'Fixture (simulated, not your account)';
 
 export const SCOPE_WORDS: Record<string, string> = {
   'https://www.googleapis.com/auth/calendar.readonly':
@@ -56,6 +66,21 @@ export const kindCounts = (byKind: Record<string, number>): string[] =>
     .filter(([, n]) => n > 0)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, n]) => `${n} ${KIND_LABEL[k] ?? k}`);
+
+const ITEM_TYPE: Record<string, string> = {
+  canvas_assignment: 'Canvas assignment',
+  canvas_file: 'Canvas file',
+  canvas_event: 'Canvas calendar event',
+  canvas_page: 'Canvas page',
+  gcal_event: 'Calendar event',
+  classroom_coursework: 'Classroom coursework',
+  classroom_course: 'Classroom course',
+  classroom_item: 'Classroom item',
+  gdrive_file: 'Drive file',
+  gdoc: 'Google Doc',
+  pdf: 'PDF',
+};
+export const itemTypeLabel = (k: string): string => ITEM_TYPE[k] ?? k.replace(/_/g, ' ');
 
 export const CALENDAR_KINDS = new Set(['gcal_event', 'canvas_event']);
 

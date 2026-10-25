@@ -186,3 +186,35 @@ describe('WebTransport through the real router', () => {
     expect(t.out[0]?.attachments).toEqual([{ path: '/tmp/a.m4a', mime: 'audio/mp4' }]);
   });
 });
+
+describe('structured source citations', () => {
+  it('a skill reply with citations reaches the web message with its source and quote, deduplicated', async () => {
+    const cite = {
+      file: 'Homework 4',
+      page: 1,
+      label: 'Homework 4',
+      source: {
+        kind: 'canvas_assignment' as const,
+        id: 'src_1',
+        anchor: 's1',
+        title: 'Homework 4',
+      },
+      quote: 'Homework 4 covers sampling.',
+    };
+    const skill: Skill = {
+      name: 'cites',
+      async match() {
+        return 0.99;
+      },
+      async handle(m) {
+        return [{ chatId: m.chatId, text: 'Next 1 due: Homework 4', citations: [cite, cite] }];
+      },
+    };
+    const { out, transport, bot, start } = setup([skill]);
+    await start();
+    await transport.inject({ chatId: 'group:sq1', from: 's_ana', text: '@cubbie what is due' });
+    await bot.stop();
+    const last = out[out.length - 1]!;
+    expect(last.citations).toEqual([cite]);
+  });
+});

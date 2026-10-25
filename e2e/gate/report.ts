@@ -20,8 +20,10 @@ import { allBlockers } from './lib/blockers';
 import { branchTable } from './lib/probes';
 import type { StepResult } from './lib/types';
 
-export const JOURNEY = ['S1', 'S2', 'S3', 'S3e', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S9b', 'S10', 'S10b'];
-export const VARIANTS = Array.from({ length: 12 }, (_, i) => `V${i + 1}`);
+export const JOURNEY = [
+  'S0', 'S1', 'S1b', 'S1c', 'S2', 'S3', 'S3e', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S9b', 'S10', 'S10b',
+];
+export const VARIANTS = Array.from({ length: 13 }, (_, i) => `V${i + 1}`);
 
 const git = (...a: string[]): string => {
   try {

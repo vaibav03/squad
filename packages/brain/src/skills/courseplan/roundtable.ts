@@ -23,6 +23,7 @@ import {
 import {
   extractCourseIds,
   loadCatalog,
+  scheduleLabel,
   type CatalogBundle,
   type CatalogCourse,
   type TermName,
@@ -129,7 +130,8 @@ export function summaryFor(
   const rem = remainingRequirements(catalog, degree, ctx.completed);
   const { minCredits, maxCredits } = limitsFor(ctx);
   const lines = eligible.map(
-    (c) => `${c.id} | ${c.title} | ${c.credits} cr | ${c.workload} h/week | ${c.area}`,
+    (c) =>
+      `${c.id} | ${c.title} | ${c.credits} cr | ${scheduleLabel(c)} | ${c.workload} h/week | ${c.area}`,
   );
   return [
     `Plan ONE ${ctx.term} term from the sample catalogue (invented data).`,
@@ -141,7 +143,7 @@ export function summaryFor(
         .map((g) => `${g.name} ${g.remaining} cr (${g.area})`)
         .join('; ') || 'none'
     }.`,
-    'ELIGIBLE courses (prerequisites done, offered this term). Choose ONLY from these:',
+    'ELIGIBLE courses (prerequisites done, offered this term; meeting times must not overlap). Choose ONLY from these:',
     ...lines,
     'The "answer" field must be a comma-separated list of course ids from the ELIGIBLE list, for example "CSL 240, CSL 310".',
   ].join('\n');
@@ -306,14 +308,14 @@ export async function runCoursePlan(
       outcome = {
         title: clip(`${termName} plan: ${credits} credits`, 120),
         summary: clip(
-          `${courses.length} course${courses.length === 1 ? '' : 's'}, ${word} workload. Every course is checked against prerequisites, offerings and credit limits.`,
+          `${courses.length} course${courses.length === 1 ? '' : 's'}, ${word} workload. Every course is checked against prerequisites, offerings, meeting times and credit limits.`,
           400,
         ),
         items: courses.map((id) => {
           const c = byId.get(id)!;
           return {
             label: clip(`${c.id} ${c.title}`, 120),
-            detail: `${c.credits} cr, ${workloadWords(c.workload, 'course')} workload`,
+            detail: `${c.credits} cr, ${scheduleLabel(c)}, ${workloadWords(c.workload, 'course')} workload`,
           };
         }),
         facts: [
@@ -363,7 +365,7 @@ export async function runCoursePlan(
     ...(out.dissent ? [`Dissent: ${out.dissent}`] : []),
     ...(repairedAll.length ? [`Fixed along the way: ${repairedAll.slice(0, 3).join('; ')}.`] : []),
     ...(usedFallback
-      ? ['(The model was unavailable, so the notes came from built-in rules.)']
+      ? ['(Fallback (demo): the model was unavailable, so the notes came from built-in rules.)']
       : []),
     SAMPLE_DISCLOSURE,
   ].join('\n');

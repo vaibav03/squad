@@ -1,0 +1,23 @@
+/* Right-side dock region for floating panels (Agent Inspector, room / council / plan / mastery panels, Council board,
+   the chat dock). One set of tokens, set on the world root, that every panel positions itself with.
+   Layer order is the --sq-z-* scale in docs/design/tokens.css. */
+.sq-dock-root {
+  --sq-dock-gutter: var(--space-4, 16px);
+  /* below the village HUD row (chips, clock, camera buttons end 71px under the top of the world) */
+  --sq-dock-top: 84px;
+  /* the Chat launcher sits 72px above the bottom edge and is 44px tall; panels stop above it */
+  --sq-dock-launcher-w: 112px;
+  --sq-dock-launcher-h: 116px;
+  --sq-dock-bottom: calc(var(--sq-dock-launcher-h) + var(--space-3, 12px));
+  --sq-dock-right: var(--sq-dock-gutter);
+  --sq-dock-w: min(380px, calc(100% - var(--sq-dock-right) - var(--sq-dock-gutter)));
+  --sq-dock-w-lg: min(640px, calc(100% - var(--sq-dock-right) - var(--sq-dock-gutter)));
+}
+/* A short window (a laptop at 200% zoom): there is no room above the launcher, so panels sit to its left instead, and
+   the bottom edge clears the build marker. */
+@media (min-width: 640px) and (max-height: 639px) {
+  .sq-dock-root {
+    --sq-dock-bottom: 64px;
+    --sq-dock-right: calc(var(--sq-dock-gutter) + var(--sq-dock-launcher-w) + var(--space-3, 12px));
+  }
+}

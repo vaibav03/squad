@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { HealthBanner } from '../health/HealthBanner';
 import { Button } from '../../primitives/Button';
 import { Card } from '../../primitives/Card';
 import { Chip } from '../../primitives/Chip';
 import { Notice } from '../../primitives/Notice';
 import { TextField } from '../../primitives/TextField';
-import type { Connection, HubClient, SourceRow } from './api';
+import type { Connection, HubClient } from './api';
+import { ItemList } from './ItemList';
 import {
   bridgeRequest,
   canvasAuthorize,
@@ -16,15 +19,14 @@ import {
   type BridgeStatus,
 } from './bridge';
 import {
-  CALENDAR_KINDS,
   errorCopy,
   FIXTURE_LABEL,
-  KIND_LABEL,
   kindCounts,
   oauthReturn,
   relTime,
   scopeWords,
   squadLabel,
+  STATE_HEADLINE,
   STATE_TONE,
 } from './model';
 import type { ConnectionsState } from './useConnections';
@@ -48,6 +50,13 @@ export function ConnectionsView(p: ViewProps) {
         Bring your Canvas and Google context into Squad. Everything is read-only, private to you by
         default, and shared with a squad only when you choose. Disconnecting deletes what was
         imported.
+      </p>
+      <HealthBanner reloadKey={p.connections.map((c) => `${c.id}${c.lastSyncAt}${c.state}`).join()} />
+      <p className="sq-conn__meta">
+        <Link to="/squad/connections/health" data-testid="health-link">
+          Integration health
+        </Link>{' '}
+        shows every link from connection to chat, plan and trip.
       </p>
       {ret ? (
         <Notice
@@ -96,6 +105,11 @@ function CanvasSection({ p, items }: { p: ViewProps; items: Connection[] }) {
       {items.map((c) => (
         <ConnectionCard key={c.id} c={c} p={p} />
       ))}
+      {items.every((c) => c.state === 'revoked') ? (
+        <p className="sq-conn__state" data-testid="canvas-not-connected">
+          <Chip tone="neutral">Disconnected</Chip> No Canvas account is connected.
+        </p>
+      ) : null}
       <CanvasConnect p={p} />
     </section>
   );
@@ -110,6 +124,11 @@ function GoogleSection({ p, items }: { p: ViewProps; items: Connection[] }) {
       {items.map((c) => (
         <ConnectionCard key={c.id} c={c} p={p} />
       ))}
+      {items.every((c) => c.state === 'revoked') ? (
+        <p className="sq-conn__state" data-testid="google-not-connected">
+          <Chip tone="neutral">Disconnected</Chip> No Google account is connected.
+        </p>
+      ) : null}
       <GoogleConnect p={p} />
     </section>
   );
@@ -118,7 +137,6 @@ function GoogleSection({ p, items }: { p: ViewProps; items: Connection[] }) {
 function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
   const [confirm, setConfirm] = useState(false);
   const [purged, setPurged] = useState<{ sources: number; chunks: number } | null>(null);
-  const [rows, setRows] = useState<SourceRow[] | null>(null);
   const live = c.state !== 'revoked';
   const counts = kindCounts(c.sources.byKind);
   const reconnect = () => {
@@ -131,7 +149,7 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
     <Card as="article" className="sq-conn__card" aria-label={`${c.provider} connection`}>
       <div className="sq-conn__row">
         <strong>{c.provider === 'canvas' ? 'Canvas' : 'Google'}</strong>
-        <Chip tone={STATE_TONE[c.state]}>{c.state.replace('_', ' ')}</Chip>
+        <Chip tone={STATE_TONE[c.state]}>{STATE_HEADLINE[c.state]}</Chip>
         {c.mode === 'fixture' ? <Chip tone="violet">{FIXTURE_LABEL}</Chip> : null}
         {c.syncPhase === 'syncing' ? <Chip tone="ember">Syncing</Chip> : null}
       </div>
@@ -141,6 +159,14 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
       ) : null}
       {c.note && c.note !== c.stateLabel ? <p className="sq-conn__meta">{c.note}</p> : null}
       <dl className="sq-conn__facts">
+        <dt>Account</dt>
+        <dd data-testid="conn-account">
+          {c.mode === 'fixture'
+            ? 'None: simulated data, not your account'
+            : c.account
+              ? [c.account.name, c.account.label, c.account.host].filter(Boolean).join(' · ')
+              : 'Not reported by this connection'}
+        </dd>
         <dt>Last sync</dt>
         <dd>
           {relTime(c.lastSyncAt, p.now)}
@@ -164,10 +190,10 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
             ? c.sharedWithSquads.map((id) => squadLabel(id, p.squadNames)).join(', ')
             : 'nobody (private to you)'}
         </dd>
-        <dt>Access</dt>
+        <dt>Granted access</dt>
         <dd>
           <ul className="sq-conn__scopes">
-            {c.scopes.map((s) => (
+            {c.grantedScopes.map((s) => (
               <li key={s}>{scopeWords(s)}</li>
             ))}
           </ul>
@@ -212,13 +238,6 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
               >
                 Stop sharing
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => void p.client?.sources(c.id).then(setRows)}
-              >
-                Choose what to share
-              </Button>
             </>
           ) : null}
           <Button size="sm" variant="danger" iconStart="trash" onClick={() => setConfirm(true)}>
@@ -239,32 +258,17 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
           </Button>
         </div>
       )}
-      {rows ? (
-        <ul className="sq-conn__sources" aria-label="Sources">
-          {rows.map((r) => {
-            const shared = !!p.squadId && r.sharedWith.includes(p.squadId);
-            return (
-              <li key={r.id}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={shared}
-                    onChange={() => {
-                      void sharing({ sourceIds: [r.id], shared: !shared })?.then(() =>
-                        p.client?.sources(c.id).then(setRows),
-                      );
-                    }}
-                  />{' '}
-                  {r.title}{' '}
-                  <span className="sq-conn__meta">
-                    ({KIND_LABEL[r.kind] ?? r.kind}
-                    {CALENDAR_KINDS.has(r.kind) ? ', event: share one at a time' : ''})
-                  </span>
-                </label>
-              </li>
-            );
-          })}
-        </ul>
+      {live && p.client?.sources ? (
+        <ItemList
+          connectionId={c.id}
+          syncKey={`${c.lastSyncAt}:${c.sources.total}`}
+          now={p.now}
+          squadId={p.squadId}
+          squadNames={p.squadNames}
+          load={(id) => p.client!.sources(id)}
+          share={(r, shared) => sharing({ sourceIds: [r.id], shared })}
+          navigate={p.navigate}
+        />
       ) : null}
       {confirm ? (
         <Notice
@@ -309,10 +313,21 @@ function CanvasConnect({ p }: { p: ViewProps }) {
   const [result, setResult] = useState<BridgeResult | null>(null);
   const [pair, setPair] = useState<{ code: string; expiresAt: number } | null>(null);
   const [feed, setFeed] = useState('');
+  const [tokenUrl, setTokenUrl] = useState('');
+  const [token, setToken] = useState('');
+  const [checking, setChecking] = useState(false);
   useEffect(() => onExtensionReady(() => setPresent(true)), []);
   useEffect(() => {
     if (present) void canvasStatus().then(setStatus);
   }, [present]);
+  const checkAgain = async () => {
+    setChecking(true);
+    setStatus(null);
+    const here = extensionPresent();
+    setPresent(here);
+    if (here) setStatus(await canvasStatus());
+    setChecking(false);
+  };
   const authorize = async (a: BridgeStatus['accounts'][number]) => {
     setResult(null);
     const r = await canvasAuthorize(a, p.userId ?? '');
@@ -323,21 +338,44 @@ function CanvasConnect({ p }: { p: ViewProps }) {
     <Card className="sq-conn__card" id="sq-conn-canvas-connect">
       <h3 className="sq-conn__h3">Connect with the Squad browser extension</h3>
       <p className="sq-conn__meta">
-        The extension reads Canvas with your own signed-in browser session. No Canvas password or
-        API token is given to Squad.{' '}
-        <a href="https://github.com/vaibav03/squad/blob/main/apps/extension/README.md">
-          Install instructions
-        </a>
+        Recommended: uses your signed-in Canvas session, nothing is stored on our side except what
+        you choose to import. No Canvas password or API token is given to Squad.
       </p>
       {!present ? (
-        <Notice tone="info" title="Extension not detected">
-          Install the unpacked extension, reload this page, and sign in to Canvas in this browser.
+        <Notice
+          tone="info"
+          title="Extension not detected"
+          action={
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={checking}
+              onClick={() => void checkAgain()}
+            >
+              Check again
+            </Button>
+          }
+        >
+          Install the unpacked extension, then press Check again.
         </Notice>
       ) : status === null ? (
         <p role="status">Asking the extension</p>
       ) : status.accounts.length === 0 ? (
-        <Notice tone="info" title="No Canvas sign-in detected">
-          Sign in to your school Canvas in this browser and open any Canvas page once, then reload.
+        <Notice
+          tone="info"
+          title="No Canvas sign-in detected"
+          action={
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={checking}
+              onClick={() => void checkAgain()}
+            >
+              Check again
+            </Button>
+          }
+        >
+          Sign in to your school Canvas in this browser and open any Canvas page once.
         </Notice>
       ) : (
         <ul className="sq-conn__sources" aria-label="Detected Canvas accounts">
@@ -361,6 +399,25 @@ function CanvasConnect({ p }: { p: ViewProps }) {
           <Notice tone="error">{errorCopy(result.error ?? '')}</Notice>
         )
       ) : null}
+      <details className="sq-conn__fallback" open={!present}>
+        <summary>Install steps (unpacked extension)</summary>
+        <ol className="sq-conn__steps">
+          <li>
+            Build it: <code>pnpm --filter @squad/extension build</code>.
+          </li>
+          <li>
+            In Chrome open <code>chrome://extensions</code>, turn on Developer mode, choose Load
+            unpacked and pick <code>apps/extension/dist</code>.
+          </li>
+          <li>Sign in to your school Canvas in the same browser and open any Canvas page once.</li>
+          <li>Come back here and press Check again, then Connect this account.</li>
+        </ol>
+        <p className="sq-conn__meta">
+          <a href="https://github.com/vaibav03/squad/blob/main/apps/extension/README.md">
+            Full install instructions
+          </a>
+        </p>
+      </details>
       <div className="sq-conn__actions">
         <Button
           size="sm"
@@ -377,23 +434,53 @@ function CanvasConnect({ p }: { p: ViewProps }) {
           expires {relTime(pair.expiresAt, p.now)} and works once.
         </Notice>
       ) : null}
+      <h3 className="sq-conn__h3">Or paste your Canvas calendar feed (.ics) URL</h3>
+      <TextField
+        label="Canvas calendar feed URL"
+        hint="Only due dates and events. Treat this URL like a password; Squad stores it encrypted."
+        value={feed}
+        onChange={setFeed}
+        type="password"
+        autoComplete="off"
+      />
+      <Button
+        size="sm"
+        variant="secondary"
+        disabled={!p.client || !feed.trim()}
+        onClick={() => void p.run((h) => h.connectFeed(feed.trim())).then(() => setFeed(''))}
+      >
+        Connect feed
+      </Button>
       <details className="sq-conn__fallback">
-        <summary>No extension? Paste your Canvas calendar feed URL</summary>
+        <summary>Advanced (optional)</summary>
+        <p className="sq-conn__meta">
+          A Canvas student API token is optional and never needed for the options above. Some
+          schools do not allow students to create tokens.
+        </p>
         <TextField
-          label="Canvas calendar feed URL"
-          hint="Only due dates and events. Treat this URL like a password; Squad stores it encrypted."
-          value={feed}
-          onChange={setFeed}
+          label="Canvas address (optional)"
+          value={tokenUrl}
+          onChange={setTokenUrl}
+          autoComplete="off"
+        />
+        <TextField
+          label="Student API token (optional)"
+          value={token}
+          onChange={setToken}
           type="password"
           autoComplete="off"
         />
         <Button
           size="sm"
           variant="secondary"
-          disabled={!p.client || !feed.trim()}
-          onClick={() => void p.run((h) => h.connectFeed(feed.trim())).then(() => setFeed(''))}
+          disabled={!p.client || !token.trim() || !tokenUrl.trim()}
+          onClick={() =>
+            void p
+              .run((h) => h.connectToken(tokenUrl.trim(), token.trim()))
+              .then(() => setToken(''))
+          }
         >
-          Connect feed
+          Connect with token
         </Button>
       </details>
     </Card>

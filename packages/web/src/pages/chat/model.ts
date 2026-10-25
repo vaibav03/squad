@@ -180,7 +180,18 @@ export function mergeMessages(
       byId.set(m.id, { ...m, card: old.card });
     else byId.set(m.id, m);
   }
-  return [...byId.values()].sort((a, b) => a.seq - b.seq);
+  // a send id is one message: if the same sender's clientId shows up under two ids, keep the first
+  const seenClient = new Map<string, string>();
+  const out: ChatMessage[] = [];
+  for (const m of [...byId.values()].sort((a, b) => a.seq - b.seq)) {
+    if (m.clientId && m.sender.kind === 'student') {
+      const key = `${m.chatId}|${m.sender.id}|${m.clientId}`;
+      if (seenClient.has(key)) continue;
+      seenClient.set(key, m.id);
+    }
+    out.push(m);
+  }
+  return out;
 }
 
 // ------------------------------------------------------------------ citations
@@ -245,7 +256,10 @@ export function resolveCitations(text: string, citations: readonly ChatCitation[
   return uniqueCitations([...out, ...citations]);
 }
 
-const citeKey = (c: Pick<ChatCitation, 'file' | 'page'>) => `${norm(c.file)}#${c.page}`;
+const citeKey = (c: Pick<ChatCitation, 'file' | 'page'> & { source?: ChatCitation['source'] }) =>
+  c.source
+    ? `${c.source.kind}/${c.source.id}#${c.source.anchor ?? ''}`
+    : `${norm(c.file)}#${c.page}`;
 
 /**
  * Prepares message text for the Markdown primitive: every marker becomes a small numbered chip (`[cite: 2]`) that

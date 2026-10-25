@@ -25,6 +25,7 @@ import { defaultSentinels } from '../lib/asserts';
 import { FACTS } from '../lib/fakes/content';
 import { ask } from './flows';
 import { V6, V7, V8, V9, V10, V11, V12 } from './variants-im';
+import { V13 } from './home-onboarding';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export interface VariantDef {
@@ -271,4 +272,5 @@ export const VARIANTS: VariantDef[] = [
   { def: V10, world: { b: true } },
   { def: V11, world: {} },
   { def: V12, world: {} },
+  { def: V13, world: {} },
 ];

@@ -10,6 +10,8 @@ export * from './internal-events';
 export * from './sentinel';
 export * from './llm';
 export * from './chat';
+export * from './chat-context';
+export * from './health';
 export * from './chat-sync';
 export * from './council';
 export * from './a2a';

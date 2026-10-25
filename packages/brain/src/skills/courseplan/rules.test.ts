@@ -177,3 +177,61 @@ describe('repairPlan property', () => {
     expect(creditsOf(catalog, r.courses)).toBeGreaterThanOrEqual(12);
   });
 });
+
+describe('time conflicts (code-level, like prerequisites)', () => {
+  const mk = (id: string, days: ('Mon' | 'Tue' | 'Wed')[], start: string, end: string) => ({
+    id,
+    title: id,
+    credits: 3,
+    prereqs: [],
+    workload: 6,
+    offered: ['fall' as const],
+    area: 'core',
+    days,
+    start,
+    end,
+  });
+  const cat = {
+    name: 't',
+    sample: false,
+    courses: [
+      mk('AAA 101', ['Mon', 'Wed'], '09:00', '10:15'),
+      mk('AAA 102', ['Wed'], '10:00', '11:00'),
+      mk('AAA 103', ['Tue'], '09:00', '10:15'),
+      mk('AAA 104', ['Mon', 'Wed'], '10:15', '11:30'),
+      { ...mk('AAA 105', ['Mon'], '09:00', '10:00'), days: undefined, start: undefined },
+    ],
+  };
+  const deg = { ...degree, core: [], groups: [] };
+  const ctx: PlanContext = {
+    catalog: cat,
+    degree: deg,
+    completed: [],
+    term: 'fall',
+    limits: { minCredits: 0, maxCredits: 18 },
+  };
+  it('flags overlapping meetings on a shared day', () => {
+    const v = validatePlan(['AAA 101', 'AAA 102'], ctx);
+    expect(v).toMatchObject([{ code: 'time-conflict', course: 'AAA 102', needs: 'AAA 101' }]);
+  });
+  it('allows different days and back-to-back meetings', () => {
+    expect(validatePlan(['AAA 101', 'AAA 103', 'AAA 104'], ctx)).toEqual([]);
+  });
+  it('never treats an incomplete row as a conflict', () => {
+    expect(validatePlan(['AAA 101', 'AAA 105'], ctx)).toEqual([]);
+  });
+  it('repair drops the conflicting course and never adds one that overlaps', () => {
+    const r = repairPlan(['AAA 101', 'AAA 102'], { ...ctx, degree: degree }, {});
+    expect(r.repairs.join(' ')).toMatch(/AAA 102 \(meets at the same time as AAA 101\)/);
+    expect(validatePlan(r.courses, ctx)).toEqual([]);
+  });
+  it('no repaired fixture plan ever has overlapping meetings (random proposals)', () => {
+    const c = ctxFor([...MOCK_COMPLETED]);
+    const ids = catalog.courses.map((x) => x.id);
+    for (let i = 0; i < 40; i++) {
+      const prop = ids.filter((_, k) => (k * 7 + i) % 5 === 0);
+      const fixed = repairPlan(prop, c, { targetCredits: 18 });
+      expect(validatePlan(fixed.courses, c).filter((v) => v.code === 'time-conflict')).toEqual([]);
+    }
+  });
+});

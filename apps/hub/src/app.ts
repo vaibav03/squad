@@ -15,6 +15,7 @@ import { loadHubConfig, type HubConfig } from './config';
 import { createChatHub } from './chat/hub-chat';
 import { createChatRoutes } from './chat/routes';
 import { createConnectionRoutes } from './routes/connections';
+import { createHealthRoutes } from './routes/health';
 import { createConfirmRouter } from './confirms';
 import { createIngestor } from './ingest';
 import { applySecurity, type SecurityOptions } from './middleware';
@@ -22,6 +23,7 @@ import { createLogger } from './log';
 import { installObservability, type ObsOptions } from './observability';
 import type { Ports } from './ports';
 import { createAuthRoutes } from './routes/auth';
+import { createPhoneRoutes } from './routes/phone';
 import { createInviteRoutes } from './routes/invites';
 import { createMemberRoutes } from './routes/members';
 import { createSquadRoutes } from './routes/squads';
@@ -34,6 +36,7 @@ import { createLibraryRoutes } from './routes/library';
 import { createMediaRoutes } from './routes/media';
 import { createPlanRoutes } from './plans/routes';
 import { refreshBusyForTrip } from './context/busy';
+import { contextDueFor } from './context/plan';
 import { createDefaultPlanContext } from './plans/context';
 import { createPlanService } from './plans/service';
 import { contextServiceFor } from './context/service';
@@ -157,6 +160,7 @@ export function createHub(opts: HubOptions = {}): Hub {
   deps.plans = createPlanService(
     deps,
     createDefaultPlanContext(deps.db, COURSE_ID, {
+      contextDue: (squadId, members, from, to) => contextDueFor(deps, squadId, members, from, to),
       store: () => contextServiceFor(deps).store,
       squadsOf: (id) => deps.directory.squadsOf(id),
     }),
@@ -207,6 +211,7 @@ export function createHub(opts: HubOptions = {}): Hub {
 
   for (const routes of [
     createAuthRoutes(deps),
+    createPhoneRoutes(deps),
     createSquadRoutes(deps),
     createMemberRoutes(deps),
     createInviteRoutes(deps),
@@ -226,6 +231,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createCouncilRoutes(deps),
     createLiveRoutes(deps),
     createChatRoutes(deps),
+    createHealthRoutes(deps),
     createConnectionRoutes(deps),
     createPlanRoutes(deps),
     ...(config.sim ? [createSimRoutes(deps)] : []),
