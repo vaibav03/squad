@@ -1,5 +1,5 @@
 import { easeOut, minHoldMs, progress } from '../curves';
-import type { Access, BubbleSpec, ChalkMark, Occupant, PaintOpts, SceneCommand } from '../contract';
+import type { Access, BubbleSpec, ChalkMark, Occupant, SceneCommand } from '../contract';
 
 /** The clock part of PaintOpts: what time-based helpers need. */
 export type Clock = { t: number; calm: boolean };

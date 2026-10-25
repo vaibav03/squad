@@ -1,4 +1,4 @@
-import { Raster } from './pixel/raster';
+import type { Raster } from './pixel/raster';
 
 /** Manifest entry subset the scenes need (assets/asset-manifest.json). */
 export interface ManifestAsset {

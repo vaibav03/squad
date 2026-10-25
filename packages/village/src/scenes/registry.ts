@@ -1,6 +1,10 @@
 import type { SceneBundle, SceneDef } from './contract';
 import { chapterHouse, chapterHouseBundle } from './chapter-house';
 import { councilHall, councilHallBundle } from './council-hall';
+import { debateStage, debateStageBundle } from './landmarks/debate-stage';
+import { feynmanPorch, feynmanPorchBundle } from './landmarks/feynman-porch';
+import { panicBooth, panicBoothBundle } from './landmarks/panic-booth';
+import { roundTable, roundTableBundle } from './landmarks/round-table';
 import { devilsTa, devilsTaBundle } from './landmarks/devils-ta';
 import { examOracle, examOracleBundle } from './landmarks/exam-oracle';
 import { oralHut, oralHutBundle } from './landmarks/oral-hut';
@@ -30,6 +34,10 @@ export const PLACEMENTS: readonly Placement[] = [
   p('chapter-3', chapterHouse, 'Chapter 3', { chapter: true }),
   p('chapter-4', chapterHouse, 'Chapter 4', { chapter: true }),
   p('council-hall', councilHall, 'Council Hall', { agent: 'council:quizkey' }),
+  p('debate-stage', debateStage, 'Debate Stage', { agent: 'council:debate' }),
+  p('round-table', roundTable, 'Course-Planning Round Table', { agent: 'council:planner' }),
+  p('feynman-porch', feynmanPorch, 'Feynman Porch', { agent: 'expert:feynman' }),
+  p('panic-booth', panicBooth, 'Panic Line booth', { agent: 'expert:stepdiff' }),
   p('exam-oracle', examOracle, 'Exam Oracle', { agent: 'expert:oracle' }),
   p('oral-exam-hut', oralHut, 'Oral Exam Hut', { agent: 'expert:oral' }),
   p('rubric-courthouse', rubricCourthouse, 'Rubric Courthouse', { agent: 'expert:rubric' }),
@@ -39,6 +47,10 @@ export const PLACEMENTS: readonly Placement[] = [
 export const BUNDLES: readonly SceneBundle<unknown>[] = [
   chapterHouseBundle as SceneBundle<unknown>,
   councilHallBundle as SceneBundle<unknown>,
+  debateStageBundle as SceneBundle<unknown>,
+  roundTableBundle as SceneBundle<unknown>,
+  feynmanPorchBundle as SceneBundle<unknown>,
+  panicBoothBundle as SceneBundle<unknown>,
   examOracleBundle as SceneBundle<unknown>,
   oralHutBundle as SceneBundle<unknown>,
   rubricCourthouseBundle as SceneBundle<unknown>,
