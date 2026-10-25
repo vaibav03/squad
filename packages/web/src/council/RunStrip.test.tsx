@@ -175,9 +175,9 @@ describe('panels and the shared board', () => {
     const { CouncilBoard } = await import('./board/CouncilBoard');
     render(<CouncilBoard store={store} open onClose={() => {}} />);
     await act(async () => new Promise((r) => setTimeout(r, 30)));
-    const head = document.querySelector('.cb-status')!;
+    const head = document.querySelector('[data-testid="cb-headline"]')!;
     expect(head.textContent).not.toMatch(/Question received|Planning who to ask/);
-    expect(head.textContent).toContain('Result');
+    expect(document.querySelector('[data-testid="cb-result"]')!.textContent).toContain('Council result');
   });
 });
 

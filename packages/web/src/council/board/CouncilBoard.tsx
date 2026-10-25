@@ -11,6 +11,7 @@ import { postCouncilAction, type ActionKind } from './actions-api';
 import { OverlayFrame } from '../../overlays/kit/OverlayFrame';
 import { LvIcon } from '../../overlays/kit/icons';
 import { DelegationCards } from './DelegationCards';
+import { ResultCard } from './ResultCard';
 import { BoardFocusPanel } from './BoardFocusPanel';
 import { FilterToggle } from '../../overlays/inspector/focus/parts';
 import { HandoffTimeline } from '../../overlays/inspector/focus/HandoffTimeline';
@@ -28,6 +29,7 @@ import { EmptyCouncilState, LastRunLabel } from '../last-run/components';
 import { useLastRunsState } from '../last-run/store';
 import './board.css';
 import '../deliberation/deliberation.css';
+import './result.css';
 
 export interface CouncilBoardProps {
   store: CouncilBoardStore;
@@ -162,12 +164,6 @@ export function CouncilBoard({
           </h2>
           {run?.question ? <p className="cb-question">{run.question}</p> : null}
           <LastRunLabel runId={run?.runId} />
-          {run ? (
-            <p className="cb-status" data-stage={run.stage} role="status">
-              <span className="cb-status__k">{run.stage === 'done' ? 'Result' : 'Now'}</span>{' '}
-              {statusLine(run)}
-            </p>
-          ) : null}
         </div>
         <div className="cb-head__side">
           {run ? <ModeBadge mode={run.mode} /> : null}
@@ -195,10 +191,71 @@ export function CouncilBoard({
           </button>
         </div>
       </header>
-      <div className="cb-strip-row">
+      {run ? (
+        <div className="cb-flow" data-testid="cb-flow">
+          <ResultCard run={run} onSelectAgent={openFocus} />
+          <PhaseStepper run={run} />
+          <Roster
+            store={store}
+            run={run}
+            calm={calm}
+            councilStatus={hubStatus}
+            selected={focus || focusAgent || ''}
+          />
+          <details className="cb-more" data-testid="cb-evidence">
+            <summary>Evidence and next steps</summary>
+            <DecisionCard
+              run={run}
+              onJump={onJump}
+              act={act}
+              sendOffReason={sendOff}
+              hub={hub}
+              councilStatus={hubStatus}
+              replay={replay}
+              onClose={onClose}
+            />
+            <BallotMatrix run={run} />
+            <DelegationCards delegations={run.delegations} onSeeAnswer={onJump} />
+          </details>
+          <details className="cb-more" data-testid="cb-discussion">
+            <summary>Show discussion</summary>
+            <div className="cb-views">
+              <FilterToggle<'timeline' | 'feed'>
+                label="Communication view"
+                value={view}
+                onChange={setView}
+                options={[
+                  { id: 'feed', label: 'Turns' },
+                  { id: 'timeline', label: 'Handoff timeline' },
+                ]}
+              />
+            </div>
+            {view === 'timeline' ? (
+              <div className="cb-timeline-scroll">
+                <HandoffTimeline
+                  run={run}
+                  defaultFilter="all"
+                  timeStyle="clock"
+                  onSelectAgent={openFocus}
+                />
+              </div>
+            ) : (
+              <TurnFeed
+                run={run}
+                filter={filter}
+                onFilter={setFilter}
+                jumpTo={jump}
+                selectedId={selectedMsg}
+                onSelect={(id) => setSelectedMsg((cur) => (cur === id ? null : id))}
+              />
+            )}
+          </details>
+          <details className="cb-more" data-testid="cb-technical">
+            <summary>Technical details</summary>
+            <div className="cb-strip-row">
         <CouncilStatusStrip
           status={hubStatus}
-          variant="compact"
+          variant="full"
           {...(run
             ? {
                 run: {
@@ -215,67 +272,8 @@ export function CouncilBoard({
             : {})}
         />
       </div>
-      {run ? (
-        <>
-          <PhaseStepper run={run} />
-          <div className="cb-body dl-body">
-            <div className="cb-col dl-col dl-col--side">
-              <Roster
-                store={store}
-                run={run}
-                calm={calm}
-                councilStatus={hubStatus}
-                selected={focus || focusAgent || ''}
-              />
-              <BallotMatrix run={run} />
-              <DelegationCards delegations={run.delegations} onSeeAnswer={onJump} />
-            </div>
-            <div className="cb-col dl-col dl-col--feed">
-              <div className="cb-views">
-                <FilterToggle<'timeline' | 'feed'>
-                  label="Communication view"
-                  value={view}
-                  onChange={setView}
-                  options={[
-                    { id: 'feed', label: 'Turns' },
-                    { id: 'timeline', label: 'Handoff timeline' },
-                  ]}
-                />
-              </div>
-              {view === 'timeline' ? (
-                <div className="cb-timeline-scroll">
-                  <HandoffTimeline
-                    run={run}
-                    defaultFilter="all"
-                    timeStyle="clock"
-                    onSelectAgent={openFocus}
-                  />
-                </div>
-              ) : (
-                <TurnFeed
-                  run={run}
-                  filter={filter}
-                  onFilter={setFilter}
-                  jumpTo={jump}
-                  selectedId={selectedMsg}
-                  onSelect={(id) => setSelectedMsg((cur) => (cur === id ? null : id))}
-                />
-              )}
-            </div>
-            <div className="cb-col dl-col dl-col--decision">
-              <DecisionCard
-                run={run}
-                onJump={onJump}
-                act={act}
-                sendOffReason={sendOff}
-                hub={hub}
-                councilStatus={hubStatus}
-                replay={replay}
-                onClose={onClose}
-              />
-            </div>
-          </div>
-        </>
+          </details>
+        </div>
       ) : (
         <EmptyCouncilState hub={hub} store={store} hideStrip />
       )}

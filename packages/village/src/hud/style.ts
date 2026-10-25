@@ -3,12 +3,12 @@
  * DOM animates only transform and opacity; hover only on fine pointers; 44 px targets; pixel font Jersey 10 at 18.667 px (2 art px).
  */
 export const HUD_CSS = `
-.sqv-hud{--ink:#070f1f;--hud-bg:rgb(11 29 56/.8);--hud-border:rgb(180 214 218/.2);--secondary:#12335a;--accent:#174a73;--fg:#eef3f8;--muted:#8fb0c4;--ring:#b4d6da;
- --glow:#ffc857;--moon:#fff2c4;--ok:#5fcf8a;--alert:#e0485a;--ember:#f08a3a;--idle:#6fa3b8;
+.sqv-hud{--ink:#070f1f;--hud-bg:rgb(11 29 56/.8);--hud-border:rgb(180 214 218/.2);--secondary:#12335a;--accent:#174a73;--fg:#eef3f8;--muted:#e3edf5;--ring:#b4d6da;
+ --glow:#ffc857;--moon:#fff2c4;--ok:#5fcf8a;--alert:#e0485a;--ember:#f08a3a;--idle:#c5dbe8;
  --ease-out:cubic-bezier(.23,1,.32,1);--ease-drawer:cubic-bezier(.32,.72,0,1);
  --top-h:auto;--bottom-h:auto;
  position:absolute;inset:0;pointer-events:none;z-index:5;color:var(--fg);box-sizing:border-box;
- font-family:'Jersey 10','Jersey 10 Fallback',ui-monospace,Menlo,Consolas,monospace;font-size:18.667px;line-height:1;letter-spacing:0;-webkit-font-smoothing:none;font-smooth:never;text-rendering:optimizeSpeed;
+ font-family:var(--font-sans,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif);font-size:16px;line-height:1.4;letter-spacing:0;-webkit-font-smoothing:auto;text-rendering:optimizeLegibility;
  display:grid;grid-template-columns:1fr auto 1fr;grid-template-rows:var(--top-h) 1fr var(--bottom-h);
  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));gap:8px}
 .sqv-hud *{box-sizing:border-box}
@@ -17,15 +17,15 @@ export const HUD_CSS = `
 .sqv-panel{pointer-events:auto;background:var(--hud-bg);border:1px solid var(--hud-border);box-shadow:0 0 0 2px var(--ink),0 6px 18px rgb(7 15 31/.45);border-radius:12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .sqv-rail{grid-area:1/1;justify-self:start;align-self:start;max-width:min(100%,640px);display:flex;flex-direction:column;gap:2px;min-width:0}
 .sqv-rail__head{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 10px;margin:0 0 2px 8px}
-.sqv-rail__title{margin:0;font:700 12px/1.2 var(--font-sans,system-ui);color:var(--fg);text-shadow:0 1px 2px var(--ink)}
-.sqv-rail__hint{margin:0;font:500 11px/1.3 var(--font-sans,system-ui);color:var(--fg);opacity:.85;text-shadow:0 1px 2px var(--ink);max-width:420px}
+.sqv-rail__title{margin:0;font:700 14px/1.4 var(--font-sans,system-ui);color:var(--fg);text-shadow:0 1px 2px var(--ink)}
+.sqv-rail__hint{margin:0;font:500 14px/1.4 var(--font-sans,system-ui);color:var(--fg);opacity:1;text-shadow:0 1px 2px var(--ink);max-width:420px}
 .sqv-chips{display:flex;gap:8px;padding:6px;max-width:100%;overflow-x:auto;scrollbar-width:none;align-self:start}
 .sqv-chips::-webkit-scrollbar{display:none}
 .sqv-clock-wrap{grid-area:1/2;align-self:start;justify-self:center}
 .sqv-ctrl{grid-area:1/3;justify-self:end;align-self:start;display:flex;gap:8px;align-items:center}
 .sqv-mid{grid-area:2/1/3/4;position:relative}
 .sqv-bottom{grid-area:3/1/4/4}
-.sqv-chip{position:relative;flex:none;width:84px;min-height:66px;border-radius:10px;border:0;background:var(--secondary);color:var(--fg);font:inherit;font-size:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:4px 2px;
+.sqv-chip{position:relative;flex:none;width:96px;min-height:76px;border-radius:10px;border:0;background:var(--secondary);color:var(--fg);font:inherit;font-size:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:4px 2px;
  box-shadow:0 0 0 2px var(--ink);transition:opacity .15s ease,transform .16s var(--ease-out),box-shadow .15s ease}
 .sqv-chip:active{transform:scale(.97)}
 .sqv-chip .sqv-initial{transform:translateY(-1px)}
@@ -37,8 +37,8 @@ export const HUD_CSS = `
 .sqv-chip[data-state=waiting_for_student]{box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--ember)}
 .sqv-chip[data-state=waiting_for_student]::before{content:'';position:absolute;inset:-7px;border-radius:14px;border:2px solid var(--ember);opacity:.6;animation:sqv-ring 1.6s var(--ease-out) infinite}
 .sqv-calm .sqv-chip::before{animation:none!important;opacity:.55}
-.sqv-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 11px/1.1 var(--font-sans,system-ui);color:var(--fg)}
-.sqv-status{display:inline-flex;align-items:center;gap:3px;font:600 11px/1 var(--font-sans,system-ui);color:var(--idle);white-space:nowrap}
+.sqv-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 14px/1.2 var(--font-sans,system-ui);color:var(--fg)}
+.sqv-status{display:inline-flex;align-items:center;gap:3px;font:600 14px/1.2 var(--font-sans,system-ui);color:var(--idle);white-space:nowrap}
 .sqv-chip[data-state=studying] .sqv-status{color:var(--glow)}.sqv-chip[data-state=in_call] .sqv-status{color:var(--ok)}.sqv-chip[data-state=waiting_for_student] .sqv-status{color:var(--ember)}
 .sqv-chip img{width:32px;height:32px;object-fit:none;object-position:center top;image-rendering:pixelated}
 @keyframes sqv-ring{from{transform:scale(1);opacity:.6}to{transform:scale(1.15);opacity:0}}
@@ -51,7 +51,7 @@ export const HUD_CSS = `
 .sqv-clock{display:flex;gap:8px;align-items:center;padding:0 14px;height:44px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .sqv-moon{width:12px;height:12px;border-radius:50%;box-shadow:inset -4px 0 0 0 var(--moon);flex:none}
 .sqv-sun{background:var(--glow);box-shadow:none}
-.sqv-badge{font-family:'Silkscreen','Jersey 10',monospace;font-size:8px;letter-spacing:.06em;color:var(--ok);padding-left:8px;border-left:2px solid var(--hud-border);text-transform:uppercase}
+.sqv-badge{font-family:var(--font-sans,system-ui);font-weight:700;font-size:14px;letter-spacing:.06em;color:var(--ok);padding-left:8px;border-left:2px solid var(--hud-border);text-transform:uppercase}
 .sqv-badge:empty{display:none}
 .sqv-prompt{pointer-events:auto;position:absolute;left:50%;bottom:0;display:flex;gap:10px;align-items:center;height:44px;padding:0 14px;font:inherit;color:var(--fg);cursor:pointer;opacity:0;transform:translate(-50%,8px);transition:opacity .2s var(--ease-out),transform .2s var(--ease-out);visibility:hidden;white-space:nowrap;max-width:100%}
 .sqv-prompt[data-show=true]{opacity:1;transform:translate(-50%,0);visibility:visible}
@@ -70,7 +70,7 @@ export const HUD_CSS = `
 @keyframes sqv-pop{from{transform:scale(.95);opacity:0}to{transform:none;opacity:1}}
 .sqv-menu{display:none;grid-area:1/3;justify-self:end;align-self:start}
 .sqv-pop{display:none}
-.sqv-help{position:absolute;right:0;top:0;width:min(300px,100%);padding:14px;pointer-events:auto;font-size:18.667px;line-height:1.35;opacity:0;transform:translateY(8px);visibility:hidden;transition:opacity .2s var(--ease-drawer),transform .2s var(--ease-drawer),visibility 0s .2s}
+.sqv-help{position:absolute;right:0;top:0;width:min(300px,100%);padding:14px;pointer-events:auto;font-size:16px;line-height:1.5;opacity:0;transform:translateY(8px);visibility:hidden;transition:opacity .2s var(--ease-drawer),transform .2s var(--ease-drawer),visibility 0s .2s}
 .sqv-help[data-open=true]{opacity:1;transform:none;visibility:visible;transition-delay:0s}
 .sqv-help b{color:var(--moon);font-weight:normal}
 .sqv-calm .sqv-prompt,.sqv-calm .sqv-help{transition-duration:.12s}
