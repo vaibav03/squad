@@ -324,8 +324,6 @@ export function createAuthRoutes(deps: HubDeps): HubApp {
     deps.squads.leaveAll(id);
     for (const sql of [
       'DELETE FROM hub_busy_blocks WHERE student=?',
-      'DELETE FROM hub_ledger_rows WHERE student=?',
-      'DELETE FROM hub_ledger_private WHERE student=?',
       'DELETE FROM memory WHERE scope_id=?',
       'DELETE FROM pending_confirms WHERE student_id=?',
     ])
@@ -334,6 +332,7 @@ export function createAuthRoutes(deps: HubDeps): HubApp {
       } catch {
         /* table absent in a minimal db */
       }
+    deps.ledger.forget(id);
     deps.trips.forget(id);
     deps.accounts.revokeAll(id);
     deps.accounts.deleteUser(id);

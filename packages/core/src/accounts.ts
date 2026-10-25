@@ -199,7 +199,7 @@ export const InvitePreviewSchema = z.object({
 });
 export type InvitePreview = z.infer<typeof InvitePreviewSchema>;
 
-export const InviteJoinBodySchema = z.object({ code: z.string().trim().min(8).max(20) }).strict();
+export const InviteJoinBodySchema = z.object({ code: z.string().trim().min(1).max(200) }).strict();
 export type InviteJoinBody = z.infer<typeof InviteJoinBodySchema>;
 
 export const SquadDetailSchema = z.object({

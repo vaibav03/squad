@@ -43,12 +43,15 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
     return c.json({ tasks });
   });
 
-  r.get('/v1/ledger/:taskId', need, (c) =>
-    c.json({
+  r.get('/v1/ledger/:taskId', need, (c) => {
+    // Squad isolation: only rows owned by members of the viewer's squad, whatever the task id.
+    const v = c.get('viewer');
+    const members = new Set(deps.directory.squad(v.squadId)?.members ?? []);
+    return c.json({
       taskId: c.req.param('taskId'),
-      entries: deps.ledger.entries(c.req.param('taskId'), c.get('viewer')),
-    }),
-  );
+      entries: deps.ledger.entries(c.req.param('taskId'), v).filter((e) => members.has(e.student)),
+    });
+  });
 
   r.get('/v1/trips/:tripId', need, (c) => {
     const view = deps.trips.view(c.req.param('tripId'), c.get('viewer'), {

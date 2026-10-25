@@ -250,6 +250,8 @@ export interface LedgerStore {
   /** Rows for a task as the viewer may see them (owner: raw withheld unless projector; others: 'hidden'). */
   entries(taskId: string, viewer: Viewer): LedgerEntry[];
   taskIds(squadId: string, directory: Directory): string[];
+  /** Account deletion: drop every row (and private raw value) the student owns. */
+  forget(student: StudentId): void;
   clear(): void;
 }
 
