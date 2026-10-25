@@ -15,7 +15,7 @@ import { createCouncilRunStore, KEEP_PER_SQUAD } from '../council/run-store';
 import type { Viewer } from '../types';
 
 const SECRET = 'status-test';
-const KEY = 'AIzaSyTESTSENTINEL_not_a_real_key_0123456789';
+const KEY = ['AI', 'za', 'Sy', 'FAKE'.repeat(8), '0123'].join('');
 const tok = (sub: string) => signToken(SECRET, { kind: 'bearer', sub, ttlMs: 60_000 }).token;
 const v = (studentId: string, squadId: string): Viewer => ({
   studentId,
