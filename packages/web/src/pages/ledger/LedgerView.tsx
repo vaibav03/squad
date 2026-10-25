@@ -77,8 +77,10 @@ export function LedgerView(props: LedgerViewProps) {
   return (
     <Page
       className="lv-ledger"
-      eyebrow="Glass Box"
-      title={title}
+      eyebrow={rows.length > 0 ? `Task: ${title}` : 'Privacy'}
+      title="Privacy ledger: what agents shared"
+      lede="Everything your agents shared, and everything they kept back. Withheld details never leave their owner."
+      next="Open a row to see which agent shared it and why. Switch to Demo projector before showing this on a screen."
       actions={
         <>
           <ConnectionBadge connection={connection} onRetry={onRetry} />
@@ -98,11 +100,6 @@ export function LedgerView(props: LedgerViewProps) {
         </>
       }
     >
-      <p className="lv-lede">
-        Everything your agents shared, and everything they kept back. Withheld details never leave
-        their owner.
-      </p>
-
       {projector && (
         <Notice tone="info">
           Demo projector is on. Other students&rsquo; entries stay blurred until you select them.

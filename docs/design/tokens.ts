@@ -68,6 +68,13 @@ export const pixel = {
   snap(v: number, zoom: number): number { return Math.round(v * zoom) / zoom; },
 } as const;
 
+/** Council chamber tokens (mirror of the --cc-* block in tokens.css). Amber = authority, cyan = participants, rose = disagreement. */
+export const councilChamber = {
+  surface: '#0d2142', text: '#eef3f8', textDim: '#9db9cb',
+  amber: '#ffc857', amberInk: '#1a1203', cyan: '#7fd6ea', rose: '#ff8e9b', violet: '#b3a5ff', green: '#7fe0a4',
+  glassBlurPx: 14, handoffMs: 200,
+} as const;
+
 /* ---------- Motion ---------- */
 export const duration = { press: 100, fast: 150, base: 200, panel: 280, bubble: 160, bubbleExit: 120, camera: 400, tripScroll: 2400 } as const; // ms
 export type Bezier = readonly [number, number, number, number];

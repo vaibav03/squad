@@ -5,7 +5,7 @@ import { useAccount } from '../../auth/AuthProvider';
 import { InviteCard } from '../../auth/InviteCard';
 import { userMessage } from '../../auth/errors';
 import { Avatar } from '../../primitives/Avatar';
-import { Badge } from '../../primitives/Badge';
+import { Icon } from '../../primitives/Icon';
 import { Button } from '../../primitives/Button';
 import { Card } from '../../primitives/Card';
 import { EmptyState, ErrorState, OfflineState } from '../../primitives/EmptyState';
@@ -125,7 +125,7 @@ export default function SquadMembersPage() {
                     className="sq-members__role"
                     title={m.role === 'owner' ? 'Owner' : 'Member'}
                   >
-                    <Badge tone={m.role === 'owner' ? 'ember' : 'neutral'} dot />
+                    <Icon name={m.role === 'owner' ? 'crown' : 'user'} size={14} />
                     {m.role === 'owner' ? 'Owner' : 'Member'}
                   </span>
                   {owner && !m.you ? (

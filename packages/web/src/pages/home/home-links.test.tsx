@@ -51,11 +51,11 @@ const hrefs = () =>
   [...document.querySelectorAll('.sq-home__link')].map((a) => a.getAttribute('href'));
 
 describe('resolveHomeLinks (no hard-coded demo ids)', () => {
-  it('no trip -> Plan a trip at /squad/trips', () => {
+  it('no trip -> Plan a trip with your group (chat wizard)', () => {
     const l = resolveHomeLinks({ kind: 'none' });
     expect(l.find((x) => x.icon === 'plane')).toMatchObject({
-      title: 'Plan a trip',
-      to: '/squad/trips',
+      title: 'Plan a trip with your group',
+      to: '/squad/chat?wizard=trip',
     });
   });
   it('a current trip -> its own title and id', () => {
@@ -92,7 +92,7 @@ describe('Home bootstrap', () => {
     });
     await waitFor(() => expect(screen.queryByText('Connecting to Squad...')).toBeNull());
     expect(screen.queryByText('You are offline')).toBeNull();
-    expect(screen.getByText('Link your phone')).toBeTruthy();
+    expect(screen.getByText('Connect iMessage via Sendblue')).toBeTruthy();
   });
 
   it('a hub that never answers ends in a true offline state with Retry, then recovers', async () => {
@@ -107,19 +107,18 @@ describe('Home bootstrap', () => {
       screen.getByRole('button', { name: /retry/i }).click();
       await vi.advanceTimersByTimeAsync(300);
     });
-    await waitFor(() => expect(screen.getByText('Link your phone')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Connect iMessage via Sendblue')).toBeTruthy());
   });
 });
 
 describe('Home cards resolve from real state', () => {
   it('fresh account: Plan a trip, every card has a real route', async () => {
     mount();
-    await screen.findByText('Plan a trip');
+    await screen.findByText('Plan a trip with your group');
     expect(hrefs()).toEqual([
       '/squad/ledger',
-      '/squad/trips',
+      '/squad/chat?wizard=trip',
       '/squad/mastery',
-      '/squad/village?plan=1',
       '/squad/courses',
     ]);
     expect(screen.queryByText('Spring break trip')).toBeNull();

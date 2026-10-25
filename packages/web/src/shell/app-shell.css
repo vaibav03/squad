@@ -125,11 +125,47 @@
 .sq-shell__status {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-pill);
-  background: var(--secondary);
+}
+.sq-shell__more {
+  position: relative;
+}
+.sq-shell__morebtn {
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.sq-shell__morepop {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: var(--z-menu, 60);
+  min-width: 220px;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  background: var(--card);
+  color: var(--foreground);
   border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+}
+.sq-shell__moreitem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm, 6px);
+  color: var(--foreground);
+  text-decoration: none;
+  font: 500 var(--text-sm) / 1 var(--font-sans);
+}
+.sq-shell__moreitem:hover,
+.sq-shell__moreitem:focus-visible {
+  background: var(--accent);
+}
+.sq-shell__moreitem.is-active {
+  font-weight: 700;
 }
 .sq-shell__account {
   position: relative;
@@ -332,11 +368,14 @@
   }
 }
 @media (max-width: 1023px) {
-  .sq-shell__status {
-    display: none;
+  .sq-shell__status .sq-pill {
+    padding: 0 var(--space-2);
+    max-width: 150px;
+    overflow: hidden;
   }
-  .sq-shell.is-bleed .sq-shell__status {
-    display: inline-flex;
+  .sq-shell__status .sq-pill__text {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

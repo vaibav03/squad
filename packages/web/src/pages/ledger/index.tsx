@@ -9,7 +9,7 @@ import { useLiveConfig } from '../../overlays/kit';
 /** /squad/ledger/:taskId? (Glass Box). Live over SSE, recorded replay in mock mode. */
 export default function LedgerPage() {
   const { setTitle } = useShell();
-  useEffect(() => setTitle('Ledger'), [setTitle]);
+  useEffect(() => setTitle('Privacy ledger'), [setTitle]);
   const params = useParams();
   const taskId = params.taskId ?? TASK_ID;
   const cfg = useLiveConfig();

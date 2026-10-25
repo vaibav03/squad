@@ -32,10 +32,15 @@ const settle = () => act(async () => new Promise((r) => setTimeout(r, 30)));
 async function open(
   store: CouncilBoardStore,
   props: Partial<Parameters<typeof CouncilBoard>[0]> = {},
+  view: 'feed' | 'timeline' = 'feed',
 ) {
   const onClose = vi.fn();
   render(<CouncilBoard store={store} open onClose={onClose} {...props} />);
   await settle();
+  if (view === 'feed') {
+    const b = screen.queryByRole('button', { name: 'Message feed' });
+    if (b) fireEvent.click(b);
+  }
   return { dlg: screen.getByRole('dialog'), onClose };
 }
 
@@ -79,8 +84,9 @@ describe('Council board', () => {
   it('an empty store offers a labelled sample instead of a blank dialog', async () => {
     const store = createCouncilBoardStore();
     await open(store);
-    expect(screen.getByText('No council session yet')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Show a sample (Demo)' }));
+    expect(screen.getByText('No council has met yet')).toBeTruthy();
+    // no hub here: Convene plays the scripted sample, and the strip says so out loud
+    fireEvent.click(screen.getByRole('button', { name: 'Convene the council' }));
     await settle();
     expect(screen.getByTestId('cb-verdict')).toBeTruthy();
   });
@@ -150,17 +156,45 @@ describe('Council board', () => {
     expect(rows[0]!.classList.contains('is-hl')).toBe(true);
   });
 
-  it('org chart: selecting an agent filters the feed, with arrow-key movement between agents', async () => {
+  it('org chart: pressing an agent opens one focused panel that swaps, with arrow-key movement between agents', async () => {
     const { dlg } = await open(loaded());
     const nodes = [...dlg.querySelectorAll<HTMLElement>('.cb-node')];
+    expect(nodes.every((n) => n.tagName === 'BUTTON')).toBe(true);
     const skeptic = nodes.find((n) => n.textContent?.includes('Skeptic'))!;
+    const teacher = nodes.find((n) => n.textContent?.includes('Teacher'))!;
+    skeptic.focus();
     fireEvent.click(skeptic);
-    expect(skeptic.getAttribute('aria-pressed')).toBe('true');
-    for (const r of dlg.querySelectorAll('article.cb-row'))
-      expect(r.textContent).toContain('Skeptic');
+    let panel = screen.getByRole('dialog', { name: /^Skeptic/ });
+    expect(screen.getAllByTestId('agent-focus-panel')).toHaveLength(1);
+    expect(within(panel).getByRole('tab', { name: 'Conversation', selected: true })).toBeTruthy();
+    fireEvent.click(teacher);
+    panel = screen.getByRole('dialog', { name: /^Teacher/ });
+    expect(screen.getAllByTestId('agent-focus-panel')).toHaveLength(1);
     nodes[0]!.focus();
     fireEvent.keyDown(nodes[0]!, { key: 'ArrowRight' });
     expect(document.activeElement).toBe(nodes[1]);
+  });
+
+  it('board shows the handoff timeline of ALL communication by default; Esc closes the focused panel first, then the board', async () => {
+    const store = loaded();
+    const { dlg, onClose } = await open(store, {}, 'timeline');
+    const tl = within(dlg).getByRole('region', { name: 'Handoff timeline' });
+    expect(tl.getAttribute('data-filter')).toBe('all');
+    expect(within(tl).getAllByTestId('af-row').length).toBe(store.run()!.messages.length);
+    const node = [...dlg.querySelectorAll<HTMLElement>('.cb-node')].find((n) =>
+      n.textContent?.includes('Skeptic'),
+    )!;
+    node.focus();
+    fireEvent.click(node);
+    await settle();
+    const panel = screen.getByRole('dialog', { name: /^Skeptic/ });
+    const sel = within(panel).getByRole('button', { name: 'Selected agent' });
+    expect(sel.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.keyDown(panel.querySelector('h2')!, { key: 'Escape' });
+    await settle();
+    expect(screen.queryByTestId('agent-focus-panel')).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(node);
   });
 
   it('verdict: confidence in words, dissent linked to the dissenting message', async () => {
@@ -230,11 +264,12 @@ describe('Council board', () => {
     });
     await settle();
     expect(within(v).getByRole('status').textContent).toBe('Added to the study plan.');
-    expect(calls.map((c) => c.url)).toEqual([
+    const acts = calls.filter((c) => c.url.includes('/actions/'));
+    expect(acts.map((c) => c.url)).toEqual([
       `http://hub.test/v1/council/${store.run()!.runId}/actions/chat`,
       `http://hub.test/v1/council/${store.run()!.runId}/actions/plan`,
     ]);
-    expect(JSON.parse(calls[1]!.body!)).toEqual({ actionId: first.id });
+    expect(JSON.parse(acts[1]!.body!)).toEqual({ actionId: first.id });
     // the old chat-phrase workaround is gone: nothing goes through /v1/chat/send
     expect(calls.some((c) => c.url.includes('/v1/chat/'))).toBe(false);
   });

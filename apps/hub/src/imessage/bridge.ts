@@ -29,13 +29,15 @@ import { activateSquad, announceMember } from '../routes/squads';
 import { parseCommand } from './commands';
 import { maskHandle, type ImessageStore } from './store';
 import { createImessageSync, BACKFILL_ANSWER_MAX_MS, type ImessageSync } from './sync';
-import { DELIVERY_LABELS } from '@squad/core';
+import { DELIVERY_LABELS, absolutizeLinks } from '@squad/core';
 import { isMirrorEcho, mirrorText, shouldMirrorStudent } from './sync-rules';
 
 export interface BridgeOptions {
   deps: HubDeps;
   gateway: IMessageGateway;
   store: ImessageStore;
+  /** Which provider carries the chat, stamped on inbound messages ("via iMessage (Sendblue)"). */
+  provider?: 'sendblue' | 'photon' | 'fixture';
   /** Base of the web links in messages. Default: the hub's HUB_WEB_URL. */
   webUrl?: string;
   now?: () => number;
@@ -87,6 +89,8 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
   const { deps, gateway, store } = o;
   const now = o.now ?? deps.now;
   const web = (o.webUrl ?? deps.config.webUrl).replace(/\/+$/, '');
+  // links inside reply text: only when a public web URL is configured; otherwise the page name, no link
+  const publicWeb = o.webUrl ?? deps.config.publicWebUrl;
   const log = deps.log;
 
   /** Raw handles live in memory only (never stored): where a nudge or reply to a student can be sent. */
@@ -233,6 +237,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
     const origin = (skipped: SkippedAttachment[]) => ({
       ts: m.ts,
       transport: 'imessage' as const,
+      ...(o.provider ? { provider: o.provider } : {}),
       externalId: m.guid,
       senderLabel: nameOf(userId),
       ...(h.late ? { receivedLate: true } : {}),
@@ -444,6 +449,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       origin: {
         ts: m.ts,
         transport: 'imessage',
+        ...(o.provider ? { provider: o.provider } : {}),
         externalId: m.guid,
         senderLabel: label,
         ...(h.late ? { receivedLate: true } : {}),
@@ -498,6 +504,8 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       ...(councilLink ? { councilLink } : {}),
       council,
     });
+    // plain text with absolute links only (a relative /squad/... path is useless on a phone)
+    parts = parts.map((p) => absolutizeLinks(p, publicWeb));
     if (group) {
       const secrets = [...SENTINELS, ...deps.ledger.privateValues()];
       if (parts.some((p) => leaks(p, secrets))) {
