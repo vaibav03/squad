@@ -12,6 +12,9 @@
     "test:smoke": "vitest run --dir test/smoke --passWithNoTests"
   },
   "dependencies": {
-    "@squad/core": "workspace:*"
+    "@google/genai": "^1.52.0",
+    "@squad/core": "workspace:*",
+    "sharp": "^0.35.5",
+    "zod": "^4.6.7"
   }
 }
