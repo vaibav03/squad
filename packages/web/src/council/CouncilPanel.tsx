@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { COUNCIL_QUESTION_MAX, COUNCIL_QUESTION_MIN } from '@squad/core';
 import type { HubCtx } from '../pages/village/hub';
+import { noteCouncilResult, setPendingVoices } from '../overlays/inspector/bridge';
 import { OverlayFrame } from '../overlays/kit/OverlayFrame';
 import { LvIcon } from '../overlays/kit/icons';
 import { usePrefersReducedMotion } from '../overlays/kit/hooks';
@@ -150,6 +151,21 @@ export function CouncilPanel(props: CouncilPanelProps) {
     playing && !view.rankings && !view.verdict && !stopped
       ? COUNCIL_ROSTER.filter((r) => !visible.some((m) => m.id === r.id))
       : [];
+  // The inspector reads the same words the panel shows, as they appear: stances, answers, ranks, verdict, dissent.
+  const pendingKey = pending.map((p) => p.id).join(',');
+  useEffect(() => {
+    const ids = pendingKey ? pendingKey.split(',') : [];
+    setPendingVoices(ids, true);
+    return () => setPendingVoices(ids, false);
+  }, [pendingKey]);
+  useEffect(() => {
+    if (result)
+      noteCouncilResult(result, {
+        members: view.members,
+        rankings: view.rankings,
+        verdict: view.verdict,
+      });
+  }, [result, view.members, view.rankings, view.verdict]);
   const canSkip = playing && !view.verdict && !stopped;
   const near = draft.length >= COUNCIL_QUESTION_MAX - 60;
 

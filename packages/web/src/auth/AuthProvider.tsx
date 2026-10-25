@@ -17,6 +17,7 @@ import type {
 } from '@squad/core';
 import type { AccountsClient, Me } from './client';
 import { isApiError } from './errors';
+import { rememberName } from '@squad/village/inspector';
 import { loadToken, saveToken } from './storage';
 
 export type AccountStatus = 'loading' | 'signed-out' | 'signed-in' | 'offline';
@@ -68,6 +69,9 @@ export function AuthProvider({
   const [online, setOnline] = useState(() =>
     typeof navigator === 'undefined' ? true : navigator.onLine,
   );
+  useEffect(() => {
+    if (snap.user) rememberName(snap.user.id, snap.user.name, true);
+  }, [snap.user]);
   const alive = useRef(true);
   useEffect(() => {
     alive.current = true;

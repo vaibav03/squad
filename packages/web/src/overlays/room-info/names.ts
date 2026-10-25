@@ -1,3 +1,4 @@
+import { looksLikeHash, studentLabel } from '@squad/village/inspector';
 /** Speaker display names and colour tones for the room transcript. Tone is decoration only: the name is always shown. */
 export type SpeakerTone = 'chill' | 'grind' | 'advisor' | 'chair' | 'agent' | 'you';
 
@@ -27,7 +28,10 @@ export function speakerName(id: string): string {
   if (known) return known;
   const m = /^expert:(.+)$/i.exec(key);
   if (m) return `${cap(m[1]!.replace(/[-_]+/g, ' '))} Expert`;
+  const st = /^(?:student:)?([us]_.+)$/i.exec(key);
+  if (st) return studentLabel(st[1]!);
   const bare = key.includes(':') ? key.slice(key.lastIndexOf(':') + 1) : key;
+  if (looksLikeHash(bare)) return studentLabel(bare);
   return cap(bare.replace(/[-_]+/g, ' ')) || 'Someone';
 }
 
