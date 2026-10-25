@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MASTERY_OPEN_EVENT } from '@squad/village/rooms';
 import { MasteryPanel, type DetailStatus } from './MasteryPanel';
@@ -56,7 +57,7 @@ export function MasteryLayer(props: MasteryLayerProps) {
     setStatus('loading');
     void (async () => {
       try {
-        const res = await fetch(
+        const res = await timedFetch(
           `${hub.hubUrl.replace(/\/+$/, '')}/v1/mastery/${encodeURIComponent(courseId)}`,
           { headers: { Authorization: `Bearer ${hub.token}` } },
         );

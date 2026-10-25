@@ -105,6 +105,7 @@ export type ThreadRow =
       tail: boolean;
       own: boolean;
       state: 'sent' | 'pending' | 'failed';
+      acked?: boolean;
       localId?: string;
       error?: string;
     };
@@ -112,6 +113,8 @@ export type ThreadRow =
 export interface ThreadItem {
   message: ChatMessage;
   state: 'sent' | 'pending' | 'failed';
+  /** the hub acknowledged this message after an optimistic send */
+  acked?: boolean;
   localId?: string;
   error?: string;
 }
@@ -149,6 +152,7 @@ export function buildRows(
       tail: !nextContinues,
       own: isOwn(m.sender, me),
       state: it.state,
+      ...(it.acked ? { acked: true } : {}),
       ...(it.localId ? { localId: it.localId } : {}),
       ...(it.error ? { error: it.error } : {}),
     });

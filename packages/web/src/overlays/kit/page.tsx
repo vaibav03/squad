@@ -25,17 +25,29 @@ const CONN: Record<Connection, { label: string; tone: string }> = {
   replaying: { label: 'Replay', tone: 'info' },
   connecting: { label: 'Connecting', tone: 'idle' },
   polling: { label: 'Live (slow link)', tone: 'warn' },
-  offline: { label: 'Offline', tone: 'bad' },
-  error: { label: 'Hub unreachable', tone: 'bad' },
+  offline: { label: 'Offline, retrying', tone: 'bad' },
+  error: { label: 'Hub unreachable, retrying', tone: 'bad' },
 };
 
 /** Live / Replay / Offline pill. Never pulses; dot + word, not color alone. */
-export function ConnectionBadge({ connection }: { connection: Connection }) {
+export function ConnectionBadge({
+  connection,
+  onRetry,
+}: {
+  connection: Connection;
+  /** Offered while offline or unreachable (the feed also retries by itself with backoff). */
+  onRetry?: () => void;
+}) {
   const c = CONN[connection];
   return (
     <span className="lv-conn" data-tone={c.tone} role="status">
       <span className="lv-conn__dot" aria-hidden="true" />
       {c.label}
+      {onRetry && (connection === 'offline' || connection === 'error') ? (
+        <button type="button" className="lv-conn__retry" onClick={onRetry}>
+          Retry
+        </button>
+      ) : null}
     </span>
   );
 }
@@ -88,6 +100,8 @@ export interface StateBlockProps {
   art?: PropName;
   onRetry?: () => void;
   retryLabel?: string;
+  /** Primary action for an empty state (for example "Plan a trip"). */
+  action?: { label: string; onClick: () => void };
 }
 
 /** Designed empty / loading / error / offline block, built on the shell EmptyState. Sprites stay at an integer scale. */
@@ -98,6 +112,7 @@ export function StateBlock({
   art,
   onRetry,
   retryLabel = 'Try again',
+  action,
 }: StateBlockProps) {
   const a = art ? propArt[art] : undefined;
   const scale = a ? Math.max(1, Math.min(4, Math.floor(48 / Math.max(a.w, a.h)))) : 1;
@@ -123,7 +138,11 @@ export function StateBlock({
         body={body}
         art={plate}
         action={
-          onRetry ? (
+          action ? (
+            <Button variant="primary" onClick={action.onClick}>
+              {action.label}
+            </Button>
+          ) : onRetry ? (
             <Button variant="secondary" onClick={onRetry}>
               {retryLabel}
             </Button>

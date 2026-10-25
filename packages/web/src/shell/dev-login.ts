@@ -1,6 +1,5 @@
 import type { SquadSession } from './types';
 
-/** Hub student ids are `s_<name>`; the sign-in stub's picker uses the bare name. */
 /** Demo students are `s_<name>`; real accounts already carry their hub id (`u_<hash>`), which must not be prefixed again. */
 export const hubStudentId = (id: string): string => (/^[su]_/.test(id) ? id : `s_${id}`);
 

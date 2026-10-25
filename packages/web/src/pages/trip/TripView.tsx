@@ -35,6 +35,8 @@ export interface TripViewProps {
   /** Fired once when the trip becomes confirmed (open the village cutscene). */
   onTripConfirmed?: (tripId: string) => void;
   onRetry?: () => void;
+  /** "Plan a trip" on the empty state (opens the squad chat). */
+  onPlan?: () => void;
   submitting?: 'vote' | 'confirm' | null;
   /** Open the confirm sheet on mount (gallery). */
   confirmOpen?: boolean;
@@ -49,6 +51,7 @@ export function TripView(props: TripViewProps) {
     onSubmitVote,
     onConfirm,
     onRetry,
+    onPlan,
     onTripConfirmed,
     submitting = null,
   } = props;
@@ -59,7 +62,7 @@ export function TripView(props: TripViewProps) {
       className="lv-trip"
       eyebrow="Plan together"
       title={trip?.title ?? 'Trip planner'}
-      actions={<ConnectionBadge connection={connection} />}
+      actions={<ConnectionBadge connection={connection} onRetry={onRetry} />}
     >
       <p className="lv-lede">
         Everyone&rsquo;s limits stay private. Your agent finds what works and only shares what has
@@ -87,8 +90,9 @@ export function TripView(props: TripViewProps) {
         <StateBlock
           kind="empty"
           art="map"
-          title="No trip yet"
+          title="No trip planned yet"
           body="When your squad starts planning, the options show up here."
+          {...(onPlan ? { action: { label: 'Plan a trip', onClick: onPlan } } : {})}
         />
       )}
       {status === 'ready' && trip && (

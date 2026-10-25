@@ -1,9 +1,10 @@
-import { createElement, lazy, Suspense, type ComponentType } from 'react';
-import type { RouteObject } from 'react-router-dom';
+import { createElement, lazy, Suspense, useMemo, useState, type ComponentType } from 'react';
+import { matchPath, type RouteObject } from 'react-router-dom';
 import type { NavItem, SquadRouteMeta } from './types';
 import { EmptyState } from '../primitives/EmptyState';
 import { Skeleton } from '../primitives/Skeleton';
 import { WorldLoading } from './WorldLoading';
+import { ErrorBoundary, LoadingTimeout } from './ErrorBoundary';
 
 export const squadRouteMeta: SquadRouteMeta[] = [
   {
@@ -38,7 +39,7 @@ export const squadRouteMeta: SquadRouteMeta[] = [
   {
     key: 'setup',
     path: '/squad/setup/:step?',
-    title: 'Setup',
+    title: 'Set up',
     nav: { label: 'Setup', icon: 'sparkle', order: 5 },
   },
   {
@@ -50,7 +51,7 @@ export const squadRouteMeta: SquadRouteMeta[] = [
   {
     key: 'ledger',
     path: '/squad/ledger/:taskId?',
-    title: 'Glass Box',
+    title: 'Ledger',
     nav: { label: 'Ledger', icon: 'ledger', order: 3, primary: true },
   },
   {
@@ -102,22 +103,67 @@ function ComingSoon({ title }: { title: string }) {
   });
 }
 
+type Loader = () => Promise<{ default: ComponentType }>;
+
+/** A chunk that fails to load is retried once (a dev-server restart or a network blip), then the error surfaces. */
+export async function importWithRetry(
+  loader: Loader,
+  delayMs = 400,
+): Promise<{ default: ComponentType }> {
+  try {
+    return await loader();
+  } catch {
+    await new Promise((r) => setTimeout(r, delayMs));
+    return loader();
+  }
+}
+
+/**
+ * Hosts one route's lazy page. Always renders one of: the page, a loading state that times out into an error,
+ * or an error state with Retry (chunk failed after its retry, or the page threw while rendering).
+ */
+export function PageHost({ meta, loader }: { meta: SquadRouteMeta; loader: Loader }) {
+  const [attempt, setAttempt] = useState(0);
+  const Lazy = useMemo(() => lazy(() => importWithRetry(loader)), [loader, attempt]);
+  const again = () => setAttempt((n) => n + 1);
+  const loading =
+    meta.key === 'village' ? <WorldLoading /> : <Skeleton shape="block" height={240} />;
+  return (
+    <ErrorBoundary resetKey={attempt} onRetry={again} title={`${meta.title} could not load`}>
+      <Suspense
+        fallback={
+          <LoadingTimeout onRetry={again} what={meta.title}>
+            {loading}
+          </LoadingTimeout>
+        }
+      >
+        <Lazy />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
 export function loadPage(meta: SquadRouteMeta): ComponentType {
   const loader = pageModules[`../pages/${meta.key}/index.tsx`];
   if (!loader) return () => createElement(ComingSoon, { title: meta.title });
-  const Lazy = lazy(loader);
-  return function PageHost() {
-    return createElement(
-      Suspense,
-      {
-        fallback:
-          meta.key === 'village'
-            ? createElement(WorldLoading)
-            : createElement(Skeleton, { shape: 'block', height: 240 }),
-      },
-      createElement(Lazy),
-    );
+  return function Page() {
+    return createElement(PageHost, { meta, loader });
   };
+}
+
+/** Title for a pathname, from the route table (the router location is the single source of truth). */
+export function routeTitleFor(pathname: string): string {
+  const all = [
+    ...squadRouteMeta,
+    { path: '/welcome/:step?', title: 'Welcome' },
+    { path: '/join/:code?', title: 'Join a squad' },
+    { path: '/signin', title: 'Sign in' },
+  ];
+  // most specific first: longer static prefix wins ("/squad" must not shadow "/squad/village")
+  const hit = [...all]
+    .sort((a, b) => b.path.length - a.path.length)
+    .find((m) => matchPath({ path: m.path, end: true }, pathname));
+  return hit?.title ?? '';
 }
 
 export const squadRoutes: RouteObject[] = squadRouteMeta.map((meta) => {

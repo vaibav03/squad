@@ -1,6 +1,7 @@
 import { useId, useState, type ReactNode } from 'react';
 import { ConnectionBadge, LvIcon, StateBlock } from '../../overlays/kit';
 import { Button, Page, Skeleton, TextField } from '../../primitives';
+import { WEB_BUILD, formatBuiltAt, isStaleBuild } from '../../lib/build';
 import {
   countLabel,
   explainDemo,
@@ -418,12 +419,20 @@ function Ready({ s, now }: { s: AdminStatus; now: number }) {
         <dl className="st-stats st-stats--tight">
           <Stat label="Version" value={s.version} />
           <Stat label="Commit" value={<code>{s.gitSha.slice(0, 8)}</code>} />
+          <Stat label="Web build" value={<code>{WEB_BUILD.sha.slice(0, 8)}</code>} />
+          <Stat label="Web built" value={formatBuiltAt(WEB_BUILD.builtAt) || 'unknown'} />
           <Stat label="Uptime" value={formatDuration(s.uptimeS)} />
           <Stat
             label="Built"
             value={new Date(s.builtAt).toISOString().slice(0, 16).replace('T', ' ') + ' UTC'}
           />
         </dl>
+        {isStaleBuild(WEB_BUILD.sha, s.gitSha) ? (
+          <p className="st-stale" role="status" data-testid="stale-build">
+            Stale build: this page is web <code>{WEB_BUILD.sha}</code> but the hub runs{' '}
+            <code>{s.gitSha}</code>. Restart the web dev server, then reload.
+          </p>
+        ) : null}
       </Panel>
     </div>
   );

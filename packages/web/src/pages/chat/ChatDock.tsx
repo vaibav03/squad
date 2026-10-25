@@ -108,12 +108,12 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
           aria-label="Squad chat"
         >
           <span className="sqd-handle" aria-hidden="true" />
-          {ctl.phase === 'loading' || (ctl.phase === 'ready' && !group) ? (
+          {ctl.phase === 'loading' ? (
             <div className="sqd-state" role="status" aria-label="Loading chat">
               <Skeleton shape="block" height={48} />
               <Skeleton shape="block" height={96} />
             </div>
-          ) : ctl.phase !== 'ready' ? (
+          ) : ctl.phase !== 'ready' || !group ? (
             <div className="sqd-state">
               <EmptyState
                 icon="message"
@@ -123,14 +123,30 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
                     ? 'Your session ended'
                     : ctl.phase === 'idle'
                       ? 'Chat is offline'
-                      : 'Chat did not load'
+                      : ctl.phase === 'ready'
+                        ? 'No chats yet'
+                        : 'Chat did not load'
                 }
                 body={
                   ctl.phase === 'expired'
                     ? 'Sign in again.'
-                    : 'Check your connection and try again.'
+                    : ctl.phase === 'ready'
+                      ? 'Your squad chat is not available yet. Try again.'
+                      : ctl.phase === 'idle'
+                        ? 'Connect to the hub to chat with your squad.'
+                        : ctl.errorText
                 }
               />
+              {ctl.phase === 'error' || ctl.phase === 'ready' ? (
+                <button
+                  type="button"
+                  className="sqc-btn"
+                  data-testid="chat-dock-retry"
+                  onClick={ctl.reload}
+                >
+                  Retry
+                </button>
+              ) : null}
               <button type="button" className="sqc-btn" onClick={close}>
                 Close
               </button>

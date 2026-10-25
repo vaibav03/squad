@@ -150,4 +150,62 @@ describe('http chat api', () => {
     });
     await vi.waitFor(() => expect(states).toContain('expired'));
   });
+
+  it('a hidden tab lets go of its stream (6-connection browser cap) and resyncs when shown again', async () => {
+    const sources: { closed: boolean }[] = [];
+    class ES {
+      onopen: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      readyState = 1;
+      closed = false;
+      constructor() {
+        sources.push(this);
+      }
+      addEventListener() {}
+      close() {
+        this.closed = true;
+      }
+    }
+    const doc = {
+      visibilityState: 'visible',
+      fns: [] as (() => void)[],
+      addEventListener(_: string, f: () => void) {
+        this.fns.push(f);
+      },
+      removeEventListener(_: string, f: () => void) {
+        this.fns = this.fns.filter((x) => x !== f);
+      },
+    };
+    vi.stubGlobal('document', doc);
+    try {
+      const api = createChatApi({
+        hubUrl: 'http://hub',
+        token: 't',
+        fetchImpl: (async () => json({ st: 's' })) as unknown as typeof fetch,
+        EventSourceImpl: ES as unknown as typeof EventSource,
+      });
+      const resync = vi.fn();
+      const states: string[] = [];
+      const close = api.subscribe({
+        onMessage() {},
+        onUpdate() {},
+        onTyping() {},
+        onResync: resync,
+        onState: (s) => states.push(s),
+      });
+      await vi.waitFor(() => expect(sources).toHaveLength(1));
+      doc.visibilityState = 'hidden';
+      doc.fns.forEach((f) => f());
+      expect(sources[0]!.closed).toBe(true);
+      expect(states).not.toContain('offline');
+      doc.visibilityState = 'visible';
+      doc.fns.forEach((f) => f());
+      await vi.waitFor(() => expect(sources).toHaveLength(2));
+      await vi.waitFor(() => expect(resync).toHaveBeenCalled());
+      close();
+      expect(doc.fns).toHaveLength(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

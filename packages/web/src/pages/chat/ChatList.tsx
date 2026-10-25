@@ -32,6 +32,14 @@ export function ChatList({ chats, activeId, unread, onSelect, loading, meName }:
         </p>
       </div>
     );
+  if (chats.length === 0)
+    return (
+      <div className="sqc-list" data-testid="chat-list">
+        <p className="sqc-loading" data-testid="chat-list-empty">
+          No chats yet
+        </p>
+      </div>
+    );
   return (
     <ul className="sqc-list" data-testid="chat-list" aria-label="Chats">
       {chats.map((c) => {

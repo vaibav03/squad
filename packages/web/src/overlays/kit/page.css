@@ -153,3 +153,14 @@
     margin-top: calc(var(--space-6) * -1);
   }
 }
+
+.lv-conn__retry {
+  margin-left: 8px;
+  padding: 0 6px;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}

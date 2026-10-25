@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { safeParseVillageEvent, type VillageEvent } from '@squad/core';
 import { useEventFeed, useLiveConfig, type Connection } from '../../overlays/kit';
@@ -31,7 +32,7 @@ export function useLedger(taskId: string = TASK_ID) {
   const refresh = useCallback(async () => {
     if (cfg.mode !== 'live' || !cfg.hubUrl) return;
     try {
-      const res = await fetch(`${cfg.hubUrl}/v1/ledger/${encodeURIComponent(taskId)}`, {
+      const res = await timedFetch(`${cfg.hubUrl}/v1/ledger/${encodeURIComponent(taskId)}`, {
         headers: cfg.token ? { Authorization: `Bearer ${cfg.token}` } : {},
       });
       if (!res.ok) throw new Error(`ledger ${res.status}`);

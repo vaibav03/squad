@@ -8,8 +8,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `feature/` | 10 | 65 | 398 | Claude Sonnet 5.5 (57) |
-| `fix/` | 2 | 23 | 107 | Claude Sonnet 5.5 (19) |
+| `feature/` | 10 | 80 | 488 | Claude Sonnet 5.5 (66) |
 | `nook-ext/` | 1 | 2 | 21 | Claude Sonnet 5.5 (2) |
 | `nook-ui/` | 1 | 1 | 11 | Claude Sonnet 5.5 (1) |
 | `nook-wire/` | 1 | 3 | 41 | Claude Sonnet 5.5 (3) |
@@ -22,15 +21,13 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | `feature/context-store` | 6 | 50 | 2026-10-25 03:47 | 2026-10-25 04:07 | Vaibav |
 | `feature/imessage-sync` | 5 | 32 | 2026-10-25 04:07 | 2026-10-25 04:39 | Vaibav |
 | `feature/nook-parity` | 11 | 35 | 2026-10-25 04:22 | 2026-10-25 04:32 | Vaibav |
-| `feature/release-gate` | 1 | 25 | 2026-10-25 04:07 | 2026-10-25 04:07 | Vaibav |
+| `feature/release-gate` | 4 | 38 | 2026-10-25 04:07 | 2026-10-25 05:12 | Vaibav |
 | `feature/study-plan` | 15 | 71 | 2026-10-25 03:51 | 2026-10-25 04:41 | Vaibav |
-| `feature/trip-collab` | 7 | 53 | 2026-10-25 04:07 | 2026-10-25 04:42 | Vaibav |
+| `feature/trip-collab` | 12 | 77 | 2026-10-25 04:07 | 2026-10-25 05:05 | Vaibav |
 | `feature/typed-mentions` | 8 | 44 | 2026-10-25 03:43 | 2026-10-25 04:16 | Vaibav |
 | `feature/w0-a2a-contracts` | 6 | 28 | 2026-10-25 03:52 | 2026-10-25 04:14 | Vaibav |
-| `feature/w1-council-runtime` | 2 | 19 | 2026-10-25 03:49 | 2026-10-25 04:07 | Vaibav |
-| `feature/w5-council-board` | 4 | 41 | 2026-10-25 03:53 | 2026-10-25 04:07 | Vaibav |
-| `fix/blank-shell` | 13 | 65 | 2026-10-25 03:24 | 2026-10-25 04:46 | Vaibav, Claude |
-| `fix/floating-chat` | 10 | 42 | 2026-10-25 03:37 | 2026-10-25 04:54 | Vaibav |
+| `feature/w1-council-runtime` | 6 | 51 | 2026-10-25 03:49 | 2026-10-25 05:11 | Vaibav |
+| `feature/w5-council-board` | 7 | 62 | 2026-10-25 03:53 | 2026-10-25 05:12 | Vaibav |
 | `nook-ext` | 2 | 21 | 2026-10-25 04:18 | 2026-10-25 04:22 | Vaibav |
 | `nook-ui` | 1 | 11 | 2026-10-25 04:24 | 2026-10-25 04:24 | Vaibav |
 | `nook-wire` | 3 | 41 | 2026-10-25 04:20 | 2026-10-25 04:26 | Vaibav |
@@ -40,15 +37,15 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 228 |
+| (no trailer) | 235 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 567 |
+| Claude Sonnet 5.5 | 585 |
 
 ## Commits landed on main by area (subject prefix)
 
 | Area | Commits |
 |---|---:|
-| (other) | 102 |
+| (other) | 113 |
 | Initial commit | 1 |
 | Merge batch 1 | 1 |
 | Merge batch 10 | 1 |
@@ -62,6 +59,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Merge batch 18 | 1 |
 | Merge batch 19 | 1 |
 | Merge batch 2 | 1 |
+| Merge batch 20 | 1 |
 | Merge batch 3 | 1 |
 | Merge batch 4 | 1 |
 | Merge batch 5 | 1 |
@@ -76,6 +74,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | brain-quiz | 7 |
 | castart | 4 |
 | chat | 18 |
+| chore | 2 |
 | ci | 2 |
 | core | 4 |
 | council | 6 |
@@ -83,14 +82,16 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | demo | 7 |
 | deploy | 5 |
 | design | 18 |
-| docs | 25 |
+| docs | 27 |
 | e2e | 27 |
-| fix | 34 |
+| feat | 1 |
+| fix | 42 |
 | hub | 5 |
 | imessage | 3 |
 | inspector | 14 |
 | integration | 41 |
 | interior-engine | 9 |
+| lint | 1 |
 | live | 36 |
 | mastery | 5 |
 | media-art | 18 |
@@ -129,6 +130,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | security | 4 |
 | spine | 13 |
 | status | 3 |
+| test | 2 |
 | ux | 7 |
 | village | 1 |
 | village-mesh | 22 |
@@ -137,6 +139,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | web-host | 2 |
 | web-live | 10 |
 | web-shell | 8 |
+| wip | 5 |
 | wire-bot | 7 |
 | wire-hub | 8 |
 | wire-web | 11 |
@@ -147,5 +150,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 |---|---:|
 | Claude | 1 |
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 512 |
+| Vaibav | 537 |
 | vaibav03 | 26 |

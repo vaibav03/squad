@@ -243,11 +243,20 @@ export function MessageBubble(p: BubbleProps) {
           </div>
         ) : null}
 
-        {row.state === 'pending' ? <p className="sqc-msg__state">Sending</p> : null}
+        {row.state === 'pending' ? (
+          <p className="sqc-msg__state" data-testid="chat-msg-state" role="status">
+            Sending
+          </p>
+        ) : null}
+        {row.state === 'sent' && row.acked ? (
+          <p className="sqc-msg__state is-sent" data-testid="chat-msg-state">
+            Sent
+          </p>
+        ) : null}
         {row.state === 'failed' && row.localId ? (
-          <p className="sqc-msg__state is-failed" role="alert">
+          <p className="sqc-msg__state is-failed" role="alert" data-testid="chat-msg-state">
             <Icon name="alert" size={14} />
-            <span>{row.error ?? 'Not sent.'}</span>
+            <span>Failed to send. {row.error ?? ''}</span>
             <button
               type="button"
               className="sqc-link"
@@ -257,7 +266,7 @@ export function MessageBubble(p: BubbleProps) {
               Retry
             </button>
             <button type="button" className="sqc-link" onClick={() => p.onDiscard(row.localId!)}>
-              Remove
+              Delete
             </button>
           </p>
         ) : null}
