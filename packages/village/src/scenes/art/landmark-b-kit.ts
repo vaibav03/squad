@@ -15,7 +15,7 @@ import { drawText, textWidth } from '../pixel/font';
 import { put, type AssetInfo, type AssetLib } from '../assets';
 import { initBase, visibleBubbles, type BaseState, reduceBase } from '../model/base';
 import { clip, CAPTION_CHARS, eventAgent } from '../model/events';
-import { routeAgent } from '../routing';
+import { routeAgent, routeCouncil } from '../routing';
 import { bubble } from './bubble';
 
 /**
@@ -95,6 +95,11 @@ export function handlesLb(spec: LbSpec, e: VillageEvent): boolean {
         typeof e.quizId === 'string' &&
         (tokenMatch(spec, e.chapter) || tokenMatch(spec, e.quizId))
       );
+    case 'council.opinion':
+    case 'council.verdict':
+      // Oracle and courthouse sessions speak and conclude as councils (council:oracle|rubric); the
+      // verdict carries the OUTCOME card. Routing is by council id only (routing.ts).
+      return routeCouncil(e.councilId) === spec.id;
     case 'agent.state':
     case 'agent.message':
     case 'call.start':
@@ -170,6 +175,17 @@ function commonMap(spec: LbSpec, e: VillageEvent): SceneCommand[] | undefined {
           bubble: { who: EXPERT, text: messageText(e.kind, e.shared), style: spec.msgStyle },
         },
       ];
+    case 'council.opinion': {
+      const text = clip((e.text ?? '').trim(), CAPTION_CHARS);
+      return text ? [{ c: 'bubble', bubble: { who: EXPERT, text, style: spec.msgStyle } }] : [];
+    }
+    case 'council.verdict': {
+      const text = clip((e.text ?? '').trim(), CAPTION_CHARS);
+      const cmds: SceneCommand[] = [];
+      if (text) cmds.push({ c: 'bubble', bubble: { who: EXPERT, text, style: spec.msgStyle } });
+      if (e.outcome) cmds.push({ c: 'outcome', outcome: e.outcome });
+      return cmds;
+    }
     case 'call.start':
       return [
         { c: 'setOccupant', state: 'in_call' },

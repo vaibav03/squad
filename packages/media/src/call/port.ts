@@ -10,6 +10,7 @@ import type {
   CallSession,
   CallTurn,
   HistoryItem,
+  ScriptedAgent,
 } from './types';
 
 export const MAX_USER_TEXT = 1000;
@@ -25,6 +26,12 @@ export interface CallPortOptions {
   budget?: BudgetGuard;
   log?: (msg: string, ctx?: Record<string, unknown>) => void;
   knownAgent?: (agent: AgentId) => boolean;
+  /** Per-call scripted agent (e.g. the oral examiner). undefined = the normal greeting/answer path. */
+  agentFor?: (args: {
+    callId: string;
+    agent: AgentId;
+    student: StudentId;
+  }) => ScriptedAgent | undefined;
 }
 
 export function defaultPersonaFor(agent: AgentId): string {
@@ -53,7 +60,7 @@ export function createCallPort(o: CallPortOptions): CallPort {
   return {
     async open({ callId, agent, student }) {
       if (o.knownAgent && !o.knownAgent(agent)) return null;
-      return new Session(o, callId, agent, student);
+      return new Session(o, callId, agent, student, o.agentFor?.({ callId, agent, student }));
     },
   };
 }
@@ -69,7 +76,12 @@ class Session implements CallSession {
     private readonly callId: string,
     private readonly agent: AgentId,
     private readonly student: StudentId,
+    private readonly scripted?: ScriptedAgent,
   ) {}
+
+  finished(): boolean {
+    return this.scripted?.done?.() ?? false;
+  }
 
   private persona(): string {
     return (this.o.personaFor ?? defaultPersonaFor)(this.agent);
@@ -111,7 +123,21 @@ class Session implements CallSession {
     }
   }
 
+  private async *scriptedTurns(get: () => Promise<AnswerSentence[]>): AsyncIterable<CallTurn> {
+    const lines = await get();
+    const out: string[] = [];
+    for await (const t of this.speak(toIter(lines))) {
+      out.push(t.text);
+      yield t;
+    }
+    if (out.length) this.history.push({ who: 'agent', text: out.join(' ') });
+  }
+
   greeting(): AsyncIterable<CallTurn> {
+    if (this.scripted) {
+      const a = this.scripted;
+      return this.scriptedTurns(() => a.greeting());
+    }
     const text = (this.o.greeting ?? defaultGreeting)(this.agent);
     this.history.push({ who: 'agent', text });
     return this.speak(toIter([{ text }]));
@@ -122,6 +148,10 @@ class Session implements CallSession {
     if (!text || this.closed) return toIter([]) as unknown as AsyncIterable<CallTurn>;
     const clipped = text.slice(0, MAX_USER_TEXT);
     this.history.push({ who: 'you', text: clipped });
+    if (this.scripted) {
+      const a = this.scripted;
+      return this.scriptedTurns(() => a.reply(clipped, this.history.slice(-MAX_HISTORY)));
+    }
     return this.answerTurns(clipped);
   }
 

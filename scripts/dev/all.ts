@@ -13,7 +13,7 @@
  *   FAKE_LLM                agents use the Gemini client only when GEMINI_API_KEY is set (FAKE_LLM=0), else FakeLlm
  *   CONFIRM_MODE            scripted (agents never block on stdin) unless BOT_URL is set
  *
- * Flags: --no-web, --no-agents. Env: DEV_ALL_HUB_PORT, DEV_ALL_WEB_PORT.
+ * Flags: --no-web, --no-agents. Env: DEV_ALL_HUB_PORT, DEV_ALL_WEB_PORT, DEV_ALL_AGENT_PORT_BASE (default 4101).
  */
 import { spawn, type ChildProcess } from 'node:child_process';
 import net from 'node:net';
@@ -30,7 +30,10 @@ const get = (k: string): string | undefined => process.env[k] || fileEnv[k] || u
 const HUB_PORT = Number(process.env.DEV_ALL_HUB_PORT || 8788);
 const WEB_PORT = Number(process.env.DEV_ALL_WEB_PORT || 5180);
 const STUDENTS = ['s_ana', 's_ben', 's_cam', 's_dev'] as const;
-const AGENT_PORTS: Record<string, number> = { s_ana: 4101, s_ben: 4102, s_cam: 4103, s_dev: 4104 };
+const AGENT_BASE = Number(process.env.DEV_ALL_AGENT_PORT_BASE || 4101);
+const AGENT_PORTS: Record<string, number> = Object.fromEntries(
+  STUDENTS.map((id, i) => [id, AGENT_BASE + i]),
+);
 const hubUrl = `http://localhost:${HUB_PORT}`;
 const webUrl = `http://localhost:${WEB_PORT}`;
 

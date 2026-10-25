@@ -16,6 +16,8 @@ const LANDMARK_AGENTS: Record<string, LandmarkId> = {
   'expert:devils-ta': 'devils-ta',
   'council:debate': 'debate-stage',
   'council:planner': 'round-table',
+  'council:oracle': 'exam-oracle',
+  'council:rubric': 'rubric-courthouse',
 };
 
 /** Council ids that sit in the Council Hall (quiz-key verify, plus any unknown council). */

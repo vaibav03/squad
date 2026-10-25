@@ -97,7 +97,7 @@ export function RoomTranscript({
           ))
         )}
         {outcome && entries.length > 0 ? (
-          <p className="rr-line rr-line--note">Plan is ready: {outcome.title}</p>
+          <p className="rr-line rr-line--note">Outcome ready: {outcome.title}</p>
         ) : null}
       </div>
     </section>

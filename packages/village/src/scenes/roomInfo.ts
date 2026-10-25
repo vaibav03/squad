@@ -70,25 +70,29 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
     title: 'Debate Stage',
     tagline: 'Two sides argue a tricky question',
     purpose:
-      'Meant to show both sides of a debatable idea in your course so you can pick a side and defend it.',
+      'See both sides of a debatable idea argued well, vote for the one that convinces you, and learn why one was stronger.',
     who: [
       {
         name: 'Two debaters',
-        does: 'Take opposite sides and answer each other from their lecterns.',
+        does: 'Take opposite sides and answer each other. On course topics they cite a checked page.',
       },
-      { name: 'Moderator', does: 'Sums up which argument held up better.' },
+      {
+        name: 'Chairman',
+        does: 'Says which argument was stronger and why, and notes if your vote went the other way.',
+      },
     ],
     how: {
-      phrase: null,
+      phrase: '@cubbie debate should exams be open book?',
       steps: [
-        'Nothing in chat starts a debate yet, so the stage stays quiet for now.',
-        'Walking in shows the empty stage and lecterns.',
+        'Type the phrase with any question worth arguing, or "@cubbie debate this" for the last message.',
+        'Watch the two sides speak, then vote in the confirm card Cubbie sends you.',
+        'Read the chairman verdict in the room or in chat.',
       ],
     },
     outcome:
-      'Once connected: both arguments side by side and a short closing summary. Today the room shows no live debate.',
+      'Both arguments, how the room voted, and the chairman verdict with the reason, plus any dissent. Course topics cite the page; others are labelled general reasoning.',
     privacy:
-      'A debate would use course topics only, nothing personal and nothing shared by default.',
+      'Only the question and the arguments are shared. Each vote is a private reply to Cubbie; the squad sees only the totals.',
   },
   'round-table': {
     slot: 'round-table',
@@ -136,7 +140,7 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
       ],
     },
     outcome:
-      'Follow-up questions at the spots where your explanation was fuzzy, then feedback on what to tighten. The porch itself does not light up yet.',
+      'Follow-up questions at the spots where your explanation was fuzzy, then feedback on what to tighten. The porch lights up while you are working through it.',
     privacy: 'Your explanation is private to your chat with Cubbie; the squad is not shown it.',
   },
   'panic-booth': {
@@ -150,7 +154,10 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
         name: 'Cubbie',
         does: 'Reads the photos of your handwritten steps and lines them up against each other.',
       },
-      { name: 'Dean', does: 'Posts only the step number where you split, never who was wrong.' },
+      {
+        name: 'Booth keeper',
+        does: 'Posts only the step number where you split, never who was wrong.',
+      },
     ],
     how: {
       phrase: '@cubbie diff',
@@ -168,85 +175,102 @@ export const ROOM_INFO: Readonly<Record<RoomSlot, RoomInfo>> = {
   'exam-oracle': {
     slot: 'exam-oracle',
     title: 'Exam Oracle',
-    tagline: 'Hints at which chapter to study next',
+    tagline: 'Tells you what to study next',
     purpose:
-      'Meant to suggest the chapter most worth studying next, so your revision time goes where it counts.',
+      'Ranks your chapters by what is due for review, what you find hard and what past exams stress, then names the three topics worth your time.',
     who: [
-      { name: 'Oracle', does: 'Holds the orb and names the chapter it expects to matter next.' },
+      {
+        name: 'Oracle',
+        does: 'Reads your review history and your course material, then phrases a short mock question for each top topic.',
+      },
     ],
     how: {
-      phrase: null,
+      phrase: '@cubbie exam oracle',
       steps: [
-        'Nothing in chat calls the oracle yet.',
-        'Walking in shows the orb; its label appears only when a question for it is asked.',
+        'Type the phrase in chat, or ask "what should I study next".',
+        'Read the ranked chapters and the three topics, each with a mock question.',
+        'Walk in to see the chalk note and the full outcome card.',
       ],
     },
     outcome:
-      'Once connected: a short chalk note such as "ch5 next?" on the board. Today the oracle makes no prediction.',
-    privacy: 'It would use only your own study history. Nothing is shared with your squad.',
+      'A ranked list of chapters, the three best topics with a mock question each, the workload in words and why each was picked. A suggestion only: it never marks your answers.',
+    privacy:
+      'It uses only your own review history. Your squad sees the topic names, never your boxes or answers.',
   },
+
   'oral-exam-hut': {
     slot: 'oral-exam-hut',
     title: 'Oral Exam Hut',
     tagline: 'Practise answering out loud',
     purpose:
-      'Meant for practising a spoken exam, answering an examiner out loud instead of typing.',
-    who: [{ name: 'Examiner', does: 'Asks you questions and speaks through live captions.' }],
-    how: {
-      phrase: null,
-      steps: [
-        'Nothing in chat starts an oral exam yet.',
-        'The hut stays locked until an examiner call begins.',
-      ],
-    },
-    outcome:
-      'Once connected: captions of the examiner questions as they are spoken. Today the hut is empty.',
-    privacy: 'A spoken practice would stay between you and the examiner, not your squad.',
-  },
-  'rubric-courthouse': {
-    slot: 'rubric-courthouse',
-    title: 'Rubric Courthouse',
-    tagline: 'Checks your answer against clear criteria',
-    purpose:
-      'Meant to check a written answer against three plain criteria so you see what is missing.',
+      'Practise a spoken exam: an examiner asks one question at a time from your chapters, listens, and follows up where you were vague.',
     who: [
       {
-        name: 'Judge',
-        does: 'Ticks or crosses Clarity, Accuracy and Gaps for each answer you submit.',
+        name: 'Examiner',
+        does: 'Asks the questions, asks one follow-up if you stay vague, then sums up what to revisit.',
       },
     ],
     how: {
-      phrase: null,
+      phrase: '@cubbie oral exam',
       steps: [
-        'Nothing in chat sends an answer here yet.',
-        'Walking in shows the three empty criteria rows.',
+        'Type the phrase in chat, then walk in and press Call.',
+        'Answer out loud or type if you have no microphone; captions always show the questions.',
+        'The examiner closes with written feedback.',
       ],
     },
     outcome:
-      'Once connected: a tick or cross per criterion, never a number. Today the rows stay empty.',
-    privacy: 'Your answers would stay private; only you see the ticks and crosses.',
+      'Three questions with one follow-up each at most, then a feedback summary in words: what was solid and what to revisit. No grades.',
+    privacy:
+      'Your spoken answers are used for this call and not kept. The squad sees that you practised, not what you said.',
   },
+
+  'rubric-courthouse': {
+    slot: 'rubric-courthouse',
+    title: 'Rubric Courthouse',
+    tagline: 'Checks your answer against the rubric',
+    purpose:
+      'Compare your own answer with the real rubric from your syllabus or assignment, and see where clarity, accuracy or gaps cost you.',
+    who: [
+      {
+        name: 'Judge',
+        does: 'Ticks or crosses Clarity, Accuracy and Gaps and quotes your own words as evidence.',
+      },
+    ],
+    how: {
+      phrase: '@cubbie rubric check',
+      steps: [
+        'Type the phrase with your answer, or attach a photo or PDF of it.',
+        'Paste the rubric, or let Cubbie find it in your syllabus or assignment.',
+        'Read the feedback in chat and in the courthouse.',
+      ],
+    },
+    outcome:
+      'A tick or cross for Clarity, Accuracy and Gaps with a comment and a quote from your answer. Feedback only: no grade, and your answer is never rewritten.',
+    privacy: 'Your answer stays between you and Cubbie. The squad sees only that you checked one.',
+  },
+
   'devils-ta': {
     slot: 'devils-ta',
     title: "Devil's TA",
     tagline: 'Spot the mistake hidden in a solution',
     purpose:
-      'Meant to train your eye: find the deliberate mistake the TA hid in a worked solution.',
+      'Train your eye: read a short, convincing explanation from your own chapter and find the one deliberate mistake the TA hid in it.',
     who: [
       {
         name: "Devil's TA",
-        does: 'Hides one sneaky error in a solution and marks whether you caught it.',
+        does: 'Writes an explanation with exactly one planted error, then checks which line you name.',
       },
     ],
     how: {
-      phrase: null,
+      phrase: "@cubbie devil's TA ch2",
       steps: [
-        'Nothing in chat starts this challenge yet.',
-        'Walking in shows the board, which stays blank until a result arrives.',
+        'Type the phrase with your chapter, or say "@cubbie find my mistake".',
+        'Reply with the line number or the wrong words. You get two tries.',
+        'Cubbie then reveals the error, explains it and cites the page.',
       ],
     },
     outcome:
-      'Once connected: a chalk tick if you caught the mistake or a red underline if you missed it. Today the board stays blank.',
+      'Feedback only: whether you caught it, then the wrong line, the correct statement and the page it comes from. A missed chapter is queued for review.',
     privacy: 'Only you see whether you caught the mistake. Nothing is shared with your squad.',
   },
 };
