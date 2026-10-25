@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { requireViewer } from '../auth';
 import type { HubApp, HubDeps, HubEnv } from '../types';
+import { createMultiplexRoutes } from './multiplex';
 
 const enc = new TextEncoder();
 
@@ -67,6 +68,9 @@ export function createStreamRoutes(deps: HubDeps): HubApp {
       },
     });
   });
+
+  // additive: squad + chat on one connection
+  r.route('/', createMultiplexRoutes(deps));
 
   return r;
 }

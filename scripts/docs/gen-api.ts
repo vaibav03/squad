@@ -27,6 +27,8 @@ const DESC: Record<string, string> = {
   'POST /internal/events': 'Emitters post VillageEvents or x.* envelopes (shared secret)',
   'GET /v1/squad/state': 'Per-viewer snapshot with `seq` for late joiners',
   'GET /v1/squad/stream': 'SSE stream, filtered per viewer, resumable with Last-Event-ID',
+  'GET /v1/stream':
+    'Multiplexed SSE: squad + chat channels on one connection, composite Last-Event-ID',
   'GET /v1/squad/replays': 'List replay scripts',
   'GET /v1/squad/replay/:name': 'One replay script, filtered as `cast.me`',
   'GET /v1/quiz/:quizId': 'Open quiz question (never the answer key)',
@@ -62,7 +64,7 @@ interface Row {
 function authOf(route: string, rest: string): string {
   if (route.startsWith('/__sim/')) return 'none (dev only, HUB_SIM=1)';
   if (route === '/internal/events') return 'X-Nook-Internal secret';
-  if (route === '/v1/squad/stream') return 'bearer or `?st=`';
+  if (route === '/v1/squad/stream' || route === '/v1/stream') return 'bearer or `?st=`';
   if (/\b(need|requireViewer)\b/.test(rest)) return 'bearer';
   return 'public';
 }

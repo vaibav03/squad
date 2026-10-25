@@ -15,3 +15,14 @@ export type { ReplaySource, ReplaySourceOptions, ReplayStatus, ReplaySpeed } fro
 export type { Clock, EventMeta, SourceLogger, Unsubscribe } from './types';
 export { systemClock } from './types';
 export { withTripCutscene, tripCutsceneFromQuery } from './cutscene';
+export {
+  SharedEventSource,
+  openSharedEventSource,
+  isSharedStreamUrl,
+  permitRunStream,
+  sharedStreamInfo,
+  otherSquadTabs,
+  exposeSharedStreamInfo,
+  resetSharedStreams,
+} from './shared-stream';
+export type { SharedEnv, SharedStreamInfo, SharedEventSourceLike } from './shared-stream';
