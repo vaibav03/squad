@@ -424,7 +424,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     const svc = contextServiceFor(deps);
     const res = svc.registerCanvasSession(c.get('user').id, {
       canvasUserId: p.data.canvas_user_id,
-      origin: p.data.canvas_origin.replace(/\/+$/, ''),
+      origin: p.data.canvas_origin,
     });
     if (!res.ok)
       return err(

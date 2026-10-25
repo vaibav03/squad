@@ -131,7 +131,7 @@ export function defaultCanvasData(): NonNullable<FakeCanvasOpts['data']> {
 export function fakeCanvas(opts: FakeCanvasOpts = {}): typeof fetch {
   const data = (opts.data ??= defaultCanvasData());
   const pageSize = opts.coursesPageSize ?? 50;
-  return (async (input: RequestInfo | URL, init?: RequestInit) => {
+  return (async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(
       typeof input === 'string' ? input : input instanceof URL ? input.href : input.url,
     );
@@ -276,7 +276,7 @@ export function fakeGoogle(opts: FakeGoogleOpts): typeof fetch {
       headers: { 'content-type': 'application/json', ...headers },
     });
 
-  return (async (input: RequestInfo | URL, init?: RequestInit) => {
+  return (async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(
       typeof input === 'string' ? input : input instanceof URL ? input.href : input.url,
     );

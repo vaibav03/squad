@@ -130,7 +130,8 @@ describe('Nook parity: Canvas REST client (cubbie-re apps/extension/src/canvas.t
     });
     const noCookie = createCanvasClient({
       credential: { kind: 'session' },
-      fetch: (async (u: RequestInfo | URL) => fakeCanvas({ session: true })(u, {})) as typeof fetch,
+      fetch: (async (u: string | URL | Request) =>
+        fakeCanvas({ session: true })(u, {})) as typeof fetch,
     });
     expect(await noCookie.probe(CANVAS_ORIGIN)).toBeNull();
     const down = createCanvasClient({
@@ -415,7 +416,7 @@ describe('Nook parity: Google OAuth and Workspace (bridge/google-workspace.ts)',
     });
     // exchangeGoogleCode talks to the token endpoint with the verifier and the secret in the body only.
     const body: string[] = [];
-    const spy = (async (u: RequestInfo | URL, i?: RequestInit) => {
+    const spy = (async (u: string | URL | Request, i?: RequestInit) => {
       body.push(String(i?.body));
       return f(u, i);
     }) as typeof fetch;

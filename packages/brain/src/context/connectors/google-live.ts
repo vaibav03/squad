@@ -115,6 +115,7 @@ export async function googleUserinfo(
     headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
     signal: AbortSignal.timeout(10_000),
   });
+  if (res.status === 429) throw new ConnectorRateLimitError(retryAfterMs(res));
   if (res.status === 401) throw new ConnectorAuthError(401);
   if (res.status === 403) throw new ConnectorAuthError(403);
   const json = (await res.json().catch(() => ({}))) as { sub?: string; email?: string };
