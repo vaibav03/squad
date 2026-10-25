@@ -439,6 +439,58 @@
       }
     },
     {
+      "at": 86000,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:planner",
+        "correlationId": "cn_p1a2n3n4e5r6",
+        "stage": "delegation",
+        "mode": "demo"
+      }
+    },
+    {
+      "at": 86500,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000001",
+          "correlationId": "cn_p1a2n3n4e5r6",
+          "seq": 0,
+          "from": "council:planner-chair",
+          "to": "council:planner-chill",
+          "kind": "delegate",
+          "stage": "delegation",
+          "summary": "Argue for the lighter plan.",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000086500
+        }
+      }
+    },
+    {
+      "at": 87000,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000002",
+          "correlationId": "cn_p1a2n3n4e5r6",
+          "seq": 1,
+          "from": "council:planner-chair",
+          "to": "council:planner-grind",
+          "kind": "delegate",
+          "stage": "delegation",
+          "summary": "Argue for the heavier plan.",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000087000
+        }
+      }
+    },
+    {
       "at": 88000,
       "event": {
         "t": "council.opinion",
