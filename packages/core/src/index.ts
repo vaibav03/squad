@@ -10,6 +10,7 @@ export * from './sentinel';
 export * from './llm';
 export * from './chat';
 export * from './council';
+export * from './a2a';
 export { parseIcsBusy } from './ics';
 export type { BusyBlock } from './ics';
 export * from './accounts';
