@@ -102,6 +102,8 @@ export interface Ingestor {
   village(input: unknown): IngestResult;
   /** Extension envelope `x.*`. */
   x(type: string, data: unknown): IngestResult;
+  /** Forget dedupe memory (sim reset / demo replay). */
+  reset(): void;
 }
 
 // ---------- broker (SSE fan-out) ----------
