@@ -12,6 +12,7 @@ import { FailureState } from './ErrorBoundary';
 import { useRenderWatchdog } from './RenderWatchdog';
 import { BuildMarker } from './BuildMarker';
 import { RateLimitBanner } from './RateLimitBanner';
+import { ConnectionBusyBanner } from './ConnectionBusyBanner';
 import { ShellContext } from './shell-context';
 import type { NavItem } from './types';
 import { useTheme, type ThemeChoice } from './useTheme';
@@ -185,6 +186,7 @@ export function AppShell({
         </header>
 
         <RateLimitBanner />
+        <ConnectionBusyBanner />
 
         <main
           id="main"

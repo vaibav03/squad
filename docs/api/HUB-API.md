@@ -35,6 +35,7 @@ Regenerate with `pnpm exec tsx scripts/docs/gen-api.ts`; verify with `pnpm exec 
 | GET | `/v1/squad/replays` | public | List replay scripts | `apps/hub/src/routes/replay.ts` |
 | GET | `/v1/squad/state` | bearer | Per-viewer snapshot with `seq` for late joiners | `apps/hub/src/routes/state.ts` |
 | GET | `/v1/squad/stream` | bearer or `?st=` | SSE stream, filtered per viewer, resumable with Last-Event-ID | `apps/hub/src/routes/stream.ts` |
+| GET | `/v1/stream` | bearer or `?st=` | Multiplexed SSE: squad + chat channels on one connection, composite Last-Event-ID | `apps/hub/src/routes/multiplex.ts` |
 | POST | `/v1/squad/stream-token` | bearer | Short-lived `st` token for SSE and the call websocket | `apps/hub/src/routes/auth.ts` |
 | GET | `/v1/status` | public | Public: real vs demo model (llm, tts, reason, probe times, notice) | `apps/hub/src/routes/status.ts` |
 | GET | `/v1/tasks` | bearer | Tasks visible to the viewer | `apps/hub/src/routes/domain.ts` |
