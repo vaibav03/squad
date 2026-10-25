@@ -1,4 +1,4 @@
-import { test, expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
+import { test as base, expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { HUB, LIVE, SHOTS, WEB, type StudentId } from './env';
@@ -51,10 +51,7 @@ export async function api(
 export async function actor(
   browser: Browser,
   id: StudentId,
-  opts: {
-    viewport?: { width: number; height: number };
-    reducedMotion?: 'reduce' | 'no-preference';
-  } = {},
+  opts: { viewport?: { width: number; height: number }; reducedMotion?: 'reduce' | 'no-preference' } = {},
 ): Promise<Actor> {
   const token = await apiLogin(id);
   const ctx = await browser.newContext({
@@ -64,33 +61,13 @@ export async function actor(
     isMobile: !!opts.viewport && opts.viewport.width < 500,
     hasTouch: !!opts.viewport && opts.viewport.width < 500,
   });
-  const session = {
-    userId: id,
-    name: NAMES[id],
-    token,
-    avatarUrl: `/avatars/${WEB_ID(id)}.png`,
-    live: true,
-  };
-  await ctx.addInitScript((s) => {
-    try {
-      if (!localStorage.getItem('squad.token')) localStorage.setItem('squad.token', s.token);
-      if (!localStorage.getItem('squad.session'))
-        localStorage.setItem('squad.session', JSON.stringify(s));
-    } catch {
-      /* ignore */
-    }
-  }, session);
   const page = await ctx.newPage();
-  const a: Actor = {
-    id,
-    ctx,
-    page,
-    token,
-    bodies: [],
-    assets: [],
-    consoleErrors: [],
-    pageErrors: [],
-  };
+  const a: Actor = { id, ctx, page, token, bodies: [], assets: [], consoleErrors: [], pageErrors: [] };
+  // live hub: accounts layer; sign in through the real screen (dev-login -> adoptToken)
+  await page.goto('/signin');
+  await page.getByRole('radio', { name: new RegExp(`^${NAMES[id]}`) }).click();
+  await page.getByRole('button', { name: new RegExp(`as ${NAMES[id]}`) }).click();
+  await page.waitForURL(/\/squad/, { timeout: 20_000 });
   page.on('console', (m) => {
     if (m.type() === 'error') a.consoleErrors.push(m.text());
   });
@@ -99,8 +76,7 @@ export async function actor(
     try {
       const ct = r.headers()['content-type'] ?? '';
       if (ct.includes('event-stream')) return;
-      if (/json|text\/plain/.test(ct) && r.url().startsWith(HUB))
-        a.bodies.push(`${r.url()}\n${await r.text()}`);
+      if (/json|text\/plain/.test(ct) && r.url().startsWith(HUB)) a.bodies.push(`${r.url()}\n${await r.text()}`);
       else if (/javascript|css|html/.test(ct)) a.assets.push(`${r.url()}\n${await r.text()}`);
     } catch {
       /* body unavailable (redirect, aborted) */
@@ -109,6 +85,7 @@ export async function actor(
   return a;
 }
 
+let shotN: Record<string, number> = {};
 export async function shot(page: Page, journey: string, step: string): Promise<string> {
   const dir = path.join(SHOTS, journey);
   fs.mkdirSync(dir, { recursive: true });
@@ -116,8 +93,9 @@ export async function shot(page: Page, journey: string, step: string): Promise<s
   await page.screenshot({ path: file, fullPage: false }).catch(() => undefined);
   return file;
 }
-/** Kept for the specs that call it; shots are named by journey and step, so there is nothing to reset. */
-export const resetShots = (): void => undefined;
+export const resetShots = () => {
+  shotN = {};
+};
 
 /** Marks the running test `blocked` (feature on an unmerged branch) and skips it. */
 export function blocked(reason: string): never {
@@ -162,21 +140,13 @@ export async function liveGuard(): Promise<void> {
 }
 
 /** Read an SSE stream for `ms` from a viewer; returns raw text. */
-export async function collectSse(
-  p: string,
-  token: string,
-  ms = 2500,
-  headers: Record<string, string> = {},
-): Promise<string> {
+export async function collectSse(p: string, token: string, ms = 2500, headers: Record<string, string> = {}): Promise<string> {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), ms);
   let out = '';
   try {
     const sep = p.includes('?') ? '&' : '?';
-    const r = await fetch(`${HUB}${p}${sep}st=${encodeURIComponent(token)}`, {
-      signal: ctl.signal,
-      headers,
-    });
+    const r = await fetch(`${HUB}${p}${sep}st=${encodeURIComponent(token)}`, { signal: ctl.signal, headers });
     const reader = r.body!.getReader();
     const dec = new TextDecoder();
     for (;;) {
@@ -207,13 +177,16 @@ export function sseEvents(raw: string): { id?: string; event: string; data: stri
 }
 
 export const FAIL_PATTERNS = {
-  secrets: [
-    /AIza[0-9A-Za-z_-]{20,}/,
-    /sk_[0-9a-f]{20,}/,
-    /xi-api-key/i,
-    /GEMINI_API_KEY\s*[=:]\s*["']?[A-Za-z0-9_-]{12,}/,
-    /ELEVENLABS_API_KEY\s*[=:]\s*["']?[A-Za-z0-9_-]{12,}/,
-    /INTERNAL_EVENTS_SECRET\s*[=:]\s*["']?[A-Za-z0-9_-]{8,}/,
-  ],
+  secrets: [/AIza[0-9A-Za-z_-]{20,}/, /sk_[0-9a-f]{20,}/, /xi-api-key/i, /GEMINI_API_KEY\s*[=:]\s*["']?[A-Za-z0-9_-]{12,}/, /ELEVENLABS_API_KEY\s*[=:]\s*["']?[A-Za-z0-9_-]{12,}/, /INTERNAL_EVENTS_SECRET\s*[=:]\s*["']?[A-Za-z0-9_-]{8,}/],
 };
-export { test, expect };
+/** `test` with the LIVE=1 guard applied to every test: skip with a clear message when Gemini cannot answer. */
+export const test = base.extend<{ _liveGuard: void }>({
+  _liveGuard: [
+    async ({}, use) => {
+      await liveGuard();
+      await use();
+    },
+    { auto: true },
+  ],
+});
+export { expect };
