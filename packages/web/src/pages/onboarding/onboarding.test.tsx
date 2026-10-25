@@ -5,7 +5,15 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { fetchOnboarding, recordSkip, skipKey, type OnboardingState } from './api';
 import { gateView } from './gate';
-import { sharePlan, groupRows, CATEGORIES, stepLabel, type ShareCategory } from './model';
+import {
+  sharePlan,
+  groupRows,
+  categoryCounts,
+  CATEGORIES,
+  CATEGORY_LABEL,
+  stepLabel,
+  type ShareCategory,
+} from './model';
 import { ContextBanner, ContextGate } from '../chat/ContextGate';
 
 const ctx = { hubUrl: 'http://hub', token: 't', userId: 'u1' };
@@ -172,10 +180,115 @@ import { parseOnboarding } from './api';
 describe('GET /v1/onboarding shape', () => {
   it('maps identityDone, integrations, sharingChosen, skipped object, nextStep', () => {
     const r = parseOnboarding({
-      identityDone: true, sharingChosen: false, nextStep: 'connect', skipped: { at: 5 },
-      integrations: { canvas: { state: 'demo', sub: null, counts: {}, lastSyncAt: 1, demo: true }, google: { state: 'not_connected', sub: 'disconnected', counts: {}, lastSyncAt: null, demo: false } },
+      identityDone: true,
+      sharingChosen: false,
+      nextStep: 'connect',
+      skipped: { at: 5 },
+      integrations: {
+        canvas: { state: 'demo', sub: null, counts: {}, lastSyncAt: 1, demo: true },
+        google: {
+          state: 'not_connected',
+          sub: 'disconnected',
+          counts: {},
+          lastSyncAt: null,
+          demo: false,
+        },
+      },
     });
-    expect(r).toMatchObject({ connected: true, skipped: true, skippedAt: 5, identityDone: true, sharingChosen: false, nextStep: 'connect' });
-    expect(parseOnboarding({ integrations: { canvas: { state: 'not_connected' } }, skipped: null })).toMatchObject({ connected: false, skipped: false });
+    expect(r).toMatchObject({
+      connected: true,
+      skipped: true,
+      skippedAt: 5,
+      identityDone: true,
+      sharingChosen: false,
+      nextStep: 'connect',
+    });
+    expect(
+      parseOnboarding({ integrations: { canvas: { state: 'not_connected' } }, skipped: null }),
+    ).toMatchObject({ connected: false, skipped: false });
+  });
+});
+
+describe('category counts: Canvas demo + Google demo (regression: Courses 3, Drive 2)', () => {
+  const mk = (id: string, provider: 'canvas' | 'google', counts: Record<string, number>) =>
+    ({
+      id,
+      provider,
+      mode: 'fixture',
+      state: 'fixture',
+      counts,
+      sources: { total: 0, byKind: {} },
+    }) as never;
+  const canvas = mk('c1', 'canvas', {
+    courses: 3,
+    modules: 6,
+    assignments: 6,
+    pages: 6,
+    files: 3,
+    announcements: 3,
+    calendarEvents: 3,
+    driveDocs: 0,
+    classroomItems: 0,
+  });
+  const google = mk('g1', 'google', {
+    courses: 1,
+    modules: 0,
+    assignments: 0,
+    pages: 0,
+    files: 0,
+    announcements: 0,
+    calendarEvents: 2,
+    driveDocs: 2,
+    classroomItems: 2,
+  });
+  it('counts Canvas courses under Courses and Drive only from Google Drive', () => {
+    expect(categoryCounts([canvas, google])).toEqual({
+      courses: 3,
+      assignments: 8,
+      calendar: 5,
+      drive: 2,
+    });
+  });
+  it('maps Canvas files, modules, pages and announcements to Courses, never Drive (rows without hub category)', () => {
+    const row = (id: string, kind: string, category?: string) => ({
+      id,
+      kind,
+      category: category ?? null,
+      title: id,
+      sharedWith: [],
+      courseId: 'c',
+      dueAt: null,
+      startsAt: null,
+      fetchedAt: null,
+      provenance: 'fixture' as const,
+    });
+    const rows = [
+      row('m', 'canvas_file'),
+      row('p', 'canvas_file', 'courses'),
+      row('a', 'canvas_assignment'),
+      row('e', 'canvas_event', 'calendar'),
+      row('d', 'gdoc'),
+    ];
+    const g = groupRows([{ connectionId: 'c1', rows }]);
+    expect(g.courses.map((x) => x.row.id)).toEqual(['m', 'p']);
+    expect(g.drive.map((x) => x.row.id)).toEqual(['d']);
+    // fallback to rows when a connection has no counts
+    const bare = {
+      id: 'c1',
+      provider: 'canvas',
+      state: 'fixture',
+      sources: { total: 5, byKind: {} },
+    } as never;
+    expect(categoryCounts([bare], [{ connectionId: 'c1', rows }])).toEqual({
+      courses: 2,
+      assignments: 1,
+      calendar: 1,
+      drive: 1,
+    });
+  });
+  it('review summary and Share step print the same numbers from the same function', () => {
+    const counts = categoryCounts([canvas, google]);
+    const line = CATEGORIES.map((k) => `${CATEGORY_LABEL[k]}: ${counts[k]}`).join(' · ');
+    expect(line).toBe('Courses: 3 · Assignments: 8 · Calendar free/busy: 5 · Drive documents: 2');
   });
 });

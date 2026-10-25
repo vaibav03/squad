@@ -177,6 +177,7 @@ const SourceRows = z.looseObject({
     z.looseObject({
       id: z.string(),
       kind: z.string(),
+      category: z.string().nullish(),
       title: z.string(),
       sharedWith: z.array(z.string()).default([]),
       courseId: z.string().nullish(),
@@ -193,6 +194,8 @@ const SourceRows = z.looseObject({
 export interface SourceRow {
   id: string;
   kind: string;
+  /** Sharing category from the hub (courses | assignments | calendar | drive). */
+  category?: string | null;
   title: string;
   sharedWith: string[];
   courseId: string | null;
@@ -298,6 +301,7 @@ export const hub = (ctx: Ctx) => ({
       (s) => ({
         id: s.id,
         kind: s.kind,
+        category: s.category ?? null,
         title: s.title,
         sharedWith: s.sharedWith,
         courseId: s.courseId ?? null,

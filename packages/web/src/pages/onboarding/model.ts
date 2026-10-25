@@ -23,27 +23,32 @@ export const CATEGORY_LABEL: Record<ShareCategory, string> = {
   drive: 'Drive documents',
 };
 export const CATEGORY_HINT: Record<ShareCategory, string> = {
-  courses: 'Course names and codes.',
+  courses: 'Course names, modules, pages, files and announcements from Canvas.',
   assignments: 'Titles and due dates.',
   calendar: 'Your squad sees only when you are busy, not event details.',
-  drive: 'Only the files you picked.',
+  drive: 'Google Drive documents you picked. Canvas files are under Courses.',
 };
 export const CATEGORIES = Object.keys(CATEGORY_LABEL) as ShareCategory[];
 
+/** Fallback for a hub that does not send `category`: by kind only (the hub's external-id mapping is more exact). */
 const KIND_CATEGORY: Record<string, ShareCategory> = {
-  classroom_course: 'courses',
-  canvas_page: 'courses',
   canvas_assignment: 'assignments',
-  classroom_coursework: 'assignments',
+  canvas_file: 'courses', // Canvas files, modules and pages are course material, never Drive
+  canvas_page: 'courses',
   classroom_item: 'assignments',
+  classroom_course: 'courses',
+  classroom_coursework: 'assignments',
   gcal_event: 'calendar',
   canvas_event: 'calendar',
   gdrive_file: 'drive',
   gdoc: 'drive',
   pdf: 'drive',
-  canvas_file: 'drive',
 };
 export const categoryOf = (kind: string): ShareCategory | null => KIND_CATEGORY[kind] ?? null;
+const isCategory = (c: string | null | undefined): c is ShareCategory =>
+  !!c && (CATEGORIES as string[]).includes(c);
+export const rowCategory = (r: { category?: string | null; kind: string }): ShareCategory | null =>
+  isCategory(r.category) ? r.category : categoryOf(r.kind);
 
 export interface ConnRows {
   connectionId: string;
@@ -61,7 +66,7 @@ export function groupRows(
   };
   for (const c of all)
     for (const row of c.rows) {
-      const k = categoryOf(row.kind);
+      const k = rowCategory(row);
       if (k) out[k].push({ connectionId: c.connectionId, row });
     }
   return out;
@@ -104,3 +109,30 @@ export const anyConnected = (conns: readonly Connection[]): boolean => {
   const v = providerViews(conns);
   return providerHasData(v.canvas) || providerHasData(v.google);
 };
+
+/**
+ * THE category counts for the review summary and the Share step: one function over the connection list, preferring
+ * the hub's per-type `counts` (courses = distinct courses, driveDocs = Google Drive/Docs only) and falling back to
+ * the loaded rows when a connection carries no counts.
+ */
+export function categoryCounts(
+  conns: readonly Connection[],
+  rows: ConnRows[] | null = null,
+): Record<ShareCategory, number> {
+  const out: Record<ShareCategory, number> = { courses: 0, assignments: 0, calendar: 0, drive: 0 };
+  const grouped = rows ? groupRows(rows) : null;
+  for (const c of conns) {
+    if (c.state === 'revoked') continue;
+    if (c.counts) {
+      // Courses = Canvas courses; Google Classroom items are counted (and shared) as assignments
+      if (c.provider === 'canvas') out.courses += c.counts.courses ?? 0;
+      out.assignments += (c.counts.assignments ?? 0) + (c.counts.classroomItems ?? 0);
+      out.calendar += c.counts.calendarEvents ?? 0;
+      out.drive += c.counts.driveDocs ?? 0;
+    } else if (grouped) {
+      for (const k of CATEGORIES)
+        out[k] += grouped[k].filter((x) => x.connectionId === c.id).length;
+    }
+  }
+  return out;
+}
