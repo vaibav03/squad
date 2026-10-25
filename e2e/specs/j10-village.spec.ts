@@ -106,10 +106,21 @@ test('J10 enter every room, read it, leave with Esc', async ({ browser }) => {
   for (const room of ROOMS) {
     // chips open the inspector (the mouse never moves the player); walk the player to the door instead
     await page.evaluate((id) => {
-      const w = (window as unknown as { __world: { debug: { ctx(): any } } }).__world;
+      const w = (
+        window as unknown as {
+          __world: {
+            debug: {
+              ctx(): {
+                interactables: { list(): { id: string; x: number }[] };
+                player: { walkTo(x: number): Promise<boolean> };
+              };
+            };
+          };
+        }
+      ).__world;
       const c = w.debug.ctx();
-      const it = c.interactables.list().find((x: { id: string }) => x.id === `enter-${id}`);
-      void c.player.walkTo(it.x);
+      const it = c.interactables.list().find((x) => x.id === `enter-${id}`);
+      void c.player.walkTo(it!.x);
     }, SLOT[room]);
     const prompt = page.getByText(new RegExp(`^Open .*(${KEY[room]})`, 'i')).first();
     await expect(prompt, `walk prompt for ${room}`).toBeVisible({ timeout: 60_000 });

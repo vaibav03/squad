@@ -109,9 +109,10 @@ export default function SetupPage() {
 
   const go = useCallback((s: StepId | 'done') => navigate(`/squad/setup/${s}`), [navigate]);
   const completed = completedSteps(state);
+  const completedKey = completed.join(',');
   useEffect(() => {
-    saveSetupDone(completed);
-  }, [completed.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
+    saveSetupDone(completedKey ? completedKey.split(',') : []);
+  }, [completedKey]);
   const canSkip = step === 'calendar' || step === 'persona';
   const next = nextStep(step);
   const prev = prevStep(step);

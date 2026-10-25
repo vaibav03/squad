@@ -14,7 +14,7 @@ export interface ScriptedOptions {
   answers?: MeshOptions['answers'];
 }
 
-const MEMBERS = ['s_ana', 's_ben', 's_cam', 's_dev'];
+const MEMBERS = ['s_ana', 's_ben', 's_chi', 's_dev'];
 
 /** Milliseconds a viewer needs to follow each kind of event (pacing is part of the script, never wall time). */
 function gap(e: VillageEvent): number {
@@ -105,7 +105,7 @@ export async function runScripted(opts: ScriptedOptions = {}): Promise<ScriptedR
     name: opts.name ?? `mesh-${flow}`,
     version: 1,
     loop: false,
-    cast: { me, s_ana: 'Ana', s_ben: 'Ben', s_cam: 'Cam', s_dev: 'Dev' },
+    cast: { me, s_ana: 'Ana', s_ben: 'Ben', s_chi: 'Chi', s_dev: 'Dev' },
     events,
     checkpoints,
   });

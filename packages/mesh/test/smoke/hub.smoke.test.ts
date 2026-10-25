@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { findLeak } from '@squad/core';
 import { TRIP_OPTIONS, WINDOWS, createTestMesh } from '../../src/flows';
 
-const members = ['s_ana', 's_ben', 's_cam', 's_dev'];
+const members = ['s_ana', 's_ben', 's_chi', 's_dev'];
 const run = (m: ReturnType<typeof createTestMesh>) =>
   m.agents.s_ana!.startTrip({
     taskId: 'hub_trip',
@@ -57,7 +57,7 @@ describe('hub private channel', () => {
     const posts = m.hub.tripLimitPosts;
     const studentsPosted = new Set(posts.map((p) => p.student));
     // every NON-coordinating member posts its own limits (the coordinator's go in the upsert)
-    for (const s of ['s_ben', 's_cam', 's_dev']) expect(studentsPosted.has(s)).toBe(true);
+    for (const s of ['s_ben', 's_chi', 's_dev']) expect(studentsPosted.has(s)).toBe(true);
     for (const p of posts) {
       expect(p.tripId).toBe('hub_trip');
       expect(members).toContain(p.student);

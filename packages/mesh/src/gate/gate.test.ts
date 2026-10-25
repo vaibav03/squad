@@ -33,7 +33,7 @@ const msg = (kind: string, payload: unknown, to = 'mediator', taskId = 't1'): Ag
   kind,
   payload,
 });
-const open = (members = ['s_ana', 's_ben', 's_cam']) =>
+const open = (members = ['s_ana', 's_ben', 's_chi']) =>
   msg(
     'task.open',
     { flow: 'trip', window: { from: '2026-11-27', to: '2026-11-29' }, members },
@@ -89,7 +89,7 @@ describe('gate.send', () => {
       {
         flow: 'trip',
         window: { from: '2026-11-27', to: '2026-11-29' },
-        members: ['s_ana', 's_ben', 's_cam'],
+        members: ['s_ana', 's_ben', 's_chi'],
         options: [{ id: 'flag', label: 'Flagstaff', perPerson: 187 }],
       },
       's_ben',
@@ -140,7 +140,7 @@ describe('gate.receive', () => {
   const openIn = inbound('task.open', {
     flow: 'trip',
     window: { from: '2026-11-27', to: '2026-11-29' },
-    members: ['s_ana', 's_ben', 's_cam'],
+    members: ['s_ana', 's_ben', 's_chi'],
   });
   it('rejects replay, unknown task, closed task, non-members, misrouted', () => {
     const { gate } = mk();
@@ -157,7 +157,7 @@ describe('gate.receive', () => {
       ok: false,
       reason: 'not_member',
     });
-    expect(gate.receive({ ...p, to: 's_cam' })).toMatchObject({ ok: false, reason: 'misrouted' });
+    expect(gate.receive({ ...p, to: 's_chi' })).toMatchObject({ ok: false, reason: 'misrouted' });
     gate.closeTask('t1');
     expect(gate.receive(inbound('psi.common', { common: [hex] }))).toMatchObject({
       ok: false,
@@ -199,7 +199,7 @@ describe('gate.receive', () => {
         to: 's_ana',
         taskId: 't1',
         kind: 'query',
-        payload: { about: 'budget', target: 's_cam' },
+        payload: { about: 'budget', target: 's_chi' },
       }),
     ).toBeNull();
   });
@@ -235,7 +235,7 @@ describe('INVARIANT: no gated output ever contains a withheld value', () => {
               {
                 flow: 'trip',
                 window: { from: '2026-11-27', to: '2026-11-29' },
-                members: ['s_ana', 's_ben', 's_cam'],
+                members: ['s_ana', 's_ben', 's_chi'],
                 options: [{ id: 'a', label: [w, `l${num}`][where % 2]! }],
               },
               's_ben',

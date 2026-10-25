@@ -24,7 +24,7 @@ import {
 } from '../secretshare';
 
 const SENTINELS = ['$187', 'therapy Tue 2pm', 'under 21', 'dynamic programming'];
-const ids = ['s_ana', 's_ben', 's_cam', 's_dev'];
+const ids = ['s_ana', 's_ben', 's_chi', 's_dev'];
 const fixture = {
   s_ana: {
     budget: 187,
@@ -33,7 +33,7 @@ const fixture = {
     weakTopics: ['dynamic programming'],
   },
   s_ben: { budget: 400, events: [{ title: 'dentist' }], hardNos: [], weakTopics: [] },
-  s_cam: { budget: 250, events: [], hardNos: [], weakTopics: [] },
+  s_chi: { budget: 250, events: [], hardNos: [], weakTopics: [] },
   s_dev: { budget: 300, events: [], hardNos: [], weakTopics: [] },
 } as const;
 
@@ -101,7 +101,7 @@ function runFlows(seed: string) {
       ],
     },
   });
-  for (const id of ['s_cam', 's_dev'])
+  for (const id of ['s_chi', 's_dev'])
     a[id]!.gate.receive({
       from: 's_ana',
       to: id,
@@ -114,13 +114,13 @@ function runFlows(seed: string) {
   const inputs: Record<string, number[]> = {
     s_ana: [1, 0],
     s_ben: [0, 0],
-    s_cam: [0, 0],
+    s_chi: [0, 0],
     s_dev: [0, 0],
   };
   const veto: Record<string, number[]> = {
     s_ana: [0, 0],
     s_ben: [0, 0],
-    s_cam: [0, 0],
+    s_chi: [0, 0],
     s_dev: [0, 0],
   };
   const sums: bigint[][] = [];
@@ -346,7 +346,7 @@ describe('red team', () => {
       payload: {
         flow: 'trip',
         window: { from: '2026-11-27', to: '2026-11-29' },
-        members: ['s_ana', 's_ben', 's_cam'],
+        members: ['s_ana', 's_ben', 's_chi'],
       },
     };
     expect(a.s_ben!.gate.receive(open).ok).toBe(true);
@@ -362,7 +362,7 @@ describe('red team', () => {
     expect(a.s_ben!.gate.receive({ ...open, taskId: 'u', from: 's_evil' })).toMatchObject({
       reason: 'not_member',
     });
-    expect(a.s_ben!.gate.receive({ ...open, taskId: 'v', to: 's_cam' })).toMatchObject({
+    expect(a.s_ben!.gate.receive({ ...open, taskId: 'v', to: 's_chi' })).toMatchObject({
       reason: 'misrouted',
     });
   });
