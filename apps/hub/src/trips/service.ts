@@ -52,6 +52,8 @@ export interface TripService {
   setAgentUrls(urls: Record<string, string>): void;
   setAsk(fn: AskMember | undefined): void;
   setNarrator(n: { narrate: Narrate; real: () => boolean } | undefined): void;
+  /** Runs before each constraint check so connection-derived busy blocks (Canvas/Google, titles never stored) are current. */
+  setBeforeConstraints(fn: ((members: string[]) => Promise<void> | void) | undefined): void;
   current(v: Viewer): TripViewV2 | null;
   list(v: Viewer): { tripId: string; title: string; status: string }[];
   get(v: Viewer, id: string): TripViewV2 | null;
@@ -101,6 +103,7 @@ export function createTripService(
   const now = () => deps.now();
   let ask: AskMember | undefined;
   let narr: { narrate: Narrate; real: () => boolean } | undefined;
+  let before: ((members: string[]) => Promise<void> | void) | undefined;
   const chains = new Map<string, Promise<void>>();
   let timer: ReturnType<typeof setInterval> | undefined;
   const lastRetry = new Map<string, number>();
@@ -259,6 +262,12 @@ export function createTripService(
           mirror(t, `${waitNote(off, c.agents)}. Nothing is checked until they are back, or ${nameOf(t.collab!.organizer)} continues without them.`);
         return;
       }
+      try {
+        await before?.(members);
+      } catch (e) {
+        deps.log.warn('trip: busy-block refresh failed', { err: (e as Error).name });
+      }
+      t = deps.trips.get(tripId)!;
       const runId = `${tripId}.r${t.collab!.runs.length + 1}`;
       t.collab!.runs.push(runId);
       save(t);
@@ -524,6 +533,7 @@ export function createTripService(
     },
     setAsk: (fn) => void (ask = fn),
     setNarrator: (n) => void (narr = n),
+    setBeforeConstraints: (fn) => void (before = fn),
     current(v) {
       const all = deps.trips.list(v.squadId);
       const collab = all.filter((t) => t.collab).sort((a, b) => b.collab!.createdAt - a.collab!.createdAt);

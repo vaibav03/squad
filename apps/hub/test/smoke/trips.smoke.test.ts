@@ -77,6 +77,10 @@ const history = async (as: string, chatId: string) =>
 const texts = (ms: ChatMessage[]) => ms.map((m) => m.text);
 const say = (as: string, chatId: string, text: string) => post(url, '/v1/chat/send', { chatId, text }, tok[as]);
 const current = async (as: string) => (await get<{ trip: TripViewV2 | null }>(url, '/v1/trips/current', tok[as])).body.trip;
+const evs = () => {
+  const e = hub.deps.events.since(0);
+  return e === 'too_old' ? [] : e;
+};
 const idle = () => hub.deps.tripSvc.idle();
 const waitFor = async (fn: () => Promise<boolean> | boolean, ms = 5000) => {
   const t0 = Date.now();
@@ -169,7 +173,7 @@ describe('collaborative flow from group chat', () => {
     const all = JSON.stringify([
       await get(url, `/v1/trips/${tripId}`, tok.s_ben),
       await history('s_ben', GROUP),
-      hub.deps.events.since(0),
+      evs(),
     ]);
     expect(all).not.toContain(SENTINEL_CAL);
   });
@@ -232,7 +236,7 @@ describe('collaborative flow from group chat', () => {
   });
 
   it('plain "confirm" in the group confirms; REST confirms; trip.confirmed fires exactly once', async () => {
-    const before = hub.deps.events.since(0).filter((e) => e.type === 'trip.confirmed').length;
+    const before = evs().filter((e) => e.type === 'trip.confirmed').length;
     await say('s_ana', GROUP, 'confirm');
     await waitFor(async () => (await current('s_ana'))!.members.find((m) => m.id === 's_ana')!.confirmed);
     for (const id of ['s_ben', 's_chi', 's_dev']) {
@@ -243,7 +247,7 @@ describe('collaborative flow from group chat', () => {
     await post(url, `/v1/trips/${tripId}/confirm`, { yes: true }, tok.s_ben);
     const t = (await current('s_ben'))!;
     expect(t.status).toBe('confirmed');
-    const fired = hub.deps.events.since(0).filter((e) => e.type === 'trip.confirmed').length - before;
+    const fired = evs().filter((e) => e.type === 'trip.confirmed').length - before;
     expect(fired).toBe(1);
     expect(texts(await history('s_ana', GROUP)).join('\n')).toContain('Trip confirmed by all 4');
   });

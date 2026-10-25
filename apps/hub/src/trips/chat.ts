@@ -5,7 +5,7 @@ import type { HubDeps, Viewer } from '../types';
 import { monthOf, MONTHS } from './logic';
 import type { TripService } from './service';
 
-const AT = /(^|[^a-z0-9_])@(?:cubbie|squad|planner|council)(?![a-z0-9_])/i;
+const AT = /(^|[^a-z0-9_])@(?:cubbie|cubbi|squad|planner|council)(?![a-z0-9_])/i;
 const LEAD = /^\s*(?:@\w+[\s,:]*)?/;
 const CREATE = /\b(?:plan|organi[sz]e|start|set\s*up|book)\b[^.!?\n]*?\btrip\b([^\n]*)$/i;
 const MONTH_WORDS = MONTHS.map((m) => m.slice(0, 3)).concat(MONTHS, ['sept']).join('|');
