@@ -363,7 +363,7 @@ export function createCouncilRuntime(deps: RuntimeDeps): {
             const q = argStr('query').slice(0, 300);
             if (!ports?.retrieve) return { grounded: false, note: 'No course materials are loaded.' };
             try {
-              const r = await deps.ports.retrieve(q);
+              const r = await ports.retrieve(q);
               return {
                 grounded: r.grounded,
                 note: r.note,
