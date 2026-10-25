@@ -32,7 +32,6 @@ const read = () =>
   });
 const seen = new Set();
 const verdicts = [];
-const frames = [];
 let beatN = 0;
 while (Date.now() - t0 < DURATION) {
   const s = await read();
@@ -57,7 +56,9 @@ while (Date.now() - t0 < DURATION) {
           scrollX: v.sx,
           viewW: v.w,
         });
-      } catch {}
+      } catch {
+        // page may have navigated
+      }
     }, 1000);
     if (vpName === 'desk' && e.score >= 5 && beatN < 14) {
       beatN++;
@@ -68,7 +69,9 @@ while (Date.now() - t0 < DURATION) {
           await page.screenshot({
             path: `${OUT}/beats/${track}-${vpName}-${String(n).padStart(2, '0')}-t${String(Math.round(at / 1000)).padStart(3, '0')}-${safe}.png`,
           });
-        } catch {}
+        } catch {
+          // page may have navigated
+        }
       }, 1100);
     }
   }
