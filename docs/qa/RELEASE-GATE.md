@@ -49,6 +49,8 @@ pnpm gate                 fixture run: fake Canvas, fake Google, scripted iMessa
 pnpm gate:live            same, but real Gemini when GET /v1/status says the key has credit (LIVE=1)
 pnpm gate:report          regenerate docs/qa/RELEASE-GATE-REPORT.md/.json from the last run's results
 pnpm gate:smoke           safe real-account path (section 7); default stage is a no-network preflight
+pnpm gate:down            stop a stack left running by GATE_KEEP=1
+GATE_TRACE=1 pnpm gate    print every assertion as it is recorded
 pnpm gate -- --grep S3    any playwright arguments
 ```
 
@@ -70,6 +72,25 @@ its own ports is busy.
 exactly those. It never kills by port or by name pattern. A hub restart (variant V7) and an agent going offline (S8, V9)
 stop and start exactly the recorded PID.
 
+### Findings the gate currently reports (all features landed except the council integration)
+
+These are real differences between the plan and what is on main, not harness noise. Each stays a FAIL until the owner
+fixes it or the plan changes:
+
+| Step | Finding | Owner |
+|---|---|---|
+| S2 | the Connections page shows raw squad ids in "Shared with" | nook-parity web |
+| S7 | an iMessage-origin message has no "via iMessage" tag and no delivery label in the web chat: `SyncBadge` exists but is not mounted in the chat bubble | imessage-sync web |
+| V1 | asking `@cubbie` before anything is connected answers "Not in the materials. Ask the TA." instead of saying nothing is connected and offering the link | context / chat |
+| V3 | a grant revoked at Google makes the hub delete all imported data ("Disconnected"); the plan wanted stale-but-kept items and a reconnect prompt | nook-parity |
+| V4 | a 401 on sync with a token that died early at Google ends the connection `revoked` (data purged) instead of one refresh and a retry; a refused refresh after a short-lived token stays `live` | nook-parity |
+
+Notes on behaviour the harness adapted to: `@planner` and `@studyplan` do not start a trip or a study plan (the plan and
+trip are started by `@cubbie plan a trip to <place> ...` and `@cubbie study plan ...`); persona aliases answer as the
+persona only. The demo model cannot ground a content answer, so citation assertions on persona answers run with
+`LIVE=1`; the fixture run asserts citations at the retrieval and source-viewer API instead. The live council
+(`feature/council-integration`) is not on main: when it lands, S5 gains its assertions (probe `P.council`).
+
 ## 3. Structure
 
 ```
@@ -79,12 +100,14 @@ e2e/gate/
   report.ts               writes docs/qa/RELEASE-GATE-REPORT.md and .json (scrubbed)
   run.mjs                 pnpm gate entry: playwright, then the report; exit code policy
   playwright.config.ts    own ports, serial, global setup/teardown
+  stack-down.mjs          pnpm gate:down: stops a stack left by GATE_KEEP=1 (exact PIDs)
   steps/
     s01-s03.ts            connect, ingest, retrieve with citations
     s04-s07.ts            iMessage tag, routing, reply delivery, web mirror
     s08-s10.ts            trip plan, study plan, cross-surface sync
     conflicts.ts          reusable fragments for conflicting edits and agent-offline
-    variants.ts           V1..V12 step definitions
+    variants.ts           V1..V5 and the V1..V12 registry
+    variants-im.ts        V6..V12
     flows.ts              reusable journey fragments (connect, sync, ask, bind a group)
   lib/
     types.ts runner.ts    the typed step runner (StepDef, runStep, StepResult)
@@ -105,10 +128,10 @@ Per step the runner writes `e2e/gate/.tmp/results/<id>.<mode>.json` (git-ignored
 
 ## 4. Fixtures
 
-* **Fake Canvas** (`:8940`): serves a calendar feed and the REST subset the hub reads, with original synthetic course
+* **Fake Canvas** (`:8940`): the REST subset the hub's real Canvas connector reads (and a calendar feed). The gate hub (`lib/gate-hub.ts`) redirects `https://canvas.fixture.invalid` to it with a fetch seam, so the real connector code runs; it serves, with original synthetic course
   content (a statistics course: three assignments, two events, one course file). Controls: `mode` (`ok`, `404`, `410`,
   `moved`, `big`), token validity, request log, reset.
-* **Fake Google** (`:8941`): OAuth authorize and consent page, token and revoke endpoints, Calendar free/busy-style events,
+* **Fake Google** (`:8941`): reached through the same seam (the Google hosts map to `/__h/<host>/...`, a fake OAuth client switches the hub to its live Google code): OAuth authorize and consent page, token and revoke endpoints, Calendar free/busy-style events,
   Drive/Docs export for picked files only, Classroom courses. Controls: `revoke` (next refresh returns `invalid_grant`),
   `expire`, `ttl`, `fail-refresh n`, `over-grant` (grants more than asked, to prove the hub refuses it), `pick`, request log.
 * **Scripted iMessage** (`:8942`, control server of the gate hub): `ScenarioTransport` extends the `FakeIMessageTransport`

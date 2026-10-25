@@ -12,7 +12,7 @@ export const RAW_ID_PATTERNS: [string, RegExp][] = [
   ['chat id', /\b(?:group|dm):[A-Za-z0-9_-]{3,}/],
   ['hub message id', /\bm_\d{1,}\b/],
   ['chat guid', /iMessage;[+-];[^\s]+/],
-  ['phone number', /\+?\d[\d\s().-]{8,}\d/],
+  ['phone number', /(?<![\d-])(?!\d{4}-\d{2}-\d{2}\b)\+?\d[\d\s().-]{8,}\d/],
   ['hex id', /\b[0-9a-f]{24,}\b/i],
   ['uuid', /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i],
   ['task id', /\btask_[a-z0-9]{6,}\b/],

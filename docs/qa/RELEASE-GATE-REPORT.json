@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-10-25T13:15:11.298Z",
+  "generatedAt": "2026-10-25T13:18:16.916Z",
   "tree": {
     "branch": "feature/release-gate",
-    "head": "c7a11eef",
-    "originMain": "2835a43d"
+    "head": "a94bcfb2",
+    "originMain": "1bef7af7"
   },
   "mode": {
     "live": false,
@@ -11,11 +11,11 @@
   },
   "verdict": "RED (a BUILT step failed)",
   "summary": {
-    "fixtureFail": 8,
+    "fixtureFail": 5,
     "realFail": 0,
     "notBuilt": 0,
     "blocked": 7,
-    "fixturePass": 14,
+    "fixturePass": 17,
     "total": 22
   },
   "fixture": [
@@ -371,8 +371,8 @@
       ],
       "notes": [],
       "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
-      "ms": 1312,
-      "at": "2026-10-25T13:13:54.711Z"
+      "ms": 1210,
+      "at": "2026-10-25T13:16:59.749Z"
     },
     {
       "id": "S2",
@@ -631,8 +631,8 @@
       ],
       "notes": [],
       "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
-      "ms": 1182,
-      "at": "2026-10-25T13:13:56.131Z",
+      "ms": 1133,
+      "at": "2026-10-25T13:17:01.034Z",
       "reason": "no raw squad or student ids on the Connections page after sharing"
     },
     {
@@ -842,8 +842,8 @@
         "demo model: the context-claims prompt is not served by the demo LLM, so a context-grounded chat answer cannot be produced without LIVE=1; retrieval and the viewer are asserted above"
       ],
       "label": "fixture (retrieval and source viewer asserted at the API; chat answers use the demo model unless LIVE=1)",
-      "ms": 1264,
-      "at": "2026-10-25T13:13:57.371Z"
+      "ms": 1625,
+      "at": "2026-10-25T13:17:02.253Z"
     },
     {
       "id": "S4",
@@ -947,8 +947,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 2556,
-      "at": "2026-10-25T13:13:58.728Z"
+      "ms": 2536,
+      "at": "2026-10-25T13:17:04.018Z"
     },
     {
       "id": "S5",
@@ -1015,8 +1015,8 @@
         "@planner: the demo model cannot ground a content answer; citations are asserted with LIVE=1"
       ],
       "label": "fixture",
-      "ms": 136,
-      "at": "2026-10-25T13:14:01.360Z"
+      "ms": 220,
+      "at": "2026-10-25T13:17:06.701Z"
     },
     {
       "id": "S6",
@@ -1086,8 +1086,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 2998,
-      "at": "2026-10-25T13:14:01.747Z"
+      "ms": 2954,
+      "at": "2026-10-25T13:17:07.070Z"
     },
     {
       "id": "S7",
@@ -1174,8 +1174,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 7160,
-      "at": "2026-10-25T13:14:04.811Z",
+      "ms": 7086,
+      "at": "2026-10-25T13:17:10.090Z",
       "reason": "iMessage-origin message carries a \"via iMessage\" tag"
     },
     {
@@ -1440,14 +1440,14 @@
       ],
       "notes": [],
       "label": "fixture (demo labelled)",
-      "ms": 11382,
-      "at": "2026-10-25T13:14:12.232Z"
+      "ms": 10515,
+      "at": "2026-10-25T13:17:17.332Z"
     },
     {
       "id": "S9",
       "title": "... and a shared study plan",
       "mode": "fixture",
-      "status": "FAIL",
+      "status": "PASS",
       "assertions": [
         {
           "name": "a progress line came before the card",
@@ -1527,18 +1527,15 @@
         },
         {
           "name": "iMessage lists Rhea's 2 items",
-          "pass": false,
-          "detail": "expected 2, got 0"
+          "pass": true
         },
         {
-          "name": "iMessage lists Ben's 1 items",
-          "pass": false,
-          "detail": "expected 1, got 0"
+          "name": "iMessage lists Ben's 2 items",
+          "pass": true
         },
         {
-          "name": "iMessage lists Cy's 2 items",
-          "pass": false,
-          "detail": "expected 2, got 0"
+          "name": "iMessage lists Cy's 1 items",
+          "pass": true
         },
         {
           "name": "web countdown shows the same days",
@@ -1549,11 +1546,11 @@
           "pass": true
         },
         {
-          "name": "web panel shows Ben on 1 items",
+          "name": "web panel shows Ben on 2 items",
           "pass": true
         },
         {
-          "name": "web panel shows Cy on 2 items",
+          "name": "web panel shows Cy on 1 items",
           "pass": true
         },
         {
@@ -1620,15 +1617,14 @@
         "mastery hidden for squads under 3 members is not exercised: the world squad has 3 members"
       ],
       "label": "fixture (demo labelled)",
-      "ms": 2457,
-      "at": "2026-10-25T13:14:23.842Z",
-      "reason": "iMessage lists Rhea's 2 items"
+      "ms": 2363,
+      "at": "2026-10-25T13:17:28.010Z"
     },
     {
       "id": "S10",
       "title": "Decisions, updates, failures and agent activity stay synchronized in web and iMessage",
       "mode": "fixture",
-      "status": "FAIL",
+      "status": "PASS",
       "assertions": [
         {
           "name": "S8/S9 recorded a trip.vote decision",
@@ -1672,8 +1668,7 @@
         },
         {
           "name": "no raw ids in web thread",
-          "pass": false,
-          "detail": "found: phone number"
+          "pass": true
         },
         {
           "name": "no sentinel in iMessage log",
@@ -1997,9 +1992,8 @@
         "live typing/thinking is transient with the scripted model; only \"not stuck\" is asserted"
       ],
       "label": "fixture (demo labelled)",
-      "ms": 6087,
-      "at": "2026-10-25T13:14:26.463Z",
-      "reason": "no raw ids in web thread"
+      "ms": 6336,
+      "at": "2026-10-25T13:17:30.669Z"
     },
     {
       "id": "V1",
@@ -2046,8 +2040,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 1991,
-      "at": "2026-10-25T13:14:33.851Z",
+      "ms": 1802,
+      "at": "2026-10-25T13:17:37.970Z",
       "reason": "and says nothing is connected and offers a way to connect"
     },
     {
@@ -2084,8 +2078,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 185,
-      "at": "2026-10-25T13:14:36.419Z"
+      "ms": 138,
+      "at": "2026-10-25T13:17:40.304Z"
     },
     {
       "id": "V3",
@@ -2123,8 +2117,8 @@
         "after revoke: state=revoked label=Disconnected: imported data deleted status=revoked degraded=false note=Disconnected. All imported data was deleted."
       ],
       "label": "fixture",
-      "ms": 125,
-      "at": "2026-10-25T13:14:36.681Z",
+      "ms": 169,
+      "at": "2026-10-25T13:17:40.518Z",
       "reason": "the label says to reconnect in words"
     },
     {
@@ -2159,8 +2153,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 136,
-      "at": "2026-10-25T13:14:37.312Z",
+      "ms": 156,
+      "at": "2026-10-25T13:17:41.375Z",
       "reason": "a refused refresh ends needing reconnect"
     },
     {
@@ -2197,8 +2191,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 137,
-      "at": "2026-10-25T13:14:37.972Z"
+      "ms": 240,
+      "at": "2026-10-25T13:17:42.050Z"
     },
     {
       "id": "V6",
@@ -2230,8 +2224,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 2586,
-      "at": "2026-10-25T13:14:38.186Z"
+      "ms": 2665,
+      "at": "2026-10-25T13:17:42.429Z"
     },
     {
       "id": "V7",
@@ -2275,8 +2269,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 3424,
-      "at": "2026-10-25T13:14:40.853Z"
+      "ms": 4004,
+      "at": "2026-10-25T13:17:45.210Z"
     },
     {
       "id": "V8",
@@ -2324,14 +2318,14 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 9117,
-      "at": "2026-10-25T13:14:44.330Z"
+      "ms": 9234,
+      "at": "2026-10-25T13:17:49.339Z"
     },
     {
       "id": "V9",
       "title": "Conflicting edits (trip field, plan chapter) and an agent going offline",
       "mode": "fixture",
-      "status": "FAIL",
+      "status": "PASS",
       "assertions": [
         {
           "name": "members can propose options",
@@ -2475,13 +2469,11 @@
         },
         {
           "name": "iMessage summary lists the item under the picked owner",
-          "pass": false,
-          "detail": " / want ch12 (Oct 26)"
+          "pass": true
         },
         {
           "name": "and under nobody else",
-          "pass": false,
-          "detail": "expected 0, got 1"
+          "pass": true
         },
         {
           "name": "web panel shows the item under the picked owner",
@@ -2572,9 +2564,8 @@
         "fewer than two members pending: the simultaneous-accept check was skipped"
       ],
       "label": "fixture",
-      "ms": 12689,
-      "at": "2026-10-25T13:14:53.643Z",
-      "reason": "iMessage summary lists the item under the picked owner"
+      "ms": 13634,
+      "at": "2026-10-25T13:17:58.773Z"
     },
     {
       "id": "V10",
@@ -2620,8 +2611,8 @@
         "1:1 squad disambiguation (\"Which squad?\") is not part of feature/imessage-sync today (docs/imessage.md); a DM stays private to Cubbie."
       ],
       "label": "fixture",
-      "ms": 2918,
-      "at": "2026-10-25T13:15:06.941Z"
+      "ms": 2999,
+      "at": "2026-10-25T13:18:12.733Z"
     },
     {
       "id": "V11",
@@ -2651,8 +2642,8 @@
         "iMessage text has no literal \"Demo\" marker (only the web label); recorded, not asserted"
       ],
       "label": "fixture/degraded",
-      "ms": 164,
-      "at": "2026-10-25T13:15:10.014Z"
+      "ms": 91,
+      "at": "2026-10-25T13:18:15.834Z"
     },
     {
       "id": "V12",
@@ -2680,8 +2671,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 127,
-      "at": "2026-10-25T13:15:10.320Z"
+      "ms": 74,
+      "at": "2026-10-25T13:18:16.011Z"
     }
   ],
   "real": [
@@ -2694,8 +2685,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 103,
-      "at": "2026-10-25T13:13:56.027Z",
+      "ms": 72,
+      "at": "2026-10-25T13:17:00.961Z",
       "reason": "no_google_client",
       "runbook": "#google-oauth-client-and-consent-screen"
     },
@@ -2708,8 +2699,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 57,
-      "at": "2026-10-25T13:13:57.314Z",
+      "ms": 83,
+      "at": "2026-10-25T13:17:02.169Z",
       "reason": "no_google_client",
       "runbook": "#google-oauth-client-and-consent-screen"
     },
@@ -2722,8 +2713,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 92,
-      "at": "2026-10-25T13:13:58.635Z",
+      "ms": 140,
+      "at": "2026-10-25T13:17:03.878Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2736,8 +2727,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 75,
-      "at": "2026-10-25T13:14:01.285Z",
+      "ms": 144,
+      "at": "2026-10-25T13:17:06.554Z",
       "reason": "apple_unverified",
       "runbook": "#apple-behaviour-and-permissions"
     },
@@ -2750,8 +2741,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 249,
-      "at": "2026-10-25T13:14:01.497Z",
+      "ms": 147,
+      "at": "2026-10-25T13:17:06.922Z",
       "reason": "llm_credits",
       "runbook": "#gemini-credits-live-and-elevenlabs-plan"
     },
@@ -2764,8 +2755,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 66,
-      "at": "2026-10-25T13:14:04.745Z",
+      "ms": 64,
+      "at": "2026-10-25T13:17:10.025Z",
       "reason": "apple_unverified",
       "runbook": "#apple-behaviour-and-permissions"
     },
@@ -2778,8 +2769,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 259,
-      "at": "2026-10-25T13:14:11.972Z",
+      "ms": 154,
+      "at": "2026-10-25T13:17:17.177Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2792,8 +2783,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 225,
-      "at": "2026-10-25T13:14:23.615Z",
+      "ms": 161,
+      "at": "2026-10-25T13:17:27.848Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2806,8 +2797,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 163,
-      "at": "2026-10-25T13:14:26.300Z",
+      "ms": 294,
+      "at": "2026-10-25T13:17:30.374Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2820,8 +2811,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 247,
-      "at": "2026-10-25T13:14:32.554Z",
+      "ms": 297,
+      "at": "2026-10-25T13:17:37.013Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2834,8 +2825,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 102,
-      "at": "2026-10-25T13:14:35.845Z",
+      "ms": 96,
+      "at": "2026-10-25T13:17:39.774Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2848,8 +2839,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 61,
-      "at": "2026-10-25T13:14:36.606Z",
+      "ms": 64,
+      "at": "2026-10-25T13:17:40.444Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2862,8 +2853,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 90,
-      "at": "2026-10-25T13:14:36.808Z",
+      "ms": 155,
+      "at": "2026-10-25T13:17:40.688Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2876,8 +2867,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 69,
-      "at": "2026-10-25T13:14:37.451Z",
+      "ms": 70,
+      "at": "2026-10-25T13:17:41.534Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2890,8 +2881,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 63,
-      "at": "2026-10-25T13:14:38.110Z",
+      "ms": 104,
+      "at": "2026-10-25T13:17:42.292Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2904,8 +2895,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 69,
-      "at": "2026-10-25T13:14:40.773Z",
+      "ms": 104,
+      "at": "2026-10-25T13:17:45.094Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2918,8 +2909,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 32,
-      "at": "2026-10-25T13:14:44.278Z",
+      "ms": 88,
+      "at": "2026-10-25T13:17:49.219Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2932,8 +2923,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 95,
-      "at": "2026-10-25T13:14:53.450Z",
+      "ms": 81,
+      "at": "2026-10-25T13:17:58.574Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2946,8 +2937,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 137,
-      "at": "2026-10-25T13:15:06.334Z",
+      "ms": 285,
+      "at": "2026-10-25T13:18:12.407Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2960,8 +2951,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 132,
-      "at": "2026-10-25T13:15:09.863Z",
+      "ms": 86,
+      "at": "2026-10-25T13:18:15.733Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -2974,8 +2965,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 121,
-      "at": "2026-10-25T13:15:10.179Z",
+      "ms": 71,
+      "at": "2026-10-25T13:18:15.930Z",
       "reason": "llm_credits",
       "runbook": "#gemini-credits-live-and-elevenlabs-plan"
     },
@@ -2988,8 +2979,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 78,
-      "at": "2026-10-25T13:15:10.447Z",
+      "ms": 60,
+      "at": "2026-10-25T13:18:16.085Z",
       "reason": "needs_second_person",
       "runbook": "#real-multi-person-imessage-group"
     }
