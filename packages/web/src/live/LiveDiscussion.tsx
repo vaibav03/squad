@@ -151,7 +151,12 @@ export function LiveDiscussion({
         </p>
       </header>
 
-      {(status === 'connecting' || status === 'reconnecting' || unavailable || ctl.error || noAudio || state.note) && (
+      {(status === 'connecting' ||
+        status === 'reconnecting' ||
+        unavailable ||
+        ctl.error ||
+        noAudio ||
+        state.note) && (
         <div className="ld-banners">
           {status === 'connecting' && !ctl.error && (
             <p className="ld-banner" role="status">
@@ -160,7 +165,8 @@ export function LiveDiscussion({
           )}
           {status === 'reconnecting' && (
             <p className="ld-banner ld-banner--warn" role="status">
-              <LvIcon name="wifi-off" size={14} /> Reconnecting. The discussion picks up where it left off.
+              <LvIcon name="wifi-off" size={14} /> Reconnecting. The discussion picks up where it
+              left off.
             </p>
           )}
           {(unavailable || ctl.error) && (
@@ -168,7 +174,8 @@ export function LiveDiscussion({
               <LvIcon name="alert" size={14} />
               <span>
                 {ctl.error ?? 'The discussion could not be reached.'}{' '}
-                {unavailable && 'The model may be busy or the hub may be offline. Fix: check the hub is running, then try again.'}
+                {unavailable &&
+                  'The model may be busy or the hub may be offline. Fix: check the hub is running, then try again.'}
               </span>
               <button type="button" className="lv-btn" onClick={ctl.retry}>
                 <LvIcon name="refresh" size={14} /> Try again
@@ -177,7 +184,8 @@ export function LiveDiscussion({
           )}
           {noAudio && (
             <p className="ld-banner" role="status">
-              <LvIcon name="info" size={14} /> No audio output from the model this time. Captions are complete.
+              <LvIcon name="info" size={14} /> No audio output from the model this time. Captions
+              are complete.
             </p>
           )}
           {state.note && demo && (
@@ -201,8 +209,8 @@ export function LiveDiscussion({
           />
           {ask && (
             <p className="ld-stance" role="status">
-              <b>{personas.find((p) => p.id === ask)?.name}</b>: {personas.find((p) => p.id === ask)?.stance}{' '}
-              Your next message goes to them.
+              <b>{personas.find((p) => p.id === ask)?.name}</b>:{' '}
+              {personas.find((p) => p.id === ask)?.stance} Your next message goes to them.
             </p>
           )}
           <CaptionsBar state={state} personas={personas} reduced={reduced} />
@@ -252,13 +260,31 @@ export function LiveDiscussion({
             </button>
           ))}
         </div>
-        <aside className="ld-pane ld-pane--tx" id="ld-pane-transcript" role="tabpanel" aria-labelledby="ld-tab-transcript" data-on={tab === 'transcript' || undefined}>
+        <aside
+          className="ld-pane ld-pane--tx"
+          id="ld-pane-transcript"
+          role="tabpanel"
+          aria-labelledby="ld-tab-transcript"
+          data-on={tab === 'transcript' || undefined}
+        >
           <h3 className="ld-pane__title">Transcript</h3>
           <Transcript state={state} personas={personas} startedAt={startedAt} focusId={focus} />
         </aside>
-        <aside className="ld-pane ld-pane--tk" id="ld-pane-takeaways" role="tabpanel" aria-labelledby="ld-tab-takeaways" data-on={tab === 'takeaways' || undefined}>
+        <aside
+          className="ld-pane ld-pane--tk"
+          id="ld-pane-takeaways"
+          role="tabpanel"
+          aria-labelledby="ld-tab-takeaways"
+          data-on={tab === 'takeaways' || undefined}
+        >
           <h3 className="ld-pane__title">Takeaways</h3>
-          <TakeawaysPanel takeaways={tk} actions={ctl.actions} onRun={(n) => void ctl.run(n)} onJump={jump} reduced={reduced} />
+          <TakeawaysPanel
+            takeaways={tk}
+            actions={ctl.actions}
+            onRun={(n) => void ctl.run(n)}
+            onJump={jump}
+            reduced={reduced}
+          />
         </aside>
       </div>
     </div>

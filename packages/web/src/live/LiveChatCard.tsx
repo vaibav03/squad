@@ -78,7 +78,8 @@ export function LiveChatCard({
           <b>{t.decisions.length}</b> {t.decisions.length === 1 ? 'decision' : 'decisions'}
         </li>
         <li>
-          <b>{t.disagreements.length}</b> open {t.disagreements.length === 1 ? 'disagreement' : 'disagreements'}
+          <b>{t.disagreements.length}</b> open{' '}
+          {t.disagreements.length === 1 ? 'disagreement' : 'disagreements'}
         </li>
         <li>
           <b>{t.nextSteps.length}</b> next {t.nextSteps.length === 1 ? 'step' : 'steps'}
@@ -92,7 +93,12 @@ export function LiveChatCard({
         <LvIcon name={t.grounding === 'course' ? 'shield' : 'info'} size={14} />
         {groundingLine(t)}
       </p>
-      <button type="button" className="lv-btn lv-btn--primary" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className="lv-btn lv-btn--primary"
+        aria-haspopup="dialog"
+        onClick={() => setOpen(true)}
+      >
         Open discussion
       </button>
       {open && (

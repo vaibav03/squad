@@ -5,7 +5,8 @@ export const PREBUFFER_S = 0.12;
 
 /** Base64 little-endian 16-bit mono PCM to Float32 in [-1, 1). */
 export function pcm16ToFloat32(b64: string): Float32Array {
-  const bin = typeof atob === 'function' ? atob(b64) : Buffer.from(b64, 'base64').toString('binary');
+  const bin =
+    typeof atob === 'function' ? atob(b64) : Buffer.from(b64, 'base64').toString('binary');
   const n = Math.floor(bin.length / 2);
   const out = new Float32Array(n);
   for (let i = 0; i < n; i++) {
@@ -38,7 +39,11 @@ interface CtxLike {
     connect(n: unknown): void;
     getByteTimeDomainData(a: Uint8Array): void;
   };
-  createBuffer(ch: number, len: number, rate: number): {
+  createBuffer(
+    ch: number,
+    len: number,
+    rate: number,
+  ): {
     duration: number;
     copyToChannel(d: Float32Array, c: number): void;
   };
@@ -226,7 +231,11 @@ interface RecognitionLike {
   lang: string;
   interimResults: boolean;
   continuous: boolean;
-  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null;
+  onresult:
+    | ((e: {
+        results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
+      }) => void)
+    | null;
   onerror: ((e: { error?: string }) => void) | null;
   onend: (() => void) | null;
   start(): void;
@@ -318,7 +327,9 @@ export function createTalk(h: TalkHandlers): Talk {
       rec.onerror = (e) => {
         active = false;
         stopMeter();
-        h.onState(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'denied' : 'idle');
+        h.onState(
+          e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'denied' : 'idle',
+        );
       };
       rec.onend = () => {
         active = false;

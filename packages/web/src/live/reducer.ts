@@ -162,7 +162,9 @@ export function liveReducer(s: LiveState, a: LiveAction): LiveState {
 }
 
 /** The line shown in the captions bar: the open turn, else the latest finished turn. */
-export function currentCaption(s: LiveState): { speaker: Speaker; text: string; live: boolean } | null {
+export function currentCaption(
+  s: LiveState,
+): { speaker: Speaker; text: string; live: boolean } | null {
   const o = s.open[s.open.length - 1];
   if (o) return { speaker: o.speaker, text: o.text, live: true };
   const t = s.turns[s.turns.length - 1];

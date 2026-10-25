@@ -28,7 +28,12 @@ describe('liveReducer', () => {
     expect(s.open).toEqual([{ turnId: 't1', speaker: 'tutor', text: 'Hello there' }]);
     expect(currentCaption(s)).toMatchObject({ text: 'Hello there', live: true });
     s = run(
-      [{ k: 'turn', turn: { id: 't1', n: 1, speaker: 'tutor', text: 'Hello there.', citations: [], ts: 1 } }],
+      [
+        {
+          k: 'turn',
+          turn: { id: 't1', n: 1, speaker: 'tutor', text: 'Hello there.', citations: [], ts: 1 },
+        },
+      ],
       s,
     );
     expect(s.open).toEqual([]);
@@ -71,7 +76,9 @@ describe('liveReducer', () => {
 
 describe('parseDiscussTrigger', () => {
   it('accepts @cubbie discuss: and discuss:', () => {
-    expect(parseDiscussTrigger('@cubbie discuss: should I switch majors?')).toBe('should I switch majors?');
+    expect(parseDiscussTrigger('@cubbie discuss: should I switch majors?')).toBe(
+      'should I switch majors?',
+    );
     expect(parseDiscussTrigger('  Discuss:  ch5 vs ch6 ')).toBe('ch5 vs ch6');
   });
   it('rejects everything else', () => {

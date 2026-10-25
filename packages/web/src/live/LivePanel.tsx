@@ -60,7 +60,9 @@ function RoomRunner({
   const tr = replay?.tr ?? transport;
   const live = useLiveDiscussion({
     transport: tr,
-    ...(p.id ? { id: p.id } : { start: { topic, ...(p.chatId ? { chatId: p.chatId } : {}), mode } }),
+    ...(p.id
+      ? { id: p.id }
+      : { start: { topic, ...(p.chatId ? { chatId: p.chatId } : {}), mode } }),
     readOnly: !!p.readOnly && !replay,
     mode: replay ? 'captions' : mode,
   });
@@ -133,7 +135,12 @@ export function LivePanel(p: LivePanelProps) {
     setStarted({ topic: trimmed, mode });
   };
   const room = useMemo(
-    () => (p.id ? { topic: p.topic ?? '', mode: 'captions' as LiveMode } : p.topic ? { topic: p.topic, mode } : started),
+    () =>
+      p.id
+        ? { topic: p.topic ?? '', mode: 'captions' as LiveMode }
+        : p.topic
+          ? { topic: p.topic, mode }
+          : started,
     [p.id, p.topic, mode, started],
   );
 
@@ -153,11 +160,22 @@ export function LivePanel(p: LivePanelProps) {
       className="ld-panel"
       initialFocus={() => area.current}
     >
-      <button type="button" className="lv-btn lv-close" onClick={onClose} aria-label="Close the discussion">
+      <button
+        type="button"
+        className="lv-btn lv-close"
+        onClick={onClose}
+        aria-label="Close the discussion"
+      >
         <LvIcon name="x" size={20} />
       </button>
       {room || direct ? (
-        <RoomRunner p={p} topic={room?.topic ?? ctxTopic} mode={room?.mode ?? 'captions'} reduced={reduced} transport={transport} />
+        <RoomRunner
+          p={p}
+          topic={room?.topic ?? ctxTopic}
+          mode={room?.mode ?? 'captions'}
+          reduced={reduced}
+          transport={transport}
+        />
       ) : (
         <div className="ld-entry">
           <span className="ld-door">
@@ -168,7 +186,8 @@ export function LivePanel(p: LivePanelProps) {
             Start a discussion
           </h2>
           <p className="ld-lede">
-            Five study agents talk it through out loud or in captions. You can interrupt, ask one directly, and leave with takeaways.
+            Five study agents talk it through out loud or in captions. You can interrupt, ask one
+            directly, and leave with takeaways.
           </p>
           <form onSubmit={begin} className="ld-entry__form">
             <label htmlFor={inputId} className="ld-eyebrow">
@@ -196,13 +215,23 @@ export function LivePanel(p: LivePanelProps) {
             <fieldset className="ld-modes">
               <legend className="ld-eyebrow">How do you want to join?</legend>
               <label className="ld-mode">
-                <input type="radio" name="ld-mode" checked={mode === 'audio'} onChange={() => setMode('audio')} />
+                <input
+                  type="radio"
+                  name="ld-mode"
+                  checked={mode === 'audio'}
+                  onChange={() => setMode('audio')}
+                />
                 <span>
                   <b>Audio</b> and captions
                 </span>
               </label>
               <label className="ld-mode">
-                <input type="radio" name="ld-mode" checked={mode === 'captions'} onChange={() => setMode('captions')} />
+                <input
+                  type="radio"
+                  name="ld-mode"
+                  checked={mode === 'captions'}
+                  onChange={() => setMode('captions')}
+                />
                 <span>
                   <b>Captions only</b>, no sound
                 </span>
@@ -212,7 +241,9 @@ export function LivePanel(p: LivePanelProps) {
               <div className="ld-intro" role="note">
                 <LvIcon name="mic" size={16} />
                 <p>
-                  If you talk, your voice is turned into text in your browser, and only that text is sent. Audio is not recorded or kept. Nothing is heard unless you hold the talk button.
+                  If you talk, your voice is turned into text in your browser, and only that text is
+                  sent. Audio is not recorded or kept. Nothing is heard unless you hold the talk
+                  button.
                 </p>
                 <button type="button" className="lv-btn" onClick={() => setMode('captions')}>
                   Use text instead
@@ -224,7 +255,10 @@ export function LivePanel(p: LivePanelProps) {
                 Start the discussion
               </button>
             </div>
-            <p className="ld-fine">AI-generated. It can be wrong. Answers that cite your course show the page they came from.</p>
+            <p className="ld-fine">
+              AI-generated. It can be wrong. Answers that cite your course show the page they came
+              from.
+            </p>
           </form>
         </div>
       )}

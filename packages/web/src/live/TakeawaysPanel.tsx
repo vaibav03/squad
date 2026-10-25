@@ -79,7 +79,12 @@ export function TakeawaysPanel({
 }) {
   const [split, setSplit] = useState<string | null>(null);
   const t = takeaways;
-  const empty = !t.decisions.length && !t.disagreements.length && !t.nextSteps.length && !t.sources.length && !t.quiz.length;
+  const empty =
+    !t.decisions.length &&
+    !t.disagreements.length &&
+    !t.nextSteps.length &&
+    !t.sources.length &&
+    !t.quiz.length;
   return (
     <div className="ld-tk" data-reduced={reduced || undefined}>
       <Section title="Decisions" glyph="D" count={t.decisions.length}>

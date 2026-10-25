@@ -42,6 +42,5 @@ export function chooseTransport(hub: HubCtx | null): LiveTransport {
 export function useLiveTransport(hub: HubCtx | null, override?: LiveTransport): LiveTransport {
   const url = hub?.hubUrl;
   const token = hub?.token;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => override ?? chooseTransport(hub), [override, url, token]);
 }

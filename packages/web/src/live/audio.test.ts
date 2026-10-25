@@ -21,8 +21,15 @@ function fakeCtx(state = 'running') {
       ctx.state = 'running';
     },
     createGain: () => ({ gain: { value: 1 }, connect() {} }),
-    createAnalyser: () => ({ fftSize: 0, connect() {}, getByteTimeDomainData: (a: Uint8Array) => a.fill(128) }),
-    createBuffer: (_c: number, len: number, rate: number) => ({ duration: len / rate, copyToChannel() {} }),
+    createAnalyser: () => ({
+      fftSize: 0,
+      connect() {},
+      getByteTimeDomainData: (a: Uint8Array) => a.fill(128),
+    }),
+    createBuffer: (_c: number, len: number, rate: number) => ({
+      duration: len / rate,
+      copyToChannel() {},
+    }),
     createBufferSource: () => {
       const rec = { at: 0, dur: 0, stopped: false };
       const src = {

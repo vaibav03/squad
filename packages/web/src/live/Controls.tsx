@@ -48,12 +48,17 @@ export function Controls({
     setText('');
     void ctl.say(t, { ...(ask ? { to: ask } : {}) });
   };
-  const quick = (q: (typeof QUICK)[number]) => void ctl.say(q.text, { kind: q.kind, ...(ask ? { to: ask } : {}) });
+  const quick = (q: (typeof QUICK)[number]) =>
+    void ctl.say(q.text, { kind: q.kind, ...(ask ? { to: ask } : {}) });
 
   return (
     <div className="ld-controls" role="group" aria-label="Join the discussion">
       {ctl.sound === 'locked' && (
-        <button type="button" className="lv-btn lv-btn--primary ld-unlock" onClick={ctl.enableSound}>
+        <button
+          type="button"
+          className="lv-btn lv-btn--primary ld-unlock"
+          onClick={ctl.enableSound}
+        >
           <LvIcon name="sparkle" size={16} />
           Tap to enable sound
         </button>
@@ -88,13 +93,23 @@ export function Controls({
             if (e.key === ' ' || e.key === 'Enter') ctl.talkStop();
           }}
         >
-          <LvIcon name={ctl.talk === 'denied' || ctl.talk === 'unsupported' ? 'mic-off' : 'mic'} size={16} />
+          <LvIcon
+            name={ctl.talk === 'denied' || ctl.talk === 'unsupported' ? 'mic-off' : 'mic'}
+            size={16}
+          />
           {listening ? 'Listening...' : 'Hold to talk (Space)'}
           <span className="ld-meter" aria-hidden="true">
-            <span style={{ transform: `scaleX(${listening ? Math.max(0.04, ctl.micLevel) : 0})` }} />
+            <span
+              style={{ transform: `scaleX(${listening ? Math.max(0.04, ctl.micLevel) : 0})` }}
+            />
           </span>
         </button>
-        <button type="button" className="lv-btn" disabled={off || !speaking} onClick={() => void ctl.say('Hold on, I want to jump in.')}>
+        <button
+          type="button"
+          className="lv-btn"
+          disabled={off || !speaking}
+          onClick={() => void ctl.say('Hold on, I want to jump in.')}
+        >
           <LvIcon name="hand" size={16} />
           Interrupt
         </button>
@@ -165,7 +180,11 @@ export function Controls({
           value={text}
           maxLength={LIVE_SAY_MAX}
           disabled={off}
-          placeholder={ask ? `Say something to ${personas.find((p) => p.id === ask)?.name}` : 'Say something to the table'}
+          placeholder={
+            ask
+              ? `Say something to ${personas.find((p) => p.id === ask)?.name}`
+              : 'Say something to the table'
+          }
           onChange={(e) => setText(e.target.value)}
         />
         <button type="submit" className="lv-btn lv-btn--primary" disabled={off || !text.trim()}>
@@ -176,7 +195,13 @@ export function Controls({
 
       <div className="ld-controls__row ld-quick" role="group" aria-label="Quick actions">
         {QUICK.map((q) => (
-          <button key={q.kind} type="button" className="ld-chipbtn" disabled={off} onClick={() => quick(q)}>
+          <button
+            key={q.kind}
+            type="button"
+            className="ld-chipbtn"
+            disabled={off}
+            onClick={() => quick(q)}
+          >
             {q.label}
           </button>
         ))}

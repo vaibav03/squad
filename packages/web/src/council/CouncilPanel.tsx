@@ -238,7 +238,8 @@ export function CouncilPanel(props: CouncilPanelProps) {
             {onStartDiscussion && (
               <div className="cn-discuss">
                 <p className="cn-dim cn-small">
-                  Want to hear the table talk it through instead? Five agents discuss, you can join in.
+                  Want to hear the table talk it through instead? Five agents discuss, you can join
+                  in.
                 </p>
                 <button type="button" className="lv-btn" onClick={onStartDiscussion}>
                   <LvIcon name="users" size={16} />

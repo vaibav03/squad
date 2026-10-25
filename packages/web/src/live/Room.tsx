@@ -23,7 +23,12 @@ export function LevelBars({ player, active }: { player: LivePlayer | null; activ
   }, [active, player]);
   const real = !!player?.enabled && player.state === 'ready';
   return (
-    <span className="ld-bars" data-active={active || undefined} data-real={real || undefined} aria-hidden="true">
+    <span
+      className="ld-bars"
+      data-active={active || undefined}
+      data-real={real || undefined}
+      aria-hidden="true"
+    >
       {[0, 1, 2, 3].map((i) => (
         <span key={i} ref={(el) => void (refs.current[i] = el)} style={{ ['--i' as string]: i }} />
       ))}
@@ -41,15 +46,7 @@ export function ThinkingDots() {
   );
 }
 
-export function SpeakerChip({
-  glyph,
-  name,
-  tone,
-}: {
-  glyph: string;
-  name: string;
-  tone?: string;
-}) {
+export function SpeakerChip({ glyph, name, tone }: { glyph: string; name: string; tone?: string }) {
   return (
     <span className="ld-chip" data-who={tone}>
       <span className="ld-chip__glyph" aria-hidden="true">
@@ -71,7 +68,15 @@ export interface RoomProps {
 }
 
 /** Round table: personas seated, a ring under the speaker, thinking dots for the next, a glance toward the addressee. */
-export function Room({ state, personas, player, selected, onSelect, reduced, userTalking }: RoomProps) {
+export function Room({
+  state,
+  personas,
+  player,
+  selected,
+  onSelect,
+  reduced,
+  userTalking,
+}: RoomProps) {
   const slots = seatSlots(personas.length);
   const pos = (id: string) => {
     const i = personas.findIndex((p) => p.id === id);
@@ -85,8 +90,16 @@ export function Room({ state, personas, player, selected, onSelect, reduced, use
   const roving = useRef<HTMLDivElement>(null);
 
   const onKey = (e: KeyboardEvent) => {
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-    const seats = Array.from(roving.current?.querySelectorAll<HTMLButtonElement>('button.ld-seat') ?? []);
+    if (
+      e.key !== 'ArrowRight' &&
+      e.key !== 'ArrowLeft' &&
+      e.key !== 'ArrowDown' &&
+      e.key !== 'ArrowUp'
+    )
+      return;
+    const seats = Array.from(
+      roving.current?.querySelectorAll<HTMLButtonElement>('button.ld-seat') ?? [],
+    );
     const i = seats.indexOf(document.activeElement as HTMLButtonElement);
     if (i < 0) return;
     e.preventDefault();
@@ -105,7 +118,12 @@ export function Room({ state, personas, player, selected, onSelect, reduced, use
     >
       <div className="ld-table" aria-hidden="true" />
       {a && b && (
-        <svg className="ld-glance" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <svg
+          className="ld-glance"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
           <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} vectorEffect="non-scaling-stroke" />
         </svg>
       )}
@@ -201,7 +219,11 @@ export function CaptionsBar({
       )}
       <div className="ld-caps__row">
         <SpeakerChip glyph={who.glyph} name={who.name} tone={cur.speaker} />
-        <p className="ld-caps__line" key={state.turns.length + state.open.length} aria-hidden="true">
+        <p
+          className="ld-caps__line"
+          key={state.turns.length + state.open.length}
+          aria-hidden="true"
+        >
           {words.map((w, i) => (
             <span className="ld-w" key={i}>
               {w}{' '}

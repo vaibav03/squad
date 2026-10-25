@@ -87,7 +87,16 @@ export function Transcript({
     return () => clearTimeout(t);
   }, [focusId]);
 
-  const rows: { id: string; n: number; speaker: string; text: string; ts?: number; cites: LiveCitation[]; yielded?: boolean; live?: boolean }[] = [
+  const rows: {
+    id: string;
+    n: number;
+    speaker: string;
+    text: string;
+    ts?: number;
+    cites: LiveCitation[];
+    yielded?: boolean;
+    live?: boolean;
+  }[] = [
     ...state.turns.map((t) => ({
       id: t.id,
       n: t.n,

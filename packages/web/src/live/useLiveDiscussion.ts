@@ -6,7 +6,14 @@ import type {
   LiveSayBody,
   LiveStartBody,
 } from '@squad/core';
-import { LivePlayer, createTalk, getRecognitionCtor, type SoundState, type Talk, type TalkState } from './audio';
+import {
+  LivePlayer,
+  createTalk,
+  getRecognitionCtor,
+  type SoundState,
+  type Talk,
+  type TalkState,
+} from './audio';
 import { liveErrorCopy, liveErrorKind, type LiveTransport } from './live-client';
 import { initialLiveState, liveReducer, type LiveState } from './reducer';
 

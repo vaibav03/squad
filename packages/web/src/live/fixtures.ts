@@ -93,7 +93,13 @@ export const MOCK_SCENES: Scene[] = [
     tk: (n) => ({
       whereWeAre: 'Planner proposes 1 evening on ch5, 3 on ch6.',
       nextSteps: [
-        { id: 'n1', text: 'Review ch5 conditioning basics', owner: 'You', due: 'Tue evening', turnId: `t${n}` },
+        {
+          id: 'n1',
+          text: 'Review ch5 conditioning basics',
+          owner: 'You',
+          due: 'Tue evening',
+          turnId: `t${n}`,
+        },
       ],
     }),
   },
@@ -108,11 +114,27 @@ export const MOCK_SCENES: Scene[] = [
         { ...CITE_A, turnId: `t${n}` },
       ],
       quiz: [
-        { id: 'q1', question: 'Write the state equations for waiting for two heads in a row.', turnId: `t${n}` },
+        {
+          id: 'q1',
+          question: 'Write the state equations for waiting for two heads in a row.',
+          turnId: `t${n}`,
+        },
       ],
       nextSteps: [
-        { id: 'n1', text: 'Review ch5 conditioning basics', owner: 'You', due: 'Tue evening', turnId: 't4' },
-        { id: 'n2', text: 'Work three waiting-time problems from ch6', owner: 'You', due: 'Wed to Thu', turnId: `t${n}` },
+        {
+          id: 'n1',
+          text: 'Review ch5 conditioning basics',
+          owner: 'You',
+          due: 'Tue evening',
+          turnId: 't4',
+        },
+        {
+          id: 'n2',
+          text: 'Work three waiting-time problems from ch6',
+          owner: 'You',
+          due: 'Wed to Thu',
+          turnId: `t${n}`,
+        },
       ],
     }),
   },
@@ -121,7 +143,13 @@ export const MOCK_SCENES: Scene[] = [
     text: 'Decision: one evening on chapter five, then chapter six first for the rest. The disagreement about chapter five stays open until you check what you know.',
     tk: (n) => ({
       whereWeAre: 'Decided: 1 evening ch5, then ch6. Ch5 depth stays open.',
-      decisions: [{ id: 'dc1', text: 'One evening on ch5, then ch6 for the rest of the week.', turnId: `t${n}` }],
+      decisions: [
+        {
+          id: 'dc1',
+          text: 'One evening on ch5, then ch6 for the rest of the week.',
+          turnId: `t${n}`,
+        },
+      ],
     }),
   },
 ];
@@ -206,7 +234,7 @@ export function mockLiveTransport(opts: MockOptions = {}): LiveTransport {
   let open: { id: string; speaker: LivePersonaId; text: string; to?: LivePersonaId } | null = null;
   let pendingWords: string[] = [];
   let pendingScene: Scene | null = null;
-  let userQueue: { text: string; to?: LivePersonaId; kind: LiveSayBody['kind'] }[] = [];
+  const userQueue: { text: string; to?: LivePersonaId; kind: LiveSayBody['kind'] }[] = [];
   let taken: LiveTakeaways = EMPTY_TAKEAWAYS;
   const done: LiveTurn[] = [];
 
@@ -263,7 +291,8 @@ export function mockLiveTransport(opts: MockOptions = {}): LiveTransport {
     if (!handlers) return;
     const u = userQueue.shift();
     if (u) {
-      const who: LivePersonaId = u.to ?? (u.kind === 'summarize' ? 'chair' : u.kind === 'disagree' ? 'skeptic' : 'tutor');
+      const who: LivePersonaId =
+        u.to ?? (u.kind === 'summarize' ? 'chair' : u.kind === 'disagree' ? 'skeptic' : 'tutor');
       const reply =
         u.kind === 'lost' || u.kind === 'simpler'
           ? 'Simply put: chapter five teaches you to split a problem into cases, chapter six reuses that to count waiting times.'
@@ -302,7 +331,11 @@ export function mockLiveTransport(opts: MockOptions = {}): LiveTransport {
     mock: true,
     start: async (b: LiveStartBody) => {
       void b;
-      return { id: MOCK_ID, streamUrl: `/v1/live/${MOCK_ID}/stream`, resultUrl: `/v1/live/${MOCK_ID}` };
+      return {
+        id: MOCK_ID,
+        streamUrl: `/v1/live/${MOCK_ID}/stream`,
+        resultUrl: `/v1/live/${MOCK_ID}`,
+      };
     },
     get: async () => {
       if (opts.replay) return opts.replay;
