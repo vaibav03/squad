@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
-import {
-  PHASE_LABEL,
-  PHASE_SENTENCE,
-  phaseHasData,
-  summarizeConnections,
-} from '../../lib/connection-phase';
+import type { ProviderView } from '../connections/connection-state';
+import { ReviewImport } from '../connections/ReviewImport';
 import { Button } from '../../primitives/Button';
 import { Card } from '../../primitives/Card';
 import { Chip } from '../../primitives/Chip';
@@ -22,9 +18,10 @@ import {
   CATEGORIES,
   CATEGORY_HINT,
   CATEGORY_LABEL,
-  DEMO_CANVAS_FEED,
   TOUR_RETURN,
   groupRows,
+  providerHasData,
+  providerViews,
   sharePlan,
   type ShareCategory,
 } from './model';
@@ -38,24 +35,20 @@ const row: React.CSSProperties = {
 };
 const stack: React.CSSProperties = { display: 'grid', gap: 12 };
 
-function PhaseLine({
-  phase,
-}: {
-  phase: ReturnType<typeof summarizeConnections>['canvas']['phase'];
-}) {
+function PhaseLine({ v }: { v: ProviderView }) {
   return (
-    <p style={{ margin: 0 }} data-testid="phase-line" data-phase={phase}>
-      <Chip tone={phase === 'demo' ? 'violet' : phase === 'live' ? 'ok' : 'neutral'}>
-        {PHASE_LABEL[phase]}
+    <p style={{ margin: 0 }} data-testid="phase-line" data-phase={v.state}>
+      <Chip tone={v.state === 'demo' ? 'violet' : v.state === 'live' ? 'ok' : 'neutral'}>
+        {v.label}
       </Chip>{' '}
-      {PHASE_SENTENCE[phase]}
+      {v.text}
     </p>
   );
 }
 
 /** Step 2: connect Canvas (extension or demo) and Google (OAuth when configured, else demo). */
 export function ConnectStep({ t }: { t: TourData }) {
-  const sum = summarizeConnections(t.connections);
+  const { canvas: cv, google: gv } = providerViews(t.connections);
   const [present, setPresent] = useState(extensionPresent());
   const [status, setStatus] = useState<BridgeStatus | null>(null);
   const [checking, setChecking] = useState(false);
@@ -73,7 +66,12 @@ export function ConnectStep({ t }: { t: TourData }) {
   };
   const canvasDemo = async () => {
     setBusy('canvas');
-    await t.run((h) => h.connectFeed(DEMO_CANVAS_FEED));
+    await t.run((h) => h.connectDemo('canvas'));
+    setBusy(null);
+  };
+  const googleDemo = async () => {
+    setBusy('google');
+    await t.run((h) => h.connectDemo('google'));
     setBusy(null);
   };
   const google = async () => {
@@ -82,8 +80,8 @@ export function ConnectStep({ t }: { t: TourData }) {
     if (r) window.location.assign(r.authorization_url);
     else setBusy(null);
   };
-  const canvasHas = phaseHasData(sum.canvas.phase);
-  const googleHas = phaseHasData(sum.calendar.phase);
+  const canvasHas = providerHasData(cv);
+  const googleHas = providerHasData(gv);
   return (
     <div style={stack}>
       {t.view === 'demo' || t.view === 'offline' ? (
@@ -104,7 +102,7 @@ export function ConnectStep({ t }: { t: TourData }) {
       <Card aria-label="Canvas">
         <div style={stack}>
           <h2 style={{ margin: 0, fontSize: 18 }}>Canvas</h2>
-          <PhaseLine phase={sum.canvas.phase} />
+          <PhaseLine v={cv} />
           {!canvasHas ? (
             <>
               <p style={{ margin: 0 }} data-testid="canvas-detect">
@@ -172,10 +170,10 @@ export function ConnectStep({ t }: { t: TourData }) {
       <Card aria-label="Google Workspace">
         <div style={stack}>
           <h2 style={{ margin: 0, fontSize: 18 }}>Google Workspace</h2>
-          <PhaseLine phase={sum.calendar.phase} />
+          <PhaseLine v={gv} />
           {!googleHas ? (
             <div style={row}>
-              {t.googleReady ? (
+              {t.googleLive !== false ? (
                 <Button
                   size="sm"
                   variant="secondary"
@@ -191,7 +189,7 @@ export function ConnectStep({ t }: { t: TourData }) {
                     variant="secondary"
                     loading={busy === 'google'}
                     disabled={!t.client}
-                    onClick={() => void google()}
+                    onClick={() => void googleDemo()}
                   >
                     Use Google demo workspace
                   </Button>
@@ -200,7 +198,7 @@ export function ConnectStep({ t }: { t: TourData }) {
               )}
             </div>
           ) : null}
-          {!googleHas && !t.googleReady ? (
+          {!googleHas && t.googleLive === false ? (
             <p style={{ margin: 0 }}>
               Not set up yet: Google sign-in is not turned on for this Squad, so only demo data is
               available.
@@ -212,43 +210,9 @@ export function ConnectStep({ t }: { t: TourData }) {
   );
 }
 
-/** Step 3: what was imported, from each connection. */
+/** Step 3: what was imported, with citations and Ask Cubbie (the shared review component, embedded). */
 export function ReviewStep({ t }: { t: TourData }) {
-  if (t.rows === null) return <p role="status">Loading what was imported</p>;
-  const g = groupRows(t.rows);
-  const demo = t.connections.some((c) => c.mode === 'fixture');
-  return (
-    <div style={stack} data-testid="review-list">
-      {demo ? (
-        <Notice tone="info" title="Demo data">
-          These are example items, not your account.
-        </Notice>
-      ) : null}
-      {CATEGORIES.map((k) => (
-        <Card key={k} aria-label={CATEGORY_LABEL[k]}>
-          <h2 style={{ margin: '0 0 8px', fontSize: 18 }}>
-            {CATEGORY_LABEL[k]} ({g[k].length})
-          </h2>
-          {g[k].length === 0 ? (
-            <p style={{ margin: 0 }}>Nothing imported for this yet.</p>
-          ) : (
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {g[k].slice(0, 5).map(({ row: r }) => (
-                <li key={r.id}>
-                  {r.title} <span style={{ opacity: 0.7 }}>({itemTypeLabel(r.kind)})</span>
-                </li>
-              ))}
-              {g[k].length > 5 ? <li>and {g[k].length - 5} more</li> : null}
-            </ul>
-          )}
-        </Card>
-      ))}
-      <p style={{ margin: 0 }}>
-        Something missing? Your connections keep syncing, and you can review every item later in
-        Connections.
-      </p>
-    </div>
-  );
+  return <ReviewImport embedded state={t} />;
 }
 
 /** Step 4: choose what the squad can see. Default Private. Applied by the page's primary button. */

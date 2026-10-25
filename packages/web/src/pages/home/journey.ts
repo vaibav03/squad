@@ -32,7 +32,7 @@ export const JOURNEY: readonly JourneyDef[] = [
     title: 'Connect Google or Canvas',
     body: 'Squad reads your due dates and calendar so the agents work from your real schedule.',
     button: 'Connect Google or Canvas',
-    to: '/squad/connections',
+    to: '/squad/welcome-tour',
   },
   {
     key: 'ask',

@@ -7,7 +7,10 @@ import { applySharingChoice, onboardingFor } from '../context/onboarding';
 import { importCounts, integrationStateOf, rollupState } from '../context/state';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 
-const Sharing = z.strictObject({ squadId: z.string().min(1).max(64), choice: z.enum(['private', 'squad']) });
+const Sharing = z.strictObject({
+  squadId: z.string().min(1).max(64),
+  choice: z.enum(['private', 'squad']),
+});
 
 /**
  * GET /v1/onboarding (viewer-scoped): where the person is in first-run setup, derived from real server state.
@@ -49,7 +52,9 @@ export function createOnboardingRoutes(deps: HubDeps): HubApp {
       identityDone,
       integrations: { canvas, google },
       sharingChosen,
-      sharing: o.sharingChoice ? { squadId: o.sharingSquad, choice: o.sharingChoice } : { squadId: null, choice: 'private' as const },
+      sharing: o.sharingChoice
+        ? { squadId: o.sharingSquad, choice: o.sharingChoice }
+        : { squadId: null, choice: 'private' as const },
       skipped: o.skippedAt === null ? null : { at: o.skippedAt },
       nextStep,
     };
@@ -69,17 +74,44 @@ export function createOnboardingRoutes(deps: HubDeps): HubApp {
     const uid = c.get('user').id;
     const p = Sharing.safeParse(await c.req.json().catch(() => null));
     if (!p.success) return c.json({ error: { code: 'invalid_request' } }, 400);
-    if (!deps.squads.isMember(p.data.squadId, uid)) return c.json({ error: { code: 'not_found' } }, 404);
+    if (!deps.squads.isMember(p.data.squadId, uid))
+      return c.json({ error: { code: 'not_found' } }, 404);
     const prev = onboardingFor(deps).get(uid);
     // Switching back to private stops FUTURE default sharing; it also unshares what the earlier choice shared.
     if (p.data.choice === 'private' && prev.sharingChoice === 'squad' && prev.sharingSquad) {
       const svc = contextServiceFor(deps);
       for (const cn of svc.store.connectionsOf(uid))
-        for (const s of svc.store.sourcesOfConnection(cn.id)) svc.store.unshare(s.id, prev.sharingSquad);
+        for (const s of svc.store.sourcesOfConnection(cn.id))
+          svc.store.unshare(s.id, prev.sharingSquad);
     }
-    onboardingFor(deps).put(uid, { sharingChoice: p.data.choice, sharingSquad: p.data.squadId, sharingAt: deps.now() });
+    onboardingFor(deps).put(uid, {
+      sharingChoice: p.data.choice,
+      sharingSquad: p.data.squadId,
+      sharingAt: deps.now(),
+    });
     const shared = applySharingChoice(deps, uid);
     return c.json({ ...view(uid), sharedNow: shared });
+  });
+
+  /**
+   * DEV/DEMO ONLY. POST /v1/dev/reset-onboarding resets the CALLER's own first-run state (skip + sharing choice) and
+   * removes the caller's own Canvas/Google connections and imports, so E2E and manual QA can replay the fresh-user
+   * flow with a throwaway student. It never touches another user, a squad, or chat history, and it answers 404 in
+   * production or when dev sign-in is off.
+   */
+  r.post('/v1/dev/reset-onboarding', need, async (c) => {
+    if (deps.config.production || !deps.config.devLogin)
+      return c.json({ error: { code: 'not_found' } }, 404);
+    const uid = c.get('user').id;
+    const svc = contextServiceFor(deps);
+    let removed = 0;
+    for (const cn of svc.store.connectionsOf(uid)) {
+      if (cn.status !== 'revoked') await svc.disconnect(uid, cn.id);
+      svc.store.deleteConnection(cn.id);
+      removed += 1;
+    }
+    onboardingFor(deps).reset(uid);
+    return c.json({ reset: true, connectionsRemoved: removed, ...view(uid) });
   });
   return r;
 }

@@ -161,7 +161,7 @@ describe('slow or failed /v1/me', () => {
 /* ---------------------------------------------------------------- route <-> title <-> content */
 
 const CONCRETE: Record<string, string> = {
-  '/squad/setup/:step?': '/squad/setup',
+  '/squad/setup/:step?': '/squad/setup/phone',
   '/squad/ledger/:taskId?': '/squad/ledger',
   '/squad/trips/:tripId?': '/squad/trips',
   '/squad/mastery/:courseId?': '/squad/mastery',
