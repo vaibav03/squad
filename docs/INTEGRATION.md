@@ -23,3 +23,12 @@ Merge order suggestion: spine, hub, brain-answers, brain-quiz, mesh-crypto, mesh
 - web-shell's `useCalmMode` should wrap motion's `calmModeStore` / `createUseCalmMode` so the DOM and canvas share one Calm value.
 - Post-merge pass (needs react and vite installed): typecheck and run the Motion Lab (`/__motion`), capture frame strips for every row into `docs/design/shots/motion/`, run the art-director critique and the second review round.
 - Owner feel-checks (judge on a real phone, play at 2-5x): walk speed 48 px/s and 80 ms stop; envelope pop/glide/stagger; council stagger and rank slide; bubble hold 1.2 s per 20 characters; conflict pop; waiting ring; 400 ms camera pan; trip cutscene pacing; day/night tween; dissent lantern; speaking bob and glow; Calm mode feel; drawer slide and button press.
+
+## Media audio (from the media-audio handoff)
+- Needs `ffmpeg` and `ffprobe` on PATH.
+- Run `pnpm --filter @squad/media design-voices` once with `ELEVENLABS_API_KEY`, then commit `saved-voices.json` (currently empty).
+- Hub wires `createAudioServices().mediaPort(personas)` and `.callPort({answer})` in `apps/hub/src/index.ts`; add the `audio.end` frame and call `replyToAudio()` on `mute:true` or `audio.end`.
+- Spine registers `podcastSkill` and `explainerSkill` around `makePodcast` / `makeExplainer`; use `ctx.dm` when `result.dm` is set. Brain supplies `AnswerFn` and the podcast/explainer material providers.
+- No extension events: media emits only VillageEvents (decision). Clip URLs travel on the call socket.
+- Run `SQUAD_LIVE=1 pnpm --filter @squad/media smoke:live` first; unverified until then: ElevenLabs `/stream` path and `mp3_44100_64`, the stock fallback voice id `21m00Tcm4TlvDq8ikWAM` and whether `GET /v1/voices` lists premade voices, Gemini `models.generateContent` vs the newer Interactions API, image generation with `responseModalities: ['IMAGE']` on `gemini-nano-banana-2.1`, and real-speech loudness.
+- Do the real-phone m4a, PNG and GIF delivery check.
