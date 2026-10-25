@@ -13,6 +13,7 @@ import { useChat } from './useChat';
 import './chat.css';
 import './dock.css';
 import { useChatPrefill } from './prefill';
+import { ContextBanner, ContextGate, useContextGate } from './ContextGate';
 
 export interface ChatDockProps {
   /** false in replay mode or without a hub token: nothing renders and no request is made */
@@ -42,6 +43,7 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
   );
   const me = injectedMe ?? (cfg.userId ? hubStudentId(cfg.userId) : '');
   const ctl = useChat(api, { me });
+  const gate = useContextGate(enabled && !injected);
   const reduced = useReducedMotion();
   const [open, setOpen] = useState(false);
   // A large panel (inspector, room, board...) folds the dock to its pill; `open` is kept so it unfolds afterwards.
@@ -133,7 +135,9 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
           aria-label="Squad chat"
         >
           <span className="sqd-handle" aria-hidden="true" />
-          {ctl.phase === 'loading' ? (
+          {gate.view === 'gate' ? (
+            <ContextGate compact onSkip={gate.skip} />
+          ) : ctl.phase === 'loading' ? (
             <div className="sqd-state" role="status" aria-label="Loading chat">
               <Skeleton shape="block" height={48} />
               <Skeleton shape="block" height={96} />
@@ -158,7 +162,7 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
                     : ctl.phase === 'ready'
                       ? 'Your squad chat is not available yet. Try again.'
                       : ctl.phase === 'idle'
-                        ? 'Connect to the hub to chat with your squad.'
+                        ? 'Sign in to chat with your squad.'
                         : ctl.errorText
                 }
               />
@@ -178,6 +182,7 @@ export function ChatDock({ enabled, api: injected, me: injectedMe }: ChatDockPro
             </div>
           ) : (
             <>
+              {gate.view === 'banner' ? <ContextBanner /> : null}
               <ThreadPane
                 chat={group!}
                 ctl={ctl}

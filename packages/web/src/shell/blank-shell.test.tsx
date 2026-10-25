@@ -166,6 +166,7 @@ const CONCRETE: Record<string, string> = {
   '/squad/trips/:tripId?': '/squad/trips',
   '/squad/mastery/:courseId?': '/squad/mastery',
   '/squad/courses/:courseId?': '/squad/courses',
+  '/squad/welcome-tour/:step?': '/squad/welcome-tour/connect',
 };
 // mastery has no page of its own: it redirects into the village overlay (covered by its own test below)
 const TOP = squadRouteMeta

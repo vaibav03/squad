@@ -63,6 +63,11 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     nav: { label: 'Setup guide', icon: 'check', order: 9 },
   },
   {
+    key: 'onboarding',
+    path: '/squad/welcome-tour/:step?',
+    title: 'Welcome tour',
+  },
+  {
     key: 'squad-create',
     path: '/squad/new',
     title: 'Create a squad',
