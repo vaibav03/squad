@@ -1,14 +1,16 @@
 @import '../../overlays/kit/bridge.css';
 
-.lv-ledger__note {
-  display: flex;
-  align-items: center;
-  gap: var(--lv-s2);
-  margin: 0;
-  padding: var(--lv-s3) var(--lv-s4);
-  border-radius: var(--lv-r3);
-  border: 1px solid var(--lv-info);
-  font: 500 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
+.lv-ledger__lede {
+  margin: calc(var(--space-3) * -1) 0 0;
+  max-width: 60ch;
+  color: var(--muted-foreground);
+  font: 400 var(--text-base) / var(--lh-base) var(--font-sans);
+  text-wrap: pretty;
+}
+@media (min-width: 768px) {
+  .lv-ledger__lede {
+    margin-top: calc(var(--space-6) * -1);
+  }
 }
 .lv-ledger__sum {
   display: flex;

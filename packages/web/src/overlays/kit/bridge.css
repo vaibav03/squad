@@ -25,7 +25,7 @@
   --lv-warn: var(--warning);
   --lv-info: var(--info);
   --lv-focus: var(--ring);
-  --lv-bar: #000; /* withheld bars are pure black in both themes */
+  --lv-bar: black; /* withheld bars are pure black in both themes */
   --lv-shadow-1: var(--shadow-1);
   --lv-shadow-2: var(--shadow-2);
   --lv-shadow-3: var(--shadow-3);

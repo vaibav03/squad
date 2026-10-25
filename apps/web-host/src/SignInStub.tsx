@@ -1,12 +1,37 @@
 import { useState } from 'react';
-import { Button, NightScene } from '@squad/web';
+import { Button, NightScene, Notice, devLogin } from '@squad/web';
 import { STUDENTS } from './session';
 import type { SquadSession } from '@squad/web';
 import './signin.css';
 
-export function SignInStub({ onSignIn }: { onSignIn: (s: SquadSession) => void }) {
+export function SignInStub({
+  onSignIn,
+  hubUrl = null,
+}: {
+  onSignIn: (s: SquadSession) => void;
+  hubUrl?: string | null;
+}) {
   const [picked, setPicked] = useState<string>(STUDENTS[0]!.id);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const student = STUDENTS.find((s) => s.id === picked)!;
+  const demo = (): SquadSession => ({
+    userId: student.id,
+    name: student.name,
+    token: `dev-${student.id}`,
+    avatarUrl: student.avatarUrl,
+  });
+  const enter = async () => {
+    if (!hubUrl) return onSignIn(demo());
+    setBusy(true);
+    setError(null);
+    try {
+      onSignIn(await devLogin(hubUrl, student));
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  };
   return (
     <NightScene className="sq-signin sq-scene">
       <main className="sq-signin__main">
@@ -32,22 +57,26 @@ export function SignInStub({ onSignIn }: { onSignIn: (s: SquadSession) => void }
               </button>
             ))}
           </div>
+          {error ? (
+            <Notice tone="warn" title="Could not reach the hub">
+              {error} You can still look around with demo data.
+            </Notice>
+          ) : null}
           <Button
             variant="primary"
             size="lg"
             fullWidth
             iconEnd="arrow-right"
-            onClick={() =>
-              onSignIn({
-                userId: student.id,
-                name: student.name,
-                token: `dev-${student.id}`,
-                avatarUrl: student.avatarUrl,
-              })
-            }
+            loading={busy}
+            onClick={() => void enter()}
           >
-            Enter the village as {student.name}
+            {error ? 'Try the hub again' : `Enter the village as ${student.name}`}
           </Button>
+          {error ? (
+            <Button variant="ghost" fullWidth onClick={() => onSignIn(demo())}>
+              Continue with demo data
+            </Button>
+          ) : null}
         </div>
       </main>
     </NightScene>

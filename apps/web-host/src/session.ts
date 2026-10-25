@@ -23,6 +23,7 @@ export function parseSession(raw: string | null): SquadSession | null {
       name: o.name,
       token: o.token,
       avatarUrl: typeof o.avatarUrl === 'string' ? o.avatarUrl : undefined,
+      ...(o.live === true ? { live: true } : {}),
     };
   } catch {
     return null;

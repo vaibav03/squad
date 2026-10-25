@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { Button, EmptyState } from '../../primitives';
 import { LvIcon } from './icons';
 import { propArt, type PropName } from './art';
 import './bridge.css';
@@ -87,8 +88,19 @@ export function Segmented<T extends string>({
   return (
     <div className="lv-seg" role="radiogroup" aria-label={label}>
       {options.map((o) => (
-        <label key={o.value} className="lv-seg__opt" data-on={o.value === value || undefined} title={o.hint}>
-          <input type="radio" name={label} value={o.value} checked={o.value === value} onChange={() => onChange(o.value)} />
+        <label
+          key={o.value}
+          className="lv-seg__opt"
+          data-on={o.value === value || undefined}
+          title={o.hint}
+        >
+          <input
+            type="radio"
+            name={label}
+            value={o.value}
+            checked={o.value === value}
+            onChange={() => onChange(o.value)}
+          />
           <span>{o.label}</span>
         </label>
       ))}
@@ -105,47 +117,71 @@ export interface StateBlockProps {
   retryLabel?: string;
 }
 
-/** Designed empty / loading / error / offline block. Sprite sits on a sky-deep plate at an integer scale. */
-export function StateBlock({ kind, title, body, art, onRetry, retryLabel = 'Try again' }: StateBlockProps) {
+/** Designed empty / loading / error / offline block, built on the shell EmptyState. Sprites stay at an integer scale. */
+export function StateBlock({
+  kind,
+  title,
+  body,
+  art,
+  onRetry,
+  retryLabel = 'Try again',
+}: StateBlockProps) {
   const a = art ? propArt[art] : undefined;
-  const scale = a ? Math.max(1, Math.min(4, Math.floor(96 / Math.max(a.w, a.h)))) : 1;
+  const scale = a ? Math.max(1, Math.min(4, Math.floor(48 / Math.max(a.w, a.h)))) : 1;
+  const plate =
+    kind === 'loading' ? (
+      <span className="lv-state__dots">
+        <i />
+        <i />
+        <i />
+      </span>
+    ) : kind === 'offline' ? (
+      <LvIcon name="wifi-off" size={28} />
+    ) : kind === 'error' ? (
+      <span className="lv-state__bang">!</span>
+    ) : a ? (
+      <img className="sq-sprite" src={a.url} width={a.w * scale} height={a.h * scale} alt="" />
+    ) : undefined;
   return (
     <div className="lv-state" data-kind={kind} role={kind === 'error' ? 'alert' : 'status'}>
-      <div className="lv-state__plate" aria-hidden="true">
-        {kind === 'loading' ? (
-          <span className="lv-state__dots">
-            <i />
-            <i />
-            <i />
-          </span>
-        ) : kind === 'offline' ? (
-          <LvIcon name="wifi-off" size={28} />
-        ) : kind === 'error' ? (
-          <span className="lv-state__bang">!</span>
-        ) : a ? (
-          <img className="sq-sprite" src={a.url} width={a.w * scale} height={a.h * scale} alt="" />
-        ) : null}
-      </div>
-      <h2 className="lv-state__title">{title}</h2>
-      {body && <p className="lv-state__body">{body}</p>}
-      {onRetry && (
-        <button type="button" className="lv-pbtn" onClick={onRetry}>
-          <LvIcon name="refresh" size={16} />
-          {retryLabel}
-        </button>
-      )}
+      <EmptyState
+        tone={kind === 'error' || kind === 'offline' ? 'error' : 'default'}
+        title={title}
+        body={body}
+        art={plate}
+        action={
+          onRetry ? (
+            <Button variant="secondary" onClick={onRetry}>
+              {retryLabel}
+            </Button>
+          ) : undefined
+        }
+      />
     </div>
   );
 }
 
-export function Avatar({ name, size = 32, tone }: { name: string; size?: number; tone?: 'you' | 'other' }) {
+export function Avatar({
+  name,
+  size = 32,
+  tone,
+}: {
+  name: string;
+  size?: number;
+  tone?: 'you' | 'other';
+}) {
   const ini = name
     .split(/\s+/)
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() ?? '')
     .join('');
   return (
-    <span className="lv-av" data-tone={tone} style={{ width: size, height: size, fontSize: size >= 40 ? 'var(--text-pixel-sm)' : '14px' }} aria-hidden="true">
+    <span
+      className="lv-av"
+      data-tone={tone}
+      style={{ width: size, height: size, fontSize: size >= 40 ? 'var(--text-pixel-sm)' : '14px' }}
+      aria-hidden="true"
+    >
       {ini}
     </span>
   );

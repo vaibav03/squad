@@ -157,7 +157,7 @@
 .lv-btn--danger {
   background: var(--lv-alert);
   border-color: transparent;
-  color: #fff;
+  color: white;
 }
 @media (hover: hover) and (pointer: fine) {
   .lv-btn--danger:hover:not(:disabled) {
