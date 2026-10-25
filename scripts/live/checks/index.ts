@@ -1,2 +1,5 @@
 import type { Check } from '../lib/types';
-export const ALL_CHECKS: Check[] = [];
+import { modelsCheck } from './01-models';
+import { groundingCheck } from './02-grounding';
+
+export const ALL_CHECKS: Check[] = [modelsCheck, groundingCheck];
