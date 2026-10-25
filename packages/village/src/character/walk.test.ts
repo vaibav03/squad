@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { STOP_MS, WALK_SPEED, WalkSim } from './walk';
 
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
-const run = (s: WalkSim, ms: number, dt = 16) => { for (let t = 0; t < ms; t += dt) s.step(dt); };
+const run = (s: WalkSim, ms: number, dt = 16) => {
+  for (let t = 0; t < ms; t += dt) s.step(dt);
+};
 
 describe('WalkSim', () => {
   it('starts instantly at constant speed (no acceleration)', () => {
@@ -14,11 +16,16 @@ describe('WalkSim', () => {
     const x1 = s.x;
     s.step(16);
     expect(s.x - x1).toBeCloseTo(d1, 5);
-    for (let i = 0; i < 100; i++) { const a = s.x; s.step(16); expect(s.x - a).toBeCloseTo(d1, 5); }
+    for (let i = 0; i < 100; i++) {
+      const a = s.x;
+      s.step(16);
+      expect(s.x - a).toBeCloseTo(d1, 5);
+    }
   });
   it('ease-out stop lasts STOP_MS and then idles', () => {
     const s = new WalkSim(100, 0, 1000, easeOut);
-    s.setIntent(1); run(s, 500);
+    s.setIntent(1);
+    run(s, 500);
     s.setIntent(0);
     expect(s.cruising).toBe(false);
     run(s, STOP_MS - 1, 1);
@@ -46,7 +53,8 @@ describe('WalkSim', () => {
   });
   it('clamps to world bounds and renders whole pixels', () => {
     const s = new WalkSim(5, 0, 50, easeOut);
-    s.setIntent(-1); run(s, 1000);
+    s.setIntent(-1);
+    run(s, 1000);
     expect(s.x).toBe(0);
     s.teleport(33.3);
     expect(Number.isInteger(s.renderX)).toBe(true);

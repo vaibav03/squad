@@ -1,4 +1,11 @@
-import { GROUND_Y, LOGICAL_H, WORLD_W, type LayoutSlot, type SlotKind, type WorldLayout } from './api';
+import {
+  GROUND_Y,
+  LOGICAL_H,
+  WORLD_W,
+  type LayoutSlot,
+  type SlotKind,
+  type WorldLayout,
+} from './api';
 
 /**
  * Hand-placed world map (spec 09 decision 2). Left = study district, Mid = council + landmark row,

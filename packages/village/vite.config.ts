@@ -4,7 +4,13 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoAssets = fileURLToPath(new URL('../../assets', import.meta.url));
-const types: Record<string, string> = { '.png': 'image/png', '.json': 'application/json', '.ttf': 'font/ttf', '.webp': 'image/webp', '.jpg': 'image/jpeg' };
+const types: Record<string, string> = {
+  '.png': 'image/png',
+  '.json': 'application/json',
+  '.ttf': 'font/ttf',
+  '.webp': 'image/webp',
+  '.jpg': 'image/jpeg',
+};
 
 /** Serves the repo `assets/` dir at /assets (the same contract apps/web-host must provide). */
 function repoAssetsPlugin(): Plugin {
@@ -24,5 +30,9 @@ function repoAssetsPlugin(): Plugin {
 export default defineConfig({
   root: fileURLToPath(new URL('./dev', import.meta.url)),
   plugins: [repoAssetsPlugin()],
-  server: { port: 5190, strictPort: false, fs: { allow: [fileURLToPath(new URL('../..', import.meta.url))] } },
+  server: {
+    port: 5190,
+    strictPort: false,
+    fs: { allow: [fileURLToPath(new URL('../..', import.meta.url))] },
+  },
 });
