@@ -399,6 +399,8 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           className="sqc-send"
           data-testid="chat-send"
           aria-label="Send message"
+          title={paused ?? undefined}
+          data-state={paused ? 'paused' : uploading ? 'uploading' : empty ? 'empty' : 'ready'}
           disabled={blocked}
           onClick={submit}
         >

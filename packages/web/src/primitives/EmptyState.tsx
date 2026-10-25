@@ -44,10 +44,12 @@ export function ErrorState({
   error,
   title = 'Something went wrong',
   onRetry,
+  retryLabel = 'Try again',
 }: {
   error?: unknown;
   title?: string;
   onRetry?: () => void;
+  retryLabel?: string;
 }) {
   const message =
     error instanceof Error
@@ -64,7 +66,7 @@ export function ErrorState({
       action={
         onRetry ? (
           <Button variant="secondary" iconStart="arrow-right" onClick={onRetry}>
-            Try again
+            {retryLabel}
           </Button>
         ) : undefined
       }

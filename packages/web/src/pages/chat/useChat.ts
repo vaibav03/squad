@@ -7,7 +7,14 @@ import type {
   ChatTyping,
   HubStatus,
 } from '@squad/core';
-import { ChatApiError, chatErrorText, isExpired, type ChatApi, type StreamState } from './api';
+import {
+  ChatApiError,
+  chatErrorText,
+  chatLoadReason,
+  isExpired,
+  type ChatApi,
+  type StreamState,
+} from './api';
 import { isOwn, mergeMessages, quizAnswerText, TYPING_TTL_MS, type ThreadItem } from './model';
 
 /**
@@ -35,6 +42,8 @@ interface Bucket {
   loading: boolean;
   loadingOlder: boolean;
   error: boolean;
+  /** plain-words reason for `error` */
+  errorText?: string;
 }
 const emptyBucket = (): Bucket => ({
   items: [],
@@ -48,6 +57,10 @@ const emptyBucket = (): Bucket => ({
 
 interface State {
   phase: ChatPhase;
+  /** why the phase is `error`, in plain words */
+  error?: string;
+  /** ids of messages the hub acknowledged after an optimistic send (they show Sent) */
+  acked: Record<string, true>;
   status: HubStatus | null;
   chats: ChatSummary[];
   buckets: Record<string, Bucket>;
@@ -59,6 +72,7 @@ interface State {
 }
 const initial: State = {
   phase: 'idle',
+  acked: {},
   status: null,
   chats: [],
   buckets: {},
@@ -69,7 +83,7 @@ const initial: State = {
 };
 
 type Action =
-  | { t: 'phase'; phase: ChatPhase }
+  | { t: 'phase'; phase: ChatPhase; error?: string }
   | { t: 'boot'; status: HubStatus | null; chats: ChatSummary[]; unread: Record<string, number> }
   | { t: 'chats'; chats: ChatSummary[] }
   | { t: 'status'; status: HubStatus }
@@ -95,9 +109,16 @@ const withBucket = (s: State, id: string, f: (b: Bucket) => Bucket): State => ({
 function reducer(s: State, a: Action): State {
   switch (a.t) {
     case 'phase':
-      return { ...s, phase: a.phase };
+      return { ...s, phase: a.phase, error: a.phase === 'error' ? a.error : undefined };
     case 'boot':
-      return { ...s, phase: 'ready', status: a.status, chats: a.chats, unread: a.unread };
+      return {
+        ...s,
+        phase: 'ready',
+        error: undefined,
+        status: a.status,
+        chats: a.chats,
+        unread: a.unread,
+      };
     case 'chats':
       return { ...s, chats: a.chats };
     case 'status':
@@ -202,7 +223,7 @@ function reducer(s: State, a: Action): State {
         ),
       }));
     case 'sentOk':
-      return withBucket(s, a.chatId, (b) => ({
+      return withBucket({ ...s, acked: { ...s.acked, [a.message.id]: true } }, a.chatId, (b) => ({
         ...b,
         pending: b.pending.filter((p) => p.localId !== a.localId),
         items: mergeMessages(b.items, [a.message]),
@@ -261,6 +282,8 @@ export type ConfirmResult = 'ok' | 'stale' | 'failed';
 
 export interface ChatController {
   phase: ChatPhase;
+  /** plain-words reason when `phase` is `error` */
+  errorText: string;
   status: HubStatus | null;
   chats: ChatSummary[];
   conn: ChatConn;
@@ -275,6 +298,7 @@ export interface ChatController {
     loaded: boolean;
     loading: boolean;
     loadingOlder: boolean;
+    errorText: string;
     hasMore: boolean;
     error: boolean;
   };
@@ -449,7 +473,12 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
       } catch (e) {
         if (dead || run !== bootN.current) return;
         if (isExpired(e)) expire();
-        else dispatch({ t: 'phase', phase: 'error' });
+        else
+          dispatch({
+            t: 'phase',
+            phase: 'error',
+            error: chatLoadReason(e, onlineRef.current),
+          });
       }
     })();
     return () => {
@@ -500,13 +529,21 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
   const loadHistory = useCallback(
     async (chatId: string) => {
       if (!api) return;
-      dispatch({ t: 'bucket', chatId, patch: { loading: true, error: false } });
+      dispatch({
+        t: 'bucket',
+        chatId,
+        patch: { loading: true, error: false, errorText: undefined },
+      });
       try {
         const r = await api.history(chatId, { limit: 50 });
         dispatch({ t: 'history', chatId, ...r, older: false });
       } catch (e) {
         if (isExpired(e)) expire();
-        dispatch({ t: 'bucket', chatId, patch: { loading: false, error: true } });
+        dispatch({
+          t: 'bucket',
+          chatId,
+          patch: { loading: false, error: true, errorText: chatLoadReason(e, onlineRef.current) },
+        });
       }
     },
     [api, expire],
@@ -656,7 +693,11 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
       const b = sRef.current.buckets[chatId];
       if (!b) return [];
       return [
-        ...b.items.map((message) => ({ message, state: 'sent' as const })),
+        ...b.items.map((message) => ({
+          message,
+          state: 'sent' as const,
+          ...(s.acked[message.id] ? { acked: true } : {}),
+        })),
         ...b.pending.map((p) => ({
           message: p.message,
           state: p.state,
@@ -666,12 +707,13 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
       ];
     },
     // re-derive when buckets change
-    [s.buckets],
+    [s.buckets, s.acked],
   );
 
   const totalUnread = Object.values(s.unread).reduce((a, n) => a + n, 0);
   return {
     phase: s.phase,
+    errorText: s.error ?? chatLoadReason(null),
     status: s.status,
     chats: s.chats,
     conn: s.conn,
@@ -690,6 +732,7 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
         loadingOlder: b.loadingOlder,
         hasMore: b.hasMore,
         error: b.error,
+        errorText: b.errorText ?? chatLoadReason(null),
       };
     },
     typing: (chatId) =>

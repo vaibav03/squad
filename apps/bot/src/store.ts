@@ -7,15 +7,24 @@ export function seedRoster(db: Db, roster: Roster, transport: string, now = Date
      ON CONFLICT(id) DO UPDATE SET name=excluded.name, handle=excluded.handle`,
   );
   for (const s of roster.students) {
-    st.run(
-      s.id,
-      s.name,
-      s.handle,
-      s.personaId ?? null,
-      s.voiceId ?? null,
-      s.avatarUrl ?? null,
-      now,
-    );
+    const run = (handle: string) =>
+      st.run(
+        s.id,
+        s.name,
+        handle,
+        s.personaId ?? null,
+        s.voiceId ?? null,
+        s.avatarUrl ?? null,
+        now,
+      );
+    try {
+      run(s.handle);
+    } catch (e) {
+      // Account handles are masked emails ("j•••@example.com"), so two accounts can share one. That must never keep the
+      // hub from starting: fall back to the (unique) id as the handle for the later one.
+      if (!/UNIQUE constraint failed: students\.handle/.test(String((e as Error).message))) throw e;
+      run(s.id);
+    }
   }
   for (const c of roster.chats) {
     ensureChat(db, c.id, true, c.name, transport);

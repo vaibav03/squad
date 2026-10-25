@@ -57,6 +57,31 @@ export class ChatApiError extends Error {
   ) {
     super(`chat ${status}${code ? ` ${code}` : ''}`);
   }
+  /** true when the hub never answered in time (status 0, code `timeout`) */
+  get timedOut(): boolean {
+    return this.status === 0 && this.code === 'timeout';
+  }
+}
+
+/** Every hub call gives up after this long, so no screen can wait forever. */
+export const CHAT_TIMEOUT_MS = 8_000;
+
+/**
+ * The plain-words reason a load failed, for the error state next to a Retry button. Never echoes a status line or body.
+ * `online` is `navigator.onLine`: when the browser itself is offline that is the reason, whatever the error was.
+ */
+export function chatLoadReason(e: unknown, online = true): string {
+  if (!online) return 'You are offline. Reconnect and try again.';
+  if (e instanceof ChatApiError) {
+    if (e.timedOut) return 'The hub took too long to answer (over 8 seconds). Try again.';
+    if (e.status === 0) return 'We could not reach the hub. Check your connection and try again.';
+    if (e.status === 401) return 'Your session ended. Sign in again.';
+    if (e.status === 403) return 'You do not have access to this chat.';
+    if (e.status === 409) return 'Create or join a squad to chat with it.';
+    if (e.status === 404) return 'This chat was not found. Try again, or pick another squad.';
+    if (e.status >= 500) return 'The hub had a problem answering. Try again in a moment.';
+  }
+  return 'Something went wrong loading chat. Try again.';
 }
 
 /** Fixed, user-safe copy. Never echoes a status line, body or schema error. */
@@ -96,12 +121,37 @@ export interface HttpChatApiOptions {
   fetchImpl?: typeof fetch;
   /** injectable for tests */
   EventSourceImpl?: typeof EventSource;
+  /** per-request timeout, default 8 s */
+  timeoutMs?: number;
+}
+
+/** fetch with a deadline: a hung hub becomes `ChatApiError(0, 'timeout')`, a dead network `ChatApiError(0)`. */
+async function fetchWithin(
+  f: typeof fetch,
+  url: string,
+  init: RequestInit | undefined,
+  ms: number,
+): Promise<Response> {
+  const ctl = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    ctl.abort();
+  }, ms);
+  try {
+    return await f(url, { ...init, signal: ctl.signal });
+  } catch {
+    throw new ChatApiError(0, timedOut ? 'timeout' : undefined);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export function createChatApi(o: HttpChatApiOptions): ChatApi {
   const base = o.hubUrl.replace(/\/+$/, '');
   const f: typeof fetch = o.fetchImpl ?? ((...a) => fetch(...a));
   const auth = { Authorization: `Bearer ${o.token}` };
+  const ms = o.timeoutMs ?? CHAT_TIMEOUT_MS;
 
   async function call<T>(
     schema: z.ZodType<T>,
@@ -109,12 +159,12 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
     init?: RequestInit,
     headers: Record<string, string> = {},
   ): Promise<T> {
-    let res: Response;
-    try {
-      res = await f(`${base}${path}`, { ...init, headers: { ...auth, ...headers } });
-    } catch {
-      throw new ChatApiError(0);
-    }
+    const res = await fetchWithin(
+      f,
+      `${base}${path}`,
+      { ...init, headers: { ...auth, ...headers } },
+      ms,
+    );
     if (!res.ok) {
       const body = (await res.json().catch(() => null)) as { error?: { code?: unknown } } | null;
       const code = typeof body?.error?.code === 'string' ? body.error.code : undefined;
@@ -142,7 +192,7 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
 
   return {
     status: () =>
-      f(`${base}/v1/status`)
+      fetchWithin(f, `${base}/v1/status`, undefined, ms)
         .then(async (r) => {
           if (!r.ok) throw new ChatApiError(r.status);
           const p = StatusSchema.safeParse(await r.json().catch(() => null));
@@ -220,7 +270,7 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
       };
 
       async function open() {
-        if (closed || !ES) return;
+        if (closed || paused || !ES) return;
         h.onState('connecting');
         let st = o.token;
         try {
@@ -237,7 +287,7 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
           h.onState('offline');
           return retry();
         }
-        if (closed) return;
+        if (closed || paused) return;
         const url = `${base}/v1/chat/stream?st=${q(st)}${last ? `&lastEventId=${last}` : ''}`;
         const src = new ES(url);
         es = src;
@@ -275,10 +325,34 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
           }
         };
       }
-      void open();
+      // Browsers allow ~6 connections per origin over HTTP/1.1 and every open tab holds streams for as long as it
+      // lives. A few forgotten background tabs starve every fetch of the tab in front (history and send queue forever
+      // behind them), so a hidden tab lets its chat stream go and picks it up again, resyncing, when it is shown.
+      const hiddenNow = () =>
+        typeof document !== 'undefined' && document.visibilityState === 'hidden';
+      let paused = false;
+      const onVis = () => {
+        if (closed) return;
+        if (hiddenNow()) {
+          if (paused) return;
+          paused = true;
+          if (timer) clearTimeout(timer);
+          es?.close();
+          es = null;
+        } else if (paused) {
+          paused = false;
+          attempt = 0;
+          void open().then(() => h.onResync(last));
+        }
+      };
+      if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVis);
+      if (hiddenNow()) paused = true;
+      else void open();
       return () => {
         closed = true;
         if (timer) clearTimeout(timer);
+        if (typeof document !== 'undefined')
+          document.removeEventListener('visibilitychange', onVis);
         es?.close();
       };
     },
