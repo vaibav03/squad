@@ -410,9 +410,15 @@ describe('GET /v1/status', () => {
     const live = await get<Record<string, unknown>>(url, '/v1/status');
     expect(live.body).toMatchObject({ llm: 'gemini', tts: 'elevenlabs', demo: false });
     expect(live.body.notice).toBeUndefined();
-    llm = { llm: 'fake', reason: 'credits_depleted', since: 1 };
+    llm = { llm: 'fake', reason: 'credits_depleted', since: 1, lastProbeAt: 5, nextProbeAt: 65 };
     const dead = await get<Record<string, unknown>>(url, '/v1/status');
-    expect(dead.body).toMatchObject({ llm: 'fake', demo: true, reason: 'credits_depleted' });
+    expect(dead.body).toMatchObject({
+      llm: 'fake',
+      demo: true,
+      reason: 'credits_depleted',
+      lastProbeAt: 5,
+      nextProbeAt: 65,
+    });
     expect(dead.body.notice).toMatch(/credits are depleted/);
     hub.deps.runtime = undefined;
   });

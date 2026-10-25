@@ -2,8 +2,11 @@ import { startHub } from './server';
 import { agentUrlsFromEnv, resilientLlmFromEnv, wireRealPorts } from './wire';
 
 const hub = await startHub();
-const llm = resilientLlmFromEnv(process.env, (reason) =>
-  hub.deps.log.warn(`llm: switched to the fake demo model (${reason}); GET /v1/status shows why`),
+const llm = resilientLlmFromEnv(
+  process.env,
+  (reason) =>
+    hub.deps.log.warn(`llm: serving the fake demo model (${reason}); GET /v1/status shows why`),
+  () => hub.deps.log.info('llm: real Gemini is back'),
 );
 // Real ports (brain, quiz, media) whenever there is a key; FORCE_FAKE_LLM=1 keeps them on the fake model.
 const real = Boolean(process.env.GEMINI_API_KEY) || process.env.FORCE_FAKE_LLM === '1';

@@ -97,13 +97,15 @@ const Trip = z.object({
   tallies: z.record(z.string(), z.number()).nullable().optional(),
 });
 export interface ConfirmTarget {
+  /** The confirm.pending task id; the answer goes to POST /v1/confirms/:taskId. */
+  taskId: string;
   tripId: string;
   optionId: string;
   label: string;
   cost?: string;
 }
 /**
- * The hub has one confirm endpoint today: `POST /v1/trips/:tripId/confirm {optionId, yes}`. A `confirm.pending` task id
+ * Answers go to the generic `POST /v1/confirms/:taskId {optionId, yes}` (fails closed for unknown tasks). The preview below still reads the trip to name the option. A `confirm.pending` task id
  * maps to its trip by the hub's naming (`task_trip_x` -> `trip_x`); the leading unvetoed option is the one being
  * confirmed. The sheet shows it BEFORE the student answers, and the answer reuses exactly that option. Other task kinds
  * have no endpoint yet, so they reject and the sheet shows its error state (contract request: a generic
@@ -123,6 +125,7 @@ export async function previewConfirm(c: HubCtx, taskId: string): Promise<Confirm
     trip.options[0];
   if (!leading) throw new HubError(409, 'trip has no options');
   return {
+    taskId,
     tripId: trip.tripId,
     optionId: leading.id,
     label: leading.label ?? leading.id,
@@ -135,7 +138,7 @@ export async function resolveConfirm(
   yes: boolean,
 ): Promise<void> {
   await ok(
-    await fetch(`${base(c)}/v1/trips/${encodeURIComponent(target.tripId)}/confirm`, {
+    await fetch(`${base(c)}/v1/confirms/${encodeURIComponent(target.taskId)}`, {
       method: 'POST',
       headers: { ...json, ...auth(c) },
       body: JSON.stringify({ optionId: target.optionId, yes }),

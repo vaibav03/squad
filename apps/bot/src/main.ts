@@ -65,8 +65,13 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
         real: new GeminiLlm({ apiKey: cfg.geminiApiKey!, models: cfg.geminiModels }),
         fake: new FakeLlm({ fallback: 'Hi! (demo reply: Gemini is unavailable)' }),
         onSwitch: (st) => {
-          log.warn(`llm switched to the fake demo model (${st.reason})`);
-          console.log(`[bot] llm switched to FakeLlm (${st.reason}); run pnpm doctor`);
+          log.warn(`llm serving the fake demo model (${st.reason}); real model is re-probed`);
+          console.log(
+            `[bot] llm on FakeLlm (${st.reason}), will switch back when Gemini works; run pnpm run doctor`,
+          );
+        },
+        onRecover: () => {
+          log.info('llm: real Gemini is back');
         },
       });
   registerMediaPersonas();
