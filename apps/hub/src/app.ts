@@ -10,6 +10,7 @@ import { createCallRegistry } from './calls';
 import { loadHubConfig, type HubConfig } from './config';
 import { createConfirmRouter } from './confirms';
 import { createIngestor } from './ingest';
+import { applySecurity, type SecurityOptions } from './middleware';
 import { createLogger } from './log';
 import { installObservability, type ObsOptions } from './observability';
 import type { Ports } from './ports';
@@ -41,6 +42,8 @@ export interface HubOptions {
   db?: Db;
   /** Observability overrides (admin token, agent probes, sentry). Defaults come from env. */
   obs?: ObsOptions;
+  /** HTTP hardening knobs (rate limits, trust proxy); defaults are safe. */
+  security?: SecurityOptions;
 }
 export interface Hub {
   app: HubApp;
@@ -80,6 +83,7 @@ export function createHub(opts: HubOptions = {}): Hub {
   if (config.seed) seedDemo(deps);
 
   const app: HubApp = new Hono<HubEnv>();
+  applySecurity(app, deps, opts.security);
   app.use(
     '*',
     cors({
