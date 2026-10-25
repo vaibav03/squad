@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { parseIcs, parseIcsDate } from './ics';
 import {
-  completedSteps,
   formatPhone,
-  initialState,
-  reducer,
+  nextStep,
+  prevStep,
+  isStepId,
+  LEGACY_STEP,
   validateCode,
   validateFile,
   validatePhone,
@@ -67,18 +68,16 @@ describe('setup model', () => {
       validateFile({ name: 'big.pdf', size: 60 * 1024 * 1024, type: 'application/pdf' }),
     ).toMatch(/50 MB/);
   });
-  it('reducer drives completion', () => {
-    let s = reducer(initialState, { type: 'phone/verified' });
-    s = reducer(s, {
-      type: 'courses/add',
-      files: [{ id: 'x', name: 'a.pdf', size: 1, status: 'queued', progress: 0 }],
-    });
-    expect(completedSteps(s)).toEqual(['phone']);
-    s = reducer(s, { type: 'courses/progress', id: 'x', progress: 1 });
-    s = reducer(s, { type: 'persona/pick', id: 'owl' });
-    expect(completedSteps(s)).toEqual(['phone', 'courses', 'persona']);
-    s = reducer(s, { type: 'courses/progress', id: 'x', progress: 0.2 });
-    expect(s.courses[0]!.progress).toBe(1);
+  it('has exactly four steps in order, with legacy aliases', () => {
+    expect(
+      isStepId('context') && isStepId('availability') && isStepId('messaging') && isStepId('agent'),
+    ).toBe(true);
+    expect(isStepId('phone')).toBe(false);
+    expect(LEGACY_STEP.phone).toBe('messaging');
+    expect(nextStep('context')).toBe('availability');
+    expect(nextStep('agent')).toBe('done');
+    expect(prevStep('context')).toBeNull();
+    expect(prevStep('agent')).toBe('messaging');
   });
 });
 

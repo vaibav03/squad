@@ -1,13 +1,16 @@
-import type { BusyBlock } from './ics';
+import { STEP_ORDER, STEP_TITLE, type StepKey } from './steps';
 
-export const STEPS = [
-  { id: 'phone', label: 'Phone' },
-  { id: 'courses', label: 'Courses' },
-  { id: 'calendar', label: 'Calendar' },
-  { id: 'persona', label: 'Study buddy' },
-] as const;
-export type StepId = (typeof STEPS)[number]['id'];
-export const isStepId = (v: string | undefined): v is StepId => STEPS.some((s) => s.id === v);
+export const STEPS = STEP_ORDER.map((id) => ({ id, label: STEP_TITLE[id] }));
+export type StepId = StepKey;
+export const isStepId = (v: string | undefined): v is StepId => STEP_ORDER.includes(v as StepKey);
+
+/** Old links (/squad/setup/phone ...) keep working: they open the step that replaced them. */
+export const LEGACY_STEP: Record<string, StepId> = {
+  phone: 'messaging',
+  courses: 'context',
+  calendar: 'availability',
+  persona: 'agent',
+};
 
 export const MAX_PDF_BYTES = 50 * 1024 * 1024;
 
@@ -47,107 +50,11 @@ export function formatBytes(n: number): string {
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export type CourseStatus = 'queued' | 'reading' | 'ready' | 'failed';
-export interface CourseFile {
-  id: string;
-  name: string;
-  size: number;
-  status: CourseStatus;
-  progress: number;
-}
-
-export interface SetupState {
-  phone: { number: string; codeSent: boolean; verified: boolean };
-  courses: CourseFile[];
-  calendar: { status: 'none' | 'ready'; blocks: BusyBlock[]; source?: 'ics' | 'demo' };
-  persona: string | null;
-  skipped: StepId[];
-}
-
-export const initialState: SetupState = {
-  phone: { number: '', codeSent: false, verified: false },
-  courses: [],
-  calendar: { status: 'none', blocks: [] },
-  persona: null,
-  skipped: [],
-};
-
-export type Action =
-  | { type: 'phone/number'; number: string }
-  | { type: 'phone/sent' }
-  | { type: 'phone/verified' }
-  | { type: 'phone/edit' }
-  | { type: 'courses/add'; files: CourseFile[] }
-  | { type: 'courses/progress'; id: string; progress: number; status?: CourseStatus }
-  | { type: 'courses/remove'; id: string }
-  | { type: 'courses/retry'; id: string }
-  | { type: 'calendar/set'; blocks: BusyBlock[]; source: 'ics' | 'demo' }
-  | { type: 'calendar/clear' }
-  | { type: 'persona/pick'; id: string }
-  | { type: 'skip'; step: StepId };
-
-export function reducer(s: SetupState, a: Action): SetupState {
-  switch (a.type) {
-    case 'phone/number':
-      return { ...s, phone: { ...s.phone, number: formatPhone(a.number) } };
-    case 'phone/sent':
-      return { ...s, phone: { ...s.phone, codeSent: true } };
-    case 'phone/verified':
-      return { ...s, phone: { ...s.phone, verified: true } };
-    case 'phone/edit':
-      return { ...s, phone: { ...s.phone, codeSent: false, verified: false } };
-    case 'courses/add':
-      return { ...s, courses: [...s.courses, ...a.files] };
-    case 'courses/progress':
-      return {
-        ...s,
-        courses: s.courses.map((c) =>
-          c.id === a.id
-            ? {
-                ...c,
-                progress: Math.max(c.progress, Math.min(1, a.progress)),
-                status: a.status ?? (a.progress >= 1 ? 'ready' : 'reading'),
-              }
-            : c,
-        ),
-      };
-    case 'courses/remove':
-      return { ...s, courses: s.courses.filter((c) => c.id !== a.id) };
-    case 'courses/retry':
-      return {
-        ...s,
-        courses: s.courses.map((c) =>
-          c.id === a.id ? { ...c, status: 'queued', progress: 0 } : c,
-        ),
-      };
-    case 'calendar/set':
-      return {
-        ...s,
-        calendar: { status: 'ready', blocks: a.blocks, source: a.source },
-        skipped: s.skipped.filter((x) => x !== 'calendar'),
-      };
-    case 'calendar/clear':
-      return { ...s, calendar: { status: 'none', blocks: [] } };
-    case 'persona/pick':
-      return { ...s, persona: a.id, skipped: s.skipped.filter((x) => x !== 'persona') };
-    case 'skip':
-      return { ...s, skipped: s.skipped.includes(a.step) ? s.skipped : [...s.skipped, a.step] };
-  }
-}
-
-export function completedSteps(s: SetupState): StepId[] {
-  const done: StepId[] = [];
-  if (s.phone.verified) done.push('phone');
-  if (s.courses.some((c) => c.status === 'ready')) done.push('courses');
-  if (s.calendar.status === 'ready') done.push('calendar');
-  if (s.persona) done.push('persona');
-  return done;
-}
 export function nextStep(step: StepId): StepId | 'done' {
-  const i = STEPS.findIndex((x) => x.id === step);
-  return STEPS[i + 1]?.id ?? 'done';
+  const i = STEP_ORDER.indexOf(step);
+  return STEP_ORDER[i + 1] ?? 'done';
 }
 export function prevStep(step: StepId): StepId | null {
-  const i = STEPS.findIndex((x) => x.id === step);
-  return STEPS[i - 1]?.id ?? null;
+  const i = STEP_ORDER.indexOf(step);
+  return STEP_ORDER[i - 1] ?? null;
 }
