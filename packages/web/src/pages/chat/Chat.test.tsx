@@ -200,18 +200,13 @@ describe('thread rendering', () => {
     await screen.findAllByTestId('chat-message');
   });
 
-  it('shows an offline banner and pauses sending', async () => {
+  it('shows an offline banner but never disables Send for a drafted message', async () => {
     setup();
     await screen.findAllByTestId('chat-message');
     act(() => void window.dispatchEvent(new Event('offline')));
     expect(await screen.findByTestId('chat-offline')).toBeTruthy();
-    expect(screen.getByTestId('chat-paused').textContent).toContain('offline');
     await userEvent.type(await input(), 'hello');
-    expect((screen.getByTestId('chat-send') as HTMLButtonElement).disabled).toBe(true);
-    act(() => void window.dispatchEvent(new Event('online')));
-    await waitFor(() =>
-      expect((screen.getByTestId('chat-send') as HTMLButtonElement).disabled).toBe(false),
-    );
+    expect((screen.getByTestId('chat-send') as HTMLButtonElement).disabled).toBe(false);
   });
 
   it('shows the offline banner when the stream drops', async () => {

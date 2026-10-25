@@ -270,7 +270,7 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
       };
 
       async function open() {
-        if (closed || !ES) return;
+        if (closed || paused || !ES) return;
         h.onState('connecting');
         let st = o.token;
         try {
@@ -287,7 +287,7 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
           h.onState('offline');
           return retry();
         }
-        if (closed) return;
+        if (closed || paused) return;
         const url = `${base}/v1/chat/stream?st=${q(st)}${last ? `&lastEventId=${last}` : ''}`;
         const src = new ES(url);
         es = src;
@@ -325,10 +325,34 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
           }
         };
       }
-      void open();
+      // Browsers allow ~6 connections per origin over HTTP/1.1 and every open tab holds streams for as long as it
+      // lives. A few forgotten background tabs starve every fetch of the tab in front (history and send queue forever
+      // behind them), so a hidden tab lets its chat stream go and picks it up again, resyncing, when it is shown.
+      const hiddenNow = () =>
+        typeof document !== 'undefined' && document.visibilityState === 'hidden';
+      let paused = false;
+      const onVis = () => {
+        if (closed) return;
+        if (hiddenNow()) {
+          if (paused) return;
+          paused = true;
+          if (timer) clearTimeout(timer);
+          es?.close();
+          es = null;
+        } else if (paused) {
+          paused = false;
+          attempt = 0;
+          void open().then(() => h.onResync(last));
+        }
+      };
+      if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVis);
+      if (hiddenNow()) paused = true;
+      else void open();
       return () => {
         closed = true;
         if (timer) clearTimeout(timer);
+        if (typeof document !== 'undefined')
+          document.removeEventListener('visibilitychange', onVis);
         es?.close();
       };
     },

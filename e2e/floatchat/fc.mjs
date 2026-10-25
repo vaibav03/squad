@@ -1,8 +1,8 @@
 import { chromium } from 'playwright';
 const CH =
   '/Users/vaibav/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
-const H = 'http://localhost:8900',
-  W = 'http://localhost:5300';
+const H = 'http://localhost:8921',
+  W = 'http://localhost:5321';
 const post = async (p, b, t) =>
   (
     await fetch(H + p, {
@@ -44,7 +44,7 @@ export async function run(kind, shot, path = '/squad/village') {
       log.push(`[${m.type()}] ${m.text().slice(0, 200)}`);
   });
   page.on('response', (r) => {
-    if (r.url().includes(':8900/v1/') && !r.url().includes('/v1/state'))
+    if (r.url().includes(':8921/v1/') && !r.url().includes('/v1/state'))
       log.push(`${r.status()} ${r.request().method()} ${r.url().replace(H, '').slice(0, 90)}`);
   });
   page.on('requestfailed', (r) =>

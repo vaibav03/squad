@@ -1,11 +1,11 @@
-// Floating chat + /squad/chat Playwright check. Needs a running stack (hub 8900, web 5300, agents), see header of fc.mjs.
+// Floating chat + /squad/chat Playwright check. Needs a running stack (hub 8921, web 5321, agents), see header of fc.mjs.
 // Run from a dir where `playwright` resolves; CH (Chrome for Testing path) is hard-coded for the dev laptop.
 import { chromium } from 'playwright';
 import { session } from './fc.mjs';
 const CH =
   '/Users/vaibav/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
 const D = '/Users/vaibav/Desktop/squad-demo/',
-  W = 'http://localhost:5300';
+  W = 'http://localhost:5321';
 const results = [];
 const ok = (n, c) => {
   results.push(`${c ? 'PASS' : 'FAIL'} ${n}`);

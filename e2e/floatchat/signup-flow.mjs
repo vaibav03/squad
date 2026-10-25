@@ -1,5 +1,5 @@
 // Fresh-profile UI flow: sign up through /welcome, create the squad 'summa', open the floating chat, send.
-// Needs the dev stack (hub 8900, web 5300). Screenshots land in ~/Desktop/squad-demo/.
+// Needs the dev stack (hub 8921, web 5321). Screenshots land in ~/Desktop/squad-demo/.
 import { chromium } from 'playwright';
 const CH =
   '/Users/vaibav/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
@@ -9,10 +9,10 @@ const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } })
 const page = await ctx.newPage();
 const net = [];
 page.on('response', (r) => {
-  if (r.url().includes(':8900/'))
+  if (r.url().includes(':8921/'))
     net.push(`${r.status()} ${r.request().method()} ${r.url().slice(21, 80)}`);
 });
-await page.goto('http://localhost:5300/welcome');
+await page.goto('http://localhost:5321/welcome');
 const dump = async (n) => {
   console.log('--', n, page.url());
   console.log(
@@ -82,7 +82,7 @@ await page.waitForTimeout(1500);
 console.log(await dock.innerText());
 await page.screenshot({ path: SC + 'dock-sent.png' });
 await page.getByTestId('chat-dock-open').click();
-await page.goto('http://localhost:5300/squad/chat');
+await page.goto('http://localhost:5321/squad/chat');
 await page.waitForTimeout(3000);
 console.log(
   'PAGE',

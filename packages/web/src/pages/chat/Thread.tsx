@@ -85,8 +85,8 @@ export function ChatBanners({ ctl, className }: { ctl: ChatController; className
 export function pausedCopy(ctl: ChatController): string | null {
   if (ctl.phase === 'expired' || ctl.conn === 'expired')
     return 'Your session ended. Sign in again.';
-  if (!ctl.online) return 'You are offline. Sending is paused until you reconnect.';
-  if (ctl.conn === 'offline') return 'Reconnecting. Sending is paused for a moment.';
+  // offline or reconnecting never blocks Send: the message shows Sending, then Failed with Retry and Delete
+  // (its text is kept), and the connection chip says Offline or Reconnecting
   return null;
 }
 
