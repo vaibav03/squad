@@ -164,7 +164,18 @@ export function mergeMessages(
 ): ChatMessage[] {
   const byId = new Map<string, ChatMessage>();
   for (const m of existing) byId.set(m.id, m);
-  for (const m of incoming) byId.set(m.id, m);
+  for (const m of incoming) {
+    const old = byId.get(m.id);
+    // A refetch can be older than a live `chat.update`: a settled confirm card never goes back to pending.
+    if (
+      old?.card?.type === 'confirm' &&
+      old.card.status !== 'pending' &&
+      m.card?.type === 'confirm' &&
+      m.card.status === 'pending'
+    )
+      byId.set(m.id, { ...m, card: old.card });
+    else byId.set(m.id, m);
+  }
   return [...byId.values()].sort((a, b) => a.seq - b.seq);
 }
 
@@ -371,5 +382,46 @@ export const countUnread = (
   seen: number,
   me: string | null | undefined,
 ): number => messages.filter((m) => m.seq > seen && !isOwn(m.sender, me)).length;
+
+/** Screen reader name for a citation chip: "Source: chapter 6, page 4". */
+export function citationSpeech(c: Pick<ChatCitation, 'file' | 'page'>): string {
+  const ch = /^ch(?:apter)?[-_ ]?(\d+)/i.exec(c.file);
+  const what = ch ? `chapter ${ch[1]}` : c.file.replace(/\.[A-Za-z]{2,4}$/, '');
+  return `Source: ${what}, page ${c.page}`;
+}
+
+/** What a screen reader (and the player) calls an attachment, from the message it came in. */
+export function attachmentLabel(
+  att: { kind: 'image' | 'audio' | 'file'; name?: string },
+  sender: ChatSender,
+  me: string | null | undefined,
+): string {
+  const bot = sender.kind === 'persona';
+  if (att.kind === 'audio') return bot ? 'Podcast audio' : 'Audio message';
+  if (att.kind === 'image')
+    return bot
+      ? `Picture from ${sender.name}`
+      : isOwn(sender, me)
+        ? 'Image you sent'
+        : `Image from ${sender.name}`;
+  return att.name ?? 'File';
+}
+
+/** Name a screen reader hears at the start of a message. */
+export const senderSpeech = (s: ChatSender, me: string | null | undefined): string =>
+  isOwn(s, me) ? 'You' : s.kind === 'persona' ? `${s.name}, bot` : s.name;
+
+/** Host to show next to a link whose text hides where it goes (URL-looking text, or text without the host). */
+export function linkHost(text: string, href: string): string | null {
+  let host: string;
+  try {
+    host = new URL(href).hostname.replace(/^www\./, '');
+  } catch {
+    return null;
+  }
+  const t = text.trim().toLowerCase();
+  const urlish = /^(https?:\/\/|www\.)|\.[a-z]{2,}(\/|$)/.test(t);
+  return urlish || !t.includes(host.toLowerCase()) ? host : null;
+}
 
 export const dmIdFor = (me: string): string => `dm:${me}`;

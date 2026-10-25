@@ -30,6 +30,20 @@ import {
 export interface ComposerHandle {
   focus(): void;
   fill(text: string): void;
+  /**
+   * Runs the composer's key handling for a native keydown aimed at its textarea (the village dock stops keys at the
+   * window in the capture phase, so React never sees them). Returns true when the key was used up (it closed the
+   * mention list), so the dock must not treat an Escape as its own.
+   */
+  keydown(e: globalThis.KeyboardEvent): boolean;
+}
+
+interface KeyLike {
+  key: string;
+  shiftKey: boolean;
+  nativeEvent: { isComposing?: boolean };
+  preventDefault(): void;
+  stopPropagation(): void;
 }
 
 interface Draft {
@@ -72,6 +86,19 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   const counterId = useId();
 
   useImperativeHandle(ref, () => ({
+    keydown: (e) => {
+      let used = false;
+      onKeyDown({
+        key: e.key,
+        shiftKey: e.shiftKey,
+        nativeEvent: e,
+        preventDefault: () => e.preventDefault(),
+        stopPropagation: () => {
+          used = true;
+        },
+      });
+      return used;
+    },
     focus: () => area.current?.focus(),
     fill: (t) => {
       setText(t);
@@ -187,7 +214,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     });
   };
 
-  const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const onKeyDown = (e: KeyLike) => {
     if (open) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -346,6 +373,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             aria-describedby={`${hintId}${showCounter ? ` ${counterId}` : ''}`}
             role={chatKind === 'group' ? 'combobox' : undefined}
             aria-autocomplete={chatKind === 'group' ? 'list' : undefined}
+            aria-haspopup={chatKind === 'group' ? 'listbox' : undefined}
             aria-expanded={chatKind === 'group' ? open : undefined}
             aria-controls={chatKind === 'group' && open ? listId : undefined}
             aria-activedescendant={open ? `${listId}-${options[act]!.id}` : undefined}
@@ -373,6 +401,9 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           <Icon name="send" size={18} />
         </button>
       </div>
+      <span className="sq-sr-only" role="status" aria-live="polite">
+        {open ? `${options.length} suggestion${options.length === 1 ? '' : 's'}` : ''}
+      </span>
       <div className="sqc-composer__foot">
         <span id={hintId} className="sqc-composer__hint">
           {hint}

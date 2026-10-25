@@ -27,9 +27,9 @@ export function ChatList({ chats, activeId, unread, onSelect, loading, meName }:
             </div>
           </div>
         ))}
-        <span className="sq-sr-only" role="status">
+        <p className="sqc-loading" role="status">
           Loading chats
-        </span>
+        </p>
       </div>
     );
   return (

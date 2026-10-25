@@ -121,7 +121,8 @@
   gap: var(--space-3);
   width: 100%;
   min-height: 72px;
-  padding: var(--space-3);
+  /* the avatar ring (4px outside its box) lines up with the "Chat" heading at 16px */
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-2);
   border: 1px solid transparent;
   border-radius: var(--radius-lg);
   background: none;
@@ -145,7 +146,7 @@
 .sqc-row[aria-current='true']::before {
   content: '';
   position: absolute;
-  left: -1px;
+  left: calc(var(--space-1) * -1);
   top: 14px;
   bottom: 14px;
   width: 3px;
@@ -175,7 +176,7 @@
 .sqc-row__title {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   font: 600 var(--text-base) / var(--lh-sm) var(--font-sans);
   min-width: 0;
 }
@@ -360,7 +361,7 @@
 .sqc-privacy {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   min-height: 28px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-pill);
@@ -532,10 +533,9 @@
   position: absolute;
   left: 50%;
   bottom: var(--space-3);
-  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   min-height: 36px;
   padding: 0 var(--space-4);
   border-radius: var(--radius-pill);
@@ -575,7 +575,7 @@
 .sqc-msg__head {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   min-height: 20px;
   padding-inline: 2px;
 }
@@ -598,7 +598,6 @@
   box-shadow: var(--pixel-outline);
   font: 400 var(--text-pixel-sm) / 1 var(--font-pixel);
   -webkit-font-smoothing: none;
-  letter-spacing: var(--tracking-pixel);
   white-space: nowrap;
 }
 .sqc-pixtag--demo {
@@ -656,7 +655,7 @@
   color: var(--popover-foreground);
 }
 .sqc-msg.is-pending .sqc-bubble {
-  opacity: 0.7;
+  opacity: 0.85;
 }
 .sqc-msg.is-failed .sqc-bubble {
   border-color: var(--destructive);
@@ -695,7 +694,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--space-2);
   padding: var(--space-1) 0;
   color: var(--muted-foreground);
   font: 400 var(--text-sm) / var(--lh-sm) var(--font-sans);
@@ -729,7 +728,7 @@
 .sqc-cite {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   min-height: 32px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-pill);
@@ -795,7 +794,7 @@
 .sqc-excerpt__src {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   color: var(--muted-foreground);
   font: 500 var(--text-sm) / var(--lh-sm) var(--font-sans);
 }
@@ -810,7 +809,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--space-2);
   min-height: var(--touch-min);
   padding: 0 var(--space-4);
   border-radius: var(--radius-md);
@@ -1037,7 +1036,16 @@
 }
 .sqc-choice:disabled {
   cursor: default;
-  opacity: 0.6;
+  color: var(--muted-foreground);
+}
+.sqc-choice:disabled .sqc-choice__key {
+  color: var(--muted-foreground);
+}
+.sqc-choice[data-chosen]:disabled {
+  color: var(--foreground);
+}
+.sqc-choice[data-chosen]:disabled .sqc-choice__key {
+  color: var(--sq-glow-core);
 }
 .sqc-choice[data-chosen] {
   opacity: 1;
@@ -1085,7 +1093,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--space-2);
   font: 500 var(--text-sm) / var(--lh-sm) var(--font-sans);
   color: var(--muted-foreground);
 }
@@ -1120,7 +1128,7 @@
 }
 .sqc-typing__dots {
   display: inline-flex;
-  gap: 5px;
+  gap: var(--space-1);
 }
 .sqc-typing__dots i {
   width: 6px;
@@ -1233,7 +1241,8 @@
   transform: scale(0.97);
 }
 .sqc-send:disabled {
-  opacity: 0.4;
+  background: var(--secondary);
+  color: var(--muted-foreground);
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -1261,7 +1270,7 @@
 .sqc-composer__problem {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   font: 500 var(--text-sm) / var(--lh-sm) var(--font-sans);
   color: var(--foreground);
 }
@@ -1384,7 +1393,7 @@
     max-width: 86%;
   }
   .sqc-log {
-    padding-inline: var(--space-3);
+    padding-inline: var(--space-4);
   }
 }
 
@@ -1413,4 +1422,92 @@
 }
 .sqd-panel .sqc-card {
   padding: var(--space-3);
+}
+
+@media (pointer: coarse) {
+  .sqc-pill {
+    min-height: var(--touch-min);
+  }
+  .sqc-audio__wave {
+    height: var(--touch-min);
+  }
+  .sqc-composer__hint {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ privacy badge: one line, short at phone width */
+.sqc-privacy__short {
+  display: none;
+}
+@media (max-width: 767px) {
+  .sqc-head .sqc-privacy {
+    max-width: none;
+    white-space: nowrap;
+    line-height: var(--lh-xs);
+    padding-block: 0;
+  }
+  .sqc-privacy__long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .sqc-privacy__short {
+    display: inline;
+  }
+}
+
+/* ------------------------------------------------------------------ banners: at most two lines, the hub text stays verbatim */
+.sqc-banners .sq-notice__text,
+.sqc-banners .sq-notice__title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+@media (max-width: 767px) {
+  .sqc-banners .sq-notice {
+    padding: var(--space-1) var(--space-3);
+    gap: var(--space-2);
+  }
+  .sqc-banners .sq-notice__text {
+    font-size: var(--text-xs);
+    line-height: var(--lh-xs);
+  }
+}
+
+/* links whose text hides the destination */
+.sqc-host {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ no press scale under reduced motion or Calm */
+@media (prefers-reduced-motion: reduce) {
+  .sqc :active,
+  .sqd :active {
+    transform: none !important;
+  }
+}
+.sqc--reduced :active,
+:root[data-calm='true'] .sqc :active,
+:root[data-calm='true'] .sqd :active {
+  transform: none !important;
+}
+.sqc-pill {
+  /* centred with translate, which must survive the rule above */
+  translate: -50% 0;
+  transform: none;
+}
+
+.sqc-loading {
+  padding: var(--space-2) var(--space-3);
+  color: var(--muted-foreground);
+  font: 500 var(--text-sm) / var(--lh-sm) var(--font-sans);
 }

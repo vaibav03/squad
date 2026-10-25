@@ -9,14 +9,17 @@ export function ImageAttachment({
   att,
   url,
   scene,
+  label,
 }: {
   att: ChatAttachment;
   url: string;
   scene?: boolean;
+  /** what the message says it is ("Picture from Cubbie"); falls back to the file name */
+  label?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
-  const alt = att.name ? `Image: ${att.name}` : 'Image attachment';
+  const alt = label ?? (att.name ? `Image: ${att.name}` : 'Image attachment');
   if (state === 'error')
     return (
       <div className="sqc-media sqc-media--broken" role="img" aria-label="Image unavailable">
@@ -67,7 +70,15 @@ export function waveformBars(id: string, n = 32): number[] {
 }
 
 /** Accessible custom audio player: play/pause, scrub (also a real range input), elapsed and total time. */
-export function AudioPlayer({ att, url }: { att: ChatAttachment; url: string }) {
+export function AudioPlayer({
+  att,
+  url,
+  label,
+}: {
+  att: ChatAttachment;
+  url: string;
+  label?: string;
+}) {
   const ref = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [t, setT] = useState(0);
@@ -83,7 +94,7 @@ export function AudioPlayer({ att, url }: { att: ChatAttachment; url: string }) 
     else a.pause();
   };
   const pct = dur > 0 ? Math.min(1, t / dur) : 0;
-  const title = att.name ?? 'Audio';
+  const title = label ?? att.name ?? 'Audio';
   return (
     <div className="sqc-audio" role="group" aria-label={`Audio: ${title}`}>
       <audio

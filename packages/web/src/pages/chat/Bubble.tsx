@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import type { ChatCitation, ChatMessage, HubStatus } from '@squad/core';
 import { Icon } from '../../primitives/Icon';
 import { Markdown } from '../../primitives/Markdown';
@@ -5,13 +6,18 @@ import { ConfirmMessageCard, QuizMessageCard } from './cards';
 import { AudioPlayer, ImageAttachment } from './media';
 import { ChatAvatar } from './parts';
 import {
+  attachmentLabel,
+  citationSpeech,
+  linkHost,
   resolveCitations,
   roleTag,
+  senderSpeech,
   textRepeatsCard,
   timeLabel,
   withInlineCites,
   type ThreadRow,
 } from './model';
+import type { ConfirmResult } from './useChat';
 import type { ChatApi } from './api';
 
 type MsgRow = Extract<ThreadRow, { kind: 'msg' }>;
@@ -33,14 +39,33 @@ export interface BubbleProps {
   onDiscard: (localId: string) => void;
   quizAnswer: (messageId: string) => string | undefined;
   onQuizAnswer: (m: ChatMessage, choice: string) => Promise<boolean>;
-  onConfirm: (m: ChatMessage, n: number) => Promise<boolean>;
+  onConfirm: (m: ChatMessage, n: number) => Promise<ConfirmResult>;
   onOpenDm?: () => void;
+}
+
+/** Links whose text hides where they go get the host after them, in small muted text. */
+function useLinkHosts(ref: React.RefObject<HTMLElement | null>, text: string) {
+  useLayoutEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    for (const a of root.querySelectorAll<HTMLAnchorElement>('a[href]')) {
+      if (a.querySelector('.sqc-host')) continue;
+      const host = linkHost(a.textContent ?? '', a.getAttribute('href') ?? '');
+      if (!host) continue;
+      const s = document.createElement('span');
+      s.className = 'sqc-host';
+      s.textContent = ` (${host})`;
+      a.append(s);
+    }
+  }, [ref, text]);
 }
 
 export function MessageBubble(p: BubbleProps) {
   const { row, api, status } = p;
   const m = row.message;
   const sender = m.sender;
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  useLinkHosts(bubbleRef, m.text);
 
   if (sender.kind === 'system')
     return (
@@ -60,7 +85,8 @@ export function MessageBubble(p: BubbleProps) {
   const tag = roleTag(sender);
   const bot = sender.kind === 'persona';
   const showDemo = bot && !!status?.demo;
-  const cites = resolveCitations(m.text, m.citations);
+  // Only the bot's replies carry verified sources: a student typing `[x.pdf p.3]` stays plain text.
+  const cites = bot ? resolveCitations(m.text, m.citations) : [];
   const onBubbleClick = (e: React.MouseEvent) => {
     const el = (e.target as HTMLElement).closest('.sq-md__cite');
     if (!el) return;
@@ -97,8 +123,16 @@ export function MessageBubble(p: BubbleProps) {
       <div className="sqc-msg__col">
         {row.head ? (
           <div className="sqc-msg__head">
-            {!row.own ? <span className="sqc-msg__name">{sender.name}</span> : null}
-            {tag ? <span className="sqc-pixtag">{tag}</span> : null}
+            {!row.own ? (
+              <span className="sqc-msg__name" aria-hidden="true">
+                {sender.name}
+              </span>
+            ) : null}
+            {tag ? (
+              <span className="sqc-pixtag" aria-hidden="true">
+                {tag}
+              </span>
+            ) : null}
             {showDemo ? (
               <span
                 className="sqc-pixtag sqc-pixtag--demo"
@@ -114,13 +148,15 @@ export function MessageBubble(p: BubbleProps) {
           </div>
         ) : null}
 
+        <span className="sq-sr-only">{senderSpeech(sender, p.me)}: </span>
         {text || attachments.length ? (
           <div
+            ref={bubbleRef}
             className="sqc-bubble"
             title={timeLabel(m.ts)}
             onClick={cites.length ? onBubbleClick : undefined}
           >
-            {text ? <Markdown>{withInlineCites(text, m.citations)}</Markdown> : null}
+            {text ? <Markdown>{bot ? withInlineCites(text, m.citations) : text}</Markdown> : null}
             {attachments.map((a) =>
               a.kind === 'image' ? (
                 <ImageAttachment
@@ -128,9 +164,15 @@ export function MessageBubble(p: BubbleProps) {
                   att={a}
                   url={api?.fileUrl(a) ?? a.url}
                   scene={p.scene}
+                  label={attachmentLabel(a, sender, p.me)}
                 />
               ) : a.kind === 'audio' ? (
-                <AudioPlayer key={a.id} att={a} url={api?.fileUrl(a) ?? a.url} />
+                <AudioPlayer
+                  key={a.id}
+                  att={a}
+                  url={api?.fileUrl(a) ?? a.url}
+                  label={attachmentLabel(a, sender, p.me)}
+                />
               ) : (
                 <div key={a.id} className="sqc-media sqc-media--broken">
                   <Icon name="file" size={18} />
@@ -169,6 +211,7 @@ export function MessageBubble(p: BubbleProps) {
                 className="sqc-cite"
                 data-testid="chat-citation-chip"
                 aria-haspopup="dialog"
+                aria-label={citationSpeech(c)}
                 onClick={() => p.onCite(c, m.text)}
               >
                 <span className="sqc-cite__n" aria-hidden="true">
@@ -180,11 +223,7 @@ export function MessageBubble(p: BubbleProps) {
           </div>
         ) : null}
 
-        {row.state === 'pending' ? (
-          <p className="sqc-msg__state" role="status">
-            Sending
-          </p>
-        ) : null}
+        {row.state === 'pending' ? <p className="sqc-msg__state">Sending</p> : null}
         {row.state === 'failed' && row.localId ? (
           <p className="sqc-msg__state is-failed" role="alert">
             <Icon name="alert" size={14} />

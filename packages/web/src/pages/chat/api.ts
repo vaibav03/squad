@@ -17,6 +17,9 @@ import {
 } from '@squad/core';
 import { z } from 'zod';
 
+/** `ChatSendBody` plus the idempotency id and the confirm task a numeric answer belongs to. */
+export type ChatSendInput = ChatSendBody & { clientId?: string; confirmTaskId?: string };
+
 /** Everything the chat UI needs from the hub. Tests and the gallery inject a fake that implements this. */
 export interface ChatApi {
   status(): Promise<HubStatus>;
@@ -25,7 +28,7 @@ export interface ChatApi {
     chatId: string,
     opts?: { before?: number; limit?: number },
   ): Promise<{ messages: ChatMessage[]; hasMore: boolean }>;
-  send(body: ChatSendBody): Promise<ChatMessage>;
+  send(body: ChatSendInput): Promise<ChatMessage>;
   upload(file: File): Promise<ChatAttachment>;
   /** `context` is the answer text: the hub opens the page at the sentence that best matches it. */
   citation(file: string, page: number, context?: string): Promise<ChatCitationExcerpt>;
@@ -63,6 +66,7 @@ export function chatErrorText(e: unknown, fallback: string): string {
     if (e.status === 429) return 'You are sending messages too fast. Wait a moment and try again.';
     if (e.status === 413) return 'That image is over 8 MB.';
     if (e.status === 415) return 'Only PNG, JPEG, WebP or GIF images can be sent.';
+    if (e.code === 'stale_confirm') return 'That question is no longer open.';
     if (e.status === 403) return 'You do not have access to this chat.';
   }
   return fallback;

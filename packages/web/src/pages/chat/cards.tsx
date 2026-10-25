@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ChatCard, ChatMessage } from '@squad/core';
 import { Icon } from '../../primitives/Icon';
+import type { ConfirmResult } from './useChat';
 
 type Quiz = Extract<ChatCard, { type: 'quiz' }>;
 type Confirm = Extract<ChatCard, { type: 'confirm' }>;
@@ -148,22 +149,24 @@ export function ConfirmMessageCard({
   disabled,
 }: {
   card: Confirm;
-  /** send the 1-based option number to the DM; resolves false on failure */
-  onChoose: (n: number) => Promise<boolean>;
+  /** send the 1-based option number (with the task id) to the DM */
+  onChoose: (n: number) => Promise<ConfirmResult>;
   disabled?: boolean;
 }) {
   const [busy, setBusy] = useState<number | null>(null);
   const [sent, setSent] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
-  const pending = card.status === 'pending';
+  const [stale, setStale] = useState(false);
+  const pending = card.status === 'pending' && !stale;
 
   const choose = async (n: number) => {
     if (!pending || busy !== null || sent !== null || disabled) return;
     setBusy(n);
     setFailed(false);
-    const ok = await onChoose(n);
+    const r = await onChoose(n);
     setBusy(null);
-    if (ok) setSent(n);
+    if (r === 'ok') setSent(n);
+    else if (r === 'stale') setStale(true);
     else setFailed(true);
   };
   const answeredIdx = card.answer ? card.options.findIndex((o) => o === card.answer) : -1;
@@ -213,6 +216,12 @@ export function ConfirmMessageCard({
         <p className="sqc-card__note is-error" role="alert">
           <Icon name="alert" size={14} />
           That did not go through. Try again.
+        </p>
+      ) : null}
+      {stale ? (
+        <p className="sqc-card__note is-warn" role="status">
+          <Icon name="alert" size={14} />
+          That question is no longer open.
         </p>
       ) : null}
       {pending && (busy !== null || sent !== null) ? (

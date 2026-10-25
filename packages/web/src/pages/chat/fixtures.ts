@@ -3,13 +3,18 @@ import {
   type ChatAttachment,
   type ChatCitationExcerpt,
   type ChatMessage,
-  type ChatSendBody,
   type ChatSummary,
   type ChatTyping,
   type ChatUpdate,
   type HubStatus,
 } from '@squad/core';
-import { ChatApiError, type ChatApi, type StreamHandlers, type StreamState } from './api';
+import {
+  ChatApiError,
+  type ChatApi,
+  type ChatSendInput,
+  type StreamHandlers,
+  type StreamState,
+} from './api';
 
 /** A realistic in-memory ChatApi for the gallery, the dev flag (`?demo=fixtures`) and tests. */
 
@@ -235,13 +240,13 @@ export interface FakeChatOptions {
 
 export interface FakeChatApi extends ChatApi {
   /** the next send() rejects with this status */
-  failNextSend(status?: number): void;
+  failNextSend(status?: number, code?: string): void;
   setStream(state: StreamState): void;
   pushMessage(m: Omit<ChatMessage, 'id' | 'seq'>): ChatMessage;
   pushUpdate(u: ChatUpdate): void;
   pushTyping(t: ChatTyping): void;
   resync(): void;
-  sent: ChatSendBody[];
+  sent: ChatSendInput[];
   data: FixtureData;
   failChats: boolean;
 }
@@ -263,6 +268,7 @@ export function createFakeChatApi(o: FakeChatOptions = {}): FakeChatApi {
   const subs = new Set<StreamHandlers>();
   const uploads = new Map<string, ChatAttachment>();
   let failStatus: number | null = null;
+  let failCode: string | undefined;
   const wait = <T>(v: T): Promise<T> =>
     latency ? new Promise((r) => setTimeout(() => r(v), latency)) : Promise.resolve(v);
 
@@ -304,7 +310,7 @@ export function createFakeChatApi(o: FakeChatOptions = {}): FakeChatApi {
   const typing = (chatId: string, on: boolean) =>
     subs.forEach((h) => h.onTyping({ chatId, personaId: 'cubbie', name: 'Cubbie', on }));
 
-  const bot = (body: ChatSendBody) => {
+  const bot = (body: ChatSendInput) => {
     if (o.bot === false) return;
     const dm = body.chatId.startsWith('dm:');
     const t = body.text.trim();
@@ -374,7 +380,7 @@ export function createFakeChatApi(o: FakeChatOptions = {}): FakeChatApi {
         const s = failStatus;
         failStatus = null;
         await wait(0);
-        throw new ChatApiError(s, s === 429 ? 'rate_limited' : undefined);
+        throw new ChatApiError(s, failCode ?? (s === 429 ? 'rate_limited' : undefined));
       }
       await wait(0);
       const attachments = (body.attachments ?? []).flatMap((a) => uploads.get(a.id) ?? []);
@@ -415,7 +421,10 @@ export function createFakeChatApi(o: FakeChatOptions = {}): FakeChatApi {
       queueMicrotask(() => h.onState('live'));
       return () => void subs.delete(h);
     },
-    failNextSend: (status = 500) => void (failStatus = status),
+    failNextSend: (status = 500, code) => {
+      failStatus = status;
+      failCode = code;
+    },
     setStream: (s) => subs.forEach((h) => h.onState(s)),
     pushMessage: push,
     pushUpdate: (u) => subs.forEach((h) => h.onUpdate(u)),

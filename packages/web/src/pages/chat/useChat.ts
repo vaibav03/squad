@@ -7,7 +7,7 @@ import type {
   ChatTyping,
   HubStatus,
 } from '@squad/core';
-import { chatErrorText, isExpired, type ChatApi, type StreamState } from './api';
+import { ChatApiError, chatErrorText, isExpired, type ChatApi, type StreamState } from './api';
 import { isOwn, mergeMessages, quizAnswerText, TYPING_TTL_MS, type ThreadItem } from './model';
 
 /**
@@ -24,6 +24,8 @@ interface Pending {
   state: 'pending' | 'failed';
   error?: string;
   files: ChatAttachment[];
+  /** the confirm card this numeric answer belongs to */
+  confirmTaskId?: string;
 }
 interface Bucket {
   items: ChatMessage[];
@@ -72,7 +74,7 @@ type Action =
   | { t: 'chats'; chats: ChatSummary[] }
   | { t: 'status'; status: HubStatus }
   | { t: 'conn'; conn: ChatConn }
-  | { t: 'msg'; m: ChatMessage; unread: boolean }
+  | { t: 'msg'; m: ChatMessage; unread: boolean; own: boolean }
   | { t: 'card'; chatId: string; messageId: string; card: ChatCard }
   | { t: 'typing'; ty: ChatTyping; now: number }
   | { t: 'prune'; now: number }
@@ -104,7 +106,25 @@ function reducer(s: State, a: Action): State {
       return { ...s, conn: a.conn };
     case 'msg': {
       const m = a.m;
-      let n = withBucket(s, m.chatId, (b) => ({ ...b, items: mergeMessages(b.items, [m]) }));
+      let n = withBucket(s, m.chatId, (b) => {
+        // the stream echo of our own message replaces its optimistic copy (the POST answer may come later)
+        let dropped = !a.own;
+        return {
+          ...b,
+          items: mergeMessages(b.items, [m]),
+          pending: b.pending.filter((p) => {
+            if (
+              dropped ||
+              p.state !== 'pending' ||
+              p.message.text !== m.text ||
+              p.message.attachments.length !== m.attachments.length
+            )
+              return true;
+            dropped = true;
+            return false;
+          }),
+        };
+      });
       const known = n.chats.some((c) => c.id === m.chatId);
       if (known)
         n = {
@@ -228,7 +248,16 @@ export interface UseChatOptions {
 export interface SendInput {
   text: string;
   files?: ChatAttachment[];
+  /** set when the text is the option number of a confirm card */
+  confirmTaskId?: string;
 }
+
+interface SendResult {
+  ok: boolean;
+  code?: string;
+  localId: string;
+}
+export type ConfirmResult = 'ok' | 'stale' | 'failed';
 
 export interface ChatController {
   phase: ChatPhase;
@@ -254,6 +283,9 @@ export interface ChatController {
   loadHistory(chatId: string): Promise<void>;
   loadOlder(chatId: string): Promise<void>;
   send(chatId: string, input: SendInput): Promise<boolean>;
+  confirm(chatId: string, taskId: string, option: number): Promise<ConfirmResult>;
+  /** when a message came in over the stream (ms), for the short entrance of live arrivals */
+  arrivedAt(messageId: string): number | undefined;
   retry(chatId: string, localId: string): Promise<boolean>;
   discard(chatId: string, localId: string): void;
   reload(): void;
@@ -271,6 +303,8 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
   const [, force] = useReducer((n: number) => n + 1, 0);
   const onlineRef = useRef(typeof navigator === 'undefined' ? true : navigator.onLine);
   const localN = useRef(0);
+  const arrived = useRef(new Map<string, number>());
+  const prevConn = useRef<ChatConn>('connecting');
   const expiredRef = useRef(onExpired);
   expiredRef.current = onExpired;
   const bootN = useRef(0);
@@ -355,7 +389,8 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
             onMessage: (m) => {
               const watching = activeRef.current === m.chatId && visible();
               const fromOther = !isOwn(m.sender, me);
-              dispatch({ t: 'msg', m, unread: fromOther && !watching });
+              arrived.current.set(m.id, Date.now());
+              dispatch({ t: 'msg', m, unread: fromOther && !watching, own: !fromOther });
               if (m.sender.kind === 'persona') {
                 clearTimeout(replyTimer);
                 replyTimer = setTimeout(refreshStatus, 800);
@@ -386,8 +421,21 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
             },
             onState: (st: StreamState) => {
               if (dead) return;
-              if (st === 'expired') expire();
-              else dispatch({ t: 'conn', conn: st });
+              if (st === 'expired') {
+                expire();
+                return;
+              }
+              // back after a drop: history may have gaps (or older card states), so refetch what is open
+              if (st === 'live' && prevConn.current === 'offline') {
+                void api.chats().then(
+                  (cs) => !dead && dispatch({ t: 'chats', chats: cs }),
+                  () => undefined,
+                );
+                for (const [id, b] of Object.entries(sRef.current.buckets))
+                  if (b.loaded) void refreshHistory(id);
+              }
+              prevConn.current = st;
+              dispatch({ t: 'conn', conn: st });
             },
           },
           lastSeq || undefined,
@@ -486,17 +534,20 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
   );
 
   const doSend = useCallback(
-    async (chatId: string, p: Pending): Promise<boolean> => {
-      if (!api) return false;
+    async (chatId: string, p: Pending): Promise<SendResult> => {
+      if (!api) return { ok: false, localId: p.localId };
       dispatch({ t: 'pendState', chatId, localId: p.localId, state: 'pending' });
       try {
         const message = await api.send({
           chatId,
           text: p.message.text,
+          // the same id on every retry, so the hub never stores a message twice
+          clientId: p.localId,
           ...(p.files.length ? { attachments: p.files.map((f) => ({ id: f.id })) } : {}),
+          ...(p.confirmTaskId ? { confirmTaskId: p.confirmTaskId } : {}),
         });
         dispatch({ t: 'sentOk', chatId, localId: p.localId, message });
-        return true;
+        return { ok: true, localId: p.localId };
       } catch (e) {
         if (isExpired(e)) expire();
         dispatch({
@@ -506,22 +557,27 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
           state: 'failed',
           error: chatErrorText(e, 'Not sent. Check your connection and try again.'),
         });
-        return false;
+        return {
+          ok: false,
+          localId: p.localId,
+          ...(e instanceof ChatApiError && e.code ? { code: e.code } : {}),
+        };
       }
     },
     [api, expire],
   );
 
-  const send = useCallback(
-    (chatId: string, input: SendInput): Promise<boolean> => {
+  const sendInner = useCallback(
+    (chatId: string, input: SendInput): Promise<SendResult> => {
       const chat = sRef.current.chats.find((c) => c.id === chatId);
       const name = chat?.members.find((m) => m.id === me)?.name ?? 'You';
-      const localId = `local_${++localN.current}`;
+      const localId = `c_${Date.now().toString(36)}_${++localN.current}`;
       const files = input.files ?? [];
       const item: Pending = {
         localId,
         state: 'pending',
         files,
+        ...(input.confirmTaskId ? { confirmTaskId: input.confirmTaskId } : {}),
         message: {
           id: localId,
           seq: 0,
@@ -540,11 +596,29 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
     },
     [doSend, me],
   );
+  const send = useCallback(
+    async (chatId: string, input: SendInput) => (await sendInner(chatId, input)).ok,
+    [sendInner],
+  );
+  const confirm = useCallback(
+    async (chatId: string, taskId: string, option: number): Promise<ConfirmResult> => {
+      const r = await sendInner(chatId, { text: String(option), confirmTaskId: taskId });
+      if (r.ok) return 'ok';
+      if (r.code === 'stale_confirm') {
+        // the question closed (answered elsewhere or timed out): drop our answer and show the real state
+        dispatch({ t: 'pendDrop', chatId, localId: r.localId });
+        void refreshHistory(chatId);
+        return 'stale';
+      }
+      return 'failed';
+    },
+    [sendInner, refreshHistory],
+  );
 
   const retry = useCallback(
     (chatId: string, localId: string) => {
       const p = sRef.current.buckets[chatId]?.pending.find((x) => x.localId === localId);
-      return p ? doSend(chatId, p) : Promise.resolve(false);
+      return p ? doSend(chatId, p).then((r) => r.ok) : Promise.resolve(false);
     },
     [doSend],
   );
@@ -618,6 +692,8 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
     loadHistory,
     loadOlder,
     send,
+    confirm,
+    arrivedAt: (id) => arrived.current.get(id),
     retry,
     discard,
     reload,

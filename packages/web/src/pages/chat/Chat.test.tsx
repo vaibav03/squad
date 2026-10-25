@@ -372,7 +372,7 @@ describe('cards', () => {
     const { api } = setup();
     const b = await screen.findByTestId('chat-quiz-choice-B');
     fireEvent.click(b);
-    await waitFor(() => expect(api.sent).toEqual([{ chatId: GROUP_ID, text: '@cubbie B' }]));
+    await waitFor(() => expect(api.sent).toMatchObject([{ chatId: GROUP_ID, text: '@cubbie B' }]));
     const sent = await screen.findByTestId('chat-quiz-sent');
     expect(sent.textContent).toContain('Answer sent, feedback in your DM');
     expect((screen.getByTestId('chat-quiz-choice-A') as HTMLButtonElement).disabled).toBe(true);
@@ -386,7 +386,11 @@ describe('cards', () => {
     const { api } = setup(DM_ID);
     const two = await screen.findByTestId('chat-confirm-option-2');
     fireEvent.click(two);
-    await waitFor(() => expect(api.sent).toEqual([{ chatId: DM_ID, text: '2' }]));
+    await waitFor(() =>
+      expect(api.sent).toMatchObject([
+        { chatId: DM_ID, text: '2', confirmTaskId: 'task_study_block' },
+      ]),
+    );
     expect(await screen.findByText(/Answer sent/)).toBeTruthy();
     expect((screen.getByTestId('chat-confirm-option-1') as HTMLButtonElement).disabled).toBe(true);
   });
@@ -488,5 +492,188 @@ describe('village dock', () => {
     const api = createFakeChatApi({ bot: false });
     render(<ChatDock enabled api={api} me={ME} />);
     await screen.findByTestId('chat-dock-unread');
+  });
+});
+
+const botMsg = (text: string, extra: Record<string, unknown> = {}) => ({
+  chatId: GROUP_ID,
+  ts: Date.now(),
+  sender: { kind: 'persona' as const, id: 'cubbie', name: 'Cubbie' },
+  text,
+  private: false,
+  attachments: [],
+  citations: [],
+  demo: true,
+  ...extra,
+});
+
+describe('review fixes', () => {
+  it('sends a clientId and a retry reuses the same one', async () => {
+    const { api } = setup();
+    api.failNextSend(500);
+    await userEvent.type(await input(), 'again{Enter}');
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry' }));
+    await waitFor(() => expect(api.sent).toHaveLength(2));
+    expect(api.sent[0]!.clientId).toBeTruthy();
+    expect(api.sent[1]!.clientId).toBe(api.sent[0]!.clientId);
+  });
+
+  it('drops the pending copy when the stream echoes our own message first', async () => {
+    const { api } = setup();
+    let release!: () => void;
+    const real = api.send;
+    api.send = (b) =>
+      new Promise((res, rej) => {
+        release = () => void real(b).then(res, rej);
+      });
+    await userEvent.type(await input(), 'echo me{Enter}');
+    await waitFor(() => expect(screen.getByText('Sending')).toBeTruthy());
+    act(() => {
+      api.pushMessage({
+        ...botMsg('echo me'),
+        sender: { kind: 'student', id: ME, name: 'Ana' },
+        demo: false,
+      });
+    });
+    await waitFor(() => expect(screen.queryByText('Sending')).toBeNull());
+    expect(screen.getAllByText('echo me')).toHaveLength(1);
+    act(() => release());
+    await waitFor(() => expect(api.sent).toHaveLength(1));
+  });
+
+  it('answers a confirm card with the task id and says when the question is no longer open', async () => {
+    const { api } = setup(DM_ID);
+    api.failNextSend(409, 'stale_confirm');
+    fireEvent.click(await screen.findByTestId('chat-confirm-option-1'));
+    expect(await screen.findByText('That question is no longer open.')).toBeTruthy();
+    expect(api.sent[0]).toMatchObject({ text: '1', confirmTaskId: 'task_study_block' });
+    // our answer is not left behind as a failed message
+    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
+    expect((screen.getByTestId('chat-confirm-option-2') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('refetches open history after the stream comes back', async () => {
+    const { api } = setup();
+    await screen.findAllByTestId('chat-message');
+    const spy = vi.spyOn(api, 'history');
+    act(() => api.setStream('offline'));
+    act(() => api.setStream('live'));
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+  });
+
+  it('only the bot gets citation chips; a student typing a marker stays plain text', async () => {
+    const { api } = setup();
+    await screen.findAllByTestId('chat-message');
+    const before = screen.getAllByTestId('chat-citation-chip').length;
+    act(() => {
+      api.pushMessage({
+        ...botMsg('look at [x.pdf p.3]'),
+        sender: { kind: 'student', id: 's_ben', name: 'Ben' },
+        demo: false,
+        citations: [{ file: 'x.pdf', page: 3, label: 'x.pdf p.3' }],
+      });
+    });
+    await screen.findByText('look at [x.pdf p.3]');
+    expect(screen.getAllByTestId('chat-citation-chip')).toHaveLength(before);
+  });
+
+  it('puts the host next to a link whose text hides it', async () => {
+    const { api } = setup();
+    await screen.findAllByTestId('chat-message');
+    act(() => {
+      api.pushMessage(botMsg('see [the notes](https://www.example.org/n)'));
+    });
+    const link = await screen.findByRole('link', { name: /the notes/ });
+    expect(link.querySelector('.sqc-host')?.textContent).toContain('example.org');
+  });
+
+  it('names every message sender for screen readers and chips by chapter and page', async () => {
+    setup();
+    const msgs = await screen.findAllByTestId('chat-message');
+    expect(msgs[0]!.querySelector('.sq-sr-only')?.textContent).toBe('Dev: ');
+    const own = msgs.find((m) => m.getAttribute('data-own'))!;
+    expect(own.querySelector('.sq-sr-only')?.textContent).toBe('You: ');
+    const bot = msgs.find((m) => m.getAttribute('data-sender-id') === 'cubbie')!;
+    expect(bot.querySelector('.sq-sr-only')?.textContent).toBe('Cubbie, bot: ');
+    const chip = screen.getAllByTestId('chat-citation-chip')[0]!;
+    expect(chip.getAttribute('aria-label')).toBe('Source: chapter 6, page 4');
+  });
+
+  it('labels bot audio as Podcast audio', async () => {
+    setup();
+    await screen.findAllByTestId('chat-message');
+    expect(screen.getByRole('group', { name: 'Audio: Podcast audio' })).toBeTruthy();
+  });
+
+  it('marks the composer as a listbox popup and announces the suggestion count', async () => {
+    setup();
+    const box = await input();
+    expect(box.getAttribute('aria-haspopup')).toBe('listbox');
+    await userEvent.type(box, '@');
+    await waitFor(() => expect(screen.getByText('2 suggestions')).toBeTruthy());
+  });
+
+  it('only the newest three live arrivals get the entrance', async () => {
+    const { api, container } = setup();
+    await screen.findAllByTestId('chat-message');
+    act(() => {
+      for (let i = 0; i < 6; i++) api.pushMessage(botMsg(`burst ${i}`));
+    });
+    await screen.findByText('burst 5');
+    expect(container.querySelectorAll('.sqc-enter').length).toBe(3);
+  });
+
+  it('adds no press transforms or entrance under reduced motion', async () => {
+    reducedMatch(true);
+    const { api, container } = setup();
+    await screen.findAllByTestId('chat-message');
+    act(() => void api.pushMessage(botMsg('hello there')));
+    await screen.findByText('hello there');
+    expect(container.querySelectorAll('.sqc-enter').length).toBe(0);
+  });
+});
+
+describe('village dock keys', () => {
+  it('stops keys in the open panel before a document capture listener (cutscene) and still sends', async () => {
+    const api = createFakeChatApi({ bot: false });
+    render(<ChatDock enabled api={api} me={ME} />);
+    const cutscene = vi.fn();
+    document.addEventListener('keydown', cutscene, true);
+    fireEvent.click(screen.getByTestId('chat-dock-open'));
+    const box = await input();
+    await userEvent.type(box, 'hello{Enter}');
+    await waitFor(() => expect(api.sent).toHaveLength(1));
+    expect(api.sent[0]).toMatchObject({ text: 'hello' });
+    expect(cutscene).not.toHaveBeenCalled();
+    // a key aimed outside the dock is none of its business
+    fireEvent.keyDown(document.body, { key: 'x' });
+    expect(cutscene).toHaveBeenCalledTimes(1);
+    document.removeEventListener('keydown', cutscene, true);
+  });
+
+  it('Escape in a citation sheet closes only the sheet and gives focus back to its chip', async () => {
+    const api = createFakeChatApi({ bot: false });
+    render(<ChatDock enabled api={api} me={ME} />);
+    fireEvent.click(screen.getByTestId('chat-dock-open'));
+    await input();
+    const chip = (await screen.findAllByTestId('chat-citation-chip'))[0]!;
+    chip.focus();
+    fireEvent.click(chip);
+    await screen.findByTestId('chat-citation-excerpt');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByTestId('chat-citation-excerpt')).toBeNull());
+    expect(screen.getByTestId('chat-composer-input')).toBeTruthy();
+    await waitFor(() => expect(document.activeElement).toBe(chip));
+  });
+
+  it('Escape with the mention list open closes the list, not the dock', async () => {
+    const api = createFakeChatApi({ bot: false });
+    render(<ChatDock enabled api={api} me={ME} />);
+    fireEvent.click(screen.getByTestId('chat-dock-open'));
+    await userEvent.type(await input(), '@');
+    await screen.findByRole('listbox');
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(screen.getByTestId('chat-composer-input')).toBeTruthy();
   });
 });

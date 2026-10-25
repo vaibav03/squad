@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { ChatMessage } from '@squad/core';
 import {
   activeMention,
+  attachmentLabel,
+  citationSpeech,
+  linkHost,
+  senderSpeech,
   applyMention,
   buildRows,
   citationFor,
@@ -202,5 +206,50 @@ describe('card text', () => {
     expect(textRepeatsCard('Question 1 of 3: what is it', { type: 'quiz' })).toBe(true);
     expect(textRepeatsCard('Join?', { type: 'confirm', question: 'join?' })).toBe(true);
     expect(textRepeatsCard('Different words', { type: 'confirm', question: 'Join?' })).toBe(false);
+  });
+});
+
+describe('review fixes: labels, links, merge', () => {
+  it('never lets a refetch put a settled confirm card back to pending', () => {
+    const confirm = (status: 'pending' | 'answered' | 'timeout') =>
+      ({
+        ...msg(5, 's_ana', 1).message,
+        card: {
+          type: 'confirm' as const,
+          taskId: 't',
+          question: 'q',
+          options: ['Yes', 'No'],
+          status,
+          ...(status === 'answered' ? { answer: 'Yes' } : {}),
+        },
+      }) satisfies ChatMessage;
+    const kept = mergeMessages([confirm('answered')], [confirm('pending')]);
+    expect(kept[0]!.card).toMatchObject({ status: 'answered', answer: 'Yes' });
+    expect(mergeMessages([confirm('pending')], [confirm('timeout')])[0]!.card).toMatchObject({
+      status: 'timeout',
+    });
+    expect(mergeMessages([confirm('timeout')], [confirm('pending')])[0]!.card).toMatchObject({
+      status: 'timeout',
+    });
+  });
+  it('speaks citations, attachments and senders in plain words', () => {
+    expect(citationSpeech({ file: 'ch6.pdf', page: 4 })).toBe('Source: chapter 6, page 4');
+    expect(citationSpeech({ file: 'ch12-intro.pdf', page: 1 })).toBe('Source: chapter 12, page 1');
+    expect(citationSpeech({ file: 'notes.pdf', page: 2 })).toBe('Source: notes, page 2');
+    const bot = { kind: 'persona' as const, id: 'cubbie', name: 'Cubbie' };
+    const ana = { kind: 'student' as const, id: 's_ana', name: 'Ana' };
+    expect(attachmentLabel({ kind: 'audio' }, bot, 's_ana')).toBe('Podcast audio');
+    expect(attachmentLabel({ kind: 'image' }, bot, 's_ana')).toBe('Picture from Cubbie');
+    expect(attachmentLabel({ kind: 'image' }, ana, 's_ana')).toBe('Image you sent');
+    expect(attachmentLabel({ kind: 'image' }, ana, 's_ben')).toBe('Image from Ana');
+    expect(senderSpeech(ana, 's_ana')).toBe('You');
+    expect(senderSpeech(bot, 's_ana')).toBe('Cubbie, bot');
+    expect(senderSpeech(ana, 's_ben')).toBe('Ana');
+  });
+  it('shows the host when link text hides where the link goes', () => {
+    expect(linkHost('click here', 'https://www.example.org/a')).toBe('example.org');
+    expect(linkHost('https://good.com/page', 'https://evil.com/x')).toBe('evil.com');
+    expect(linkHost('example.org notes', 'https://example.org/n')).toBeNull();
+    expect(linkHost('x', 'not a url')).toBeNull();
   });
 });

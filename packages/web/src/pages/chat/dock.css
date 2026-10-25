@@ -60,7 +60,26 @@
 .sqd-panel .sqc-head__title {
   font-size: var(--text-base);
 }
+/* a private chat shows a lock and the short word, never the long badge */
 .sqd-panel .sqc-privacy {
+  white-space: nowrap;
+}
+.sqd-panel .sqc-privacy__long {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.sqd-panel .sqc-privacy__short {
+  display: inline;
+}
+.sqd-panel :focus-visible {
+  outline-offset: -1px;
+}
+.sqd-handle,
+.sqd-scrim {
   display: none;
 }
 .sqd-state {
@@ -101,10 +120,33 @@
     right: -9999px;
   }
   .sqd-panel {
+    position: relative;
     width: 100%;
     height: min(80%, 560px);
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     border-bottom: 0;
+    /* the composer clears the tab bar and the home indicator */
+    padding-bottom: calc(var(--space-2) + var(--safe-bottom));
+  }
+  /* drag handle, 36x4 (DESIGN.md); decorative, the close button is the way out */
+  .sqd-handle {
+    display: block;
+    flex: none;
+    width: 36px;
+    height: 4px;
+    margin: var(--space-2) auto 0;
+    border-radius: var(--radius-pill);
+    background: var(--border);
+  }
+  .sqd-scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: var(--scrim);
+    pointer-events: none;
+  }
+  .sqd-panel {
+    z-index: 1;
   }
 }
 @media (min-width: 768px) {

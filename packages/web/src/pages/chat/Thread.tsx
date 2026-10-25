@@ -256,6 +256,32 @@ function MessageList({
     return () => clearTimeout(t);
   }, [chat.id, bucket.loaded]);
 
+  // prepended history is not news: keep the log quiet while it loads and for a moment after it lands
+  const [quietOlder, setQuietOlder] = useState(false);
+  useEffect(() => {
+    if (bucket.loadingOlder) {
+      setQuietOlder(true);
+      return;
+    }
+    const t = setTimeout(() => setQuietOlder(false), 400);
+    return () => clearTimeout(t);
+  }, [bucket.loadingOlder]);
+
+  // Only messages that just arrived over the stream get the entrance: the newest three of the last second, so a
+  // reconnect that replays a pile of messages does not make them all fly in.
+  const now = Date.now();
+  const fresh = new Set(
+    rows
+      .flatMap((r) => {
+        if (r.kind !== 'msg' || r.own || r.message.seq <= baseSeq) return [];
+        const at = ctl.arrivedAt(r.message.id);
+        return at !== undefined && now - at <= 1000 ? [{ id: r.message.id, at }] : [];
+      })
+      .sort((a, b) => b.at - a.at)
+      .slice(0, 3)
+      .map((x) => x.id),
+  );
+
   const toBottom = useCallback(() => {
     const e = el.current;
     if (!e) return;
@@ -309,7 +335,7 @@ function MessageList({
         role="log"
         tabIndex={0}
         aria-label={`Messages in ${chat.title}`}
-        aria-live={quiet || bucket.loadingOlder ? 'off' : 'polite'}
+        aria-live={quiet || quietOlder ? 'off' : 'polite'}
         aria-relevant="additions text"
         aria-busy={bucket.loading || undefined}
         data-testid="chat-thread"
@@ -383,7 +409,7 @@ function MessageList({
                       api={ctl.api}
                       status={ctl.status}
                       me={ctl.me}
-                      isNew={!r.own && r.message.seq > baseSeq}
+                      isNew={fresh.has(r.message.id)}
                       reduced={reduced}
                       scene={scene}
                       compact={compact}
@@ -396,7 +422,11 @@ function MessageList({
                       onDiscard={(id) => ctl.discard(chat.id, id)}
                       quizAnswer={ctl.quizAnswer}
                       onQuizAnswer={(m, choice) => ctl.answerQuiz(m.chatId, m.id, choice)}
-                      onConfirm={(m, n) => ctl.send(m.chatId, { text: String(n) })}
+                      onConfirm={(m, n) =>
+                        m.card?.type === 'confirm'
+                          ? ctl.confirm(m.chatId, m.card.taskId, n)
+                          : Promise.resolve('failed' as const)
+                      }
                       onOpenDm={onOpenChat && chat.id !== dmId ? () => onOpenChat(dmId) : undefined}
                     />
                   </li>
@@ -458,7 +488,7 @@ export function ThreadPane({
   const subtitle =
     chat.kind === 'dm'
       ? 'Cubbie, your study buddy'
-      : (chat.subtitle ?? `${names.join(', ')} and Cubbie`);
+      : `Shared with your squad · ${chat.subtitle ?? `${names.join(', ')} and Cubbie`}`;
   const paused = pausedCopy(ctl);
   return (
     <div className="sqc-thread" data-chat-kind={chat.kind}>
@@ -483,7 +513,10 @@ export function ThreadPane({
           {chat.private ? (
             <span className="sqc-privacy" data-testid="chat-privacy-badge">
               <Icon name="lock" size={13} />
-              Only you can see this
+              <span className="sqc-privacy__long">Only you can see this</span>
+              <span className="sqc-privacy__short" aria-hidden="true">
+                Private
+              </span>
             </span>
           ) : null}
           <span className="sqc-head__conn">
