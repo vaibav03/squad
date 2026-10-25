@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T14:59:36.889Z",
+  "at": "2026-10-25T16:02:45.620Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -538,6 +538,78 @@
    },
    {
     "title": "9 disconnect purges and flips the chain; reconnect works",
+    "status": "skipped",
+    "note": "",
+    "ms": 0
+   },
+   {
+    "title": "1 first entry lands in the connect step, before anything else",
+    "status": "pass",
+    "note": "",
+    "ms": 4495
+   },
+   {
+    "title": "2 Canvas demo workspace is explicit demo data and unlocks Continue",
+    "status": "pass",
+    "note": "",
+    "ms": 172
+   },
+   {
+    "title": "3 review shows what was imported, then sharing defaults to private",
+    "status": "pass",
+    "note": "",
+    "ms": 237
+   },
+   {
+    "title": "4 entering the group chat: no gate, Cubbie answers, practice mode says so",
+    "status": "fail",
+    "note": "\u001b[31mTest timeout of 240000ms exceeded.\u001b[39m",
+    "ms": 240002
+   },
+   {
+    "title": "5 Home leads with the next step and one primary action",
+    "status": "skipped",
+    "note": "",
+    "ms": 0
+   },
+   {
+    "title": "6 a returning visit does not bounce back into the tour",
+    "status": "skipped",
+    "note": "",
+    "ms": 0
+   },
+   {
+    "title": "1 first entry lands in the connect step, before anything else",
+    "status": "pass",
+    "note": "",
+    "ms": 2179
+   },
+   {
+    "title": "2 Canvas demo workspace is explicit demo data and unlocks Continue",
+    "status": "pass",
+    "note": "",
+    "ms": 174
+   },
+   {
+    "title": "3 review shows what was imported, then sharing defaults to private",
+    "status": "pass",
+    "note": "",
+    "ms": 240
+   },
+   {
+    "title": "4 entering the group chat: no gate, Cubbie answers, practice mode says so",
+    "status": "fail",
+    "note": "\u001b[31mTest timeout of 240000ms exceeded.\u001b[39m",
+    "ms": 240001
+   },
+   {
+    "title": "5 Home leads with the next step and one primary action",
+    "status": "skipped",
+    "note": "",
+    "ms": 0
+   },
+   {
+    "title": "6 a returning visit does not bounce back into the tour",
     "status": "skipped",
     "note": "",
     "ms": 0

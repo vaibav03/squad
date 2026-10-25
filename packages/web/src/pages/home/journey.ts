@@ -34,7 +34,7 @@ export const JOURNEY: readonly JourneyDef[] = [
     title: 'Connect Google or Canvas',
     body: 'Squad reads your due dates and calendar so the agents work from your real schedule.',
     button: 'Connect Google or Canvas',
-    to: '/squad/connections',
+    to: '/squad/welcome-tour/connect',
   },
   {
     key: 'ask',
@@ -137,7 +137,7 @@ export function journeyLine(states: JourneyStates, hasSquad = true): string | nu
   return `Next: ${next.verb} (${done} of ${JOURNEY.length} done)`;
 }
 
-export function useJourney(ctx: HubCtx, waiting = false): Journey {
+export function useJourney(ctx: HubCtx, waiting = false, refreshKey = ''): Journey {
   const live = !!ctx.hubUrl && !!ctx.token;
   const init = (s: ItemState): JourneyStates => ({
     squad: 'done',
@@ -153,14 +153,16 @@ export function useJourney(ctx: HubCtx, waiting = false): Journey {
   const gen = useRef(0);
   const { hubUrl, token } = ctx;
   const load = useCallback(
-    (keys: readonly (keyof typeof READERS)[]) => {
+    (keys: readonly (keyof typeof READERS)[], silent = false) => {
       if (!hubUrl || !token) return;
       const id = ++gen.current;
-      setStates((p) => {
-        const n = { ...p };
-        for (const k of keys) n[k] = 'loading';
-        return n;
-      });
+      // a refresh after navigating keeps the last answer on screen instead of flashing "checking"
+      if (!silent)
+        setStates((p) => {
+          const n = { ...p };
+          for (const k of keys) n[k] = 'loading';
+          return n;
+        });
       for (const k of keys)
         READERS[k]({ hubUrl, token }).then(
           (ok) => {
@@ -173,9 +175,11 @@ export function useJourney(ctx: HubCtx, waiting = false): Journey {
     },
     [hubUrl, token],
   );
+  const first = useRef(true);
   useEffect(() => {
-    load(KEYS);
-  }, [load]);
+    load(KEYS, !first.current);
+    first.current = false;
+  }, [load, refreshKey]);
   const retry = useCallback(() => load(KEYS.filter((k) => states[k] === 'error')), [load, states]);
   const done = JOURNEY.filter((j) => states[j.key] === 'done').length;
   const next = JOURNEY.find((j) => states[j.key] !== 'done' && states[j.key] !== 'loading') ?? null;

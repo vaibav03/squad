@@ -142,7 +142,7 @@ export function AppShell({
 
   return (
     <ShellContext.Provider value={api}>
-      <JourneyProvider>
+      <JourneyProvider refreshKey={pathname}>
         <div className={`sq-shell${fullBleed ? ' is-bleed sq-scene' : ''}`}>
           <a className="sq-shell__skip" href="#main">
             Skip to content

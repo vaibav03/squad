@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useEffect, useMemo } from 'react';
 import { Button } from '../../primitives/Button';
 import { LinkButton } from '../../primitives/LinkButton';
@@ -19,12 +19,41 @@ import { OfflineState } from '../../primitives/EmptyState';
 import { useSetupSteps } from '../setup/use-setup-steps';
 import { StatusStrip } from './StatusStrip';
 import { HomePlanCard } from './PlanCard';
+import { useContextGate } from '../chat/ContextGate';
+import { TOUR_PATH } from '../onboarding/gate';
 import { HealthBanner } from '../health/HealthBanner';
 import './home.css';
 
 /** Home owns a journey provider only when it renders outside the shell (tests, stories). */
+/** First run: a person with nothing connected and no skip lands in the connect step ONCE per session, then Home works normally. */
+function useFirstRunKey(): string | null {
+  const cfg = useSquadConfig();
+  const gate = useContextGate();
+  const key = `squad.tour.entered.${cfg.userId ?? 'anon'}`;
+  if (gate.view !== 'gate') return null;
+  try {
+    if (sessionStorage.getItem(key)) return null;
+  } catch {
+    /* storage blocked: redirect once per mount */
+  }
+  return key;
+}
+
+function TourRedirect({ storageKey }: { storageKey: string }) {
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(storageKey, '1');
+    } catch {
+      /* ignore */
+    }
+  }, [storageKey]);
+  return <Navigate to={`${TOUR_PATH}/connect`} replace />;
+}
+
 export default function HomePage() {
   const shared = useSharedJourney();
+  const tourKey = useFirstRunKey();
+  if (tourKey) return <TourRedirect storageKey={tourKey} />;
   return shared ? (
     <HomeBody />
   ) : (

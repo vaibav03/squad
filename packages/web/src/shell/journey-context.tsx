@@ -15,7 +15,14 @@ interface Shared {
 const Ctx = createContext<Shared | null>(null);
 
 /** One journey read for the whole shell: Home's Next step card and the top bar line share it (no double fetching). */
-export function JourneyProvider({ children }: { children: ReactNode }) {
+export function JourneyProvider({
+  children,
+  refreshKey = '',
+}: {
+  children: ReactNode;
+  /** Changes when the customer navigates: the journey is re-read so the Next line never goes stale. */
+  refreshKey?: string;
+}) {
   const cfg = useSquadConfig();
   const enabled = cfg.mode === 'live' && !!cfg.hubUrl && !!cfg.token;
   const hub = useHubReady(enabled ? cfg.hubUrl : null);
@@ -27,7 +34,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     }),
     [ready, enabled, cfg.hubUrl, cfg.token],
   );
-  const journey = useJourney(ctx, enabled && !ready);
+  const journey = useJourney(ctx, enabled && !ready, refreshKey);
   const value = useMemo(() => ({ journey, hub, enabled }), [journey, hub, enabled]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
