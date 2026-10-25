@@ -240,12 +240,12 @@
 .sqp-truth--live {
   border-color: var(--primary);
 }
-.sqc-ctxchips {
+.sqp-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
-.sqc-ctxchip {
+.sqp-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -254,10 +254,30 @@
   border-radius: 999px;
   font-size: var(--text-xs);
 }
-.sqc-ctxchip button {
+.sqp-chip button {
   border: 0;
   background: transparent;
   color: inherit;
   cursor: pointer;
   display: inline-flex;
+}
+.sqp-card.is-highlight,
+.sqc-plancard.is-highlight {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  animation: sqp-flash 1.6s ease-out 1;
+}
+@keyframes sqp-flash {
+  from {
+    background: color-mix(in srgb, var(--primary) 25%, transparent);
+  }
+  to {
+    background: transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sqp-card.is-highlight,
+  .sqc-plancard.is-highlight {
+    animation: none;
+  }
 }

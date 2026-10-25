@@ -6,16 +6,19 @@ import './plans.css';
 /** Composer '+' button with a real menu (button + role=menu): Enter/Space/ArrowDown open, arrows move, Esc closes and refocuses. */
 export function PlusMenu({
   onPick,
+  onLedger,
   disabled,
 }: {
   onPick: (k: PlanKind) => void;
+  /** Group chats: open the group activity and ledger drawer (view=ledger). */
+  onLedger?: () => void;
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const btn = useRef<HTMLButtonElement>(null);
   const items = useRef<(HTMLButtonElement | null)[]>([]);
   const id = useId();
-  const kinds: PlanKind[] = ['trip', 'study'];
+  const kinds: (PlanKind | 'ledger')[] = onLedger ? ['trip', 'study', 'ledger'] : ['trip', 'study'];
 
   useEffect(() => {
     if (open) items.current[0]?.focus();
@@ -91,11 +94,12 @@ export function PlusMenu({
               data-testid={`plus-${k}`}
               onClick={() => {
                 setOpen(false);
-                onPick(k);
+                if (k === 'ledger') onLedger?.();
+                else onPick(k);
               }}
             >
-              <Icon name={k === 'trip' ? 'plane' : 'book'} size={16} />
-              {FLOWS[k].action}
+              <Icon name={k === 'trip' ? 'plane' : k === 'study' ? 'book' : 'ledger'} size={16} />
+              {k === 'ledger' ? 'Group activity & ledger' : FLOWS[k].action}
             </button>
           ))}
         </div>

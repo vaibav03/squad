@@ -66,7 +66,13 @@ export default function ChatPage() {
     <ContextGateFrame>
       <div className="sqld-layout">
         <div className="sqld-main">
-          <ChatView ctl={ctl} activeId={active} onActiveChange={setActive} onSignInAgain={signOut} />
+          <ChatView
+            ctl={ctl}
+            activeId={active}
+            onActiveChange={setActive}
+            onSignInAgain={signOut}
+            onOpenLedger={ledger.open}
+          />
         </div>
         {ledger.isOpen && groupId ? (
           <LedgerDrawer

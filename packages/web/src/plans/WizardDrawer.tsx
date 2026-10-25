@@ -4,6 +4,7 @@ import { Stepper } from '../primitives/Stepper';
 import { timedFetch } from '../lib/http';
 import { createBodyFromForm, MONTHS } from '../pages/trip/model';
 import { FLOWS, type PlanKind } from './registry';
+import { StudyFlow } from './StudyFlow';
 import './plans.css';
 
 export interface WizardDrawerProps {
@@ -46,43 +47,50 @@ export function WizardDrawer({ kind, groupTitle, hub, onClose, onCreated }: Wiza
           <Icon name="x" size={18} />
         </button>
       </header>
-      <Stepper
-        steps={flow.steps.map((s) => ({ id: s.id, label: s.label }))}
-        current={current}
-        completed={completed}
-        onStepClick={created ? undefined : setStepId}
-      />
-      <p className="sqp-note" data-testid="wizard-next">
-        {created
-          ? 'Brief saved. Next: agents check availability, then options and the private vote.'
-          : step.hint}
-      </p>
-      {created ? (
-        <Created kind={kind} id={created} />
-      ) : kind === 'trip' && step.id === 'brief' ? (
-        <TripBrief
-          hub={hub}
-          onDone={(id) => {
-            setCreated(id);
-            onCreated?.({ kind, id });
-          }}
-        />
+      {kind === 'study' ? (
+        <StudyFlow hub={hub} />
       ) : (
-        <p className="sqp-coming" data-testid="wizard-coming">
-          Coming next: {step.label.toLowerCase()} is not built yet. Nothing is saved from this step.
-        </p>
+        <>
+          <Stepper
+            steps={flow.steps.map((s) => ({ id: s.id, label: s.label }))}
+            current={current}
+            completed={completed}
+            onStepClick={created ? undefined : setStepId}
+          />
+          <p className="sqp-note" data-testid="wizard-next">
+            {created
+              ? 'Brief saved. Next: agents check availability, then options and the private vote.'
+              : step.hint}
+          </p>
+          {created ? (
+            <Created kind={kind} id={created} />
+          ) : kind === 'trip' && step.id === 'brief' ? (
+            <TripBrief
+              hub={hub}
+              onDone={(id) => {
+                setCreated(id);
+                onCreated?.({ kind, id });
+              }}
+            />
+          ) : (
+            <p className="sqp-coming" data-testid="wizard-coming">
+              Coming next: {step.label.toLowerCase()} is not built yet. Nothing is saved from this
+              step.
+            </p>
+          )}
+          {!created && idx > 0 ? (
+            <div className="sqp-nav">
+              <button
+                type="button"
+                className="sqp-btn"
+                onClick={() => setStepId(flow.steps[idx - 1]!.id)}
+              >
+                Back
+              </button>
+            </div>
+          ) : null}
+        </>
       )}
-      {!created && idx > 0 ? (
-        <div className="sqp-nav">
-          <button
-            type="button"
-            className="sqp-btn"
-            onClick={() => setStepId(flow.steps[idx - 1]!.id)}
-          >
-            Back
-          </button>
-        </div>
-      ) : null}
     </section>
   );
 }

@@ -29,12 +29,7 @@ export {
 export { ChatCouncilCard, summarize } from './ChatCouncilCard';
 export { ChatCardActionsContext, useChatCardActions } from './card-actions';
 export type { ChatCardActions } from './card-actions';
-export {
-  councilTruthFor,
-  noteCouncilTruth,
-  useCouncilTruthVersion,
-  councilTruthOf,
-} from './truth-store';
+export { councilTruthFor, noteCouncilTruth, useCouncilTruthVersion, councilTruthOf } from './truth-store';
 export * from './live';
 export { CouncilStage } from './stage/CouncilStage';
 export { deriveSeats, SEAT_WORDS, SEAT_GLYPH } from './stage/seat-state';

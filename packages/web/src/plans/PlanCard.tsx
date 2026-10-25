@@ -5,6 +5,8 @@ import './plans.css';
 
 export interface PlanCardProps {
   kind: 'trip' | 'study';
+  /** hub id (`trip_…` / `pl_…`): the `plan=` deep link scrolls to and highlights this card */
+  planId?: string | undefined;
   title: string;
   /** Draft / Checking availability / Options ready / Voting / Agreed / Needs attention */
   status: string;
@@ -34,6 +36,7 @@ export function PlanCard(p: PlanCardProps) {
       className="sqp-card"
       aria-label={`${p.kind === 'trip' ? 'Trip' : 'Study plan'}: ${p.title}`}
       data-testid="plan-card"
+      data-plan-id={p.planId}
       data-kind={p.kind}
       data-status={p.status}
     >

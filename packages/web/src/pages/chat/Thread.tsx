@@ -587,6 +587,8 @@ export interface ThreadPaneProps {
   composerLeading?: ReactNode;
   /** inline wizard/drawer above the composer: capped height, scrolls inside, never pushes the composer out */
   drawer?: ReactNode;
+  /** open the group activity and ledger drawer (the chat page keeps `view=ledger` in the URL) */
+  onOpenLedger?: () => void;
 }
 
 export function ThreadPane({
@@ -602,6 +604,7 @@ export function ThreadPane({
   headerActions,
   composerLeading,
   drawer,
+  onOpenLedger,
 }: ThreadPaneProps) {
   const st = useHeaderTruth(ctl, chat.id);
   const names = chat.members.map((m) => m.name);
@@ -622,7 +625,34 @@ export function ThreadPane({
     }
   }, []);
   const [wizard, setWizard] = useState<PlanKind | null>(null);
-  const [plansOpen, setPlansOpen] = useState(isGroup && !!planParam);
+  const [plansOpen, setPlansOpen] = useState(false);
+  const noticeKind = useMemo(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('notice');
+    } catch {
+      return null;
+    }
+  }, []);
+  const [noticeOpen, setNoticeOpen] = useState(!!noticeKind);
+  // `plan=` deep link: scroll to the plan's card and highlight it (the card renders once history has loaded)
+  useEffect(() => {
+    if (!isGroup || !planParam) return;
+    let tries = 0;
+    const find = () =>
+      [...document.querySelectorAll<HTMLElement>('[data-plan-id]')].find(
+        (e) => e.dataset.planId === planParam,
+      );
+    const t = setInterval(() => {
+      const el = find();
+      if (el) {
+        clearInterval(t);
+        el.scrollIntoView?.({ block: 'center' });
+        el.classList.add('is-highlight');
+        el.setAttribute('data-highlighted', 'true');
+      } else if (++tries > 40) clearInterval(t);
+    }, 250);
+    return () => clearInterval(t);
+  }, [isGroup, planParam, chat.id]);
   const plansState = usePlans(liveHub, isGroup && plansOpen);
   const imsg = useImessageStatus(ctl.api);
   const planActions = useMemo(
@@ -699,6 +729,15 @@ export function ThreadPane({
             onClose={() => setPlansOpen(false)}
           />
         ) : null}
+        {isGroup && noticeOpen && (noticeKind === 'plans' || noticeKind === 'ledger') ? (
+          <div data-testid="chat-migration-notice">
+            <Notice tone="info" onDismiss={() => setNoticeOpen(false)}>
+              {noticeKind === 'plans'
+                ? 'Plans now live in your group chat: use + to plan a trip or a study plan, or open Plans.'
+                : 'The ledger now lives in your group chat: use + then Group activity & ledger.'}
+            </Notice>
+          </div>
+        ) : null}
         <ChatBanners ctl={ctl} />
         <MessageList
           key={chat.id}
@@ -736,6 +775,7 @@ export function ThreadPane({
           onSend={(input) => ctl.send(chat.id, input)}
           onDiscuss={setLiveTopic}
           onPlan={isGroup ? setWizard : undefined}
+          {...(isGroup && onOpenLedger ? { onLedger: onOpenLedger } : {})}
         />
         {liveTopic ? (
           <LivePanel

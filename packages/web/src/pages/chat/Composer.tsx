@@ -79,6 +79,8 @@ export interface ComposerProps {
   onDiscuss?: (topic: string) => void;
   /** Group chats: the '+' menu starts a plan wizard. */
   onPlan?: (kind: PlanKind) => void;
+  /** Group chats: opens the group activity and ledger drawer. */
+  onLedger?: () => void;
   /** left-side slot in the row (the '+' action menu); never affects the textarea's min width */
   leading?: React.ReactNode;
 }
@@ -86,7 +88,7 @@ export interface ComposerProps {
 const MAX_H = 144;
 
 export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
-  { api, chatKind, chatId, onSend, paused, compact, onDiscuss, onPlan, leading },
+  { api, chatKind, chatId, onSend, paused, compact, onDiscuss, onPlan, onLedger, leading },
   ref,
 ) {
   const [text, setText] = useState('');
@@ -457,7 +459,9 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
             e.target.value = '';
           }}
         />
-        {onPlan && chatKind === 'group' ? <PlusMenu onPick={onPlan} /> : null}
+        {onPlan && chatKind === 'group' ? (
+          <PlusMenu onPick={onPlan} {...(onLedger ? { onLedger } : {})} />
+        ) : null}
         <button
           type="button"
           className="sqc-iconbtn"

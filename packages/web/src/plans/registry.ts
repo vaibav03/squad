@@ -61,16 +61,16 @@ export const STUDY_FLOW: Flow = {
   title: 'Create a study plan',
   action: 'Create a study plan',
   steps: [
-    { id: 'goal', label: 'Goal', hint: 'Goal, course and material scope.', built: false },
+    { id: 'goal', label: 'Goal', hint: 'Goal, course and material scope.', built: true },
     {
       id: 'availability',
       label: 'Availability',
       hint: 'Find shared study time without exposing calendars.',
-      built: false,
+      built: true,
     },
-    { id: 'draft', label: 'Draft', hint: 'Draft sessions and tasks.', built: false },
-    { id: 'edits', label: 'Edits and votes', hint: 'Members edit and vote.', built: false },
-    { id: 'plan', label: 'Shared plan', hint: 'The agreed plan card.', built: false },
+    { id: 'draft', label: 'Draft', hint: 'Draft sessions and tasks.', built: true },
+    { id: 'edits', label: 'Edits and votes', hint: 'Members edit and vote.', built: true },
+    { id: 'plan', label: 'Shared plan', hint: 'The agreed plan card.', built: true },
   ],
 };
 
