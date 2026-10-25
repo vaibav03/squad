@@ -13,5 +13,6 @@ export function splitEvenly(totalCents: number, payers: string[]): Record<string
 /** Venmo charge link. Format is UNVERIFIED against the live app: one-line fix here. */
 export function venmoLink(o: { payee: string; amountCents: number; note: string }): string {
   const amount = `${Math.floor(o.amountCents / 100)}.${String(o.amountCents % 100).padStart(2, '0')}`;
-  return `https://venmo.com/${encodeURIComponent(o.payee)}?txn=charge&amount=${amount}&note=${encodeURIComponent(o.note)}`;
+  const enc = (x: string): string => encodeURIComponent(x).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+  return `https://venmo.com/${enc(o.payee)}?txn=charge&amount=${amount}&note=${enc(o.note)}`;
 }
