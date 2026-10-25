@@ -309,3 +309,64 @@ Frames: `docs/design/shots/merge7/`. The e2e suites themselves (`pnpm e2e`) were
 
 - Landing merge commit: `c853f56bcddc7e4a9b10a0b2e939206569574b19` (parents `c074a130806e19b87435d3ae2fdab924c0df76f0` = tag `pre-merge-batch7`, `5c636fe2545045b2c38e6acc11591d3b2891e9f2` = origin/merge/batch7; only tracker docs differ).
 - Rollback: `git revert -m 1 c853f56bcddc7e4a9b10a0b2e939206569574b19`.
+
+## Batch 8: feature/council-cast-art + feature/agent-inspector into main
+
+Branch `merge/batch8` (worktree `squad-wt/merge8`), landed as a true `--no-ff` merge. Not merged: feature/live-discussion and e2e/acceptance (leads still running; both had new pushes while this batch ran).
+
+### Manual resolutions
+
+1. Both branches merged cleanly (no conflicts, in the order cast art, then inspector).
+2. Flaky brain test: `packages/brain/src/library/library.test.ts` "same name, different bytes gets a suffix" asserted `listChapters` order `['n', 'n-2']`, but the two uploads are processed concurrently so the listing order is not part of the contract. The test (code unchanged by cast art, so the same flake exists on main; it did not fail in 3 sequential runs here) now sorts the ids before comparing and passes 6 of 6 parallel runs. Not skipped.
+3. The date-dependent Chat test was already fixed on main in batch 7.
+
+## Honest status (fix/honest-status into main), run as a follow-up to batch 7
+
+Branch `merge/honest-status` (worktree `squad-wt/merge-honest`). Naming note: "batch 7" and `pre-merge-batch7` were already taken on main by the e2e batch (`c853f56`), and `merge/batch8` / `squad-wt/merge8` belong to another captain's castart merge, so this run uses its own names (`merge/honest-status`, tag `pre-merge-honest-status`). Landed as a true `--no-ff` merge; no squash, no rebase, no fast-forward, no force.
+
+### Manual resolutions
+
+1. `packages/core/src/llm/resilient.ts` (content conflict, 3 hunks): kept both sides. Main's `failedTier` (probe with the tier that hit the quota) and `run(f, tier)` signature stay; the branch's `probeTimeoutMs`/`withTimeout` and `startupProbe()` are added; the recovery probe is now `withTimeout(real.complete({ ..., model: failedTier ?? 'fast' }))`. `resilient.test.ts` auto-merged and passes.
+2. `assets/pixel/composed/scripts/__pycache__/palette.cpython-314.pyc` (binary, a tracked-then-gitignored build artefact that both sides had regenerated): kept main's copy.
+3. Chat day-separator test: main already carried the fixed-clock fix from the e2e batch (`vi.useFakeTimers({ toFake: ['Date'] })` plus `setSystemTime` at local noon), so only the second half of the request was needed: two explicit boundary cases (00:30 and 23:59) added to `Chat.test.tsx`, asserting that Yesterday/Today separators stay in order and the first message stays first. Grep of all tests for `Date.now() +/-`, `new Date()`, `getHours`, `toLocale*String` found no other time-of-day-dependent assertions (remaining hits are elapsed-time and timeout arithmetic).
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` (after cast art, and again after the inspector merge; mesh gate test did not flake) | pass |
+| `pnpm demo:live`, `pnpm test:smoke hub` (99 tests) | pass |
+| Round Table help panel (room-info dev harness): Chill, Grind, Advisor, Chairman render as four 64px `CastAvatar`s with the `ca-frames` animation, 0 page errors | pass (screenshot looked at: four distinct pixel busts with names and "Listening" chips) |
+| Fresh hub, `?replay=track2` and `?replay=track3` at 1280x800 | both play, 0 page errors, 0 HTTP >= 400 (no 500 from the new `thought`/`message`/`work` fields) |
+| Click a character in the replayed village | inspector opens with tabs Doing, Thinking, Chat, Agents (Ana: Studying, "Keeping calendar hidden", Model badges, Recent list) |
+
+Frames: `docs/design/shots/merge8/`. "Clicking the ground does not move the player" is by code (`packages/village/src/inspector/module.ts`, ground click only closes the inspector) and was not checked separately in a browser. A hub started before this batch rejects the new replays, so the demo stack must be restarted after it.
+
+### Landing (batch 8)
+
+- Landing merge commit: `b94b5ec922a333d36025d030d74b6a4dff0b4a94` (parents `1cf2c30c201f45d8d6845f11cd5672d5254253aa` = tag `pre-merge-batch8`, `bc0337724f0e784ad4ef9da18a477bc7a9b4062c` = origin/merge/batch8; diff empty).
+- Rollback: `git revert -m 1 b94b5ec922a333d36025d030d74b6a4dff0b4a94` (reverts both branches). The branch merges inside the batch are `git log --merges --oneline 1cf2c30..bc03377`.
+
+| `pnpm install --frozen-lockfile` | pass |
+| `pnpm check` (typecheck, eslint + prettier, every package's tests) | exit 0, fully green |
+| `pnpm test` with `TZ=Pacific/Kiritimati` and `TZ=Etc/GMT+12` (shifts the day boundary by 26 h) | pass both; `Chat.test.tsx` also pass under default TZ and `America/Los_Angeles` (49/49) |
+| `pnpm test:smoke all` | first run failed once: `apps/bot` multi-skill smoke hit its 5 s timeout while the machine load average was about 77 (parallel captains); passed on 2 of 2 reruns |
+| `pnpm demo:live` | OK |
+| `pnpm run doctor`, no keys (no `.env` in the worktree; not copied) | reports Gemini and ElevenLabs missing, voice caption-only |
+| `pnpm run doctor` with deliberately invalid keys | Gemini FAIL (HTTP 400, API_KEY_INVALID, fix text); ElevenLabs FAIL `key_restricted` with the exact permission fix. The real 402 / free-plan path was NOT run live (no real keys used); it is covered by `packages/media/src/tts/health.test.ts`, `resilient.test.ts` and `apps/hub/test/smoke/squad.smoke.test.ts` |
+| Hub with invalid keys (`/v1/status`) | first `probing:true`, notice "Checking services..."; about 1 s later `reason:invalid_key`, fix and notice text, `ttsReason:key_restricted` |
+| Browser (Playwright, dev:all hub :18877 web :15277, no keys, signed in via dev-login) | /squad (redirects to welcome until signed in, then lands), /squad/village?replay=track2 renders, Round Table room panel opens by keyboard and Esc closes it, /squad/chat: `@cubbie what is a z-score?` and `@cubbie council ...` answered with Bot + Demo labels and a council verdict card; /squad/personas shows "Voice previews are off: no ElevenLabs key is set"; 0 page errors, 0 HTTP >= 400 |
+
+Frames: `docs/design/shots/merge7/` (01-06 happy path, 07/08 status banner attempts).
+
+### Known gaps
+
+- Not demonstrated in a browser: the sentence "Voices need an ElevenLabs plan that allows API voices" (needs a real free-plan key; the hub cannot be pointed at a stub, `ELEVEN_BASE` is a constant) and the "Checking services..." banner (the UI shows it only while the hub reports `probing:true`, which lasts about a second with a key set; hub behaviour was shown by polling `/v1/status`, UI by unit tests). With no keys the banners correctly show the no-key demo reasons instead.
+- Doctor was not run against the real Gemini (402) and restricted ElevenLabs keys, per the no-`.env` rule.
+- `/squad/personas` voice play with no key shows the no-key notice, not the plan notice, for the same reason.
+- The browser run used Playwright from another project's `playwright-core` 1.64.1 because the repo's e2e deps are not installed in this worktree; `pnpm e2e` was not run.
+
+### Landing (honest status)
+
+- Landing merge commit: `753b212` (parents `a026ecc` = tag `pre-merge-honest-status`, `0f57097` = origin/merge/honest-status). Main had moved by batch 8 (cast art, agent inspector, 149 files) after the branch was verified on `1cf2c30`; the only merge conflict was this log (both sides appended, both kept), and `pnpm typecheck`, `pnpm lint` and `pnpm test` were re-run on the combined tree: all exit 0. The browser run and smoke/demo/doctor were not repeated on the combined tree.
+- Rollback: `git revert -m 1 753b212`.

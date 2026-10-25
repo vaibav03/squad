@@ -37,6 +37,32 @@
    "fps": 4
   }
  },
+ "council_cast_animations": {
+  "idle": {
+   "frames": 4,
+   "fps": 5
+  },
+  "walk": {
+   "frames": 4,
+   "fps": 8
+  },
+  "talk": {
+   "frames": 4,
+   "fps": 5
+  },
+  "think": {
+   "frames": 4,
+   "fps": 5
+  },
+  "sit": {
+   "frames": 2,
+   "fps": 2
+  },
+  "wave": {
+   "frames": 2,
+   "fps": 4
+  }
+ },
  "portrait": {
   "size": [
    32,
@@ -110,6 +136,30 @@
    "hair": "wood-dark",
    "outfit": "ember",
    "role": "teaching assistant"
+  },
+  "cast-chill": {
+   "skin": "skin-lt",
+   "hair": "wood",
+   "outfit": "ok",
+   "role": "council cast: Chill"
+  },
+  "cast-grind": {
+   "skin": "wood",
+   "hair": "wood-dark",
+   "outfit": "ember",
+   "role": "council cast: Grind"
+  },
+  "cast-advisor": {
+   "skin": "skin-lt",
+   "hair": "wood",
+   "outfit": "violet",
+   "role": "council cast: Advisor"
+  },
+  "cast-chair": {
+   "skin": "wood-lit",
+   "hair": "wood-dark",
+   "outfit": "wall-lit",
+   "role": "council cast: Chairman"
   }
  }
 }

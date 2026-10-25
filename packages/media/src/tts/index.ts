@@ -6,3 +6,4 @@ export * from './audio';
 export * from './elevenlabs';
 export * from './fake';
 export * from './service';
+export * from './health';

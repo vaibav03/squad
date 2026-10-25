@@ -8,7 +8,8 @@
     "./sources": "./src/sources/index.ts",
     "./motion": "./src/motion/index.ts",
     "./a11y": "./src/a11y/index.ts",
-    "./rooms": "./src/scenes/rooms.ts"
+    "./rooms": "./src/scenes/rooms.ts",
+    "./inspector": "./src/inspector/index.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",

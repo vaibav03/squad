@@ -9,6 +9,7 @@ import type {
   Student,
   StudentId,
   LlmStatus,
+  TtsReason,
   VillageEvent,
 } from '@squad/core';
 import type { CouncilService } from '@squad/brain';
@@ -307,8 +308,10 @@ import type { SquadsStore } from './store/squads';
 /** Which providers are live right now; read lazily so a mid-run credits switch shows up. */
 export interface HubRuntime {
   llm(): LlmStatus;
-  /** true when an ElevenLabs engine is wired */
+  /** true when speech is proven to work (kept for callers that only need a flag; `ttsStatus` has the reason) */
   tts(): boolean;
+  /** Truthful speech state: provider, reason, probing. Absent in older wiring (then `tts()` decides). */
+  ttsStatus?(): { tts: 'elevenlabs' | 'none'; reason: TtsReason; probing?: boolean };
   ports(): 'real' | 'stub';
 }
 

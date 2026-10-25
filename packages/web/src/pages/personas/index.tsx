@@ -16,7 +16,15 @@ import { TextField } from '../../primitives/TextField';
 import { useToast } from '../../primitives/Toast';
 import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
-import { fetchPersonas, fetchPreviewBlob, fetchVoices, savePersona } from './api';
+import {
+  fetchPersonas,
+  fetchPreviewBlob,
+  fetchVoiceStatus,
+  fetchVoices,
+  savePersona,
+  VoicesUnavailable,
+  type VoiceStatus,
+} from './api';
 import { PERSONAS, VOICES, type PersonaDraft, type VoiceOption } from './fixtures';
 import { initPersonas, isDirty, personasReducer } from './model';
 import { PreviewPlayer, type PreviewState } from './preview-audio';
@@ -121,6 +129,26 @@ function Studio({ personas, voices }: { personas: PersonaDraft[]; voices: VoiceO
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
+  // the hub says whether voices can speak at all (and "Checking services..." while it finds out)
+  const [vstatus, setVstatus] = useState<VoiceStatus | null>(null);
+  const [vmsg, setVmsg] = useState<string | null>(null);
+  useEffect(() => {
+    if (cfg.mode === 'mock' || !cfg.hubUrl) return;
+    let dead = false;
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const poll = async () => {
+      const s = await fetchVoiceStatus({ hubUrl: cfg.hubUrl!, token: cfg.token });
+      if (dead) return;
+      setVstatus(s);
+      t = setTimeout(() => void poll(), s?.probing ? 1500 : 60_000);
+    };
+    void poll();
+    return () => {
+      dead = true;
+      if (t) clearTimeout(t);
+    };
+  }, [cfg.mode, cfg.hubUrl, cfg.token]);
+  const voicesOff = !!vstatus && !vstatus.probing && !vstatus.available;
 
   useEffect(() => {
     const offL = player.onLevel(setLevel);
@@ -141,21 +169,27 @@ function Studio({ personas, voices }: { personas: PersonaDraft[]; voices: VoiceO
         player.stop();
         return;
       }
+      setVmsg(null);
+      if (voicesOff && vstatus?.notice) {
+        setVmsg(vstatus.notice);
+        return;
+      }
       setPlaying(v.id);
       if (cfg.mode !== 'mock' && cfg.hubUrl) {
         try {
           await player.playBlob(
             await fetchPreviewBlob({ hubUrl: cfg.hubUrl, token: cfg.token }, v.id, draft.sample),
           );
-        } catch {
-          setPstate('error');
+        } catch (e) {
+          if (e instanceof VoicesUnavailable) setVmsg(e.message);
+          else setPstate('error');
           setPlaying(null);
         }
       } else {
         await player.play(v, draft.sample);
       }
     },
-    [player, playing, cfg, draft.sample],
+    [player, playing, cfg, draft.sample, voicesOff, vstatus],
   );
 
   useEffect(() => {
@@ -269,6 +303,18 @@ function Studio({ personas, voices }: { personas: PersonaDraft[]; voices: VoiceO
                 ),
               }))}
             />
+            {vstatus?.probing ? (
+              <Notice tone="info" title="Checking services...">
+                Voice previews are available once the check finishes.
+              </Notice>
+            ) : null}
+            {voicesOff || vmsg ? (
+              <div data-testid="voices-unavailable">
+                <Notice tone="warn" title="Voice previews are off">
+                  {vmsg ?? vstatus?.notice}
+                </Notice>
+              </div>
+            ) : null}
             {pstate === 'blocked' ? (
               <Notice tone="warn" title="Tap play to hear it">
                 Your browser waits for a tap before it plays sound.

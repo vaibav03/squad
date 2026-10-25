@@ -281,8 +281,8 @@ export function visibleBubbles(s: BaseState, o: Clock): BubbleView[] {
 }
 
 /** 2 fps idle / 8 fps work frame index from scene time; frozen when calm. */
-export function frameAt(t: number, fps: number, calm: boolean): number {
-  return calm ? 0 : Math.floor((t / 1000) * fps) % 2;
+export function frameAt(t: number, fps: number, calm: boolean, count = 2): number {
+  return calm ? 0 : Math.floor((t / 1000) * fps) % count;
 }
 
 /** Loop value 0..1 triangle over `periodMs` (lit window flicker, ring pulse inputs). */

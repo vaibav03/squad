@@ -147,8 +147,16 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
           if (!r.ok) throw new ChatApiError(r.status);
           const p = StatusSchema.safeParse(await r.json().catch(() => null));
           if (!p.success) throw new ChatApiError(502, 'bad_response');
-          const { llm, tts, demo, notice } = p.data;
-          return { llm, tts, demo, ...(notice ? { notice } : {}) };
+          const { llm, tts, demo, notice, probing, ttsReason, ttsNotice } = p.data;
+          return {
+            llm,
+            tts,
+            demo,
+            ...(notice ? { notice } : {}),
+            ...(probing ? { probing } : {}),
+            ...(ttsReason ? { ttsReason } : {}),
+            ...(ttsNotice ? { ttsNotice } : {}),
+          };
         })
         .catch((e) => {
           throw e instanceof ChatApiError ? e : new ChatApiError(0);

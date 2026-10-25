@@ -57,6 +57,7 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
 
   const [open, setOpen] = useState(false);
   const [planShown, setPlanShown] = useState(true);
+  const [speaking, setSpeaking] = useState<string | null>(null);
   const helpRef = useRef<HTMLButtonElement | null>(null);
 
   // First entry per room per browser session: show what the room does once.
@@ -73,6 +74,19 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
       setOpen(false);
     }
   }, [slot, !!info]);
+
+  // The avatar of whoever just spoke plays its talking loop while the line is on screen.
+  const last = entries[entries.length - 1];
+  const lastId = last?.id;
+  useEffect(() => {
+    if (!last) return;
+    setSpeaking(last.who);
+    const t = setTimeout(
+      () => setSpeaking(null),
+      Math.min(Math.max(last.holdMs || 1500, 1200), 4000),
+    );
+    return () => clearTimeout(t);
+  }, [lastId, slot]);
 
   const sessionRun = session?.run;
   const run =
@@ -167,6 +181,7 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
           }
           returnFocusTo={helpRef.current}
           calm={calm}
+          speaking={speaking}
         />
       ) : null}
     </div>

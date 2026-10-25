@@ -1,6 +1,7 @@
 import type { IncomingMessage, Server } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { WebSocketServer, type RawData, type WebSocket } from 'ws';
+import { TTS_NOTICES } from '@squad/core';
 import { z } from 'zod';
 import { verifyToken } from './auth';
 import { callSessions, connectedCalls, hangUp } from './call-sessions';
@@ -98,6 +99,15 @@ export function attachCallWs(
     };
 
     send({ type: 'ready', callId, agent });
+    // Captions-only calls say why (the caller shows `message`), instead of silently having no audio.
+    const voice = deps.runtime?.ttsStatus?.();
+    if (voice && voice.tts === 'none' && !voice.probing && voice.reason !== 'ok')
+      send({
+        type: 'notice',
+        code: 'voices_unavailable',
+        reason: voice.reason,
+        message: TTS_NOTICES[voice.reason],
+      });
     if (!session) return void end('server');
     queue = speak(session.greeting()).catch(() => send({ type: 'error', code: 'agent_failed' }));
 

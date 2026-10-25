@@ -77,6 +77,22 @@ describe('thread rendering', () => {
     expect(own.getAttribute('data-own')).toBe('true');
   });
 
+  it.each([
+    ['00:30, just after midnight', new Date(2026, 9, 15, 0, 30, 0)],
+    ['23:59, just before midnight', new Date(2026, 9, 15, 23, 59, 0)],
+  ])('keeps day separators and message order stable at %s', async (_label, at) => {
+    // Fixtures are relative to "now" (the newest is about an hour old), so at 00:30 they cross midnight.
+    vi.setSystemTime(at);
+    setup();
+    await screen.findAllByTestId('chat-message');
+    const ids = screen.getAllByTestId('chat-message').map((m) => m.getAttribute('data-message-id'));
+    expect(ids[0]).toBe('m_1');
+    expect(screen.getAllByText('Yesterday').length).toBeGreaterThan(0);
+    expect(screen.getByText('Today')).toBeTruthy();
+    const separators = screen.getAllByText(/^(Today|Yesterday)$/).map((e) => e.textContent);
+    expect(separators.lastIndexOf('Yesterday')).toBeLessThan(separators.indexOf('Today'));
+  });
+
   it('the thread is a polite log', async () => {
     setup();
     const log = await screen.findByTestId('chat-thread');

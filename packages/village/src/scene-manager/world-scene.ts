@@ -9,6 +9,7 @@ import {
 } from '../character';
 import { createCamera, type CameraImpl } from '../camera';
 import { createHud } from '../hud';
+import { createInspectorStore, type InspectorStore } from '../inspector/store';
 import {
   ASSETS as PARALLAX_ASSETS,
   createLighting,
@@ -90,6 +91,8 @@ export class WorldScene extends Phaser.Scene {
     const bus = createBus();
     const agents = createAgentRegistry(bus);
     const interactables = createInteractables();
+    const inspector = I.opts.inspector ?? createInspectorStore({ me: I.opts.me });
+    this.registry.set('inspector', inspector);
     const layout = createLayout();
     const calm = I.calm;
     const getCalm = () => calm.value;
@@ -204,7 +207,15 @@ export class WorldScene extends Phaser.Scene {
               },
             },
             assetUrl: assets.url,
+            inspector,
             focusAgent: (id) => {
+              if (I.opts.inspector) {
+                inspector.select(id);
+                // keyboard users stay on the chip so the panel can take focus; mouse users keep the stage
+                const a = stage.ownerDocument.activeElement as HTMLElement | null;
+                if (!a?.matches?.(':focus-visible')) stage.focus({ preventScroll: true });
+                return;
+              }
               const a = agents.get(id);
               const slot = a?.slotId ? layout.slots.find((s) => s.id === a.slotId) : undefined;
               if (slot) void player.walkTo(slot.door?.x ?? slot.x);
@@ -251,6 +262,7 @@ export class WorldScene extends Phaser.Scene {
     _h: number,
   ) {
     const I = this.init_;
+    const inspector_ = this.registry.get('inspector') as InspectorStore;
     const time = ctx.time;
     void _h;
     for (const mod of I.modules) {
@@ -291,6 +303,7 @@ export class WorldScene extends Phaser.Scene {
       }
     };
     const source: VillageSource = I.opts.source;
+    if (!I.opts.inspector) this.unsubs.push(inspector_.attach(source));
     this.unsubs.push(source.subscribe(handle));
 
     // initial calm / camera from options

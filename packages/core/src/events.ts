@@ -7,17 +7,43 @@ const StudentId = z.string().min(1);
 const AgentId = AgentIdSchema;
 
 /**
+ * Optional, additive: a short plain-words account of what the agent is working on or weighing, built only
+ * from public text. The hub filters it like any other event text. Never a chain of thought, a key or a withheld value.
+ */
+export const ThoughtSchema = z.string().max(240);
+/** Optional LLM work info for the inspector: which tier ran, whether it is demo mode, a model call in flight. */
+export const WorkSchema = z.strictObject({
+  tier: z.enum(['fast', 'main', 'chair']).optional(),
+  demo: z.boolean().optional(),
+  skill: z.string().max(60).optional(),
+  thinking: z.boolean().optional(),
+});
+export type Work = z.infer<typeof WorkSchema>;
+/**
+ * Optional, additive: what the agent said to the other party, in plain public words (e.g. 'Here are my blinded
+ * free evenings; the calendar itself stays with me'). Filtered like any event text; never a withheld value.
+ */
+export const MessageSchema = z.string().max(280);
+const Extras = {
+  thought: ThoughtSchema.optional(),
+  work: WorkSchema.optional(),
+  message: MessageSchema.optional(),
+} as const;
+
+/**
  * VillageEvent union, exactly per docs/specs/00-OVERVIEW.md. All members are strict: an unknown
  * key (e.g. a stray withheld value on `ledger.entry`) is a validation error, never silently kept.
  */
 export const AgentStateEvent = z.strictObject({
   t: z.literal('agent.state'),
+  ...Extras,
   agent: AgentId,
   state: z.enum(['idle', 'studying', 'in_call', 'waiting_for_student']),
 });
 
 export const AgentMessageEvent = z.strictObject({
   t: z.literal('agent.message'),
+  ...Extras,
   from: AgentId,
   to: z.union([AgentId, z.literal('commons')]),
   taskId: z.string(),
@@ -27,6 +53,7 @@ export const AgentMessageEvent = z.strictObject({
 
 export const LedgerEntryEvent = z.strictObject({
   t: z.literal('ledger.entry'),
+  ...Extras,
   taskId: z.string(),
   student: StudentId,
   field: z.string(),
@@ -37,6 +64,7 @@ export const LedgerEntryEvent = z.strictObject({
 
 export const ConfirmEvent = z.strictObject({
   t: z.enum(['confirm.pending', 'confirm.done']),
+  ...Extras,
   student: StudentId,
   taskId: z.string(),
   question: z.string(),
@@ -65,6 +93,7 @@ export type RoomOutcome = z.infer<typeof RoomOutcomeSchema>;
 
 export const CouncilEvent = z.strictObject({
   t: z.enum(['council.opinion', 'council.rank', 'council.verdict']),
+  ...Extras,
   councilId: z.string(),
   member: z.string(),
   text: z.string().optional(),
@@ -77,6 +106,7 @@ export const CouncilEvent = z.strictObject({
 
 export const QuizEvent = z.strictObject({
   t: z.enum(['quiz.question', 'quiz.answer', 'quiz.result']),
+  ...Extras,
   quizId: z.string(),
   chapter: z.string(),
   target: StudentId.optional(),
@@ -88,6 +118,7 @@ export const QuizEvent = z.strictObject({
 
 export const CallEvent = z.strictObject({
   t: z.enum(['call.start', 'call.caption', 'call.end']),
+  ...Extras,
   agent: AgentId,
   callId: z.string(),
   student: StudentId.optional(),
@@ -97,12 +128,14 @@ export const CallEvent = z.strictObject({
 
 export const TripConfirmedEvent = z.strictObject({
   t: z.literal('trip.confirmed'),
+  ...Extras,
   taskId: z.string(),
   squadId: z.string(),
 });
 
 export const MasteryChangedEvent = z.strictObject({
   t: z.literal('mastery.changed'),
+  ...Extras,
   student: StudentId,
   chapter: z.string(),
   box: z.number(),
