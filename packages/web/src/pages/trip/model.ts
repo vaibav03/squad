@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { meetsMinGroupSize } from '@squad/core';
+import { studentLabel } from '@squad/village/inspector';
 
 export const TripOptionSchema = z.object({
   id: z.string(),
@@ -101,10 +102,7 @@ const dollars = (v: unknown): number => {
   const n = Number.parseFloat(String(v ?? '').replace(/[^0-9.]/g, ''));
   return Number.isFinite(n) ? n : 0;
 };
-const nameOf = (id: string) => {
-  const bare = id.replace(/^s_/, '');
-  return bare.charAt(0).toUpperCase() + bare.slice(1);
-};
+const nameOf = (id: string) => studentLabel(id);
 
 /**
  * `GET /v1/trips/:tripId` (hub-api.md) -> the page's TripState. `fits` is computed here from the viewer's OWN limits

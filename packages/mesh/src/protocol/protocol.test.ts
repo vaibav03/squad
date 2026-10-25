@@ -15,7 +15,7 @@ const samples: Record<string, unknown> = {
   'task.open': {
     flow: 'trip',
     window: { from: '2026-11-27', to: '2026-11-29' },
-    members: ['s_ana', 's_ben', 's_cam'],
+    members: ['s_ana', 's_ben', 's_chi'],
     options: [{ id: 'flag', label: 'Flagstaff', perPerson: 142 }],
   },
   'psi.blind': { round: 1, points: [hex64], origin: 's_ana', hop: 1 },

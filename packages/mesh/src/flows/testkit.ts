@@ -115,8 +115,8 @@ export function demoProfiles(): PrivateProfile[] {
     },
     {
       ...base,
-      id: 's_cam',
-      name: 'Cam',
+      id: 's_chi',
+      name: 'Chi',
       venmo: 'cam-r',
       calendar: [ev('2026-11-04T09:00:00Z', '2026-11-04T11:00:00Z', 'shift')],
       hourCost: { '14': 0, '15': 1 },

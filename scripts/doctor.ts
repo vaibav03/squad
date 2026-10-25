@@ -117,7 +117,7 @@ const ports: [string, number][] = [
   ['web host', 5180],
   ['agent s_ana', 4101],
   ['agent s_ben', 4102],
-  ['agent s_cam', 4103],
+  ['agent s_chi', 4103],
   ['agent s_dev', 4104],
 ];
 let anyBusy = false;

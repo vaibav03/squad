@@ -1,11 +1,19 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { relTime, type ActivityView, type InspectorStore } from '@squad/village/inspector';
+import {
+  relTime,
+  voiceKey,
+  type ActivityView,
+  type InspectorStore,
+} from '@squad/village/inspector';
+import { roomInfo } from '@squad/village/rooms';
 import { LvIcon, usePresence, usePrefersReducedMotion } from '../kit';
 import { pixelPortrait } from '../../pixel/portraits';
 import { useNow, useSelectedView, useStoreVersion } from './useInspector';
 import { useRoomSnapshot } from './useRoomSession';
 import { AgentsTab, ChatTab } from './Conversation';
+import { openVoice } from './bridge';
 import type { InspectorHub } from './useDmHistory';
+import { MasterySummary, useChapterFor } from '../mastery/MasterySummary';
 import './inspector.css';
 
 type Tab = 'doing' | 'thinking' | 'chat' | 'agents';
@@ -61,9 +69,49 @@ export function InspectorPanel({
     ? roomSeats.find((x) => x.agent === store.selected && x.who === room.who)
     : undefined;
   const roomKey = room ? `${store.selected}|${room.slot}|${room.who}` : null;
+  // A council agent (member, chair, advisor, persona, or the council itself) opens on Thinking when it is thinking
+  // right now or has a thought on record, otherwise on Chat. Other room characters open on the room chat.
+  const sel = store.selected;
+  const councilWho =
+    sel && sel.startsWith('council:')
+      ? room
+        ? room.who
+        : sel.startsWith('council:live-')
+          ? voiceKey(sel)
+          : ''
+      : null;
+  const voice = sel && councilWho !== null ? store.voice(councilWho, sel) : null;
+  const openKey = sel ? `${sel}|${room?.slot ?? ''}|${room?.who ?? ''}` : null;
+  const openTab: Tab | null = voice
+    ? voice.thinking || voice.hasThought
+      ? 'thinking'
+      : 'chat'
+    : null;
+  const openTabRef = useRef(openTab);
+  openTabRef.current = openTab;
   useEffect(() => {
-    if (roomKey) setTab('chat');
-  }, [roomKey]);
+    if (!openKey) return;
+    if (openTabRef.current) setTab(openTabRef.current);
+    else if (roomKey) setTab('chat');
+  }, [openKey, roomKey]);
+  // Words the room session recorded for this room join the council thread (deduped against the event stream).
+  const sessionSnap = useRoomSnapshot();
+  const roomSlot = room?.slot;
+  const roomWords = roomSlot ? sessionSnap.transcripts[roomSlot] : undefined;
+  useEffect(() => {
+    if (!roomSlot || !roomWords || !sel?.startsWith('council:')) return;
+    for (const e of roomWords)
+      if (e.kind === 'opinion' || e.kind === 'rank' || e.kind === 'verdict')
+        store.noteVoice({
+          who: e.who,
+          group: sel,
+          kind: e.kind,
+          text: e.text,
+          ...(e.dissent ? { dissent: true } : {}),
+          key: `room:${roomSlot}:${e.id}`,
+          ...(e.ts ? { at: e.ts } : {}),
+        });
+  }, [roomSlot, roomWords, sel, store]);
   const now = useNow();
   const reduced = usePrefersReducedMotion(calm);
   const open = !!view;
@@ -73,6 +121,7 @@ export function InspectorPanel({
   const last = useRef<ActivityView | undefined>(undefined);
   if (view) last.current = view;
   const v = view ?? last.current; // keep the last content while the exit transition runs
+  const mastery = useChapterFor(v?.kind === 'expert' ? v.id : undefined);
 
   const close = () => {
     store.select(null);
@@ -155,9 +204,9 @@ export function InspectorPanel({
         </span>
         <div className="ai-id">
           <h2 id={titleId} className="ai-name" tabIndex={-1} data-autofocus>
-            {seat?.label ?? v.name}
+            {voice && voice.who ? voice.name : (seat?.label ?? v.name)}
           </h2>
-          <p className="ai-role">{v.role}</p>
+          <p className="ai-role">{voice && voice.who ? voice.role : v.role}</p>
         </div>
         <button type="button" className="ai-icon" onClick={close} aria-label="Close inspector">
           <LvIcon name="x" size={20} />
@@ -201,7 +250,7 @@ export function InspectorPanel({
             onClick={() => setTab(id)}
           >
             {label}
-            {id === 'thinking' && v.thinking && (
+            {id === 'thinking' && (voice ? voice.thinking : v.thinking) && (
               <span className="ai-dots" role="status" aria-label="Thinking now">
                 <i />
                 <i />
@@ -253,6 +302,12 @@ export function InspectorPanel({
                 )}
               </dl>
             </section>
+            {mastery && (
+              <section className="ai-mastery" aria-label="Your mastery of this chapter">
+                <h3 className="ai-label">Your mastery</h3>
+                <MasterySummary chapter={mastery} />
+              </section>
+            )}
             <section className="ai-log" aria-label="Recent activity">
               <h3 className="ai-label">Recent</h3>
               {v.log.length === 0 ? (
@@ -270,7 +325,13 @@ export function InspectorPanel({
             </section>
           </div>
         )}
-        {tab === 'thinking' && (
+        {tab === 'thinking' && voice && (
+          <VoiceThinking
+            voice={voice}
+            onOpen={(who) => openVoice(who, { agent: v.id, slot: room?.slot ?? '' })}
+          />
+        )}
+        {tab === 'thinking' && !voice && (
           <div className="ai-tabpanel">
             <section className="ai-think" aria-label="Thinking">
               <h3 className="ai-label">
@@ -304,6 +365,14 @@ export function InspectorPanel({
             now={now}
             mode={mode}
             room={room}
+            voice={
+              voice
+                ? {
+                    view: voice,
+                    title: (room?.slot && roomInfo(room.slot)?.title) || 'the council',
+                  }
+                : null
+            }
           />
         )}
         {tab === 'agents' && <AgentsTab view={v} convo={convo} store={store} now={now} />}
@@ -319,3 +388,86 @@ export function InspectorPanel({
 }
 
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+const POS_KIND = {
+  opinion: 'Opinion',
+  rank: 'Ranking',
+  verdict: 'Verdict',
+  turn: 'Said',
+  yield: 'Yielded',
+  thought: 'Thought',
+} as const;
+
+/** What a council voice is thinking: its latest thought or stance, earlier thoughts, and where every member stands. */
+function VoiceThinking({
+  voice,
+  onOpen,
+}: {
+  voice: NonNullable<ReturnType<InspectorStore['voice']>>;
+  onOpen(who: string): void;
+}) {
+  return (
+    <div className="ai-tabpanel" data-testid="voice-thinking">
+      <section className="ai-think" aria-label="Thinking">
+        <h3 className="ai-label">
+          {voice.who ? `How ${voice.name} is thinking` : 'How the council is thinking'}
+          {voice.thinking && <span className="ai-live">live</span>}
+        </h3>
+        <div className="ai-bubble" data-source={voice.thought.source}>
+          <p>{voice.thought.text}</p>
+          {voice.thought.source === 'stream' && (
+            <small>From what it said in the council, not extra reasoning.</small>
+          )}
+        </div>
+        {voice.history.length > 0 && (
+          <details className="ai-history">
+            <summary>Earlier thoughts ({voice.history.length})</summary>
+            <ul>
+              {voice.history.map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </section>
+      {voice.positions.length > 0 && (
+        <section aria-label="Where the council stands" className="ai-positions">
+          <h3 className="ai-label">Where everyone stands</h3>
+          <ul className="ai-thread">
+            {voice.positions.map((p) => (
+              <li
+                key={p.who}
+                className="ai-msg"
+                data-dissent={p.dissent || undefined}
+                data-focus={p.who === voice.who || undefined}
+              >
+                <div className="ai-msg__head">
+                  {p.who === voice.who ? (
+                    <b className="ai-party">{p.name}</b>
+                  ) : (
+                    <button
+                      type="button"
+                      className="ai-party ai-party--btn"
+                      onClick={() => onOpen(p.who)}
+                    >
+                      {p.name}
+                    </button>
+                  )}
+                </div>
+                <p className="ai-msg__text">{p.text}</p>
+                <div className="ai-msg__meta">
+                  <span className="ai-kind">{POS_KIND[p.kind]}</span>
+                  {p.dissent && (
+                    <span className="ai-flag">
+                      <LvIcon name="alert" size={12} aria-hidden="true" /> Dissent recorded
+                    </span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}

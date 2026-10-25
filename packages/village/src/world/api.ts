@@ -44,6 +44,7 @@ export type SlotKind =
   | 'landmark'
   | 'commons'
   | 'notice-board'
+  | 'mastery-board'
   | 'student-home'
   | 'road'
   | 'spawn';

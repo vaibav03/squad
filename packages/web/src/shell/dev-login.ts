@@ -1,9 +1,6 @@
 import type { SquadSession } from './types';
 
-/**
- * Hub student ids are `s_<name>` (seeded demo students) or `u_<hex>` (real accounts); the sign-in stub's picker uses the
- * bare name. Only a bare name gets the `s_` prefix: prefixing a `u_` id made the viewer a stranger to their own messages.
- */
+/** Demo students are `s_<name>`; real accounts already carry their hub id (`u_<hash>`), which must not be prefixed again. */
 export const hubStudentId = (id: string): string => (/^[su]_/.test(id) ? id : `s_${id}`);
 
 /**

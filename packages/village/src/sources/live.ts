@@ -1,6 +1,7 @@
 import { VILLAGE_EVENT_TYPES, safeParseVillageEvent } from '@squad/core';
 import type { VillageEvent, VillageSource } from '@squad/core';
 import type { Clock, EventMeta, SourceLogger, Unsubscribe } from './types';
+import { setRoster } from '../adapter/labels';
 import { consoleLogger, systemClock } from './types';
 
 export type LiveErrorKind = 'snapshot' | 'stream';
@@ -36,7 +37,8 @@ export interface LiveSourceOptions {
 
 export interface SquadSnapshot {
   seq: number;
-  me?: { id: string };
+  me?: { id: string; name?: string };
+  squad?: { members?: { id: string; name?: string }[] };
   agents?: Record<string, 'idle' | 'studying' | 'in_call' | 'waiting_for_student'>;
   pendingConfirms?: { taskId: string; question: string }[];
   calls?: { callId: string; agent: string; mine: boolean }[];
@@ -138,7 +140,15 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
       log.warn('a subscriber threw');
     }
   };
+  // What the world needs to catch up when it subscribes after the snapshot was delivered (it boots slower
+  // than the first fetch): the last snapshot's events, with agent states kept current by the stream.
+  let caughtUp: VillageEvent[] | undefined;
   const emit = (e: VillageEvent, m?: EventMeta) => {
+    if (caughtUp && e.t === 'agent.state' && !m?.snapshot) {
+      const i = caughtUp.findIndex((x) => x.t === 'agent.state' && x.agent === e.agent);
+      if (i >= 0) caughtUp[i] = e;
+      else caughtUp.push(e);
+    }
     for (const fn of [...subs]) call(fn, e, m);
   };
   const reportError = (k: LiveErrorKind) => {
@@ -203,7 +213,10 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
   async function fetchState(): Promise<SquadSnapshot> {
     const res = await f()(`${base}/v1/squad/state`, { headers: await headers() });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as SquadSnapshot;
+    const snap = (await res.json()) as SquadSnapshot;
+    // roster (names only, this squad's members) so every label shows a person's name, never an id
+    setRoster(snap.squad?.members ?? [], snap.me);
+    return snap;
   }
 
   /** Fetch the snapshot and deliver its events; stream frames that arrive meanwhile are held back, in order. */
@@ -219,6 +232,7 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
       seen = new Set(events.map((e) => JSON.stringify(e)));
       for (const fn of [...snapSubs]) call(fn, snap);
       const meta: EventMeta = resync ? { snapshot: true, resync: true } : { snapshot: true };
+      caughtUp = [...events];
       for (const e of events) emit(e, { ...meta });
       ok = true;
     } catch (err) {
@@ -351,7 +365,9 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
 
   return {
     subscribe(fn) {
+      const late = caughtUp && !closed && !loading ? [...caughtUp] : [];
       subs.add(fn);
+      for (const e of late) call(fn, e, { snapshot: true });
       return () => subs.delete(fn);
     },
     get status() {

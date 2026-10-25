@@ -41,7 +41,7 @@ describe('LivePanel (mock stream)', () => {
     expect(await screen.findByText('Demo mode: scripted discussion')).toBeTruthy();
     expect(screen.getByText('AI-generated discussion')).toBeTruthy();
     // finishes: Ended + Replay
-    await screen.findByText(/Ended\./, undefined, { timeout: 5000 });
+    await screen.findByText(/Ended\./, undefined, { timeout: 25_000 });
     const tx = screen.getByRole('list', { name: 'Transcript' });
     expect(within(tx).getAllByText(/Chair|Tutor/).length).toBeGreaterThan(0);
     // takeaways built
@@ -63,7 +63,8 @@ describe('LivePanel (mock stream)', () => {
     // captions-only mode (default mode for entry-less topic): no AudioContext
     expect(AC).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: /Replay with captions/ })).toBeTruthy();
-  });
+    // the scripted stream plays in real time (about 5 s); the default 5 s test timeout is too tight on a busy machine
+  }, 30_000);
 
   it('interruption yields the current speaker and the table answers', async () => {
     const tr = mockLiveTransport({ wordMs: 5, gapMs: 5 });

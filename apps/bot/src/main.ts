@@ -103,7 +103,15 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
   let transport: Transport;
   if (kind === 'imessage') {
     const { createIMessageTransport } = await import('./transports/imessage');
-    transport = createIMessageTransport({ roster, log });
+    const { configProblem, createIMessageGateway, imessageConfigFromEnv } =
+      await import('./imessage');
+    // Kill switch, allowlists, dry run and rate limits apply to the standalone transport too.
+    const imCfg = imessageConfigFromEnv(env);
+    const problem = configProblem(imCfg);
+    if (problem) throw new Error(`iMessage transport refused to start: ${problem}`);
+    const gateway = createIMessageGateway({ config: imCfg, log });
+    console.log(`[bot] iMessage guarded (dryRun=${imCfg.dryRun}); see docs/imessage.md`);
+    transport = createIMessageTransport({ roster, log, sdk: gateway.guardedSdk() });
   } else if (kind === 'discord') {
     const { createDiscordTransport } = await import('./transports/discord');
     transport = createDiscordTransport({ roster, log });

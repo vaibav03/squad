@@ -285,7 +285,7 @@ describe('chapter house paint', () => {
       expect(t).toMatch(/Chapter 5 house/);
     }
     expect(def.describe(run([st('studying'), mast(3)]))).toBe(
-      'Chapter 5 house, expert is studying, mastery growing.',
+      'Chapter 5 house, expert is studying, mastery getting there.',
     );
     expect(new Set(texts).size).toBeGreaterThan(4);
   });

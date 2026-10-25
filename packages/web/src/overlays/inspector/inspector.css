@@ -41,10 +41,13 @@
   .ai-panel {
     left: auto;
     right: var(--lv-s4, 16px);
-    top: 76px;
+    top: 148px; /* below the top HUD chips (Left/Mid/Right/Zoom/Calm) */
     bottom: auto;
+    box-sizing: border-box;
     width: 380px;
-    max-height: calc(100% - 92px);
+    max-width: calc(100% - 32px);
+    max-height: calc(100% - 164px);
+    overflow: hidden;
     border: 1px solid var(--lv-line);
     border-radius: var(--lv-r4, 16px);
     padding-bottom: 0;
@@ -601,4 +604,67 @@
 .ai-msg[data-focus] {
   border-left-width: 5px;
   background: var(--lv-hover);
+}
+
+/* Council agents shown outside the village (cards, help avatars): compact hover tag, dots when thinking */
+.ai-voice {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  min-height: 24px;
+}
+.ai-voice:focus-visible {
+  outline: 2px solid var(--lv-info);
+  outline-offset: 2px;
+}
+.ai-voice__tag {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 2px);
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 6px;
+  background: #070f1f;
+  color: #b4d6da;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.ai-voice:hover .ai-voice__tag,
+.ai-voice:focus-visible .ai-voice__tag {
+  opacity: 1;
+}
+.ai-voice__tag .ai-dots i {
+  width: 3px;
+  height: 3px;
+  background: #b4d6da;
+}
+:root[data-calm] .ai-voice__tag .ai-dots i {
+  animation: none;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-voice__tag .ai-dots i {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.ai-bar {
+  flex-wrap: wrap;
+  row-gap: 6px;
 }

@@ -380,6 +380,14 @@ describe('LiveSource', () => {
     const es2 = FakeES.all[1]!;
     expect(es2.url).toContain('lastEventId=6');
   });
+  it('a subscriber that arrives after the snapshot is caught up with current agent states', async () => {
+    const { live } = mk();
+    await live.start();
+    FakeES.all[0]!.msg(6, ev('dean')); // dean moved on after the snapshot
+    const late: [string, boolean | undefined][] = [];
+    live.subscribe((e, m) => late.push([e.t === 'agent.state' ? e.agent : e.t, m?.snapshot]));
+    expect(late).toEqual([['dean', true]]);
+  });
   it('ignores malformed frames and over-sharing events', async () => {
     const { live, warn } = mk();
     const got: VillageEvent[] = [];
@@ -498,7 +506,7 @@ describe('LiveSource', () => {
     es.named('x.resync', 0, { seq: 3 });
     await flush();
     const got: string[] = [];
-    live.subscribe((e) => e.t === 'agent.state' && got.push(e.agent));
+    live.subscribe((e, m) => e.t === 'agent.state' && !m?.snapshot && got.push(e.agent));
     es.msg(4, ev('student:s_cy'));
     expect(got).toEqual(['student:s_cy']);
     es.msg(4, ev('student:s_cy'));

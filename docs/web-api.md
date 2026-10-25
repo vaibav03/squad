@@ -78,7 +78,7 @@ export const squadNav: NavItem[];
 | `personas` | `/squad/personas` | web-shell |
 | `ledger` | `/squad/ledger/:taskId?` | web-live |
 | `trip` | `/squad/trips/:tripId` | web-live |
-| `mastery` | `/squad/mastery/:courseId?` | web-live |
+| `mastery` | `/squad/mastery/:courseId?` | web-live; redirect only (to `/squad/village?mastery=1`), no nav item. The UI is `overlays/mastery` inside the village |
 
 **How a page registers:** create `packages/web/src/pages/<key>/index.tsx` with a **default export** React component (no props; read route params with `useParams`). The registry discovers it with `import.meta.glob('../pages/*/index.tsx')` (lazy, one chunk per page). If the file does not exist yet, the route renders a designed `EmptyState` ("Coming soon"), so nobody blocks anybody. Pages wrap their content in `Page`; the host's `AppShell` wraps the router outlet. Data: pages read hub config from `useSquadConfig()` (`{ hubUrl, token, userId, mode: 'live'|'replay'|'mock' }`), supplied by `<SquadProvider>` in the host. `mode: 'mock'` is the default when `VITE_HUB_URL` is unset: pages must render from local fixtures (use `src/fixtures/` of your own page dir; do not call fetch in mock mode).
 

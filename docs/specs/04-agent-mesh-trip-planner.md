@@ -104,7 +104,7 @@ Rules:
 app/packages/mesh/src/  protocol.ts (zod kinds)  gate.ts  ledger.ts  psi.ts  shares.ts
                         mediator/{study,trip}.ts  split.ts  events.ts (builds VillageEvents, posts via core's /internal/events helper, writes replay file)
 app/apps/agent/src/     server.ts (POST /a2a, agent card)  state.ts  flows/{study,trip}.ts  confirm.ts
-app/apps/agent/fixtures/ s_ana.json s_ben.json s_cam.json s_dev.json  trips.json
+app/apps/agent/fixtures/ s_ana.json s_ben.json s_chi.json s_dev.json  trips.json
 app/apps/agent/scripts/  dev-mesh.ts (spawn 4 agents)  demo-study.ts  demo-trip.ts  (both take --scripted)
 ```
 

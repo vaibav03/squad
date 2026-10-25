@@ -4,14 +4,14 @@ export const HOME_CHECKLIST = [
     title: 'Link your phone',
     body: 'So your agent can text you in iMessage.',
     to: '/squad/setup/phone',
-    done: true,
+    done: false,
   },
   {
     key: 'courses',
     title: 'Add your course PDFs',
     body: 'Your experts learn from these chapters.',
     to: '/squad/setup/courses',
-    done: true,
+    done: false,
   },
   {
     key: 'calendar',

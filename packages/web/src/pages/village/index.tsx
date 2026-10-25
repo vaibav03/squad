@@ -15,7 +15,9 @@ import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
 import { ChatDock } from '../chat/ChatDock';
 import { RoomLayer } from '../../overlays/room-info';
+import { MasteryLayer } from '../../overlays/mastery';
 import { InspectorPanel } from '../../overlays/inspector';
+import { setInspectorStore } from '../../overlays/inspector/bridge';
 import { SourceViewerHost } from '../../components/source-viewer';
 import { createInspectorStore, type InspectorStore } from '@squad/village/inspector';
 import { CouncilHall } from '../../council';
@@ -98,6 +100,7 @@ export default function VillagePage({ world }: { world?: string }) {
           prevClose();
         };
         setInspector(store);
+        setInspectorStore(store);
         const mount = await loadWorld(worldId);
         if (dead || !stage.current) return feed.close();
         // `?cutscene=trip&task=<id>`: the world plays the cutscene once per task (any key skips it).
@@ -128,6 +131,7 @@ export default function VillagePage({ world }: { world?: string }) {
       handle.current = null;
       setEvent(null);
       setInspector(null);
+      setInspectorStore(null);
     };
     // calm is applied live through setCalm; the world is not remounted for it.
   }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable]);
@@ -214,6 +218,13 @@ export default function VillagePage({ world }: { world?: string }) {
         </span>
       )}
       <RoomLayer calm={calm} onRun={runPhrase} />
+      <MasteryLayer
+        hub={hub}
+        calm={calm}
+        onRun={runPhrase}
+        initialOpen={q.get('mastery') === '1'}
+        returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
+      />
       <OverlayHost
         event={event}
         mode={mode}

@@ -20,3 +20,6 @@ export {
   isDemoLlm,
   DEMO_CHAT_REPLY,
 } from './demo/demo-llm';
+export * from './imessage';
+export { createScheduler, type Scheduler } from './scheduler';
+export type { IMessageSdkLike, IMessageMessageLike } from './transports/imessage';

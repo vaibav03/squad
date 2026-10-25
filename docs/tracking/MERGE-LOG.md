@@ -469,3 +469,66 @@ Branch `merge/batch13` (worktree `squad-wt/merge13`), landed as a true `--no-ff`
 
 - Landing merge commit: `1cea988ebc6d6cb00ffe3b3d4779f081882c981b` (parents `0e4a52855b2e596835a04e14f045f2992e3ce995` = tag `pre-merge-batch13`, `58165c3163ee03eb8ea8c61e05d5961c8ce2a6d4` = origin/merge/batch13; only tracker docs differ).
 - Rollback: `git revert -m 1 1cea988ebc6d6cb00ffe3b3d4779f081882c981b`.
+
+## Batch 14: fix/names-council-inspect + feature/imessage-binding into main
+
+Branch `merge/batch14` (worktree `squad-wt/merge14`), landed as a true `--no-ff` merge. Not merged (leads still running): fix/e2e-round2, fix/blank-shell.
+
+- Both branches merged cleanly (names first, then iMessage); `pnpm check` was run after each merge (exit status read): 0 after names; after iMessage it exited 1 once on `packages/web` `LivePanel.test.tsx` "plays the scripted discussion" (a real-time scripted run, 5 s test and `findByText` timeouts, hit under a load average of 80+; 3 of 3 passes alone). The test now allows 25 s for the run to end and 30 s overall; `pnpm check` is then 0. The mesh `gate.test.ts` flake did not appear.
+- `pnpm demo:live` OK; `pnpm test:smoke hub` 102 of 102.
+- Browser, demo mode (hub :18914, web :15314): signed up "Maya Tester" through `/v1/auth/start` and `/verify`, created a squad, opened the village: clicking the character opens the inspector with the real name "Maya Tester (you)" and tabs Doing/Thinking/Chat/Agents (no raw `u_...` id anywhere on the page); `@cubbie what is a hash table?` was answered; 0 page errors. Frames in `docs/design/shots/merge14/`. The iMessage bridge ran only over its fake transport (unit tests), not a real Messages account.
+
+### Leftover branch review
+
+| Branch | State | Action |
+| --- | --- | --- |
+| fix/honest-status | ancestor of main | deleted (origin, local, worktree `honest`) |
+| merge/honest-status | ancestor of main | deleted (origin, local, worktree `merge-honest`) |
+| fix/e2e-bugs | ancestor of main | deleted on origin; the local branch and worktree `fixbugs` are kept because the worktree holds 3 untracked screenshots (`docs/design/shots/fixes/02-courses-1280.png`, `09-members-1280.png`, `12-mastery-1280.png`) that are not on main |
+| ws/hub | NOT an ancestor: 6 unique commits (`c1eeaec`, `1242ff7`, `5218f8c`, `50a570f`, `1b0ce39`, `690c1e0`: the original W1 hub workstream, publishing hub-api.md, call registry, ingest/filter/SSE, smoke tests, x.trip.limits merge and secret ballot) | kept; not deleted |
+
+### Landing (batch 14)
+
+- Landing merge commit: `3790e2cb7f7dce98a67c57ac40705073681e1645` (parents `96328ebaa89c54f79c9a59f1141ec2d71bbb9540` = tag `pre-merge-batch14`, `9bacde0a3222c3440504b66cf4f56c44b77a0f51` = origin/merge/batch14; only tracker docs differ).
+- Rollback: `git revert -m 1 3790e2cb7f7dce98a67c57ac40705073681e1645` (reverts both branches).
+- The demo stack was not restarted in this batch (the coordinator restarts it).
+
+## Batch 15: fix/names-council-inspect (remaining commits) into main
+
+Branch `merge/batch15` (worktree `squad-wt/merge15`), landed as a true `--no-ff` merge. These are the commits the names lead pushed after batch 14: hash-like ids never title-cased (announcer, ledger, call panel), a no-raw-ids regression scan (`scripts/dev/scan-raw-ids.mjs`) over every inspector tab, lint and prettier fixes.
+
+- One conflict, `packages/web/src/live/LivePanel.test.tsx`: both sides raised the scripted-discussion test timeout (the names branch to 20 s, main from batch 14 to 30 s overall plus 25 s for the run to end); main's values kept.
+- `pnpm check` exit status 0, `pnpm demo:live` OK, `pnpm test:smoke hub` 102 of 102.
+- Browser, demo mode (hub :18915, web :15315): new account "Maya Tester": inspector shows "Maya Tester (you)" with Doing/Thinking/Chat/Agents, no raw `u_...` id on the chat page, `@cubbie` question answered, 0 page errors. Frames in `docs/design/shots/merge15/`.
+
+### Landing (batch 15)
+
+- Landing merge commit: `ef8fbf2c06ce39553034adee36dd7e5db0c6e213` (parents `449ae511cbe474aec9e25a2919032914187a63fd` = tag `pre-merge-batch15`, `18d0ca662211eee9588335da72cadbdb68b89ac0` = origin/merge/batch15; diff empty).
+- Rollback: `git revert -m 1 ef8fbf2c06ce39553034adee36dd7e5db0c6e213`.
+
+## Batch 16: fix/e2e-round2 into main
+
+Branch `merge/batch16` (worktree `squad-wt/merge16`), landed as a true `--no-ff` merge.
+
+- Merged cleanly (11 commits): setup ready-state fix, `.ics` posting, `s_cam` to `s_chi` across scripts/docker/env/e2e, Home checklist from real state, live-source late-subscriber catch-up so rooms unlock, Esc/focus return in rooms, e2e harness fixes.
+- `s_cam` grep after the merge: no references left in `scripts/`, docker files, `.env.example`, `apps/agent`, `packages/mesh`, `apps/hub` or `e2e/`. Stragglers fixed in this batch: the status page fixture agent list (`packages/web/src/pages/status/fixtures.ts`), `docs/DEPLOY.md`, `docs/specs/04-agent-mesh-trip-planner.md`, the open note in `docs/INTEGRATION.md`, and the `E2E-003` row in `docs/qa/E2E-BUGS.md` (now marked fixed). Deliberately left: `s_cam` as a made-up member of the bot's and brain's own unit-test chat casts (`apps/bot/**`, `packages/brain/**`, `packages/village` director test, their fixtures), which are not the demo stack ids, plus historical text in `docs/qa` reports and `docs/tracking`.
+- Verification: `pnpm check` exit status 0, `pnpm demo:live` OK, hub smoke 102 of 102, agent smoke 4 of 4. Browser (hub :18916, web :15316, with the four agents up and also without): village 1280x800 and 390x844, courses and chat show no page errors; Council Hall: entering through the door, floor click opens nothing, chair and member clicks open the inspector with the room conversation, Esc closes the inspector, the room stays open and focus returns to the village stage. Frames in `docs/design/shots/merge16/`.
+- Observation (not from this batch): the inspector opens a council agent on the Thinking tab, not Chat, since the names batch (`397aa63`, "Thinking/Chat content" for council agents). The branch spec `e2e/specs/j17-room-inspector.spec.ts` still asserts that the Chat tab is selected, so it will fail until the spec or the default tab is aligned.
+
+### Landing (batch 16)
+
+- Landing merge commit: `75f73ad7a506c7c54e90f04e9bb2107dc67e0b75` (parents `acd78466ac90c1ef495098341a7381f0ab16a66f` = tag `pre-merge-batch16`, `e414427d72078171e614e1e0ef9109d2231b5780` = origin/merge/batch16; diff empty).
+- Rollback: `git revert -m 1 75f73ad7a506c7c54e90f04e9bb2107dc67e0b75`.
+
+## Batch 17: feature/mastery-in-village into main
+
+Branch `merge/batch17` (worktree `squad-wt/merge17`), landed as a true `--no-ff` merge.
+
+- One conflict, `packages/village/src/hud/index.ts`: kept mastery's `lastChip` state and main's focus return to the stage after the prompt click (batch 16 Esc/focus work).
+- The lead had not re-run `pnpm check` after its last merge of main: it exits 0 here (status read). `pnpm demo:live` OK; hub smoke 102 of 102.
+- Browser (hub :18917, web :15317, no agents): village renders; top nav has no Mastery item (Home, Village, Chat, Ledger, Trip, Setup, Personas, Courses); the Mastery board interactable `enter-mastery-board` (activated through the world's interactable list, the same call Enter makes at the board; the walk itself was not driven) opens the "Mastery board" panel ("A study map, not a grade", chapter states); `/squad/mastery` redirects to `/squad/village?mastery=1`; 0 page errors, 0 HTTP >= 400. Frames in `docs/design/shots/merge17/`.
+
+### Landing (batch 17)
+
+- Landing merge commit: `4ff5dbd55e9ecf4069ab4fb07c502ad3955feddc` (parents `bda7a90fe3f07f6534ab8930a34a99bce80d87e7` = tag `pre-merge-batch17`, `59b94d8eb5835e0c1dc708c74a3d1819d2f52f28` = origin/merge/batch17; diff empty).
+- Rollback: `git revert -m 1 4ff5dbd55e9ecf4069ab4fb07c502ad3955feddc`.

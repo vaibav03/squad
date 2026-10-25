@@ -13,6 +13,13 @@ import { nearestInteractable } from '../world/interact';
 import { STATE_GLYPH, STATE_LABEL, chipOrder, closePopovers, formatClock, initialOf } from './math';
 import { HUD_CSS } from './style';
 import type { InspectorStore } from '../inspector/store';
+import {
+  getMastery,
+  masteryLevel,
+  masteryPips,
+  masteryWord,
+  MASTERY_PIPS,
+} from '../scenes/mastery';
 
 export interface HudDeps {
   parent: HTMLElement;
@@ -166,7 +173,14 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
     const s = d.layout.slot('trip-road');
     void d.player.walkTo(s.x - 60);
   });
-  mid.append(prompt, trip);
+  // compact mastery chip: word + pips for the chapter house the player stands at (no numbers)
+  const mchip = el('div', 'sqv-panel sqv-mchip', { role: 'status', 'data-show': 'false' });
+  const mchipName = el('span', 'sqv-mchip__name');
+  const mchipPips = el('span', 'sqv-mchip__pips', { 'aria-hidden': 'true' });
+  for (let i = 0; i < MASTERY_PIPS; i++) mchipPips.appendChild(el('i'));
+  const mchipWord = el('span', 'sqv-mchip__word');
+  mchip.append(mchipName, mchipPips, mchipWord);
+  mid.append(mchip, prompt, trip);
 
   const help = el('div', 'sqv-panel sqv-help', {
     id: 'sqv-help',
@@ -298,7 +312,12 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
   ];
   let lastClock = '';
   let promptFor: Interactable | undefined;
-  prompt.addEventListener('click', () => promptFor?.onActivate());
+  let lastChip = '';
+  prompt.addEventListener('click', () => {
+    promptFor?.onActivate();
+    // keys (Esc to leave the room, arrows to walk) only reach the world while the stage has focus
+    d.parent.focus?.({ preventScroll: true });
+  });
   syncCamera();
   syncCalm();
 
@@ -317,6 +336,26 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
         if (near) promptText.textContent = near.label;
         prompt.dataset.show = String(!!near);
         prompt.tabIndex = near ? 0 : -1;
+      }
+      // mastery chip: chapter houses only, and only while the house is open (a dim house has nothing to say yet)
+      const slotId = near?.id.startsWith('enter-chapter-') ? near.id.slice('enter-'.length) : '';
+      const ch = slotId ? getMastery().chapters.find((c) => c.slot === slotId) : undefined;
+      const mkey = ch ? `${ch.title}|${masteryPips(ch.box)}` : '';
+      if (mkey !== lastChip) {
+        lastChip = mkey;
+        if (ch) {
+          mchipName.textContent = ch.title;
+          mchipWord.textContent = masteryWord(ch.box);
+          mchip.dataset.level = masteryLevel(ch.box);
+          [...mchipPips.children].forEach((p, i) =>
+            (p as HTMLElement).toggleAttribute('data-on', i < masteryPips(ch.box)),
+          );
+          mchip.setAttribute(
+            'aria-label',
+            `${ch.title} mastery: ${masteryWord(ch.box)}, ${masteryPips(ch.box)} of ${MASTERY_PIPS} pips`,
+          );
+        }
+        mchip.dataset.show = String(!!ch);
       }
     },
     destroy() {
