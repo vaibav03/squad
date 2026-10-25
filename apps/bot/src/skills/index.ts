@@ -7,6 +7,9 @@ import {
   chapterIdsFromStore,
   chapterProviderFromStore,
   createBrain,
+  createCanvasAnswerSkill,
+  type ContextStore,
+  type ContextViewer,
   type Brain,
   type MasteryStore,
   createCoursePlanSkill,
@@ -61,6 +64,11 @@ export interface SkillDeps {
   onCouncil?: (c: CouncilService) => void;
   /** Share the hub's brain and mastery store so chat, quiz and the village use one instance. */
   shared?: { brain?: Brain; mastery?: MasteryStore; council?: CouncilService };
+  /**
+   * Connected-source store plus the asker -> viewer resolver (squad membership verified by the caller). With both,
+   * doubts cite the asker's own and squad-shared Canvas/Drive sources and "what's due?" is answered from Canvas.
+   */
+  context?: { store: ContextStore; viewerFor: (m: { from: string }) => ContextViewer | undefined };
   /** Starts a live agent discussion through the hub; omit and `discuss:` is not registered. */
   live?: LiveStarter;
   /** Shared proactive scheduler (main starts it once the bot exists). A private one is created if omitted. */
@@ -79,7 +87,15 @@ export const skills: Skill[] = buildRegistry([chatSkill]);
 export async function createSkills(d: SkillDeps): Promise<Skill[]> {
   const emit = async (e: VillageEvent): Promise<void> => void (await d.emit(e));
   const now = d.now ? { now: d.now } : {};
-  const brain = d.shared?.brain ?? createBrain({ llm: d.llm, db: d.db, emit, ...now });
+  const brain =
+    d.shared?.brain ??
+    createBrain({
+      llm: d.llm,
+      db: d.db,
+      emit,
+      ...(d.context ? { context: d.context.store } : {}),
+      ...now,
+    });
   const course = d.courseId ?? (() => 'demo');
   if ((d.seedFixtureCourse ?? true) && !brain.store.getCourse(course())) {
     await loadFixtureCourse({ store: brain.store }, course());
@@ -109,7 +125,10 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
   const brainSkills: Skill[] = [
     createCouncilSkill(council, { courseId: courseIdFor }),
     ...(d.live ? [createLiveSkill(d.live)] : []),
-    ...answerSkills(brain, course),
+    ...(d.context
+      ? [createCanvasAnswerSkill(d.context.store, { viewerFor: d.context.viewerFor, ...now })]
+      : []),
+    ...answerSkills(brain, course, d.context?.viewerFor),
     createQuizSkill({ engine, courseIdFor }),
     createFeynmanSkill({ engine: feynman, courseIdFor }),
     createStepDiffSkill({ engine: stepDiff, courseIdFor }),

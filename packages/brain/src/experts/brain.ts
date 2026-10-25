@@ -124,8 +124,9 @@ export function assembleBrain(deps: CreateBrainDeps): Brain {
       const pdf = await askPdf(courseId, question);
       if (!deps.context || !opts?.viewer) return pdf;
       // Only chunks the viewer may read (own + squad-shared) are ever retrieved; claims are verified verbatim.
+      const ctxCourse = opts.contextCourseId === undefined ? courseId : opts.contextCourseId;
       const hits = deps.context.search(question, opts.viewer as ContextViewer, {
-        courseId,
+        ...(ctxCourse ? { courseId: ctxCourse } : {}),
         limit: 4,
       });
       if (hits.length === 0) return pdf;

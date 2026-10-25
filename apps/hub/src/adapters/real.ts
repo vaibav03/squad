@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import {
   parseAgentId,
   parseIcsBusy,
+  stripBusyTitles,
   type BusyBlock,
   type Llm,
   type StudentId,
@@ -28,6 +29,7 @@ import {
   type MasteryStore,
 } from '@squad/brain';
 import { contextServiceFor } from '../context/service';
+import { contextBusyBlocks } from '../context/busy';
 import {
   createAudioServices,
   createCallPort,
@@ -327,7 +329,14 @@ function createRealBrainPort(
     // Busy blocks are stored per student (hub_busy_blocks, owner-private: never streamed) and pushed to
     // the owner's mesh agent so the next study/trip flow schedules around them.
     async loadCalendar(student, input) {
-      const blocks = input.demo ? demoBusyBlocks(deps.now()) : parseIcsBusy(input.ics ?? '');
+      const blocks = stripBusyTitles(
+        input.demo ? demoBusyBlocks(deps.now()) : parseIcsBusy(input.ics ?? ''),
+      );
+      // connected calendars (Google/Canvas events) contribute derived intervals too, never titles
+      const known = new Set(blocks.map((b) => `${b.start}|${b.end}`));
+      for (const b of contextBusyBlocks(deps, student))
+        if (!known.has(`${b.start}|${b.end}`)) blocks.push(b);
+      blocks.sort((a, b) => a.start.localeCompare(b.start));
       const tx = deps.db.transaction(() => {
         deps.db.prepare('DELETE FROM hub_busy_blocks WHERE student=?').run(student);
         const ins = deps.db.prepare(

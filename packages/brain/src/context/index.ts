@@ -7,3 +7,7 @@ export * from './sync';
 export * from './retrieve';
 export * from './answer';
 export * from './connectors';
+export * from './readable';
+export * from './answers';
+export * from './constraints';
+export * from './study-seeds';

@@ -11,7 +11,7 @@ export * from './sentinel';
 export * from './llm';
 export * from './chat';
 export * from './council';
-export { parseIcsBusy } from './ics';
+export { parseIcsBusy, stripBusyTitles, BUSY_TITLE } from './ics';
 export type { BusyBlock } from './ics';
 export * from './accounts';
 export * from './telemetry';
