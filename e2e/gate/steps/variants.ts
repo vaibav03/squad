@@ -190,14 +190,13 @@ export const V4: StepDef<GateCtx> = {
     // D. a refresh the provider refuses without saying "revoked": expired, data KEPT, sync stopped, stale, reconnect prompt
     await disconnectAll(rhea);
     await resetUpstreams();
-    await connectGoogle(rhea, { shortLived: true });
+    await connectGoogle(rhea);
     await syncAll(rhea);
     const kept = (await items(rhea)).filter((s) => s.provider === 'google').length;
     a.ok('Google data was imported before the refusal', kept > 0);
-    await google.failRefresh(99);
-    const g4 = (await listConnections(rhea)).connections.find(
-      (x) => x.provider === 'google' && x.status !== 'revoked',
-    );
+    await expireUpstream({ refreshFails: true }); // the access token dies at Google and the refresh answers 500
+    await syncAll(rhea);
+    const g4 = await connectionStatus(rhea, 'google');
     a.eq('a refused refresh (not invalid_grant) ends expired, never live', g4?.state, 'expired');
     a.ok('and asks for a reconnect', g4?.needsReconnect === true);
     a.eq(
