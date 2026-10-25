@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, type Connect, type Plugin } from 'vite';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
 
@@ -12,17 +12,22 @@ const types: Record<string, string> = {
   '.jpg': 'image/jpeg',
 };
 
-/** INTEGRATION GLUE: serves the repo `assets/` dir at /assets (the village asset contract). */
+/** INTEGRATION GLUE: serves the repo `assets/` dir at /assets (the village asset contract), in dev and in `vite preview`. */
 function repoAssetsPlugin(): Plugin {
+  const serve: Connect.NextHandleFunction = (req, res, next) => {
+    const p = normalize(join(repoAssets, decodeURIComponent((req.url ?? '/').split('?')[0]!)));
+    if (!p.startsWith(repoAssets) || !existsSync(p) || !statSync(p).isFile()) return next();
+    res.setHeader('content-type', types[extname(p)] ?? 'application/octet-stream');
+    createReadStream(p).pipe(res);
+  };
   return {
     name: 'squad-repo-assets',
     configureServer(server) {
-      server.middlewares.use('/assets', (req, res, next) => {
-        const p = normalize(join(repoAssets, decodeURIComponent((req.url ?? '/').split('?')[0]!)));
-        if (!p.startsWith(repoAssets) || !existsSync(p) || !statSync(p).isFile()) return next();
-        res.setHeader('content-type', types[extname(p)] ?? 'application/octet-stream');
-        createReadStream(p).pipe(res);
-      });
+      server.middlewares.use('/assets', serve);
+    },
+    configurePreviewServer(server) {
+      // Repo assets win over the built bundle's own /assets (hashed JS and CSS never clash with these paths).
+      server.middlewares.use('/assets', serve);
     },
   };
 }

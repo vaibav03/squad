@@ -23,6 +23,8 @@ export interface AgentAppOptions {
   ledger?: Ledger;
   hub?: HubPort;
   timeouts?: { peerMs?: number; confirmMs?: number };
+  /** Resolve an open web confirm for this student's task; false when nothing waits (hub answers 404). */
+  resolveConfirm?: (taskId: string, answer: string) => boolean;
   log?: (line: string) => void;
 }
 
@@ -36,6 +38,17 @@ const StudyStart = z.strictObject({
   examAt: z.string().optional(),
   topics: z.array(Id).max(16).optional(),
   squadId: Id.optional(),
+});
+const CalendarPut = z.strictObject({
+  events: z
+    .array(
+      z.strictObject({
+        start: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?Z$/),
+        end: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?Z$/),
+        title: z.string().max(200),
+      }),
+    )
+    .max(2000),
 });
 const TripStart = z.strictObject({
   taskId: Id,
@@ -112,6 +125,24 @@ export function createAgentApp(o: AgentAppOptions): { app: Hono; agent: FlowAgen
     const p = TripStart.safeParse(await c.req.json().catch(() => null));
     if (!p.success) return c.json({ error: 'bad_request' }, 400);
     return c.json(await agent.startTrip(p.data));
+  });
+  // Calendar import from the hub: replaces this student's busy blocks (the profile is read live by every flow).
+  app.post('/internal/calendar', async (c) => {
+    if (!guard(c.req.header('X-Nook-Internal'))) return c.json({ error: 'forbidden' }, 403);
+    const p = CalendarPut.safeParse(await c.req.json().catch(() => null));
+    if (!p.success) return c.json({ error: 'bad_request' }, 400);
+    o.profile.calendar.splice(0, o.profile.calendar.length, ...p.data.events);
+    return c.json({ ok: true, blocks: o.profile.calendar.length });
+  });
+  app.post('/internal/confirm/answer', async (c) => {
+    if (!guard(c.req.header('X-Nook-Internal'))) return c.json({ error: 'forbidden' }, 403);
+    const p = z
+      .strictObject({ taskId: Id, answer: z.enum(['yes', 'no']) })
+      .safeParse(await c.req.json().catch(() => null));
+    if (!p.success) return c.json({ error: 'bad_request' }, 400);
+    if (!o.resolveConfirm?.(p.data.taskId, p.data.answer))
+      return c.json({ error: 'not_waiting' }, 404);
+    return c.json({ ok: true });
   });
   app.post('/internal/query', async (c) => {
     if (!guard(c.req.header('X-Nook-Internal'))) return c.json({ error: 'forbidden' }, 403);

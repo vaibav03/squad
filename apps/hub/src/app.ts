@@ -4,10 +4,16 @@ import { openDb } from '@squad/core/node';
 import type { Db } from '@squad/core';
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createStubPorts } from './adapters';
 import { createBroker } from './broker';
 import { createCallRegistry } from './calls';
 import { loadHubConfig, type HubConfig } from './config';
+import { createChatHub } from './chat/hub-chat';
+import { createChatRoutes } from './chat/routes';
+import { createConfirmRouter } from './confirms';
 import { createIngestor } from './ingest';
 import { createLogger } from './log';
 import type { Ports } from './ports';
@@ -21,6 +27,7 @@ import { createQuizRoutes } from './routes/quiz';
 import { createReplayRoutes } from './routes/replay';
 import { createSimRoutes } from './routes/sim';
 import { createStateRoutes } from './routes/state';
+import { createStatusRoutes } from './routes/status';
 import { createStreamRoutes } from './routes/stream';
 import { seedDemo } from './sim/seed';
 import { createDirectory } from './store/directory';
@@ -71,7 +78,14 @@ export function createHub(opts: HubOptions = {}): Hub {
   deps.state = createSquadState(deps);
   deps.state.rebuild(); // agent states and pending confirms come back from the persisted log
   deps.ingest = createIngestor(deps);
+  deps.confirms = createConfirmRouter(deps);
   deps.ports = { ...createStubPorts(deps), ...opts.ports };
+  deps.chat = createChatHub(
+    deps,
+    config.dbPath === ':memory:'
+      ? mkdtempSync(join(tmpdir(), 'squad-chat-files-'))
+      : join(dirname(config.dbPath), 'chat-files'),
+  );
   if (config.seed) seedDemo(deps);
 
   const app: HubApp = new Hono<HubEnv>();
@@ -100,6 +114,7 @@ export function createHub(opts: HubOptions = {}): Hub {
   for (const routes of [
     createAuthRoutes(deps),
     createInternalRoutes(deps),
+    createStatusRoutes(deps),
     createStateRoutes(deps),
     createStreamRoutes(deps),
     createReplayRoutes(deps),
@@ -108,6 +123,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     createMediaRoutes(deps),
     createDomainRoutes(deps),
     createCouncilRoutes(deps),
+    createChatRoutes(deps),
     ...(config.sim ? [createSimRoutes(deps)] : []),
   ])
     app.route('/', routes);
@@ -123,6 +139,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     deps,
     async close() {
       deps.broker.closeAll();
+      deps.chat.close();
       if (ownDb) deps.db.close();
     },
   };

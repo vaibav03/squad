@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FakeLlm, type Llm, type Skill } from '@squad/core';
+import { FakeLlm, createResilientLlm, type Llm, type Skill } from '@squad/core';
 import { GeminiLlm, describeConfig, loadConfig, openDb, openMemoryDb } from '@squad/core/node';
 import { createBot } from './bot';
 import { ChatRepl } from './cli/repl';
@@ -61,7 +61,14 @@ export async function main(argv = process.argv.slice(2), env = process.env): Pro
   });
   const llm: Llm = fake
     ? new FakeLlm({ fallback: 'Hi! (fake LLM reply)' })
-    : new GeminiLlm({ apiKey: cfg.geminiApiKey!, models: cfg.geminiModels });
+    : createResilientLlm({
+        real: new GeminiLlm({ apiKey: cfg.geminiApiKey!, models: cfg.geminiModels }),
+        fake: new FakeLlm({ fallback: 'Hi! (demo reply: Gemini is unavailable)' }),
+        onSwitch: (st) => {
+          log.warn(`llm switched to the fake demo model (${st.reason})`);
+          console.log(`[bot] llm switched to FakeLlm (${st.reason}); run pnpm doctor`);
+        },
+      });
   registerMediaPersonas();
   const tap: { current?: EventPublisher } = {};
   const hub = createEventPublisher({

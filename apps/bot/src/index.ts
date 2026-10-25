@@ -13,3 +13,10 @@ export { createSkills, type SkillDeps, type MediaWiring } from './skills';
 export { buildMedia, registerMediaPersonas } from './wiring';
 export { WebTransport, type WebOutbound, type WebInbound } from './transports/web';
 export { extractCitations, parseQuizCard, stripPersonaPrefix } from './transports/web-format';
+export {
+  createDemoLlm,
+  DemoLlm,
+  DemoUnsupported,
+  isDemoLlm,
+  DEMO_CHAT_REPLY,
+} from './demo/demo-llm';

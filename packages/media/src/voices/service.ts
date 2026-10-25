@@ -24,7 +24,11 @@ export interface VoiceServiceOptions {
   previewDir?: string;
 }
 
-/** Stock premade voice ("Rachel"). From memory, not re-verified here: the live smoke script validates it and the env var overrides it. */
+/**
+ * Stock premade voice ("Rachel", the id in the ElevenLabs API reference examples). Rachel is now a
+ * Legacy voice: per the ElevenLabs help centre, legacy voice ids "automatically route to their
+ * replacement voice IDs" (Rachel -> Janet) over the API, so it keeps working. ELEVENLABS_FALLBACK_VOICE_ID overrides.
+ */
 export const DEFAULT_FALLBACK_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
 
 export class VoiceService {

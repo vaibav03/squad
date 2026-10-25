@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.5",
+    "@squad/bot": "workspace:*",
     "@squad/brain": "workspace:*",
     "@squad/core": "workspace:*",
     "@squad/media": "workspace:*",

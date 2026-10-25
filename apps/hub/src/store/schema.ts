@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS hub_ledger_rows(
 CREATE TABLE IF NOT EXISTS hub_ledger_private(
   task_id TEXT NOT NULL, student TEXT NOT NULL, field TEXT NOT NULL, raw TEXT NOT NULL,
   PRIMARY KEY(task_id, student, field));
+CREATE TABLE IF NOT EXISTS hub_busy_blocks(
+  student TEXT NOT NULL, start TEXT NOT NULL, end TEXT NOT NULL, title TEXT NOT NULL,
+  PRIMARY KEY(student, start, end));
 CREATE TABLE IF NOT EXISTS hub_confirmed_tasks(task_id TEXT PRIMARY KEY);
 `;
 
