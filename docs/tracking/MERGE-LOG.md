@@ -107,7 +107,7 @@ No code from either branch was dropped.
 | `pnpm check` | pass |
 | every package's tests, one at a time (`pnpm -r --workspace-concurrency=1 test`) | pass, 13 suites, 1587 tests, 0 failures |
 | 50-line banter suite with all 16 skills registered (`registry.adversarial.test.ts`, `rooms-a.adversarial.test.ts`, rooms/b banter tests) | pass: no skill fires on banter, bot sends nothing |
-| new rooms' tests (debate 81+, devilta, oracle, rubric, oral, hub `oral.ws.test.ts`, feynman and stepdiff emission) | pass (inside the suites above) |
+| new rooms' tests (Devil's TA 81 tests per rooms/a, debate, oracle, rubric, oral, hub `oral.ws.test.ts`, feynman and stepdiff emission) | pass (inside the suites above) |
 | 13-room village check | pass: 13 rooms x (events valid, routed to the right scene, painted differently from idle in interior and exterior, non-blank), transcript present for the 11 speaking rooms, outcome card for debate, round table, oracle, rubric |
 | routing: council:debate, council:oracle, council:rubric, expert:devil, expert:feynman, expert:stepdiff | all route to their rooms (explicit table test) |
 | `pnpm test:smoke all` | pass |
