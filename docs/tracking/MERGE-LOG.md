@@ -505,3 +505,51 @@ Branch `merge/batch15` (worktree `squad-wt/merge15`), landed as a true `--no-ff`
 
 - Landing merge commit: `ef8fbf2c06ce39553034adee36dd7e5db0c6e213` (parents `449ae511cbe474aec9e25a2919032914187a63fd` = tag `pre-merge-batch15`, `18d0ca662211eee9588335da72cadbdb68b89ac0` = origin/merge/batch15; diff empty).
 - Rollback: `git revert -m 1 ef8fbf2c06ce39553034adee36dd7e5db0c6e213`.
+
+## Batch 16: fix/e2e-round2 into main
+
+Branch `merge/batch16` (worktree `squad-wt/merge16`), landed as a true `--no-ff` merge.
+
+- Merged cleanly (11 commits): setup ready-state fix, `.ics` posting, `s_cam` to `s_chi` across scripts/docker/env/e2e, Home checklist from real state, live-source late-subscriber catch-up so rooms unlock, Esc/focus return in rooms, e2e harness fixes.
+- `s_cam` grep after the merge: no references left in `scripts/`, docker files, `.env.example`, `apps/agent`, `packages/mesh`, `apps/hub` or `e2e/`. Stragglers fixed in this batch: the status page fixture agent list (`packages/web/src/pages/status/fixtures.ts`), `docs/DEPLOY.md`, `docs/specs/04-agent-mesh-trip-planner.md`, the open note in `docs/INTEGRATION.md`, and the `E2E-003` row in `docs/qa/E2E-BUGS.md` (now marked fixed). Deliberately left: `s_cam` as a made-up member of the bot's and brain's own unit-test chat casts (`apps/bot/**`, `packages/brain/**`, `packages/village` director test, their fixtures), which are not the demo stack ids, plus historical text in `docs/qa` reports and `docs/tracking`.
+- Verification: `pnpm check` exit status 0, `pnpm demo:live` OK, hub smoke 102 of 102, agent smoke 4 of 4. Browser (hub :18916, web :15316, with the four agents up and also without): village 1280x800 and 390x844, courses and chat show no page errors; Council Hall: entering through the door, floor click opens nothing, chair and member clicks open the inspector with the room conversation, Esc closes the inspector, the room stays open and focus returns to the village stage. Frames in `docs/design/shots/merge16/`.
+- Observation (not from this batch): the inspector opens a council agent on the Thinking tab, not Chat, since the names batch (`397aa63`, "Thinking/Chat content" for council agents). The branch spec `e2e/specs/j17-room-inspector.spec.ts` still asserts that the Chat tab is selected, so it will fail until the spec or the default tab is aligned.
+
+### Landing (batch 16)
+
+- Landing merge commit: `75f73ad7a506c7c54e90f04e9bb2107dc67e0b75` (parents `acd78466ac90c1ef495098341a7381f0ab16a66f` = tag `pre-merge-batch16`, `e414427d72078171e614e1e0ef9109d2231b5780` = origin/merge/batch16; diff empty).
+- Rollback: `git revert -m 1 75f73ad7a506c7c54e90f04e9bb2107dc67e0b75`.
+
+## Batch 17: feature/mastery-in-village into main
+
+Branch `merge/batch17` (worktree `squad-wt/merge17`), landed as a true `--no-ff` merge.
+
+- One conflict, `packages/village/src/hud/index.ts`: kept mastery's `lastChip` state and main's focus return to the stage after the prompt click (batch 16 Esc/focus work).
+- The lead had not re-run `pnpm check` after its last merge of main: it exits 0 here (status read). `pnpm demo:live` OK; hub smoke 102 of 102.
+- Browser (hub :18917, web :15317, no agents): village renders; top nav has no Mastery item (Home, Village, Chat, Ledger, Trip, Setup, Personas, Courses); the Mastery board interactable `enter-mastery-board` (activated through the world's interactable list, the same call Enter makes at the board; the walk itself was not driven) opens the "Mastery board" panel ("A study map, not a grade", chapter states); `/squad/mastery` redirects to `/squad/village?mastery=1`; 0 page errors, 0 HTTP >= 400. Frames in `docs/design/shots/merge17/`.
+
+### Landing (batch 17)
+
+- Landing merge commit: `4ff5dbd55e9ecf4069ab4fb07c502ad3955feddc` (parents `bda7a90fe3f07f6534ab8930a34a99bce80d87e7` = tag `pre-merge-batch17`, `59b94d8eb5835e0c1dc708c74a3d1819d2f52f28` = origin/merge/batch17; diff empty).
+- Rollback: `git revert -m 1 4ff5dbd55e9ecf4069ab4fb07c502ad3955feddc`.
+
+## Batch 18: fix/room-click-default-tab into main
+
+Small fix branch (worktree `squad-wt/roomtab`), landed as a true `--no-ff` merge. Product decision: a click on an agent inside a room opens the inspector on the Chat tab (the room conversation); clicks on village sprites, chips and avatars keep the names-batch rule (Thinking if the agent is thinking now or has a recent thought, otherwise Chat).
+
+- Code: the room-seat click passes an explicit `initialTab: 'chat'` in the room focus (`packages/village/src/scenes/module.ts`, `inspector/store.ts` `RoomFocus`), stepping through seats keeps it, and the panel decides through the new pure `defaultTab(initialTab, voice)` (`packages/web/src/overlays/inspector/defaultTab.ts`). Unit tests: `defaultTab.test.ts` (both rules, all combinations) and a panel test in `voices.test.tsx` (seat click on a member with a thought opens Chat; the name chip opens Thinking). `e2e/specs/j17-room-inspector.spec.ts` keeps asserting Chat, unchanged.
+- Verification: `pnpm check` exit status 0 (a first run failed typecheck because the scene store's own `select` type lacked `initialTab`; fixed), `pnpm demo:live` OK, hub smoke 102 of 102. Browser (hub :18918, web :15318): entering the Council Hall, the floor click opens nothing, the chair click opens the inspector with the Chat tab selected (verdict text visible), a member click shows that member's opinion, Esc closes the inspector and the room stays open, 0 page errors. Frames in `docs/design/shots/merge18/`.
+
+### Landing (batch 18)
+
+- Landing merge commit: `c6cb3a9fca60807d8856397bcf181b699f964ede` (parents `7d8cedb4c206a3e5b43e533a29f8a061c7792518` = tag `pre-merge-batch18`, `56ff97747e85a356f129cf7685186fee2981bb37` = origin/fix/room-click-default-tab; only tracker docs differ).
+- Rollback: `git revert -m 1 c6cb3a9fca60807d8856397bcf181b699f964ede`.
+
+## Batch 19: docs/plan-live-council + docs/plan-e2e-product into main
+
+Branch `merge/batch19` (worktree `squad-wt/merge19`), landed as a true `--no-ff` merge. Docs only: `docs/plans/LIVE-COUNCIL.md`, `docs/plans/E2E-PRODUCT-REVIEW.md`, `docs/plans/RELEASE-GATE.md` and 25 review screenshots under `docs/design/shots/review/`. Both merged cleanly. `pnpm check` exit status 0, `pnpm demo:live` OK, hub smoke 102 of 102 (no browser smoke: no code changed).
+
+### Landing (batch 19)
+
+- Landing merge commit: `408ce998ea30d6a0c72e254a98a955c80bb6d8f7` (parents `0699dc5bfaa4b89194acbe6097335e8059cc619d` = tag `pre-merge-batch19`, `98bad225eca7c16103d5c80e9056762e976f272f` = origin/merge/batch19; diff empty).
+- Rollback: `git revert -m 1 408ce998ea30d6a0c72e254a98a955c80bb6d8f7`.

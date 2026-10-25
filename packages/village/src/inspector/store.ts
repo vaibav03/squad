@@ -45,6 +45,8 @@ export interface InspectorEntry {
 export interface RoomFocus {
   readonly slot: string;
   readonly who: string;
+  /** Set by a click on a character inside the room: the inspector opens on that tab (the room chat). */
+  readonly initialTab?: 'chat';
 }
 
 export interface InspectorStore {

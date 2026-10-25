@@ -99,6 +99,10 @@
       }
     },
     {
+      "at": 6800,
+      "event": { "t": "mastery.changed", "student": "s_ana", "chapter": "ch6", "box": 1 }
+    },
+    {
       "at": 8000,
       "event": {
         "t": "agent.message",
@@ -226,6 +230,10 @@
         "thought": "No slot works for everyone, so I will propose a shorter plan",
         "message": "No single evening suits everyone, so I will look for the least bad plan."
       }
+    },
+    {
+      "at": 15500,
+      "event": { "t": "mastery.changed", "student": "s_ana", "chapter": "ch6", "box": 3 }
     },
     {
       "at": 17000,

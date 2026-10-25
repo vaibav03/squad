@@ -3,8 +3,8 @@ import { ledgerFromSnapshot, ledgerReducer, emptyLedger, summarize } from './led
 import { snapshot, recordedScript, TASK_ID } from './ledger/fixtures';
 import { splitTotal, tripReducer, withDerived, parseTripEvent, move } from './trip/model';
 import { tripVoted, TRIP_ID } from './trip/fixtures';
-import { masteryReducer, sanitize, nextUp } from './mastery/model';
-import { masteryData } from './mastery/fixtures';
+import { sanitize, weakestConcepts } from '../overlays/mastery/model';
+import { masteryData } from '../overlays/mastery/fixtures';
 import { playRecorded } from '../overlays/kit';
 
 describe('ledger privacy and reduction', () => {
@@ -74,21 +74,9 @@ describe('mastery', () => {
     expect(JSON.stringify(s)).not.toContain('squadAvg');
     expect(JSON.stringify(sanitize(masteryData))).toContain('squadAvg');
   });
-  it('mastery.changed only moves the owner and never lowers a box', () => {
-    const up = masteryReducer(
-      masteryData,
-      { t: 'mastery.changed', student: 's_ana', chapter: 'ch5', box: 3 },
-      's_ana',
-    );
-    expect(up.chapters[1]?.concepts.map((c) => c.box)).toEqual([4, 3, 3, 3]);
-    expect(
-      masteryReducer(
-        masteryData,
-        { t: 'mastery.changed', student: 's_ben', chapter: 'ch5', box: 5 },
-        's_ana',
-      ),
-    ).toBe(masteryData);
-    expect(nextUp(masteryData.chapters)[0]?.id).toBe('ch6');
+  it('weakest concepts come lowest first and skip solid ones', () => {
+    const w = weakestConcepts(masteryData.chapters);
+    expect(w.map((x) => x.id)).toEqual(['atp', 'calvin', 'cycle']);
   });
 });
 
