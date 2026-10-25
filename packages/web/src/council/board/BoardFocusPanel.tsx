@@ -161,7 +161,7 @@ export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onC
       <FocusShell
         titleId={titleId}
         name={agent.name}
-        role={ROLE_LABEL[agent.role]}
+        role={agent.role === 'chair' ? 'Council chair' : ROLE_LABEL[agent.role]}
         portrait={
           cast ? (
             <CastAvatar name={cast} state="idle" size={1} {...(calm ? { calm: true } : {})} />

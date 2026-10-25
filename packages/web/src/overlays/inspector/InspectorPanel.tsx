@@ -89,7 +89,6 @@ export function InspectorPanel({
   const seat = room
     ? roomSeats.find((x) => x.agent === store.selected && x.who === room.who)
     : undefined;
-  const roomKey = room ? `${store.selected}|${room.slot}|${room.who}` : null;
   // See defaultTab: inside a room the Chat tab; a council agent clicked outside a room opens on Thinking when it is
   // thinking now or has a thought on record, otherwise on Chat.
   const sel = store.selected;
@@ -233,7 +232,9 @@ export function InspectorPanel({
     : undefined;
   const name = resolved?.agent?.name ?? shown_name;
   const roleWords = resolved?.agent
-    ? ROLE_LABEL[resolved.agent.role]
+    ? resolved.agent.role === 'chair'
+      ? 'Council chair'
+      : ROLE_LABEL[resolved.agent.role]
     : voice && voice.who
       ? voice.role
       : v.role;

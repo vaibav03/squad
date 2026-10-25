@@ -145,7 +145,6 @@ export function HandoffTimeline({
           })
         : [],
     // run is mutated in place by the store: key on its size and stage
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [run, run?.messages.length, run?.stage, filter, agent?.id, run && statusKey(run)],
   );
   const total = run?.messages.length ?? 0;

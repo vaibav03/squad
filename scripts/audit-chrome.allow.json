@@ -27,6 +27,12 @@
       "path": "^packages/web/src/overlays/room-info/",
       "pending": true,
       "reason": "room transcript speaker dot is replaced by portraits in the deliberation redesign"
+    },
+    {
+      "path": "^packages/(village/src/council/handoffs\\.ts|web/src/overlays/inspector/focus/HandoffTimeline\\.tsx)$",
+      "kind": "marker",
+      "match": "\u2192",
+      "reason": "the required 'Sender \u2192 Recipient' handoff label: a text arrow between two names, not a decorative marker"
     }
   ]
 }
