@@ -447,3 +447,25 @@ Note: events seeded before the hall was entered did not show in the room chat in
 
 - Landing merge commit: `eee67592fd7993b552dde4e29e48f243f0bc3272` (parents `09539f5770f363ad5c0521b5c47d97027536472d` = tag `pre-merge-batch12`, `3340a73f4796268a78fa2bac4d6b89865f2d6171` = origin/merge/batch12; diff empty).
 - Rollback: `git revert -m 1 eee67592fd7993b552dde4e29e48f243f0bc3272`.
+
+## Batch 13: e2e/acceptance into main
+
+Branch `merge/batch13` (worktree `squad-wt/merge13`), landed as a true `--no-ff` merge.
+
+### Manual resolutions
+
+1. Three conflicts: `e2e/lib/helpers.ts` (acceptance's harness kept, since it has the PID-scoped stack teardown), `docs/qa/E2E-REPORT.md` and `docs/qa/e2e-results.json` (acceptance's report kept; the per-branch `docs/qa/E2E-BUGS-*.md` logs from batch 7 are untouched). All specs from the batch 7 e2e branches stay as they were on main; the acceptance specs (J1, J6 to J15) were added beside them.
+2. Lint errors fixed in the acceptance files: unused `shotN` (and `resetShots` now a no-op), unused imports in `j07`, `import()` type in `j10-village`; the empty fixture pattern `async ({}, use)` is required by Playwright, so it stays with a targeted `eslint-disable-next-line`.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `pnpm install --frozen-lockfile`, `pnpm check` (exit status read: 0), `pnpm demo:live`, `pnpm test:smoke hub` (102) | pass |
+| `pnpm e2e j14` | 2 of 2 passed (the full suite, about 21 minutes with 7 known failures, was not run) |
+| Kill-pattern grep, `pkill\|killall\|xargs kill` under `e2e/` and `scripts/` | `e2e/`: no matches. `scripts/`: one match, `scripts/track/autotrack.sh:150: pkill -TERM -P "$p"`, which signals only the children of a specific PID (not a pattern or port kill) in the tracker script, not in the e2e or dev tooling. `lsof` appears under `e2e/lib/stack.ts` only to test whether a port is in use (read-only), and in `scripts/doctor.ts` and `scripts/dev/all.ts` only in message text. |
+
+### Landing (batch 13)
+
+- Landing merge commit: `1cea988ebc6d6cb00ffe3b3d4779f081882c981b` (parents `0e4a52855b2e596835a04e14f045f2992e3ce995` = tag `pre-merge-batch13`, `58165c3163ee03eb8ea8c61e05d5961c8ce2a6d4` = origin/merge/batch13; only tracker docs differ).
+- Rollback: `git revert -m 1 1cea988ebc6d6cb00ffe3b3d4779f081882c981b`.
