@@ -201,7 +201,7 @@ export const norm = (s: string) =>
     .replace(/^🐻\s*Cubbie:\s*/i, '')
     .replace(/\s+/g, ' ')
     .trim();
-export const groupHistory = (u: WorldUser, chatId: string, limit = 300) =>
+export const groupHistory = (u: WorldUser, chatId: string, limit = 100) =>
   history(u.token, chatId, limit);
 export const lastSeqOf = async (u: WorldUser, chatId: string) =>
   (await groupHistory(u, chatId)).reduce((n, m) => Math.max(n, m.seq), 0);

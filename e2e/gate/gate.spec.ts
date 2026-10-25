@@ -12,19 +12,21 @@ import { S8, S9, S10 } from './steps/s08-s10';
 
 const JOURNEY: StepDef<GateCtx>[] = [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10];
 
-let ctx: GateCtx;
-test.beforeAll(async ({ browser }) => {
-  ctx = await makeCtx(browser, { kind: 'journey' });
+// One test, ten steps: a failing step must not restart the worker (that would drop the journey's shared state),
+// and a FAIL never stops the later steps: each records its own result; Playwright goes red through soft expects.
+test('release gate journey S1..S10', async ({ browser }) => {
+  test.setTimeout(JOURNEY.length * 300_000);
+  const ctx: GateCtx = await makeCtx(browser, { kind: 'journey' });
+  try {
+    for (const def of JOURNEY) {
+      await test.step(`${def.id} ${def.title}`, async () => {
+        const fx = await runStep(def, 'fixture', ctx);
+        expect.soft(fx.status, `${def.id} fixture: ${fx.reason ?? ''}`).not.toBe('FAIL');
+        const rl = await runStep(def, 'real', ctx);
+        expect.soft(rl.status, `${def.id} real: ${rl.reason ?? ''}`).not.toBe('FAIL');
+      });
+    }
+  } finally {
+    await disposeCtx(ctx);
+  }
 });
-test.afterAll(async () => {
-  await disposeCtx(ctx);
-});
-
-for (const def of JOURNEY) {
-  test(`${def.id} ${def.title}`, async () => {
-    const fx = await runStep(def, 'fixture', ctx);
-    expect.soft(fx.status, `${def.id} fixture: ${fx.reason ?? ''}`).not.toBe('FAIL');
-    const rl = await runStep(def, 'real', ctx);
-    expect.soft(rl.status, `${def.id} real: ${rl.reason ?? ''}`).not.toBe('FAIL');
-  });
-}

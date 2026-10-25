@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-25T13:08:56.105Z",
+  "generatedAt": "2026-10-25T13:10:57.928Z",
   "tree": {
     "branch": "feature/release-gate",
-    "head": "b1fae056",
+    "head": "9dffecd3",
     "originMain": "2835a43d"
   },
   "mode": {
@@ -11,11 +11,11 @@
   },
   "verdict": "RED (a BUILT step failed)",
   "summary": {
-    "fixtureFail": 5,
+    "fixtureFail": 9,
     "realFail": 0,
     "notBuilt": 0,
-    "blocked": 5,
-    "fixturePass": 5,
+    "blocked": 7,
+    "fixturePass": 13,
     "total": 22
   },
   "fixture": [
@@ -371,8 +371,8 @@
       ],
       "notes": [],
       "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
-      "ms": 1227,
-      "at": "2026-10-25T13:03:29.608Z"
+      "ms": 1280,
+      "at": "2026-10-25T13:09:38.640Z"
     },
     {
       "id": "S2",
@@ -631,8 +631,8 @@
       ],
       "notes": [],
       "label": "fixture (real hub connectors against HTTP fakes; no real Google or Canvas account)",
-      "ms": 1078,
-      "at": "2026-10-25T13:03:30.895Z",
+      "ms": 1117,
+      "at": "2026-10-25T13:09:39.988Z",
       "reason": "no raw squad or student ids on the Connections page after sharing"
     },
     {
@@ -842,8 +842,8 @@
         "demo model: the context-claims prompt is not served by the demo LLM, so a context-grounded chat answer cannot be produced without LIVE=1; retrieval and the viewer are asserted above"
       ],
       "label": "fixture (retrieval and source viewer asserted at the API; chat answers use the demo model unless LIVE=1)",
-      "ms": 1294,
-      "at": "2026-10-25T13:03:32.498Z"
+      "ms": 1353,
+      "at": "2026-10-25T13:09:41.653Z"
     },
     {
       "id": "S4",
@@ -947,8 +947,8 @@
       "evidence": [],
       "notes": [],
       "label": "fixture",
-      "ms": 2507,
-      "at": "2026-10-25T13:03:33.878Z"
+      "ms": 2586,
+      "at": "2026-10-25T13:09:43.157Z"
     },
     {
       "id": "S5",
@@ -1015,8 +1015,8 @@
         "@planner: the demo model cannot ground a content answer; citations are asserted with LIVE=1"
       ],
       "label": "fixture",
-      "ms": 82,
-      "at": "2026-10-25T13:03:36.447Z"
+      "ms": 355,
+      "at": "2026-10-25T13:09:45.916Z"
     },
     {
       "id": "S6",
@@ -1086,8 +1086,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 2877,
-      "at": "2026-10-25T13:03:36.614Z"
+      "ms": 3114,
+      "at": "2026-10-25T13:09:46.608Z"
     },
     {
       "id": "S7",
@@ -1174,8 +1174,8 @@
       ],
       "notes": [],
       "label": "fixture",
-      "ms": 6951,
-      "at": "2026-10-25T13:03:39.555Z",
+      "ms": 11026,
+      "at": "2026-10-25T13:09:49.869Z",
       "reason": "iMessage-origin message carries a \"via iMessage\" tag"
     },
     {
@@ -1210,11 +1210,11 @@
         },
         {
           "name": "hub chat carries the trip card text",
-          "pass": false
+          "pass": true
         },
         {
           "name": "card links to the trip page",
-          "pass": false
+          "pass": true
         },
         {
           "name": "web thread shows the trip text with its link",
@@ -1255,7 +1255,7 @@
         },
         {
           "name": "Rhea's vote is announced in the group (no ranking)",
-          "pass": false
+          "pass": true
         },
         {
           "name": "another member sees no ranking of mine",
@@ -1271,7 +1271,7 @@
         },
         {
           "name": "Ben's vote is announced in the group (no ranking)",
-          "pass": false
+          "pass": true
         },
         {
           "name": "counts still hidden at 2 voters",
@@ -1287,7 +1287,7 @@
         },
         {
           "name": "Cy's vote is announced in the group (no ranking)",
-          "pass": false
+          "pass": true
         },
         {
           "name": "per-member vote rows (3 distinct voters)",
@@ -1303,15 +1303,15 @@
         },
         {
           "name": "Ben's ranking never appears in Rhea's browser payloads",
-          "pass": false
+          "pass": true
         },
         {
           "name": "Rhea (API) confirmation is announced",
-          "pass": false
+          "pass": true
         },
         {
           "name": "Ben (iMessage \"confirm\") confirmation is announced",
-          "pass": false
+          "pass": true
         },
         {
           "name": "two of three is not a trip",
@@ -1319,7 +1319,7 @@
         },
         {
           "name": "Cy (API) confirmation is announced",
-          "pass": false
+          "pass": true
         },
         {
           "name": "a repeated confirm is harmless",
@@ -1331,8 +1331,7 @@
         },
         {
           "name": "\"Trip confirmed\" is said exactly once",
-          "pass": false,
-          "detail": "expected 1, got 0"
+          "pass": true
         },
         {
           "name": "trip.confirmed reached the village stream exactly once",
@@ -1400,7 +1399,7 @@
         },
         {
           "name": "hub chat posts the offline notice",
-          "pass": false
+          "pass": true
         },
         {
           "name": "iMessage receives the offline notice",
@@ -1442,9 +1441,9 @@
       ],
       "notes": [],
       "label": "fixture (demo labelled)",
-      "ms": 211074,
-      "at": "2026-10-25T13:03:47.127Z",
-      "reason": "hub chat carries the trip card text"
+      "ms": 10872,
+      "at": "2026-10-25T13:10:01.615Z",
+      "reason": "at least two live options"
     },
     {
       "id": "S9",
@@ -1453,17 +1452,179 @@
       "status": "FAIL",
       "assertions": [
         {
-          "name": "a plan card reached the group",
+          "name": "a progress line came before the card",
+          "pass": true
+        },
+        {
+          "name": "card carries the plan id",
+          "pass": true
+        },
+        {
+          "name": "plan is readable by id",
+          "pass": true
+        },
+        {
+          "name": "status is proposed",
+          "pass": true
+        },
+        {
+          "name": "plan has a rev",
+          "pass": true
+        },
+        {
+          "name": "Ben sees the same plan id",
+          "pass": true
+        },
+        {
+          "name": "Cy sees the same plan id",
+          "pass": true
+        },
+        {
+          "name": "plan row is persisted",
+          "pass": true
+        },
+        {
+          "name": "persisted rev equals the API rev",
+          "pass": true
+        },
+        {
+          "name": "plan belongs to this squad",
+          "pass": true
+        },
+        {
+          "name": "exam date is the Canvas midterm due day",
+          "pass": true
+        },
+        {
+          "name": "countdown matches the due date",
+          "pass": true
+        },
+        {
+          "name": "every item has an owner who is a member",
+          "pass": true
+        },
+        {
+          "name": "work is shared (at least two owners)",
+          "pass": true
+        },
+        {
+          "name": "item ids are unique",
+          "pass": true
+        },
+        {
+          "name": "three members on the plan",
+          "pass": true
+        },
+        {
+          "name": "iMessage carries the plan summary",
+          "pass": true
+        },
+        {
+          "name": "iMessage countdown matches the page",
+          "pass": true
+        },
+        {
+          "name": "iMessage names the exam day",
+          "pass": true
+        },
+        {
+          "name": "iMessage lists Rhea's 3 items",
           "pass": false,
-          "detail": "bot said: nothing"
+          "detail": "expected 3, got 0"
+        },
+        {
+          "name": "iMessage lists Ben's 1 items",
+          "pass": false,
+          "detail": "expected 1, got 0"
+        },
+        {
+          "name": "iMessage lists Cy's 1 items",
+          "pass": false,
+          "detail": "expected 1, got 0"
+        },
+        {
+          "name": "web countdown shows the same days",
+          "pass": true
+        },
+        {
+          "name": "web panel shows Rhea on 3 items",
+          "pass": true
+        },
+        {
+          "name": "web panel shows Ben on 1 items",
+          "pass": true
+        },
+        {
+          "name": "web panel shows Cy on 1 items",
+          "pass": true
+        },
+        {
+          "name": "web chat shows the plan card with an Open plan link",
+          "pass": true
+        },
+        {
+          "name": "Ben (API) acceptance is announced",
+          "pass": true
+        },
+        {
+          "name": "Cy (iMessage) acceptance is announced",
+          "pass": true
+        },
+        {
+          "name": "plan is active after everyone accepted",
+          "pass": true
+        },
+        {
+          "name": "acceptances are tracked per member",
+          "pass": true
+        },
+        {
+          "name": "owner swap accepted",
+          "pass": true
+        },
+        {
+          "name": "swap is announced in the group",
+          "pass": true
+        },
+        {
+          "name": "rev increased and persisted",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in plan view",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in group chat (plan)",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in iMessage (plan)",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in Rhea's browser payloads (plan)",
+          "pass": true
+        },
+        {
+          "name": "squad availability is aggregate only (counts, never who)",
+          "pass": true
+        },
+        {
+          "name": "no mastery numbers in the shared plan payload",
+          "pass": true
         }
       ],
-      "evidence": [],
-      "notes": [],
+      "evidence": [
+        "docs/design/shots/gate/s9-01-plan-proposed.png"
+      ],
+      "notes": [
+        "mastery hidden for squads under 3 members is not exercised: the world squad has 3 members"
+      ],
       "label": "fixture (demo labelled)",
-      "ms": 60378,
-      "at": "2026-10-25T13:07:18.795Z",
-      "reason": "a plan card reached the group"
+      "ms": 2606,
+      "at": "2026-10-25T13:10:13.467Z",
+      "reason": "iMessage lists Rhea's 3 items"
     },
     {
       "id": "S10",
@@ -1493,7 +1654,7 @@
         },
         {
           "name": "a failed plan edit is said in the group",
-          "pass": false
+          "pass": true
         },
         {
           "name": "hub message ids are unique",
@@ -1527,6 +1688,10 @@
         {
           "name": "no raw ids in iMessage log",
           "pass": true
+        },
+        {
+          "name": "failure.plan-edit m_55: in the hub",
+          "pass": false
         },
         {
           "name": "trip id is stable and present in the trip card text",
@@ -1566,9 +1731,688 @@
         "live typing/thinking is transient with the scripted model; only \"not stuck\" is asserted"
       ],
       "label": "fixture (demo labelled)",
-      "ms": 34386,
-      "at": "2026-10-25T13:08:20.134Z",
+      "ms": 4191,
+      "at": "2026-10-25T13:10:20.436Z",
       "reason": "S8/S9 recorded a trip.vote decision"
+    },
+    {
+      "id": "V1",
+      "title": "Fresh setup: connecting is optional and asking before connecting is honest",
+      "mode": "fixture",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "name": "a new account has no connections",
+          "pass": true
+        },
+        {
+          "name": "the hub lists the allowed scopes up front",
+          "pass": true
+        },
+        {
+          "name": "asking before connecting still gets an answer",
+          "pass": true
+        },
+        {
+          "name": "and says nothing is connected and offers a way to connect",
+          "pass": false,
+          "detail": "reply does not mention connecting"
+        },
+        {
+          "name": "with no citations",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in reply",
+          "pass": true
+        },
+        {
+          "name": "the Connections page offers Canvas and Google",
+          "pass": true
+        },
+        {
+          "name": "no error alert on the page",
+          "pass": true
+        }
+      ],
+      "evidence": [
+        "docs/design/shots/gate/v1-01-fresh-connections.png"
+      ],
+      "notes": [],
+      "label": "fixture",
+      "ms": 1786,
+      "at": "2026-10-25T13:10:25.267Z",
+      "reason": "and says nothing is connected and offers a way to connect"
+    },
+    {
+      "id": "V2",
+      "title": "Reconnect: purge on disconnect, same ids on reconnect, chat untouched",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "first connect ingested sources",
+          "pass": true
+        },
+        {
+          "name": "disconnect purges every derived source",
+          "pass": true
+        },
+        {
+          "name": "connections stay listed as revoked",
+          "pass": true
+        },
+        {
+          "name": "chat history untouched",
+          "pass": true
+        },
+        {
+          "name": "reconnect recreates the same source ids",
+          "pass": true
+        },
+        {
+          "name": "and the same titles",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [],
+      "label": "fixture",
+      "ms": 232,
+      "at": "2026-10-25T13:10:27.783Z"
+    },
+    {
+      "id": "V3",
+      "title": "Revoked auth: needs reconnect, data marked not deleted, the other source keeps working",
+      "mode": "fixture",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "name": "Google is no longer live",
+          "pass": true
+        },
+        {
+          "name": "the label says to reconnect in words",
+          "pass": false
+        },
+        {
+          "name": "Canvas is unaffected",
+          "pass": true
+        },
+        {
+          "name": "Google-derived items are kept (stale), not deleted",
+          "pass": false
+        },
+        {
+          "name": "retrieval still answers from the valid source",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in search payload",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [
+        "after revoke: state=revoked label=Disconnected: imported data deleted status=revoked degraded=false note=Disconnected. All imported data was deleted."
+      ],
+      "label": "fixture",
+      "ms": 167,
+      "at": "2026-10-25T13:10:28.131Z",
+      "reason": "the label says to reconnect in words"
+    },
+    {
+      "id": "V4",
+      "title": "Expired access token: transparent refresh; refresh failure falls to V3",
+      "mode": "fixture",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "name": "a token near expiry is refreshed by the hub (a refresh call reached the token endpoint)",
+          "pass": false
+        },
+        {
+          "name": "and the connection stays live with no user-visible failure",
+          "pass": true
+        },
+        {
+          "name": "a sync then works",
+          "pass": true
+        },
+        {
+          "name": "a refused refresh ends needing reconnect",
+          "pass": false,
+          "detail": "state live"
+        },
+        {
+          "name": "a 401 on sync triggers one refresh and a retry (no user-visible failure)",
+          "pass": false,
+          "detail": "sync 200, state revoked, refresh calls 0"
+        }
+      ],
+      "evidence": [],
+      "notes": [],
+      "label": "fixture",
+      "ms": 144,
+      "at": "2026-10-25T13:10:30.142Z",
+      "reason": "a token near expiry is refreshed by the hub (a refresh call reached the token endpoint)"
+    },
+    {
+      "id": "V5",
+      "title": "Canvas upstream gone: degraded with the last good items, never a silent empty",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "Canvas items exist before the outage",
+          "pass": true
+        },
+        {
+          "name": "Canvas shows as degraded or not live, in words",
+          "pass": true
+        },
+        {
+          "name": "the last good items are kept",
+          "pass": true
+        },
+        {
+          "name": "and a last-synced time is shown",
+          "pass": true
+        },
+        {
+          "name": "a rate limit is reported as such, not as empty",
+          "pass": true
+        },
+        {
+          "name": "items still kept after the rate limit",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [],
+      "label": "fixture",
+      "ms": 103,
+      "at": "2026-10-25T13:10:30.758Z"
+    },
+    {
+      "id": "V6",
+      "title": "Duplicate events",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "one hub message for a GUID delivered four times",
+          "pass": true
+        },
+        {
+          "name": "one bot reply",
+          "pass": true
+        },
+        {
+          "name": "one outbound to Apple",
+          "pass": true
+        },
+        {
+          "name": "the reply exists",
+          "pass": true
+        },
+        {
+          "name": "one identity row for the GUID",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [],
+      "label": "fixture",
+      "ms": 2593,
+      "at": "2026-10-25T13:10:30.933Z"
+    },
+    {
+      "id": "V7",
+      "title": "Offline gap, backfill and hub restart",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "nothing reached the hub while the watcher was down",
+          "pass": true
+        },
+        {
+          "name": "hub restarted (exact PID)",
+          "pass": true
+        },
+        {
+          "name": "both gap messages appear after reconnect",
+          "pass": true
+        },
+        {
+          "name": "each appears exactly once",
+          "pass": true
+        },
+        {
+          "name": "in message-time order (one before two)",
+          "pass": true
+        },
+        {
+          "name": "flagged as received late",
+          "pass": true
+        },
+        {
+          "name": "the thread is in the shared order",
+          "pass": true
+        },
+        {
+          "name": "the tagged one is answered once",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [],
+      "label": "fixture",
+      "ms": 3429,
+      "at": "2026-10-25T13:10:33.600Z"
+    },
+    {
+      "id": "V8",
+      "title": "Outbound failure and retry",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "failNext(2) then sent after the retry",
+          "pass": true
+        },
+        {
+          "name": "delivered to Apple once",
+          "pass": true
+        },
+        {
+          "name": "the ladder ends in failed",
+          "pass": true
+        },
+        {
+          "name": "with a reason and a label in words",
+          "pass": true
+        },
+        {
+          "name": "attempts are bounded (10)",
+          "pass": true
+        },
+        {
+          "name": "nothing was ever delivered to Apple",
+          "pass": true
+        },
+        {
+          "name": "no more attempts after failed",
+          "pass": true
+        },
+        {
+          "name": "Retry accepted for a member of the chat",
+          "pass": true
+        },
+        {
+          "name": "and the message is then sent",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [],
+      "label": "fixture",
+      "ms": 9113,
+      "at": "2026-10-25T13:10:37.087Z"
+    },
+    {
+      "id": "V9",
+      "title": "Conflicting edits (trip field, plan chapter) and an agent going offline",
+      "mode": "fixture",
+      "status": "FAIL",
+      "assertions": [
+        {
+          "name": "members can propose options",
+          "pass": true
+        },
+        {
+          "name": "same-option race: exactly one edit lands and one gets 409",
+          "pass": true
+        },
+        {
+          "name": "409 carries the conflict code",
+          "pass": true
+        },
+        {
+          "name": "409 names who changed it (their version)",
+          "pass": true
+        },
+        {
+          "name": "409 returns the current option (theirs)",
+          "pass": true
+        },
+        {
+          "name": "nothing is silently overwritten: the winner stays",
+          "pass": true
+        },
+        {
+          "name": "edits to different options merge (both 200)",
+          "pass": true
+        },
+        {
+          "name": "simultaneous votes never conflict",
+          "pass": true
+        },
+        {
+          "name": "\"Replace with mine\" lands",
+          "pass": true
+        },
+        {
+          "name": "final value is the replacement",
+          "pass": true
+        },
+        {
+          "name": "hub chat logs the winning change",
+          "pass": true
+        },
+        {
+          "name": "hub chat logs the replacement as \"replaced a newer change\"",
+          "pass": true
+        },
+        {
+          "name": "web thread shows both outcomes",
+          "pass": false
+        },
+        {
+          "name": "iMessage shows the replacement",
+          "pass": true
+        },
+        {
+          "name": "iMessage shows the winning change",
+          "pass": true
+        },
+        {
+          "name": "web actor for trip page",
+          "pass": false,
+          "detail": "not opened"
+        },
+        {
+          "name": "iMessage summary shows the same final price",
+          "pass": true
+        },
+        {
+          "name": "no sentinel in trip conflict iMessage text",
+          "pass": true
+        },
+        {
+          "name": "same-chapter race: exactly one edit lands and one gets 409",
+          "pass": true
+        },
+        {
+          "name": "409 carries the conflict code",
+          "pass": true
+        },
+        {
+          "name": "conflict record keeps both versions",
+          "pass": true
+        },
+        {
+          "name": "conflict is open until someone picks",
+          "pass": true
+        },
+        {
+          "name": "the winner stays on the item",
+          "pass": true
+        },
+        {
+          "name": "the plan lists the conflict for every member",
+          "pass": true
+        },
+        {
+          "name": "edits to other items merge (both 200)",
+          "pass": true
+        },
+        {
+          "name": "further edits are refused while the conflict is open",
+          "pass": true
+        },
+        {
+          "name": "picking a version resolves the conflict",
+          "pass": true
+        },
+        {
+          "name": "the picked version is applied",
+          "pass": true
+        },
+        {
+          "name": "the conflict is closed",
+          "pass": true
+        },
+        {
+          "name": "hub chat logs the conflict",
+          "pass": true
+        },
+        {
+          "name": "hub chat logs the pick",
+          "pass": true
+        },
+        {
+          "name": "web thread shows both",
+          "pass": false
+        },
+        {
+          "name": "iMessage shows the conflict",
+          "pass": true
+        },
+        {
+          "name": "iMessage shows the pick",
+          "pass": true
+        },
+        {
+          "name": "iMessage \"show plan\" answers",
+          "pass": true
+        },
+        {
+          "name": "iMessage summary lists the item under the picked owner",
+          "pass": false,
+          "detail": " / want ch12 (Oct 26)"
+        },
+        {
+          "name": "and under nobody else",
+          "pass": false,
+          "detail": "expected 0, got 1"
+        },
+        {
+          "name": "web actor for plan panel",
+          "pass": false,
+          "detail": "not opened"
+        },
+        {
+          "name": "no sentinel in plan conflict iMessage text",
+          "pass": true
+        },
+        {
+          "name": "agent s_ben is down",
+          "pass": true
+        },
+        {
+          "name": "trip is created while an agent is down",
+          "pass": true
+        },
+        {
+          "name": "constraints wait for the missing agent",
+          "pass": true
+        },
+        {
+          "name": "Ben's agent is reported offline (not \"no agent\")",
+          "pass": true
+        },
+        {
+          "name": "the wait names the member",
+          "pass": true
+        },
+        {
+          "name": "note says the agent is offline",
+          "pass": true
+        },
+        {
+          "name": "trip stays open (planning), not voting or confirmed",
+          "pass": true
+        },
+        {
+          "name": "web actor for trip page",
+          "pass": false,
+          "detail": "not opened"
+        },
+        {
+          "name": "hub chat posts the offline notice",
+          "pass": true
+        },
+        {
+          "name": "iMessage receives the offline notice",
+          "pass": true
+        },
+        {
+          "name": "notice names the member and not a raw id",
+          "pass": true
+        },
+        {
+          "name": "still not confirmed after waiting",
+          "pass": true
+        },
+        {
+          "name": "stored trip is not confirmed",
+          "pass": true
+        },
+        {
+          "name": "confirm before voting closes is refused (409)",
+          "pass": true
+        },
+        {
+          "name": "no \"Trip confirmed\" message for this trip",
+          "pass": true
+        },
+        {
+          "name": "agent s_ben restarted",
+          "pass": true
+        },
+        {
+          "name": "Retry resumes the trip once the agent is back",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [
+        "same option, different field with a stale baseRev answered 409 (docs say merge, code checks per option)",
+        "fewer than two members pending: the simultaneous-accept check was skipped"
+      ],
+      "label": "fixture",
+      "ms": 6475,
+      "at": "2026-10-25T13:10:46.278Z",
+      "reason": "web thread shows both outcomes"
+    },
+    {
+      "id": "V10",
+      "title": "Multiple group threads",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "squad A got its answer",
+          "pass": true
+        },
+        {
+          "name": "squad B got its answer",
+          "pass": true
+        },
+        {
+          "name": "A never shows B text",
+          "pass": true
+        },
+        {
+          "name": "B never shows A text",
+          "pass": true
+        },
+        {
+          "name": "exactly one outbound per group",
+          "pass": true
+        },
+        {
+          "name": "no cross-over in the outbound text",
+          "pass": true
+        },
+        {
+          "name": "a 1:1 never appears in squad A",
+          "pass": true
+        },
+        {
+          "name": "nor in squad B",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [
+        "1:1 squad disambiguation (\"Which squad?\") is not part of feature/imessage-sync today (docs/imessage.md); a DM stays private to Cubbie."
+      ],
+      "label": "fixture",
+      "ms": 2958,
+      "at": "2026-10-25T13:10:53.621Z"
+    },
+    {
+      "id": "V11",
+      "title": "Degraded model is labelled Demo everywhere",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "status says the model is the demo stand-in",
+          "pass": true
+        },
+        {
+          "name": "and says why in words",
+          "pass": true
+        },
+        {
+          "name": "the reply carries demo:true",
+          "pass": true
+        },
+        {
+          "name": "and the iMessage text says Demo too",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [
+        "iMessage text has no literal \"Demo\" marker (only the web label); recorded, not asserted"
+      ],
+      "label": "fixture/degraded",
+      "ms": 113,
+      "at": "2026-10-25T13:10:56.757Z"
+    },
+    {
+      "id": "V12",
+      "title": "Wrong person tags @cubbie",
+      "mode": "fixture",
+      "status": "PASS",
+      "assertions": [
+        {
+          "name": "an unlinked handle gets the link prompt only",
+          "pass": true
+        },
+        {
+          "name": "nothing is posted to the web thread",
+          "pass": true
+        },
+        {
+          "name": "a non-member is told to join, nothing more",
+          "pass": true
+        },
+        {
+          "name": "and nothing is posted to the web thread",
+          "pass": true
+        }
+      ],
+      "evidence": [],
+      "notes": [],
+      "label": "fixture",
+      "ms": 113,
+      "at": "2026-10-25T13:10:57.029Z"
     }
   ],
   "real": [
@@ -1581,8 +2425,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 53,
-      "at": "2026-10-25T13:03:30.837Z",
+      "ms": 61,
+      "at": "2026-10-25T13:09:39.922Z",
       "reason": "no_google_client",
       "runbook": "#google-oauth-client-and-consent-screen"
     },
@@ -1595,8 +2439,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 56,
-      "at": "2026-10-25T13:03:31.974Z",
+      "ms": 61,
+      "at": "2026-10-25T13:09:41.106Z",
       "reason": "no_google_client",
       "runbook": "#google-oauth-client-and-consent-screen"
     },
@@ -1609,8 +2453,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 79,
-      "at": "2026-10-25T13:03:33.794Z",
+      "ms": 143,
+      "at": "2026-10-25T13:09:43.008Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -1623,8 +2467,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 57,
-      "at": "2026-10-25T13:03:36.385Z",
+      "ms": 154,
+      "at": "2026-10-25T13:09:45.744Z",
       "reason": "apple_unverified",
       "runbook": "#apple-behaviour-and-permissions"
     },
@@ -1637,8 +2481,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 79,
-      "at": "2026-10-25T13:03:36.529Z",
+      "ms": 316,
+      "at": "2026-10-25T13:09:46.275Z",
       "reason": "llm_credits",
       "runbook": "#gemini-credits-live-and-elevenlabs-plan"
     },
@@ -1651,8 +2495,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 59,
-      "at": "2026-10-25T13:03:39.492Z",
+      "ms": 138,
+      "at": "2026-10-25T13:09:49.723Z",
       "reason": "apple_unverified",
       "runbook": "#apple-behaviour-and-permissions"
     },
@@ -1665,8 +2509,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 106,
-      "at": "2026-10-25T13:03:46.507Z",
+      "ms": 159,
+      "at": "2026-10-25T13:10:00.897Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -1679,8 +2523,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 78,
-      "at": "2026-10-25T13:07:18.205Z",
+      "ms": 157,
+      "at": "2026-10-25T13:10:12.491Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -1693,8 +2537,8 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 230,
-      "at": "2026-10-25T13:08:19.180Z",
+      "ms": 129,
+      "at": "2026-10-25T13:10:16.076Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
     },
@@ -1707,10 +2551,178 @@
       "evidence": [],
       "notes": [],
       "label": "real",
-      "ms": 189,
-      "at": "2026-10-25T13:08:54.524Z",
+      "ms": 99,
+      "at": "2026-10-25T13:10:24.629Z",
       "reason": "real_not_requested",
       "runbook": "#smoke-path"
+    },
+    {
+      "id": "V1",
+      "title": "Fresh setup: connecting is optional and asking before connecting is honest",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 189,
+      "at": "2026-10-25T13:10:27.056Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "V2",
+      "title": "Reconnect: purge on disconnect, same ids on reconnect, chat untouched",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 92,
+      "at": "2026-10-25T13:10:28.019Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "V3",
+      "title": "Revoked auth: needs reconnect, data marked not deleted, the other source keeps working",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 125,
+      "at": "2026-10-25T13:10:28.299Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "V4",
+      "title": "Expired access token: transparent refresh; refresh failure falls to V3",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 71,
+      "at": "2026-10-25T13:10:30.289Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "V5",
+      "title": "Canvas upstream gone: degraded with the last good items, never a silent empty",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 60,
+      "at": "2026-10-25T13:10:30.863Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "V6",
+      "title": "Duplicate events",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 64,
+      "at": "2026-10-25T13:10:33.526Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "V7",
+      "title": "Offline gap, backfill and hub restart",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 40,
+      "at": "2026-10-25T13:10:37.031Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "V8",
+      "title": "Outbound failure and retry",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 69,
+      "at": "2026-10-25T13:10:46.200Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "V9",
+      "title": "Conflicting edits (trip field, plan chapter) and an agent going offline",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 287,
+      "at": "2026-10-25T13:10:52.755Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "V10",
+      "title": "Multiple group threads",
+      "mode": "real",
+      "status": "SKIPPED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 161,
+      "at": "2026-10-25T13:10:56.581Z",
+      "reason": "real_not_requested",
+      "runbook": "#smoke-path"
+    },
+    {
+      "id": "V11",
+      "title": "Degraded model is labelled Demo everywhere",
+      "mode": "real",
+      "status": "BLOCKED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 138,
+      "at": "2026-10-25T13:10:56.871Z",
+      "reason": "llm_credits",
+      "runbook": "#gemini-credits-live-and-elevenlabs-plan"
+    },
+    {
+      "id": "V12",
+      "title": "Wrong person tags @cubbie",
+      "mode": "real",
+      "status": "BLOCKED",
+      "assertions": [],
+      "evidence": [],
+      "notes": [],
+      "label": "real",
+      "ms": 71,
+      "at": "2026-10-25T13:10:57.143Z",
+      "reason": "needs_second_person",
+      "runbook": "#real-multi-person-imessage-group"
     }
   ],
   "blockers": [
@@ -1776,6 +2788,7 @@
     "docs/design/shots/gate/key-s3-01-citation-excerpt.png",
     "docs/design/shots/gate/key-s6-01-delivery-state.png",
     "docs/design/shots/gate/key-s7-01-web-mirror-rhea.png",
-    "docs/design/shots/gate/key-s8-01-trip-voting.png"
+    "docs/design/shots/gate/key-s8-01-trip-voting.png",
+    "docs/design/shots/gate/key-s9-01-plan-proposed.png"
   ]
 }

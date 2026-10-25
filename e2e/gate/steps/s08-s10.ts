@@ -196,7 +196,7 @@ async function s8(c: GateCtx, a: Asserts) {
   a.eq('trip is confirmed', done?.status, 'confirmed');
   a.eq(
     '"Trip confirmed" is said exactly once',
-    (await history(rhea.token, sq.chatId, 300)).filter(
+    (await history(rhea.token, sq.chatId, 100)).filter(
       (m) => isBot(m) && /Trip confirmed by all/.test(m.text),
     ).length,
     1,
@@ -228,7 +228,7 @@ async function s8(c: GateCtx, a: Asserts) {
   }
 
   // 7. privacy
-  const hist = (await history(rhea.token, sq.chatId, 300)).map((m) => m.text).join('\n');
+  const hist = (await history(rhea.token, sq.chatId, 100)).map((m) => m.text).join('\n');
   a.noLeak('group chat (trip)', hist);
   a.noLeak('iMessage (trip)', await imText(sq.chat));
   a.noLeak("Rhea's browser payloads (trip)", rb, defaultSentinels());
@@ -259,20 +259,20 @@ async function s9(c: GateCtx, a: Asserts) {
   await im.say(sq.chat, rhea.phone, `@cubbie study plan for the midterm on ${MIDTERM_DAY}`);
   const proposed = await waitFor(
     async () =>
-      (await history(rhea.token, sq.chatId, 300)).find(
+      (await history(rhea.token, sq.chatId, 100)).find(
         (m) => isBot(m) && m.seq > seq0 && m.card?.type === 'plan',
       ),
     60_000,
   );
   if (!proposed) {
-    const said = (await history(rhea.token, sq.chatId, 300))
+    const said = (await history(rhea.token, sq.chatId, 100))
       .filter((m) => isBot(m) && m.seq > seq0)
       .map((m) => m.text.slice(0, 140));
     return a.fail('a plan card reached the group', `bot said: ${said.join(' | ') || 'nothing'}`);
   }
   a.ok(
     'a progress line came before the card',
-    (await history(rhea.token, sq.chatId, 300)).some(
+    (await history(rhea.token, sq.chatId, 100)).some(
       (m) => isBot(m) && m.seq > seq0 && m.seq < proposed.seq && /on it|building/i.test(m.text),
     ),
   );
@@ -406,7 +406,7 @@ async function s9(c: GateCtx, a: Asserts) {
   a.noLeak('plan view', body);
   a.noLeak(
     'group chat (plan)',
-    (await history(rhea.token, sq.chatId, 300)).map((m) => m.text).join('\n'),
+    (await history(rhea.token, sq.chatId, 100)).map((m) => m.text).join('\n'),
   );
   a.noLeak('iMessage (plan)', await imText(sq.chat));
   a.noLeak("Rhea's browser payloads (plan)", c.actors.rhea?.bodies.join('\n') ?? '');

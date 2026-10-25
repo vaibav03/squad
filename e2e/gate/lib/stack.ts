@@ -151,7 +151,13 @@ export function prepareAgentFixtures(): void {
     const prof = JSON.parse(fs.readFileSync(path.join(FIXTURES, `${slot}.json`), 'utf8'));
     fs.writeFileSync(
       path.join(FIXTURES, `${u.id}.json`),
-      JSON.stringify({ ...prof, id: u.id, name: u.name }),
+      // rhea's budget is raised so at least two trip options survive the private budget check
+      JSON.stringify({
+        ...prof,
+        id: u.id,
+        name: u.name,
+        budget: SLOT_USER[slot] === 'rhea' ? Math.max(prof.budget, 600) : prof.budget,
+      }),
     );
     peerMap[u.id] = AGENT_URL(slot);
   }

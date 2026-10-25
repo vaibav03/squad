@@ -233,7 +233,7 @@ export const VARIANTS: VariantDef[] = [
   { def: V6, world: {} },
   { def: V7, world: {} },
   { def: V8, world: {} },
-  { def: V9, world: { kind: 'journey' } },
+  { def: V9, world: { kind: 'journey', actors: true } },
   { def: V10, world: { b: true } },
   { def: V11, world: {} },
   { def: V12, world: {} },
