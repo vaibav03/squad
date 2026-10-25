@@ -192,5 +192,6 @@ export class ChatRepl {
       rl.prompt();
     }
     rl.close();
+    (input as { pause?: () => void }).pause?.();
   }
 }

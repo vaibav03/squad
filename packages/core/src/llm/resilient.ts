@@ -54,6 +54,9 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
       ? { llm: 'real' }
       : { llm: 'fake', reason: 'no_key', since: now() };
   let probing = false;
+  // The tier whose call hit the quota: probe with that same tier, so a cheaper model that still answers
+  // cannot flip the status back to real while the model the app actually uses keeps failing.
+  let failedTier: string | undefined;
   // A cache handle only works on the model that made it: when the other model answers, the handle is dropped
   // and the context it held is sent as the system prompt instead.
   const caches = new Map<string, { owner: 'real' | 'fake'; system?: string }>();
@@ -93,7 +96,7 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
     const real = o.real;
     void (async () => {
       try {
-        await real.complete({ messages: 'ok', maxTokens: 1, model: 'fast' });
+        await real.complete({ messages: 'ok', maxTokens: 1, model: failedTier ?? 'fast' });
         state = { llm: 'real' };
         o.onRecover?.({ ...state });
       } catch (e) {
@@ -107,7 +110,7 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
     })();
   }
 
-  async function run<T>(f: (l: Llm, toFake: boolean) => Promise<T>): Promise<T> {
+  async function run<T>(f: (l: Llm, toFake: boolean) => Promise<T>, tier?: string): Promise<T> {
     if (state.llm === 'fake' || !o.real) {
       maybeProbe();
       return f(o.fake, true);
@@ -117,6 +120,7 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
     } catch (e) {
       const reason = reasonOf(e);
       if (!reason) throw classifyGeminiError(e);
+      if (tier) failedTier = tier;
       if (state.llm === 'real') {
         const t = now();
         state = {
@@ -137,8 +141,10 @@ export function createResilientLlm(o: ResilientLlmOptions): ResilientLlm {
       maybeProbe();
       return { ...state };
     },
-    complete: (req: LlmRequest) => run((l, t) => l.complete(portable(req, t))),
-    json: <T>(req: LlmJsonRequest<T>) => run((l, t) => l.json(portable(req, t))),
+    complete: (req: LlmRequest) =>
+      run((l, t) => l.complete(portable(req, t)), String(req.model ?? 'main')),
+    json: <T>(req: LlmJsonRequest<T>) =>
+      run((l, t) => l.json(portable(req, t)), String(req.model ?? 'main')),
     async createCache(req: LlmCacheRequest) {
       let owner: 'real' | 'fake' = 'real';
       const h = await run((l, t) => {

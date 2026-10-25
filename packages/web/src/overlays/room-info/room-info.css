@@ -376,6 +376,13 @@
   overflow: hidden;
   max-height: 88dvh;
 }
+@media (max-width: 639px) {
+  /* keep the panel clear of the 64px bottom nav */
+  .rr-panel {
+    max-height: calc(88dvh - 64px - var(--safe-bottom, 0px));
+    margin-bottom: calc(64px + var(--safe-bottom, 0px));
+  }
+}
 @media (min-width: 640px) {
   .lv-ovl[data-placement='dock'] .rr-panel {
     align-self: flex-start;
@@ -497,4 +504,9 @@
     animation-name: rr-fade;
     animation-duration: var(--dur-base);
   }
+}
+
+.rr-ask {
+  margin-top: var(--lv-s3);
+  min-height: var(--lv-tap);
 }
