@@ -30,7 +30,8 @@ export class Telemetry {
 export function percentiles(xs: number[]): { p50: number; p95: number; n: number } {
   if (xs.length === 0) return { p50: 0, p95: 0, n: 0 };
   const s = [...xs].sort((a, b) => a - b);
-  const at = (q: number) => s[Math.min(s.length - 1, Math.max(0, Math.ceil(q * s.length) - 1))] as number;
+  const at = (q: number) =>
+    s[Math.min(s.length - 1, Math.max(0, Math.ceil(q * s.length) - 1))] as number;
   return { p50: at(0.5), p95: at(0.95), n: s.length };
 }
 
@@ -65,7 +66,9 @@ type Usage = {
 };
 
 const statusOf = (e: unknown): number | undefined => {
-  const s = (e as { status?: unknown; code?: unknown } | null)?.status ?? (e as { code?: unknown } | null)?.code;
+  const s =
+    (e as { status?: unknown; code?: unknown } | null)?.status ??
+    (e as { code?: unknown } | null)?.code;
   return typeof s === 'number' ? s : undefined;
 };
 
@@ -95,7 +98,12 @@ export function meterClient(
         });
     }
   };
-  const run = async <T>(op: CallStat['op'], model: string | undefined, f: () => Promise<T>, usage?: (r: T) => Usage | undefined): Promise<T> => {
+  const run = async <T>(
+    op: CallStat['op'],
+    model: string | undefined,
+    f: () => Promise<T>,
+    usage?: (r: T) => Usage | undefined,
+  ): Promise<T> => {
     const t0 = now();
     try {
       const r = await f();
@@ -113,12 +121,20 @@ export function meterClient(
         ok: true,
         ...(u?.promptTokenCount !== undefined ? { inputTokens: u.promptTokenCount } : {}),
         ...(u?.candidatesTokenCount !== undefined ? { outputTokens: u.candidatesTokenCount } : {}),
-        ...(u?.cachedContentTokenCount !== undefined ? { cachedTokens: u.cachedContentTokenCount } : {}),
+        ...(u?.cachedContentTokenCount !== undefined
+          ? { cachedTokens: u.cachedContentTokenCount }
+          : {}),
       });
       return r;
     } catch (e) {
       const status = statusOf(e);
-      tel.push({ op, ...(model ? { model } : {}), ms: now() - t0, ok: false, ...(status ? { status } : {}) });
+      tel.push({
+        op,
+        ...(model ? { model } : {}),
+        ms: now() - t0,
+        ok: false,
+        ...(status ? { status } : {}),
+      });
       noteError(e);
       throw e;
     }
@@ -130,7 +146,12 @@ export function meterClient(
       budget.guardGeminiCall(params.config?.cachedContent ? Math.ceil(est * 0.2) + 200 : est);
       const cfg = { ...(params.config ?? {}) };
       cfg.maxOutputTokens = budget.outputAllowance(cfg.maxOutputTokens, est);
-      return run('generate', String(params.model), () => inner.models.generateContent({ ...params, config: cfg }), (r) => r.usageMetadata as Usage | undefined);
+      return run(
+        'generate',
+        String(params.model),
+        () => inner.models.generateContent({ ...params, config: cfg }),
+        (r) => r.usageMetadata as Usage | undefined,
+      );
     },
     list: async (...a: Parameters<GenAiClient['models']['list']>) => {
       budget.guardFreeCall();
@@ -156,8 +177,17 @@ export function meterClient(
  * Logical meter for an injected non-Gemini Llm (tests, OracleLlm): counts calls and usage, enforces the same
  * caps, and records latency. Real runs meter at the client instead so retries are counted.
  */
-export function meterLlm(inner: Llm, budget: Budget, tel: Telemetry, now: () => number = Date.now): Llm {
-  const wrap = async <T>(est: number, f: () => Promise<T>, usage?: (r: T) => LlmUsageLike | undefined): Promise<T> => {
+export function meterLlm(
+  inner: Llm,
+  budget: Budget,
+  tel: Telemetry,
+  now: () => number = Date.now,
+): Llm {
+  const wrap = async <T>(
+    est: number,
+    f: () => Promise<T>,
+    usage?: (r: T) => LlmUsageLike | undefined,
+  ): Promise<T> => {
     budget.guardGeminiCall(est);
     const t0 = now();
     try {
@@ -173,12 +203,26 @@ export function meterLlm(inner: Llm, budget: Budget, tel: Telemetry, now: () => 
       throw e;
     }
   };
-  type LlmUsageLike = { inputTokens?: number | undefined; outputTokens?: number | undefined; cachedTokens?: number | undefined };
+  type LlmUsageLike = {
+    inputTokens?: number | undefined;
+    outputTokens?: number | undefined;
+    cachedTokens?: number | undefined;
+  };
   return {
-    complete: (r: LlmRequest) => wrap(estimateTokens(r.messages) + estimateTokens(r.system ?? ''), () => inner.complete(r), (x) => x.usage),
-    json: <T>(r: LlmJsonRequest<T>) => wrap(estimateTokens(r.messages) + estimateTokens(r.system ?? ''), () => inner.json(r)),
+    complete: (r: LlmRequest) =>
+      wrap(
+        estimateTokens(r.messages) + estimateTokens(r.system ?? ''),
+        () => inner.complete(r),
+        (x) => x.usage,
+      ),
+    json: <T>(r: LlmJsonRequest<T>) =>
+      wrap(estimateTokens(r.messages) + estimateTokens(r.system ?? ''), () => inner.json(r)),
     createCache: (r) => inner.createCache(r),
-    ...(inner.deleteCache ? { deleteCache: (h: Parameters<NonNullable<Llm['deleteCache']>>[0]) => inner.deleteCache!(h) } : {}),
+    ...(inner.deleteCache
+      ? {
+          deleteCache: (h: Parameters<NonNullable<Llm['deleteCache']>>[0]) => inner.deleteCache!(h),
+        }
+      : {}),
   };
 }
 

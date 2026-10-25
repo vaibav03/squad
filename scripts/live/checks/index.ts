@@ -9,4 +9,13 @@ import { elevenCheck } from './07-elevenlabs';
 import { e2eCheck } from './08-e2e';
 
 /** Priority order: the cheap, decisive checks first so a cap hit costs the least. */
-export const ALL_CHECKS: Check[] = [modelsCheck, groundingCheck, visionCheck, quizCheck, geminiCheck, flowsCheck, elevenCheck, e2eCheck];
+export const ALL_CHECKS: Check[] = [
+  modelsCheck,
+  groundingCheck,
+  visionCheck,
+  quizCheck,
+  geminiCheck,
+  flowsCheck,
+  elevenCheck,
+  e2eCheck,
+];

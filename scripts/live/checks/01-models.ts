@@ -21,7 +21,12 @@ export const modelsCheck: Check = {
         const missing = ids.filter((id) => !names.has(id));
         if (missing.length)
           throw new Error(
-            `not in the models list: ${missing.join(', ')}. Fix GEMINI_MODEL_FAST/MAIN/CHAIR in .env (or the defaults in packages/core/src/llm/gemini.ts:17). Closest listed: ${[...names].filter((n) => n.startsWith('gemini-')).slice(0, 12).join(', ')}`,
+            `not in the models list: ${missing.join(', ')}. Fix GEMINI_MODEL_FAST/MAIN/CHAIR in .env (or the defaults in packages/core/src/llm/gemini.ts:17). Closest listed: ${[
+              ...names,
+            ]
+              .filter((n) => n.startsWith('gemini-'))
+              .slice(0, 12)
+              .join(', ')}`,
           );
         return `${ids.length} configured id(s) all listed (${names.size} models visible)`;
       });
@@ -31,20 +36,42 @@ export const modelsCheck: Check = {
     for (const tier of ['fast', 'main', 'chair'] as const) {
       const id = ctx.models[tier];
       if (seen.has(id)) {
-        t.pass(`tier ${tier} answers`, `same model id as tier ${seen.get(id)} (${id}); not called again`);
+        t.pass(
+          `tier ${tier} answers`,
+          `same model id as tier ${seen.get(id)} (${id}); not called again`,
+        );
         continue;
       }
       seen.set(id, tier);
       await t.step(`tier ${tier} answers (${id})`, async () => {
-        const r = await ctx.llm.complete({ model: tier, messages: 'Reply with the single word OK.', maxTokens: 256, temperature: 0 });
-        if (!r.text.trim()) throw new Error('empty text (a thinking model may have spent maxTokens; check finishReason)');
+        const r = await ctx.llm.complete({
+          model: tier,
+          messages: 'Reply with the single word OK.',
+          maxTokens: 256,
+          temperature: 0,
+        });
+        if (!r.text.trim())
+          throw new Error(
+            'empty text (a thinking model may have spent maxTokens; check finishReason)',
+          );
         return `text=${JSON.stringify(r.text.trim().slice(0, 40))} usage=${JSON.stringify(r.usage ?? {})}`;
       });
     }
 
-    const json = async <T>(name: string, schema: z.ZodType<T>, prompt: string, ok: (v: T) => string | undefined) =>
+    const json = async <T>(
+      name: string,
+      schema: z.ZodType<T>,
+      prompt: string,
+      ok: (v: T) => string | undefined,
+    ) =>
       t.step(`structured JSON: ${name}`, async () => {
-        const v = await ctx.llm.json({ model: 'main', messages: prompt, schema, temperature: 0, maxTokens: 1500 });
+        const v = await ctx.llm.json({
+          model: 'main',
+          messages: prompt,
+          schema,
+          temperature: 0,
+          maxTokens: 1500,
+        });
         const bad = ok(v);
         if (bad) throw new Error(bad);
         return `parsed with the product schema; ${JSON.stringify(v).length} chars`;
@@ -68,6 +95,9 @@ export const modelsCheck: Check = {
       'Write a 4-turn podcast dialogue between speakers "cubbie" and "rival" about coin flips. Each turn: {"speaker","text","kind":"fact"|"banter"}. Return {"turns":[...]}.',
       (v) => (v.turns.length < 4 ? `only ${v.turns.length} turns` : undefined),
     );
-    t.metric('families proven in other checks', 'dean routing + merge (2), stepdiff steps + equivalence (3), quiz grade + quizkey council (4), council opinion/ranking/verdict (5), feynman (5)');
+    t.metric(
+      'families proven in other checks',
+      'dean routing + merge (2), stepdiff steps + equivalence (3), quiz grade + quizkey council (4), council opinion/ranking/verdict (5), feynman (5)',
+    );
   },
 };

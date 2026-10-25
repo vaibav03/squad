@@ -30,11 +30,15 @@ export interface RunOptions {
   log?: (line: string) => void;
 }
 
-const has = (cmd: string, arg = '-version') => spawnSync(cmd, [arg], { stdio: 'ignore' }).status === 0;
+const has = (cmd: string, arg = '-version') =>
+  spawnSync(cmd, [arg], { stdio: 'ignore' }).status === 0;
 
 export function parseIdList(v: string | undefined): Set<number> | undefined {
   if (!v) return undefined;
-  const ids = v.split(/[,\s]+/).map(Number).filter((n) => Number.isInteger(n));
+  const ids = v
+    .split(/[,\s]+/)
+    .map(Number)
+    .filter((n) => Number.isInteger(n));
   return ids.length ? new Set(ids) : undefined;
 }
 
@@ -56,7 +60,8 @@ export function buildContext(o: RunOptions): LiveContext {
   if (inj.llm) {
     llm = meterLlm(inj.llm, budget, tel, now);
   } else {
-    const raw: GenAiClient = inj.client ?? new GoogleGenAI({ apiKey: env.GEMINI_API_KEY ?? 'missing' });
+    const raw: GenAiClient =
+      inj.client ?? new GoogleGenAI({ apiKey: env.GEMINI_API_KEY ?? 'missing' });
     client = meterClient(raw, budget, tel, now);
     llm = new GeminiLlm({ client, models, retries: 2, sleep });
   }
@@ -101,26 +106,43 @@ export async function runVerify(o: RunOptions): Promise<{ report: RunReport; ctx
     if (skip.has(c.id)) return 'excluded (LIVE_SKIP)';
     if (c.needs.includes('gemini') && !hasGemini) return 'GEMINI_API_KEY is not set';
     if (c.needs.includes('elevenlabs') && !hasEleven) return 'ELEVENLABS_API_KEY is not set';
-    if (c.needs.includes('ffmpeg') && !ffmpeg) return 'ffmpeg is not installed (brew install ffmpeg)';
+    if (c.needs.includes('ffmpeg') && !ffmpeg)
+      return 'ffmpeg is not installed (brew install ffmpeg)';
     if (c.needs.includes('python') && !python) return 'python3 is not installed';
     return undefined;
   };
 
-  const est = selected.filter((c) => !skipReason(c)).reduce(
-    (a, c) => ({ calls: a.calls + c.estimate.calls, tokens: a.tokens + c.estimate.tokens, chars: a.chars + (c.estimate.chars ?? 0) }),
-    { calls: 0, tokens: 0, chars: 0 },
-  );
+  const est = selected
+    .filter((c) => !skipReason(c))
+    .reduce(
+      (a, c) => ({
+        calls: a.calls + c.estimate.calls,
+        tokens: a.tokens + c.estimate.tokens,
+        chars: a.chars + (c.estimate.chars ?? 0),
+      }),
+      { calls: 0, tokens: 0, chars: 0 },
+    );
   const L = ctx.budget.limits;
-  log(`plan: ~${est.calls} calls / ~${est.tokens} tokens / ~${est.chars} chars; caps ${L.maxCalls} calls / ${L.maxTokens} tokens / ${L.maxChars} chars / $${L.maxUsd}`);
+  log(
+    `plan: ~${est.calls} calls / ~${est.tokens} tokens / ~${est.chars} chars; caps ${L.maxCalls} calls / ${L.maxTokens} tokens / ${L.maxChars} chars / $${L.maxUsd}`,
+  );
   if (est.calls > L.maxCalls || est.tokens > L.maxTokens)
-    log('note: the estimated worst case exceeds a cap; later checks will SKIP when the cap is hit (raise LIVE_MAX_CALLS / LIVE_MAX_TOKENS to run them all).');
+    log(
+      'note: the estimated worst case exceeds a cap; later checks will SKIP when the cap is hit (raise LIVE_MAX_CALLS / LIVE_MAX_TOKENS to run them all).',
+    );
 
   const { results, aborted } = await runChecks(ctx, {
     checks: o.checks,
     skipReason,
     preflight: async () => {
-      const r = await ctx.llm.complete({ model: 'fast', messages: PROBE_PROMPT, maxTokens: 256, temperature: 0 });
-      if (!/ok/i.test(r.text)) throw new Error(`probe answered without OK: ${JSON.stringify(r.text.slice(0, 80))}`);
+      const r = await ctx.llm.complete({
+        model: 'fast',
+        messages: PROBE_PROMPT,
+        maxTokens: 256,
+        temperature: 0,
+      });
+      if (!/ok/i.test(r.text))
+        throw new Error(`probe answered without OK: ${JSON.stringify(r.text.slice(0, 80))}`);
     },
   });
 

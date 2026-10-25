@@ -30,7 +30,11 @@ describe('402 credits depleted', () => {
 describe('401 invalid key', () => {
   it('aborts at the probe naming GEMINI_API_KEY', async () => {
     const sc = scriptedClient([{ status: 401 }]);
-    const { report } = await runVerify({ env: baseEnv(), checks: [spendCheck(1, 2)], injected: { client: sc.client, sleep: noSleep } });
+    const { report } = await runVerify({
+      env: baseEnv(),
+      checks: [spendCheck(1, 2)],
+      injected: { client: sc.client, sleep: noSleep },
+    });
     expect(sc.calls()).toBe(1);
     expect(report.aborted?.kind).toBe('auth');
     expect(report.aborted?.fix).toContain('GEMINI_API_KEY');
@@ -55,7 +59,11 @@ describe('429 rate limit', () => {
 
   it('a persistent 429 aborts with the rate-limit fix, not an endless retry', async () => {
     const sc = scriptedClient([{ status: 429 }]);
-    const { report } = await runVerify({ env: baseEnv(), checks: [spendCheck(1, 5)], injected: { client: sc.client, sleep: noSleep } });
+    const { report } = await runVerify({
+      env: baseEnv(),
+      checks: [spendCheck(1, 5)],
+      injected: { client: sc.client, sleep: noSleep },
+    });
     expect(report.aborted?.kind).toBe('rate_limited');
     expect(sc.calls()).toBe(3); // 1 + 2 retries inside the adapter
     expect(report.exitCode).toBe(3);
@@ -66,7 +74,13 @@ describe('429 rate limit', () => {
 describe('200 and slow responses', () => {
   it('passes, accounts tokens, and reports latency percentiles', async () => {
     let t = 0;
-    const sc = scriptedClient([{ status: 200, delayMs: 100, usage: { in: 50, out: 5 } }, { status: 200, delayMs: 900, usage: { in: 50, out: 5 } }], (ms) => (t += ms));
+    const sc = scriptedClient(
+      [
+        { status: 200, delayMs: 100, usage: { in: 50, out: 5 } },
+        { status: 200, delayMs: 900, usage: { in: 50, out: 5 } },
+      ],
+      (ms) => (t += ms),
+    );
     const { report } = await runVerify({
       env: baseEnv(),
       checks: [spendCheck(1, 3)],
@@ -82,8 +96,15 @@ describe('200 and slow responses', () => {
   });
 
   it('records a FAIL (exit 1) when an answer is wrong, without aborting', async () => {
-    const sc = scriptedClient([{ status: 200, text: 'OK' }, { status: 200, text: 'nope' }]);
-    const { report } = await runVerify({ env: baseEnv(), checks: [spendCheck(1, 2)], injected: { client: sc.client } });
+    const sc = scriptedClient([
+      { status: 200, text: 'OK' },
+      { status: 200, text: 'nope' },
+    ]);
+    const { report } = await runVerify({
+      env: baseEnv(),
+      checks: [spendCheck(1, 2)],
+      injected: { client: sc.client },
+    });
     expect(report.outcome).toBe('fail');
     expect(report.exitCode).toBe(1);
     expect(report.checks[1]?.steps.some((s) => s.status === 'FAIL')).toBe(true);
@@ -119,8 +140,13 @@ describe('budget caps', () => {
 
   it('clamps output tokens to the per-call cap and the remaining budget', async () => {
     const sc = scriptedClient([{ status: 200 }]);
-    await runVerify({ env: baseEnv({ LIVE_MAX_OUT_PER_CALL: '100' }), checks: [spendCheck(1, 1)], injected: { client: sc.client } });
-    for (const p of sc.seen as { config: { maxOutputTokens: number } }[]) expect(p.config.maxOutputTokens).toBeLessThanOrEqual(100);
+    await runVerify({
+      env: baseEnv({ LIVE_MAX_OUT_PER_CALL: '100' }),
+      checks: [spendCheck(1, 1)],
+      injected: { client: sc.client },
+    });
+    for (const p of sc.seen as { config: { maxOutputTokens: number } }[])
+      expect(p.config.maxOutputTokens).toBeLessThanOrEqual(100);
   });
 
   it('Budget characters and USD caps', () => {
@@ -144,7 +170,11 @@ describe('secrets', () => {
     leaky.run = async (_ctx, t) => {
       t.fail('leak attempt', `url ?key=${FAKE_SECRET} and raw ${FAKE_SECRET}`);
     };
-    const { report, ctx } = await runVerify({ env: baseEnv(), checks: [leaky], injected: { client: scriptedClient([{ status: 200 }]).client } });
+    const { report, ctx } = await runVerify({
+      env: baseEnv(),
+      checks: [leaky],
+      injected: { client: scriptedClient([{ status: 200 }]).client },
+    });
     const md = renderMarkdown(report, ctx.redact);
     expect(md).not.toContain(FAKE_SECRET);
     expect(JSON.stringify(report)).not.toContain(FAKE_SECRET);
@@ -173,7 +203,11 @@ describe('selection and gating', () => {
 
   it('LIVE_ONLY selects a subset', async () => {
     const sc = scriptedClient([{ status: 200 }]);
-    const { report } = await runVerify({ env: baseEnv({ LIVE_ONLY: '2' }), checks: [spendCheck(1, 1), spendCheck(2, 1)], injected: { client: sc.client } });
+    const { report } = await runVerify({
+      env: baseEnv({ LIVE_ONLY: '2' }),
+      checks: [spendCheck(1, 1), spendCheck(2, 1)],
+      injected: { client: sc.client },
+    });
     expect(report.checks.find((c) => c.id === 1)?.status).toBe('SKIP');
     expect(report.checks.find((c) => c.id === 2)?.status).toBe('PASS');
   });

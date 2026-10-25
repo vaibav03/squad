@@ -21,7 +21,10 @@ function visionLlm(opts: { blind?: boolean } = {}): Llm {
   return {
     async complete(req: LlmRequest) {
       const img = imageOf(req);
-      const text = img?.mimeType === 'application/pdf' ? 'Coin flips. A fair coin lands heads with probability one half. Two independent flips both land heads with probability one quarter.' : 'OK';
+      const text =
+        img?.mimeType === 'application/pdf'
+          ? 'Coin flips. A fair coin lands heads with probability one half. Two independent flips both land heads with probability one quarter.'
+          : 'OK';
       return { text, toolCalls: [] };
     },
     async json<T>(req: LlmJsonRequest<T>): Promise<T> {
@@ -41,7 +44,12 @@ function visionLlm(opts: { blind?: boolean } = {}): Llm {
 }
 
 const run = (llm: Llm) =>
-  runVerify({ env: { SQUAD_LIVE: '1' }, checks: [visionCheck], injected: { llm }, limits: { maxCalls: 100 } }).then((r) => r.report.checks.find((c) => c.id === 3)!);
+  runVerify({
+    env: { SQUAD_LIVE: '1' },
+    checks: [visionCheck],
+    injected: { llm },
+    limits: { maxCalls: 100 },
+  }).then((r) => r.report.checks.find((c) => c.id === 3)!);
 
 describe('check 3 (vision) with a scripted vision model', () => {
   it('passes when the model transcribes faithfully: split at step 2, no verdict, scanned page recovered', async () => {
@@ -52,10 +60,14 @@ describe('check 3 (vision) with a scripted vision model', () => {
   it('FAILS when the transcription loses the divergence', async () => {
     const c = await run(visionLlm({ blind: true }));
     expect(c.status).toBe('FAIL');
-    expect(c.steps.find((s) => s.name.startsWith('two photos'))?.evidence[0]).toContain('expected 2');
+    expect(c.steps.find((s) => s.name.startsWith('two photos'))?.evidence[0]).toContain(
+      'expected 2',
+    );
   });
   it('the committed fixtures are real images with no text layer', () => {
     expect(fs.statSync(path.join(FIXTURES, 'stepdiff-a.png')).size).toBeGreaterThan(5000);
-    expect(fs.readFileSync(path.join(FIXTURES, 'scanned-page.pdf')).includes('/Type /Font')).toBe(false);
+    expect(fs.readFileSync(path.join(FIXTURES, 'scanned-page.pdf')).includes('/Type /Font')).toBe(
+      false,
+    );
   });
 });

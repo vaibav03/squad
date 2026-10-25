@@ -21,7 +21,13 @@ export function fatalFromGemini(err: unknown): Fatal | undefined {
   const message = e.message.slice(0, 300);
   switch (e.kind) {
     case 'credits_depleted':
-      return { kind: 'credits_depleted', provider: 'gemini', status: e.status ?? 402, message, fix: FIX.credits_depleted };
+      return {
+        kind: 'credits_depleted',
+        provider: 'gemini',
+        status: e.status ?? 402,
+        message,
+        fix: FIX.credits_depleted,
+      };
     case 'auth':
       return { kind: 'auth', provider: 'gemini', status: e.status ?? 401, message, fix: FIX.auth };
     default:
@@ -36,6 +42,12 @@ export function fatalFromEleven(status: number, detail: string): Fatal | undefin
   if (status === 402)
     return { kind: 'el_payment', provider: 'elevenlabs', status, message, fix: FIX.el_payment };
   if (status === 429)
-    return { kind: 'el_rate_limited', provider: 'elevenlabs', status, message, fix: FIX.el_rate_limited };
+    return {
+      kind: 'el_rate_limited',
+      provider: 'elevenlabs',
+      status,
+      message,
+      fix: FIX.el_rate_limited,
+    };
   return undefined;
 }

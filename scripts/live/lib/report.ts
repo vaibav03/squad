@@ -10,14 +10,15 @@ export function renderMarkdown(r: RunReport, redact: (s: string) => string): str
   L.push(`- Started: ${r.startedAt}`, `- Finished: ${r.finishedAt}`);
   L.push(`- Mode: ${r.mode}`);
   L.push(`- Outcome: **${r.outcome.toUpperCase()}** (exit code ${r.exitCode})`);
-  L.push(`- Models: fast \`${r.models.fast}\`, main \`${r.models.main}\`, chair \`${r.models.chair}\``);
   L.push(
-    `- Checks: ${r.summary.pass} PASS, ${r.summary.fail} FAIL, ${r.summary.skip} SKIP`,
-    '',
+    `- Models: fast \`${r.models.fast}\`, main \`${r.models.main}\`, chair \`${r.models.chair}\``,
   );
+  L.push(`- Checks: ${r.summary.pass} PASS, ${r.summary.fail} FAIL, ${r.summary.skip} SKIP`, '');
   if (r.aborted) {
     L.push('## Run aborted', '');
-    L.push(`- Provider: ${r.aborted.provider}${r.aborted.status ? `, HTTP ${r.aborted.status}` : ''}`);
+    L.push(
+      `- Provider: ${r.aborted.provider}${r.aborted.status ? `, HTTP ${r.aborted.status}` : ''}`,
+    );
     L.push(`- What happened: ${r.aborted.message}`);
     L.push(`- Exact fix: ${r.aborted.fix}`, '');
   }
@@ -34,9 +35,16 @@ export function renderMarkdown(r: RunReport, redact: (s: string) => string): str
     'USD is an estimate from LIVE_PRICE_* placeholders, not a bill.',
     '',
   );
-  L.push('## Checks', '', '| # | Check | Result | Calls | Tokens | Chars | ms |', '| ---: | --- | --- | ---: | ---: | ---: | ---: |');
+  L.push(
+    '## Checks',
+    '',
+    '| # | Check | Result | Calls | Tokens | Chars | ms |',
+    '| ---: | --- | --- | ---: | ---: | ---: | ---: |',
+  );
   for (const c of r.checks)
-    L.push(`| ${c.id} | ${c.name} | ${icon[c.status]} | ${c.spend.calls} | ${c.spend.billedTokens} | ${c.spend.chars} | ${c.ms} |`);
+    L.push(
+      `| ${c.id} | ${c.name} | ${icon[c.status]} | ${c.spend.calls} | ${c.spend.billedTokens} | ${c.spend.chars} | ${c.ms} |`,
+    );
   L.push('');
   for (const c of r.checks) {
     L.push(`### ${c.id}. ${c.name}: ${icon[c.status]}`, '');
@@ -69,13 +77,17 @@ export function writeReports(
 export function consoleSummary(r: RunReport, redact: (s: string) => string): string {
   const L: string[] = [];
   for (const c of r.checks) {
-    L.push(`${c.status.padEnd(4)}  ${String(c.id).padStart(2)}  ${c.name}${c.note ? `  (${c.note})` : ''}`);
+    L.push(
+      `${c.status.padEnd(4)}  ${String(c.id).padStart(2)}  ${c.name}${c.note ? `  (${c.note})` : ''}`,
+    );
     for (const s of c.steps.filter((x) => x.status === 'FAIL'))
       L.push(`        FAIL ${s.name}: ${s.evidence[0] ?? ''}`.slice(0, 220));
   }
   L.push('');
   if (r.aborted) {
-    L.push(`ABORTED (${r.aborted.provider}${r.aborted.status ? ` HTTP ${r.aborted.status}` : ''}): ${r.aborted.message}`);
+    L.push(
+      `ABORTED (${r.aborted.provider}${r.aborted.status ? ` HTTP ${r.aborted.status}` : ''}): ${r.aborted.message}`,
+    );
     L.push(`FIX: ${r.aborted.fix}`, '');
   }
   L.push(

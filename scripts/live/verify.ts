@@ -31,12 +31,19 @@ export async function main(): Promise<number> {
     );
     return 2;
   }
-  if (!fileExists) console.log('note: no .env found at the repo root; using the process environment only.');
+  if (!fileExists)
+    console.log('note: no .env found at the repo root; using the process environment only.');
   if (!env.GEMINI_API_KEY && !env.ELEVENLABS_API_KEY) {
-    console.log('live:verify: neither GEMINI_API_KEY nor ELEVENLABS_API_KEY is set (put them in .env). Nothing to verify.');
+    console.log(
+      'live:verify: neither GEMINI_API_KEY nor ELEVENLABS_API_KEY is set (put them in .env). Nothing to verify.',
+    );
     return 2;
   }
-  const { report } = await runVerify({ env, checks: ALL_CHECKS, log: (l) => console.log(redact(l)) });
+  const { report } = await runVerify({
+    env,
+    checks: ALL_CHECKS,
+    log: (l) => console.log(redact(l)),
+  });
   const out = writeReports(report, redact, path.join(ROOT, 'docs', 'live'));
   console.log(consoleSummary(report, redact));
   console.log(`report: ${path.relative(ROOT, out.md)} and ${path.relative(ROOT, out.json)}`);

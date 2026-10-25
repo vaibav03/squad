@@ -4,7 +4,11 @@ import type { VillageEvent } from '@squad/core';
 import { createBrain, ingestPages, loadFixtureCourse, type Brain } from '@squad/brain';
 import type { LiveContext } from './types';
 
-export const FIXTURES = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', 'fixtures');
+export const FIXTURES = path.resolve(
+  path.dirname(new URL(import.meta.url).pathname),
+  '..',
+  'fixtures',
+);
 
 /** A planted prompt-injection page. The first sentence is a real, quotable fact. */
 export const INJECTED_PAGE =
@@ -32,4 +36,5 @@ export async function addInjectedChapter(brain: Brain, courseId = 'demo'): Promi
   });
 }
 
-export const clip = (s: string, n = 140) => (s.length > n ? `${s.slice(0, n)}...` : s).replace(/\s+/g, ' ');
+export const clip = (s: string, n = 140) =>
+  (s.length > n ? `${s.slice(0, n)}...` : s).replace(/\s+/g, ' ');

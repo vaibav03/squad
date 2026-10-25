@@ -30,7 +30,18 @@ describe('every check runs to completion on a hostile model without crashing or 
 describe.skipIf(!ffmpeg)('check 7 (ElevenLabs) with an injected port', () => {
   const tone = () => {
     const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tone-')), 't.mp3');
-    spawnSync('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=300:duration=2', '-b:a', '64k', f]);
+    spawnSync('ffmpeg', [
+      '-y',
+      '-v',
+      'error',
+      '-f',
+      'lavfi',
+      '-i',
+      'sine=frequency=300:duration=2',
+      '-b:a',
+      '64k',
+      f,
+    ]);
     return new Uint8Array(fs.readFileSync(f));
   };
   const port = () => {
@@ -43,7 +54,11 @@ describe.skipIf(!ffmpeg)('check 7 (ElevenLabs) with an injected port', () => {
     };
   };
   const run = (env: Record<string, string>, eleven = port()) =>
-    runVerify({ env: { SQUAD_LIVE: '1', ELEVENLABS_API_KEY: 'x'.repeat(20), ...env }, checks: ALL_CHECKS.filter((c) => c.id === 7), injected: { llm: new FakeLlm(), eleven, tools: { ffmpeg: true } } });
+    runVerify({
+      env: { SQUAD_LIVE: '1', ELEVENLABS_API_KEY: 'x'.repeat(20), ...env },
+      checks: ALL_CHECKS.filter((c) => c.id === 7),
+      injected: { llm: new FakeLlm(), eleven, tools: { ffmpeg: true } },
+    });
 
   it('SKIPs every billed step unless LIVE_ELEVENLABS=1', async () => {
     const { report } = await run({});

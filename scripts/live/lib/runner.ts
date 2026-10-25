@@ -1,5 +1,13 @@
 import { BudgetExceeded, type Fatal } from './budget';
-import type { Check, CheckResult, LiveContext, RunReport, Status, StepResult, Tracker } from './types';
+import type {
+  Check,
+  CheckResult,
+  LiveContext,
+  RunReport,
+  Status,
+  StepResult,
+  Tracker,
+} from './types';
 
 export class StepTracker implements Tracker {
   steps: StepResult[] = [];
@@ -30,7 +38,12 @@ export class StepTracker implements Tracker {
       this.add(name, 'PASS', r === undefined ? [] : Array.isArray(r) ? r : [r], this.now() - t0);
     } catch (e) {
       if (e instanceof BudgetExceeded) throw e;
-      this.add(name, 'FAIL', [`threw: ${(e as Error).message ?? String(e)}`.slice(0, 400)], this.now() - t0);
+      this.add(
+        name,
+        'FAIL',
+        [`threw: ${(e as Error).message ?? String(e)}`.slice(0, 400)],
+        this.now() - t0,
+      );
     }
   }
   status(): Status {
@@ -62,10 +75,12 @@ export async function runChecks(
   if (geminiNeeded && plan.preflight) {
     const t = new StepTracker(ctx.redact, ctx.now);
     const t0 = ctx.now();
-    await t.step('probe: one tiny Gemini call', async () => {
-      await plan.preflight!();
-      return `answered; calls=${ctx.budget.calls}`;
-    }).catch(() => undefined);
+    await t
+      .step('probe: one tiny Gemini call', async () => {
+        await plan.preflight!();
+        return `answered; calls=${ctx.budget.calls}`;
+      })
+      .catch(() => undefined);
     const fatal = ctx.budget.fatal;
     results.push({
       id: 0,
@@ -82,7 +97,16 @@ export async function runChecks(
   for (const c of plan.checks) {
     const why = aborted ? `aborted earlier: ${aborted.kind}` : plan.skipReason(c);
     if (why) {
-      results.push({ id: c.id, name: c.name, status: 'SKIP', steps: [], metrics: {}, ms: 0, spend: NONE, note: why });
+      results.push({
+        id: c.id,
+        name: c.name,
+        status: 'SKIP',
+        steps: [],
+        metrics: {},
+        ms: 0,
+        spend: NONE,
+        note: why,
+      });
       continue;
     }
     const before = snap(ctx);
@@ -91,12 +115,17 @@ export async function runChecks(
     try {
       await c.run(ctx, t);
     } catch (e) {
-      if (!(e instanceof BudgetExceeded)) t.fail('check crashed', `threw: ${(e as Error).message}`.slice(0, 400));
+      if (!(e instanceof BudgetExceeded))
+        t.fail('check crashed', `threw: ${(e as Error).message}`.slice(0, 400));
     }
     const after = snap(ctx);
     if (ctx.budget.fatal && !aborted) {
       aborted = { ...ctx.budget.fatal, atCheck: c.id };
-      t.fail(`aborted: ${ctx.budget.fatal.kind}`, ctx.budget.fatal.message, `fix: ${ctx.budget.fatal.fix}`);
+      t.fail(
+        `aborted: ${ctx.budget.fatal.kind}`,
+        ctx.budget.fatal.message,
+        `fix: ${ctx.budget.fatal.fix}`,
+      );
     }
     results.push({
       id: c.id,

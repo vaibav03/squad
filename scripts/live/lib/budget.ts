@@ -76,7 +76,9 @@ export class Budget {
   constructor(readonly limits: BudgetLimits) {}
 
   get billedTokens(): number {
-    return Math.max(0, this.inputTokens - this.cachedTokens) + this.outputTokens + this.pendingEstimate;
+    return (
+      Math.max(0, this.inputTokens - this.cachedTokens) + this.outputTokens + this.pendingEstimate
+    );
   }
   get usd(): number {
     const l = this.limits;
@@ -121,11 +123,13 @@ export class Budget {
   guardGeminiCall(estTokens: number): void {
     if (this.fatal) throw new BudgetExceeded(this.fatal.message, this.fatal);
     const l = this.limits;
-    if (this.calls + 1 > l.maxCalls) this.stop(this.over('calls', this.calls + 1, l.maxCalls, 'LIVE_MAX_CALLS'));
+    if (this.calls + 1 > l.maxCalls)
+      this.stop(this.over('calls', this.calls + 1, l.maxCalls, 'LIVE_MAX_CALLS'));
     if (this.billedTokens + estTokens > l.maxTokens)
       this.stop(this.over('tokens', this.billedTokens + estTokens, l.maxTokens, 'LIVE_MAX_TOKENS'));
     const estUsd = this.usd + estTokens * (l.priceInPerM / 1e6);
-    if (estUsd > l.maxUsd) this.stop(this.over('usd', Number(estUsd.toFixed(4)), l.maxUsd, 'LIVE_MAX_USD'));
+    if (estUsd > l.maxUsd)
+      this.stop(this.over('usd', Number(estUsd.toFixed(4)), l.maxUsd, 'LIVE_MAX_USD'));
     this.calls++;
   }
 
@@ -148,7 +152,9 @@ export class Budget {
     if (this.fatal) throw new BudgetExceeded(this.fatal.message, this.fatal);
     const l = this.limits;
     if (this.chars + n > l.maxChars)
-      this.stop(this.over('ElevenLabs characters', this.chars + n, l.maxChars, 'LIVE_MAX_EL_CHARS'));
+      this.stop(
+        this.over('ElevenLabs characters', this.chars + n, l.maxChars, 'LIVE_MAX_EL_CHARS'),
+      );
     if (this.usd + (n / 1000) * l.priceCharsPer1k > l.maxUsd)
       this.stop(this.over('usd', Number(this.usd.toFixed(4)), l.maxUsd, 'LIVE_MAX_USD'));
     this.chars += n;
