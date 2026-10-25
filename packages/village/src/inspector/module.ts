@@ -20,7 +20,7 @@ interface ActorList {
 
 /**
  * Agent Inspector, canvas side (order 500): every character sprite (agents and the viewer) is a hit
- * target of at least 44 CSS px with a pointer cursor, a hover outline and name tag, a ring under the
+ * target of at least 44 CSS px with a pointer cursor, a compact hover name tag (no outline box), a ring under the
  * selected one, optional camera follow, and the `I` key to cycle characters. It only reads and writes
  * the InspectorStore; the DOM panel lives in the host.
  */
@@ -101,14 +101,6 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
   };
   scene.input.on('pointerdown', onGround);
 
-  const drawOutline = (sp: Phaser.GameObjects.Sprite, color: number) => {
-    const b = sp.getBounds();
-    const x = snap(b.x) - 1;
-    const y = snap(b.y) - 1;
-    gfx.lineStyle(1, color, 1);
-    gfx.strokeRect(x + 0.5, y + 0.5, Math.round(b.width) + 1, Math.round(b.height) + 1);
-  };
-
   return {
     update(now) {
       for (const s of spots()) wire(s);
@@ -154,11 +146,10 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
         gfx.fillStyle(COLOR.violet, a);
         gfx.fillRect(mx - 1, y - 1, 3, 3);
       }
-      // hover outline and name tag
+      // hover name tag (name only; the activity sentence lives in the inspector panel)
       if (hover && hover.sprite.active && hover.sprite.alpha > 0) {
-        drawOutline(hover.sprite, COLOR.cloudHi);
         const v = store.view(hover.id);
-        const text = v ? `${v.name}: ${clip(v.headline, 34)}` : hover.id;
+        const text = v ? clip(v.name, 28) : hover.id;
         tag.setText(text).setVisible(true);
         const cam = scene.cameras.main;
         const x = Math.min(
@@ -172,13 +163,6 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
           snap(tag.y) - 2,
           Math.ceil(tag.width) + 6,
           Math.ceil(tag.height) + 4,
-        );
-        gfx.lineStyle(1, COLOR.hillMid, 1);
-        gfx.strokeRect(
-          snap(tag.x) - 2.5,
-          snap(tag.y) - 1.5,
-          Math.ceil(tag.width) + 5,
-          Math.ceil(tag.height) + 3,
         );
       } else tag.setVisible(false);
       // follow: ease the camera toward the selected character (whole pixels, no zoom change)
