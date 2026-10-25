@@ -642,3 +642,15 @@ Branch `merge/batch25` (worktree `squad-wt/merge25`), one `--no-ff` merge per br
 
 - Landing merge commit: `6212f53b68996cf99222cc1da05d88adb28d7ae9` (parents `ef63fb9bec39180667287a701f91a6bfb25d334a` = tag `pre-merge-batch25`, `3a1b88a22b5e744984e64ee4aab6660dbec59729` = merge/batch25; only tracker docs differ).
 - Rollback: `git revert -m 1 6212f53b68996cf99222cc1da05d88adb28d7ae9`.
+
+## Batch 26: fix/gate-findings into main
+
+Branch `merge/batch26` (worktree `squad-wt/merge26`), `fix/gate-findings` head `437a209f` merged cleanly (no conflicts; chat Bubble/api and connections files auto-merged with blank-shell-2's work), landed as a true `--no-ff` merge.
+
+- Checks: `pnpm check` exit 0; `pnpm demo:live` OK; hub smoke 138/138; hub security 23/23; browser smoke (hub :9030 / web :5430 / agents 4901+, new squad `summa`): 3 routes render, build marker equal, chat sends and answers, trip flow, 0 page errors.
+- Full `pnpm gate` run once by me on the landed tree (hub :9040 / web :5440 / agents 4911+ / canvas fake :9045, fixture mode, fake model labelled Demo): exit 0, 13 of 13 Playwright tests passed in 1.4 min, verdict `FIXTURE-GREEN / REAL-BLOCKED`, fixture steps 22 PASS, 0 FAIL, 0 NOT_BUILT of 22 (S1..S10, V1..V12). Real column: S1 and S2 BLOCKED(no_google_client), S3 S7 S8 S9 S10 and V1..V10 SKIPPED(real_not_requested), S4 and S6 BLOCKED(apple_unverified), S5 BLOCKED(llm_credits), V11 BLOCKED(llm_credits), V12 BLOCKED(needs_second_person). External blockers: no_google_client, no_own_google_account, no_canvas_feed, token_disabled_or_missing, apple_unverified, needs_second_person, llm_credits (gate probe sees the demo stand-in), elevenlabs_plan (paid_plan_required). The regenerated report and screenshots were not committed (copy kept outside the repo).
+
+### Landing (batch 26)
+
+- Landing merge commit: `f9e39a15007c6f31fccedd5675e1a324bb8bb1d3` (parents `92d5fdb3b884b874c01aa54d40117720dc9a7638` = tag `pre-merge-batch26`, `ffb5f6abce4dff20d46d2115774e1af8e2508c3f` = merge/batch26; only tracker docs differ).
+- Rollback: `git revert -m 1 f9e39a15007c6f31fccedd5675e1a324bb8bb1d3`.

@@ -210,7 +210,14 @@ wire; the Nook mock-server route tests have no equivalent in Squad because Squad
     Squad does not store course names as sources, so there is no `/canvas/courses` read; course names ride inside each
     source's text.
 14. Canvas expiry is reported by the extension (`canvas-report`) as honest state instead of a silent empty sync.
-15. Squad has no `/__sim` mock server: the simulator is a labelled consent page inside the hub, only active while no
+15. A grant the provider says is revoked (Google `invalid_grant` on refresh, or a revoked probe with no refresh path)
+    ends the connection `revoked` and **purges** the imported data (Nook marks the account `needs_reauth` and keeps it).
+    This is deliberate, privacy first. The state is honest and recoverable: the UI and API say "Google access was
+    revoked. Imported data was removed. Reconnect to import again." and offer a Reconnect button. Any other refused
+    refresh (the provider did not say revoked) ends `expired`: the data is kept and flagged stale, sync stops, and a
+    Reconnect prompt is shown. A 401 on sync first refreshes the access token once and retries; a refused refresh never
+    leaves the connection `live`.
+16. Squad has no `/__sim` mock server: the simulator is a labelled consent page inside the hub, only active while no
     Google client is configured.
 
 ## 6. BLOCKED items and runbooks

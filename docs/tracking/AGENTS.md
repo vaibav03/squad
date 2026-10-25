@@ -8,32 +8,35 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
-| `feature/` | 1 | 14 | 77 | Claude Sonnet 5.5 (13) |
-| `fix/` | 2 | 9 | 57 | Claude Sonnet 5.5 (8) |
+| `feature/` | 2 | 6 | 56 | Claude Sonnet 5.5 (6) |
+| `fix/` | 4 | 9 | 74 | Claude Sonnet 5.5 (8) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
 
 ## By workstream branch
 
 | Branch | Commits (not on main) | Files changed (sum) | First commit | Last commit | Authors |
 |---|---:|---:|---|---|---|
-| `feature/council-integration` | 14 | 77 | 2026-10-25 05:53 | 2026-10-25 06:32 | Vaibav |
-| `fix/blank-shell-2` | 1 | 1 | 2026-10-25 06:32 | 2026-10-25 06:32 | Vaibav |
-| `fix/gate-findings` | 8 | 56 | 2026-10-25 06:22 | 2026-10-25 06:36 | Vaibav |
+| `feature/council-followup` | 4 | 37 | 2026-10-25 06:37 | 2026-10-25 06:50 | Vaibav |
+| `feature/council-live-ux` | 2 | 19 | 2026-10-25 06:47 | 2026-10-25 06:54 | Vaibav |
+| `fix/connection-budget` | 6 | 34 | 2026-10-25 06:47 | 2026-10-25 06:56 | Vaibav |
+| `fix/demo-serve` | 1 | 7 | 2026-10-25 06:52 | 2026-10-25 06:52 | Vaibav |
+| `fix/oauth-redirect-context-proof` | 1 | 14 | 2026-10-25 06:54 | 2026-10-25 06:54 | Vaibav |
+| `fix/panels-semantics-dedupe` | 1 | 19 | 2026-10-25 06:55 | 2026-10-25 06:55 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
 
 ## Co-Authored-By totals (all commits: not on main plus landed on main)
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 242 |
+| (no trailer) | 243 |
 | Claude Haiku 5.5 | 10 |
-| Claude Sonnet 5.5 | 658 |
+| Claude Sonnet 5.5 | 681 |
 
 ## Commits landed on main by area (subject prefix)
 
 | Area | Commits |
 |---|---:|
-| (other) | 129 |
+| (other) | 133 |
 | Initial commit | 1 |
 | Merge batch 1 | 1 |
 | Merge batch 10 | 1 |
@@ -52,6 +55,8 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Merge batch 22 | 1 |
 | Merge batch 23 | 1 |
 | Merge batch 24 | 1 |
+| Merge batch 25 | 1 |
+| Merge batch 26 | 1 |
 | Merge batch 3 | 1 |
 | Merge batch 4 | 1 |
 | Merge batch 5 | 1 |
@@ -72,16 +77,16 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | ci | 2 |
 | context | 4 |
 | core | 4 |
-| council | 17 |
+| council | 30 |
 | courses | 8 |
 | demo | 7 |
 | deploy | 5 |
 | design | 18 |
-| docs | 32 |
+| docs | 34 |
 | e2e | 27 |
 | feat | 1 |
-| fix | 49 |
-| gate | 15 |
+| fix | 56 |
+| gate | 17 |
 | hub | 5 |
 | imessage | 3 |
 | imsync | 4 |
@@ -129,9 +134,9 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | security | 4 |
 | spine | 13 |
 | status | 3 |
-| style | 1 |
+| style | 2 |
 | test | 2 |
-| test(hub) | 1 |
+| test(hub) | 2 |
 | trip wiring | 1 |
 | trip | 11 |
 | ux | 7 |
@@ -153,5 +158,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 |---|---:|
 | Claude | 1 |
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 617 |
+| Vaibav | 641 |
 | vaibav03 | 26 |

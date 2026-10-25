@@ -11,7 +11,7 @@ Cubbie is the default and first entry. `@cubbie` and `@cubbi` (any case) both me
 | `@cubbie`, `@cubbi`, `@squad` | router | Cubbie | Your study buddy. Picks the right skill for the message. |
 | `@tutor`, `@teacher` | persona | Tutor | Explains the idea simply, then checks you got it. |
 | `@skeptic` | persona | Skeptic | Pokes holes and asks for evidence. |
-| `@planner` | persona | Planner | Steps, order and dates. |
+| `@planner` | persona | Planner | Steps, order and dates. Plan intents start the flows: `@planner plan a trip to Cabo` (any `@planner ... trip ...`) starts the trip flow, `@planner study plan for the exam on Nov 12` starts the study-plan flow; other messages get the persona answer. |
 | `@examiner` | persona | Examiner | Asks what a test would ask. |
 | `@chair` | persona | Chair | Keeps order, calls decisions. |
 | `@council` | council | Cubbie | Convenes the council (the `council` skill). |
@@ -38,6 +38,7 @@ A skill alias runs its skill even when its own score would be low: `@quiz chapte
 
 ## Router behavior
 
+- `@planner` plan intents (`plannerIntent` in `packages/core/src/mentions.ts`): `trip` in the text starts the trip flow (the hub's trip chat handler runs before the bot, `apps/hub/src/trips/chat.ts`, so `@planner trip to Lisbon in June` needs no planning verb); `study plan ...` or `plan the midterm/final/exam` runs the `sharedPlan` skill in the bot router. If a message names both, "study plan" wins. Anything else addressed to `@planner` still gets the persona answer.
 - An addressed agent always replies (it overrides the speaking-policy score). Persona replies are prefixed with the persona name.
 - Several tags answer in order, one reply each, capped at 3.
 - A bare `@cubbi` replies "What do you need?".
