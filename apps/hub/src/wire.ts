@@ -4,6 +4,8 @@ import { FakeLlm, createResilientLlm, type Llm, type ResilientLlm } from '@squad
 import type { RunningHub } from './server';
 import { createRealPorts, type RealPorts, type RealPortsOptions } from './adapters/real';
 
+export { busyBlocksOf } from './adapters/real';
+
 /** Real ports need a hub's deps (db, ingest, directory), so they are attached after `createHub`; routes read `deps.ports` lazily. */
 export async function wireRealPorts(
   hub: Pick<RunningHub, 'deps'>,
