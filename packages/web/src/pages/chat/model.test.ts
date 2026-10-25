@@ -85,6 +85,14 @@ describe('grouping and date separators', () => {
     expect(listTime(NOON - 24 * 60 * MIN, NOON)).toBe('Yesterday');
     expect(listTime(NOON - 30 * 24 * 60 * MIN, NOON)).toBe('Sep 22');
   });
+  it('history + stream never render the same id or the same send twice', () => {
+    const a = msg(5, 's_ben', 2).message;
+    const live = { ...a };
+    expect(mergeMessages([a], [live, a]).map((m) => m.id)).toEqual([a.id]);
+    const first = { ...a, clientId: 'c1' };
+    const twin = { ...msg(6, 's_ben', 1).message, clientId: 'c1' };
+    expect(mergeMessages([first], [twin]).map((m) => m.seq)).toEqual([5]);
+  });
   it('merges by id and keeps seq order', () => {
     const a = msg(2, 's_ben', 2).message;
     const b = msg(1, 's_ben', 3).message;

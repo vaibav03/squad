@@ -1,5 +1,6 @@
 import {
   A2aMessageSchema,
+  recordCouncilRunMeta,
   registerCouncilRun,
   scripted,
   worstMode,
@@ -83,6 +84,10 @@ export interface StartRunOptions {
    * Real runs only.
    */
   prefetchQuery?: string;
+  /** Public question text of the run (stored with the run record; hidden from other viewers of a private run). */
+  question?: string;
+  /** Transport label for the UI (default derived from the transport kind). */
+  transportLabel?: { label: string; requested?: 'stream' | 'live'; why?: string };
   /** Called after every published envelope and stage change (the caller syncs its snapshot). Must not throw. */
   onChange?: () => void;
 }
@@ -197,6 +202,32 @@ export function createCouncilRuntime(deps: RuntimeDeps): {
           askedBy: o.owner.askedBy,
           private: o.visibility === 'private',
         });
+      const tkind: 'stream-text' | 'live-text' | 'live-audio' | 'demo' = isDemo
+        ? 'demo'
+        : transport.kind;
+      recordCouncilRunMeta(o.correlationId, {
+        councilKey: o.councilKey,
+        question: (o.question ?? '').slice(0, 600),
+        transport: {
+          kind: tkind === 'live-text' ? 'live-audio' : tkind,
+          label:
+            o.transportLabel?.label ??
+            (isDemo
+              ? 'Demo (scripted, not Gemini)'
+              : tkind === 'stream-text'
+                ? 'Gemini streaming text'
+                : 'Gemini Live (audio + transcript)'),
+          ...(o.transportLabel?.requested ? { requested: o.transportLabel.requested } : {}),
+          ...(o.transportLabel?.why ? { why: o.transportLabel.why } : {}),
+        },
+        roster: o.roster.map((s) => ({
+          id: s.id,
+          role: s.role,
+          ...(s.parent ? { parent: s.parent } : {}),
+          displayName: s.displayName,
+        })),
+        startedAt: now(),
+      });
       const guard = new BudgetGuard(budgetLimits, now);
       const roster = new Map(o.roster.map((s) => [s.key, s]));
       const chair = o.roster.find((s) => s.key === (o.chairKey ?? '') || s.role === 'chair');
@@ -274,7 +305,7 @@ export function createCouncilRuntime(deps: RuntimeDeps): {
         const msg = parsed.data;
         messages.push(msg);
         if (messages.length > 60) messages.shift();
-        await safeEmit({ t: 'a2a.message', msg, mode: msg.mode });
+        await safeEmit({ t: 'a2a.message', msg, mode: msg.mode, transport: tkind });
         changed();
         return msg;
       }
@@ -312,6 +343,7 @@ export function createCouncilRuntime(deps: RuntimeDeps): {
           correlationId: o.correlationId,
           stage: s,
           mode: aggregate(),
+          transport: tkind,
         } as Parameters<CouncilEmitFn>[0]);
         changed();
       };
@@ -322,7 +354,7 @@ export function createCouncilRuntime(deps: RuntimeDeps): {
         ...(s.parent ? { parent: s.parent } : {}),
         displayName: s.displayName,
         mode: agentMode.get(s.id) ?? startMode,
-        transport: isDemo ? 'demo' : transport.kind,
+        transport: tkind,
         status: agentStatus.get(s.id) ?? 'queued',
       });
 
@@ -867,6 +899,7 @@ export function createCouncilRuntime(deps: RuntimeDeps): {
           correlationId: o.correlationId,
           stage: 'question',
           mode: startMode,
+          transport: tkind,
         } as Parameters<CouncilEmitFn>[0]);
         return m;
       })();

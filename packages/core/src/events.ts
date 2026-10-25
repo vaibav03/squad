@@ -37,6 +37,8 @@ const Extras = {
   message: MessageSchema.optional(),
   /** Optional, additive: honest status of the agent that produced the event (live | degraded:<why> | demo). */
   mode: AgentModeSchema.optional(),
+  /** Optional, additive: how the producing council run reached its model (honest transport, docs/live-council.md). */
+  transport: z.enum(['stream-text', 'live-text', 'live-audio', 'demo']).optional(),
 } as const;
 
 /**

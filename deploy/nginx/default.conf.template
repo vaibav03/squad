@@ -40,7 +40,7 @@ server {
   location ^~ /__sim/ { return 404; }
 
   # SSE: no buffering, long read timeout.
-  location = /v1/squad/stream {
+  location ~ ^/v1/(squad/stream|stream)$ {
     proxy_pass http://${HUB_UPSTREAM};
     proxy_http_version 1.1;
     proxy_set_header Connection "";

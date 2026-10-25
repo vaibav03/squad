@@ -24,6 +24,7 @@
     "demo:live": "tsx scripts/demo/live.ts",
     "dev:all": "tsx scripts/dev/all.ts",
     "live:verify": "tsx scripts/live/verify.ts",
+    "live:council-live": "tsx scripts/live/council-live-proof.ts",
     "live:council-probe": "tsx scripts/live/council-probe.ts",
     "live:council-smoke": "tsx scripts/live/council-smoke.ts",
     "live:council-scan": "tsx scripts/live/council-stream-scan.ts",
