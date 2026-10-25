@@ -55,3 +55,9 @@ open "http://localhost:5180/squad/village?replay=track2"    # also ?replay=track
 open http://localhost:5180/__motion ; open http://localhost:5180/__gallery
 pnpm dlx playwright install chromium && node apps/web-host/scripts/integration-capture.mjs   # re-capture
 ```
+
+## wire/hub (hub-side wiring)
+- Hub main: real brain/quiz/media ports when `GEMINI_API_KEY` is set (`apps/hub/src/wire.ts`, `adapters/real.ts`), stubs otherwise. Hub event log, trips, ledger and directory persist in the shared sqlite; `x.resync` only for ids older than the buffer.
+- Chapter ids: hub seed, stubs, fixtures and tests use course `demo`, chapters ch6/ch12. Remaining `ch5` strings live in core/web/village fixtures owned by other workstreams.
+- `MeshScheduler.findSlots` is `createMeshScheduler` in `@squad/mesh`; brain's `runStudyPlan` takes it in place of the stub (proved in `pnpm demo:live`). Mastery events use brain-answers' `emitMasteryChanged` only.
+- `pnpm demo:live` (no keys): hub + 4 agents (4101-4104) + bot fake chat, squad `sq_demo`; asserts trip.confirmed once and after all confirms, no `$180`/`therapy` on any stream, every event validates.
