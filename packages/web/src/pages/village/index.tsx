@@ -294,7 +294,7 @@ export default function VillagePage({ world }: { world?: string }) {
         hub={hub}
         calm={calm}
         onRun={runPhrase}
-        initialOpen={q.get('mastery') === '1'}
+        initialOpen={q.get('mastery') === '1' || q.get('panel') === 'mastery'}
         returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
       />
       {live && !replayName && <PlanPill />}
@@ -302,7 +302,7 @@ export default function VillagePage({ world }: { world?: string }) {
         hub={hub}
         calm={calm}
         onRun={runPhrase}
-        initialOpen={q.get('plan') === '1'}
+        initialOpen={q.get('plan') === '1' || q.get('panel') === 'plan'}
         returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
       />
       <OverlayHost

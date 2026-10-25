@@ -3,7 +3,7 @@
   overflow: hidden;
   border-radius: var(--radius-xl);
   border: 2px solid var(--sq-ink);
-  min-height: 260px;
+  min-height: 132px;
   display: flex;
   align-items: flex-end;
   box-shadow: var(--shadow-2);
@@ -43,12 +43,85 @@
   text-wrap: pretty;
 }
 @media (min-width: 768px) {
-  .sq-home__hero {
-    min-height: 340px;
-  }
   .sq-home__heroinner {
-    padding: var(--space-8);
+    padding: var(--space-4) var(--space-5);
   }
+}
+.sq-home__hall {
+  position: absolute;
+  right: var(--space-5);
+  bottom: 0;
+  height: 112px;
+  width: auto;
+  image-rendering: pixelated;
+  z-index: -1;
+}
+.sq-home__chamber {
+  background-size: cover;
+  background-position: center;
+  image-rendering: pixelated;
+}
+.sq-home__heroinner {
+  padding: var(--space-4);
+  gap: var(--space-2);
+}
+.sq-home__herotitle {
+  font-size: var(--text-pixel-md);
+}
+.sq-home__herolede {
+  font-size: var(--text-sm);
+}
+.sq-home__next {
+  display: grid;
+  gap: var(--space-2);
+}
+.sq-home__nexttitle {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+.sq-home__nextbody {
+  margin: 0;
+  color: var(--muted-foreground);
+  max-width: 40rem;
+}
+.sq-home__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  font-size: var(--text-xs);
+}
+.sq-home__steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+.sq-home__steps li[data-state='done'] {
+  color: var(--foreground);
+}
+.sq-home__alt {
+  display: block;
+  padding: 0 var(--space-4) var(--space-3) calc(var(--space-4) + 28px);
+  font-size: var(--text-sm);
+}
+.sq-home__note {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+}
+.sq-home__explore > summary {
+  cursor: pointer;
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
+  color: var(--muted-foreground);
+  font: 600 var(--text-sm) / 1 var(--font-sans);
 }
 .sq-home__grid {
   display: grid;
