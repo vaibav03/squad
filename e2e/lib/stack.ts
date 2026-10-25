@@ -80,7 +80,8 @@ export function stopStack(): void {
   } catch {
     /* already gone */
   }
-  for (const port of [HUB_PORT, WEB_PORT, 4101, 4102, 4103, 4104]) {
+  const agentPorts = process.env.E2E_NO_AGENTS === '1' ? [] : [4101, 4102, 4103, 4104];
+  for (const port of [HUB_PORT, WEB_PORT, ...agentPorts]) {
     try {
       execSync(`lsof -tiTCP:${port} -sTCP:LISTEN | xargs kill || true`);
     } catch {
