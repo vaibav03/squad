@@ -188,7 +188,6 @@ export function Roster({
             const who = resolveParticipant(a.id, a.name);
             const state: CastState =
               a.status === 'working' ? 'talk' : a.status === 'queued' ? 'think' : 'idle';
-            const stance = a.status === 'done' || a.status === 'partial' ? a.stance : undefined;
             return (
               <li
                 key={a.id}
@@ -205,7 +204,7 @@ export function Roster({
               >
                 <PortraitButton
                   who={who}
-                  scale={2}
+                  scale={1}
                   state={state}
                   {...(calm ? { calm: true } : {})}
                   runId={run.runId}
@@ -220,11 +219,6 @@ export function Roster({
                     <StatusChip status={STATE_CHIP[a.status]} label={STATE_WORD[a.status]} />
                   </p>
                   <p className="dl-member__provider">{providerLine(a, councilStatus)}</p>
-                  {stance ? (
-                    <p className="dl-member__stance">
-                      <span className="dl-k">Position</span> {stance}
-                    </p>
-                  ) : null}
                 </div>
               </li>
             );

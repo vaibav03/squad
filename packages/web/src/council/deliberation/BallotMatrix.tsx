@@ -50,7 +50,7 @@ export function BallotMatrix({ run }: { run: BoardRun }) {
                 </th>
               ))}
               <th scope="col" className="dl-ballot__order">
-                Council order
+                Order
               </th>
             </tr>
           </thead>

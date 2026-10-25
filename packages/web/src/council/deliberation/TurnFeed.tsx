@@ -98,17 +98,19 @@ function TurnCard({
           </span>
           {odd ? <StatusChip status={chipStatusOf(m.mode)} /> : null}
           {m.partial ? <span className="dl-tag">Cut short</span> : null}
+        </header>
+        <p className="dl-turn__sub">
           <span className="dl-turn__meta">
             <span>Turn {t.n}</span>
             {m.ts > 0 ? <time dateTime={new Date(m.ts).toISOString()}>{time(m.ts)}</time> : null}
           </span>
-        </header>
-        {reply ? (
-          <p className="dl-turn__reply" data-testid="dl-reply-to">
-            <Icon name="reply" size={12} />
-            {reply}
-          </p>
-        ) : null}
+          {reply ? (
+            <span className="dl-turn__reply" data-testid="dl-reply-to">
+              <Icon name="reply" size={12} />
+              {reply}
+            </span>
+          ) : null}
+        </p>
         {private_ ? (
           <p className="dl-turn__text dl-dim">Details are private to the person who asked.</p>
         ) : text ? (

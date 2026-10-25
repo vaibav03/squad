@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T10:33:22.559Z",
+  "at": "2026-10-25T15:44:01.723Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -457,6 +457,66 @@
     "status": "pass",
     "note": "",
     "ms": 71697
+   },
+   {
+    "title": "tmp",
+    "status": "pass",
+    "note": "",
+    "ms": 1130
+   },
+   {
+    "title": "J35 keyboard: buttons are real buttons, Tab stays in the dialog, Esc closes",
+    "status": "pass",
+    "note": "",
+    "ms": 2793
+   },
+   {
+    "title": "J35 contrast AA: every text element in the board meets 4.5:1 (3:1 for large text)",
+    "status": "pass",
+    "note": "",
+    "ms": 1778
+   },
+   {
+    "title": "J35 emoji and dot audit of the board: no emoji or bare marker outside user content",
+    "status": "pass",
+    "note": "",
+    "ms": 1941
+   },
+   {
+    "title": "J35 motion: handoff lines focus in 160-240 ms ease-out; Calm and reduced motion are static",
+    "status": "pass",
+    "note": "",
+    "ms": 30211
+   },
+   {
+    "title": "J35 the deliberation surface renders the phases, turn cards, ballot and the pinned decision",
+    "status": "pass",
+    "note": "",
+    "ms": 5299
+   },
+   {
+    "title": "J35 responsive 1280x800: nothing overlaps, no sideways scroll, the decision stays reachable",
+    "status": "pass",
+    "note": "",
+    "ms": 2346
+   },
+   {
+    "title": "J35 responsive 1440x900: nothing overlaps, no sideways scroll, the decision stays reachable",
+    "status": "pass",
+    "note": "",
+    "ms": 2207
+   },
+   {
+    "title": "J35 responsive 1920x1080: nothing overlaps, no sideways scroll, the decision stays reachable",
+    "status": "pass",
+    "note": "",
+    "ms": 2291
+   },
+   {
+    "title": "J35 responsive 390x844: nothing overlaps, no sideways scroll, the decision stays reachable",
+    "status": "pass",
+    "note": "",
+    "ms": 2023
    }
   ]
  }

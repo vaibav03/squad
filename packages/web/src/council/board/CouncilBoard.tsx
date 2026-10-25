@@ -19,12 +19,12 @@ import { PhaseStepper } from '../deliberation/PhaseStepper';
 import { Roster } from '../deliberation/Roster';
 import { NO_FILTER, TurnFeed, type FeedFilter } from '../deliberation/TurnFeed';
 import { registerAgentPanel } from '../deliberation/agent-panel';
-import '../deliberation/deliberation.css';
 import { CouncilStatusStrip } from '../status/CouncilStatusStrip';
 import { useCouncilStatus } from '../status/useCouncilStatus';
 import { EmptyCouncilState, LastRunLabel } from '../last-run/components';
 import { useLastRunsState } from '../last-run/store';
 import './board.css';
+import '../deliberation/deliberation.css';
 
 export interface CouncilBoardProps {
   store: CouncilBoardStore;
@@ -207,7 +207,7 @@ export function CouncilBoard({
         <>
           <PhaseStepper run={run} />
           <div className="cb-body dl-body">
-            <div className="cb-col cb-col--left dl-col dl-col--side">
+            <div className="cb-col dl-col dl-col--side">
               <Roster
                 store={store}
                 run={run}
@@ -218,7 +218,17 @@ export function CouncilBoard({
               <BallotMatrix run={run} />
               <DelegationCards delegations={run.delegations} onSeeAnswer={onJump} />
             </div>
-            <div className="cb-col cb-col--right dl-col dl-col--main">
+            <div className="cb-col dl-col dl-col--feed">
+              <TurnFeed
+                run={run}
+                filter={filter}
+                onFilter={setFilter}
+                jumpTo={jump}
+                selectedId={selectedMsg}
+                onSelect={(id) => setSelectedMsg((cur) => (cur === id ? null : id))}
+              />
+            </div>
+            <div className="cb-col dl-col dl-col--decision">
               <DecisionCard
                 run={run}
                 onJump={onJump}
@@ -228,14 +238,6 @@ export function CouncilBoard({
                 councilStatus={hubStatus}
                 replay={replay}
                 onClose={onClose}
-              />
-              <TurnFeed
-                run={run}
-                filter={filter}
-                onFilter={setFilter}
-                jumpTo={jump}
-                selectedId={selectedMsg}
-                onSelect={(id) => setSelectedMsg((cur) => (cur === id ? null : id))}
               />
             </div>
           </div>

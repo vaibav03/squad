@@ -69,7 +69,7 @@ test('J23 chat card: mode badge, stage and agents; the board opens from the card
   const badge = card.locator('.cb-mode').first();
   await expect(badge).toBeVisible({ timeout: RUN_MS });
   if (LIVE) await expect(badge).toContainText(/Live/);
-  else await expect(badge).toContainText(/Demo/);
+  else await expect(badge).toContainText(/Fixture/);
   await card.scrollIntoViewIfNeeded();
   await page.waitForTimeout(500);
   await snap(page, '1-chat-card');
@@ -78,16 +78,16 @@ test('J23 chat card: mode badge, stage and agents; the board opens from the card
   await card.getByRole('button', { name: 'Open council board' }).click({ timeout: RUN_MS });
   const dlg = board(page);
   await expect(dlg).toBeVisible();
-  const stepper = dlg.locator('.cb-stepper__count');
+  const donePhases = dlg.locator('.dl-phase[data-state="done"]');
   const seen = new Set<string>();
   const end = Date.now() + RUN_MS;
   while (Date.now() < end) {
-    const t = (await stepper.textContent().catch(() => '')) ?? '';
-    if (t) seen.add(t);
-    if (/All 7 steps done/.test(t)) break;
+    const n = await donePhases.count().catch(() => 0);
+    seen.add(String(n));
+    if (n === 4) break;
     await page.waitForTimeout(250);
   }
-  await expect(stepper).toContainText('All 7 steps done', { timeout: 5_000 });
+  await expect(donePhases).toHaveCount(4, { timeout: 5_000 });
   // a live run is slow enough to watch: the stepper must have moved through more than one state
   if (LIVE) expect(seen.size).toBeGreaterThan(1);
 
@@ -96,8 +96,8 @@ test('J23 chat card: mode badge, stage and agents; the board opens from the card
   await expect(head).not.toContainText('Question received. Planning who to ask.');
   await expect(head.locator('.cb-status')).toBeVisible();
   await expect(head.locator('.cb-status')).not.toHaveText(/^\s*$/);
-  await expect(dlg.locator('.cb-head .cb-mode')).toContainText(LIVE ? /Live/ : /Demo/);
-  const verdict = dlg.getByTestId('cb-verdict');
+  await expect(dlg.locator('.cb-head .cb-mode')).toContainText(LIVE ? /Live/ : /Fixture/);
+  const verdict = dlg.getByTestId('dl-decision');
   await expect(verdict).toBeVisible();
   await page.waitForTimeout(800);
   await snap(page, '2-board-final');
@@ -132,7 +132,7 @@ test('J23 action items: Send to chat posts to the squad thread; Add to plan adds
   await expect(card).toBeVisible({ timeout: 30_000 });
   await card.getByRole('button', { name: 'Open council board' }).click();
   const dlg = board(page);
-  const verdict = dlg.getByTestId('cb-verdict');
+  const verdict = dlg.getByTestId('dl-decision');
   await expect(verdict).toBeVisible({ timeout: 30_000 });
 
   const send = verdict.getByRole('button', { name: /^Send to chat/ }).first();
@@ -234,14 +234,14 @@ test('J23 Council Hall panel: mode badge, stage and agents of the run, and the b
   });
   await expect(strip.locator('.cn-strip__agent')).not.toHaveCount(0);
   await expect(ask.locator('.cn-verdict')).toBeVisible({ timeout: RUN_MS });
-  await expect(ask.locator('.cb-mode').first()).toContainText(LIVE ? /Live/ : /Demo/);
+  await expect(ask.locator('.cb-mode').first()).toContainText(LIVE ? /Live/ : /Fixture/);
   await page.waitForTimeout(600);
   await snap(page, '4-council-hall-panel');
 
   await ask.getByRole('button', { name: 'Open council board' }).first().click();
   const dlg = board(page);
   await expect(dlg).toBeVisible();
-  await expect(dlg.locator('.cb-stepper__count')).toContainText('All 7 steps done', {
+  await expect(dlg.locator('.dl-phase[data-state="done"]')).toHaveCount(4, {
     timeout: RUN_MS,
   });
   await expect(dlg.locator('.cb-head .cb-status')).not.toContainText(
@@ -261,15 +261,15 @@ test('J23 Round Table board: Chairman, Chill, Grind and Advisor show their cast 
   await page.goto('/squad/village?board=roundtable&boardspeed=instant');
   const dlg = page.getByRole('dialog').filter({ has: page.locator('.cb-head') });
   await expect(dlg).toBeVisible({ timeout: 40_000 });
-  await expect(dlg.locator('.cb-node')).toHaveCount(4, { timeout: 20_000 });
+  await expect(dlg.getByTestId('dl-member')).toHaveCount(4, { timeout: 20_000 });
   for (const n of ['Chairman', 'Chill', 'Grind', 'Advisor']) {
     // a cast portrait (img named after the character), not the initial tile
     await expect(
-      dlg.locator('.cb-node').getByRole('img', { name: new RegExp(`^${n}`) }),
+      dlg.getByTestId('dl-member').getByRole('img', { name: new RegExp(`^${n}`) }).first(),
     ).toBeVisible();
   }
-  await expect(dlg.locator('.cb-head .cb-mode')).toContainText('Demo');
-  await expect(dlg.getByTestId('cb-verdict')).toBeVisible({ timeout: 30_000 });
+  await expect(dlg.locator('.cb-head .cb-mode')).toContainText('Fixture');
+  await expect(dlg.getByTestId('dl-decision')).toBeVisible({ timeout: 30_000 });
   await page.waitForTimeout(800);
   await snap(page, '6-round-table-portraits');
   await a.ctx.close();

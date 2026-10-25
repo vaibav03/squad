@@ -109,7 +109,7 @@ test('J26 a started council opens the hall: Demo banner, seats that change state
 
   // unmissable honesty: words, not only colour
   await expect(page.getByTestId('demo-banner')).toContainText('Demo: scripted, not Gemini');
-  await expect(stage(page).locator('.cb-mode').first()).toContainText('Demo');
+  await expect(stage(page).locator('.cb-mode').first()).toContainText('Fixture');
   await expect(stage(page)).not.toContainText('Live');
   await expect(page.getByTestId('stage-transport')).toContainText('Demo');
 
@@ -130,7 +130,7 @@ test('J26 a started council opens the hall: Demo banner, seats that change state
   const cap = page.getByTestId('council-captions');
   await expect(cap.getByTestId('caption-speaker')).toBeVisible();
   await expect(cap.getByTestId('caption-text')).not.toHaveText('Waiting for the first words.');
-  await expect(cap.locator('.cb-mode')).toContainText('Demo');
+  await expect(cap.locator('.cb-mode')).toContainText('Fixture');
   await snap(page, 'captions');
 
   // the board is one click away (the room-info panel that opens on entry is closed first)
@@ -145,7 +145,7 @@ test('J26 a started council opens the hall: Demo banner, seats that change state
   await page.getByTestId('stage-board').click();
   const board = page.getByRole('dialog', { name: /Council|Ask council/ });
   await expect(board).toBeVisible();
-  await expect(board.locator('.cb-head .cb-mode')).toContainText('Demo');
+  await expect(board.locator('.cb-head .cb-mode')).toContainText('Fixture');
   await snap(page, 'board-from-hall');
 
   // the run is stored: it is still there after a reload (hub store, last 20 per squad)
