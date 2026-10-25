@@ -119,6 +119,7 @@ export function PlanLayer(props: PlanLayerProps) {
       }
       {...(onRun ? { onAsk: (p: string) => onRun(p || ASK_PHRASE) } : {})}
       onRetry={() => setAttempt((n) => n + 1)}
+      onPropose={(d) => void run(() => planApi.propose(hub!, d), 'Plan proposed.')}
     />
   );
 }

@@ -35,6 +35,7 @@ const clean = (v: string | undefined) => (v ?? '').trim();
 export function providerFromEnv(env: Env): ImessageProvider {
   const v = clean(env.IMESSAGE_PROVIDER).toLowerCase();
   if (v === 'sendblue' || v === 'fake' || v === 'local' || v === 'off') return v;
+  if (clean(env.IMESSAGE_FIXTURE) === '1') return 'fake';
   // unset: the pre-Sendblue behaviour (the local Mac bridge only when IMESSAGE_ENABLED=1), otherwise off
   return clean(env.IMESSAGE_ENABLED) === '1' ? 'local' : 'off';
 }

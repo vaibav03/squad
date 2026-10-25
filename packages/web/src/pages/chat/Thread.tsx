@@ -22,6 +22,8 @@ import { Composer, type ComposerHandle } from './Composer';
 import { MemberStack, TypingIndicator } from './parts';
 import { QUICK_PROMPTS_DM, QUICK_PROMPTS_GROUP, buildRows, dmIdFor, type ThreadRow } from './model';
 import type { ChatController } from './useChat';
+import { ImessageIndicator } from './sync/ImessageIndicator';
+import { useImessageStatus } from './sync/useImessageStatus';
 import { LivePanel } from '../../live/LivePanel';
 import { useSquadConfig } from '../../shell/context';
 
@@ -497,6 +499,7 @@ export function ThreadPane({
   const cfg = useSquadConfig();
   const liveHub = cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token ?? null } : null;
   const [liveTopic, setLiveTopic] = useState<string | null>(null);
+  const imsg = useImessageStatus(ctl.api);
   return (
     <div className="sqc-thread" data-chat-kind={chat.kind}>
       <header className="sqc-head">
@@ -526,6 +529,7 @@ export function ThreadPane({
               </span>
             </span>
           ) : null}
+          <ImessageIndicator status={imsg} chatId={chat.id} compact={compact} />
           <span className="sqc-head__conn">
             <StatusDot status={st.status} label={st.label} hideLabel={compact} />
           </span>

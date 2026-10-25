@@ -7,6 +7,7 @@ import {
   type ChatTyping,
   type ChatUpdate,
   type HubStatus,
+  type ImessageStatus,
 } from '@squad/core';
 import {
   ChatApiError,
@@ -247,6 +248,8 @@ export interface FakeChatApi extends ChatApi {
   pushUpdate(u: ChatUpdate): void;
   /** a `chat.sync` event: the delivery state of a message changed */
   pushSync(e: ChatSyncEvent): void;
+  /** what `imessageStatus()` returns (default: null, as an old hub) */
+  imessage: ImessageStatus | null;
   /** message ids the web asked to retry (POST /v1/imessage/messages/:id/retry) */
   retried: string[];
   pushTyping(t: ChatTyping): void;
@@ -435,6 +438,8 @@ export function createFakeChatApi(o: FakeChatOptions = {}): FakeChatApi {
     pushUpdate: (u) => subs.forEach((h) => h.onUpdate(u)),
     pushSync: (e) => subs.forEach((h) => h.onSync?.(e)),
     retried: [],
+    imessage: null,
+    imessageStatus: async () => api.imessage,
     retryImessage: async (id) => {
       api.retried.push(id);
       return true;

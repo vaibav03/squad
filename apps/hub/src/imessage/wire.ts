@@ -1,5 +1,6 @@
 // Starts the iMessage bridge inside the hub process. Off unless IMESSAGE_ENABLED=1 and an allowlist is set.
 import {
+  FakeIMessageTransport,
   configProblem,
   createIMessageGateway,
   imessageConfigFromEnv,
@@ -8,7 +9,6 @@ import {
   type IMessageSdkLike,
   type Logger,
 } from '@squad/bot';
-import { FakeIMessageTransport } from '@squad/bot';
 import type { HubDeps } from '../types';
 import { createIMessageBridge, type IMessageBridge } from './bridge';
 import { createSendblueClient } from './sendblue/client';
@@ -47,6 +47,9 @@ export interface AttachIMessageOptions {
   timers?: boolean;
 }
 
+/** The one chat guid the fixture transport knows. Allowlist it with IMESSAGE_ALLOWED_CHATS. */
+export const FIXTURE_CHAT = 'iMessage;+;chat-fixture-0001';
+
 /** The hub's logger takes (message, fields); the bot's takes (fields, message). */
 const botLog = (deps: Pick<HubDeps, 'log'>): Logger => ({
   info: (a, m) =>
@@ -83,6 +86,7 @@ export async function attachIMessage(
   }
   let config = o.config ?? imessageConfigFromEnv(env);
   let sdk = o.sdk;
+  let fixture = false;
   let sbParts:
     | {
         cfg: ReturnType<typeof sendblueConfigFromEnv>;
@@ -93,9 +97,14 @@ export async function attachIMessage(
       }
     | undefined;
   if (provider === 'fake') {
-    // fixture transport: nothing real is ever read or sent, so the allowlist is not needed
-    sdk ??= new FakeIMessageTransport();
-    config = o.config ?? { ...config, enabled: true, dryRun: false, allowAll: true };
+    // fixture transport (also IMESSAGE_FIXTURE=1): nothing real is ever read or sent. Without an allowlist
+    // the fixture needs none; with one (IMESSAGE_ALLOWED_CHATS naming FIXTURE_CHAT) it is honoured.
+    fixture = !o.sdk;
+    sdk ??= new FakeIMessageTransport([
+      { chatId: FIXTURE_CHAT, name: 'Fixture group', kind: 'group' },
+    ]);
+    if (!o.config && config.allowedChats.length + config.allowedHandles.length === 0)
+      config = { ...config, enabled: true, dryRun: false, allowAll: true };
   }
   if (provider === 'sendblue') {
     const cfg = sendblueConfigFromEnv(env, deps.config.baseUrl);
@@ -154,7 +163,13 @@ export async function attachIMessage(
     provider: provider === 'sendblue' ? 'sendblue' : provider === 'fake' ? 'fixture' : 'photon',
     ...(o.now ? { now: o.now } : {}),
     ...(o.timers !== undefined ? { timers: o.timers } : {}),
+    ...(o.sdk || fixture ? { fixture: true } : {}),
   });
+  if (fixture) {
+    const squad = env.IMESSAGE_FIXTURE_SQUAD ?? deps.directory.students()[0]?.id;
+    const squadId = env.IMESSAGE_FIXTURE_SQUAD ?? (squad ? deps.directory.squadOf(squad) : undefined);
+    if (squadId && !deps.imessage.binding(FIXTURE_CHAT)) deps.imessage.bind(FIXTURE_CHAT, squadId, 'fixture');
+  }
   deps.imessageSync = bridge.sync;
   await gateway.start((m) => bridge.handleInbound(m));
   // pick up what chat.db received while the hub was down (cursor per bound chat), then keep retrying queued sends
