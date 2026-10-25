@@ -99,7 +99,7 @@ describe('Home bootstrap', () => {
     hubUpAt = Date.now() + 60_000;
     mount();
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(9000);
+      await vi.advanceTimersByTimeAsync(8500);
     });
     expect(await screen.findByText('You are offline')).toBeTruthy();
     hubUpAt = 0;
