@@ -52,9 +52,10 @@
   --state-conflict: var(--sq-alert);
   --state-offline: var(--sq-hill-mid);
 
-  /* ---------- 3. Typography (final families confirmed in typography.md) ---------- */
-  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-pixel: "Pixelify Sans", "Silkscreen", "NinjaAdventure", ui-monospace, monospace;
+  /* ---------- 3. Typography (typography.md is the detail source: Jersey 10 + Silkscreen + Inter Variable) ---------- */
+  --font-sans: "Inter Variable", "Inter Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-pixel: "Jersey 10", "Jersey 10 Fallback", ui-monospace, Menlo, Consolas, monospace;   /* mixed case; art pixel = em/9.333 */
+  --font-pixel-caps: "Silkscreen", "Jersey 10", ui-monospace, Menlo, monospace;                    /* caps tags only: LIVE, REPLAY; 8/16/24px */
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   --text-xs: 0.75rem;   --lh-xs: 1rem;       /* 12/16 labels, chip meta */
   --text-sm: 0.875rem;  --lh-sm: 1.25rem;    /* 14/20 secondary UI */
@@ -62,9 +63,12 @@
   --text-lg: 1.125rem;  --lh-lg: 1.75rem;    /* 18/28 panel titles */
   --text-xl: 1.375rem;  --lh-xl: 1.875rem;   /* 22/30 card headings */
   --text-2xl: 1.75rem;  --lh-2xl: 2.125rem;  /* 28/34 page titles */
-  --text-pixel-sm: 1rem;     --lh-pixel-sm: 1rem;     /* 16/16 pixel labels (8px grid x2) */
-  --text-pixel-md: 1.5rem;   --lh-pixel-md: 1.5rem;   /* 24/24 (8px grid x3) */
-  --text-pixel-lg: 2rem;     --lh-pixel-lg: 2rem;     /* 32/32 hero numerals, titles */
+  /* Jersey 10 only at integer multiples of its art pixel (em/9.333): 18.667 (2x), 28 (3x), 37.333 (4x), 56 (6x) */
+  --text-pixel-sm: 18.667px; --lh-pixel-sm: 20px;    /* chip names, game button labels */
+  --text-pixel-md: 28px;     --lh-pixel-md: 30px;    /* bubble text desktop, signs */
+  --text-pixel-lg: 37.333px; --lh-pixel-lg: 40px;    /* screen titles */
+  --text-pixel-xl: 56px;     --lh-pixel-xl: 56px;    /* numerals: Q2 of 5, countdowns */
+  --text-tag: 8px; --text-tag-lg: 16px;              /* Silkscreen caps tags */
   --tracking-pixel: 0;         --tracking-ui: -0.005em;  --tracking-caps: 0.06em;
 
   /* ---------- 4. Spacing (4px base), radius, border, shadow ---------- */

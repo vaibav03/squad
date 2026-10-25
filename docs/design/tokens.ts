@@ -38,21 +38,27 @@ export const agentState = {
 } as const;
 
 export const font = {
-  sans: '"Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
-  pixel: '"Pixelify Sans", "Silkscreen", "NinjaAdventure", ui-monospace, monospace',
+  sans: '"Inter Variable", "Inter Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+  pixel: '"Jersey 10", "Jersey 10 Fallback", ui-monospace, Menlo, Consolas, monospace',
+  pixelCaps: '"Silkscreen", "Jersey 10", ui-monospace, Menlo, monospace',
+  /** Jersey 10: one art pixel = em/9.333. Phaser fontSize = jerseyPx * k * zoom */
+  jerseyPx: 9.3333,
   mono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
 } as const;
 
 /** DOM type scale [px size, px line-height]. */
 export const text = {
   xs: [12, 16], sm: [14, 20], base: [16, 24], lg: [18, 28], xl: [22, 30], '2xl': [28, 34],
-  pixelSm: [16, 16], pixelMd: [24, 24], pixelLg: [32, 32],
+  pixelSm: [18.667, 20], pixelMd: [28, 30], pixelLg: [37.333, 40], pixelXl: [56, 56],
 } as const;
 
 export const space = { 0: 0, 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40, 12: 48, 16: 64 } as const;
 export const radius = { base: 10, sm: 6, md: 8, lg: 12, xl: 16, pill: 999 } as const;
 export const touchMin = 44;
 export const z = { canvas: 0, sceneDom: 1, hud: 10, panel: 20, dock: 20, scrim: 30, overlay: 40, toast: 50, tooltip: 60, cutsceneSkip: 70 } as const;
+
+/** Phaser text size for the pixel font: k = 1 labels, 2 bubbles/titles, 3+ numerals; zoom = 2 phone / 3 desktop. */
+export const pixelFontSize = (k: number, zoom: number): number => font.jerseyPx * k * zoom;
 
 /** Art scale. Native art is 1x; show it at an integer zoom only. */
 export const pixel = {
