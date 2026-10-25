@@ -138,12 +138,20 @@ export function createCoursePlanSkill(deps: CoursePlanSkillDeps): Skill {
         : seeded
           ? 'Using the course record I have for you.'
           : 'No record yet, so I used a sample end-of-year-2 record. Tell me what you finished ("I finished CSL 101, CSL 102") to change it.';
+      const fallback = !own && !deps.bundle;
       const label = own
         ? `Using your imported catalogue (${own.catalog.courses.length} courses).`
         : deps.bundle
           ? ''
           : 'Fallback: sample catalogue (you have not imported one, so this is not your real catalogue).';
-      return [{ chatId: m.chatId, text: `${res.replyText}\n${source}${label ? `\n${label}` : ''}` }];
+      // The catalogue is invented sample data, so the reply says so in its provenance row (never "grounded").
+      return [
+        {
+          chatId: m.chatId,
+          text: `${res.replyText}\n${source}${label ? `\n${label}` : ''}`,
+          ...(fallback ? { provenance: { kind: 'sample' as const, label: 'Fallback: sample catalogue' } } : {}),
+        },
+      ];
     },
   };
 }

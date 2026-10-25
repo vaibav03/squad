@@ -27,13 +27,16 @@ export const JOURNEY = [
   'S1c',
   'S2',
   'S3',
+  'S3e',
   'S4',
   'S5',
   'S6',
   'S7',
   'S8',
   'S9',
+  'S9b',
   'S10',
+  'S10b',
 ];
 export const VARIANTS = Array.from({ length: 13 }, (_, i) => `V${i + 1}`);
 
