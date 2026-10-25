@@ -20,7 +20,10 @@ logs/
 assets/vendor/
 **/vendor/
 assets/interior/vendor-recipe.json
-docs/
+docs/*
+!docs/design/
+docs/design/*
+!docs/design/tokens.css
 **/*.test.ts
 **/*.test.tsx
 **/test/

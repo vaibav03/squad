@@ -1,0 +1,73 @@
+name: deploy-build
+# Builds production artifacts and images (never pushes, never deploys). Separate from ci.yml so it cannot break it.
+on:
+  push:
+  pull_request:
+concurrency:
+  group: deploy-build-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+        env: { VITE_HUB_URL: 'http://__SQUAD_PUBLIC_ORIGIN__' }
+      - name: Bundle size report and budgets
+        run: |
+          mkdir -p reports
+          pnpm bundle:report --md reports/bundle-size.md --json reports/bundle-size.json | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: bundle-size-report, path: reports/ }
+
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Compose file is valid
+        run: docker compose config -q
+        env: { INTERNAL_EVENTS_SECRET: ci-only-not-a-real-secret-0123456789 }
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with: { dockerfile: Dockerfile, failure-threshold: error }
+      - name: Build all images (no push)
+        run: docker compose --profile bot build
+        env:
+          INTERNAL_EVENTS_SECRET: ci-only-not-a-real-secret-0123456789
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
+      - name: ffmpeg is in the hub image, vendor art is not in the web image
+        run: |
+          docker run --rm --entrypoint ffmpeg squad-hub:local -version | head -1
+          ! docker run --rm --entrypoint sh squad-web:local -c 'test -e /usr/share/nginx/html/assets/vendor'
+      - name: Hub smoke in the container
+        run: |
+          docker run -d --name hub-smoke -e INTERNAL_EVENTS_SECRET=ci-only-not-a-real-secret-0123456789 -e NODE_ENV=production -e HUB_SEED=1 -p 8788:8788 squad-hub:local
+          for i in $(seq 1 40); do curl -fsS localhost:8788/health && break; sleep 2; done
+          curl -fsS localhost:8788/health
+          curl -fsS localhost:8788/v1/status
+          docker stop -t 15 hub-smoke
+          test "$(docker inspect -f '{{.State.ExitCode}}' hub-smoke)" = "0"
+      - name: Full stack e2e smoke through the proxy
+        run: |
+          echo "INTERNAL_EVENTS_SECRET=ci-only-not-a-real-secret-0123456789" > .env
+          docker compose up -d --wait --wait-timeout 180
+          curl -fsS localhost:8080/healthz
+          curl -fsS localhost:8080/health
+          curl -fsS localhost:8080/v1/status
+          curl -fsS localhost:8080/ | grep -q '<div id="root">'
+          curl -fsS localhost:8080/some/spa/route | grep -q '<div id="root">'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:8080/internal/events)" = "404"
+          curl -sI localhost:8080/ | grep -qi 'content-security-policy'
+          docker compose ps
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail=200

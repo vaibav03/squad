@@ -118,6 +118,7 @@ COPY packages/web packages/web
 COPY apps/web-host apps/web-host
 COPY tsconfig.base.json ./
 COPY assets assets
+COPY docs/design/tokens.css docs/design/tokens.css
 # The hub origin is a runtime sentinel, swapped by the entrypoint (one image works for any domain).
 ENV VITE_HUB_URL=http://__SQUAD_PUBLIC_ORIGIN__
 RUN pnpm --filter @squad/web-host build
