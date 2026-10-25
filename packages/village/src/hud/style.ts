@@ -69,7 +69,9 @@ export const HUD_CSS = `
 .sqv-hud[data-layout=narrow] .sqv-mid{grid-area:2/1/3/3}
 .sqv-hud[data-layout=narrow] .sqv-bottom{grid-area:3/1/4/3;display:flex;align-items:flex-end}
 .sqv-hud[data-layout=narrow] .sqv-chips{grid-area:auto;width:100%;justify-content:flex-start;align-self:end;pointer-events:auto}
-.sqv-hud[data-layout=narrow] .sqv-pop{display:flex;flex-direction:column;gap:8px;position:absolute;right:0;top:0;padding:8px;opacity:0;transform:translateY(8px);visibility:hidden;transition:opacity .2s var(--ease-drawer),transform .2s var(--ease-drawer),visibility 0s .2s;pointer-events:auto;align-items:stretch}
+.sqv-hud[data-layout=narrow] .sqv-menu .sqv-seg{padding:0}
+.sqv-hud[data-layout=narrow] .sqv-pop .sqv-panel{box-shadow:none;border:0;background:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.sqv-hud[data-layout=narrow] .sqv-pop{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;width:100%;position:absolute;right:0;top:0;padding:8px;opacity:0;transform:translateY(8px);visibility:hidden;transition:opacity .2s var(--ease-drawer),transform .2s var(--ease-drawer),visibility 0s .2s;pointer-events:auto;align-items:stretch}
 .sqv-hud[data-layout=narrow] .sqv-pop[data-open=true]{opacity:1;transform:none;visibility:visible;transition-delay:0s}
 .sqv-hud[data-layout=narrow] .sqv-pop .sqv-seg{padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none}
 .sqv-hud[data-layout=narrow] .sqv-prompt{bottom:8px}
