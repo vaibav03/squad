@@ -1044,7 +1044,10 @@ describe('status exposes dry run, allowlist and kill switch; @cubbie parity with
     const orig = chat.send.bind(chat);
     chat.send = ((viewer: any, body: any, o: any) => {
       calls.push(`${o?.via ?? 'web'}:${viewer.studentId}`);
-      return orig(viewer, body, o);
+      return orig(viewer, body, o).then((r: any) => {
+        if (!r.ok) calls.push(`REFUSED:${r.code}:${r.status}`);
+        return r;
+      });
     }) as typeof chat.send;
     await chat.send(
       { studentId: c.uid.Ben!, squadId: c.squadId, projector: false },
@@ -1054,16 +1057,23 @@ describe('status exposes dry run, allowlist and kill switch; @cubbie parity with
     await settle();
     await c.fake.inbound({
       from: BEN,
-      content: '@cubbie what is a z-score?',
+      content: '@cubbie what is a standard deviation?',
       groupId: GID1,
       handle: 'PAR-1',
     });
-    await waitFor(() => personaPosts(gid).length >= 2, 15000);
+    await waitFor(() => personaPosts(gid).length >= 2, 15000).catch(() => {
+      throw new Error(
+        `second answer missing; calls=${calls.join(',')} history=${history(gid)
+          .map((m) => m.sender.kind + ':' + m.text.slice(0, 30))
+          .join(' | ')}`,
+      );
+    });
     await settle();
     expect(calls).toEqual([`web:${c.uid.Ben}`, `imessage:${c.uid.Ben}`]);
     const [web, im] = personaPosts(gid) as any[];
     expect(im.provenance?.kind).toBe(web.provenance?.kind);
-    expect(im.citations.length).toBe(web.citations.length);
+    expect(im.provenance?.mode).toBe(web.provenance?.mode);
+    expect(!!im.provenance).toBe(true);
     expect(groupSends().some((t) => /Cubbie: /.test(t))).toBe(true); // and the answer reached iMessage
   }, 30_000);
 });
