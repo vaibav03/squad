@@ -627,3 +627,18 @@ Branch `merge/batch24` (worktree `squad-wt/merge24`), one `--no-ff` merge per br
 
 - Landing merge commit: `823a095f81de7f214206b596610fbd8cf05f8861` (parents `5491edb052d0c5d78d2ffa52a5996faa68a4f056` = tag `pre-merge-batch24`, `c1b1e45f193689f8d67e772d4041fbcd47bc46e1` = merge/batch24; only tracker docs differ).
 - Rollback: `git revert -m 1 823a095f81de7f214206b596610fbd8cf05f8861`.
+
+## Batch 25: fix/blank-shell-2 (final, `7eb2e8ae`) + feature/council-integration (`0ba90b1c`) into main
+
+Branch `merge/batch25` (worktree `squad-wt/merge25`), one `--no-ff` merge per branch (both clean, no conflicts), landed as one true merge.
+
+- blank-shell-2's other commits landed in batch 24; this adds the final j18 spec update (connections and the 429 state).
+- council-integration: live council reliability, wiring, plan actions (core `CouncilResult.actions`, hub `POST /v1/council/:id/actions/plan|chat`), the board UI, `scripts/live` council scans, e2e j20/j23.
+- Stale test fixed (already red on main, outside `pnpm check`): `apps/hub/test/security/units.security.test.ts` config-guard tests now pass `SESSION_SECRET` (required in production since the accounts work). `pnpm --filter @squad/hub test:security` is now 23/23 (security limits for sign-up, verify, dev-login, upload, call-start, council and internal events were not touched by this batch; tests pass).
+- Checks: `pnpm check` exit 0; `pnpm demo:live` OK; hub smoke 138/138; hub security 23/23; e2e fixture mode on own ports (hub :9010 / web :5410 / agents 4881+): `j20-council-board` 6/6 and `j23-council-live` 6/6; browser smoke (hub :9020 / web :5420 / agents 4891+, new squad `summa`): 3 routes render, build marker equal, chat sends and answers, trip flow works, 0 page errors; burst of 40 page loads (8 rounds x 5 routes, concurrent contexts, one IP): 0 "offline" screens, 0 blank, 0 HTTP 429. One small real `@cubbie ask the council` in a fresh squad: the card showed the Live label with "Step 2 of 7: Delegation" at 3 s; the hub log then showed the full run (3 council.opinion, 3 council.rank, 8 council.stage, 1 council.verdict, no degraded or error line), so the board did not stick on "Question received".
+- Housekeeping: e2e runs rewrite `docs/qa/E2E-REPORT.md` and `e2e-results.json`; those generated changes were discarded, not committed.
+
+### Landing (batch 25)
+
+- Landing merge commit: `6212f53b68996cf99222cc1da05d88adb28d7ae9` (parents `ef63fb9bec39180667287a701f91a6bfb25d334a` = tag `pre-merge-batch25`, `3a1b88a22b5e744984e64ee4aab6660dbec59729` = merge/batch25; only tracker docs differ).
+- Rollback: `git revert -m 1 6212f53b68996cf99222cc1da05d88adb28d7ae9`.
