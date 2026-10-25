@@ -3,14 +3,16 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { listPersonas } from '../personas/index.js';
 import {
-  ANCHORS,
+  ANIM_FPS,
+  ANIM_FRAMES,
+  FEET_ANCHOR,
   FRAME_CELL,
-  ORIGIN_Y,
   loadCastAtlas,
   loadFrames,
   phaserAnims,
   repoRoot,
   spritesDir,
+  type AnimName,
 } from './index.js';
 import { readPng } from './png.js';
 
@@ -35,73 +37,98 @@ function assertPaletteLocked(path: string): void {
   }
   expect([...bad], `${path} has off-palette pixels`).toEqual([]);
 }
+function opaqueCount(
+  png: ReturnType<typeof readPng>,
+  x0: number,
+  y0: number,
+  w: number,
+  h: number,
+): number {
+  let n = 0;
+  for (let y = y0; y < y0 + h; y++)
+    for (let x = x0; x < x0 + w; x++) if (png.data[(y * png.width + x) * 4 + 3] === 255) n++;
+  return n;
+}
 
 const ids = listPersonas().map((p) => p.id);
-const NAME = /^(idle|walk|talk)_(r|f)_\d$/;
 
-describe('cast atlas', () => {
-  it('has a sprites dir with assets (run build_cast.py)', () => {
-    expect(existsSync(join(spritesDir(), 'cast.json')), 'assets/sprites/cast.json missing').toBe(
-      true,
-    );
+describe('cast atlas (format v2)', () => {
+  it('assets exist (run pnpm --filter @squad/media build:sprites)', () => {
+    expect(existsSync(join(spritesDir(), 'cast.json'))).toBe(true);
   });
 
-  it.each(ids)('%s: per-persona atlas is valid, in bounds and palette-locked', (id) => {
+  it.each(ids)('%s: strips, frames.json and portrait are valid and palette-locked', (id) => {
     const f = loadFrames(id);
     expect(f.id).toBe(id);
     expect(f.cell).toEqual(FRAME_CELL);
-    expect(f.anchors).toEqual(ANCHORS);
-    const sheet = join(spritesDir(), id, f.image);
-    const png = readPng(sheet);
+    expect(f.anchors.feet).toEqual(FEET_ANCHOR);
+    expect(f.anchors.head.y).toBeLessThan(f.anchors.feet.y);
     for (const [name, r] of Object.entries(f.frames)) {
-      expect(name).toMatch(NAME);
-      expect(r.w).toBe(24);
-      expect(r.h).toBe(24);
-      expect(r.x + r.w, `${id}/${name} x out of bounds`).toBeLessThanOrEqual(png.width);
+      expect(name).toMatch(/^(idle|walk|talk|sit|wave)\/\d$/);
+      const png = readPng(join(spritesDir(), id, r.strip));
+      expect(r.w).toBe(32);
+      expect(r.h).toBe(32);
+      expect(r.x + r.w, `${id}/${name} out of bounds`).toBeLessThanOrEqual(png.width);
       expect(r.y + r.h).toBeLessThanOrEqual(png.height);
-      // never an empty frame
-      let opaque = 0;
-      for (let y = r.y; y < r.y + r.h; y++)
-        for (let x = r.x; x < r.x + r.w; x++)
-          if (png.data[(y * png.width + x) * 4 + 3] === 255) opaque++;
-      expect(opaque, `${id}/${name} is empty`).toBeGreaterThan(30);
+      expect(opaqueCount(png, r.x, r.y, r.w, r.h), `${id}/${name} is empty`).toBeGreaterThan(40);
     }
-    for (const [anim, a] of Object.entries(f.anims)) {
-      expect(anim).toMatch(/^(idle|walk|talk)_(r|f)$/);
-      for (const n of a.frames)
-        expect(f.frames[n], `${id}: anim ${anim} references missing ${n}`).toBeDefined();
+    for (const a of Object.keys(ANIM_FPS) as AnimName[]) {
+      const anim = f.anims[a]!;
+      expect(anim, `${id} missing anim ${a}`).toBeDefined();
+      expect(anim.frames).toHaveLength(ANIM_FRAMES[a]);
+      expect(anim.frameRate).toBe(ANIM_FPS[a]);
+      for (const n of anim.frames)
+        expect(f.frames[n], `${id}: ${a} references missing ${n}`).toBeDefined();
     }
-    expect(f.anims.walk_r!.frames).toHaveLength(4);
-    expect(f.anims.talk_f!.frames).toHaveLength(2);
-    expect(f.anims.idle_r!.frames).toHaveLength(2);
-    assertPaletteLocked(sheet);
+    for (const strip of new Set(Object.values(f.frames).map((r) => r.strip)))
+      assertPaletteLocked(join(spritesDir(), id, strip));
+    const port = readPng(join(spritesDir(), id, f.portrait));
+    expect([port.width, port.height]).toEqual([32, 32]);
+    assertPaletteLocked(join(spritesDir(), id, f.portrait));
+    for (const s of [2, 3, 4]) {
+      const up = readPng(join(spritesDir(), id, `portrait@${s}x.png`));
+      expect([up.width, up.height]).toEqual([32 * s, 32 * s]);
+    }
   });
 
-  it('cast.json keys are the union of <id>/<frame> with feet pivots, and the image is palette-locked', () => {
+  it('cast.json keys are exactly the union of <id>/<anim>/<n> + <id>/portrait, feet pivots, palette-locked image', () => {
     const atlas = loadCastAtlas();
     const want = new Set<string>();
-    for (const id of ids)
-      for (const n of Object.keys(loadFrames(id).frames)) want.add(`${id}/${n}`);
+    for (const id of ids) {
+      const f = loadFrames(id);
+      for (const n of Object.keys(f.frames)) want.add(`${id}/${n}`);
+      want.add(`${id}/portrait`);
+    }
     expect(new Set(Object.keys(atlas.frames))).toEqual(want);
     const png = readPng(join(spritesDir(), atlas.meta.image));
     expect([png.width, png.height]).toEqual([atlas.meta.size.w, atlas.meta.size.h]);
-    for (const fr of Object.values(atlas.frames)) {
-      expect(fr.pivot.x).toBe(0.5);
-      expect(fr.pivot.y).toBeCloseTo(ORIGIN_Y, 3);
+    for (const [k, fr] of Object.entries(atlas.frames)) {
+      if (!k.endsWith('/portrait')) expect(fr.pivot).toEqual({ x: 0.5, y: 1 });
       expect(fr.frame.x + fr.frame.w).toBeLessThanOrEqual(png.width);
       expect(fr.frame.y + fr.frame.h).toBeLessThanOrEqual(png.height);
+    }
+    for (const id of ids) {
+      for (const a of Object.keys(ANIM_FPS))
+        for (const fr of atlas.animations[id]![a]!.frames)
+          expect(atlas.frames[fr], fr).toBeDefined();
     }
     assertPaletteLocked(join(spritesDir(), atlas.meta.image));
   });
 
-  it('phaserAnims is deterministic and addresses cast.json frames', () => {
+  it('phaserAnims is deterministic, keyed <id>/<anim>, and mirrors cast.json animations', () => {
     const atlas = loadCastAtlas();
     for (const id of ids) {
       const a = phaserAnims(id);
       expect(a).toEqual(phaserAnims(id));
-      expect(a.map((x) => x.key)).toContain(`${id}/walk_r`);
-      for (const anim of a)
-        for (const fr of anim.frames) expect(atlas.frames[fr.frame], fr.frame).toBeDefined();
+      expect(a.map((x) => x.key).sort()).toEqual(
+        Object.keys(ANIM_FPS)
+          .map((n) => `${id}/${n}`)
+          .sort(),
+      );
+      for (const anim of a) {
+        const name = anim.key.split('/')[1]!;
+        expect(anim.frames.map((f) => f.frame)).toEqual(atlas.animations[id]![name]!.frames);
+      }
     }
   });
 });

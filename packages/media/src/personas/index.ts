@@ -1,9 +1,19 @@
 import { z } from 'zod';
 import type { Persona } from '@squad/core';
 import { SEED } from './data.js';
+import { SpriteSourceSchema, type SpriteSource } from '../sprites/source.js';
 
 export type PersonaRole =
-  'cubbie' | 'examiner' | 'dean' | 'expert' | 'rival' | 'council' | 'feynman' | 'student';
+  | 'cubbie'
+  | 'examiner'
+  | 'dean'
+  | 'expert'
+  | 'rival'
+  | 'council'
+  | 'feynman'
+  | 'student'
+  | 'mediator'
+  | 'ta';
 
 /** A core Persona plus the media-only fields (voice design prompt, style line, fluent fallback). */
 export type MediaPersona = Persona & {
@@ -12,12 +22,25 @@ export type MediaPersona = Persona & {
   style: string;
   fluentPortrait?: string;
   nameOverride?: string;
+  /** Generated cast (default) or an imported pack under assets/vendor/. spriteSheet stays the generated fallback. */
+  spriteSource?: SpriteSource;
 };
 
 const Schema = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),
   name: z.string().min(1),
-  role: z.enum(['cubbie', 'examiner', 'dean', 'expert', 'rival', 'council', 'feynman', 'student']),
+  role: z.enum([
+    'cubbie',
+    'examiner',
+    'dean',
+    'expert',
+    'rival',
+    'council',
+    'feynman',
+    'student',
+    'mediator',
+    'ta',
+  ]),
   systemPrompt: z.string().min(1),
   voiceDescription: z.string().min(10),
   style: z.string().min(3),
@@ -25,6 +48,7 @@ const Schema = z.object({
   portrait: z.string(),
   emoji: z.string(),
   fluentPortrait: z.string().optional(),
+  spriteSource: SpriteSourceSchema.optional(),
   voiceId: z.string().optional(),
   avatarUrl: z.string().optional(),
 });

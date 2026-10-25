@@ -242,4 +242,30 @@ export const SEED: readonly MediaPersona[] = [
     emoji: '🙂',
     fluentPortrait: 'assets/fluent-characters/avatars/avatar-06-woman-scientist-medium-dark.png',
   },
+  {
+    id: 'mediator',
+    name: 'The Mediator',
+    role: 'mediator',
+    systemPrompt:
+      'You are the Mediator. You carry only what the privacy gate allows between two student agents, never more, and you say plainly when something was withheld.',
+    voiceDescription:
+      'Neutral, even, courteous voice, mid-pitched, like a calm conference interpreter.',
+    style: 'even, courteous, neutral',
+    spriteSheet: 'assets/sprites/mediator/frames.json',
+    portrait: 'assets/sprites/mediator/portrait.png',
+    emoji: '🤝',
+  },
+  {
+    id: 'ta',
+    name: 'The TA',
+    role: 'ta',
+    systemPrompt:
+      'You are the teaching assistant: quick, friendly and a bit sly. You point students to the right page of the course material and keep hints short.',
+    voiceDescription:
+      'Quick, friendly young voice with a sly grin, helpful and casual, like a grad-student TA at office hours.',
+    style: 'quick, friendly, sly',
+    spriteSheet: 'assets/sprites/ta/frames.json',
+    portrait: 'assets/sprites/ta/portrait.png',
+    emoji: '🧑‍🏫',
+  },
 ] as MediaPersona[];

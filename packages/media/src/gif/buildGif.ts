@@ -9,7 +9,7 @@ import { spritesDir } from '../sprites/index.js';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FFMPEG = process.env.FFMPEG_PATH ?? 'ffmpeg';
 
-export type GifAnim = 'idle' | 'walk' | 'talk' | 'hello';
+export type GifAnim = 'idle' | 'walk' | 'talk' | 'wave' | 'hello';
 export interface BuildGifOptions {
   id: string;
   anim: GifAnim;
@@ -22,7 +22,7 @@ export interface BuildGifOptions {
 export function buildPersonaGif({
   id,
   anim,
-  scale = 6,
+  scale = 5,
   bg = 'card',
   out,
 }: BuildGifOptions): string {
