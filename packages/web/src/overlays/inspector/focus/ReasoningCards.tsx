@@ -32,7 +32,7 @@ export function ReasoningCardView({ c }: { c: ReasoningCard }) {
       <dl className="af-fields">
         <dt>Goal</dt>
         <dd>{c.goal}</dd>
-        <dt>Evidence and sources</dt>
+        <dt>Evidence</dt>
         <dd>
           {c.evidence.length === 0 ? (
             <span className="af-dim">No sources cited.</span>
@@ -49,7 +49,7 @@ export function ReasoningCardView({ c }: { c: ReasoningCard }) {
           {c.decision.stance ? <strong className="af-stance">{c.decision.stance}. </strong> : null}
           {c.decision.text}
         </dd>
-        <dt>Next action</dt>
+        <dt>Next step</dt>
         <dd>{c.next}</dd>
       </dl>
       <p className="af-card__foot">{REASONING_FOOTER}</p>

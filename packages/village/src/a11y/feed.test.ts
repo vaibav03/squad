@@ -43,6 +43,29 @@ const mk = (squadSize?: number, extra: Partial<FeedOptions> = {}) => {
 const entry = (feed: ReturnType<typeof mk>['feed'], id: string) =>
   feed.snapshot().entries.find((e) => e.id === id);
 
+describe('live region follows the selected agent', () => {
+  it('while an agent is focused, another agent state event is never announced; with none focused it is', () => {
+    let focus: string | null = 'council:debate';
+    const { feed, anns, advance } = mk(undefined, { focusAgent: () => focus });
+    feed.apply({ t: 'agent.state', agent: 'expert:ch6', state: 'studying' });
+    advance(2000);
+    expect(anns.map((a) => a.text)).toEqual([]);
+    feed.apply({ t: 'agent.state', agent: 'council:debate', state: 'studying' });
+    advance(2000);
+    expect(anns.map((a) => a.text)).toEqual(['Debate council is studying']);
+    // selection moves mid-stream: the announcement follows it
+    focus = 'expert:ch6';
+    feed.apply({ t: 'agent.state', agent: 'council:debate', state: 'idle' });
+    feed.apply({ t: 'agent.state', agent: 'expert:ch6', state: 'idle' });
+    advance(2000);
+    expect(anns.map((a) => a.text)).toEqual(['Debate council is studying', 'Chapter 6 expert is resting']);
+    focus = null;
+    feed.apply({ t: 'agent.state', agent: 'expert:ch6', state: 'studying' });
+    advance(2000);
+    expect(anns.at(-1)!.text).toBe('Chapter 6 expert is studying');
+  });
+});
+
 describe('agent feed', () => {
   it('tracks states with words and icons (not colour only)', () => {
     const { feed } = mk();

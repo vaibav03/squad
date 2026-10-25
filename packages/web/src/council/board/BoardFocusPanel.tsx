@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import {
+  a2aPartyName,
   providerState,
   type BoardRun,
   type CouncilBoardStore,
@@ -11,7 +12,7 @@ import { LvIcon } from '../../overlays/kit/icons';
 import { DecisionsView } from '../../overlays/inspector/focus/DecisionsView';
 import { FocusShell, type FocusTab } from '../../overlays/inspector/focus/FocusShell';
 import { HandoffTimeline } from '../../overlays/inspector/focus/HandoffTimeline';
-import { NoRunNote } from '../../overlays/inspector/focus/NoRunNote';
+import { EmptyHelp } from '../../overlays/inspector/focus/EmptyHelp';
 import '../../overlays/inspector/inspector.css';
 import '../../overlays/inspector/focus/focus.css';
 import { InitialTile } from './AgentCard';
@@ -73,8 +74,8 @@ export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onC
         <h3 className="ai-label">Right now</h3>
         <p className="ai-headline">{agent.summary ?? STATUS_LABEL[agent.status]}</p>
         <dl className="ai-facts">
-          <dt>Position</dt>
-          <dd>{h?.position ?? ROLE_LABEL[agent.role]}</dd>
+          <dt>Status</dt>
+          <dd>{STATUS_LABEL[agent.status]}</dd>
           {agent.stance ? (
             <>
               <dt>Stance</dt>
@@ -85,31 +86,66 @@ export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onC
           <dd>
             <ModeBadge mode={agent.mode} />
           </dd>
-          {h?.parent ? (
-            <>
-              <dt>Reports to</dt>
-              <dd>{h.parent.name}</dd>
-            </>
-          ) : null}
-          {h && h.children.length > 0 ? (
-            <>
-              <dt>Delegates to</dt>
-              <dd>{h.children.map((c) => c.name).join(', ')}</dd>
-            </>
-          ) : null}
         </dl>
       </section>
+    </div>
+  );
+  // Team: who this agent works with, from the run's handoffs (names are buttons that swap the panel).
+  const partners = new Map<string, number>();
+  for (const m of run.messages) {
+    const other = m.from === agent.id ? m.to : m.to === agent.id ? m.from : '';
+    if (other && other !== 'room' && !other.startsWith('tool:'))
+      partners.set(other, (partners.get(other) ?? 0) + 1);
+  }
+  const team = (
+    <div className="ai-tabpanel">
+      <h3 className="ai-label">Who {agent.name} works with</h3>
+      {partners.size === 0 ? (
+        <EmptyHelp isCouncil topic={agent.name} title={`${agent.name} has not worked with anyone yet`} />
+      ) : (
+        <ul className="ai-partners">
+          {[...partners].map(([id, n]) => (
+            <li key={id}>
+              <button type="button" className="ai-party ai-party--btn" onClick={() => onSelectAgent(id)}>
+                {a2aPartyName(id)}
+              </button>
+              <span className="ai-count">
+                {n} {n === 1 ? 'message' : 'messages'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+  // Structure: who reports to whom.
+  const structure = (
+    <div className="ai-tabpanel">
+      <h3 className="ai-label">Who reports to whom</h3>
+      <dl className="ai-facts">
+        <dt>Position</dt>
+        <dd>{h?.position ?? ROLE_LABEL[agent.role]}</dd>
+        {h?.parent ? (
+          <>
+            <dt>Reports to</dt>
+            <dd>{h.parent.name}</dd>
+          </>
+        ) : null}
+        {h && h.children.length > 0 ? (
+          <>
+            <dt>Delegates to</dt>
+            <dd>{h.children.map((c) => c.name).join(', ')}</dd>
+          </>
+        ) : null}
+      </dl>
       {h && h.delegationsIn.length + h.delegationsOut.length > 0 ? (
-        <section aria-label="Delegations">
-          <h3 className="ai-label">Delegations</h3>
-          <ul className="af-plain">
-            {[...h.delegationsIn, ...h.delegationsOut].map((d) => (
-              <li key={d.id}>
-                {d.fromName} asked {d.toName}: {d.summary}
-              </li>
-            ))}
-          </ul>
-        </section>
+        <ul className="af-plain">
+          {[...h.delegationsIn, ...h.delegationsOut].map((d) => (
+            <li key={d.id}>
+              {d.fromName} asked {d.toName}: {d.summary}
+            </li>
+          ))}
+        </ul>
       ) : null}
     </div>
   );
@@ -154,12 +190,12 @@ export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onC
                 defaultFilter="selected"
                 timeStyle="clock"
                 onSelectAgent={onSelectAgent}
-                emptyExtra={<NoRunNote />}
+                emptyExtra={<EmptyHelp isCouncil topic={agent.name} />}
               />
             </div>
           ),
           activity,
-          decisions: (
+          reasoning: (
             <DecisionsView
               run={run}
               agentId={agent.id}
@@ -168,6 +204,8 @@ export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onC
               isChair={agent.role === 'chair'}
             />
           ),
+          team,
+          structure,
         }}
       />
     </div>

@@ -3,11 +3,13 @@ import type { ProviderState } from '@squad/village/council';
 import { LvIcon } from '../../kit';
 import { ProviderBadge } from './parts';
 
-export type FocusTab = 'conversation' | 'activity' | 'decisions';
+export type FocusTab = 'activity' | 'reasoning' | 'conversation' | 'team' | 'structure';
 export const FOCUS_TABS: ReadonlyArray<readonly [FocusTab, string]> = [
-  ['conversation', 'Conversation'],
   ['activity', 'Activity'],
-  ['decisions', 'Decisions'],
+  ['reasoning', 'Reasoning summary'],
+  ['conversation', 'Conversation'],
+  ['team', 'Team'],
+  ['structure', 'Structure'],
 ];
 
 export interface FocusShellProps {
@@ -43,13 +45,25 @@ export interface FocusShellProps {
  */
 export function FocusShell(p: FocusShellProps) {
   const [announce, setAnnounce] = useState('');
+  // The live text is derived from THIS panel's agent only: "Now showing <name>" on open or swap,
+  // "<name>: <tab>" when the tab changes. A state event from another agent can never change it.
   const first = useRef(true);
+  const lastAgent = useRef('');
+  const swappedAt = useRef(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    // after mount, so assistive tech treats it as a change
-    const t = setTimeout(() => setAnnounce(`Now showing ${p.name}`), first.current ? 60 : 0);
+    const swapped = lastAgent.current !== p.swapKey;
+    if (swapped) swappedAt.current = Date.now();
+    lastAgent.current = p.swapKey;
+    // the host resets the tab right after a swap; that is part of the swap, not a tab change
+    if (!swapped && Date.now() - swappedAt.current < 250) return;
+    const label = FOCUS_TABS.find(([id]) => id === p.tab)![1];
+    const text = swapped ? `Now showing ${p.name}` : `${p.name}: ${label}`;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setAnnounce(text), first.current ? 60 : 0);
     first.current = false;
-    return () => clearTimeout(t);
-  }, [p.swapKey, p.name]);
+  }, [p.swapKey, p.name, p.tab]);
+  useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
   const list = useRef<HTMLDivElement>(null);
   const onTabKey = (e: React.KeyboardEvent) => {
     const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];

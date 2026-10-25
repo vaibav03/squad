@@ -62,7 +62,7 @@ describe('focused agent panel: selection', () => {
     render(<InspectorPanel store={store} mode="replay" />);
     act(() => store.select(SK));
     await settle();
-    fireEvent.click(screen.getByRole('tab', { name: 'Decisions' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Reasoning summary' }));
     act(() => store.select(TE));
     await settle();
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
@@ -82,6 +82,35 @@ describe('focused agent panel: selection', () => {
     fireEvent.click(chip);
     expect(store.selected).not.toBe(SK);
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
+  });
+});
+
+describe('live announcement binds to the selected agent', () => {
+  const live = () => document.querySelector('.af-sr[role="status"]')!.textContent;
+  it('a tab change announces "<Selected agent>: <tab>" and another agent state event never changes it', async () => {
+    const store = createInspectorStore({ me: 's_ana' });
+    store.seed('council:debate');
+    store.seed('expert:ch6');
+    render(<InspectorPanel store={store} />);
+    act(() => store.select('council:debate'));
+    await settle(300);
+    fireEvent.click(screen.getByRole('tab', { name: /^Reasoning summary/ }));
+    await settle(30);
+    expect(live()).toBe('Debate council: Reasoning summary');
+    // a Chapter 6 expert state event mid-stream
+    act(() => store.apply({ t: 'agent.state', agent: 'expert:ch6', state: 'studying' }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Team/ }));
+    await settle(30);
+    expect(live()).toBe('Debate council: Team');
+    expect(live()).not.toMatch(/Chapter 6/);
+    expect(screen.getByRole('dialog', { name: /^Debate council/ })).toBeTruthy();
+    // selection moves: the announcement follows the selection
+    act(() => store.select('expert:ch6'));
+    await settle(300);
+    expect(live()).toBe('Now showing Chapter 6 expert');
+    fireEvent.click(screen.getByRole('tab', { name: /^Structure/ }));
+    await settle(30);
+    expect(live()).toBe('Chapter 6 expert: Structure');
   });
 });
 
@@ -167,7 +196,7 @@ describe('no raw ids on the focused panel', () => {
     for (const a of board.run()!.agents) {
       act(() => store.select(a.id));
       await settle();
-      for (const tab of ['Conversation', 'Activity', 'Decisions']) {
+      for (const tab of ['Activity', 'Reasoning summary', 'Conversation', 'Team', 'Structure']) {
         fireEvent.click(screen.getByRole('tab', { name: new RegExp(`^${tab}`) }));
         const dlg = screen.getByRole('dialog');
         const texts = [dlg.textContent ?? ''];
@@ -204,13 +233,29 @@ describe('focused agent panel: keyboard', () => {
     await settle();
     const conv = screen.getByRole('tab', { name: 'Conversation' });
     expect(conv.getAttribute('tabindex')).toBe('0');
+    const sel = (n: string) => screen.getByRole('tab', { name: n, selected: true });
     fireEvent.keyDown(conv, { key: 'ArrowRight' });
-    expect(screen.getByRole('tab', { name: 'Activity', selected: true })).toBeTruthy();
+    expect(sel('Team')).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Conversation' }).getAttribute('tabindex')).toBe('-1');
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Activity' }), { key: 'ArrowRight' });
-    expect(screen.getByRole('tab', { name: 'Decisions', selected: true })).toBeTruthy();
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Decisions' }), { key: 'ArrowRight' });
-    expect(screen.getByRole('tab', { name: 'Conversation', selected: true })).toBeTruthy();
+    fireEvent.keyDown(sel('Team'), { key: 'ArrowRight' });
+    expect(sel('Structure')).toBeTruthy();
+    fireEvent.keyDown(sel('Structure'), { key: 'ArrowRight' });
+    expect(sel('Activity')).toBeTruthy();
+    fireEvent.keyDown(sel('Activity'), { key: 'ArrowLeft' });
+    expect(sel('Structure')).toBeTruthy();
+    fireEvent.keyDown(sel('Structure'), { key: 'Home' });
+    expect(sel('Activity')).toBeTruthy();
+    fireEvent.keyDown(sel('Activity'), { key: 'End' });
+    expect(sel('Structure')).toBeTruthy();
+    // the five tabs, in this order, with exactly these names
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual([
+      'Activity',
+      'Reasoning summary',
+      'Conversation',
+      'Team',
+      'Structure',
+    ]);
+    fireEvent.click(screen.getByRole('tab', { name: 'Conversation' }));
     const panel = screen.getByRole('tabpanel');
     expect(panel.getAttribute('aria-labelledby')).toBe(
       screen.getByRole('tab', { name: 'Conversation' }).id,
@@ -219,13 +264,33 @@ describe('focused agent panel: keyboard', () => {
 });
 
 describe('focused agent panel: empty states', () => {
-  it('no run ever: "No messages involving <name> yet" with a Convene the council button', async () => {
+  it('no run ever: "No messages involving <name> yet" with Start a council and Ask Cubbie', async () => {
     const { store } = boot({ run: false });
     render(<InspectorPanel store={store} />);
     act(() => store.select(SK));
     await settle();
     expect(screen.getByText('No messages involving Skeptic yet')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Convene the council' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Start a council' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Ask Cubbie' })).toBeTruthy();
+    expect(screen.getByText('No council has run yet', { exact: false })).toBeTruthy();
+    // no hub: honest example-mode badge
+    expect(screen.getAllByTestId('af-help-badge')[0]!.textContent).toBe(
+      'Example mode: scripted, not Gemini',
+    );
+    // every tab has its own useful empty state, never a dead end
+    for (const tab of ['Activity', 'Reasoning summary', 'Team', 'Structure']) {
+      fireEvent.click(screen.getByRole('tab', { name: new RegExp(`^${tab}`) }));
+      expect(screen.queryAllByTestId('af-help').length, tab).toBeGreaterThan(0);
+    }
+  });
+  it('a non-council agent gets "Ask Cubbie about <topic>" instead of a dead end', async () => {
+    const store = createInspectorStore({ me: 's_ana' });
+    store.apply({ t: 'agent.state', agent: 'expert:ch6', state: 'studying' });
+    render(<InspectorPanel store={store} />);
+    act(() => store.select('expert:ch6'));
+    await settle();
+    expect(screen.getByRole('button', { name: /^Ask Cubbie about Chapter 6 expert/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Start a council' })).toBeNull();
   });
   it('a persisted last run shows "Last council: <time>, <mode>" instead', async () => {
     const { store } = boot({ run: false });
@@ -266,16 +331,16 @@ describe('focused agent panel: empty states', () => {
 });
 
 describe('reasoning summary cards (Decisions)', () => {
-  it('show Goal, Evidence and sources, Decision, Next action, the fixed footer and Scripted example', async () => {
+  it('show Goal, Evidence, Decision, Next step, the fixed footer and Scripted example', async () => {
     const { store } = boot();
     render(<InspectorPanel store={store} mode="replay" />);
     act(() => store.select('council:ask-chair'));
     await settle();
-    fireEvent.click(screen.getByRole('tab', { name: 'Decisions' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Reasoning summary' }));
     const cards = screen.getAllByTestId('af-reasoning');
     expect(cards.length).toBeGreaterThan(0);
     const c = cards[cards.length - 1]!;
-    for (const k of ['Goal', 'Evidence and sources', 'Decision', 'Next action'])
+    for (const k of ['Goal', 'Evidence', 'Decision', 'Next step'])
       expect(within(c).getByText(k)).toBeTruthy();
     expect(c.textContent).toContain('Summary shared by the agent. Private reasoning is never shown.');
     expect(within(c).getByTestId('af-scripted').textContent).toBe('Scripted example');

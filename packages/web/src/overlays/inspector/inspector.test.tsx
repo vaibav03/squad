@@ -49,7 +49,7 @@ describe('InspectorPanel', () => {
     expect(screen.getByText('Fast model')).toBeTruthy();
     expect(screen.getByText('Demo')).toBeTruthy();
     expect(screen.getByRole('status', { name: 'Thinking now' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('tab', { name: /^Activity/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Reasoning summary/ }));
     expect(screen.getByText('Comparing two examples of correlation')).toBeTruthy();
     fireEvent.click(screen.getByRole('tab', { name: /^Activity/ }));
     // live update
@@ -63,7 +63,7 @@ describe('InspectorPanel', () => {
       }),
     );
     expect(screen.getByText('Asking Ana a question on Chapter 6')).toBeTruthy();
-    fireEvent.click(screen.getByRole('tab', { name: /^Activity/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Reasoning summary/ }));
     expect(screen.getByText('Working on: What is r squared?')).toBeTruthy();
   });
   it('is honest when no reasoning was shared', async () => {
@@ -72,7 +72,7 @@ describe('InspectorPanel', () => {
     render(<InspectorPanel store={store} />);
     act(() => store.select('dean'));
     await settle();
-    fireEvent.click(screen.getByRole('tab', { name: /^Activity/ }));
+    fireEvent.click(screen.getByRole('tab', { name: /^Reasoning summary/ }));
     expect(screen.getByText('Working on it: no reasoning shared yet')).toBeTruthy();
   });
   it('Esc closes and returns focus to the stage; cycle buttons move between agents', async () => {
@@ -116,7 +116,7 @@ describe('InspectorPanel', () => {
     });
     render(<InspectorPanel store={store} />);
     await settle();
-    fireEvent.click(screen.getByRole('tab', { name: 'Conversation' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Team' }));
     expect(screen.getByText('Here are my blinded evenings')).toBeTruthy();
     expect(screen.getAllByText(/Dissent recorded/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getAllByRole('button', { name: 'Ben' })[0]!);

@@ -38,7 +38,7 @@ export function adapt(event: VillageEvent, ctx: AdapterContext): SceneCommand[] 
         in_call: `${who} is on a call`,
         waiting_for_student: `${who} is waiting for a yes`,
       }[event.state];
-      out.push({ type: 'announce', text: words, politeness: 'polite' });
+      out.push({ type: 'announce', text: words, politeness: 'polite', agent: event.agent });
       return out;
     }
 

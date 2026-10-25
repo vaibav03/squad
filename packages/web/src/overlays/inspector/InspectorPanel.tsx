@@ -17,7 +17,7 @@ import { FocusShell, type FocusTab } from './focus/FocusShell';
 import { HandoffTimeline } from './focus/HandoffTimeline';
 import { DecisionsView } from './focus/DecisionsView';
 import { AgentPortrait } from './focus/AgentPortrait';
-import { NoRunNote } from './focus/NoRunNote';
+import { EmptyHelp } from './focus/EmptyHelp';
 import { resolveBoardAgent } from './focus/resolve';
 import { useLastRunsState } from '../../council/last-run/store';
 import { ROLE_LABEL, STATUS_LABEL } from '../../council/board/common';
@@ -294,7 +294,12 @@ export function InspectorPanel({
       <section className="ai-log" aria-label="Recent activity">
         <h3 className="ai-label">Status log</h3>
         {v.log.length === 0 ? (
-          <p className="ai-empty">Nothing yet. This updates live.</p>
+          <EmptyHelp
+            title={`${name} has no activity yet`}
+            isCouncil={isCouncil}
+            topic={name}
+            now={now}
+          />
         ) : (
           <ol>
             {v.log.map((l, i) => (
@@ -306,46 +311,47 @@ export function InspectorPanel({
           </ol>
         )}
       </section>
-      {voice ? (
-        <VoiceThought
-          voice={voice}
-          lastNote={voice.thought.source === 'none' ? (voiceNote ?? null) : null}
-        />
-      ) : (
-        <section className="ai-think" aria-label="Public notes">
-          <h3 className="ai-label">
-            Shared notes
-            {v.thinking && <span className="ai-live">live</span>}
-          </h3>
-          <div className="ai-bubble" data-source={v.thought.source}>
-            <p>
-              {isCouncil && v.thought.source === 'none'
-                ? note
-                  ? `Last said: ${note.said ?? note.stance ?? 'nothing public'}`
-                  : NO_COUNCIL_YET
-                : v.thought.text}
-            </p>
-            {isCouncil && v.thought.source === 'none' && note && (
-              <small>{note.label}. Public words only.</small>
-            )}
-            {v.thought.source === 'stream' && (
-              <small>From what the agent shared, not extra reasoning.</small>
-            )}
-          </div>
-          {v.thoughtHistory.length > 0 && (
-            <details className="ai-history">
-              <summary>Earlier notes ({v.thoughtHistory.length})</summary>
-              <ul>
-                {v.thoughtHistory.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ul>
-            </details>
-          )}
-        </section>
-      )}
-      {(isCouncil || board?.has(v.id)) && <HierarchyTab agentId={v.id} board={board} inspector={store} />}
     </div>
+  );
+
+  // Shared notes: only what the agent chose to say publicly. Never hidden reasoning.
+  const notes = voice ? (
+    <VoiceThought
+      voice={voice}
+      lastNote={voice.thought.source === 'none' ? (voiceNote ?? null) : null}
+    />
+  ) : (
+    <section className="ai-think" aria-label="Public notes">
+      <h3 className="ai-label">
+        Shared notes
+        {v.thinking && <span className="ai-live">live</span>}
+      </h3>
+      <div className="ai-bubble" data-source={v.thought.source}>
+        <p>
+          {isCouncil && v.thought.source === 'none'
+            ? note
+              ? `Last said: ${note.said ?? note.stance ?? 'nothing public'}`
+              : NO_COUNCIL_YET
+            : v.thought.text}
+        </p>
+        {isCouncil && v.thought.source === 'none' && note && (
+          <small>{note.label}. Public words only.</small>
+        )}
+        {v.thought.source === 'stream' && (
+          <small>From what the agent shared, not extra reasoning.</small>
+        )}
+      </div>
+      {v.thoughtHistory.length > 0 && (
+        <details className="ai-history">
+          <summary>Earlier notes ({v.thoughtHistory.length})</summary>
+          <ul>
+            {v.thoughtHistory.map((t, i) => (
+              <li key={i}>{t}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </section>
   );
 
   const conversation = resolved ? (
@@ -356,7 +362,7 @@ export function InspectorPanel({
         defaultFilter="selected"
         onSelectAgent={selectParty}
         now={now}
-        emptyExtra={<NoRunNote now={now} />}
+        emptyExtra={<EmptyHelp isCouncil topic={name} now={now} />}
       />
     </div>
   ) : isCouncil ? (
@@ -365,7 +371,7 @@ export function InspectorPanel({
         <div className="ai-tabpanel">
           <div className="af-empty" data-testid="af-empty">
             <p className="af-empty__title">No messages involving {name} yet</p>
-            <NoRunNote now={now} />
+            <EmptyHelp isCouncil topic={name} now={now} />
           </div>
         </div>
       ) : null}
@@ -394,42 +400,71 @@ export function InspectorPanel({
         room={room}
         voice={null}
       />
-      <AgentsTab view={v} convo={convo} store={store} now={now} />
+      {convo.chat.length === 0 && !room ? (
+        <div className="ai-tabpanel">
+          <EmptyHelp isCouncil={false} topic={name} now={now} />
+        </div>
+      ) : null}
     </>
   );
 
-  const decisions = resolved ? (
+  const reasoning = (
     <>
-      <DecisionsView
-        run={resolved.run}
-        agentId={resolved.agent?.id}
-        is={timelineAgent.is}
-        name={name}
-        isChair={resolved.agent?.role === 'chair'}
-      />
+      {resolved ? (
+        <DecisionsView
+          run={resolved.run}
+          agentId={resolved.agent?.id}
+          is={timelineAgent.is}
+          name={name}
+          isChair={resolved.agent?.role === 'chair'}
+        />
+      ) : (
+        <div className="ai-tabpanel">
+          <section aria-label="Reasoning summaries">
+            <h3 className="ai-label">Reasoning summary</h3>
+            <p className="af-empty__title" data-testid="af-no-decisions">
+              {name} has not shared a reasoning summary yet.
+            </p>
+            <EmptyHelp isCouncil={isCouncil} topic={name} now={now} />
+          </section>
+        </div>
+      )}
+      <div className="ai-tabpanel">{notes}</div>
       {voice && voice.positions.length > 0 ? (
-        <VoicePositions voice={voice} onOpen={(who) => openVoice(who, { agent: v.id, slot: room?.slot ?? '' })} />
+        <VoicePositions
+          voice={voice}
+          onOpen={(who) => openVoice(who, { agent: v.id, slot: room?.slot ?? '' })}
+        />
       ) : null}
     </>
-  ) : voice ? (
-    <>
-      <div className="ai-tabpanel">
-        <p className="af-empty__title" data-testid="af-no-decisions">
-          {name} has not made a public decision yet.
-        </p>
-      </div>
-      <VoicePositions voice={voice} onOpen={(who) => openVoice(who, { agent: v.id, slot: room?.slot ?? '' })} />
-    </>
-  ) : (
-    <div className="ai-tabpanel">
-      <p className="af-empty__title" data-testid="af-no-decisions">
-        {isCouncil
-          ? `${name} has not made a public decision yet.`
-          : `${name} does not make council decisions. See Activity for what it is doing.`}
-      </p>
-      {isCouncil ? <NoRunNote now={now} /> : null}
-    </div>
   );
+
+  const team = (
+    <>
+      <AgentsTab view={v} convo={convo} store={store} now={now} />
+      {convo.partners.length === 0 && convo.thread.length === 0 ? (
+        <div className="ai-tabpanel">
+          <EmptyHelp isCouncil={isCouncil} topic={name} now={now} />
+        </div>
+      ) : null}
+    </>
+  );
+  const structure =
+    isCouncil || board?.has(v.id) ? (
+      <div className="ai-tabpanel">
+        <HierarchyTab agentId={v.id} board={board} inspector={store} />
+        {!board?.hierarchy(v.id) && !board?.runs().some((r) => r.councilId === v.id) ? (
+          <EmptyHelp isCouncil topic={name} now={now} />
+        ) : null}
+      </div>
+    ) : (
+      <div className="ai-tabpanel">
+        <p className="af-empty__title" data-testid="af-no-structure">
+          {name} is not part of a council, so there is no reporting line to show.
+        </p>
+        <EmptyHelp isCouncil={false} topic={name} now={now} />
+      </div>
+    );
 
   return (
     <div
@@ -460,7 +495,7 @@ export function InspectorPanel({
         swapKey={`${v.id}|${room?.who ?? ''}`}
         onClose={close}
         tabAddon={{
-          activity:
+          reasoning:
             (voice ? voice.thinking : v.thinking) ? (
               <span className="ai-dots" role="status" aria-label="Thinking now">
                 <i />
@@ -504,7 +539,7 @@ export function InspectorPanel({
             </button>
           </>
         }
-        panels={{ conversation, activity: doing, decisions }}
+        panels={{ activity: doing, reasoning, conversation, team, structure }}
         footer={
           !v.isMe && v.kind === 'student' && tab !== 'conversation' ? (
             <p className="ai-privacy">
