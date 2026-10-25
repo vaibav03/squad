@@ -92,7 +92,9 @@ describe('shared plan skill', () => {
   });
 
   it('ignores plain chatter and unaddressed replies when nothing is waiting', async () => {
-    const t = setup({ state: () => ({ proposed: false, pendingMe: false, active: false, ownsOpen: () => false }) });
+    const t = setup({
+      state: () => ({ proposed: false, pendingMe: false, active: false, ownsOpen: () => false }),
+    });
     expect(await t.skill.match(msg('anyone want pizza', { mentionsBot: false }), t.ctx)).toBe(0);
     expect(await t.skill.match(msg('plan 1', { mentionsBot: false }), t.ctx)).toBe(0);
   });

@@ -167,9 +167,10 @@ export function planEditConflicts(item: Pick<PlanItem, 'rev'>, baseRev: number):
 
 /** `done ch6 review` -> `{ ref: 'ch6 review' }`. Returns null when the text is not a done report. */
 export function parseDoneReport(text: string): { ref: string } | null {
-  const m = /^\s*(?:@cubbie\s*[,:]?\s*)?(?:i\s+)?(?:done|finished|completed)\s+(?:with\s+)?(.+?)\s*[.!]?\s*$/i.exec(
-    text.replace(/@squad/gi, '@cubbie'),
-  );
+  const m =
+    /^\s*(?:@cubbie\s*[,:]?\s*)?(?:i\s+)?(?:done|finished|completed)\s+(?:with\s+)?(.+?)\s*[.!]?\s*$/i.exec(
+      text.replace(/@squad/gi, '@cubbie'),
+    );
   const ref = m?.[1]?.trim();
   return ref && ref.length <= 80 ? { ref } : null;
 }
@@ -210,7 +211,6 @@ export const isRealDate = (s: string): boolean => {
   return Number.isFinite(t) && ymd(t) === s;
 };
 
-
 /** Exam date from free text: ISO, `Nov 4`, `November 4 2026`, `11/4`, `tomorrow`. Returns a `YYYY-MM-DD` or undefined. */
 export function parseExamDate(text: string, now: number): string | undefined {
   const t = text.toLowerCase();
@@ -224,15 +224,37 @@ export function parseExamDate(text: string, now: number): string | undefined {
   const iso = /\b(\d{4})-(\d{2})-(\d{2})\b/.exec(t);
   if (iso) return isRealDate(iso[0]) ? iso[0] : undefined;
   const months = [
-    'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'may',
+    'jun',
+    'jul',
+    'aug',
+    'sep',
+    'oct',
+    'nov',
+    'dec',
   ];
-  const named = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(\d{4}))?\b/.exec(t);
-  if (named) return mk(named[3] ? Number(named[3]) : year, months.indexOf(named[1]!) + 1, Number(named[2]));
-  const rev = /\b(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b(?:,?\s+(\d{4}))?/.exec(t);
+  const named =
+    /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(\d{4}))?\b/.exec(
+      t,
+    );
+  if (named)
+    return mk(named[3] ? Number(named[3]) : year, months.indexOf(named[1]!) + 1, Number(named[2]));
+  const rev =
+    /\b(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b(?:,?\s+(\d{4}))?/.exec(
+      t,
+    );
   if (rev) return mk(rev[3] ? Number(rev[3]) : year, months.indexOf(rev[2]!) + 1, Number(rev[1]));
   const slash = /\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/.exec(t);
   if (slash) {
-    const y = slash[3] ? (slash[3].length === 2 ? 2000 + Number(slash[3]) : Number(slash[3])) : year;
+    const y = slash[3]
+      ? slash[3].length === 2
+        ? 2000 + Number(slash[3])
+        : Number(slash[3])
+      : year;
     return mk(y, Number(slash[1]), Number(slash[2]));
   }
   if (/\btomorrow\b/.test(t)) return ymd(now + DAY);

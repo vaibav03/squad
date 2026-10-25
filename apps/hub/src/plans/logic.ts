@@ -175,7 +175,11 @@ export function editItem(
   if (plan.status !== 'proposed' && plan.status !== 'active')
     return { kind: 'rejected', code: 'plan_closed', message: 'This plan is not open for edits.' };
   if (patch.ownerId && !c.isMember(patch.ownerId))
-    return { kind: 'rejected', code: 'invalid_request', message: 'That person is not in the plan.' };
+    return {
+      kind: 'rejected',
+      code: 'invalid_request',
+      message: 'That person is not in the plan.',
+    };
   if (patch.date) {
     if (!isRealDate(patch.date))
       return { kind: 'rejected', code: 'invalid_request', message: 'That is not a real date.' };
@@ -258,7 +262,8 @@ export function rebalance(
   const keep = plan.members.filter((m) => m.optedIn && m.id !== declinedId).map((m) => m.id);
   if (keep.length === 0) return 0;
   const minutes = new Map(keep.map((id) => [id, 0]));
-  for (const i of plan.items) if (minutes.has(i.ownerId)) minutes.set(i.ownerId, minutes.get(i.ownerId)! + i.durationMin);
+  for (const i of plan.items)
+    if (minutes.has(i.ownerId)) minutes.set(i.ownerId, minutes.get(i.ownerId)! + i.durationMin);
   let moved = 0;
   for (const i of plan.items.filter((x) => x.ownerId === declinedId && x.status === 'todo')) {
     const to = [...minutes].sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]))[0]![0];
@@ -287,4 +292,3 @@ export function matchItems(items: PlanItem[], ref: string): PlanItem[] {
   }
   return hit;
 }
-

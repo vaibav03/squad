@@ -33,7 +33,15 @@ beforeAll(async () => {
   const cs = createCourseStore(hub.deps.db);
   cs.saveCourse({ id: 'demo', title: 'Statistics' });
   for (const [i, id] of ['ch1', 'ch2', 'ch3', 'ch4'].entries())
-    cs.saveChapter({ courseId: 'demo', id, title: `Topic ${i + 1}`, summary: 's', file: `${id}-slides.pdf`, pageStart: 1, pageEnd: 20 });
+    cs.saveChapter({
+      courseId: 'demo',
+      id,
+      title: `Topic ${i + 1}`,
+      summary: 's',
+      file: `${id}-slides.pdf`,
+      pageStart: 1,
+      pageEnd: 20,
+    });
   await attachChatEngine(hub, { real: null, env: {}, envFile: false });
   for (const id of ids) {
     tok[id] = await login(url, id);
@@ -58,25 +66,45 @@ describe('study plan in chat', () => {
     expect(card.text).toMatch(/Ana|Ben/);
     expect(card.text).not.toMatch(/\$180|therapy|box \d/i);
     // creating it does not hide it in someone's DM
-    expect(msgs(ben).some((m) => m.chatId !== GROUP && bot(m) && m.card?.type === 'plan')).toBe(false);
+    expect(msgs(ben).some((m) => m.chatId !== GROUP && bot(m) && m.card?.type === 'plan')).toBe(
+      false,
+    );
     // only the asker got private details, as a DM
-    await streams.s_ana!.waitFor(() => msgs(streams.s_ana!).some((m) => m.chatId === 'dm:s_ana' && bot(m) && /Your part/.test(m.text)), 5000);
+    await streams.s_ana!.waitFor(
+      () =>
+        msgs(streams.s_ana!).some(
+          (m) => m.chatId === 'dm:s_ana' && bot(m) && /Your part/.test(m.text),
+        ),
+      5000,
+    );
     expect(msgs(streams.s_ben!).some((m) => /Your part of the plan/.test(m.text))).toBe(false);
   });
 
   it('numbered replies accept; the plan activates when everyone accepted', async () => {
     for (const id of ids) await send(id, GROUP, '@cubbie plan 1');
     await waitMsg(streams.s_dev!, (m) => bot(m) && /plan is active/i.test(m.text), 10_000);
-    const cur = hub.deps.plans.current({ studentId: 's_ana', squadId: 'sq_demo', projector: false });
+    const cur = hub.deps.plans.current({
+      studentId: 's_ana',
+      squadId: 'sq_demo',
+      projector: false,
+    });
     expect(cur?.status).toBe('active');
   });
 
   it('done <item> updates progress in the group in plain words', async () => {
-    const cur = hub.deps.plans.current({ studentId: 's_ana', squadId: 'sq_demo', projector: false })!;
+    const cur = hub.deps.plans.current({
+      studentId: 's_ana',
+      squadId: 'sq_demo',
+      projector: false,
+    })!;
     const mine = cur.items.find((i) => i.ownerId === 's_ben' && i.chapter)!;
     await send('s_ben', GROUP, `done ${mine.chapter} review`);
     await waitMsg(streams.s_chi!, (m) => bot(m) && /finished/i.test(m.text), 10_000);
-    const after = hub.deps.plans.current({ studentId: 's_ana', squadId: 'sq_demo', projector: false })!;
+    const after = hub.deps.plans.current({
+      studentId: 's_ana',
+      squadId: 'sq_demo',
+      projector: false,
+    })!;
     expect(after.items.find((i) => i.id === mine.id)!.status).toBe('done');
   });
 

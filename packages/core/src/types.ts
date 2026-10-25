@@ -2,6 +2,7 @@
 import type { Database } from 'better-sqlite3';
 import { z } from 'zod';
 import type { Llm } from './llm/types';
+import type { ChatCard } from './chat';
 
 export type StudentId = string; // stable id, e.g. "s_ana"
 export type ChatId = string; // imessage-kit chat id (group or DM)
@@ -41,7 +42,7 @@ export interface OutboundMessage {
   attachments?: Attachment[];
   personaId?: string;
   /** Structured card for transports that render one (the web chat); others show `text` only. */
-  card?: import('./chat').ChatCard;
+  card?: ChatCard;
 }
 
 /** `'timeout'` is part of the contract (treated as "no" by callers). */

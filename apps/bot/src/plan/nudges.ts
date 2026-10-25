@@ -15,8 +15,7 @@ export interface PlanNudges {
 function readPlan(db: Db, id: string): Plan | undefined {
   try {
     const r = db.prepare('SELECT json FROM hub_plans WHERE id=?').get(id) as
-      | { json: string }
-      | undefined;
+      { json: string } | undefined;
     return r ? (JSON.parse(r.json) as Plan) : undefined;
   } catch {
     return undefined;
@@ -24,11 +23,19 @@ function readPlan(db: Db, id: string): Plan | undefined {
 }
 
 const fmt = (d: string) =>
-  new Date(`${d}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  new Date(`${d}T00:00:00Z`).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
 
 export function registerPlanNudges(api: ProactiveApi, db: Db): PlanNudges {
   api.register(PLAN_KINDS.item, async (h) => {
-    const { planId, itemId, date } = h.job.payload as { planId: string; itemId: string; date: string };
+    const { planId, itemId, date } = h.job.payload as {
+      planId: string;
+      itemId: string;
+      date: string;
+    };
     const student = h.job.student!;
     const plan = readPlan(db, planId);
     const item = plan?.items.find((i) => i.id === itemId);

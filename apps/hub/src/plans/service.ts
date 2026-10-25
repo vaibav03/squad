@@ -71,7 +71,13 @@ export interface PlanService {
     body: { courseId?: string; examDate?: string; examLabel?: string; text?: string },
   ): Promise<PlanResult>;
   respond(v: Viewer, planId: string, r: 'accept' | 'decline'): PlanResult;
-  edit(v: Viewer, planId: string, itemId: string, baseRev: number, patch: PlanItemPatch): PlanResult;
+  edit(
+    v: Viewer,
+    planId: string,
+    itemId: string,
+    baseRev: number,
+    patch: PlanItemPatch,
+  ): PlanResult;
   editByRef(v: Viewer, ref: string, to: string): PlanResult;
   resolve(v: Viewer, planId: string, conflictId: string, pick: 'theirs' | 'mine'): PlanResult;
   confirm(v: Viewer, planId: string): PlanResult;
@@ -96,7 +102,8 @@ export interface PlanService {
 }
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-export const fmtDate = (d: string): string => `${MON[Number(d.slice(5, 7)) - 1]} ${Number(d.slice(8, 10))}`;
+export const fmtDate = (d: string): string =>
+  `${MON[Number(d.slice(5, 7)) - 1]} ${Number(d.slice(8, 10))}`;
 const id10 = () => randomBytes(8).toString('hex').slice(0, 10);
 
 export const REPLY_HELP =
@@ -251,7 +258,8 @@ export function createPlanService(
           say: { text: `There is already a plan going.\n${summary(prior)}`, card: cardOf(prior) },
         });
       const members = deps.directory.members(v.squadId);
-      if (!members.some((m) => m.id === v.studentId)) return fail(403, 'forbidden', 'Not in a squad.');
+      if (!members.some((m) => m.id === v.studentId))
+        return fail(403, 'forbidden', 'Not in a squad.');
       // course: asked for, else the default, else the first ready course that has chapters
       let courseId = body.courseId;
       if (!courseId) {
@@ -283,7 +291,8 @@ export function createPlanService(
           examLabel = exam.title;
         }
       }
-      if (examDate && !isRealDate(examDate)) return fail(422, 'invalid_date', 'That is not a real date.');
+      if (examDate && !isRealDate(examDate))
+        return fail(422, 'invalid_date', 'That is not a real date.');
       if (examDate && examDate <= today)
         return fail(
           422,
@@ -291,7 +300,11 @@ export function createPlanService(
           `${fmtDate(examDate)} is not in the future. Give me the exam date again, for example "for the exam on ${fmtDate(addDays(today, 14))}".`,
         );
       if (examDate && daysBetween(today, examDate) > 120)
-        return fail(422, 'exam_too_far', 'That exam is more than four months away. Ask again closer to the date.');
+        return fail(
+          422,
+          'exam_too_far',
+          'That exam is more than four months away. Ask again closer to the date.',
+        );
       const due = examDate ? dueAll.filter((d) => ymd(d.dueAt) <= examDate!) : dueAll;
       try {
         const roster = members.map((m) => ({ id: m.id, name: m.name }));
@@ -367,7 +380,11 @@ export function createPlanService(
         };
       } catch (e) {
         deps.log.error('plan generation failed', { err: (e as Error).name });
-        return fail(500, 'generation_failed', 'I could not build the plan this time. Please try again in a minute.');
+        return fail(
+          500,
+          'generation_failed',
+          'I could not build the plan this time. Please try again in a minute.',
+        );
       }
     },
 
@@ -379,7 +396,9 @@ export function createPlanService(
       const me = p.members.find((m) => m.id === v.studentId);
       if (!me || !me.optedIn) return fail(403, 'forbidden', 'You are not part of this plan.');
       if (r === 'decline' && v.studentId === p.organizerId)
-        return fail(409, 'organizer_cannot_decline', 'You started this plan. Cancel it instead.', { plan: p });
+        return fail(409, 'organizer_cannot_decline', 'You started this plan. Cancel it instead.', {
+          plan: p,
+        });
       let text: string;
       if (r === 'accept') {
         me.response = 'accepted';
@@ -392,7 +411,8 @@ export function createPlanService(
         const moved = rebalance(p, v.studentId, v.studentId, nameOf);
         if (moved === 0) p.rev += 1;
         log(p, v.studentId, 'declined');
-        text = `${me.name} declined. ${moved ? `Their ${moved} item${moved === 1 ? ' was' : 's were'} shared out among the others.` : ''}`.trim();
+        text =
+          `${me.name} declined. ${moved ? `Their ${moved} item${moved === 1 ? ' was' : 's were'} shared out among the others.` : ''}`.trim();
       }
       const activated = activateIfReady(p, v.studentId, 'everyone accepted');
       const { accepted, total } = countsOf(p);
@@ -417,13 +437,21 @@ export function createPlanService(
         isMember: (id) => p.members.some((m) => m.id === id && m.optedIn),
       });
       if (out.kind === 'rejected') {
-        const st = out.code === 'not_found' ? 404 : out.code === 'conflict_open' ? 409 : out.code === 'plan_closed' ? 409 : 422;
+        const st =
+          out.code === 'not_found'
+            ? 404
+            : out.code === 'conflict_open'
+              ? 409
+              : out.code === 'plan_closed'
+                ? 409
+                : 422;
         return fail(st, out.code, out.message, { plan: p });
       }
       if (out.kind === 'conflict') {
         const item = p.items.find((i) => i.id === itemId)!;
         const cf = out.conflict;
-        const show = (f: typeof cf.theirs) => `${nameOf(f.ownerId)}, ${fmtDate(f.date)}, ${f.durationMin} min`;
+        const show = (f: typeof cf.theirs) =>
+          `${nameOf(f.ownerId)}, ${fmtDate(f.date)}, ${f.durationMin} min`;
         log(p, v.studentId, `edit conflict on ${item.title}`);
         store.save(p);
         emitChange(p, 'conflict');
@@ -434,11 +462,16 @@ export function createPlanService(
             'Nothing was overwritten. Open the Study plan in the village and pick one version.',
           card: cardOf(p),
         };
-        return fail(409, 'conflict', 'Someone changed this item first. Both versions are kept until one is picked.', {
-          plan: p,
-          conflictId: cf.id,
-          say,
-        });
+        return fail(
+          409,
+          'conflict',
+          'Someone changed this item first. Both versions are kept until one is picked.',
+          {
+            plan: p,
+            conflictId: cf.id,
+            say,
+          },
+        );
       }
       if (!out.changed) return { ok: true, plan: p, say: { text: '' } };
       log(p, v.studentId, `edited ${out.item.title}`);
@@ -470,10 +503,18 @@ export function createPlanService(
       const item = hits[0]!;
       const date = parseExamDate(to, deps.now());
       const person = p.members.find(
-        (m) => m.optedIn && (m.name.toLowerCase() === to || m.name.toLowerCase().split(' ')[0] === to),
+        (m) =>
+          m.optedIn && (m.name.toLowerCase() === to || m.name.toLowerCase().split(' ')[0] === to),
       );
-      const patch: PlanItemPatch | undefined = person ? { ownerId: person.id } : date ? { date } : undefined;
-      if (!patch) return fail(422, 'invalid_request', `I could not read "${to}" as a person or a date.`, { plan: p });
+      const patch: PlanItemPatch | undefined = person
+        ? { ownerId: person.id }
+        : date
+          ? { date }
+          : undefined;
+      if (!patch)
+        return fail(422, 'invalid_request', `I could not read "${to}" as a person or a date.`, {
+          plan: p,
+        });
       return service.edit(v, p.id, item.id, item.rev, patch);
     },
 
@@ -503,8 +544,14 @@ export function createPlanService(
       const p = store.get(planId);
       if (!own(v, p)) return fail(404, 'not_found', 'No such plan.');
       if (v.studentId !== p.organizerId)
-        return fail(403, 'organizer_only', `Only ${nameOf(p.organizerId)} can start the plan early.`, { plan: p });
-      if (p.status !== 'proposed') return fail(409, 'plan_closed', 'This plan is not waiting to start.', { plan: p });
+        return fail(
+          403,
+          'organizer_only',
+          `Only ${nameOf(p.organizerId)} can start the plan early.`,
+          { plan: p },
+        );
+      if (p.status !== 'proposed')
+        return fail(409, 'plan_closed', 'This plan is not waiting to start.', { plan: p });
       p.status = 'active';
       p.rev += 1;
       const waiting = p.members.filter((m) => m.optedIn && m.response === 'pending');
@@ -525,14 +572,20 @@ export function createPlanService(
       const p = store.get(planId);
       if (!own(v, p)) return fail(404, 'not_found', 'No such plan.');
       if (v.studentId !== p.organizerId)
-        return fail(403, 'organizer_only', `Only ${nameOf(p.organizerId)} can cancel the plan.`, { plan: p });
+        return fail(403, 'organizer_only', `Only ${nameOf(p.organizerId)} can cancel the plan.`, {
+          plan: p,
+        });
       if (!open(p)) return fail(409, 'plan_closed', 'This plan is already closed.', { plan: p });
       p.status = 'cancelled';
       p.rev += 1;
       log(p, v.studentId, 'cancelled');
       store.save(p);
       emitChange(p, 'cancelled');
-      return { ok: true, plan: p, say: { text: `${nameOf(v.studentId)} cancelled the study plan.`, card: cardOf(p) } };
+      return {
+        ok: true,
+        plan: p,
+        say: { text: `${nameOf(v.studentId)} cancelled the study plan.`, card: cardOf(p) },
+      };
     },
 
     done(v, planId, itemId, done) {
@@ -569,14 +622,29 @@ export function createPlanService(
       const p = store.current(v.squadId);
       if (!p || !open(p)) return fail(404, 'not_found', 'There is no open plan to mark.');
       const mine = p.items.filter((i) => i.ownerId === v.studentId);
-      const hits = matchItems(mine.filter((i) => i.status === 'todo'), ref);
+      const hits = matchItems(
+        mine.filter((i) => i.status === 'todo'),
+        ref,
+      );
       if (hits.length === 1) return service.done(v, p.id, hits[0]!.id, true);
       if (hits.length > 1)
-        return fail(422, 'ambiguous', `"${ref}" matches ${hits.length} of your items: ${hits.map((i) => i.title).join('; ')}. Say which one.`, { plan: p });
-      const finished = matchItems(mine.filter((i) => i.status === 'done'), ref);
+        return fail(
+          422,
+          'ambiguous',
+          `"${ref}" matches ${hits.length} of your items: ${hits.map((i) => i.title).join('; ')}. Say which one.`,
+          { plan: p },
+        );
+      const finished = matchItems(
+        mine.filter((i) => i.status === 'done'),
+        ref,
+      );
       if (finished.length)
-        return fail(409, 'already_done', `"${finished[0]!.title}" is already marked done.`, { plan: p });
-      return fail(404, 'not_found', `I could not find "${ref}" among your open plan items.`, { plan: p });
+        return fail(409, 'already_done', `"${finished[0]!.title}" is already marked done.`, {
+          plan: p,
+        });
+      return fail(404, 'not_found', `I could not find "${ref}" among your open plan items.`, {
+        plan: p,
+      });
     },
 
     view(v, p) {
@@ -643,7 +711,9 @@ export function createPlanService(
       return (
         `Your part of the plan: ${mineItems.map((i) => `${i.chapter ?? i.title} (${fmtDate(i.date)})`).join(', ') || 'nothing yet'}.` +
         (busy ? ` ${busy} of your items fall on a day your calendar shows as busy.` : '') +
-        (view.myWeakTopics.length ? ` Your shakiest chapters: ${view.myWeakTopics.join(', ')}.` : '')
+        (view.myWeakTopics.length
+          ? ` Your shakiest chapters: ${view.myWeakTopics.join(', ')}.`
+          : '')
       );
     },
   };

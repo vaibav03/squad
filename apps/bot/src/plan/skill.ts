@@ -15,7 +15,8 @@ const PLAN_ASK =
   /\b(?:study\s*plan|plan\s+(?:the\s+|our\s+|my\s+)?(?:midterm|final|exam)|plan\s+(?:for\s+)?(?:the\s+)?(?:midterm|final|exam))\b/i;
 const EXAM_CLAUSE = /\b(?:exam|midterm|final)\b[^?!.\n]*?\b(?:on|by|in|at|is)\s+([^?!.\n]+)/i;
 const ON_CLAUSE = /\b(?:on|by)\s+([^?!.\n]+)$/i;
-const DATEISH = /\d|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|mon|tue|wed|thu|fri|sat|sun|week|day)/i;
+const DATEISH =
+  /\d|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|mon|tue|wed|thu|fri|sat|sun|week|day)/i;
 const TIMEOUT_MS = 20_000;
 
 const groupSquad = (chatId: string) => (chatId.startsWith('group:') ? chatId.slice(6) : undefined);
@@ -33,7 +34,9 @@ export function createSharedPlanSkill(deps: SharedPlanSkillDeps): Skill {
     if (g) return g;
     // DM: the student's squad via chat_members of any group chat they belong to
     const r = ctx.db
-      .prepare("SELECT chat_id FROM chat_members WHERE student_id=? AND chat_id LIKE 'group:%' LIMIT 1")
+      .prepare(
+        "SELECT chat_id FROM chat_members WHERE student_id=? AND chat_id LIKE 'group:%' LIMIT 1",
+      )
       .get(m.from) as { chat_id: string } | undefined;
     return r ? groupSquad(r.chat_id) : undefined;
   };
@@ -66,7 +69,9 @@ export function createSharedPlanSkill(deps: SharedPlanSkillDeps): Skill {
         { chatId: m.chatId, text: o.text, ...(o.card ? { card: o.card } : {}) },
       ];
       if (!squadId)
-        return [{ chatId: m.chatId, text: 'I could not find your squad chat, so I cannot plan yet.' }];
+        return [
+          { chatId: m.chatId, text: 'I could not find your squad chat, so I cannot plan yet.' },
+        ];
 
       const done = parseDoneReport(m.text);
       const reply = parsePlanReply(m.text);
@@ -120,9 +125,7 @@ export function createSharedPlanSkill(deps: SharedPlanSkillDeps): Skill {
           chatId: m.chatId,
           text: 'On it. Building a shared study plan from the course materials and due dates. I will post it here for everyone to accept.',
         });
-        const out = await guard(
-          deps.plans.propose(m.from, squadId, examDate ? { examDate } : {}),
-        );
+        const out = await guard(deps.plans.propose(m.from, squadId, examDate ? { examDate } : {}));
         if (out === 'timeout') return [{ chatId: m.chatId, text: TIMEOUT_TEXT }];
         if (out.privateText) await ctx.dm(m.from, out.privateText);
         return say(out);

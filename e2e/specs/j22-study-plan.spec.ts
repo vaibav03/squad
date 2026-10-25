@@ -19,14 +19,25 @@ test('J22 prerequisites: chat and plan routes exist, course material ingested', 
   const fd = new FormData();
   const f = path.join(FIXTURE_PDFS, 'ch6-the-normal-distribution.pdf');
   fd.append('file', new Blob([fs.readFileSync(f)], { type: 'application/pdf' }), path.basename(f));
-  const r = await fetch(`${HUB}/v1/squad/courses`, { method: 'POST', headers: { authorization: `Bearer ${tok}` }, body: fd });
+  const r = await fetch(`${HUB}/v1/squad/courses`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${tok}` },
+    body: fd,
+  });
   expect(r.status).toBeLessThan(500);
   await expect
-    .poll(async () => ((await (await api(tok, '/v1/squad/courses')).json()) as { courses: unknown[] }).courses.length, { timeout: 40_000 })
+    .poll(
+      async () =>
+        ((await (await api(tok, '/v1/squad/courses')).json()) as { courses: unknown[] }).courses
+          .length,
+      { timeout: 40_000 },
+    )
     .toBeGreaterThan(0);
 });
 
-test('J22 Ana asks in the group; everyone sees progress then one plan card; the group is never stuck', async ({ browser }) => {
+test('J22 Ana asks in the group; everyone sees progress then one plan card; the group is never stuck', async ({
+  browser,
+}) => {
   const ana = await actor(browser, 's_ana');
   await openChat(ana, GROUP);
   await say(ana.page, `@cubbie study plan for the exam on ${exam}`);
@@ -42,11 +53,19 @@ test('J22 Ana asks in the group; everyone sees progress then one plan card; the 
   await ana.ctx.close();
 });
 
-test('J22 Ben accepts by numbered reply in chat; Chi accepts in the village panel via ?plan=1', async ({ browser }) => {
+test('J22 Ben accepts by numbered reply in chat; Chi accepts in the village panel via ?plan=1', async ({
+  browser,
+}) => {
   const ben = await actor(browser, 's_ben');
   await openChat(ben, GROUP);
   await say(ben.page, '@cubbie plan 1');
-  await expect.poll(async () => (await history(await apiLogin('s_ben'), GROUP)).filter(isBot).some((m) => /accepted/i.test(m.text))).toBe(true);
+  await expect
+    .poll(async () =>
+      (await history(await apiLogin('s_ben'), GROUP))
+        .filter(isBot)
+        .some((m) => /accepted/i.test(m.text)),
+    )
+    .toBe(true);
   await ben.ctx.close();
 
   const chi = await actor(browser, 's_chi');
@@ -63,30 +82,42 @@ test('J22 Ben accepts by numbered reply in chat; Chi accepts in the village pane
   await chi.ctx.close();
 });
 
-test('J22 same-item edits show a conflict banner with both versions; pick one', async ({ browser }) => {
+test('J22 same-item edits show a conflict banner with both versions; pick one', async ({
+  browser,
+}) => {
   const ana = await apiLogin('s_ana');
   const ben = await apiLogin('s_ben');
-  const cur = (await (await api(ana, '/v1/plans/current')).json()) as { plan: { id: string; rev: number; items: { id: string }[] } };
+  const cur = (await (await api(ana, '/v1/plans/current')).json()) as {
+    plan: { id: string; rev: number; items: { id: string }[] };
+  };
   const { id, rev, items } = cur.plan;
   const item = items[0]!.id;
-  const e1 = await api(ana, `/v1/plans/${id}/items/${item}`, { method: 'PATCH', json: { baseRev: rev, patch: { durationMin: 90 } } });
+  const e1 = await api(ana, `/v1/plans/${id}/items/${item}`, {
+    method: 'PATCH',
+    json: { baseRev: rev, patch: { durationMin: 90 } },
+  });
   expect(e1.status).toBe(200);
-  const e2 = await api(ben, `/v1/plans/${id}/items/${item}`, { method: 'PATCH', json: { baseRev: rev, patch: { durationMin: 25 } } });
+  const e2 = await api(ben, `/v1/plans/${id}/items/${item}`, {
+    method: 'PATCH',
+    json: { baseRev: rev, patch: { durationMin: 25 } },
+  });
   expect(e2.status, 'stale edit to the same item must not overwrite silently').toBe(409);
 
   const b = await actor(browser, 's_ben');
   await b.page.goto('/squad/village?plan=1');
   const banner = b.page.getByTestId('plan-conflict').first();
   await expect(banner).toBeVisible({ timeout: 30_000 });
-  await expect(b.page.getByTestId('plan-theirs').first()).toContainText(/90/);
-  await expect(b.page.getByTestId('plan-mine').first()).toContainText(/25/);
+  await expect(b.page.getByTestId('plan-theirs').first()).toContainText(/1 h 30 min/);
+  await expect(b.page.getByTestId('plan-mine').first()).toContainText(/25 min/);
   await shot(b.page, J, 'conflict-banner');
   await b.page.getByTestId('plan-pick-theirs').first().click();
   await expect(b.page.getByTestId('plan-conflict')).toHaveCount(0, { timeout: 15_000 });
   await b.ctx.close();
 });
 
-test('J22 organizer confirms; a member marks an item done from chat; decisions are in the group thread', async ({ browser }) => {
+test('J22 organizer confirms; a member marks an item done from chat; decisions are in the group thread', async ({
+  browser,
+}) => {
   const ana = await actor(browser, 's_ana');
   await ana.page.goto('/squad/village?plan=1');
   const confirm = ana.page.getByTestId('plan-confirm');
@@ -96,7 +127,9 @@ test('J22 organizer confirms; a member marks an item done from chat; decisions a
   await ana.ctx.close();
 
   const benTok = await apiLogin('s_ben');
-  const cur = (await (await api(benTok, '/v1/plans/current')).json()) as { plan: { items: { ownerId: string; chapter?: string; title: string }[] } };
+  const cur = (await (await api(benTok, '/v1/plans/current')).json()) as {
+    plan: { items: { ownerId: string; chapter?: string; title: string }[] };
+  };
   const mine = cur.plan.items.find((i) => i.ownerId === 's_ben' && i.chapter);
   if (mine) {
     const ben = await actor(browser, 's_ben');
@@ -107,7 +140,10 @@ test('J22 organizer confirms; a member marks an item done from chat; decisions a
     expect(m!.text).not.toMatch(/streak|points|leaderboard/i);
     await ben.ctx.close();
   }
-  const texts = (await history(benTok, GROUP)).filter(isBot).map((m) => m.text).join('\n');
+  const texts = (await history(benTok, GROUP))
+    .filter(isBot)
+    .map((m) => m.text)
+    .join('\n');
   expect(texts).toMatch(/active|accepted/i);
   expect(texts).not.toMatch(/\$180|therapy/i);
 });

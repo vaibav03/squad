@@ -15,7 +15,15 @@ beforeAll(async () => {
   const cs = createCourseStore(hub.deps.db);
   cs.saveCourse({ id: 'demo', title: 'Statistics' });
   for (const id of ['ch1', 'ch2', 'ch3'])
-    cs.saveChapter({ courseId: 'demo', id, title: id, summary: 's', file: `${id}.pdf`, pageStart: 1, pageEnd: 9 });
+    cs.saveChapter({
+      courseId: 'demo',
+      id,
+      title: id,
+      summary: 's',
+      file: `${id}.pdf`,
+      pageStart: 1,
+      pageEnd: 9,
+    });
   eng = await attachChatEngine(hub, { real: null, env: { HUB_SCHEDULER: '1' }, envFile: false });
 }, 60_000);
 afterAll(async () => {
@@ -30,15 +38,24 @@ describe('plan nudges', () => {
     const r = await hub.deps.plans.propose(V('s_ana'), { examDate: exam });
     expect(r.ok).toBe(true);
     const planId = r.ok ? r.plan.id : '';
-    const pending = sch.list({ kindPrefix: 'plan.', status: 'pending' }).filter((j) => j.key.startsWith(`plan:${planId}:`));
+    const pending = sch
+      .list({ kindPrefix: 'plan.', status: 'pending' })
+      .filter((j) => j.key.startsWith(`plan:${planId}:`));
     expect(pending.some((j) => j.kind === 'plan.pending')).toBe(true);
     expect(pending.every((j) => j.student && j.requiresOptIn)).toBe(true);
-    for (const id of ['s_ana', 's_ben', 's_chi', 's_dev']) hub.deps.plans.respond(V(id), planId, 'accept');
-    const after = sch.list({ kindPrefix: 'plan.', status: 'pending' }).filter((j) => j.key.startsWith(`plan:${planId}:`));
+    for (const id of ['s_ana', 's_ben', 's_chi', 's_dev'])
+      hub.deps.plans.respond(V(id), planId, 'accept');
+    const after = sch
+      .list({ kindPrefix: 'plan.', status: 'pending' })
+      .filter((j) => j.key.startsWith(`plan:${planId}:`));
     expect(after.some((j) => j.kind === 'plan.item')).toBe(true);
     expect(after.some((j) => j.kind === 'plan.pending')).toBe(false);
     // cancelling the plan removes its reminders
     hub.deps.plans.cancel(V('s_ana'), planId);
-    expect(sch.list({ kindPrefix: 'plan.', status: 'pending' }).filter((j) => j.key.startsWith(`plan:${planId}:`))).toHaveLength(0);
+    expect(
+      sch
+        .list({ kindPrefix: 'plan.', status: 'pending' })
+        .filter((j) => j.key.startsWith(`plan:${planId}:`)),
+    ).toHaveLength(0);
   });
 });

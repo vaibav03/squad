@@ -231,12 +231,12 @@ export function PlanPanel(props: PlanPanelProps) {
                   <strong>Two edits to "{it?.title ?? 'an item'}" collided.</strong>
                   <p>
                     <span data-testid="plan-theirs">
-                      {c.theirsBy} set: {fieldsText(c.theirs, nameOf)}
+                      {nameOf(c.theirsBy)} set: {fieldsText(c.theirs, nameOf)}
                     </span>
                   </p>
                   <p>
                     <span data-testid="plan-mine">
-                      {c.mineBy} wanted: {fieldsText(c.mine, nameOf)}
+                      {nameOf(c.mineBy)} wanted: {fieldsText(c.mine, nameOf)}
                     </span>
                   </p>
                   <div className="pl-row">

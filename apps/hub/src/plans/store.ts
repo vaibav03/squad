@@ -53,7 +53,9 @@ export function createPlanStore(db: Db): PlanStore {
         p.items = p.items.flatMap((i) => {
           if (i.ownerId !== studentId) return [i];
           if (!fallback) return [];
-          return [{ ...i, ownerId: fallback, ownerName: rest.find((m) => m.id === fallback)!.name }];
+          return [
+            { ...i, ownerId: fallback, ownerName: rest.find((m) => m.id === fallback)!.name },
+          ];
         });
         p.log = p.log.filter((l) => l.by !== studentId);
         put.run(p.id, p.squadId, JSON.stringify(p), p.updatedAt);

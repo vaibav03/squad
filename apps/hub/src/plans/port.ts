@@ -26,7 +26,10 @@ export function createPlanPort(deps: Pick<HubDeps, 'plans' | 'log'>): PlanPort {
   };
   const fail = (e: unknown): PlanSayOut => {
     deps.log.error('plan chat action failed', { err: (e as Error)?.name });
-    return { ok: false, text: 'Something went wrong with the study plan. Nothing was changed. Please try again.' };
+    return {
+      ok: false,
+      text: 'Something went wrong with the study plan. Nothing was changed. Please try again.',
+    };
   };
 
   return {
@@ -45,15 +48,24 @@ export function createPlanPort(deps: Pick<HubDeps, 'plans' | 'log'>): PlanPort {
         switch (r.kind) {
           case 'show':
             return cur
-              ? { ok: true, text: plans.summary(cur), card: { type: 'plan', planId: cur.id, rev: cur.rev, status: cur.status } }
-              : { ok: false, text: 'There is no study plan yet. Say "@cubbie study plan for the exam on Nov 4" to start one.' };
+              ? {
+                  ok: true,
+                  text: plans.summary(cur),
+                  card: { type: 'plan', planId: cur.id, rev: cur.rev, status: cur.status },
+                }
+              : {
+                  ok: false,
+                  text: 'There is no study plan yet. Say "@cubbie study plan for the exam on Nov 4" to start one.',
+                };
           case 'accept':
           case 'decline':
             return cur
               ? out(v, plans.respond(v, cur.id, r.kind), r.kind === 'accept')
               : { ok: false, text: 'There is no study plan waiting for an answer.' };
           case 'confirm':
-            return cur ? out(v, plans.confirm(v, cur.id)) : { ok: false, text: 'There is no study plan to start.' };
+            return cur
+              ? out(v, plans.confirm(v, cur.id))
+              : { ok: false, text: 'There is no study plan to start.' };
           case 'edit':
             return out(v, plans.editByRef(v, r.ref, r.to));
         }

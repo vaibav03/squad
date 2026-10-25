@@ -20,7 +20,7 @@ export function createPlanRoutes(deps: HubDeps): HubApp {
   const plans = () => deps.plans;
 
   /** Reply for a service result. A decision or failure with something to say is mirrored into the group chat. */
-  const reply = (c: Context<HubEnv, any>, res: PlanResult, squadId: string) => {
+  const reply = (c: Context<HubEnv>, res: PlanResult, squadId: string) => {
     if (res.say?.text) plans().post(squadId, res.say);
     const v = c.get('viewer');
     if (res.ok) return c.json({ plan: plans().view(v, res.plan) });
@@ -28,9 +28,7 @@ export function createPlanRoutes(deps: HubDeps): HubApp {
     return c.json(
       {
         error: { code: f.code, message: f.message },
-        ...(f.conflictId
-          ? { conflict: f.plan?.conflicts.find((x) => x.id === f.conflictId) }
-          : {}),
+        ...(f.conflictId ? { conflict: f.plan?.conflicts.find((x) => x.id === f.conflictId) } : {}),
         ...(f.plan ? { plan: plans().view(v, f.plan) } : {}),
       },
       f.status,
@@ -56,7 +54,8 @@ export function createPlanRoutes(deps: HubDeps): HubApp {
     if (!body.success) return c.json(err('invalid_request'), 400);
     const res = await plans().propose(v, body.data);
     // a failed proposal is also said in the group, so nobody waits for a plan that is not coming
-    if (!res.ok && !res.say) plans().post(v.squadId, { text: `The study plan could not be made: ${res.message}` });
+    if (!res.ok && !res.say)
+      plans().post(v.squadId, { text: `The study plan could not be made: ${res.message}` });
     return reply(c, res, v.squadId);
   });
 
