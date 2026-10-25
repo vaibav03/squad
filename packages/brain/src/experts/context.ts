@@ -3,8 +3,12 @@ import type { CourseStore } from '../ingest/types';
 import type { ChapterContext, ContextProvider } from './types';
 import { loadPrompt } from './prompts';
 
-/** Gemini needs >= ~4k tokens to cache; below this we skip the cache call and send a plain prompt. */
-export const MIN_CACHE_CHARS = 8000;
+/**
+ * Explicit caching on gemini-3.8-flash needs >= 4,096 input tokens (ai.google.dev context caching
+ * table). At ~4 chars/token that is ~16k chars; below this we skip the cache call (it would 400) and
+ * send a plain prompt.
+ */
+export const MIN_CACHE_CHARS = 16_384;
 export const CACHE_TTL_SECONDS = 1800;
 
 export interface ContextOptions {

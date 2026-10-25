@@ -8,7 +8,14 @@ export type LlmPart =
   /** Vision input: inline base64 data, or a URI the provider can fetch. */
   | { type: 'image'; mimeType: string; data: string }
   | { type: 'image'; mimeType: string; uri: string }
-  | { type: 'tool_call'; id: string; name: string; args: Record<string, unknown> }
+  | {
+      type: 'tool_call';
+      id: string;
+      name: string;
+      args: Record<string, unknown>;
+      /** Provider-opaque token that must be echoed back (Gemini 3 `thoughtSignature`). */
+      signature?: string;
+    }
   | { type: 'tool_result'; id: string; name: string; result: unknown };
 
 export interface LlmMessage {
@@ -50,6 +57,8 @@ export interface LlmToolCall {
   id: string;
   name: string;
   args: Record<string, unknown>;
+  /** Provider-opaque token that must be echoed back (Gemini 3 `thoughtSignature`). */
+  signature?: string;
 }
 
 export interface LlmUsage {

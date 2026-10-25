@@ -17,7 +17,7 @@ import type {
 
 /** The only thing that differs between iMessage, Discord and the fake-chat CLI. */
 export interface Transport {
-  readonly name: 'imessage' | 'discord' | 'cli' | (string & {});
+  readonly name: 'imessage' | 'discord' | 'cli' | 'web' | (string & {});
   /** Begin delivering normalized messages. Own messages (isFromMe) must never be delivered. */
   start(onMsg: (m: InboundMessage) => void | Promise<void>): Promise<void>;
   stop(): Promise<void>;
@@ -25,6 +25,13 @@ export interface Transport {
   send(o: OutboundMessage & { text?: string }): Promise<void>;
   /** The chat id of the 1:1 DM with this student (stable, derived from the roster). */
   dmChatId(s: StudentId): ChatId;
+  /** Optional structured confirm prompt (web renders a card). Without it the numbered DM text is sent. */
+  confirmPrompt?(
+    student: StudentId,
+    p: { taskId: string; question: string; options: string[] },
+  ): Promise<void>;
+  /** Optional: a pending confirm resolved (answer is the chosen option string or 'timeout'). */
+  confirmResolved?(student: StudentId, taskId: string, answer: ConfirmAnswer): void;
 }
 
 export interface Roster {

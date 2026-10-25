@@ -3,12 +3,21 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { parseAgentId, type Llm, type StudentId, type VillageEvent } from '@squad/core';
+import {
+  parseAgentId,
+  parseIcsBusy,
+  type BusyBlock,
+  type Llm,
+  type StudentId,
+  type VillageEvent,
+} from '@squad/core';
 import {
   BrainUnavailableError,
   CaptionUnavailableError,
   chapterProviderFromStore,
   createBrain,
+  councilLlmFor,
+  createCouncilService,
   createMasteryStore,
   loadFixtureCourse,
   QuizEngine,
@@ -46,6 +55,10 @@ export interface RealPortsOptions {
   courseId?: string;
   /** council:quizkey verifier for generated questions (omit with FakeLlm). */
   verifier?: KeyVerifier;
+  /** Mesh agent base URLs by student id; calendar imports are pushed to the owner's agent (X-Nook-Internal). */
+  agentUrls?: Record<string, string>;
+  /** Injected in tests. */
+  fetch?: typeof fetch;
   /** Load the committed OpenStax sample as course `demo` when it is missing (offline, default true). */
   loadFixture?: boolean;
 }
@@ -90,6 +103,16 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
   if (o.loadFixture !== false && !brain.store.getCourse(courseId))
     await loadFixtureCourse({ store: brain.store }, courseId);
 
+  const councilDemo = () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : false);
+  deps.council = createCouncilService({
+    llm: councilLlmFor(o.llm, councilDemo),
+    db,
+    emit,
+    brain,
+    courseId: () => courseId,
+    demo: councilDemo,
+  });
+
   const mastery = createMasteryStore({ db, emit: quizEmit });
   const engine = new QuizEngine({
     db,
@@ -101,7 +124,7 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
   });
 
   const quiz = createRealQuizPort(deps, engine, courseId);
-  const brainPort = createRealBrainPort(deps, brain, mastery, o.llm);
+  const brainPort = createRealBrainPort(deps, brain, mastery, o);
   const { media, call } = createAudioPorts(brain, courseId, o);
 
   return {
@@ -214,7 +237,7 @@ function createRealBrainPort(
   deps: HubDeps,
   brain: Brain,
   mastery: MasteryStore,
-  _llm: Llm,
+  o: RealPortsOptions,
 ): BrainPort {
   const progress = new Map<string, CourseStatus>(); // in-flight or failed uploads, by courseId
 
@@ -290,12 +313,60 @@ function createRealBrainPort(
       return { concepts: chapters, mine: score(student), squad: members.map(score) };
     },
 
-    // Calendar import is not wired to a mesh agent yet: only the count of blocks is returned and nothing is stored.
-    async loadCalendar(_student, input) {
-      if (input.demo) return { busyBlocks: 12 };
-      return { busyBlocks: (input.ics?.match(/BEGIN:VEVENT/g) ?? []).length };
+    // Busy blocks are stored per student (hub_busy_blocks, owner-private: never streamed) and pushed to
+    // the owner's mesh agent so the next study/trip flow schedules around them.
+    async loadCalendar(student, input) {
+      const blocks = input.demo ? demoBusyBlocks(deps.now()) : parseIcsBusy(input.ics ?? '');
+      const tx = deps.db.transaction(() => {
+        deps.db.prepare('DELETE FROM hub_busy_blocks WHERE student=?').run(student);
+        const ins = deps.db.prepare(
+          'INSERT OR REPLACE INTO hub_busy_blocks(student, start, end, title) VALUES(?,?,?,?)',
+        );
+        for (const b of blocks) ins.run(student, b.start, b.end, b.title);
+      });
+      tx();
+      const url = o.agentUrls?.[student];
+      if (url) {
+        try {
+          const res = await (o.fetch ?? fetch)(`${url.replace(/\/+$/, '')}/internal/calendar`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              'X-Nook-Internal': deps.config.internalSecret,
+            },
+            body: JSON.stringify({ events: blocks }),
+            signal: AbortSignal.timeout(3000),
+          });
+          if (!res.ok) deps.log.warn('calendar push rejected', { student, status: res.status });
+        } catch (e) {
+          deps.log.warn('calendar push failed', { student, err: (e as Error).name });
+        }
+      }
+      return { busyBlocks: blocks.length };
     },
   };
+}
+
+/** The stored busy blocks for one student (owner-private). */
+export function busyBlocksOf(deps: Pick<HubDeps, 'db'>, student: string): BusyBlock[] {
+  return deps.db
+    .prepare('SELECT start, end, title FROM hub_busy_blocks WHERE student=? ORDER BY start')
+    .all(student) as BusyBlock[];
+}
+
+/** "Use demo calendar": 12 deterministic blocks (two per weekday over the next six weekdays, UTC). */
+export function demoBusyBlocks(nowMs: number): BusyBlock[] {
+  const out: BusyBlock[] = [];
+  const day = new Date(nowMs);
+  day.setUTCHours(0, 0, 0, 0);
+  while (out.length < 12) {
+    day.setUTCDate(day.getUTCDate() + 1);
+    if (day.getUTCDay() === 0 || day.getUTCDay() === 6) continue;
+    const ymd = day.toISOString().slice(0, 10);
+    out.push({ start: `${ymd}T16:00:00Z`, end: `${ymd}T17:00:00Z`, title: 'Lecture' });
+    out.push({ start: `${ymd}T21:00:00Z`, end: `${ymd}T22:00:00Z`, title: 'Shift' });
+  }
+  return out;
 }
 
 // ---------- media (call + personas + voices) ----------

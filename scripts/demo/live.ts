@@ -11,16 +11,19 @@ import { fileURLToPath } from 'node:url';
 import { createStudentsConfirm } from './lib/live-bot';
 import {
   FakeLlm,
+  createResilientLlm,
   SENTINELS,
   VillageEventSchema,
   findLeak,
   postEvent,
   type VillageEvent,
 } from '@squad/core';
+import { GeminiLlm } from '@squad/core/node';
 import { createHttpCoordinator, createMeshScheduler } from '@squad/mesh';
 import { createHubEmitter, createHubPort, parseProfile, startMesh } from '@squad/agent';
 import { createMasteryStore, runStudyPlan } from '@squad/brain';
 import { startHub } from '@squad/hub';
+import { busyBlocksOf } from '@squad/hub/real';
 import { wireRealPorts } from '@squad/hub/real';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -28,6 +31,18 @@ const fx = (f: string) => join(root, 'apps/agent/fixtures', f);
 const STUDENTS = ['s_ana', 's_ben', 's_cam', 's_dev'] as const;
 const SQUAD = 'sq_demo';
 const SECRET = 'demo-live-secret';
+const QUIZ_EXPLANATION = 'The median ignores extremes.';
+const QUIZ_QUESTIONS = {
+  questions: [
+    {
+      kind: 'choice',
+      question: 'Which statistic resists outliers?',
+      choices: ['mean', 'median'],
+      key: 1,
+      explanation: QUIZ_EXPLANATION,
+    },
+  ],
+};
 const failures: string[] = [];
 const check = (ok: boolean, msg: string) => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${msg}`);
@@ -108,8 +123,29 @@ async function main(): Promise<void> {
       handle: `${id.slice(2)}@demo.test`,
     });
   hub.deps.directory.upsertSquad({ id: SQUAD, name: 'Demo squad', members: [...STUDENTS] });
-  const llm = new FakeLlm({ fallback: 'ok' });
-  const real = await wireRealPorts(hub, { llm });
+  // FakeLlm serves the quiz generation path (question JSON) and the free-text grader; everything else is 'ok'.
+  const fakeLlm = new FakeLlm({
+    fallback: (req) => {
+      if ((req.system ?? '').includes('grade a short answer'))
+        return { correct: true, feedback: 'Right.' };
+      return (req.system ?? '').toLowerCase().includes('quiz') ||
+        JSON.stringify(req).toLowerCase().includes('questions')
+        ? QUIZ_QUESTIONS
+        : 'ok';
+    },
+  });
+  // DEMO_LIVE_LLM=real wraps Gemini (key from the environment) in the resilient fallback: with depleted credits the
+  // first call switches to the fake for good and the run still passes. Default: the fake only (no keys needed).
+  const useReal = process.env.DEMO_LIVE_LLM === 'real' && Boolean(process.env.GEMINI_API_KEY);
+  const llm = useReal
+    ? createResilientLlm({
+        real: new GeminiLlm({ apiKey: process.env.GEMINI_API_KEY! }),
+        fake: fakeLlm,
+      })
+    : fakeLlm;
+  console.log(`llm: ${useReal ? 'real Gemini with fake fallback' : 'FakeLlm'}`);
+  const agentUrls: Record<string, string> = {}; // filled once the mesh agents are listening
+  const real = await wireRealPorts(hub, { llm, agentUrls });
   check(
     real.brain.store.listChapters('demo').length > 0,
     'hub: real brain port loaded course "demo" (fixture)',
@@ -147,7 +183,44 @@ async function main(): Promise<void> {
     askConfirm: (s) => students.askConfirm(s),
     seed: 'demo-live',
   });
+  Object.assign(agentUrls, mesh.urls);
   try {
+    // ---- calendar import: hub stores busy blocks and pushes them to the owner's agent
+    const cal = await fetch(`${hub.url}/v1/squad/calendar`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${tokens.s_ana}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ demo: true }),
+    });
+    const calBody = (await cal.json()) as { busyBlocks?: number };
+    check(calBody.busyBlocks === 12, `calendar: demo import stored ${calBody.busyBlocks} blocks`);
+    check(
+      busyBlocksOf(hub.deps, 's_ana').length === 12,
+      'calendar: busy blocks are in the hub db (hub_busy_blocks)',
+    );
+    const ana = profiles[0]!;
+    check(ana.calendar.length > 0, `calendar: pushed to s_ana's agent (${ana.calendar.length})`);
+
+    // ---- quiz: question generation (FakeLlm) -> hub routes -> mastery, with the public text on the stream
+    const quizId = await real.startQuiz('ch6');
+    const q = (await (
+      await fetch(`${hub.url}/v1/quiz/${quizId}`, {
+        headers: { authorization: `Bearer ${tokens.s_ben}` },
+      })
+    ).json()) as { question?: string };
+    check(q.question === 'Which statistic resists outliers?', 'quiz: generated question is served');
+    for (const id of STUDENTS) {
+      const a = await fetch(`${hub.url}/v1/quiz/${quizId}/answer`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${tokens[id]}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ choice: '1' }),
+      });
+      check(a.status === 200, `quiz: ${id} answer accepted (${a.status})`);
+    }
+    check(
+      real.mastery.forStudent('s_ben', 'demo').some((r) => r.chapter === 'ch6' && r.box > 0),
+      'quiz: s_ben mastery moved for ch6',
+    );
+
     // ---- study flow: brain's study plan, scheduled by the mesh (not brain's stub)
     let meshCalls = 0;
     const http = createHttpCoordinator({ url: mesh.urls.s_ana!, secret: SECRET });
@@ -226,9 +299,19 @@ async function main(): Promise<void> {
       check(invalid === 0, `${id}: ${village.length} village events all validate`);
       const leak = findLeak(
         frames.map((f) => f.data),
-        SENTINELS,
+        [...SENTINELS, QUIZ_EXPLANATION],
       );
-      check(leak === undefined, `${id}: sentinels ${SENTINELS.join(', ')} never appear`);
+      check(
+        leak === undefined,
+        `${id}: sentinels ${SENTINELS.join(', ')} and the quiz explanation never appear`,
+      );
+      const qEvents = village
+        .filter((f) => f.event === 'quiz.question')
+        .map((f) => JSON.parse(f.data));
+      check(
+        qEvents.length > 0 && qEvents.every((e) => e.text === 'Which statistic resists outliers?'),
+        `${id}: quiz.question carries the public prompt (${qEvents.length})`,
+      );
       const idx = village
         .map((f, n) => (f.event === 'trip.confirmed' ? n : -1))
         .filter((n) => n >= 0);
@@ -248,6 +331,10 @@ async function main(): Promise<void> {
     );
   } finally {
     streams.forEach((s) => s.stop());
+    if ('status' in llm) {
+      const st = (llm as ReturnType<typeof createResilientLlm>).status();
+      console.log(`llm status at end: ${JSON.stringify(st)}`);
+    }
     await mesh.close();
     await hub.stop();
   }

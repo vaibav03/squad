@@ -6,6 +6,7 @@ import type { HubApp, HubDeps, HubEnv } from '../types';
 const MAX_PDF = 50 * 1024 * 1024;
 const Vote = z.strictObject({ ranking: z.array(z.string().min(1)).min(1).max(20) });
 const Confirm = z.strictObject({ optionId: z.string().min(1), yes: z.boolean() });
+const ConfirmGeneric = z.strictObject({ yes: z.boolean(), optionId: z.string().min(1).optional() });
 const Calendar = z.strictObject({ demo: z.literal(true) });
 
 const err = (code: string, message?: string) => ({
@@ -88,6 +89,25 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
     if (deps.trips.allConfirmed(tripId))
       deps.ingest.village({ t: 'trip.confirmed', taskId: rec.taskId, squadId: rec.squadId });
     return c.json({ ok: true, status: rec.status });
+  });
+
+  // Generic confirm: any task with an owning handler (trip store, an agent's open confirm card, or a
+  // registered kind). Unknown tasks fail closed with 404; handlers without wiring answer 422.
+  r.post('/v1/confirms/:taskId', need, async (c) => {
+    const body = ConfirmGeneric.safeParse(await c.req.json().catch(() => null));
+    if (!body.success) return c.json(err('invalid_request'), 400);
+    const out = await deps.confirms.answer(c.get('viewer'), c.req.param('taskId'), {
+      yes: body.data.yes,
+      ...(body.data.optionId ? { optionId: body.data.optionId } : {}),
+    });
+    if (out.ok) return c.json({ ok: true, ...(out.status ? { status: out.status } : {}) });
+    const status = {
+      unknown_task: 404,
+      unsupported_kind: 422,
+      invalid_request: 400,
+      upstream_failed: 502,
+    }[out.code];
+    return c.json(err(out.code, out.message), status as 404 | 422 | 400 | 502);
   });
 
   r.get('/v1/mastery/:courseId', need, async (c) => {

@@ -8,11 +8,14 @@ import type {
   Persona,
   Student,
   StudentId,
+  LlmStatus,
   VillageEvent,
 } from '@squad/core';
+import type { CouncilService } from '@squad/brain';
 import type { HubConfig } from './config';
 import type { Logger } from './log';
 import type { Ports } from './ports';
+import type { ChatHub } from './chat/hub-chat';
 
 export type LedgerEntryEventT = Extract<VillageEvent, { t: 'ledger.entry' }>;
 
@@ -149,6 +152,8 @@ export interface SquadState {
   apply(e: LoggedEvent): void;
   /** Re-derive agent states and pending confirms from the (persisted) event log; used at boot. */
   rebuild(): void;
+  /** The open confirm.pending card for this student and task, if any. */
+  pendingConfirm(student: StudentId, taskId: string): { question: string } | undefined;
   snapshot(viewer: Viewer): Promise<Snapshot>;
   reset(): void;
 }
@@ -232,6 +237,8 @@ export interface LedgerStore {
   /** Rows for a task as the viewer may see them (owner: raw withheld unless projector; others: 'hidden'). */
   entries(taskId: string, viewer: Viewer): LedgerEntry[];
   taskIds(squadId: string, directory: Directory): string[];
+  /** Every raw withheld value (for leak guards only; never sent anywhere). */
+  privateValues(): string[];
   clear(): void;
 }
 
@@ -250,10 +257,28 @@ export interface HubDeps {
   state: SquadState;
   ingest: Ingestor;
   ports: Ports;
+  /** Ask-the-council service. Built with the real ports, or lazily (demo model) by the council routes. */
+  council?: CouncilService;
+  /** Web chat: store, files, SSE fan-out; the bot engine attaches later (`attachChatEngine`). */
+  chat: ChatHub;
   /** students with projector mode on (server-side session flag) */
   projector: Set<StudentId>;
   filterCtx: FilterCtx;
   now(): number;
+  /** What GET /v1/status reports; set by `main.ts` after wiring (defaults to stub/fake when absent). */
+  runtime?: HubRuntime;
+  /** Generic confirm answers (POST /v1/confirms/:taskId). */
+  confirms: ConfirmRouter;
+}
+
+import type { ConfirmRouter } from './confirms';
+
+/** Which providers are live right now; read lazily so a mid-run credits switch shows up. */
+export interface HubRuntime {
+  llm(): LlmStatus;
+  /** true when an ElevenLabs engine is wired */
+  tts(): boolean;
+  ports(): 'real' | 'stub';
 }
 
 export type { Citation, Persona, Student, StudentId, VillageEvent, LedgerEntry, AgentId };

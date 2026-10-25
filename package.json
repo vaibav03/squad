@@ -20,7 +20,10 @@
     "demo:reset": "tsx scripts/demo/reset.ts",
     "demo:replay": "tsx scripts/demo/replay.ts",
     "demo:preflight": "tsx scripts/demo/preflight.ts",
-    "demo:live": "tsx scripts/demo/live.ts"
+    "demo:live": "tsx scripts/demo/live.ts",
+    "dev:all": "tsx scripts/dev/all.ts",
+    "doctor": "tsx scripts/doctor.ts",
+    "squad:doctor": "tsx scripts/doctor.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

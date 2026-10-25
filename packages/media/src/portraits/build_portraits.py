@@ -70,7 +70,17 @@ def card(im, scale):
     f = Image.new('RGBA', (d.width - 2*scale, d.height - 2*scale), RGB['sky-deep'] + (255,)); c.alpha_composite(f, (3*scale, 3*scale))
     c.alpha_composite(s, (c.width//2 - s.width//2, c.height//2 - s.height//2)); return c
 
-def build(c, swap_img):
+def swap_img(im, swap):
+    """Palette-name swap on a quantized RGBA image."""
+    if not swap: return im
+    px = im.load()
+    for y in range(im.height):
+        for x in range(im.width):
+            p = px[x, y]
+            if p[3] and INV.get(p[:3]) in swap: px[x, y] = RGB[swap[INV[p[:3]]]] + (255,)
+    return im
+
+def build(c, swap_img=swap_img):
     src = FACE_OVERRIDE.get(c['id'], c['src'])
     p = os.path.join(SRC, src, 'Faceset.png')
     if not os.path.exists(p): raise SystemExit(f"no Faceset for {c['id']} ({src}); add FACE_OVERRIDE")
@@ -87,7 +97,6 @@ def check(im):
         if p[3]: assert p[:3] in pal, ('off palette', p)
 
 def main():
-    from build_cast import swap_img
     items = []
     for c in CAST:
         im = build(c, swap_img); check(im)

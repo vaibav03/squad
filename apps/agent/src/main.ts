@@ -1,12 +1,12 @@
 // One process per student: AGENT_ID=s_ana PORT=4101 pnpm --filter @squad/agent dev
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serve } from '@hono/node-server';
 import { GeminiLlm, loadConfig, openDb } from '@squad/core/node';
-import { FakeLlm, type Llm } from '@squad/core';
+import { FakeLlm, createResilientLlm, type Llm } from '@squad/core';
 import { createSqliteLedger } from '@squad/mesh';
-import { confirmFromEnv } from './confirm';
+import { confirmFromEnv, webConfirm } from './confirm';
 import { createHubPort } from './hub';
 import { createHttpNet, createHubEmitter } from './net';
 import { loadProfile } from './profile';
@@ -30,19 +30,29 @@ for (const kv of (process.env.PEERS ?? '').split(',').filter(Boolean)) {
 }
 const port = Number(process.env.PORT ?? new URL(peers[id] ?? 'http://localhost:4101').port ?? 4101);
 const emitter = createHubEmitter();
+mkdirSync(join(root, 'data'), { recursive: true });
 const db = openDb(join(root, 'data', `agent-${id}.sqlite`));
 
 let llm: Llm = new FakeLlm();
 if (process.env.FAKE_LLM === '0') {
   const cfg = loadConfig();
-  llm = new GeminiLlm({ apiKey: cfg.geminiApiKey ?? '' });
+  llm = createResilientLlm({
+    ...(cfg.geminiApiKey ? { real: new GeminiLlm({ apiKey: cfg.geminiApiKey }) } : {}),
+    fake: new FakeLlm(),
+    onSwitch: (st) => console.log(`[${id}] llm switched to FakeLlm (${st.reason})`),
+  });
 }
+
+// CONFIRM_MODE=web: confirm cards in the village answer through the hub (POST /v1/confirms/:taskId).
+const web =
+  process.env.CONFIRM_MODE === 'web' && !process.env.BOT_URL ? webConfirm({ emitter }) : undefined;
 
 const { app } = createAgentApp({
   profile,
   net: createHttpNet(peers),
   emitter,
-  askConfirm: confirmFromEnv(emitter),
+  askConfirm: web?.ask ?? confirmFromEnv(emitter),
+  ...(web ? { resolveConfirm: web.resolve } : {}),
   llm,
   url: `http://localhost:${port}`,
   secret: process.env.INTERNAL_EVENTS_SECRET ?? '',

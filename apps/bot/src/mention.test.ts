@@ -4,6 +4,8 @@ import { detectMention } from './mention';
 describe('detectMention', () => {
   it.each([
     '@cubbie hi',
+    '@squad what is a z-score?',
+    'thoughts @Squad?',
     '@Cubbie what is a mitochondria',
     'what do you think @CUBBIE?',
     'cubbie, quiz me',
@@ -22,6 +24,8 @@ describe('detectMention', () => {
     'I told cubbie yesterday',
     'email me@cubbie.com',
     'x@cubbiefan',
+    'email me@squad.com',
+    '@squadron go',
     'the cubbie bot is slow',
   ])('no mention: %j', (t) => expect(detectMention(t, true)).toBe(false));
 
