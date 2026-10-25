@@ -37,6 +37,17 @@ const StudyStart = z.strictObject({
   topics: z.array(Id).max(16).optional(),
   squadId: Id.optional(),
 });
+const CalendarPut = z.strictObject({
+  events: z
+    .array(
+      z.strictObject({
+        start: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?Z$/),
+        end: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?Z$/),
+        title: z.string().max(200),
+      }),
+    )
+    .max(2000),
+});
 const TripStart = z.strictObject({
   taskId: Id,
   members: z.array(Id).min(2).max(12),
@@ -112,6 +123,14 @@ export function createAgentApp(o: AgentAppOptions): { app: Hono; agent: FlowAgen
     const p = TripStart.safeParse(await c.req.json().catch(() => null));
     if (!p.success) return c.json({ error: 'bad_request' }, 400);
     return c.json(await agent.startTrip(p.data));
+  });
+  // Calendar import from the hub: replaces this student's busy blocks (the profile is read live by every flow).
+  app.post('/internal/calendar', async (c) => {
+    if (!guard(c.req.header('X-Nook-Internal'))) return c.json({ error: 'forbidden' }, 403);
+    const p = CalendarPut.safeParse(await c.req.json().catch(() => null));
+    if (!p.success) return c.json({ error: 'bad_request' }, 400);
+    o.profile.calendar.splice(0, o.profile.calendar.length, ...p.data.events);
+    return c.json({ ok: true, blocks: o.profile.calendar.length });
   });
   app.post('/internal/query', async (c) => {
     if (!guard(c.req.header('X-Nook-Internal'))) return c.json({ error: 'forbidden' }, 403);

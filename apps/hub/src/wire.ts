@@ -36,3 +36,15 @@ export function resilientLlmFromEnv(
     ...(onSwitch ? { onSwitch: (s) => onSwitch(s.reason) } : {}),
   });
 }
+
+/** `AGENT_PEERS=s_ana=http://localhost:4101,s_ben=...`: where each student's mesh agent listens (calendar push). */
+export function agentUrlsFromEnv(
+  env: Record<string, string | undefined> = process.env,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const kv of (env.AGENT_PEERS ?? '').split(',').filter(Boolean)) {
+    const i = kv.indexOf('=');
+    if (i > 0) out[kv.slice(0, i).trim()] = kv.slice(i + 1).trim();
+  }
+  return out;
+}

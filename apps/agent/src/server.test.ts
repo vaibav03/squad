@@ -81,6 +81,23 @@ describe('agent server', () => {
   });
 });
 
+describe('POST /internal/calendar', () => {
+  it('is guarded, validates, and replaces the live profile calendar', async () => {
+    const { app } = mk();
+    const ev = { start: '2026-11-10T16:00:00Z', end: '2026-11-10T17:00:00Z', title: 'Lecture' };
+    expect((await post(app, '/internal/calendar', { events: [ev] })).status).toBe(403);
+    const h = { 'X-Nook-Internal': 's3cret' };
+    expect(
+      (await post(app, '/internal/calendar', { events: [{ ...ev, start: 'x' }] }, h)).status,
+    ).toBe(400);
+    const keep = [...profile.calendar];
+    const res = await post(app, '/internal/calendar', { events: [ev, ev] }, h);
+    expect(await res.json()).toEqual({ ok: true, blocks: 2 });
+    expect(profile.calendar).toEqual([ev, ev]);
+    profile.calendar.splice(0, profile.calendar.length, ...keep);
+  });
+});
+
 describe('fixtures and calendar import', () => {
   it('fixtures validate and match the demo profiles', () => {
     for (const p of demoProfiles()) {

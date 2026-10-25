@@ -59,6 +59,7 @@ const baseEnv: NodeJS.ProcessEnv = {
   // Provider keys from .env reach the children (the hub and core read .env themselves too).
   ...(get('GEMINI_API_KEY') ? { GEMINI_API_KEY: get('GEMINI_API_KEY') } : {}),
   ...(get('ELEVENLABS_API_KEY') ? { ELEVENLABS_API_KEY: get('ELEVENLABS_API_KEY') } : {}),
+  AGENT_PEERS: STUDENTS.map((id) => `${id}=http://localhost:${AGENT_PORTS[id]}`).join(','),
   FORCE_COLOR: '0',
 };
 

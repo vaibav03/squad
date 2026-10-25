@@ -1,5 +1,5 @@
 import { startHub } from './server';
-import { resilientLlmFromEnv, wireRealPorts } from './wire';
+import { agentUrlsFromEnv, resilientLlmFromEnv, wireRealPorts } from './wire';
 
 const hub = await startHub();
 const llm = resilientLlmFromEnv(process.env, (reason) =>
@@ -8,7 +8,7 @@ const llm = resilientLlmFromEnv(process.env, (reason) =>
 // Real ports (brain, quiz, media) whenever there is a key; FORCE_FAKE_LLM=1 keeps them on the fake model.
 const real = Boolean(process.env.GEMINI_API_KEY) || process.env.FORCE_FAKE_LLM === '1';
 if (real) {
-  await wireRealPorts(hub, { llm });
+  await wireRealPorts(hub, { llm, agentUrls: agentUrlsFromEnv() });
   hub.deps.log.info(`ports: real (brain, quiz, media), llm: ${llm.status().llm}`);
 } else {
   hub.deps.log.info('ports: stubs (GEMINI_API_KEY is not set)');
