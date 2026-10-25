@@ -249,3 +249,38 @@ describe('privacy', () => {
     expect(texts(t, G).join(' ')).not.toContain('@tutor');
   });
 });
+
+describe('@planner routes plan intents to the plan flows', () => {
+  const planSkill: Skill = {
+    ...quizSkill,
+    name: 'sharedPlan',
+    async handle(m) {
+      return [{ chatId: m.chatId, text: `plan flow: ${m.text}` }];
+    },
+  };
+  const mkPlan = () =>
+    createTestBot({
+      skills: [planSkill],
+      llm: new FakeLlm({ fallback: 'planner persona answer' }),
+    });
+  it('@planner study plan ... starts the study-plan flow, not the persona', async () => {
+    const t = mkPlan();
+    await t.say('s_ana', G, '@planner study plan for the exam on Nov 12');
+    expect(texts(t, G)).toHaveLength(1);
+    expect(texts(t, G)[0]).toMatch(/plan flow: @cubbie study plan for the exam on Nov 12/);
+    expect(texts(t, G)[0]).not.toMatch(/persona answer/);
+  });
+  it('other @planner messages (and trips, which the hub handles) keep the persona answer', async () => {
+    const t = mkPlan();
+    await t.say('s_ana', G, '@planner what should I do first this week?');
+    expect(texts(t, G)[0]).toMatch(/persona answer/);
+  });
+  it('plannerIntent classifies trip, study plan and neither', async () => {
+    const { plannerIntent } = await import('@squad/core');
+    expect(plannerIntent('plan a trip to Cabo')).toBe('trip');
+    expect(plannerIntent('trip to Lisbon in March')).toBe('trip');
+    expect(plannerIntent('study plan for the exam on Nov 12')).toBe('studyplan');
+    expect(plannerIntent('plan the midterm')).toBe('studyplan');
+    expect(plannerIntent('what is a z-score')).toBeNull();
+  });
+});
