@@ -29,7 +29,7 @@ const get = (k: string): string | undefined => process.env[k] || fileEnv[k] || u
 
 const HUB_PORT = Number(process.env.DEV_ALL_HUB_PORT || 8788);
 const WEB_PORT = Number(process.env.DEV_ALL_WEB_PORT || 5180);
-const STUDENTS = ['s_ana', 's_ben', 's_cam', 's_dev'] as const;
+const STUDENTS = ['s_ana', 's_ben', 's_chi', 's_dev'] as const;
 const AGENT_BASE = Number(process.env.DEV_ALL_AGENT_PORT_BASE || 4101);
 const AGENT_PORTS: Record<string, number> = Object.fromEntries(
   STUDENTS.map((id, i) => [id, AGENT_BASE + i]),
