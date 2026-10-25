@@ -123,3 +123,7 @@ export function oauthReturn(
     message: decodeMessage(p.get('message')),
   };
 }
+
+/** A squad as a person reads it: its name from the roster, never its raw id. */
+export const squadLabel = (id: string, names: Record<string, string> | undefined): string =>
+  names?.[id] ?? 'another squad';

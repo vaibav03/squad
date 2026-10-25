@@ -48,7 +48,7 @@ export const AGENT_ALIASES: readonly AgentAlias[] = [
     id: 'planner',
     kind: 'persona',
     name: 'Planner',
-    description: 'Turns it into steps, order and dates.',
+    description: 'Turns it into steps, order and dates. Starts trip and study plans.',
     aliases: ['planner'],
     personaId: 'planner',
   },
@@ -283,6 +283,22 @@ const TOKEN = /@([\p{L}][\p{L}\p{N}_]*)/gu;
  * - is not inside code, a link, a URL, a "quote" or a `>` block quote.
  * Matching is case-insensitive. Punctuation after the word (`,` `:` `?` `!` `.`) is fine.
  */
+/**
+ * What a plan request addressed to `@planner` means. `@planner plan a trip to Cabo` / `@planner ... trip ...` is the
+ * trip flow; `@planner study plan ...` (or `plan the midterm`) is the study-plan flow; anything else is a plain persona
+ * answer (null). A message naming both goes to the study plan only when it says "study plan".
+ */
+export function plannerIntent(rest: string): 'trip' | 'studyplan' | null {
+  if (
+    /\bstudy[\s-]*plan\b|\bplan\s+(?:for\s+)?(?:the\s+|our\s+|my\s+)?(?:midterm|final|exam)\b/i.test(
+      rest,
+    )
+  )
+    return 'studyplan';
+  if (/\btrips?\b/i.test(rest)) return 'trip';
+  return null;
+}
+
 export function parseMentions(text: string): ParsedMentions {
   const out: ParsedMentions = { mentions: [], unknownMention: [], rest: '' };
   if (typeof text !== 'string' || text.length === 0) return out;

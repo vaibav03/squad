@@ -3,6 +3,7 @@ import type { Citation } from '@squad/core';
 import { createDean } from '../dean';
 import { claimToCitation } from '../citations';
 import { answerFromContext } from '../context/answer';
+import { isConnectableQuestion } from '../context/answers';
 import type { ContextViewer } from '../context/types';
 import type { CourseStore } from '../ingest/types';
 import { BrainUnavailableError } from './errors';
@@ -11,6 +12,7 @@ import { defaultEmit } from './emit';
 import { createChapterExpert } from './expert';
 import {
   NOT_IN_MATERIALS,
+  NOTHING_CONNECTED,
   type Brain,
   type BrainDeps,
   type CaptionPipeline,
@@ -129,7 +131,7 @@ export function assembleBrain(deps: CreateBrainDeps): Brain {
         ...(ctxCourse ? { courseId: ctxCourse } : {}),
         limit: 4,
       });
-      if (hits.length === 0) return pdf;
+      if (hits.length === 0) return nothingConnected(pdf, question, opts.viewer as ContextViewer);
       const ctx = await answerFromContext(llm, question, hits);
       if (!ctx.grounded) return pdf;
       if (!pdf.grounded) return { ...ctx, struck: ctx.struck + pdf.struck };
@@ -143,6 +145,18 @@ export function assembleBrain(deps: CreateBrainDeps): Brain {
       };
     },
   };
+  /** V1: no readable source at all and a question only a connected source could answer: say so instead of "Ask the TA". */
+  function nothingConnected(
+    pdf: ExpertAnswer,
+    question: string,
+    viewer: ContextViewer,
+  ): ExpertAnswer {
+    const store = deps.context;
+    if (pdf.grounded || !store || !isConnectableQuestion(question)) return pdf;
+    return store.readableCount(viewer) > 0
+      ? pdf
+      : { ...pdf, text: NOTHING_CONNECTED, reason: 'nothing_connected' };
+  }
   async function askPdf(courseId: string, question: string): Promise<ExpertAnswer> {
     {
       const route = await dean.route(courseId, question);

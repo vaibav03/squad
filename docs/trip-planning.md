@@ -8,7 +8,7 @@ Code: `packages/core/src/trip.ts` (wire contract), `apps/hub/src/trips/*` (servi
 
 1. **Create.** Two entry points, same service call:
    - Group or DM chat: `@cubbie plan a trip to Cabo in March` (aliases `@cubbie`, `@cubbi`, `@squad`, `@planner`,
-     `@council`; in a DM no tag is needed). Without a destination Cubbie replies with the usage line.
+     `@council`; in a DM no tag is needed). `@planner` also accepts the looser `@planner trip to Lisbon in June` (any `@planner ... trip ...` with a destination); `@planner study plan ...` starts the study plan instead (see docs/study-plan.md). Without a destination Cubbie replies with the usage line.
    - Trip page: **Plan a trip** (no trip yet) or **Plan another trip** (after a trip ended, or on the seeded demo trip).
    The hub keeps trips per squad (`TripRecord.squadId`). Ids are `trip_<random>`; nothing is hard-coded. Real-account
    squads and the seeded `sq_demo` squad behave the same; the seeded `trip_cabo` stays addressable by trip id or task id.
