@@ -90,9 +90,14 @@ export function classifyReply(raw: string): ReplyKind {
 
 // ---------- spoken text guards ----------
 
-/** Sentences that mention grades, scores, percentages, fractions of marks or pass/fail are dropped. */
+/**
+ * Sentences that carry a real grade are dropped: percentages, x/10 or "x out of y", scores
+ * ("you scored", "score of 7", "score: 7"), "you got/earned ...", letter grades ("grade of B",
+ * "get a B+"), GPA, point/mark counts and pass/fail. The bare word "graded" or "grading" is not a
+ * grade: the intro line is a disclaimer ("nothing here is graded") and must stay speakable.
+ */
 const GRADE =
-  /\d+(?:\.\d+)?\s*(?:%|percent|per cent)|\b\d+\s*(?:\/|out of)\s*\d+\b|\b(?:grades?|graded|grading|scores?|scored|marks?|gpa|points?)\b|\b(?:pass(?:ed)?|fail(?:ed)?)\b|%/i;
+  /\d+(?:\.\d+)?\s*(?:%|percent|per cent)|\b\d+\s*(?:\/|out of)\s*\d+\b|\b(?:grade|score|mark)s?\s*(?:of|is|was|will be|:|=)\s*(?:an?\s+)?[\w+-]|\byou(?:'ve| have|'d| would| will| just)?\s*(?:scored|earned|received|achieved)\b|\byou(?:'ve| have|'d| would| will| just)?\s*(?:got|get|gotten)\s+(?:an?\s+)?(?:\d|full\b|top\b|perfect\b|zero\b|half\b|[A-F][+-]?(?![\w']))|\b(?:full|top|half|zero|no)\s+(?:marks|points|credit)\b|\b\d+\s*(?:points?|marks?)\b|\bgpa\b|\b(?:pass(?:ed)?|fail(?:ed)?)\b|%/i;
 
 export function hasGrade(text: string): boolean {
   return GRADE.test(text);
