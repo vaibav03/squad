@@ -12,6 +12,16 @@ const mod: SceneModule = {
   order: 410,
   create(ctx) {
     const bridge = createOverlayBridge({
+      // Input: the world locks on 'overlay' and unlocks on closeOverlay / overlayClosed, so
+      // resumeInput is intentionally not passed (emitting overlayClosed here would echo back).
+      // Focus: after a programmatic close with nothing queued, hand focus back to the canvas.
+      focusCanvas: () => {
+        try {
+          (ctx.game.canvas as HTMLCanvasElement | undefined)?.focus?.();
+        } catch {
+          /* no canvas (tests, headless) */
+        }
+      },
       // The world's OverlayEvent union gains `openConfirm` (requested); until then it is passed through as-is.
       onOverlay: (e: OverlayEvent) =>
         ctx.bus.emit('overlay', e as unknown as VillageBusEvents['overlay']),

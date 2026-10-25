@@ -16,7 +16,12 @@ export interface OverlayBridgeOptions {
   pauseInput?: () => void;
   resumeInput?: () => void;
   focusCanvas?: () => void;
+  /** Injectable clock for the echo guard. */
+  now?: () => number;
 }
+
+/** A host `closed()` without a kind this soon after we closed programmatically is our own echo. */
+const ECHO_MS = 250;
 
 export interface OverlayBridge {
   /** Execute an adapter `openOverlay` request. */
@@ -60,6 +65,8 @@ export function createOverlayBridge(opts: OverlayBridgeOptions): OverlayBridge {
   let current: { kind: OverlayKind; key: string } | undefined;
   const queue: OverlayEvent[] = [];
   let disposed = false;
+  const now = opts.now ?? (() => Date.now());
+  let progCloseAt = -Infinity;
 
   const show = (e: OverlayEvent) => {
     const kind = kindOf(e)!;
@@ -96,12 +103,22 @@ export function createOverlayBridge(opts: OverlayBridgeOptions): OverlayBridge {
         case 'openConfirm':
           return request({ type: 'openConfirm', taskId: req.taskId, question: req.question });
         case 'close': {
-          // drop queued ones of that kind; if it is the open one, tell the host and move on
+          // Only overlays that match the given callId / taskId (if any) are dropped or closed:
+          // a close for someone else's call must not touch mine.
+          const wanted =
+            req.which === 'call' && req.callId !== undefined
+              ? `call:${req.callId}`
+              : req.which === 'confirm' && req.taskId !== undefined
+                ? `confirm:${req.taskId}`
+                : undefined;
+          const matches = (kind: OverlayKind | undefined, key: string) =>
+            kind === req.which && (wanted === undefined || key === wanted);
           for (let i = queue.length - 1; i >= 0; i--)
-            if (kindOf(queue[i]!) === req.which) queue.splice(i, 1);
-          if (current?.kind === req.which) {
+            if (matches(kindOf(queue[i]!), keyOf(queue[i]!))) queue.splice(i, 1);
+          if (current && matches(current.kind, current.key)) {
             opts.onOverlay({ type: 'closeOverlay', which: req.which });
             current = undefined;
+            progCloseAt = now();
             dequeue();
           }
           return;
@@ -116,6 +133,7 @@ export function createOverlayBridge(opts: OverlayBridgeOptions): OverlayBridge {
       else if (!disposed) opts.onOverlay({ type: 'focusAgent', agent: agentId });
     },
     closed(which) {
+      if (!which && now() - progCloseAt < ECHO_MS) return; // echo of our own closeOverlay
       if (!current || (which && current.kind !== which)) return;
       current = undefined;
       dequeue();

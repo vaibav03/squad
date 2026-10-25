@@ -1,6 +1,6 @@
 import type Phaser from 'phaser';
 import type { VillageContext } from '../world/api';
-import { pixelText, snap, tween } from './util';
+import { bubbleBody, pixelText, snap, tween } from './util';
 
 const PAD_X = 4;
 const PAD_Y = 3;
@@ -8,7 +8,6 @@ const TAIL_H = 6;
 const GAP = 6;
 const MAX_BUBBLES = 12;
 const WRAP_PX = 92; // about 20 characters of the pixel font
-const MAX_LINES = 3;
 
 export interface BubbleSpec {
   key: string;
@@ -53,10 +52,7 @@ export function createBubbles(ctx: VillageContext): BubbleManager {
   const build = (spec: BubbleSpec): Live | undefined => {
     const a = spec.anchor();
     if (!a) return undefined;
-    const body = [
-      spec.text,
-      ...(spec.lines ?? []).slice(0, MAX_LINES).map((l) => (spec.bullets === false ? l : `- ${l}`)),
-    ].join('\n');
+    const body = bubbleBody(spec.text, spec.lines, spec.bullets !== false);
     const label = pixelText(ctx, body, { color: 'ink', wrap: WRAP_PX, size: 9.333 });
     const withIcon = spec.tone === 'alert' && spec.icon !== false;
     const iconW = withIcon ? 10 : 0;
@@ -95,6 +91,9 @@ export function createBubbles(ctx: VillageContext): BubbleManager {
     tail.x = Math.min(Math.max(Math.round(a.x - x) - 3, -half + 6), half - 12);
   };
 
+  /** Live objects (leaving ones included) never exceed MAX_BUBBLES. */
+  const full = (key: string) => !live.has(key) && live.size >= MAX_BUBBLES;
+
   const exit = (b: Live) => {
     if (b.leaving) return;
     b.leaving = true;
@@ -112,7 +111,7 @@ export function createBubbles(ctx: VillageContext): BubbleManager {
   const pump = () => {
     for (let i = 0; i < queued.length; i++) {
       const s = queued[i]!;
-      if (s.lane && laneBusy(s.lane)) continue;
+      if ((s.lane && laneBusy(s.lane)) || full(s.key)) continue;
       queued.splice(i, 1);
       start(s);
       i--;
@@ -122,14 +121,10 @@ export function createBubbles(ctx: VillageContext): BubbleManager {
   const start = (spec: BubbleSpec) => {
     const old = live.get(spec.key);
     if (old) {
-      old.box.destroy();
       old.timer?.remove(false);
+      ctx.scene.tweens.killTweensOf(old.box);
+      old.box.destroy();
       live.delete(spec.key);
-    }
-    // cap: drop the oldest when over the pool limit
-    if (live.size >= MAX_BUBBLES) {
-      const oldest = [...live.values()].sort((a, b) => a.bornAt - b.bornAt)[0];
-      if (oldest) exit(oldest);
     }
     const b = build(spec);
     if (!b) return;
@@ -143,14 +138,18 @@ export function createBubbles(ctx: VillageContext): BubbleManager {
 
   return {
     show(spec) {
-      if (spec.lane && laneBusy(spec.lane)) queued.push(spec);
-      else start(spec);
+      // never evict a bubble still within its dwell: a full pool queues the new one until a slot frees up
+      if ((spec.lane && laneBusy(spec.lane)) || full(spec.key)) {
+        const qi = queued.findIndex((q) => q.key === spec.key);
+        if (qi >= 0) queued.splice(qi, 1);
+        queued.push(spec);
+      } else start(spec);
     },
     dismiss(key) {
       const qi = queued.findIndex((q) => q.key === key);
       if (qi >= 0) queued.splice(qi, 1);
       const b = live.get(key);
-      if (!b) return;
+      if (!b || b.leaving) return;
       // words stay for their full dwell: dismiss only schedules the exit after minMs
       const left = Math.max(0, b.spec.minMs - (ctx.scene.time.now - b.bornAt));
       b.timer?.remove(false);
@@ -165,6 +164,7 @@ export function createBubbles(ctx: VillageContext): BubbleManager {
     destroy() {
       for (const b of live.values()) {
         b.timer?.remove(false);
+        ctx.scene.tweens.killTweensOf(b.box);
         b.box.destroy();
       }
       live.clear();

@@ -41,6 +41,13 @@ export interface FeedOptions {
   now?: () => number;
   setTimeout?: (fn: () => void, ms: number) => unknown;
   clearTimeout?: (h: unknown) => void;
+  /** Known agents (idle ones included, e.g. the viewer's own house); seeded as idle entries. */
+  agents?: readonly { id: string; name?: string; kind?: FeedEntry['kind'] }[];
+  /**
+   * Places to list besides the fixed ones. Each gets an action `{ id: 'go:<id>', label: 'Walk to <name>' }`.
+   * The host maps action ids to behaviour ('go:hall', 'go:board', 'go:trip' and 'go:<slotId>'); there is no OverlayRequest.
+   */
+  places?: readonly { id: string; name: string }[];
 }
 
 export interface AgentFeed {
@@ -64,9 +71,13 @@ const STATE_WORDS: Record<AgentState, { words: string; icon: StateIcon }> = {
 const MIN_GAP_MS = 600;
 const QUEUE_CAP = 20;
 const DETAIL_MAX = 80;
+/** The same text is announced again once this long has passed (looping replay, same verdict twice). */
+const REPEAT_MS = 5000;
 
 interface AgentRec {
   id: string;
+  name?: string;
+  kind?: FeedEntry['kind'];
   state: AgentState;
   detail: string;
   call?: { callId: string; mine: boolean };
@@ -95,6 +106,15 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
   let timer: unknown;
   let disposed = false;
 
+  for (const a of opts.agents ?? [])
+    agents.set(a.id, {
+      id: a.id,
+      state: 'idle',
+      detail: '',
+      ...(a.name ? { name: a.name } : {}),
+      ...(a.kind ? { kind: a.kind } : {}),
+    });
+
   const rec = (id: string): AgentRec => {
     let r = agents.get(id);
     if (!r) agents.set(id, (r = { id, state: 'idle', detail: '' }));
@@ -104,9 +124,11 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
 
   const entryFor = (r: AgentRec): FeedEntry => {
     const { kind } = parseAgentId(r.id);
-    const k = (
-      ['student', 'expert', 'council', 'dean', 'mediator'].includes(kind) ? kind : 'expert'
-    ) as FeedEntry['kind'];
+    const k =
+      r.kind ??
+      ((['student', 'expert', 'council', 'dean', 'mediator'].includes(kind)
+        ? kind
+        : 'expert') as FeedEntry['kind']);
     const sw = STATE_WORDS[r.state];
     const actions: FeedAction[] = [];
     if (r.call?.mine) {
@@ -136,7 +158,7 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
     return {
       id: r.id,
       kind: k,
-      name: agentName(r.id),
+      name: r.name ?? agentName(r.id),
       state: sw.words,
       stateIcon: sw.icon,
       detail: r.detail,
@@ -149,7 +171,8 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
     const list = [...agents.values()]
       .map(entryFor)
       .sort((a, b) => order[a.kind] - order[b.kind] || a.name.localeCompare(b.name));
-    const small = opts.squadSize !== undefined && opts.squadSize < 3;
+    // Fail closed: unknown squad size hides counts.
+    const small = opts.squadSize === undefined || opts.squadSize < 3;
     const places: FeedEntry[] = [
       {
         id: 'place:council-hall',
@@ -193,6 +216,16 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
         actions: [{ id: 'go:trip', label: 'Go to Trip door', enabled: true }],
       });
     }
+    for (const p of opts.places ?? [])
+      places.push({
+        id: `place:${p.id}`,
+        kind: 'place',
+        name: p.name,
+        state: 'open',
+        stateIcon: 'place',
+        detail: '',
+        actions: [{ id: `go:${p.id}`, label: `Walk to ${p.name}`, enabled: true }],
+      });
     return { entries: [...list, ...places] };
   };
 
@@ -207,7 +240,7 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
     if (disposed) return;
     const next = queue.shift();
     if (!next) return;
-    if (next.text === lastText) {
+    if (next.text === lastText && now() - lastAnn < REPEAT_MS) {
       drain();
       return;
     }
@@ -218,7 +251,7 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
   };
   const enqueue = (a: Announcement) => {
     if (queue.length && queue[queue.length - 1]!.text === a.text) return;
-    if (!queue.length && a.text === lastText) return;
+    if (!queue.length && a.text === lastText && now() - lastAnn < REPEAT_MS) return;
     if (queue.length >= QUEUE_CAP) queue.shift();
     queue.push(a);
     if (timer === undefined) {
@@ -262,7 +295,9 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
           break;
         }
         case 'chalkboard':
-          if (c.mark !== 'question') delete agents.get(`expert:${c.chapter}`)?.quiz;
+          // Only my own answer clears my 'Answer quiz' action.
+          if (c.mine === true && c.mark !== 'question')
+            delete agents.get(`expert:${c.chapter}`)?.quiz;
           break;
         case 'showBubble':
           if (c.style === 'caption' && c.at.kind === 'agent') rec(c.at.agent).detail = clip(c.text);
@@ -286,10 +321,10 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
     notify();
   };
 
+  const apply = (event: unknown) => fold(adaptUnknown(event as VillageEvent, ctx));
+
   return {
-    apply(event) {
-      fold(adaptUnknown(event as VillageEvent, ctx));
-    },
+    apply,
     applyCommands: fold,
     snapshot,
     subscribe(fn) {
@@ -301,7 +336,7 @@ export function createAgentFeed(opts: FeedOptions): AgentFeed {
       return () => annSubs.delete(fn);
     },
     attach(source) {
-      return source.subscribe((e) => this.apply(e));
+      return source.subscribe((e) => apply(e));
     },
     dispose() {
       disposed = true;

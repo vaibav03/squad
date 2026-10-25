@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SENTINELS, VILLAGE_EVENT_TYPES, assertNoLeak } from '@squad/core';
 import type { VillageEvent, VillageEventType } from '@squad/core';
 import { adapt, adaptUnknown } from './adapt';
+import { createAdapter } from './module';
 import type { SceneCommand } from './commands';
 
 const ctx = { me: 's_ana' };
@@ -165,8 +166,11 @@ describe('confirm', () => {
     expect(find(mine, 'ring')).toMatchObject({ agent: 'student:s_ana', on: true });
     expect(find(mine, 'openOverlay')?.request).toMatchObject({ overlay: 'openConfirm' });
     const other = adapt({ ...SAMPLES['confirm.pending'], student: 's_ben' } as VillageEvent, ctx);
-    expect(tags(other)).not.toContain('openOverlay');
-    expect(find(other, 'ring')?.on).toBe(true);
+    expect(other).toEqual([]);
+  });
+  it('done for another student yields nothing (no announce, no ring)', () => {
+    const other = adapt({ ...SAMPLES['confirm.done'], student: 's_ben' } as VillageEvent, ctx);
+    expect(other).toEqual([]);
   });
   it('done: ring off, tick, overlay closed for me', () => {
     const out = adapt(SAMPLES['confirm.done'], ctx);
@@ -218,10 +222,25 @@ describe('quiz', () => {
         ?.mark,
     ).toBe('tick');
     expect(
-      find(adapt({ ...SAMPLES['quiz.result'], correct: false } as VillageEvent, ctx), 'chalkboard')
-        ?.mark,
+      find(
+        adapt({ ...SAMPLES['quiz.result'], student: 's_ana', correct: false } as VillageEvent, ctx),
+        'chalkboard',
+      )?.mark,
     ).toBe('cross');
     expect(find(adapt(SAMPLES['quiz.answer'], ctx), 'chalkboard')?.mark).toBe('none');
+  });
+  it("another student's answer is never ticked or crossed on my board", () => {
+    for (const t of ['quiz.answer', 'quiz.result'] as const) {
+      const ev = { ...SAMPLES[t], student: 's_ben', correct: false } as VillageEvent;
+      expect(find(adapt(ev, ctx), 'chalkboard')).toMatchObject({ mark: 'none', mine: false });
+      const mine = { ...SAMPLES[t], student: 's_ana', correct: false } as VillageEvent;
+      expect(find(adapt(mine, ctx), 'chalkboard')).toMatchObject({ mark: 'cross', mine: true });
+    }
+  });
+  it('question carries mine when I am the target', () => {
+    expect(find(adapt(SAMPLES['quiz.question'], ctx), 'chalkboard')?.mine).toBe(true);
+    const other = adapt({ ...SAMPLES['quiz.question'], target: 's_ben' } as VillageEvent, ctx);
+    expect(find(other, 'chalkboard')?.mine).toBe(false);
   });
 });
 
@@ -381,5 +400,61 @@ describe('sentinel: no withheld value reaches any bubble or label', () => {
       };
       assertNoLeak(adapt(ev, ctx), SENTINELS, `sweep ${i}`);
     }
+  });
+});
+
+describe('review fixes', () => {
+  it('envelope id includes the shared labels', () => {
+    const mk = (shared: string[]) =>
+      find(
+        adapt(
+          {
+            t: 'agent.message',
+            from: 'student:s_ben',
+            to: 'commons',
+            taskId: 't',
+            kind: 'propose',
+            shared,
+          },
+          ctx,
+        ),
+        'spawnEnvelope',
+      )?.id;
+    expect(mk(['a'])).not.toBe(mk(['b']));
+    expect(mk(['a', 'b'])).toContain('a|b');
+  });
+  it('query_denied ledger card names a student sender, else mediator', () => {
+    const card = (from: string) =>
+      find(
+        adapt(
+          {
+            t: 'agent.message',
+            from,
+            to: 'commons',
+            taskId: 't',
+            kind: 'query_denied',
+            shared: [],
+          },
+          ctx,
+        ),
+        'ledgerCard',
+      )?.student;
+    expect(card('student:s_ben')).toBe('s_ben');
+    expect(card('expert:ch5')).toBe('mediator');
+    expect(card('dean')).toBe('mediator');
+    expect(card('mediator')).toBe('mediator');
+  });
+  it("createAdapter drops captions of someone else's call and forgets on call.end", () => {
+    const a = createAdapter({ me: 's_ana' });
+    const cap = (callId: string) =>
+      a.adapt({ t: 'call.caption', agent: 'dean', callId, text: 'hello' } as VillageEvent);
+    a.adapt({ t: 'call.start', agent: 'dean', callId: 'c1', student: 's_ben' } as VillageEvent);
+    a.adapt({ t: 'call.start', agent: 'dean', callId: 'c2', student: 's_ana' } as VillageEvent);
+    a.adapt({ t: 'call.start', agent: 'dean', callId: 'c3' } as VillageEvent);
+    expect(cap('c1')).toEqual([]);
+    expect(cap('c2')).toHaveLength(1);
+    expect(cap('c3')).toHaveLength(1);
+    a.adapt({ t: 'call.end', agent: 'dean', callId: 'c1' } as VillageEvent);
+    expect(cap('c1')).toHaveLength(1); // forgotten
   });
 });

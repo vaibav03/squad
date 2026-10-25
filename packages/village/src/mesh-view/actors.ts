@@ -6,8 +6,15 @@ import { agentName } from '../adapter';
 import { pixelText, snap, tween } from './util';
 
 const WALK_PX_PER_S = 48; // constant speed, never eased (spec 08 row 3; motion-api default)
-const STOP_PX = 4;
 const STOP_MS = 80;
+/**
+ * Stop segment (spec 08 row 3: "80 ms ease-out stop, whole pixels"). The ease-out curve must stay one of the
+ * three tokens, so instead of a new curve the distance is chosen to match velocity: cubic-bezier(.23,1,.32,1)
+ * starts at slope y1/x1 = 1/.23, so the stop begins at STOP_PX*4.35/STOP_MS px per ms. Setting that equal to the
+ * walking speed gives STOP_PX = 48*0.08/4.35 = 0.88 px, which rounds to one whole pixel: no speed jump between
+ * the constant walk and the stop (the previous 4 px stop started at ~4x the walking speed, a visible lurch).
+ */
+const STOP_PX = Math.max(1, Math.round((WALK_PX_PER_S * (STOP_MS / 1000)) / (1 / 0.23)));
 
 /** Student agents must not look like the viewer's own character (the 'student' cast): stable pick by first sight. */
 const AGENT_CASTS = ['ta', 'freshman', 'expert'] as const;
@@ -123,6 +130,7 @@ export function createActors(ctx: VillageContext): ActorManager {
     let chain: Promise<void> = Promise.resolve();
     let moving: Phaser.Tweens.Tween | undefined;
     let tagOn = false;
+    let walking = false;
     const placeTag = () => {
       const cam = ctx.scene.cameras.main;
       const x = Math.min(
@@ -155,9 +163,11 @@ export function createActors(ctx: VillageContext): ActorManager {
           );
           return;
         }
+        walking = true;
         sprite.play(`mv-${persona}-walk`, true);
         const lead = Math.max(0, dist - STOP_PX);
         const finish = () => {
+          walking = false;
           sprite.play(`mv-${persona}-idle`, true);
           resolve();
         };
@@ -209,11 +219,19 @@ export function createActors(ctx: VillageContext): ActorManager {
         if (on) placeTag();
       },
       update() {
+        // Calm is read live: no idle breathing, a still first frame; it resumes when Calm turns off
+        if (!walking) {
+          if (ctx.calm && sprite.anims.isPlaying) {
+            sprite.anims.stop();
+            sprite.setFrame(`${persona}/idle/0`);
+          } else if (!ctx.calm && !sprite.anims.isPlaying) sprite.play(`mv-${persona}-idle`);
+        }
         shadow.setPosition(sprite.x, g).setAlpha(sprite.alpha);
         if (tagOn) placeTag();
       },
       destroy() {
         moving?.stop();
+        ctx.scene.tweens.killTweensOf([sprite, shadow, tag]);
         shadow.destroy();
         tag.destroy();
         sprite.destroy();

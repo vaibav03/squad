@@ -138,7 +138,10 @@ export function createBoard(ctx: VillageContext): Board {
     pin(card) {
       const i = next++ % SLOTS.length;
       const [sx, sy] = SLOTS[i]!;
-      cards[i]?.destroy();
+      if (cards[i]) {
+        sc.tweens.killTweensOf(cards[i]!);
+        cards[i]!.destroy();
+      }
       const key =
         card.kind === 'shared'
           ? 'mv-card-shared'
@@ -159,7 +162,11 @@ export function createBoard(ctx: VillageContext): Board {
     anchor: () => ({ x, y: top + 2 }),
     destroy() {
       img.destroy();
-      cards.forEach((c) => c?.destroy());
+      cards.forEach((c) => {
+        if (!c) return;
+        sc.tweens.killTweensOf(c);
+        c.destroy();
+      });
     },
   };
 }

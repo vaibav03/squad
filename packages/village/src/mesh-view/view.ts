@@ -10,6 +10,7 @@ import { createEnvelopes } from './envelopes';
 import { createHomes } from './homes';
 import { createPlaceResolver } from './places';
 import { createBoard, createCampfire } from './props';
+import { nextStagger } from './util';
 
 const BUBBLE_LANE_COMMONS = 'commons';
 const BUBBLE_LANE_BOARD = 'board';
@@ -38,6 +39,7 @@ export function createMeshView(
   let pinIndex = 0;
   let destroyed = false;
   let lastPan = -Infinity;
+  const handOffStarts: number[] = []; // concurrent hand-offs stagger by 60 ms each (spec 08 row 7)
 
   /**
    * Mesh activity can happen off-screen. When the focus is outside the view and the student is not walking
@@ -209,16 +211,22 @@ export function createMeshView(
 
   /** Envelope arrives with its carrier at the commons: pin at the fire, or glide to the recipient's door. */
   const handOff = (env: ReturnType<typeof envs.get> & object, carrier: Actor) => {
+    const staggerIndex = nextStagger(handOffStarts, ctx.scene.time.now);
     if (env.to === 'commons') {
       envs.glide(env, camp.pinSpot(pinIndex++), {
         rest: true,
+        staggerIndex,
         onDone: () => carrier.showTag(false),
       });
       return;
     }
     const dx = places.doorX(env.to);
     actorFor(env.to); // recipient steps out to receive
-    envs.glide(env, { x: dx, y: g - 36 }, { rest: false, onDone: () => carrier.showTag(false) });
+    envs.glide(
+      env,
+      { x: dx, y: g - 36 },
+      { rest: false, staggerIndex, onDone: () => carrier.showTag(false) },
+    );
   };
 
   return {
