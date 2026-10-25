@@ -71,7 +71,7 @@ describe('no raw ids while cycling the inspector', () => {
         await settle();
         const ids = store.ids();
         for (let i = 0; i < ids.length * 2 + 2; i++) {
-          for (const tab of ['Doing', 'Thinking', 'Chat', 'Agents', 'Hierarchy']) {
+          for (const tab of ['Conversation', 'Activity', 'Decisions']) {
             fireEvent.click(screen.getByRole('tab', { name: new RegExp(`^${tab}`) }));
             for (const t of scan()) expect(t, `step ${i} ${tab}`).not.toMatch(RAW);
           }

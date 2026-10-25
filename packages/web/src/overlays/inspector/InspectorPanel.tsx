@@ -344,7 +344,7 @@ export function InspectorPanel({
           )}
         </section>
       )}
-      {board?.has(v.id) && <HierarchyTab agentId={v.id} board={board} inspector={store} />}
+      {(isCouncil || board?.has(v.id)) && <HierarchyTab agentId={v.id} board={board} inspector={store} />}
     </div>
   );
 
