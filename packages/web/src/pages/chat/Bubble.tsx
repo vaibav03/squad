@@ -4,6 +4,7 @@ import { Icon } from '../../primitives/Icon';
 import { Markdown } from '../../primitives/Markdown';
 import { ConfirmMessageCard, QuizMessageCard } from './cards';
 import { CouncilChatCard } from '../../council';
+import { LiveChatCard } from '../../live/LiveChatCard';
 import { useSquadConfig } from '../../shell/context';
 import { AudioPlayer, ImageAttachment } from './media';
 import { ChatAvatar } from './parts';
@@ -201,6 +202,16 @@ export function MessageBubble(p: BubbleProps) {
         {m.card?.type === 'council' ? (
           <div data-testid="chat-council-card">
             <CouncilChatCard hub={hub} runId={m.card.runId} calm={p.reduced} />
+          </div>
+        ) : null}
+        {m.card?.type === 'live' ? (
+          <div data-testid="chat-live-card">
+            <LiveChatCard
+              hub={hub}
+              liveId={m.card.liveId}
+              {...(m.card.topic ? { topic: m.card.topic } : {})}
+              calm={p.reduced}
+            />
           </div>
         ) : null}
         {m.card?.type === 'confirm' ? (
