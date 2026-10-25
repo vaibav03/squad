@@ -4,28 +4,24 @@ export const HOME_CHECKLIST = [
     title: 'Link your phone',
     body: 'So your agent can text you in iMessage.',
     to: '/squad/setup/phone',
-    done: false,
   },
   {
     key: 'courses',
     title: 'Add your course PDFs',
     body: 'Your experts learn from these chapters.',
     to: '/squad/setup/courses',
-    done: false,
   },
   {
     key: 'calendar',
     title: 'Share your busy times',
     body: 'Only free or busy leaves your device.',
     to: '/squad/setup/calendar',
-    done: false,
   },
   {
     key: 'persona',
     title: 'Pick your study buddy',
     body: 'Choose a voice and a face you like.',
     to: '/squad/personas',
-    done: false,
   },
 ] as const;
 

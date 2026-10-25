@@ -2,6 +2,9 @@ import type { Context, MiddlewareHandler } from 'hono';
 import { verifyToken } from '../auth';
 import type { HubDeps } from '../types';
 
+/** Streams that hold a connection open: the two legacy SSEs and the multiplexed one. */
+const STREAM_PATHS = new Set(['/v1/squad/stream', '/v1/stream']);
+
 const deny = (c: Context, status: 403 | 404, code: string) => c.json({ error: { code } }, status);
 
 /**
@@ -31,12 +34,14 @@ export function ledgerScope(
 export function sseCap(max: number, userOf: (c: Context) => string | undefined): MiddlewareHandler {
   const open = new Map<string, number>();
   return async (c, next) => {
-    if (new URL(c.req.url).pathname !== '/v1/squad/stream') return next();
+    if (!STREAM_PATHS.has(new URL(c.req.url).pathname)) return next();
     const u = userOf(c);
     if (!u) return next();
     const n = open.get(u) ?? 0;
     if (n >= max)
-      return c.json({ error: { code: 'rate_limited', message: 'too many streams' } }, 429);
+      return c.json({ error: { code: 'rate_limited', message: 'too many streams' } }, 429, {
+        'retry-after': '5',
+      });
     open.set(u, n + 1);
     let released = false;
     const release = () => {
@@ -87,7 +92,7 @@ export function sseCap(max: number, userOf: (c: Context) => string | undefined):
  */
 export function streamTokenOnly(deps: HubDeps): MiddlewareHandler {
   return async (c, next) => {
-    if (new URL(c.req.url).pathname !== '/v1/squad/stream' || c.req.header('authorization'))
+    if (!STREAM_PATHS.has(new URL(c.req.url).pathname) || c.req.header('authorization'))
       return next();
     const st = c.req.query('st');
     if (st && !verifyToken(deps.config.authSecret, st, ['stream'], deps.now()))
