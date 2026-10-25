@@ -1,0 +1,102 @@
+[
+  {
+    "t": "agent.state",
+    "agent": "expert:rubric",
+    "state": "studying"
+  },
+  {
+    "t": "council.opinion",
+    "councilId": "council:rubric",
+    "member": "clarity",
+    "text": "Met. The order of ideas is easy to follow."
+  },
+  {
+    "t": "quiz.result",
+    "quizId": "rubric:hw1-1",
+    "chapter": "rubric:hw1",
+    "student": "s_ana",
+    "correct": true
+  },
+  {
+    "t": "council.opinion",
+    "councilId": "council:rubric",
+    "member": "accuracy",
+    "text": "Met. You picked the median for skewed data and said why."
+  },
+  {
+    "t": "quiz.result",
+    "quizId": "rubric:hw1-2",
+    "chapter": "rubric:hw1",
+    "student": "s_ana",
+    "correct": true
+  },
+  {
+    "t": "council.opinion",
+    "councilId": "council:rubric",
+    "member": "gaps",
+    "text": "Not yet. Spread is not mentioned at all. (no quote found)"
+  },
+  {
+    "t": "quiz.result",
+    "quizId": "rubric:hw1-3",
+    "chapter": "rubric:hw1",
+    "student": "s_ana",
+    "correct": false
+  },
+  {
+    "t": "council.verdict",
+    "councilId": "council:rubric",
+    "member": "judge",
+    "text": "Rubric check: two of three criteria met. Feedback only, no grade.",
+    "outcome": {
+      "title": "Rubric check: hw1",
+      "summary": "Two of three criteria met. Feedback only, so there is no grade; the answer stays yours.",
+      "items": [
+        {
+          "label": "Clarity",
+          "detail": "Clear: The order of ideas is easy to follow."
+        },
+        {
+          "label": "Accuracy",
+          "detail": "Accurate: You picked the median for skewed data and said why."
+        },
+        {
+          "label": "Gaps",
+          "detail": "Gaps remain: Spread is not mentioned at all. (no quote found)"
+        }
+      ],
+      "facts": [
+        {
+          "label": "Criteria met",
+          "value": "two of three"
+        },
+        {
+          "label": "Mode",
+          "value": "Feedback only"
+        }
+      ],
+      "why": [
+        {
+          "who": "clarity",
+          "text": "Met: \"The mean adds all the values and divides by how many there are\" The order of ideas is easy to follow."
+        },
+        {
+          "who": "accuracy",
+          "text": "Met: \"I used the median for the skewed data\" You picked the median for skewed data and said why."
+        },
+        {
+          "who": "gaps",
+          "text": "Not yet: Spread is not mentioned at all. (no quote found)"
+        }
+      ],
+      "notes": [
+        "Feedback only: no grade, and the answer stays yours."
+      ]
+    }
+  },
+  {
+    "t": "agent.state",
+    "agent": "expert:rubric",
+    "state": "idle"
+  }
+]
