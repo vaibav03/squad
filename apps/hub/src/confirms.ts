@@ -15,7 +15,8 @@ export type ConfirmOutcome =
         | 'unsupported_kind'
         | 'invalid_request'
         | 'upstream_failed'
-        | 'already_answered';
+        | 'already_answered'
+        | 'expired';
       message?: string;
     };
 
@@ -26,6 +27,18 @@ export interface ConfirmPreview {
   options: string[];
   kind: string;
   mode: 'pick' | 'yesno';
+  /** Epoch ms when the question stops accepting answers. */
+  expiresAt?: number;
+  /** Original ask for "Ask again" (see ChatCard.reask). */
+  reask?: { chatId: string; text: string };
+}
+
+/** Why a task that is visible to the viewer can no longer be answered. */
+export interface ConfirmClosed {
+  state: 'expired' | 'answered';
+  answer?: string;
+  /** Original ask, so a closed card can still offer "Ask again". */
+  reask?: { chatId: string; text: string };
 }
 
 /** One kind of confirmable task. `owns` must be cheap and side-effect free. */
@@ -35,11 +48,19 @@ export interface ConfirmHandler {
   answer(viewer: Viewer, taskId: string, a: ConfirmAnswer): Promise<ConfirmOutcome>;
   /** Optional: what to show for this task (question + options). */
   preview?(viewer: Viewer, taskId: string): ConfirmPreview | undefined;
+  /** Optional: the closed state (expired / answered) of a task the viewer owns. */
+  closed?(viewer: Viewer, taskId: string): ConfirmClosed | undefined;
+  /** Optional DEV/E2E: expire every open confirm of the viewer through the normal timeout path. */
+  expireAll?(viewer: Viewer): number;
 }
 
 export interface ConfirmRouter {
   /** Preview for the viewer's own open confirm; undefined (404) for unknown tasks and other students' tasks. */
   preview(viewer: Viewer, taskId: string): ConfirmPreview | undefined;
+  /** Expired / already-answered state of the viewer's own task (undefined = open or unknown). */
+  closed(viewer: Viewer, taskId: string): ConfirmClosed | undefined;
+  /** DEV/E2E only: times out the viewer's open confirms; returns how many. */
+  expireAll(viewer: Viewer): number;
   register(h: ConfirmHandler): void;
   /** Where each student's mesh agent listens (for the `agent` handler); unset = that kind is unsupported. */
   setAgentUrls(urls: Record<string, string>): void;
@@ -132,6 +153,12 @@ export function createConfirmRouter(
     setAgentUrls: (u) => void (agentUrls = { ...u }),
     preview(viewer, taskId) {
       return handlers.find((x) => x.owns(taskId, viewer))?.preview?.(viewer, taskId);
+    },
+    closed(viewer, taskId) {
+      return handlers.find((x) => x.owns(taskId, viewer))?.closed?.(viewer, taskId);
+    },
+    expireAll(viewer) {
+      return handlers.reduce((n, h) => n + (h.expireAll?.(viewer) ?? 0), 0);
     },
     async answer(viewer, taskId, a) {
       const h = handlers.find((x) => x.owns(taskId, viewer));
