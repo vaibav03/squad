@@ -193,6 +193,7 @@ export async function runDebateV2(
   const run: AgentRun = deps.agents.runtime.startRun({
     correlationId: cnId(),
     councilKey: DEBATE_COUNCIL,
+    question: question.slice(0, 600),
     mode,
     visibility: 'squad',
     ...(deps.askedBy ? { owner: { askedBy: deps.askedBy } } : {}),

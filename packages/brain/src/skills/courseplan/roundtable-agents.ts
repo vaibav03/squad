@@ -193,6 +193,7 @@ export async function runCoursePlanAgents(
     run = deps.agents.runtime.startRun({
       correlationId: (deps.newRunId ?? randomRunId)(),
       councilKey: ROUNDTABLE_KEY,
+      question: `Plan my ${input.term} courses`,
       mode,
       visibility: 'squad',
       ...(deps.askedBy ? { owner: { askedBy: deps.askedBy } } : {}),

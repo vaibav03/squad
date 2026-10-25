@@ -121,3 +121,17 @@ pnpm --filter @squad/hub test:smoke   # real service + demo model end to end
 
 Council runs will also publish `a2a.message` and `council.stage` village events and an optional `mode` on the legacy
 council events. See `docs/a2a.md` for the envelope, the privacy rules and the replay fixtures.
+
+## 8. Council live UX endpoints (council-live-ux)
+
+All need the viewer token (`?st=` for the SSE one). Details and the UI: `docs/council-live-ux.md`.
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /v1/council/ask` | body now also takes `transport: "stream" \| "live"` (default `COUNCIL_TRANSPORT`, `stream`). The result carries `transport { kind, label, requested?, why?, models? }`. |
+| `GET /v1/council/status` | `CouncilStatus`: provider `Google Gemini`, model ids per tier and for Live, key state `ok \| credits_depleted \| no_key \| rate_limited` with the exact fix text, transports (stream availability, Live `enabled \| state untested/ok/unavailable \| why`), `demo.forced`, A2A counters of the viewer's squad. No secrets: every field is an enum, a count, a model id or a fixed sentence (test: `routes/council-status.test.ts`). |
+| `GET /v1/council/runs?council=ask\|roundtable\|debate&limit=` | the last runs (max 20 kept per squad) as `CouncilRunRecord`: id, question, mode, transport, stage, agents (hierarchy), A2A envelopes, action items, counters and, for Ask, the result card. Filtered like the live stream (a squadmate sees public text, a private DM run shows others only skeleton arrows, other squads nothing). Persisted in `hub_council_runs`, so it survives reloads and restarts. |
+| `GET /v1/council/:id/live[?audio=1]` | SSE of `CouncilLiveEvent` (speaker, streaming caption, audio chunks, turn end, interrupted, transcript state) for a Gemini Live run. |
+| `POST /v1/council/:id/say` `{ text }` | the asker interrupts a running Live council (409 `not_live` / `ended`). |
+
+`a2a.message` and `council.stage` events (and the legacy `council.*` ones) carry an optional `transport` (`stream-text | live-text | live-audio | demo`).
