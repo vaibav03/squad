@@ -1,0 +1,25 @@
+{
+  "name": "multi-skill",
+  "students": [
+    { "id": "s_ana", "name": "Ana" },
+    { "id": "s_ben", "name": "Ben" },
+    { "id": "s_cam", "name": "Cam" }
+  ],
+  "groups": [{ "id": "group:stats", "members": ["s_ana", "s_ben", "s_cam"] }],
+  "steps": [
+    { "as": "s_cam", "chat": "group:stats", "say": "ok who is bringing snacks to the library" },
+    { "as": "s_ben", "chat": "group:stats", "say": "not me, I have no cash lol" },
+    { "as": "s_ana", "chat": "group:stats", "say": "I will grab chips" },
+    {
+      "as": "s_ana",
+      "chat": "group:stats",
+      "say": "@cubbie What is another name for the empirical rule?"
+    },
+    { "as": "s_ana", "chat": "group:stats", "say": "@cubbie quiz ch6" },
+    { "as": "s_ana", "chat": "group:stats", "say": "B" },
+    { "as": "s_ben", "chat": "group:stats", "say": "A" },
+    { "as": "s_cam", "chat": "group:stats", "say": "B" },
+    { "as": "s_ana", "chat": "group:stats", "say": "@cubbie am I behind?" },
+    { "as": "s_ana", "chat": "group:stats", "say": "@cubbie podcast for me on ch6" }
+  ]
+}

@@ -1,4 +1,4 @@
-import type { InboundMessage, Llm, OutboundMessage, Skill, VillageEvent } from '@squad/core';
+import type { Db, InboundMessage, Llm, OutboundMessage, Skill, VillageEvent } from '@squad/core';
 import { FakeLlm } from '@squad/core';
 import { openMemoryDb } from '@squad/core/node';
 import { createBot } from './bot';
@@ -56,13 +56,15 @@ export interface TestBotOptions {
   chat?: boolean;
   /** extra publisher that also receives every event (the recorder) */
   tap?: EventPublisher;
+  /** share a database with skills built on it (default: a fresh in-memory db) */
+  db?: Db;
 }
 
 export function createTestBot(o: TestBotOptions = {}) {
   let clock = o.startMs ?? 1_700_000_000_000;
   const transport = new FakeTransport();
   const events = recordingPublisher();
-  const db = openMemoryDb();
+  const db = o.db ?? openMemoryDb();
   const roster = o.roster ?? TEST_ROSTER;
   const bot: Bot = createBot({
     skills: [...(o.chat === false ? [] : [chatSkill]), ...(o.skills ?? [])],

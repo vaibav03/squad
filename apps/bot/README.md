@@ -20,6 +20,20 @@ Env: `TRANSPORT` (cli default), `FAKE_LLM=1`, `STUB_SKILLS=1` (adds demo skills:
 
 `/as <student>`, `/group <name>`, `/dm`, `/script <file>` (see `fixtures/scripts/*.json`), `/record <file>` ... `/record stop` (writes a replay JSON validated by `@squad/core`), `/checkpoint <name>`, `/decisions [n]` (glass-box: every skill score, the chosen skill, why it spoke or stayed quiet), `/help`, `/quit`. `@cubbie ...` or `cubbie, ...` mentions the bot; every DM does.
 
+### Multi-skill session (`pnpm bot:chat`)
+
+`pnpm bot:chat` (root alias for `pnpm --filter @squad/bot chat`) starts the fake-chat REPL. Registered skills: chat, doubt, behind, hwpolicy, quiz, feynman, stepDiff, studyPlan, podcast, explainer, all on one shared emit, db and mastery store (`src/skills/index.ts`, `createSkills`). The LLM is `GeminiLlm` when `GEMINI_API_KEY` is set, otherwise `FakeLlm`; podcast and explainer use `FakeTts` and `FakeImageGen` in fake mode (ffmpeg and ffprobe on PATH needed for podcasts), real ElevenLabs when `ELEVENLABS_API_KEY` is set. Without a TTS engine in real mode those two skills are not registered (the bot says so at startup).
+
+Run the scripted demo session from `apps/bot`: a doubt answered with a verified citation, a three-student quiz round, a private "am I behind?" (group sees only "Sent you a DM."), and a personal podcast delivered by DM with an audio attachment.
+
+```bash
+cd apps/bot && pnpm chat      # then at the prompt:
+/script fixtures/scripts/multi-skill.json     # runs on scripted FakeLlm + FakeTts, no keys
+pnpm test:smoke bot           # same session asserted: events valid, quiz key/explanation and other students' data never reach the group, events or another DM
+```
+
+Quiet-group guarantee: `src/adversarial/registry.adversarial.test.ts` runs 50 banter lines through the full registry; no skill scores >= 0.8 and the bot sends nothing.
+
 ### Speaking policy
 
 Group: speak if mentioned, or if the best Skill scores >= 0.8 and no unprompted message went out in that chat in the last 2 minutes. DM: always run the top Skill. A pending `askConfirm` consumes that student's DMs. Every decision is stored in `messages.decision_json` and logged.

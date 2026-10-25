@@ -63,9 +63,15 @@ importers:
       '@photon-ai/imessage-kit':
         specifier: ^3.0.0
         version: 3.0.0
+      '@squad/brain':
+        specifier: workspace:*
+        version: link:../../packages/brain
       '@squad/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@squad/media':
+        specifier: workspace:*
+        version: link:../../packages/media
       better-sqlite3:
         specifier: ^12.11.1
         version: 12.11.1

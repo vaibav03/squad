@@ -6,6 +6,7 @@ import { decisions } from '../store';
 import type { CliTransport } from '../transports/cli';
 import type { Bot, EventPublisher } from '../types';
 import { createRecorder, type Recorder } from './recorder';
+import { buildSessionSkills } from './demo-session';
 import { loadScript, runScript } from './script';
 
 export interface ReplDeps {
@@ -106,7 +107,8 @@ export class ChatRepl {
       case '/script': {
         if (!args[0]) return out('usage: /script <file>');
         try {
-          const r = await runScript(loadScript(args[0]));
+          const { skills, db } = await buildSessionSkills();
+          const r = await runScript(loadScript(args[0]), { skills, db, drainMs: 15_000 });
           for (const s of r.sent) out(`  [${s.chatId}] ${s.text ?? ''}`);
           out(
             `script done: ${r.sent.length} messages, ${r.events.length} events, ${r.unresolved} unresolved`,

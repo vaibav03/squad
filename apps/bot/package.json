@@ -16,7 +16,9 @@
   },
   "dependencies": {
     "@photon-ai/imessage-kit": "^3.0.0",
+    "@squad/brain": "workspace:*",
     "@squad/core": "workspace:*",
+    "@squad/media": "workspace:*",
     "better-sqlite3": "^12.11.1",
     "discord.js": "^14.27.0",
     "pino": "^10.4.0",
