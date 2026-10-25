@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createHttpCoordinator, createMeshScheduler } from './scheduler';
 import { createTestMesh, demoProfiles } from './testkit';
 import { parseSlot } from './time';
+
+vi.setConfig({ testTimeout: 30_000 }); // PSI is CPU bound; the full `pnpm test` runs packages in parallel
 
 const ids = ['s_ana', 's_ben', 's_cam', 's_dev'];
 const NOW = Date.parse('2026-11-02T00:30:00Z'); // window 2026-11-02T01 .. 2026-11-05T01
