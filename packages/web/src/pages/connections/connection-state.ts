@@ -10,24 +10,32 @@ export const PROVIDER_STATES = [
   'not_connected',
   'connecting',
   'syncing',
-  'connected',
+  'live',
+  'demo',
   'degraded',
   'reauth',
-  'disconnected',
 ] as const;
 export type ProviderState = (typeof PROVIDER_STATES)[number];
 export type Provider = 'canvas' | 'google';
 export type Cta = 'connect' | 'reconnect' | 'review' | 'ask' | 'none';
 
+/** THE label map (onboarding, Home, Connections, health, chat chips). `demo` reads 'Demo data', never 'Live'. */
 export const STATE_WORDS: Record<ProviderState, string> = {
   not_connected: 'Not connected',
   connecting: 'Connecting',
   syncing: 'Syncing',
-  connected: 'Connected',
+  live: 'Live',
+  demo: 'Demo data',
   degraded: 'Degraded',
   reauth: 'Reauth required',
-  disconnected: 'Disconnected',
 };
+/** Disconnected is a sub-state of Not connected (its data was deleted). */
+export const SUB_WORDS = { disconnected: 'Disconnected' } as const;
+export type ProviderSub = keyof typeof SUB_WORDS | null;
+
+/** Citation / source chip text: demo sources never read as real. */
+export const sourceChipLabel = (provider: Provider, fixture: boolean): string =>
+  fixture ? `Demo: ${NAME[provider]}` : NAME[provider];
 const NAME: Record<Provider, string> = { canvas: 'Canvas', google: 'Google' };
 
 export interface DeriveOpts {
@@ -41,7 +49,8 @@ export interface DeriveOpts {
 export interface ProviderView {
   provider: Provider;
   state: ProviderState;
-  /** Exact word for the state chip. */
+  sub: ProviderSub;
+  /** Exact word for the state chip (the sub-state word when there is one). */
   label: string;
   connection: Connection | null;
   fixture: boolean;
@@ -88,16 +97,17 @@ export function deriveProviderState(
   ): ProviderView => ({
     ...base,
     state,
+    sub: null,
     label: STATE_WORDS[state],
     text,
     cta,
     ctaLabel,
-    showConnectPanel: state === 'not_connected' || state === 'disconnected',
+    showConnectPanel: state === 'not_connected',
     showRepair: state === 'degraded' || state === 'reauth',
     hasItems: items > 0,
     firstSyncRunning: false,
     lastSyncText: c && c.lastSyncAt ? `Last synced ${relTime(c.lastSyncAt, o.now)}${c.lastOutcome ? ` (${c.lastOutcome})` : ''}` : null,
-    usable: state === 'connected' || state === 'syncing',
+    usable: state === 'live' || state === 'syncing' || state === 'demo',
     ...extra,
   });
   const connect = `Connect ${name}`;
@@ -110,10 +120,11 @@ export function deriveProviderState(
     return o.justReturned
       ? mk('connecting', `${name} is connecting. Waiting for the connection to be recorded.`, 'none', null)
       : mk(
-          'disconnected',
+          'not_connected',
           c.note ?? `${name} was disconnected and the imported data was deleted.`,
           'connect',
           connect,
+          { sub: 'disconnected', label: SUB_WORDS.disconnected },
         );
   const last = c.lastSyncAt;
   const ago = last ? relTime(last, o.now) : null;
@@ -149,7 +160,7 @@ export function deriveProviderState(
     ? `${name} connected. ${plural(items, 'item')} imported.`
     : `${name} connected. No sync has completed yet.`;
   return mk(
-    'connected',
+    base.fixture ? 'demo' : 'live',
     text,
     items > 0 ? (o.reviewed ? 'ask' : 'review') : 'none',
     items > 0 ? (o.reviewed ? 'Ask Cubbie with this' : 'Review imported context') : null,
@@ -161,6 +172,6 @@ export function calendarUsable(conns: readonly Connection[]): boolean {
   return (['google', 'canvas'] as const).some((p) => {
     const list = conns.filter((c) => c.provider === p && (p === 'google' || c.variant === 'feed'));
     const v = deriveProviderState(p, list, { now: 0 });
-    return v.usable && v.connection?.mode === 'live';
+    return v.usable && v.state !== 'demo' && v.connection?.mode === 'live';
   });
 }

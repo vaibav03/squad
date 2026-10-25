@@ -113,7 +113,7 @@ function CanvasSection({ p, items, v }: { p: ViewProps; items: Connection[]; v: 
       {items.map((c) => (
         <ConnectionCard key={c.id} c={c} p={p} />
       ))}
-      {v.state === 'not_connected' ? (
+      {v.state === 'not_connected' && !v.sub ? (
         <p className="sq-conn__state" data-testid="canvas-not-connected">
           <Chip tone="neutral">{v.label}</Chip> {v.text}
         </p>
@@ -132,7 +132,7 @@ function GoogleSection({ p, items, v }: { p: ViewProps; items: Connection[]; v: 
       {items.map((c) => (
         <ConnectionCard key={c.id} c={c} p={p} />
       ))}
-      {v.state === 'not_connected' ? (
+      {v.state === 'not_connected' && !v.sub ? (
         <p className="sq-conn__state" data-testid="google-not-connected">
           <Chip tone="neutral">{v.label}</Chip> {v.text}
         </p>
@@ -171,18 +171,18 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
       <div className="sq-conn__row">
         <strong>{c.provider === 'canvas' ? 'Canvas' : 'Google'}</strong>
         <span data-testid="conn-state">
-          <Chip tone={v.state === 'degraded' || v.state === 'reauth' ? 'alert' : v.state === 'syncing' ? 'ember' : v.state === 'connected' ? 'ok' : STATE_TONE[c.state]}>
+          <Chip tone={v.state === 'degraded' || v.state === 'reauth' ? 'alert' : v.state === 'syncing' ? 'ember' : v.state === 'live' ? 'ok' : v.state === 'demo' ? 'violet' : STATE_TONE[c.state]}>
             {v.label}
           </Chip>
         </span>
-        {v.fixture ? <Chip tone="violet">{FIXTURE_LABEL}</Chip> : null}
+        {v.fixture && v.state !== 'demo' ? <Chip tone="violet">Demo data</Chip> : null}
       </div>
       <p className="sq-conn__state" data-testid="conn-text">
         {v.text}
       </p>
       {v.fixture ? (
         <p className="sq-conn__meta" data-testid="conn-fixture-note">
-          This is simulated sample data from the repo. Nothing was read from a real {c.provider === 'canvas' ? 'Canvas' : 'Google'} account.
+          {FIXTURE_LABEL}: sample data from the repo. Nothing was read from a real {c.provider === 'canvas' ? 'Canvas' : 'Google'} account.
         </p>
       ) : null}
       {c.state === 'rate_limited' && c.retryAfter ? (
@@ -467,6 +467,22 @@ function CanvasConnect({ p }: { p: ViewProps }) {
           <Notice tone="error">{errorCopy(result.error ?? '')}</Notice>
         )
       ) : null}
+      {!present ? (
+        <div className="sq-conn__actions">
+          <Button
+            size="sm"
+            variant="secondary"
+            data-testid="use-canvas-demo"
+            disabled={!p.client}
+            onClick={() => void p.run((h) => h.connectDemo('canvas'))}
+          >
+            Use Canvas demo workspace
+          </Button>
+          <span className="sq-conn__meta">
+            Labelled demo data, not your Canvas. Use it to try Squad without the extension.
+          </span>
+        </div>
+      ) : null}
       <details className="sq-conn__fallback" open={!present}>
         <summary>Install steps (unpacked extension)</summary>
         <ol className="sq-conn__steps">
@@ -583,7 +599,25 @@ function GoogleConnect({ p }: { p: ViewProps }) {
         No Gmail, no editing, no deleting. You can disconnect at any time, which deletes what was
         imported.
       </p>
+      {p.googleLive === false ? (
+        <p className="sq-conn__meta" data-testid="google-no-client">
+          No Google OAuth client is configured on this server (GOOGLE_OAUTH_CLIENT_ID,
+          GOOGLE_OAUTH_CLIENT_SECRET, GOOGLE_OAUTH_REDIRECT_URI). Connect Google shows a labelled demo
+          consent screen; the demo workspace is simulated data, not your account.
+        </p>
+      ) : null}
       <div className="sq-conn__actions">
+        {p.googleLive === false ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            data-testid="use-google-demo"
+            disabled={!p.client}
+            onClick={() => void p.run((h) => h.connectDemo('google'))}
+          >
+            Use Google demo workspace
+          </Button>
+        ) : null}
         <Button
           size="sm"
           variant="primary"

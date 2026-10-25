@@ -123,8 +123,29 @@ export function toConnection(raw: z.infer<typeof RawConnection>): Connection {
   };
 }
 
+/** Lenient list parse for other surfaces (Home): invalid rows are skipped, never invented. */
+export function parseConnections(json: unknown): Connection[] {
+  const rows = (json as { connections?: unknown } | null)?.connections;
+  if (!Array.isArray(rows)) return [];
+  return rows.flatMap((r) => {
+    const p = RawConnection.safeParse({
+      id: 'unknown',
+      scopes: [],
+      lastSyncAt: null,
+      sources: { total: 0, byKind: {} },
+      sharedWithSquads: [],
+      ...(r as object),
+    });
+    return p.success ? [toConnection(p.data)] : [];
+  });
+}
+
 const ErrorBody = z.looseObject({ error: z.looseObject({ code: z.string() }) });
-const List = z.looseObject({ connections: z.array(RawConnection) });
+const List = z.looseObject({
+  connections: z.array(RawConnection),
+  /** `live` once a Google OAuth client is configured on the hub; otherwise Google is the labelled demo. */
+  mode: z.enum(['live', 'fixture']).optional(),
+});
 const One = z.looseObject({ connection: RawConnection });
 const Squads = z.looseObject({
   activeSquadId: z.string().nullable().optional(),
@@ -201,6 +222,34 @@ const enc = encodeURIComponent;
 export const hub = (ctx: Ctx) => ({
   async list(): Promise<Connection[]> {
     return (await call(ctx, 'GET', '/v1/connections', List)).connections.map(toConnection);
+  },
+  /** Connections plus whether the hub has a real Google OAuth client (`googleLive`). */
+  async overview(): Promise<{ connections: Connection[]; googleLive: boolean }> {
+    const r = await call(ctx, 'GET', '/v1/connections', List);
+    return { connections: r.connections.map(toConnection), googleLive: r.mode === 'live' };
+  },
+  /**
+   * The labelled demo workspace for a provider. Uses fixture-mode connect until the hub's `variant: 'demo'` lands;
+   * the connection comes back with mode `fixture` and is shown as Demo data everywhere.
+   */
+  async connectDemo(provider: 'canvas' | 'google'): Promise<Connection> {
+    const body =
+      provider === 'canvas'
+        ? {
+            provider,
+            variant: 'feed' as const,
+            scopes: ['canvas.calendar_feed'],
+            feedUrl: 'https://canvas.demo.invalid/feeds/calendars/demo.ics',
+          }
+        : {
+            provider,
+            scopes: [
+              'https://www.googleapis.com/auth/calendar.readonly',
+              'https://www.googleapis.com/auth/classroom.courses.readonly',
+              'https://www.googleapis.com/auth/classroom.coursework.me.readonly',
+            ],
+          };
+    return toConnection((await call(ctx, 'POST', '/v1/connections', One, body)).connection);
   },
   async activeSquad(): Promise<string | null> {
     return (await call(ctx, 'GET', '/v1/squads', Squads)).activeSquadId ?? null;

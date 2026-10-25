@@ -72,10 +72,10 @@ describe('state badges', () => {
       />,
     );
     expect(screen.getByTestId('conn-state').textContent).toBe(
-      { live: 'Connected', fixture: 'Connected', expired: 'Reauth required', revoked: 'Disconnected', rate_limited: 'Degraded', error: 'Degraded' }[state],
+      { live: 'Live', fixture: 'Demo data', expired: 'Reauth required', revoked: 'Disconnected', rate_limited: 'Degraded', error: 'Degraded' }[state],
     );
-    if (state === 'fixture') expect(screen.getAllByText('Fixture (simulated, not your account)').length).toBeGreaterThan(0);
-    else expect(screen.queryByText('Fixture (simulated, not your account)')).toBeNull();
+    if (state === 'fixture') expect(screen.getByTestId('conn-fixture-note').textContent).toContain('Fixture (simulated, not your account)');
+    else expect(screen.queryByTestId('conn-fixture-note')).toBeNull();
     if (state === 'rate_limited') expect(screen.getByText(/Will retry in/)).toBeTruthy();
   });
   it('derives state when the hub has not sent one yet', () => {

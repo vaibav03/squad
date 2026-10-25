@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { timedFetch } from '../../lib/http';
+import { parseConnections } from '../connections/api';
+import { calendarUsable } from '../connections/connection-state';
 
 /**
  * The Home "Get set up" checklist is derived ONLY from what the hub says about the signed-in viewer.
@@ -50,15 +52,8 @@ export async function calendarDone(ctx: HubCtx): Promise<boolean> {
   ]);
   if (ics.status === 'fulfilled' && obj(ics.value).ics === true) return true;
   if (conns.status === 'fulfilled') {
-    const live = arr(obj(conns.value).connections)
-      .map(obj)
-      .some(
-        (c) =>
-          c.mode === 'live' &&
-          (c.state ?? c.status) === 'live' &&
-          (c.provider === 'google' || c.variant === 'feed'),
-      );
-    if (live) return true;
+    // the same state machine as the Connections page: a real, usable (connected or syncing) calendar source
+    if (calendarUsable(parseConnections(conns.value))) return true;
   }
   // Not provably done: only report "to do" when both reads answered, otherwise surface the failure.
   if (conns.status === 'rejected') throw conns.reason as Error;
