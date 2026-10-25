@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import type {
   CacheHandle,
   Llm,
@@ -24,15 +23,26 @@ export interface RecordedCall {
 }
 
 /** Stable hash of the parts of a request that determine the answer. */
+/** Small deterministic 64-bit string hash (pure JS, browser-safe; not cryptographic). Returns 16 hex chars. */
+function hash64(input: string): string {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
+}
+
 export function requestKey(req: LlmRequest | LlmJsonRequest<unknown>): string {
   const { model, system, messages, temperature } = req;
   const tools = 'tools' in req ? (req.tools ?? []).map((t) => t.name) : [];
-  return createHash('sha256')
-    .update(
-      JSON.stringify({ model, system, messages: normalizeMessages(messages), temperature, tools }),
-    )
-    .digest('hex')
-    .slice(0, 16);
+  return hash64(
+    JSON.stringify({ model, system, messages: normalizeMessages(messages), temperature, tools }),
+  );
 }
 
 export interface FakeLlmOptions {

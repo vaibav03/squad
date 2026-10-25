@@ -1,0 +1,570 @@
+{
+ "props/bench.png": {
+  "size": [
+   62,
+   26
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/barrel.png": {
+  "size": [
+   21,
+   25
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/stall-bunting.png": {
+  "size": [
+   99,
+   76
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/stall-awning.png": {
+  "size": [
+   93,
+   76
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/bunting-a.png": {
+  "size": [
+   106,
+   20
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/bunting-b.png": {
+  "size": [
+   40,
+   16
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/sofa.png": {
+  "size": [
+   97,
+   54
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/sofa-small.png": {
+  "size": [
+   48,
+   27
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/bookshelf.png": {
+  "size": [
+   34,
+   49
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/signpost-board.png": {
+  "size": [
+   32,
+   28
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/signpost-arrow.png": {
+  "size": [
+   23,
+   29
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/stump.png": {
+  "size": [
+   35,
+   25
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/shelf-table.png": {
+  "size": [
+   64,
+   23
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/crate-a.png": {
+  "size": [
+   18,
+   21
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/crate-b.png": {
+  "size": [
+   18,
+   21
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/stool.png": {
+  "size": [
+   9,
+   11
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_TownNight_litwindows.png, regraded to palette ramps (hand-mapped by luminance)",
+  "license": "Autumn Town pack (see LICENSES.md)",
+  "anchor": "bottom-center"
+ },
+ "props/lamp-post.png": {
+  "size": [
+   24,
+   64
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/lamp-post-lit.png": {
+  "size": [
+   24,
+   64
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/lamp-halo.png": {
+  "size": [
+   56,
+   40
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "center",
+  "note": "dithered warm pool for lit street lamps"
+ },
+ "props/rock-big.png": {
+  "size": [
+   41,
+   23
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+  "license": "Autumn Town pack",
+  "anchor": "bottom-center"
+ },
+ "props/rock-small.png": {
+  "size": [
+   19,
+   22
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+  "license": "Autumn Town pack",
+  "anchor": "bottom-center"
+ },
+ "props/tuft-a.png": {
+  "size": [
+   30,
+   22
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+  "license": "Autumn Town pack",
+  "anchor": "bottom-center"
+ },
+ "props/tuft-b.png": {
+  "size": [
+   30,
+   25
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+  "license": "Autumn Town pack",
+  "anchor": "bottom-center"
+ },
+ "props/tuft-c.png": {
+  "size": [
+   28,
+   26
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+  "license": "Autumn Town pack",
+  "anchor": "bottom-center"
+ },
+ "props/tuft-d.png": {
+  "size": [
+   17,
+   15
+  ],
+  "source": "assets/pixel/buildings/autumn-town/Props_ForestNight.png regraded",
+  "license": "Autumn Town pack",
+  "anchor": "bottom-center"
+ },
+ "props/flower.png": {
+  "size": [
+   5,
+   7
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/tree-1.png": {
+  "size": [
+   54,
+   66
+  ],
+  "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/tree-2.png": {
+  "size": [
+   46,
+   60
+  ],
+  "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/tree-3.png": {
+  "size": [
+   62,
+   74
+  ],
+  "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/tree-4.png": {
+  "size": [
+   38,
+   54
+  ],
+  "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/tree-5.png": {
+  "size": [
+   50,
+   62
+  ],
+  "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/tree-6.png": {
+  "size": [
+   42,
+   58
+  ],
+  "source": "hand-pixeled (round dark canopy leaf-dark/leaf-lit, lit from upper-left)",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/pine-1.png": {
+  "size": [
+   30,
+   62
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/pine-2.png": {
+  "size": [
+   24,
+   50
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/bush-1.png": {
+  "size": [
+   24,
+   16
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/bush-2.png": {
+  "size": [
+   18,
+   12
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/flower-1.png": {
+  "size": [
+   5,
+   7
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/flower-2.png": {
+  "size": [
+   5,
+   7
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/flower-3.png": {
+  "size": [
+   5,
+   7
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/fence.png": {
+  "size": [
+   16,
+   16
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "tileable": "x",
+  "frame": [
+   16,
+   16
+  ],
+  "anchor": "bottom-left"
+ },
+ "props/mailbox.png": {
+  "size": [
+   14,
+   22
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center"
+ },
+ "props/window-dark.png": {
+  "size": [
+   8,
+   10
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "note": "8x10 window decal for house builders, same on-wall alignment"
+ },
+ "props/window-lit.png": {
+  "size": [
+   8,
+   10
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "note": "8x10 window decal for house builders, same on-wall alignment"
+ },
+ "props/window-curtained.png": {
+  "size": [
+   8,
+   10
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "note": "8x10 window decal for house builders, same on-wall alignment"
+ },
+ "props/desk-lamp.png": {
+  "size": [
+   12,
+   12
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "note": null
+ },
+ "props/desk.png": {
+  "size": [
+   48,
+   26
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "note": null
+ },
+ "props/chair.png": {
+  "size": [
+   14,
+   13
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "note": null
+ },
+ "props/books.png": {
+  "size": [
+   15,
+   9
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "note": null
+ },
+ "props/chalkboard.png": {
+  "size": [
+   48,
+   32
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "note": "chalkboard: empty 48x32 frame; tick/cross are overlays for its slate (inner area x4..43,y4..27)"
+ },
+ "props/chalk-tick.png": {
+  "size": [
+   12,
+   8
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "note": null
+ },
+ "props/chalk-cross.png": {
+  "size": [
+   10,
+   8
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "note": null
+ },
+ "props/round-table.png": {
+  "size": [
+   34,
+   22
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "note": null
+ },
+ "props/scroll.png": {
+  "size": [
+   16,
+   6
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "note": null
+ },
+ "props/map.png": {
+  "size": [
+   13,
+   8
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "note": null
+ },
+ "props/telescope.png": {
+  "size": [
+   26,
+   30
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center",
+  "note": null
+ },
+ "props/van.png": {
+  "size": [
+   128,
+   40
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   64,
+   40
+  ],
+  "count": 2,
+  "fps": 6,
+  "anchor": "bottom-left (wheels on y=39; front at x=51, headlight cone x52..63)",
+  "note": "faces right; frame 1 = body bobs 1px + wheel spokes rotate"
+ },
+ "props/van-luggage.png": {
+  "size": [
+   128,
+   40
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   64,
+   40
+  ],
+  "count": 2,
+  "fps": 6,
+  "anchor": "bottom-left (wheels on y=39; front at x=51, headlight cone x52..63)",
+  "note": "faces right; frame 1 = body bobs 1px + wheel spokes rotate"
+ },
+ "props/van-cone.png": {
+  "size": [
+   24,
+   20
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "left-center",
+  "note": "longer headlight cone if the cutscene wants it"
+ },
+ "props/road-tile.png": {
+  "size": [
+   32,
+   16
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "tileable": "x",
+  "frame": [
+   32,
+   16
+  ],
+  "note": "verge+road edge with dashed centre line, road top at y=4"
+ }
+}

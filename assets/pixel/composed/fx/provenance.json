@@ -1,0 +1,143 @@
+{
+ "fx/campfire-fire.png": {
+  "size": [
+   96,
+   22
+  ],
+  "source": "hand-pixeled (procedural flame; palette ember/glow/glow-core/alert), reference fx/campfire-sprite-sheet.png",
+  "license": "original",
+  "frame": [
+   16,
+   22
+  ],
+  "count": 6,
+  "fps": 9,
+  "anchor": "bottom-center (8,21)",
+  "note": "fire only; place over campfire-base.png with fire bottom at base ring centre"
+ },
+ "fx/campfire-base.png": {
+  "size": [
+   32,
+   14
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "bottom-center (16,13)",
+  "note": "log ring + stones + crossed logs; draw fire with its bottom ~ y=9 of this sprite"
+ },
+ "fx/campfire.png": {
+  "size": [
+   192,
+   34
+  ],
+  "source": "composite of campfire-fire + campfire-base",
+  "license": "original",
+  "frame": [
+   32,
+   34
+  ],
+  "count": 6,
+  "fps": 9,
+  "anchor": "bottom-center (16,33)"
+ },
+ "fx/campfire-light.png": {
+  "size": [
+   112,
+   44
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "anchor": "center",
+  "note": "additive-friendly lighting pool, centre it on the fire at ground level; 4 stepped bands glow-core/glow/ember with dithered edges, no alpha"
+ },
+ "fx/campfire-sparks.png": {
+  "size": [
+   24,
+   12
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   8,
+   12
+  ],
+  "count": 3,
+  "fps": 6,
+  "anchor": "bottom-center"
+ },
+ "fx/chimney-smoke.png": {
+  "size": [
+   192,
+   40
+  ],
+  "source": "hand-pixeled puffs (assets/pixel/fx/chimney_smoke.png is dithered noise cone, did not fit the outlined-cloud look)",
+  "license": "original",
+  "frame": [
+   24,
+   40
+  ],
+  "count": 8,
+  "fps": 5,
+  "anchor": "bottom-left (6,35): place so (6,35) sits on the chimney top centre"
+ },
+ "fx/star-1.png": {
+  "size": [
+   15,
+   5
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   5,
+   5
+  ],
+  "count": 3,
+  "fps": 2,
+  "anchor": "center (2,2)"
+ },
+ "fx/star-2.png": {
+  "size": [
+   15,
+   5
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   5,
+   5
+  ],
+  "count": 3,
+  "fps": 2,
+  "anchor": "center (2,2)"
+ },
+ "fx/star-3.png": {
+  "size": [
+   15,
+   5
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   5,
+   5
+  ],
+  "count": 3,
+  "fps": 2,
+  "anchor": "center (2,2)"
+ },
+ "fx/star-4.png": {
+  "size": [
+   15,
+   5
+  ],
+  "source": "hand-pixeled",
+  "license": "original",
+  "frame": [
+   5,
+   5
+  ],
+  "count": 3,
+  "fps": 2,
+  "anchor": "center (2,2)"
+ }
+}

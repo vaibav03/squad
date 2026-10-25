@@ -15,9 +15,9 @@ import { normalizeMessages } from './types';
 import { completeWithTools } from './tools';
 
 export const DEFAULT_GEMINI_MODELS: Record<ModelTier, string> = {
-  fast: 'gemini-2.5-flash-lite',
-  main: 'gemini-2.5-flash',
-  chair: 'gemini-2.5-pro',
+  fast: 'gemini-3.5-flash-lite',
+  main: 'gemini-3.8-flash',
+  chair: 'gemini-3.8-flash',
 };
 
 export interface GeminiLlmOptions {

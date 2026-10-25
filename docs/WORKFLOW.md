@@ -52,7 +52,7 @@ Ordering follows 00: foundation (spine, hub, village scaffold), then brain/mesh/
 - Keep PRs against `main` small enough to review; if a branch grows past roughly one day of work, merge a green slice first.
 
 ## 5. Secrets
-- `.env` is never committed. `.env.example` is the contract: every variable, with a placeholder and a comment on who uses it (`GEMINI_API_KEY`, `ELEVENLABS_API_KEY`, `NOOK_INTERNAL_SECRET`, hub base URL, ports, Google OAuth).
+- `.env` is never committed. `.env.example` is the contract: every variable, with a placeholder and a comment on who uses it (`GEMINI_API_KEY`, `ELEVENLABS_API_KEY`, `INTERNAL_EVENTS_SECRET`, hub base URL, ports, Google OAuth).
 - The owner puts real keys in `.env` in the main checkout. Each worktree gets it by symlink: `ln -s ../../squad/.env .env` (or the owner copies it). Agents read keys from `process.env` only.
 - Agents never print, log, paste into a doc or commit key values, and never echo `.env`. Logs show only whether a key is set. If a new variable is needed, add it to `.env.example` in a core-style small PR and tell the orchestrator.
 - Tests use the fake `Llm` by default; real-key tests are opt-in (`SQUAD_LIVE=1`).
