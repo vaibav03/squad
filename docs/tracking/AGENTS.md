@@ -9,13 +9,13 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Prefix | Branches | Commits (not on main) | Files changed (sum) | Co-Authored-By (commits) |
 |---|---:|---:|---:|---|
 | `audit/` | 2 | 5 | 17 | Claude Sonnet 5.5 (3) |
-| `chat/` | 1 | 12 | 153 | Claude Sonnet 5.5 (12) |
-| `council/` | 1 | 12 | 99 | Claude Sonnet 5.5 (6) |
+| `chat/` | 1 | 11 | 115 | Claude Sonnet 5.5 (9) |
+| `council/` | 1 | 19 | 154 | Claude Sonnet 5.5 (13) |
 | `deploy/` | 1 | 7 | 21 | Claude Sonnet 5.5 (5) |
 | `docs/` | 1 | 7 | 13 | Claude Sonnet 5.5 (7) |
-| `e2e/` | 1 | 4 | 35 | Claude Sonnet 5.5 (3) |
-| `ops/` | 2 | 10 | 81 | Claude Sonnet 5.5 (8) |
-| `product/` | 3 | 20 | 163 | Claude Sonnet 5.5 (18) |
+| `e2e/` | 1 | 7 | 57 | Claude Sonnet 5.5 (6) |
+| `ops/` | 2 | 13 | 106 | Claude Sonnet 5.5 (10) |
+| `product/` | 3 | 24 | 181 | Claude Sonnet 5.5 (20) |
 | `qa/` | 1 | 14 | 310 | Claude Sonnet 5.5 (12) |
 | `security/` | 1 | 6 | 27 | Claude Sonnet 5.5 (3) |
 | `ws/` | 1 | 6 | 91 | Claude Sonnet 5.5 (6) |
@@ -26,16 +26,16 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 |---|---:|---:|---|---|---|
 | `audit/a11y` | 2 | 9 | 2026-10-25 00:15 | 2026-10-25 00:15 | Vaibav |
 | `audit/perf` | 3 | 8 | 2026-10-24 23:34 | 2026-10-25 00:17 | Vaibav |
-| `chat/web` | 12 | 153 | 2026-10-24 22:47 | 2026-10-24 23:36 | Vaibav |
-| `council/ask` | 12 | 99 | 2026-10-24 22:48 | 2026-10-24 23:24 | Vaibav |
+| `chat/web` | 11 | 115 | 2026-10-24 23:19 | 2026-10-25 00:24 | Vaibav |
+| `council/ask` | 19 | 154 | 2026-10-24 22:47 | 2026-10-24 23:24 | Vaibav |
 | `deploy/prod` | 7 | 21 | 2026-10-24 23:33 | 2026-10-25 00:14 | Vaibav |
 | `docs/guide` | 7 | 13 | 2026-10-24 23:31 | 2026-10-24 23:36 | Vaibav |
-| `e2e/acceptance` | 4 | 35 | 2026-10-24 23:36 | 2026-10-25 00:14 | Vaibav |
+| `e2e/acceptance` | 7 | 57 | 2026-10-24 23:36 | 2026-10-25 00:20 | Vaibav |
 | `ops/live-verify` | 9 | 69 | 2026-10-24 23:37 | 2026-10-25 00:19 | Vaibav |
-| `ops/observability` | 1 | 12 | 2026-10-24 23:38 | 2026-10-24 23:38 | Vaibav |
+| `ops/observability` | 4 | 37 | 2026-10-24 23:38 | 2026-10-25 00:20 | Vaibav |
 | `product/accounts` | 5 | 62 | 2026-10-24 23:32 | 2026-10-25 00:18 | Vaibav |
-| `product/courses` | 8 | 75 | 2026-10-24 23:32 | 2026-10-25 00:19 | Vaibav |
-| `product/proactive` | 7 | 26 | 2026-10-24 23:34 | 2026-10-25 00:15 | Vaibav |
+| `product/courses` | 10 | 76 | 2026-10-24 23:32 | 2026-10-25 00:21 | Vaibav |
+| `product/proactive` | 9 | 43 | 2026-10-24 23:34 | 2026-10-25 00:20 | Vaibav |
 | `qa/web` | 14 | 310 | 2026-10-24 22:54 | 2026-10-25 00:18 | Vaibav |
 | `security/review` | 6 | 27 | 2026-10-24 23:35 | 2026-10-25 00:15 | Vaibav |
 | `ws/hub` | 6 | 91 | 2026-10-24 20:16 | 2026-10-24 20:37 | Vaibav Venkatapathy |
@@ -44,8 +44,8 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 
 | Co-Authored-By | Commits |
 |---|---:|
-| (no trailer) | 86 |
-| Claude Sonnet 5.5 | 371 |
+| (no trailer) | 91 |
+| Claude Sonnet 5.5 | 382 |
 
 ## Commits landed on main by area (subject prefix)
 
@@ -93,5 +93,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Author | Commits |
 |---|---:|
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 165 |
+| Vaibav | 181 |
 | vaibav03 | 26 |
