@@ -25,7 +25,7 @@ export async function main(): Promise<number> {
         'live:verify refuses to run: SQUAD_LIVE is not 1.',
         'This harness makes REAL paid model calls (capped). To run it deliberately:',
         '  SQUAD_LIVE=1 pnpm live:verify',
-        'Caps (env): LIVE_MAX_CALLS=60 LIVE_MAX_TOKENS=40000 LIVE_MAX_EL_CHARS=800 LIVE_MAX_USD=0.50',
+        'Caps (env): LIVE_MAX_CALLS=150 LIVE_MAX_TOKENS=120000 LIVE_MAX_EL_CHARS=800 LIVE_MAX_USD=0.50',
         'Runbook: docs/live/RUNBOOK.md',
       ].join('\n'),
     );
