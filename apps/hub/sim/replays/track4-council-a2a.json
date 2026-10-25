@@ -1,0 +1,564 @@
+{
+  "name": "track4-council-a2a",
+  "version": 1,
+  "loop": false,
+  "cast": {
+    "me": "s_ana",
+    "chair": "council:ask-chair",
+    "skeptic": "council:ask-skeptic",
+    "teacher": "council:ask-teacher",
+    "practitioner": "council:ask-practitioner"
+  },
+  "events": [
+    {
+      "at": 0,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "question",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 200,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000001",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 0,
+          "from": "council:ask-chair",
+          "to": "room",
+          "kind": "status",
+          "stage": "question",
+          "summary": "Question received. Planning who to ask.",
+          "status": "working",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000000200
+        }
+      }
+    },
+    {
+      "at": 900,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "delegation",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 1000,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000002",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 1,
+          "from": "council:ask-chair",
+          "to": "council:ask-skeptic",
+          "kind": "delegate",
+          "parentMessageId": "am_000000000001",
+          "stage": "delegation",
+          "summary": "Check whether a higher yield really implies a lower price in every case.",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000001000
+        }
+      }
+    },
+    {
+      "at": 1300,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000003",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 2,
+          "from": "council:ask-chair",
+          "to": "council:ask-teacher",
+          "kind": "delegate",
+          "parentMessageId": "am_000000000001",
+          "stage": "delegation",
+          "summary": "Explain the price-yield relationship from the chapter in plain words.",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000001300
+        }
+      }
+    },
+    {
+      "at": 1600,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000004",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 3,
+          "from": "council:ask-chair",
+          "to": "council:ask-practitioner",
+          "kind": "delegate",
+          "parentMessageId": "am_000000000001",
+          "stage": "delegation",
+          "summary": "Say when this fails in practice, for example for callable bonds.",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000001600
+        }
+      }
+    },
+    {
+      "at": 2400,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "opinions",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 3000,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000005",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 4,
+          "from": "council:ask-skeptic",
+          "to": "council:ask-teacher",
+          "kind": "ask",
+          "parentMessageId": "am_000000000002",
+          "stage": "opinions",
+          "summary": "Does step 2 assume a fixed coupon?",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000003000
+        }
+      }
+    },
+    {
+      "at": 4200,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000006",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 5,
+          "from": "council:ask-teacher",
+          "to": "council:ask-skeptic",
+          "kind": "answer",
+          "parentMessageId": "am_000000000005",
+          "stage": "opinions",
+          "summary": "Yes. The chapter derives it for a fixed coupon only.",
+          "citations": [
+            {
+              "file": "ch6.pdf",
+              "page": 3,
+              "label": "ch6.pdf p.3"
+            }
+          ],
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000004200
+        }
+      }
+    },
+    {
+      "at": 5200,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000007",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 6,
+          "from": "council:ask-skeptic",
+          "to": "council:ask-chair",
+          "kind": "answer",
+          "parentMessageId": "am_000000000002",
+          "stage": "opinions",
+          "summary": "Holds for fixed-coupon bonds once the coupon is fixed.",
+          "stance": "leaning yes, one caveat",
+          "answer": "yes, for fixed-coupon bonds",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000005200
+        }
+      }
+    },
+    {
+      "at": 5300,
+      "event": {
+        "t": "council.opinion",
+        "councilId": "council:ask",
+        "member": "skeptic",
+        "text": "Holds for fixed-coupon bonds once the coupon is fixed.",
+        "a2aId": "am_000000000007",
+        "mode": "demo",
+        "work": {
+          "demo": true,
+          "tier": "main"
+        }
+      }
+    },
+    {
+      "at": 6200,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000008",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 7,
+          "from": "council:ask-teacher",
+          "to": "council:ask-chair",
+          "kind": "answer",
+          "parentMessageId": "am_000000000003",
+          "stage": "opinions",
+          "summary": "Price and yield move in opposite directions because the cash flows are fixed.",
+          "stance": "fairly sure",
+          "answer": "yes, for fixed-coupon bonds",
+          "citations": [
+            {
+              "file": "ch6.pdf",
+              "page": 3,
+              "label": "ch6.pdf p.3"
+            }
+          ],
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000006200
+        }
+      }
+    },
+    {
+      "at": 6300,
+      "event": {
+        "t": "council.opinion",
+        "councilId": "council:ask",
+        "member": "teacher",
+        "text": "Price and yield move in opposite directions because the cash flows are fixed.",
+        "a2aId": "am_000000000008",
+        "mode": "demo",
+        "work": {
+          "demo": true,
+          "tier": "main"
+        }
+      }
+    },
+    {
+      "at": 7200,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000009",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 8,
+          "from": "council:ask-practitioner",
+          "to": "council:ask-chair",
+          "kind": "answer",
+          "parentMessageId": "am_000000000004",
+          "stage": "opinions",
+          "summary": "Not for callable bonds: the issuer can redeem early, so the relationship bends.",
+          "stance": "unsure about callables",
+          "answer": "only when the bond is not callable",
+          "citations": [
+            {
+              "file": "ch6.pdf",
+              "page": 5,
+              "label": "ch6.pdf p.5"
+            }
+          ],
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000007200
+        }
+      }
+    },
+    {
+      "at": 7300,
+      "event": {
+        "t": "council.opinion",
+        "councilId": "council:ask",
+        "member": "practitioner",
+        "text": "Not for callable bonds: the issuer can redeem early, so the relationship bends.",
+        "a2aId": "am_000000000009",
+        "dissent": true,
+        "mode": "demo",
+        "work": {
+          "demo": true,
+          "tier": "main"
+        }
+      }
+    },
+    {
+      "at": 8400,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "critiques",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 8800,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000010",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 9,
+          "from": "council:ask-skeptic",
+          "to": "council:ask-practitioner",
+          "kind": "critique",
+          "parentMessageId": "am_000000000009",
+          "stage": "critiques",
+          "summary": "The callable case is real but outside the chapter; it narrows the claim, it does not reverse it.",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000008800
+        }
+      }
+    },
+    {
+      "at": 9300,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000011",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 10,
+          "from": "council:ask-skeptic",
+          "to": "council:ask-chair",
+          "kind": "rank",
+          "parentMessageId": "am_000000000002",
+          "stage": "critiques",
+          "order": ["Teacher", "Practitioner"],
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000009300
+        }
+      }
+    },
+    {
+      "at": 9400,
+      "event": {
+        "t": "council.rank",
+        "councilId": "council:ask",
+        "member": "skeptic",
+        "order": ["Teacher", "Practitioner"],
+        "a2aId": "am_000000000011",
+        "mode": "demo"
+      }
+    },
+    {
+      "at": 9600,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000012",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 11,
+          "from": "council:ask-teacher",
+          "to": "council:ask-chair",
+          "kind": "rank",
+          "parentMessageId": "am_000000000003",
+          "stage": "critiques",
+          "order": ["Teacher", "Practitioner"],
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000009600
+        }
+      }
+    },
+    {
+      "at": 9700,
+      "event": {
+        "t": "council.rank",
+        "councilId": "council:ask",
+        "member": "teacher",
+        "order": ["Teacher", "Practitioner"],
+        "a2aId": "am_000000000012",
+        "mode": "demo"
+      }
+    },
+    {
+      "at": 10000,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000013",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 12,
+          "from": "council:ask-practitioner",
+          "to": "council:ask-chair",
+          "kind": "rank",
+          "parentMessageId": "am_000000000004",
+          "stage": "critiques",
+          "order": ["Practitioner", "Teacher"],
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000010000
+        }
+      }
+    },
+    {
+      "at": 10100,
+      "event": {
+        "t": "council.rank",
+        "councilId": "council:ask",
+        "member": "practitioner",
+        "order": ["Practitioner", "Teacher"],
+        "a2aId": "am_000000000013",
+        "mode": "demo"
+      }
+    },
+    {
+      "at": 11000,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "dissent",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 12000,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "verdict",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 12400,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_000000000014",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 13,
+          "from": "council:ask-chair",
+          "to": "room",
+          "kind": "verdict",
+          "parentMessageId": "am_000000000001",
+          "stage": "verdict",
+          "summary": "Yes, for a fixed-coupon bond; the Practitioner's caveat on callable bonds stands.",
+          "answer": "yes, for fixed-coupon bonds",
+          "confidence": "fairly_sure",
+          "dissentRefs": ["am_000000000009"],
+          "citations": [
+            {
+              "file": "ch6.pdf",
+              "page": 3,
+              "label": "ch6.pdf p.3"
+            }
+          ],
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000012400
+        }
+      }
+    },
+    {
+      "at": 12500,
+      "event": {
+        "t": "council.verdict",
+        "councilId": "council:ask",
+        "member": "chair",
+        "text": "Yes, for a fixed-coupon bond; the Practitioner's caveat on callable bonds stands.",
+        "dissent": true,
+        "dissenter": "practitioner",
+        "a2aId": "am_000000000014",
+        "mode": "demo",
+        "work": {
+          "demo": true,
+          "tier": "chair"
+        }
+      }
+    },
+    {
+      "at": 13200,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "actions",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    },
+    {
+      "at": 14000,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "done",
+        "mode": "demo",
+        "work": {
+          "demo": true
+        }
+      }
+    }
+  ],
+  "checkpoints": {
+    "delegation": 1000,
+    "opinions": 2400,
+    "critiques": 8400,
+    "verdict": 12000
+  }
+}

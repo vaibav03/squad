@@ -81,6 +81,31 @@ const ev: Record<(typeof VILLAGE_EVENT_TYPES)[number], VillageEvent> = {
     text: 'Use the definition first.',
   },
   'discussion.ended': { t: 'discussion.ended', discussionId: 'ld_abcdefghijkl' },
+  'a2a.message': {
+    t: 'a2a.message',
+    msg: {
+      id: 'am_a1b2c3d4e5f6',
+      correlationId: 'cn_k3j9x0a1b2c3',
+      seq: 2,
+      from: 'council:ask-chair',
+      to: 'council:ask-skeptic',
+      kind: 'delegate',
+      stage: 'delegation',
+      summary: 'Check the claim.',
+      status: 'done',
+      mode: 'live',
+      source: 'model',
+      redaction: 'public',
+      ts: 1,
+    },
+  },
+  'council.stage': {
+    t: 'council.stage',
+    councilId: 'council:ask',
+    correlationId: 'cn_k3j9x0a1b2c3',
+    stage: 'delegation',
+    mode: 'live',
+  },
   'call.caption': {
     t: 'call.caption',
     agent: 'expert:ch6',
@@ -100,6 +125,8 @@ const silent = new Set([
   'discussion.started',
   'discussion.takeaway',
   'discussion.ended',
+  'a2a.message',
+  'council.stage',
 ]);
 
 describe('exchangesFromEvent covers the union', () => {

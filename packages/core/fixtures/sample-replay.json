@@ -172,7 +172,38 @@
         "text": "Review chapter 5 first."
       }
     },
-    { "at": 6500, "event": { "t": "discussion.ended", "discussionId": "ld_abcdefabcdef" } }
+    { "at": 6500, "event": { "t": "discussion.ended", "discussionId": "ld_abcdefabcdef" } },
+    {
+      "at": 6600,
+      "event": {
+        "t": "council.stage",
+        "councilId": "council:ask",
+        "correlationId": "cn_k3j9x0a1b2c3",
+        "stage": "delegation",
+        "mode": "demo"
+      }
+    },
+    {
+      "at": 6700,
+      "event": {
+        "t": "a2a.message",
+        "msg": {
+          "id": "am_a1b2c3d4e5f6",
+          "correlationId": "cn_k3j9x0a1b2c3",
+          "seq": 1,
+          "from": "council:ask-chair",
+          "to": "council:ask-skeptic",
+          "kind": "delegate",
+          "stage": "delegation",
+          "summary": "Check whether a higher yield really implies a lower price in every case.",
+          "status": "done",
+          "mode": "demo",
+          "source": "script",
+          "redaction": "public",
+          "ts": 1760000000500
+        }
+      }
+    }
   ],
   "checkpoints": { "council": 1200, "trip": 6000 }
 }
