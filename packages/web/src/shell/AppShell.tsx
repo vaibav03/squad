@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Avatar } from '../primitives/Avatar';
 import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
@@ -8,6 +8,8 @@ import { StatusDot, type Status } from '../primitives/StatusDot';
 import { Switch } from '../primitives/Switch';
 import { useCalmMode } from '../hooks/useCalmMode';
 import { routeTitleFor, squadNav } from './routes';
+import { FailureState } from './ErrorBoundary';
+import { useRenderWatchdog } from './RenderWatchdog';
 import { ShellContext } from './shell-context';
 import type { NavItem } from './types';
 import { useTheme, type ThemeChoice } from './useTheme';
@@ -90,6 +92,8 @@ export function AppShell({
   const [theme, setTheme] = useTheme();
   const [calm, setCalm] = useCalmMode();
   const mainRef = useRef<HTMLElement>(null);
+  const [pageKey, setPageKey] = useState(0);
+  const dog = useRenderWatchdog(mainRef, `${pathname}:${pageKey}`);
 
   const setTitle = useCallback((t: string) => setOverride({ path: pathRef.current, title: t }), []);
   useEffect(() => {
@@ -186,7 +190,18 @@ export function AppShell({
           aria-label={title || undefined}
           data-route={pathname}
         >
-          {children}
+          {dog.stalled ? (
+            <FailureState
+              title={`${title || 'This page'} did not appear`}
+              body="Something went wrong while opening this page."
+              onRetry={() => {
+                setPageKey((n) => n + 1);
+                dog.reset();
+              }}
+            />
+          ) : (
+            <Fragment key={pageKey}>{children}</Fragment>
+          )}
         </main>
 
         <nav className="sq-shell__tabs" aria-label="Main">

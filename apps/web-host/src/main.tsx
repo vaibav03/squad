@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { Agentation } from 'agentation';
-import { ErrorBoundary, FailureState } from '@squad/web';
+import { ErrorBoundary, FailureState, RootWatchdog } from '@squad/web';
 import '@squad/web/styles.css';
 import './host.css';
 import { createRouter } from './router';
@@ -23,6 +23,7 @@ createRoot(document.getElementById('root')!).render(
       )}
     >
       <RouterProvider router={router} />
+      <RootWatchdog />
     </ErrorBoundary>
     {import.meta.env.DEV && (
       <ErrorBoundary fallback={() => null}>

@@ -59,7 +59,10 @@ describe('useEventFeed never stays on "connecting"', () => {
   });
 
   it('a refused stream (browser closed it: expired token, 401/403/404) becomes an error, then retries with a fresh token', async () => {
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ st: 'a' }), { status: 200 }));
+    const fetchMock = vi.fn(
+      async (_u: unknown, _i?: unknown) =>
+        new Response(JSON.stringify({ st: 'a' }), { status: 200 }),
+    );
     vi.stubGlobal('fetch', fetchMock);
     const { result } = feed();
     await flush();
@@ -75,7 +78,9 @@ describe('useEventFeed never stays on "connecting"', () => {
   });
 
   it('a failing stream-token request ends in error and backs off exponentially', async () => {
-    const fetchMock = vi.fn(async () => new Response('{}', { status: 401 }));
+    const fetchMock = vi.fn(
+      async (_u: unknown, _i?: unknown) => new Response('{}', { status: 401 }),
+    );
     vi.stubGlobal('fetch', fetchMock);
     const { result } = feed();
     await flush();

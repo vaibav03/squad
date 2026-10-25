@@ -9,3 +9,4 @@ export * from './AppShell';
 export * from './RouterAppShell';
 export * from './NightScene';
 export * from './dev-login';
+export * from './RenderWatchdog';
