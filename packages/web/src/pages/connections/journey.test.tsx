@@ -34,28 +34,8 @@ const conn = (o: Partial<Connection> = {}): Connection => ({
   ...o,
 });
 const rows: SourceRow[] = [
-  {
-    id: 's1',
-    kind: 'classroom_coursework',
-    title: 'Problem set 3',
-    sharedWith: [],
-    courseId: 'STAT101',
-    dueAt: NOW + 86_400_000,
-    startsAt: null,
-    fetchedAt: NOW - 240_000,
-    provenance: 'real',
-  },
-  {
-    id: 's2',
-    kind: 'gcal_event',
-    title: 'Office hours',
-    sharedWith: ['sq_1'],
-    courseId: null,
-    dueAt: null,
-    startsAt: NOW + 3_600_000,
-    fetchedAt: NOW - 240_000,
-    provenance: 'fixture',
-  },
+  { id: 's1', kind: 'classroom_coursework', title: 'Problem set 3', sharedWith: [], courseId: 'STAT101', courseName: 'Statistics 101', dueAt: NOW + 86_400_000, startsAt: null, fetchedAt: NOW - 240_000, provenance: 'real' },
+  { id: 's2', kind: 'gcal_event', title: 'Office hours', sharedWith: ['sq_1'], courseId: null, dueAt: null, startsAt: NOW + 3_600_000, fetchedAt: NOW - 240_000, provenance: 'fixture' },
 ];
 function props(over: Partial<ViewProps> = {}, client: Partial<HubClient> = {}): ViewProps {
   return {
@@ -99,7 +79,7 @@ describe('journey: connections', () => {
   });
   it('a fixture connection never claims an account', () => {
     ui(props({ connections: [conn({ mode: 'fixture', state: 'fixture' })] }));
-    expect(screen.getByTestId('conn-account').textContent).toBe('None');
+    expect(screen.getByTestId('conn-account').textContent).toBe('Demo workspace (simulated)');
     expect(screen.getByTestId('conn-fixture-note').textContent).toMatch(/sample data from the repo/);
     expect(screen.getByTestId('conn-state').textContent).toBe('Demo data');
     expect(screen.getByTestId('conn-fixture-note').textContent).toContain('Fixture (simulated, not your account)');
@@ -116,7 +96,8 @@ describe('journey: connections', () => {
     const items = await screen.findAllByTestId('imported-item');
     expect(items).toHaveLength(2);
     expect(items[0]!.textContent).toContain('Classroom coursework');
-    expect(items[0]!.textContent).toContain('STAT101');
+    expect(items[0]!.textContent).toContain('Statistics 101');
+    expect(items[0]!.textContent).not.toContain('STAT101');
     expect(items[0]!.textContent).toContain('imported 4 min ago');
     expect(screen.getAllByTestId('item-sharing').map((e) => e.textContent)).toEqual([
       'Private',
@@ -240,5 +221,19 @@ describe('journey: panels follow the state machine', () => {
   it('counts use correct plurals', () => {
     render(<MemoryRouter><ConnectionsView {...props({ connections: [conn({ sources: { total: 3, byKind: { classroom_coursework: 1, gcal_event: 2 } } })] })} /></MemoryRouter>);
     expect(screen.getByText('1 Classroom item, 2 calendar events')).toBeTruthy();
+  });
+});
+
+describe('journey: hub-provided fields', () => {
+  it('scope line uses grantedScopeLabels when present, counts use hub counts with plurals', () => {
+    ui(props({ connections: [conn({ grantedScopeLabels: ['Calendar (read only)'], counts: { calendarEvents: 1, driveDocs: 2, classroomItems: 1 }, sources: { total: 4, byKind: {} } })] }));
+    expect(screen.getByText('Calendar (read only)')).toBeTruthy();
+    expect(screen.getByText('1 calendar event, 2 Drive docs, 1 Classroom item')).toBeTruthy();
+  });
+  it('no course name from the hub means no course text, never the raw id', async () => {
+    ui(props());
+    fireEvent.click(await screen.findByTestId('review-imported-context'));
+    const items = await screen.findAllByTestId('imported-item');
+    expect(items[1]!.textContent).not.toMatch(/course/i);
   });
 });

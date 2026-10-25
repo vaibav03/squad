@@ -11,7 +11,7 @@ import { useSquadConfig } from '../../shell/context';
 import type { Connection, SourceRow } from './api';
 import { askCubbie, pickAskItems } from './askCubbie';
 import { deriveProviderState, sourceChipLabel, type Provider } from './connection-state';
-import { CALENDAR_KINDS, errorCopy, FIXTURE_LABEL, itemTypeLabel, kindCounts, relTime, squadLabel } from './model';
+import { CALENDAR_KINDS, errorCopy, FIXTURE_LABEL, itemTypeLabel, countLines, kindCounts, relTime, squadLabel } from './model';
 import { useConnections, type ConnectionsState } from './useConnections';
 import './connections.css';
 
@@ -97,10 +97,12 @@ function ProviderReview({ provider, s, now, navigate }: { provider: Provider; s:
       </Card>
     );
   const courses = new Set((rows ?? []).map((r) => r.courseId).filter(Boolean)).size;
-  const counts = [
-    ...(courses > 0 && !('canvas_course' in c.sources.byKind) ? [plural(courses, 'course')] : []),
-    ...kindCounts(c.sources.byKind),
-  ];
+  const counts = c.counts
+    ? countLines(c)
+    : [
+        ...(courses > 0 && !('canvas_course' in c.sources.byKind) ? [plural(courses, 'course')] : []),
+        ...kindCounts(c.sources.byKind),
+      ];
   const sharedAll = rows !== null && rows.some((r) => s.squadId && r.sharedWith.includes(s.squadId));
   const squadName = s.squadId ? squadLabel(s.squadId, s.squadNames) : null;
   return (
@@ -173,7 +175,7 @@ function ProviderReview({ provider, s, now, navigate }: { provider: Provider; s:
                 />
                 <span className="sq-conn__meta">
                   {itemTypeLabel(r.kind)}
-                  {r.courseId ? ` · course ${r.courseId}` : ''}
+                  {r.courseName ? ` · ${r.courseName}` : ''}
                   {where(r) ? ` · ${where(r)}` : ''}
                 </span>
               </div>

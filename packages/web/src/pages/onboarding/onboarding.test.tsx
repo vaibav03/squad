@@ -167,3 +167,15 @@ describe('gate and banner UI', () => {
     );
   });
 });
+
+import { parseOnboarding } from './api';
+describe('GET /v1/onboarding shape', () => {
+  it('maps identityDone, integrations, sharingChosen, skipped object, nextStep', () => {
+    const r = parseOnboarding({
+      identityDone: true, sharingChosen: false, nextStep: 'connect', skipped: { at: 5 },
+      integrations: { canvas: { state: 'demo', sub: null, counts: {}, lastSyncAt: 1, demo: true }, google: { state: 'not_connected', sub: 'disconnected', counts: {}, lastSyncAt: null, demo: false } },
+    });
+    expect(r).toMatchObject({ connected: true, skipped: true, skippedAt: 5, identityDone: true, sharingChosen: false, nextStep: 'connect' });
+    expect(parseOnboarding({ integrations: { canvas: { state: 'not_connected' } }, skipped: null })).toMatchObject({ connected: false, skipped: false });
+  });
+});

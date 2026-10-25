@@ -372,7 +372,7 @@ export function createChatHub(
         const cv = { studentId: viewer.studentId, squadIds: [viewer.squadId] };
         for (const c of body.context) {
           const r = deps.context
-            ? buildContextRef(deps.context.store, cv, c.sourceId, c.location?.anchor)
+            ? buildContextRef(deps.context.store, cv, c.sourceId, c.location?.anchor, (src) => deps.context!.courses.name(src.connectionId, src.courseId))
             : undefined;
           if (!r?.ok) return { ok: false, status: 404, code: 'context_unreadable' };
           ctxFull.push(r.ref);

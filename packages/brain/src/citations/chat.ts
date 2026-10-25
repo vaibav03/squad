@@ -1,9 +1,9 @@
 import type { ChatCitation, Citation, CitationSource } from '@squad/core';
-import type { ContextSource } from '../context/types';
+import { courseLabel, type ContextSource } from '../context/types';
 
 /** A synced Canvas/Drive/Calendar source as a chat citation chip (`file` is the title, page 1, `source` set). */
 export function chatCitationForSource(
-  s: Pick<ContextSource, 'kind' | 'id' | 'title' | 'url'>,
+  s: Pick<ContextSource, 'kind' | 'id' | 'title' | 'url'> & Partial<Pick<ContextSource, 'courseId' | 'courseName' | 'courseCode'>>,
   anchor?: string,
 ): ChatCitation {
   const source: CitationSource = {
@@ -12,6 +12,7 @@ export function chatCitationForSource(
     ...(anchor ? { anchor } : {}),
     title: s.title,
     ...(s.url ? { url: s.url } : {}),
+    ...(s.courseName || s.courseCode ? { courseName: courseLabel(s)! } : {}),
   };
   return { file: s.title, page: 1, label: s.title, source };
 }
