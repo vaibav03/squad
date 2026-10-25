@@ -48,7 +48,8 @@ for (const vp of VIEWPORTS) {
       if (o.primary !== false) await expectOnePrimary(page, name);
       await expectNoJargon(page, name);
       await expectNoOverlap(page, name);
-      if (o.links !== false) await expectNoDeadLinks(scratch, await internalLinks(page), seen, name);
+      if (o.links !== false)
+        await expectNoDeadLinks(scratch, await internalLinks(page), seen, name);
       await shot(page, `${vp.tag}-${name}`);
     }
 
@@ -93,10 +94,12 @@ for (const vp of VIEWPORTS) {
       await expect(page).toHaveURL(/\/squad\/chat/, { timeout: 30_000 });
       await expect(page.getByText(/Connect your learning context so Cubbie/i)).toHaveCount(0);
       await expectNoJargon(page, '05-chat');
-      const box = page.getByRole('textbox').first();
+      const box = page.getByRole('combobox', { name: 'Message' });
       await box.fill('@cubbie what is due this week?');
       await box.press('Enter');
-      await expect(page.locator('[data-testid="chat-demo-label"], .sqc-pixtag--demo').first()).toBeVisible({
+      await expect(
+        page.locator('[data-testid="chat-demo-label"], .sqc-pixtag--demo').first(),
+      ).toBeVisible({
         timeout: 60_000,
       });
       const t = await visibleText(page);

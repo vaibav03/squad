@@ -3,6 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import HomePage from './index';
+// the first-run redirect to the tour is covered by the e2e journey (j36); here Home must render
+try {
+  sessionStorage.setItem('squad.tour.entered.u', '1');
+} catch {
+  /* ignore */
+}
 import { SquadProvider } from '../../shell/context';
 import { resolveHomeLinks } from './home-links';
 import { HUB_PROBE_START_MS } from './bootstrap';

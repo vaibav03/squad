@@ -46,7 +46,9 @@ export async function expectOnePrimary(page: Page, where: string): Promise<void>
       return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none';
     };
     return Array.from(
-      document.querySelectorAll('main .sq-btn--primary, main .lv-btn--primary, main [data-primary="true"]'),
+      document.querySelectorAll(
+        'main .sq-btn--primary, main .lv-btn--primary, main [data-primary="true"]',
+      ),
     ).filter(vis).length;
   });
   expect(n, `${where}: exactly one primary CTA (found ${n})`).toBe(1);
@@ -85,13 +87,14 @@ export async function expectFocusOnPage(page: Page, where: string): Promise<void
     .toMatch(/^(main|heading|inside-main)$/);
 }
 
-const NOT_FOUND = /Nothing at this address|We could not find|Page not found|is on its way|could not load/i;
+const NOT_FOUND =
+  /Nothing at this address|We could not find|Page not found|is on its way|could not load/i;
 
 /** Every internal link in the header and the page, de-duplicated. */
 export async function internalLinks(page: Page): Promise<string[]> {
   const hrefs = await page.evaluate(() =>
-    Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map((a) =>
-      a.getAttribute('href') ?? '',
+    Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]')).map(
+      (a) => a.getAttribute('href') ?? '',
     ),
   );
   return [...new Set(hrefs.filter((h) => /^\/(squad|welcome|join)/.test(h)))];
@@ -129,8 +132,20 @@ export async function expectNoDeadLinks(
 }
 
 /** Floating panels (selectors shared with j27) must not overlap each other or the decision card. */
-const PANELS = ['.sqd-panel', '.ai-panel', '.rr-panel', '.cn-panel', '.cb-panel', '.pl-panel', '.ms-panel'];
-export async function expectNoOverlap(page: Page, where: string, keepClear: string[] = []): Promise<void> {
+const PANELS = [
+  '.sqd-panel',
+  '.ai-panel',
+  '.rr-panel',
+  '.cn-panel',
+  '.cb-panel',
+  '.pl-panel',
+  '.ms-panel',
+];
+export async function expectNoOverlap(
+  page: Page,
+  where: string,
+  keepClear: string[] = [],
+): Promise<void> {
   const boxes = await page.evaluate(
     ([panels, clear]) => {
       const out: { n: string; x: number; y: number; w: number; h: number }[] = [];
@@ -138,7 +153,8 @@ export async function expectNoOverlap(page: Page, where: string, keepClear: stri
         for (const el of Array.from(document.querySelectorAll<HTMLElement>(sel))) {
           const r = el.getBoundingClientRect();
           const cs = getComputedStyle(el);
-          if (r.width < 2 || r.height < 2 || cs.visibility === 'hidden' || +cs.opacity < 0.1) continue;
+          if (r.width < 2 || r.height < 2 || cs.visibility === 'hidden' || +cs.opacity < 0.1)
+            continue;
           out.push({ n: sel, x: r.x, y: r.y, w: r.width, h: r.height });
         }
       return out;

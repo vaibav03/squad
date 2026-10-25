@@ -75,14 +75,14 @@ export default function OnboardingTour() {
   const skip = async () => {
     if (cfg.hubUrl && cfg.token)
       await recordSkip({ hubUrl: cfg.hubUrl, token: cfg.token, userId: cfg.userId });
-    navigate('/squad/chat');
+    navigate('/squad/chat?open=group');
   };
   const primary = async () => {
     if (fwd) return navigate(`${TOUR_ROOT}/${fwd}`);
     setSaving(true);
     const ok = await applyShares(t, chosen);
     setSaving(false);
-    if (ok) navigate('/squad/chat');
+    if (ok) navigate('/squad/chat?open=group');
     else setFailed(true);
   };
 

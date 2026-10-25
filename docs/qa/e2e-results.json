@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T16:02:45.620Z",
+  "at": "2026-10-25T16:16:48.510Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -546,43 +546,7 @@
     "title": "1 first entry lands in the connect step, before anything else",
     "status": "pass",
     "note": "",
-    "ms": 4495
-   },
-   {
-    "title": "2 Canvas demo workspace is explicit demo data and unlocks Continue",
-    "status": "pass",
-    "note": "",
-    "ms": 172
-   },
-   {
-    "title": "3 review shows what was imported, then sharing defaults to private",
-    "status": "pass",
-    "note": "",
-    "ms": 237
-   },
-   {
-    "title": "4 entering the group chat: no gate, Cubbie answers, practice mode says so",
-    "status": "fail",
-    "note": "\u001b[31mTest timeout of 240000ms exceeded.\u001b[39m",
-    "ms": 240002
-   },
-   {
-    "title": "5 Home leads with the next step and one primary action",
-    "status": "skipped",
-    "note": "",
-    "ms": 0
-   },
-   {
-    "title": "6 a returning visit does not bounce back into the tour",
-    "status": "skipped",
-    "note": "",
-    "ms": 0
-   },
-   {
-    "title": "1 first entry lands in the connect step, before anything else",
-    "status": "pass",
-    "note": "",
-    "ms": 2179
+    "ms": 3137
    },
    {
     "title": "2 Canvas demo workspace is explicit demo data and unlocks Continue",
@@ -598,21 +562,57 @@
    },
    {
     "title": "4 entering the group chat: no gate, Cubbie answers, practice mode says so",
-    "status": "fail",
-    "note": "\u001b[31mTest timeout of 240000ms exceeded.\u001b[39m",
-    "ms": 240001
+    "status": "pass",
+    "note": "",
+    "ms": 220
    },
    {
     "title": "5 Home leads with the next step and one primary action",
-    "status": "skipped",
+    "status": "pass",
     "note": "",
-    "ms": 0
+    "ms": 4347
    },
    {
     "title": "6 a returning visit does not bounce back into the tour",
-    "status": "skipped",
+    "status": "pass",
     "note": "",
-    "ms": 0
+    "ms": 571
+   },
+   {
+    "title": "1 first entry lands in the connect step, before anything else",
+    "status": "pass",
+    "note": "",
+    "ms": 2553
+   },
+   {
+    "title": "2 Canvas demo workspace is explicit demo data and unlocks Continue",
+    "status": "pass",
+    "note": "",
+    "ms": 175
+   },
+   {
+    "title": "3 review shows what was imported, then sharing defaults to private",
+    "status": "pass",
+    "note": "",
+    "ms": 225
+   },
+   {
+    "title": "4 entering the group chat: no gate, Cubbie answers, practice mode says so",
+    "status": "pass",
+    "note": "",
+    "ms": 198
+   },
+   {
+    "title": "5 Home leads with the next step and one primary action",
+    "status": "pass",
+    "note": "",
+    "ms": 4687
+   },
+   {
+    "title": "6 a returning visit does not bounce back into the tour",
+    "status": "pass",
+    "note": "",
+    "ms": 299
    }
   ]
  }

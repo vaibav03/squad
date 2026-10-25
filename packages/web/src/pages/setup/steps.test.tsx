@@ -4,6 +4,12 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import SetupPage from './index';
 import HomePage from '../home/index';
+// the first-run redirect to the tour is covered by the e2e journey (j36); here Home must render
+try {
+  sessionStorage.setItem('squad.tour.entered.u', '1');
+} catch {
+  /* ignore */
+}
 import { SquadProvider } from '../../shell/context';
 import { resetRequestBudget } from '../../lib/request-budget';
 import { hub as hubClient } from '../connections/api';

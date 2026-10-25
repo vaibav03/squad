@@ -33,7 +33,12 @@ export default function ChatPage() {
   const me = fixtures ? ME : cfg.userId ? hubStudentId(cfg.userId) : '';
   const ctl = useChat(api, { me });
 
-  const active = params.get('c');
+  // `?open=group` (the first-run tour) opens the squad's group chat directly, also on a phone where the list shows first
+  const active =
+    params.get('c') ??
+    (params.get('open') === 'group'
+      ? (ctl.chats.find((c) => c.kind === 'group')?.id ?? null)
+      : null);
   const setActive = useCallback(
     (id: string | null) =>
       setParams(
