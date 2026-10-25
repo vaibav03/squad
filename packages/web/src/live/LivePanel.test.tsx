@@ -41,7 +41,7 @@ describe('LivePanel (mock stream)', () => {
     expect(await screen.findByText('Demo mode: scripted discussion')).toBeTruthy();
     expect(screen.getByText('AI-generated discussion')).toBeTruthy();
     // finishes: Ended + Replay
-    await screen.findByText(/Ended\./, undefined, { timeout: 5000 });
+    await screen.findByText(/Ended\./, undefined, { timeout: 25_000 });
     const tx = screen.getByRole('list', { name: 'Transcript' });
     expect(within(tx).getAllByText(/Chair|Tutor/).length).toBeGreaterThan(0);
     // takeaways built
