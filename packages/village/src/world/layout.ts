@@ -23,29 +23,30 @@ const S = (
 ): LayoutSlot => ({ id, kind, x, w, region, label, ...(door ? { door: { x } } : {}) });
 
 export const SLOTS: readonly LayoutSlot[] = [
-  // Left: chapter houses (128 px composed house art, >= 145 px pitch) and study landmarks
+  // Left: chapter houses (hut art 128 px wide, 160 px pitch) and study landmarks. Widths are the real art widths
+  // from assets/asset-manifest.json; gaps between footprints are >= 32 px.
   S('chapter-1', 'chapter-house', 120, 128, 'left', 'Chapter 1 house'),
-  S('chapter-2', 'chapter-house', 270, 128, 'left', 'Chapter 2 house'),
-  S('chapter-3', 'chapter-house', 420, 128, 'left', 'Chapter 3 house'),
-  S('chapter-4', 'chapter-house', 570, 128, 'left', 'Chapter 4 house'),
-  S('exam-oracle', 'landmark', 690, 48, 'left', 'Exam Oracle'),
-  S('feynman-porch', 'landmark', 795, 56, 'left', 'Feynman Porch'),
-  // Mid: council and the landmark row
-  S('debate-stage', 'landmark', 910, 80, 'mid', 'Debate Stage'),
-  S('round-table', 'landmark', 1020, 64, 'mid', 'Course-Planning Round Table'),
-  S('council-hall', 'council-hall', 1170, 112, 'mid', 'Council Hall'),
-  S('panic-booth', 'landmark', 1290, 40, 'mid', 'Panic Line booth'),
-  S('devils-ta', 'landmark', 1375, 48, 'mid', "Devil's TA"),
-  S('oral-exam-hut', 'landmark', 1475, 56, 'mid', 'Oral Exam Hut'),
-  S('rubric-courthouse', 'landmark', 1610, 96, 'mid', 'Rubric Courthouse'),
-  // Right: mesh view (board, campfire, neighbours at >= 145 px pitch), then the trip road
-  S('notice-board', 'notice-board', 1800, 48, 'right', 'Notice board'),
-  S('commons', 'commons', 1930, 48, 'right', 'Campfire commons', false),
-  S('home-1', 'student-home', 2095, 128, 'right', 'Neighbour house 1'),
-  S('home-2', 'student-home', 2245, 128, 'right', 'Neighbour house 2'),
-  S('home-3', 'student-home', 2395, 128, 'right', 'Neighbour house 3'),
-  S('trip-road', 'road', 2540, 96, 'right', 'Trip road', false),
-  S('spawn', 'spawn', 1235, 8, 'mid', 'Village green', false),
+  S('chapter-2', 'chapter-house', 280, 128, 'left', 'Chapter 2 house'),
+  S('chapter-3', 'chapter-house', 440, 128, 'left', 'Chapter 3 house'),
+  S('chapter-4', 'chapter-house', 600, 128, 'left', 'Chapter 4 house'),
+  S('exam-oracle', 'landmark', 732, 63, 'left', 'Exam Oracle'),
+  S('feynman-porch', 'landmark', 857, 114, 'left', 'Feynman Porch'),
+  // Mid: debate stage, round table, council hall and the landmark row
+  S('debate-stage', 'landmark', 1048, 197, 'mid', 'Debate Stage'),
+  S('round-table', 'landmark', 1244, 124, 'mid', 'Course-Planning Round Table'),
+  S('council-hall', 'council-hall', 1412, 139, 'mid', 'Council Hall'),
+  S('panic-booth', 'landmark', 1532, 28, 'mid', 'Panic Line booth'),
+  S('devils-ta', 'landmark', 1649, 134, 'mid', "Devil's TA"),
+  S('oral-exam-hut', 'landmark', 1789, 73, 'mid', 'Oral Exam Hut'),
+  S('rubric-courthouse', 'landmark', 1924, 123, 'mid', 'Rubric Courthouse'),
+  // Right: mesh view in one 427 px window (board, campfire, first neighbour), then more homes and the trip road
+  S('notice-board', 'notice-board', 2050, 64, 'right', 'Notice board'),
+  S('commons', 'commons', 2160, 48, 'right', 'Campfire commons', false),
+  S('home-1', 'student-home', 2300, 128, 'right', 'Neighbour house 1'),
+  S('home-2', 'student-home', 2450, 128, 'right', 'Neighbour house 2'),
+  S('home-3', 'student-home', 2600, 128, 'right', 'Neighbour house 3'),
+  S('trip-road', 'road', 2770, 96, 'right', 'Trip road', false),
+  S('spawn', 'spawn', 1490, 8, 'mid', 'Village green', false),
 ];
 
 export function createLayout(): WorldLayout {
@@ -61,6 +62,6 @@ export function createLayout(): WorldLayout {
       return s;
     },
     slotsOfKind: (kind) => SLOTS.filter((s) => s.kind === kind),
-    cameraPresets: { left: 380, mid: 1120, right: 2040 },
+    cameraPresets: { left: 400, mid: 1300, right: 2200 },
   };
 }

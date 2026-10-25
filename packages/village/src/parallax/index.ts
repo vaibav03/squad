@@ -14,22 +14,40 @@ import { MOON_ALPHA, RAMPS, STAR_ALPHA } from './ramps';
 
 const BG = 'assets/pixel/composed/backgrounds/';
 const img = (key: string, file: string): AssetSpec => ({ type: 'image', key, path: BG + file });
+// Keys are the manifest ids (assets/asset-manifest.json) so the manifest and this fallback list dedupe by key.
 export const ASSETS: AssetSpec[] = [
-  img('bgv-sky-night', '0_sky.png'),
-  img('bgv-sky-dusk', '0_sky_dusk.png'),
-  img('bgv-sky-dawn', '0_sky_dawn.png'),
-  img('bgv-sky-day', '0_sky_day.png'),
-  img('bgv-1_stars', '1_stars.png'),
-  ...[0, 1, 2, 3].map((i) => img(`bgv-1_stars_tw${i}`, `1_stars_twinkle_${i}.png`)),
-  img('bgv-2_moon', '2_moon.png'),
-  img('bgv-3_clouds_far', '3_clouds_far.png'),
-  img('bgv-4_clouds_near', '4_clouds_near.png'),
-  img('bgv-5_hills_far', '5_hills_far.png'),
-  img('bgv-6_hills_mid', '6_hills_mid.png'),
-  img('bgv-7_hills_near', '7_hills_near.png'),
-  img('bgv-8_fenceline', '8_fenceline.png'),
-  img('bgv-9_ground', '9_ground.png'),
-  img('bgv-10_foreground', '10_foreground.png'),
+  img('parallax.0_sky', '0_sky.png'),
+  img('parallax.0_sky:dusk', '0_sky_dusk.png'),
+  img('parallax.0_sky:dawn', '0_sky_dawn.png'),
+  img('parallax.0_sky:day', '0_sky_day.png'),
+  img('parallax.1_stars', '1_stars.png'),
+  ...[0, 1, 2, 3].map((i) => img(`parallax.1_stars:twinkle_${i}`, `1_stars_twinkle_${i}.png`)),
+  img('parallax.2_moon', '2_moon.png'),
+  img('parallax.3_clouds_far', '3_clouds_far.png'),
+  img('parallax.4_clouds_near', '4_clouds_near.png'),
+  img('parallax.5_hills_far', '5_hills_far.png'),
+  img('parallax.6_hills_mid', '6_hills_mid.png'),
+  img('parallax.7_hills_near', '7_hills_near.png'),
+  img('parallax.8_fenceline', '8_fenceline.png'),
+  img('parallax.9_ground', '9_ground.png'),
+  img('parallax.10_foreground', '10_foreground.png'),
+  {
+    type: 'image',
+    key: 'landmark.windmill',
+    path: 'assets/pixel/composed/buildings/windmill/windmill_lit.png',
+  },
+  {
+    type: 'image',
+    key: 'landmark.windmill:dark',
+    path: 'assets/pixel/composed/buildings/windmill/windmill_dark.png',
+  },
+  {
+    type: 'spritesheet',
+    key: 'landmark.windmill.sails',
+    path: 'assets/pixel/composed/buildings/windmill/windmill_sails_strip.png',
+    frameWidth: 72,
+    frameHeight: 72,
+  },
 ];
 
 /* ---------- world time ---------- */
@@ -256,18 +274,18 @@ export function createParallax(scene: Phaser.Scene, d: ParallaxDeps) {
 
   // sky: four ready-made ramps
   const skyDef: LayerDef = { name: 'sky', factor: 0, depth: DEPTH.sky, y: 0, h: LOGICAL_H };
-  const sky = d.assets.has('bgv-sky-night')
+  const sky = d.assets.has('parallax.0_sky')
     ? {
-        base: mkTile('bgv-sky-night', skyDef),
-        dusk: mkTile('bgv-sky-dusk', skyDef),
-        dawn: mkTile('bgv-sky-dawn', skyDef),
-        day: mkTile('bgv-sky-day', skyDef, DEPTH.sky + 0.1),
+        base: mkTile('parallax.0_sky', skyDef),
+        dusk: mkTile('parallax.0_sky:dusk', skyDef),
+        dawn: mkTile('parallax.0_sky:dawn', skyDef),
+        day: mkTile('parallax.0_sky:day', skyDef, DEPTH.sky + 0.1),
       }
     : undefined;
 
   // stars (twinkle frames) and moon (screen-anchored, upper left like the reference)
-  const stars = d.assets.has('bgv-1_stars')
-    ? mkTile('bgv-1_stars', {
+  const stars = d.assets.has('parallax.1_stars')
+    ? mkTile('parallax.1_stars', {
         name: 'stars',
         factor: 0.02,
         depth: DEPTH.parallaxBack,
@@ -275,9 +293,9 @@ export function createParallax(scene: Phaser.Scene, d: ParallaxDeps) {
         h: LOGICAL_H,
       })
     : undefined;
-  const moon = d.assets.has('bgv-2_moon')
+  const moon = d.assets.has('parallax.2_moon')
     ? scene.add
-        .image(0, 0, 'bgv-2_moon')
+        .image(0, 0, 'parallax.2_moon')
         .setOrigin(0.5)
         .setScrollFactor(0)
         .setDepth(DEPTH.parallaxBack + 1)
@@ -285,7 +303,7 @@ export function createParallax(scene: Phaser.Scene, d: ParallaxDeps) {
   if (moon) all.push(moon);
 
   for (const def of LAYERS) {
-    const key = `bgv-${def.name}`;
+    const key = `parallax.${def.name}`;
     if (!d.assets.has(key)) continue;
     const base = mkTile(key, def);
     const overlays: Overlay[] = [];
@@ -300,6 +318,25 @@ export function createParallax(scene: Phaser.Scene, d: ParallaxDeps) {
     items.push({ def, base, overlays });
   }
 
+  // windmill on the near hills (84 px tower, 8-frame sail strip pivoting on the hub at (21,25))
+  const mills: Array<{ body: Phaser.GameObjects.Image; sails: Phaser.GameObjects.Image }> = [];
+  if (d.assets.has('landmark.windmill') && d.assets.has('landmark.windmill.sails')) {
+    for (const lx of [520, 1650]) {
+      const base = 214; // stands on the near-hill ridge
+      const body = scene.add
+        .image(lx, base, 'landmark.windmill')
+        .setOrigin(0.5, 1)
+        .setScrollFactor(0.6, 1)
+        .setDepth(DEPTH.parallaxMid + 1.5);
+      const sails = scene.add
+        .image(lx, base - 58, 'landmark.windmill.sails', 0)
+        .setOrigin(0.5)
+        .setScrollFactor(0.6, 1)
+        .setDepth(DEPTH.parallaxMid + 1.6);
+      mills.push({ body, sails });
+      all.push(body, sails);
+    }
+  }
   let lastW = cam.width;
   return {
     update(t: number) {
@@ -321,13 +358,26 @@ export function createParallax(scene: Phaser.Scene, d: ParallaxDeps) {
         if (resized) stars.setSize(w, LOGICAL_H);
         const twAlpha = tw === 'dusk' ? STAR_ALPHA.dusk : STAR_ALPHA.dawn;
         stars.setAlpha(n >= 0.5 ? twAlpha + (1 - twAlpha) * (n - 0.5) * 2 : twAlpha * n * 2);
-        stars.setTexture(calm ? 'bgv-1_stars' : `bgv-1_stars_tw${Math.floor(t / 400) % 4}`);
+        stars.setTexture(
+          calm ? 'parallax.1_stars' : `parallax.1_stars:twinkle_${Math.floor(t / 400) % 4}`,
+        );
         stars.tilePositionX = tileOffset(cam.scrollX, 0.02, 0, 480);
       }
       if (moon) {
         moon.setPosition(Math.round(w * 0.2), 56);
         const ta = tw === 'dusk' ? MOON_ALPHA.dusk : MOON_ALPHA.dawn;
         moon.setAlpha(n >= 0.5 ? ta + (1 - ta) * (n - 0.5) * 2 : ta * n * 2);
+      }
+      const sailFrame = calm ? 0 : Math.floor(t / 220) % 8;
+      for (const m of mills) {
+        m.sails.setFrame(sailFrame);
+        m.body.setTexture(
+          n > 0.45
+            ? 'landmark.windmill'
+            : d.assets.has('landmark.windmill:dark')
+              ? 'landmark.windmill:dark'
+              : 'landmark.windmill',
+        );
       }
       for (const it of items) {
         const drift = it.def.drift && !calm ? (t / 1000) * it.def.drift : 0;

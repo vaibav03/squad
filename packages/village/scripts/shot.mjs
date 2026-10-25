@@ -1,3 +1,4 @@
+/* global window, console, process */
 // Usage: node scripts/shot.mjs <out.png> [w] [h] [dpr] [query] [waitMs] [actionsJS]
 import { chromium } from 'playwright';
 const [out, w = '1280', h = '720', dpr = '1', query = '', wait = '1500', actions = ''] =

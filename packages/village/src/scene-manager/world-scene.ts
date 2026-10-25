@@ -20,7 +20,6 @@ import {
 import { createAssetApi, queueSpecs } from '../boot/assets';
 import {
   DEPTH,
-  GROUND_Y,
   type AdapterModule,
   type AssetSpec,
   type CameraMode,

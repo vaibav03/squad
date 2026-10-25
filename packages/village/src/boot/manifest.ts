@@ -2,67 +2,79 @@ import { z } from 'zod';
 import type { AssetSpec } from '../world/api';
 
 /**
- * Tolerant reader for assets/asset-manifest.json (design foundation lead). The final shape was not published when this
- * was written, so we accept: `{ assets: Entry[] }`, a bare `Entry[]`, or `{ <key>: Entry-without-key }`, where
- * Entry = { key, type: image|spritesheet|atlas, path, frameWidth?, frameHeight?, atlasPath?, scope?|village? }.
- * Entries that fail validation are skipped (and reported), they never break boot. Entries tagged for another scope
- * (scope/village === false or a scope list without 'village'/'world') are skipped.
+ * Reader for assets/asset-manifest.json (design foundation, `build_manifest.py`). Shape actually published:
+ * `{ assets: [{ id, group, kind: image|tile|nineslice|spritesheet|atlas|font, file, size, frame?: {w,h,count},
+ *   atlasJson?, variants?: { name: file } }] }`. Texture key = `id`; variants load as `<id>:<variant>`.
+ * Fonts are not Phaser assets (CSS @font-face) and are skipped. Bad entries are skipped and counted, never fatal.
  */
 const Entry = z
   .object({
-    key: z.string().min(1),
-    type: z.enum(['image', 'spritesheet', 'atlas']).default('image'),
-    path: z.string().min(1),
-    frameWidth: z.number().int().positive().optional(),
-    frameHeight: z.number().int().positive().optional(),
-    atlasPath: z.string().optional(),
-    village: z.boolean().optional(),
-    scope: z.union([z.string(), z.array(z.string())]).optional(),
+    id: z.string().min(1),
+    kind: z.string(),
+    file: z.string().min(1),
+    frame: z
+      .object({ w: z.number().int().positive(), h: z.number().int().positive() })
+      .partial({ w: true, h: true })
+      .optional(),
+    atlasJson: z.string().optional(),
+    variants: z.record(z.string(), z.string()).optional(),
   })
   .passthrough();
 
-function wanted(e: z.infer<typeof Entry>): boolean {
-  if (e.village === false) return false;
-  if (e.scope === undefined) return true;
-  const s = Array.isArray(e.scope) ? e.scope : [e.scope];
-  return s.some((x) => ['village', 'world', 'game', 'pixel', 'all'].includes(x));
-}
+const clean = (p: string) => p.replace(/^\/+/, '');
 
 export function parseManifest(json: unknown): { specs: AssetSpec[]; skipped: number } {
-  let raw: unknown[] = [];
-  if (Array.isArray(json)) raw = json;
-  else if (json && typeof json === 'object') {
-    const o = json as Record<string, unknown>;
-    if (Array.isArray(o.assets)) raw = o.assets;
-    else if (o.assets && typeof o.assets === 'object')
-      raw = Object.entries(o.assets).map(([key, v]) => ({ key, ...(v as object) }));
-    else
-      raw = Object.entries(o).map(([key, v]) =>
-        v && typeof v === 'object' ? { key, ...(v as object) } : null,
-      );
-  }
+  const raw = (
+    json && typeof json === 'object' && Array.isArray((json as { assets?: unknown }).assets)
+      ? (json as { assets: unknown[] }).assets
+      : Array.isArray(json)
+        ? json
+        : []
+  ) as unknown[];
   const specs: AssetSpec[] = [];
   let skipped = 0;
   for (const r of raw) {
     const p = Entry.safeParse(r);
-    if (!p.success || !wanted(p.data)) {
+    if (!p.success) {
       skipped++;
       continue;
     }
     const e = p.data;
-    const path = e.path.replace(/^\/+/, '');
-    if (e.type === 'spritesheet' && e.frameWidth && e.frameHeight)
-      specs.push({
-        type: 'spritesheet',
-        key: e.key,
-        path,
-        frameWidth: e.frameWidth,
-        frameHeight: e.frameHeight,
-      });
-    else if (e.type === 'atlas' && e.atlasPath)
-      specs.push({ type: 'atlas', key: e.key, path, atlasPath: e.atlasPath.replace(/^\/+/, '') });
-    else if (e.type === 'image') specs.push({ type: 'image', key: e.key, path });
-    else skipped++;
+    if (e.kind === 'font') continue;
+    const add = (key: string, file: string) => {
+      if (e.kind === 'spritesheet') {
+        if (e.frame?.w && e.frame?.h)
+          specs.push({
+            type: 'spritesheet',
+            key,
+            path: clean(file),
+            frameWidth: e.frame.w,
+            frameHeight: e.frame.h,
+          });
+        else skipped++;
+      } else if (e.kind === 'atlas') {
+        if (e.atlasJson)
+          specs.push({ type: 'atlas', key, path: clean(file), atlasPath: clean(e.atlasJson) });
+        else skipped++;
+      } else specs.push({ type: 'image', key, path: clean(file) });
+    };
+    // Per-persona entries are `atlas` without an atlasJson: their variants are 32x32 strips (walk, idle, ...) -> '<id>:<strip>' spritesheets.
+    const stripsOnly = e.kind === 'atlas' && !e.atlasJson && !!e.frame?.w && !!e.frame?.h;
+    if (stripsOnly) {
+      for (const [name, file] of Object.entries(e.variants ?? {}))
+        specs.push({
+          type: 'spritesheet',
+          key: `${e.id}:${name}`,
+          path: clean(file),
+          frameWidth: e.frame!.w!,
+          frameHeight: e.frame!.h!,
+        });
+      continue;
+    }
+    add(e.id, e.file);
+    // Variant textures ('lit'/'dark', 'dusk', ...). The default file is usually repeated as one variant: skip exact duplicates.
+    for (const [name, file] of Object.entries(e.variants ?? {}))
+      if (clean(file) !== clean(e.file)) add(`${e.id}:${name}`, file);
   }
   return { specs, skipped };
 }

@@ -121,7 +121,7 @@ export function createDressing(
   const lamps: Array<{ img: Phaser.GameObjects.Image; glow: Glow }> = [];
   const objs: Phaser.GameObjects.Image[] = [];
   for (const p of planDressing(d.layout)) {
-    const key = `prop-${p.key}`;
+    const key = `prop.${p.key}`;
     if (!d.has(key)) continue;
     const img = scene.add
       .image(p.x, p.y, key)
@@ -141,7 +141,7 @@ export function createDressing(
       const nowLit = d.time.nightness > 0.45;
       if (nowLit === lit) return;
       lit = nowLit;
-      for (const l of lamps) l.img.setTexture(lit ? 'prop-lamp-post-lit' : 'prop-lamp-post');
+      for (const l of lamps) l.img.setTexture(lit ? 'prop.lamp-post-lit' : 'prop.lamp-post');
     },
     destroy() {
       objs.forEach((o) => o.destroy());

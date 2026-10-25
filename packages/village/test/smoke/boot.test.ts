@@ -4,13 +4,10 @@ import { fileURLToPath } from 'node:url';
 
 /** Boots the dev harness headless: canvas present, no console errors, integer art scaling, constant-speed walking. */
 describe('village boot (Playwright)', () => {
-  it('renders, scales by integers and walks at constant speed', async () => {
-    let chromium: typeof import('playwright').chromium;
-    try {
-      ({ chromium } = await import('playwright'));
-    } catch {
-      return;
-    }
+  it('renders with integer art scaling and no console errors', async () => {
+    const pw = await import('playwright').catch(() => undefined);
+    if (!pw) return;
+    const { chromium } = pw;
     const server = await createServer({
       configFile: fileURLToPath(new URL('../../vite.config.ts', import.meta.url)),
       server: { port: 5199, strictPort: false },
