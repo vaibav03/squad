@@ -88,7 +88,7 @@ describe('event coverage', () => {
     const a = half((t) => t < 'm');
     const b = half((t) => t >= 'm');
     expect(checkEventCoverage([a, b]).status).toBe('PASS');
-    expect(VILLAGE_EVENT_TYPES.length).toBe(21);
+    expect(VILLAGE_EVENT_TYPES.length).toBe(23);
   });
   it('fails and names the missing type', () => {
     const noMastery = {

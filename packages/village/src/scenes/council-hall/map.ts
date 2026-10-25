@@ -23,7 +23,7 @@ export function mapCouncilEvent(
   s: CouncilHallState,
   _ctx: SceneCtx,
 ): SceneCommand[] {
-  if (!handlesCouncil(e) || !('councilId' in e)) return [];
+  if (!handlesCouncil(e) || !('member' in e)) return [];
   if (typeof e.member !== 'string' || e.member === '') return []; // malformed: ignore, never throw
   const cmds: SceneCommand[] = [];
   if (s.access !== 'open') cmds.push({ c: 'setAccess', access: 'open' });

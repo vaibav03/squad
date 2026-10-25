@@ -17,6 +17,7 @@ import type { HubConfig } from './config';
 import type { Logger } from './log';
 import type { Ports } from './ports';
 import type { ChatHub } from './chat/hub-chat';
+import type { PlanService } from './plans/service';
 
 export type LedgerEntryEventT = Extract<VillageEvent, { t: 'ledger.entry' }>;
 
@@ -92,10 +93,19 @@ export interface EventLog {
 }
 
 // ---------- filter ----------
+/** Who owns a council run / live discussion (A2A privacy). Modelled on `CallRegistry.ownerOf`. */
+export interface CouncilRunRegistry {
+  /** `undefined` = unknown run (default deny). `private` runs show other viewers arrows only, never text. */
+  ownerOf(
+    correlationId: string,
+  ): { askedBy: string; squadId: string; private: boolean } | undefined;
+}
 export interface FilterCtx {
   directory: Directory;
   calls: CallRegistry;
   trips: TripStore;
+  /** Optional until the council runtime lands (W2/W4); without it `a2a.message` and `council.stage` are dropped. */
+  councils?: CouncilRunRegistry;
 }
 /** What the viewer receives on the wire, or null when it must not be sent. */
 export interface WireEvent {
@@ -293,20 +303,28 @@ export interface HubDeps {
   squads: SquadsStore;
   /** iMessage chat bindings, handle links and dedupe (docs/imessage.md). */
   imessage: ImessageStore;
+  /** The iMessage sync engine while the bridge runs (queue, delivery state, backfill); undefined when iMessage is off. */
+  imessageSync?: ImessageSync | undefined;
   codeSender: CodeSender;
+  /** Shared study plans (docs/study-plan.md). */
+  plans: PlanService;
   /** Live agent discussions; built lazily by `liveServiceFor` (live/wire.ts). */
   live?: LiveService;
   /** Real-ports wiring for live grounding/takeaways (set by adapters/real.ts). */
   liveWiring?: LiveWiring;
+  /** Connected sources (Canvas/Google): store, encrypted tokens, connectors; built lazily by `contextServiceFor`. */
+  context?: ContextService;
 }
 
 import type { CodeSender } from './code-sender';
 import type { LiveService } from './live/service';
+import type { ContextService } from './context/service';
 import type { LiveWiring } from './live/wire';
 import type { ConfirmRouter } from './confirms';
 import type { AccountsStore } from './store/accounts';
 import type { SquadsStore } from './store/squads';
 import type { ImessageStore } from './imessage/store';
+import type { ImessageSync } from './imessage/sync';
 
 /** Which providers are live right now; read lazily so a mid-run credits switch shows up. */
 export interface HubRuntime {

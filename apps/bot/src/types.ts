@@ -58,7 +58,8 @@ export type DecisionReason =
   | 'no_skills'
   | 'confirm_reply' // DM consumed by a pending askConfirm
   | 'own_message'
-  | 'duplicate';
+  | 'duplicate'
+  | 'unknown_mention'; // `@word` that is not an agent: a help DM (rate limited), never a group reply
 
 export interface Decision {
   action: 'run' | 'quiet';
@@ -130,6 +131,8 @@ export interface BotCtx extends Ctx {
 export type { Db, Llm };
 
 export interface BotOptions {
+  /** Display names of the people in a chat; unknown `@name` tags that match one never get the help DM. */
+  memberNames?: (chatId: ChatId, from: string) => string[];
   skills: Skill[];
   llm: Llm;
   transport: Transport;

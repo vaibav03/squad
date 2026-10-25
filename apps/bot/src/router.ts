@@ -1,6 +1,19 @@
-import type { ChatId, InboundMessage, OutboundMessage, Skill } from '@squad/core';
+import {
+  BARE_MENTION_REPLY,
+  MAX_MENTION_FANOUT,
+  MENTION_DM_NOTICE,
+  mentionHelpText,
+  shouldHelpUnknown,
+  parseMentions,
+  type AgentAlias,
+  type ChatId,
+  type InboundMessage,
+  type OutboundMessage,
+  type ParsedMentions,
+  type Skill,
+} from '@squad/core';
 import { decide, clampScore } from './policy';
-import { formatPersonaText } from './persona';
+import { formatPersonaText, getPersona } from './persona';
 import { clip } from './log';
 import { lastUnpromptedAt, saveInbound, saveOutbound, setDecision } from './store';
 import type {
@@ -27,9 +40,12 @@ export interface RouterDeps {
   now: () => number;
   policy?: Partial<PolicyConfig>;
   scoreTimeoutMs?: number;
+  /** Display names of the people in a chat (a human-name tag like `@jamie` must never get a help DM). */
+  memberNames?: (chatId: ChatId, from: string) => string[];
 }
 
 const DEDUPE_WINDOW_MS = 60_000;
+const HELP_COOLDOWN_MS = 60_000;
 const APOLOGY = 'Sorry, something went wrong on my side. Try again in a moment.';
 
 export async function scoreSkills(
@@ -70,6 +86,7 @@ export function createRouter(d: RouterDeps) {
   const lastUnprompted = new Map<ChatId, number>();
   const chains = new Map<ChatId, Promise<unknown>>();
   const bySkill = new Map(d.skills.map((s) => [s.name, s]));
+  const helped = new Map<string, number>();
 
   const quiet = (reason: Decision['reason'], mentioned: boolean): RouteResult => ({
     decision: { action: 'quiet', reason, scores: [], mentioned, unprompted: false },
@@ -152,6 +169,130 @@ export function createRouter(d: RouterDeps) {
     return sent;
   }
 
+  /** One addressed agent: always replies, whatever the speaking-policy score says. */
+  async function runTarget(
+    m: InboundMessage,
+    t: { agent: AgentAlias; alias: string },
+    rest: string,
+    messageId: number,
+  ): Promise<OutboundMessage[]> {
+    const { agent } = t;
+    const who = `student:${m.from}`;
+    emit({
+      t: 'agent.state',
+      agent: who,
+      state: 'studying',
+      thought: `Addressed @${t.alias} (${agent.name})`,
+      work: { skill: agent.id },
+    });
+    try {
+      const personaId = agent.kind === 'persona' ? agent.personaId : 'cubbie';
+      if (rest.length === 0) {
+        return await sendAll([{ chatId: m.chatId, text: BARE_MENTION_REPLY, personaId }]);
+      }
+      if (agent.kind === 'router') {
+        const m2 = { ...m, text: m.text, mentionsBot: true };
+        const scores = await scoreSkills(d.skills, m2, d.ctx, scoreTimeout);
+        const decision = decide(m2, scores, { now: d.now() }, d.policy);
+        if (decision.action !== 'run') return [];
+        return await runSkill(
+          m2,
+          { ...decision, reason: 'mentioned', unprompted: false },
+          messageId,
+        );
+      }
+      if (agent.kind === 'persona') {
+        const p = getPersona(agent.personaId);
+        try {
+          const r = await d.ctx.llm.complete({
+            model: 'fast',
+            system: p.systemPrompt,
+            messages: rest,
+            maxTokens: 300,
+          });
+          const text = r.text.trim() || `${agent.name} here. Ask me again in a moment.`;
+          return await sendAll([{ chatId: m.chatId, text, personaId: agent.personaId }]);
+        } catch (err) {
+          d.log.error({ agent: agent.id, err: (err as Error).message }, 'persona reply failed');
+          return await sendAll([{ chatId: m.chatId, text: APOLOGY, personaId: agent.personaId }]);
+        }
+      }
+      const skill = agent.skill ? bySkill.get(agent.skill) : undefined;
+      if (!skill)
+        return await sendAll([
+          { chatId: m.chatId, text: `@${t.alias} is not available right now. Try @cubbie.` },
+        ]);
+      const m2 = {
+        ...m,
+        text: `@cubbie ${agent.keyword ?? ''} ${rest}`.replace(/\s+/g, ' ').trim(),
+        mentionsBot: true,
+      };
+      const decision: Decision = {
+        action: 'run',
+        reason: 'mentioned',
+        skill: skill.name,
+        scores: [],
+        mentioned: true,
+        unprompted: false,
+      };
+      return await runSkill(m2, decision, messageId);
+    } finally {
+      emit({ t: 'agent.state', agent: who, state: 'idle' });
+    }
+  }
+
+  /** Unknown `@word`: a short help to the sender only (a DM in groups), rate limited per sender. */
+  async function unknownHelp(m: InboundMessage, word: string): Promise<OutboundMessage[]> {
+    const t = d.now();
+    for (const [k, at] of helped) if (t - at > HELP_COOLDOWN_MS) helped.delete(k);
+    if (helped.has(m.from)) return [];
+    helped.set(m.from, t);
+    const clean = word.replace(/[^\p{L}\p{N}_]/gu, '').slice(0, 24);
+    const dm = m.isGroup ? d.transport.dmChatId(m.from) : m.chatId;
+    const out = await sendAll([{ chatId: dm, text: mentionHelpText(clean), personaId: 'cubbie' }]);
+    if (m.isGroup && out.length)
+      out.push(
+        ...(await sendAll([{ chatId: m.chatId, text: MENTION_DM_NOTICE, personaId: 'cubbie' }])),
+      );
+    return out;
+  }
+
+  async function mentionFlow(m: InboundMessage, pm: ParsedMentions): Promise<RouteResult> {
+    const prevChain = chains.get(m.chatId) ?? Promise.resolve();
+    const step = prevChain.then(async () => {
+      const messageId = saveInbound(d.db, m, d.transport.name);
+      const targets = pm.mentions.slice(0, MAX_MENTION_FANOUT);
+      const sent: OutboundMessage[] = [];
+      for (const t of targets) sent.push(...(await runTarget(m, t, pm.rest, messageId)));
+      const names = d.memberNames?.(m.chatId, m.from) ?? [];
+      const unk = pm.unknownMention.find((u) => shouldHelpUnknown(m.text, u.word, names));
+      if (unk) sent.push(...(await unknownHelp(m, unk.word)));
+      const decision: Decision = targets.length
+        ? {
+            action: 'run',
+            reason: 'mentioned',
+            skill: targets[0]!.agent.skill ?? targets[0]!.agent.id,
+            scores: [],
+            mentioned: true,
+            unprompted: false,
+          }
+        : {
+            action: 'quiet',
+            reason: 'unknown_mention',
+            scores: [],
+            mentioned: true,
+            unprompted: false,
+          };
+      setDecision(d.db, messageId, { ...decision, spoke: sent.length > 0 } as Decision);
+      return { decision, sent };
+    });
+    chains.set(
+      m.chatId,
+      step.catch(() => undefined),
+    );
+    return step;
+  }
+
   async function handle(m: InboundMessage): Promise<RouteResult> {
     try {
       if (m.from === 'bot') return quiet('own_message', false);
@@ -168,6 +309,17 @@ export function createRouter(d: RouterDeps) {
         d.log.info({ from: m.from }, 'DM consumed by pending confirm');
         return { decision, sent: [] };
       }
+
+      const pm = parseMentions(m.text);
+      // `@cubbie <text>` alone is the classic path (scored, decided, recorded); anything else typed goes to the mention flow.
+      const plain =
+        pm.unknownMention.length === 0 &&
+        pm.mentions.length === 1 &&
+        pm.mentions[0]!.agent.kind === 'router' &&
+        pm.rest.length > 0;
+      if (!plain && (pm.mentions.length || pm.unknownMention.length))
+        return await mentionFlow(m, pm);
+      if (plain && !m.mentionsBot) m = { ...m, mentionsBot: true };
 
       const prevChain = chains.get(m.chatId) ?? Promise.resolve();
       const step = prevChain.then(() => decideStep(m));

@@ -47,6 +47,8 @@ export const SLOTS: readonly LayoutSlot[] = [
   S('home-1', 'student-home', 2300, 128, 'right', 'Neighbour house 1'),
   S('home-2', 'student-home', 2450, 128, 'right', 'Neighbour house 2'),
   S('home-3', 'student-home', 2600, 128, 'right', 'Neighbour house 3'),
+  // The Study Plan table sits between the last neighbour house and the trip road.
+  S('plan-table', 'plan-board', 2693, 44, 'right', 'Study plan table'),
   S('trip-road', 'road', 2770, 96, 'right', 'Trip road', false),
   S('spawn', 'spawn', 1490, 8, 'mid', 'Village green', false),
 ];

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { VILLAGE_EVENT_TYPES } from '@squad/core';
 import type { RunningHub } from '../../src/server';
 import { playDemoRun, isDemoRunning } from '../../src/sim/demo-run';
-import { auth, boot, emit, get, login, openSse, post } from '../helpers';
+import { auth, boot, emit, get, login, NOT_IN_PLAIN_RUN, openSse, post } from '../helpers';
 
 let hub: RunningHub;
 let url: string;
@@ -215,7 +215,9 @@ describe('sim and shutdown', () => {
     for (const e of log) seen.add(e.type);
     // discussion.* events are scoped to a live run's squad (ingest drops them for an unknown run), so they never
     // reach a plain stream or the demo log; their delivery is covered by src/live/engine.test.ts and routes/live.test.ts
-    for (const type of VILLAGE_EVENT_TYPES.filter((x) => !x.startsWith('discussion.')))
+    for (const type of VILLAGE_EVENT_TYPES.filter(
+      (x) => !x.startsWith('discussion.') && !NOT_IN_PLAIN_RUN.has(x),
+    ))
       expect(seen.has(type), type).toBe(true);
     expect(log.filter((e) => e.type === 'trip.confirmed')).toHaveLength(1);
     // running it twice works: the stage is reset at the start of each run

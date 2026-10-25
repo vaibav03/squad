@@ -1,5 +1,10 @@
 import type { Db } from '@squad/core';
-import { ChatMessageSchema, type ChatCard, type ChatMessage } from '@squad/core';
+import {
+  ChatMessageSchema,
+  type ChatCard,
+  type ChatMessage,
+  type ChatSyncFields,
+} from '@squad/core';
 
 export const CHAT_SCHEMA = `
 CREATE TABLE IF NOT EXISTS hub_chat_messages(
@@ -16,6 +21,8 @@ export interface ChatStore {
   append(m: NewMessage): ChatMessage;
   get(id: string): ChatMessage | undefined;
   updateCard(id: string, card: ChatCard): ChatMessage | undefined;
+  /** Merge additive sync fields (transport, deliveryState, ...) into a stored message. */
+  annotate(id: string, patch: Partial<ChatSyncFields>): ChatMessage | undefined;
   /** Oldest first. `before` is exclusive. */
   history(
     chatId: string,
@@ -75,6 +82,13 @@ export function createChatStore(db: Db): ChatStore {
       const cur = this.get(id);
       if (!cur) return undefined;
       const next: ChatMessage = { ...cur, card };
+      setJson.run(JSON.stringify(next), cur.seq);
+      return next;
+    },
+    annotate(id, patch) {
+      const cur = this.get(id);
+      if (!cur) return undefined;
+      const next: ChatMessage = ChatMessageSchema.parse({ ...cur, ...patch });
       setJson.run(JSON.stringify(next), cur.seq);
       return next;
     },

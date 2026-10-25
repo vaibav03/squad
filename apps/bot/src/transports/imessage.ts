@@ -31,7 +31,25 @@ export interface IMessageSdkLike {
     onError?: (e: Error) => void;
   }): Promise<void>;
   stopWatching(): Promise<void>;
-  send(r: { to: string; text?: string; attachments?: readonly string[] }): Promise<void>;
+  /** Resolves when Apple accepted the send. A transport that knows the new message's guid may return it. */
+  send(r: {
+    to: string;
+    text?: string;
+    attachments?: readonly string[];
+  }): Promise<void | { guid?: string }>;
+  /**
+   * Optional (sync, docs/imessage.md section 8): messages of one chat created at or after `since`, oldest first.
+   * Used to backfill after a watcher outage. A transport without it simply cannot backfill.
+   */
+  listMessages?(q: {
+    chatId: string;
+    since: Date;
+    limit?: number;
+  }): Promise<readonly IMessageMessageLike[]>;
+  /** Optional: delivery receipts for sends whose guid `send` returned. Returns an unsubscribe. */
+  watchReceipts?(
+    cb: (r: { guid: string; state: 'delivered' | 'failed'; reason?: string }) => void,
+  ): void | (() => void);
   listChats(q?: {
     kind?: 'group' | 'dm';
     limit?: number;

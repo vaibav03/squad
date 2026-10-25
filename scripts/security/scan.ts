@@ -35,6 +35,11 @@ const PATTERNS: [string, RegExp][] = [
   ['Slack token', /\bxox[abprs]-[A-Za-z0-9-]{10,}/],
   ['AWS access key', /\bAKIA[0-9A-Z]{16}\b/],
   ['Private key block', /-----BEGIN [A-Z ]*PRIVATE KEY-----/],
+  ['Google OAuth client secret (GOCSPX)', /\bGOCSPX-[A-Za-z0-9_-]{20,}/],
+  ['Google OAuth access token (ya29)', /\bya29\.[A-Za-z0-9_-]{20,}/],
+  ['Google OAuth refresh token (1//0)', /\b1\/\/0[A-Za-z0-9_-]{30,}/],
+  ['Canvas personal access token (id~secret)', /\b\d{3,6}~[A-Za-z0-9]{40,}\b/],
+  ['Squad extension bearer (sqx_)', /\bsqx_[0-9a-f]{18}\.[A-Za-z0-9_-]{20,}/],
 ];
 const ALLOW_FILE = /(^|\/)(\.env\.example|pnpm-lock\.yaml|scan\.ts)$/;
 

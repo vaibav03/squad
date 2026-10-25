@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import type { AskConfirm, Llm } from '@squad/core';
+import { stripBusyTitles, type AskConfirm, type Llm } from '@squad/core';
 import {
   agentCard,
   createAgent,
@@ -131,7 +131,7 @@ export function createAgentApp(o: AgentAppOptions): { app: Hono; agent: FlowAgen
     if (!guard(c.req.header('X-Nook-Internal'))) return c.json({ error: 'forbidden' }, 403);
     const p = CalendarPut.safeParse(await c.req.json().catch(() => null));
     if (!p.success) return c.json({ error: 'bad_request' }, 400);
-    o.profile.calendar.splice(0, o.profile.calendar.length, ...p.data.events);
+    o.profile.calendar.splice(0, o.profile.calendar.length, ...stripBusyTitles(p.data.events));
     return c.json({ ok: true, blocks: o.profile.calendar.length });
   });
   app.post('/internal/confirm/answer', async (c) => {
