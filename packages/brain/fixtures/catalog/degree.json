@@ -1,0 +1,84 @@
+{
+  "name": "BS Computer Science-lite (SAMPLE DATA)",
+  "sample": true,
+  "totalCredits": 90,
+  "limits": {
+    "maxCreditsPerTerm": 18,
+    "minFullTimeCredits": 12
+  },
+  "core": [
+    "CSL 101",
+    "CSL 102",
+    "CSL 110",
+    "CSL 201",
+    "CSL 210",
+    "CSL 220",
+    "CSL 230",
+    "CSL 240",
+    "CSL 310",
+    "CSL 320",
+    "CSL 490",
+    "MAT 111",
+    "MAT 112",
+    "MAT 210",
+    "STA 201"
+  ],
+  "groups": [
+    {
+      "id": "sys",
+      "name": "Systems and Data electives",
+      "kind": "elective",
+      "area": "sys",
+      "credits": 9
+    },
+    {
+      "id": "ai",
+      "name": "Intelligent Systems electives",
+      "kind": "elective",
+      "area": "ai",
+      "credits": 6
+    },
+    {
+      "id": "app",
+      "name": "Applied Computing electives",
+      "kind": "elective",
+      "area": "app",
+      "credits": 6
+    },
+    {
+      "id": "hum",
+      "name": "Humanities",
+      "kind": "gened",
+      "area": "hum",
+      "credits": 6
+    },
+    {
+      "id": "soc",
+      "name": "Social Science",
+      "kind": "gened",
+      "area": "soc",
+      "credits": 6
+    },
+    {
+      "id": "wrt",
+      "name": "Writing",
+      "kind": "gened",
+      "area": "wrt",
+      "credits": 3
+    },
+    {
+      "id": "arts",
+      "name": "Arts and Design",
+      "kind": "gened",
+      "area": "arts",
+      "credits": 3
+    },
+    {
+      "id": "sci",
+      "name": "Natural Science",
+      "kind": "gened",
+      "area": "sci",
+      "credits": 3
+    }
+  ]
+}

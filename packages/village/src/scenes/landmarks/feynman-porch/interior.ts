@@ -157,8 +157,8 @@ export function paintInterior(s: FeynmanPorchState, o: PaintOpts): Raster {
   }
   for (const v of bubbles) {
     placeBubble(r, v.b.text, v.b.style, FEET.x, FEET.y - 30 + enterDrop(v, o.calm), v.alpha, {
-      maxChars: 16,
-      maxLines: 4,
+      maxChars: 30,
+      maxLines: 3,
     });
   }
   return r;

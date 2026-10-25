@@ -6,14 +6,9 @@ import { put } from '../../assets';
 import { easeOut, progress } from '../../curves';
 import { frameAt, lanternFrame, triangle, visibleBubbles } from '../../model/base';
 import { isChair } from '../../council-hall/state';
-import {
-  EXPERT,
-  dimmed,
-  enterDrop,
-  placeBubble,
-  planksH,
-  portraitFrame,
-} from '../../art/landmark-a-kit';
+import { bubble } from '../../art/bubble';
+import { blitBubble, placeRow } from '../../art/bubbleLayout';
+import { EXPERT, dimmed, enterDrop, planksH, portraitFrame } from '../../art/landmark-a-kit';
 import { MAX_LANTERNS, lecternOf, votesOf, type DebateStageState } from './state';
 import { lanternArt, lanternLoop } from './exterior';
 
@@ -171,22 +166,30 @@ export function paintInterior(s: DebateStageState, o: PaintOpts): Raster {
   }
 
   const headTop = FEET_Y - 30;
+  const speakers: typeof bubbles = [];
   for (const v of bubbles) {
-    const w = v.b.who;
-    const drop = enterDrop(v, o.calm);
     if (v.b.style === 'announce') continue;
-    if (w === EXPERT) {
-      placeBubble(r, v.b.text, v.b.style, 112, 98 + drop, v.alpha, { maxChars: 16, maxLines: 4 });
-    } else if (isChair(w)) {
-      placeBubble(r, v.b.text, v.b.style, 112, 98 + drop, v.alpha, { maxChars: 16, maxLines: 3 });
-    } else {
-      const side = lecternOf(s.debaters, w);
-      placeBubble(r, v.b.text, v.b.style, LECTERN_X[side]!, headTop + drop, v.alpha, {
-        maxChars: 12,
-        maxLines: 4,
-      });
-    }
+    if (v.b.who === EXPERT) {
+      const art = bubble(v.b.text, v.b.style, 30, 3, 0.5);
+      const x = Math.max(2, Math.min(INT_W - art.r.w - 2, 112 - art.tail.x));
+      blitBubble(r, art.r, x, Math.max(2, 98 - art.tail.y), v.alpha, v.b.who);
+    } else speakers.push(v);
   }
+  // debaters and the chair share one row above the lecterns; widths shrink, bubbles never touch
+  const placed = placeRow(
+    speakers.map((v) => ({
+      cx: isChair(v.b.who) ? 112 : LECTERN_X[lecternOf(s.debaters, v.b.who)]!,
+      text: v.b.text,
+      style: v.b.style,
+      tail: true,
+    })),
+    INT_W,
+    headTop,
+  );
+  speakers.forEach((v, i) => {
+    const p = placed[i]!;
+    blitBubble(r, p.art.r, p.x, p.y + enterDrop(v, o.calm), v.alpha, v.b.who);
+  });
   paintVerdict(r, s, o);
   return r;
 }
@@ -198,8 +201,8 @@ function paintVerdict(r: Raster, s: DebateStageState, o: PaintOpts): void {
   if (age < 0 || age > 8000 + 120) return;
   const enter = o.calm ? 1 : easeOut(progress(o.t, v.since, 240));
   const exit = age > 8000 ? 1 - (age - 8000) / 120 : 1;
-  placeBubble(r, v.text, 'announce', 112, 98, Math.max(0, Math.min(enter, exit)), {
-    maxChars: 16,
-    maxLines: 4,
-  });
+  // banner above the speaker row (its top is at most 58): never touches a debater's bubble
+  const art = bubble(v.text, 'announce', 30, 4, 0.5);
+  const x = Math.max(2, Math.min(INT_W - art.r.w - 2, 112 - art.tail.x));
+  blitBubble(r, art.r, x, 24, Math.max(0, Math.min(enter, exit)), 'verdict');
 }

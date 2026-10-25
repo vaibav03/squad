@@ -4,6 +4,8 @@ import { drawText, textWidth } from '../pixel/font';
 import type { PaintOpts } from '../contract';
 import { put, type AssetInfo } from '../assets';
 import { bubble } from '../art/bubble';
+import { blitBubble, placeRow } from '../art/bubbleLayout';
+import { paintPlanSheet } from '../art/planSheet';
 import { easeInOut, easeOut, progress } from '../curves';
 import { frameAt, lanternFrame, triangle, visibleBubbles } from '../model/base';
 import { isChair, seatOf, type CouncilHallState } from './state';
@@ -21,7 +23,7 @@ export const SEATS = [
 ] as const;
 export const CHAIR_AT = { x: 112, y: 89 };
 const ROW_X = [50, 112, 174] as const; // bubble row slots (rank positions)
-const ROW_TIP = 30; // bubble row: tail tip y
+const ROW_TIP = 66; // bubble row: tail tip y (all seats share one row; the verdict banner sits above)
 
 /** Cast persona per member (03: solvers and planners). Unknown members borrow by seat. */
 const PERSONA: Record<string, string> = {
@@ -108,13 +110,10 @@ export function paintInterior(s: CouncilHallState, o: PaintOpts): Raster {
     if (dissenting) put(r, A.image('ui.marker-alert'), pos.x, pos.y - 30);
   }
 
+  paintPlanSheet(r, s, o.t, o.calm, 37, 4);
   paintBubbles(r, s, o, bubbles);
   paintVerdict(r, s, o);
   return r;
-}
-
-function tip(art: ReturnType<typeof bubble>, x: number, y: number) {
-  return { x: x - art.tail.x, y: y - art.tail.y };
 }
 
 function paintBubbles(
@@ -123,9 +122,12 @@ function paintBubbles(
   o: PaintOpts,
   bubbles: ReturnType<typeof visibleBubbles>,
 ): void {
-  for (const v of bubbles) {
-    const seat = isChair(v.b.who) ? 1 : (s.seats[v.b.who] ?? seatOf(s.seats, v.b.who));
-    const ranked = s.slots !== null && v.b.style !== 'announce';
+  const row = bubbles.filter((v) => v.b.style !== 'announce');
+  const ranked = s.slots !== null;
+  const seatOfWho = (who: string): number =>
+    isChair(who) ? 1 : (s.seats[who] ?? seatOf(s.seats, who));
+  const items = row.map((v) => {
+    const seat = seatOfWho(v.b.who);
     let x: number = ROW_X[seat] ?? 112;
     if (ranked && s.slots) {
       const from = s.slots.from.indexOf(v.b.who);
@@ -134,18 +136,22 @@ function paintBubbles(
       const tx = ROW_X[to < 0 ? seat : to] ?? x;
       x = Math.round(fx + (tx - fx) * (o.calm ? 1 : easeInOut(progress(o.t, s.slots.since, 320))));
     }
-    const style = ranked && v.b.style === 'thought' ? 'speech' : v.b.style;
-    const art = bubble(v.b.text, style, 12, 3, ranked ? null : 0.5);
-    const pos = tip(art, x, ROW_TIP + (ranked ? art.r.h - art.tail.y : 0));
-    r.blit(art.r, pos.x, pos.y, { alpha: v.alpha });
+    const style = ranked && v.b.style === 'thought' ? ('speech' as const) : v.b.style;
+    return { cx: x, text: v.b.text, style, tail: !ranked };
+  });
+  // one shared row (widths shrink to fit, pushed apart), banner for the verdict sits above it
+  const placed = placeRow(items, INT_W, ROW_TIP);
+  row.forEach((v, i) => {
+    const { x: bx, y: by, art } = placed[i]!;
+    blitBubble(r, art.r, bx, by, v.alpha, v.b.who);
+    const seat = seatOfWho(v.b.who);
     if (!ranked) {
-      // thought trail: two dots from the bubble down to the member's head
+      // thought trail: dots from the bubble down to the member's head
       const head = SEATS[seat]!;
-      const hx = head.x;
-      const hy = head.y - 31;
+      const sx = items[i]!.cx;
       for (let k = 1; k <= 3; k++) {
-        const px = Math.round(x + ((hx - x) * k) / 4);
-        const py = Math.round(ROW_TIP + 2 + ((hy - ROW_TIP) * k) / 4);
+        const px = Math.round(sx + ((head.x - sx) * k) / 4);
+        const py = Math.round(ROW_TIP + 2 + ((head.y - 31 - ROW_TIP) * k) / 4);
         r.px(px, py, 'cloud-hi', v.alpha > 0.5 ? 1 : 0);
         r.px(px, py + 1, 'ink', v.alpha > 0.5 ? 1 : 0);
       }
@@ -153,11 +159,11 @@ function paintBubbles(
     const place = s.slots ? s.slots.to.indexOf(v.b.who) : -1;
     if (ranked && place >= 0 && place < 3 && v.alpha > 0.9) {
       // rank tab on the bubble's corner: position only, never a score
-      r.rect(pos.x - 2, pos.y - 3, 7, 7, 'ink');
-      r.frame(pos.x - 2, pos.y - 3, 7, 7, 'glow');
-      drawText(r, pos.x, pos.y - 2, String(place + 1), 'glow-core');
+      r.rect(bx - 2, by - 3, 7, 7, 'ink');
+      r.frame(bx - 2, by - 3, 7, 7, 'glow');
+      drawText(r, bx, by - 2, String(place + 1), 'glow-core');
     }
-  }
+  });
 }
 
 function paintVerdict(r: Raster, s: CouncilHallState, o: PaintOpts): void {
@@ -167,9 +173,7 @@ function paintVerdict(r: Raster, s: CouncilHallState, o: PaintOpts): void {
   if (age < 0 || age > 8000 + 120) return;
   const enter = o.calm ? 1 : easeOut(Math.min(1, age / 240));
   const exit = age > 8000 ? 1 - (age - 8000) / 120 : 1;
-  const art = bubble(v.text, 'announce', 24, 3, 0.5);
-  const headTop = CHAIR_AT.y - 31 - 3;
-  r.blit(art.r, 112 - art.tail.x, headTop - art.tail.y, {
-    alpha: Math.max(0, Math.min(enter, exit)),
-  });
+  const art = bubble(v.text, 'announce', 30, 4, 0.5);
+  // banner above the shared seat row: never on top of a seat bubble
+  blitBubble(r, art.r, 112 - art.tail.x, 7, Math.max(0, Math.min(enter, exit)), 'verdict');
 }

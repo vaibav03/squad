@@ -1,8 +1,10 @@
 import { Raster } from '../../pixel/raster';
-import { drawTextCentered, textWidth } from '../../pixel/font';
+import { drawText, drawTextCentered, textWidth } from '../../pixel/font';
 import { put, type AssetLib } from '../../assets';
 import type { PaintOpts } from '../../contract';
 import { triangle } from '../../model/base';
+import { wrap } from '../../art/bubble';
+import { fontSafe } from '../../art/planSheet';
 import {
   callPortrait,
   castFrame,
@@ -95,6 +97,19 @@ function plinth(r: Raster, label: string, live: boolean): void {
   }
 }
 
+/** The public question prompt, wrapped in a panel across the star window (never the key). */
+function questionPanel(r: Raster, text: string): void {
+  let lines = wrap(fontSafe(text), 26);
+  if (lines.length > 4) {
+    lines = lines.slice(0, 4);
+    lines[3] = `${(lines[3] ?? '').slice(0, 24)}..`;
+  }
+  const h = lines.length * 6 + 5;
+  r.rect(56, 12, 112, h, 'ink');
+  r.frame(56, 12, 112, h, 'violet');
+  lines.forEach((ln, i) => drawText(r, 60, 15 + i * 6, ln, 'glow-core'));
+}
+
 /** Interior cutaway (224x128): star room with telescope, charts, brass plinth and a pulsing orb. */
 export function paintInterior(s: LbState, o: PaintOpts): Raster {
   const look = lookOf(s);
@@ -125,6 +140,7 @@ export function paintInterior(s: LbState, o: PaintOpts): Raster {
     34,
   );
   plinth(r, look.awake ? s.chalk.text.toUpperCase() : '', look.awake);
+  if (look.awake && s.chalk.question) questionPanel(r, s.chalk.question);
   if (!look.locked) put(r, castFrame(a, 'chairman', s.occupant, o), 72, FLOOR_Y - 1);
   // the orb: shell, iris, core
   const p = orbPulse(s, o);
@@ -154,6 +170,6 @@ export function paintInterior(s: LbState, o: PaintOpts): Raster {
   r.ellipse(112, FLOOR_Y + 6, 40, 4, 'violet', 0.12 + 0.1 * p);
   if (s.ring) doorRing(r, a, 112, FLOOR_Y + 12, o);
   if (s.portrait) callPortrait(r, a, 'chairman', 8, 40, o);
-  paintLbBubbles(r, s, o, 84, FLOOR_Y - 36, 20, 3);
+  paintLbBubbles(r, s, o, 84, FLOOR_Y - 36, 30, 3);
   return r;
 }

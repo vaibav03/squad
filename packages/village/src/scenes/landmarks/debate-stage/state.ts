@@ -100,6 +100,7 @@ export function mapDebateCouncil(
         text: (e.text ?? '').trim() || 'Verdict reached',
         ...(e.dissenter ? { dissenter: e.dissenter } : {}),
       });
+      if (e.outcome) cmds.push({ c: 'outcome', outcome: e.outcome });
       cmds.push({ c: 'lantern', mode: dissenting ? 'flicker' : 'steady' });
       break;
     }

@@ -6,6 +6,8 @@ import { put, type AssetLib } from '../../assets';
 import { easeInOut, easeOut, progress } from '../../curves';
 import { frameAt, lanternFrame, triangle, visibleBubbles } from '../../model/base';
 import { bubble } from '../../art/bubble';
+import { blitBubble, placeRow } from '../../art/bubbleLayout';
+import { paintPlanSheet } from '../../art/planSheet';
 import { EXPERT, dimmed, planksH, portraitFrame } from '../../art/landmark-a-kit';
 import { isChair, seatOf } from '../../council-hall/state';
 import type { RoundTableState } from './state';
@@ -299,6 +301,7 @@ export function paintInterior(s: RoundTableState, o: PaintOpts): Raster {
     r.blit(portraitFrame(A, 'council-balance', talking, frameAt(o.t, 8, o.calm)), 196, 34);
   }
 
+  paintPlanSheet(r, s, o.t, o.calm, 14, 32);
   paintBubbles(r, s, o, bubbles);
   paintVerdict(r, s, o);
   return r;
@@ -313,16 +316,18 @@ function paintBubbles(
   o: PaintOpts,
   bubbles: ReturnType<typeof visibleBubbles>,
 ): void {
+  const seatBubbles: typeof bubbles = [];
   for (const v of bubbles) {
-    const w = v.b.who;
     if (v.b.style === 'announce') continue;
-    if (w === EXPERT) {
-      const art = bubble(v.b.text, v.b.style, 16, 4, 0.5);
-      r.blit(art.r, Math.round(CHAIR.x - art.tail.x), 42, { alpha: v.alpha });
-      continue;
-    }
+    if (v.b.who === EXPERT) {
+      const art = bubble(v.b.text, v.b.style, 28, 3, 0.5);
+      blitBubble(r, art.r, Math.round(CHAIR.x - art.tail.x), 42, v.alpha, v.b.who);
+    } else seatBubbles.push(v);
+  }
+  const ranked = s.slots !== null;
+  const items = seatBubbles.map((v) => {
+    const w = v.b.who;
     const seat = isChair(w) ? 2 : (s.seats[w] ?? seatOf(s.seats, w));
-    const ranked = s.slots !== null;
     let x: number = seatX(seat);
     if (ranked && s.slots) {
       const from = s.slots.from.indexOf(w);
@@ -332,22 +337,22 @@ function paintBubbles(
       const k = o.calm ? 1 : easeInOut(progress(o.t, s.slots.since, 320));
       x = Math.round(fx + (tx - fx) * k);
     }
-    const style = ranked && v.b.style === 'thought' ? 'speech' : v.b.style;
-    const art = bubble(v.b.text, style, 11, 4, ranked ? null : 0.5);
-    const bx = Math.max(2, Math.min(INT_W - art.r.w - 2, x - art.tail.x));
-    const slotIdx = ranked && s.slots ? Math.max(0, s.slots.to.indexOf(w)) : seat;
-    const lift = slotIdx === 1 ? 6 : 0; // stagger the row so neighbours never touch
-    const by = (ranked ? HEAD_TIP - 2 - art.r.h : HEAD_TIP - art.tail.y) - lift;
-    r.blit(art.r, bx, by, { alpha: v.alpha });
+    const style = ranked && v.b.style === 'thought' ? ('speech' as const) : v.b.style;
+    return { cx: x, text: v.b.text, style, tail: !ranked };
+  });
+  const placed = placeRow(items, INT_W, HEAD_TIP);
+  seatBubbles.forEach((v, i) => {
+    const { x: bx, y: by, art } = placed[i]!;
+    blitBubble(r, art.r, bx, by, v.alpha, v.b.who);
     if (ranked && s.slots && v.alpha > 0.9) {
-      const place = s.slots.to.indexOf(w);
+      const place = s.slots.to.indexOf(v.b.who);
       if (place >= 0 && place < 3) {
         r.rect(bx - 1, by - 8, 7, 7, 'ink');
         r.frame(bx - 1, by - 8, 7, 7, 'glow');
         drawText(r, bx + 1, by - 7, String(place + 1), 'glow-core');
       }
     }
-  }
+  });
 }
 
 function paintVerdict(r: Raster, s: RoundTableState, o: PaintOpts): void {
@@ -357,7 +362,8 @@ function paintVerdict(r: Raster, s: RoundTableState, o: PaintOpts): void {
   if (age < 0 || age > 8000 + 120) return;
   const enter = o.calm ? 1 : easeOut(Math.min(1, age / 240));
   const exit = age > 8000 ? 1 - (age - 8000) / 120 : 1;
-  const art = bubble(v.text, 'announce', 12, 5, 0.7);
+  // top tier on the chair's side, above the seat row, so it never touches a seat bubble
+  const art = bubble(v.text, 'announce', 16, 4, 0.7);
   const x = Math.max(2, Math.min(INT_W - art.r.w - 2, CHAIR.x - art.tail.x));
-  r.blit(art.r, x, CHAIR.feet - 34 - art.tail.y, { alpha: Math.max(0, Math.min(enter, exit)) });
+  blitBubble(r, art.r, x, 31, Math.max(0, Math.min(enter, exit)), 'verdict');
 }

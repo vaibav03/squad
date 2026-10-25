@@ -1,6 +1,8 @@
 import type { VillageEvent } from '@squad/core';
 import { createAssetLib, type AssetLib, type ManifestAsset } from './assets';
-import { DEFAULT_CTX, step, type SceneCtx, type SceneDef } from './contract';
+import { DEFAULT_CTX, sanitizeEvent, step, type SceneCtx, type SceneDef } from './contract';
+import { createRoomSession } from './roomSession';
+import { publishRoomSession } from './rooms';
 import { eventChapter } from './model/events';
 import { Raster } from './pixel/raster';
 import { PLACEMENTS, chapterSlotFor, type Placement } from './registry';
@@ -186,6 +188,8 @@ const mod = {
   create(ctx: HostCtx): Instance {
     const { scene, layout, depth } = ctx;
     const lives: Live[] = [];
+    const session = createRoomSession(); // what was said in each room; the DOM reads it via @squad/village/rooms
+    publishRoomSession(session);
     const chapterSlots = new Map<string, string>();
     let assets: AssetLib | null = null;
     let now = 0;
@@ -284,6 +288,7 @@ const mod = {
       releaseInput = ctx.player.lockInput();
       ctx.registry.set('playerX', ctx.player.x);
       ctx.player.sprite.setVisible(false);
+      session.enter(live.p.slotId);
       ctx.bus.emit('enter', { slotId: live.p.slotId });
       fade = { from: alphaNow, to: 1, since: now, dur: ctx.calm ? 120 : 200 };
       fading = true;
@@ -306,6 +311,7 @@ const mod = {
       ctx.player.sprite.setVisible(true);
       releaseInput?.();
       releaseInput = null;
+      session.leave();
       ctx.bus.emit('leave', { slotId: live.p.slotId });
     }
     scene.input.keyboard?.on('keydown-ESC', leave);
@@ -322,7 +328,9 @@ const mod = {
           live.state = live.def.init({ instance: chapter, title: chapterTitle(chapter) });
         }
       }
+      const clean = sanitizeEvent(e, c); // the transcript never holds another student's `correct`
       for (const live of lives) {
+        if (live.def.handles(clean, live.state, c)) session.record(live.p.slotId, clean, now);
         const before = live.state;
         live.state = step(live.def, live.state, e, c, now);
         if (live.state !== before && e.t === 'council.verdict') {
