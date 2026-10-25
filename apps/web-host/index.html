@@ -19,9 +19,96 @@
           document.documentElement.dataset.calm = 'true';
       } catch (e) {}
     </script>
+    <style>
+      .sq-boot {
+        min-height: 100dvh;
+        display: grid;
+        place-content: center;
+        gap: 8px;
+        text-align: center;
+        font:
+          16px/1.5 system-ui,
+          sans-serif;
+        color: #c9d3e8;
+        background: #070f1f;
+      }
+      .sq-boot p {
+        margin: 0;
+      }
+      .sq-boot__retry {
+        margin-left: 8px;
+        font: inherit;
+        padding: 4px 12px;
+        cursor: pointer;
+      }
+      .sq-boot__build {
+        opacity: 0.6;
+        font-family: ui-monospace, Menlo, monospace;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static boot state: React replaces it on first render. If the app bundle never starts (a stale dev server,
+           a failed chunk, a hub-less host) the guard below turns it into a visible error with Reload. -->
+      <div class="sq-boot" role="status" data-build="%SQUAD_BUILD%">
+        <p class="sq-boot__msg">Starting Squad&hellip;</p>
+        <p class="sq-boot__err" hidden>
+          Squad did not start.
+          <button type="button" class="sq-boot__retry" onclick="location.reload()">Retry</button>
+        </p>
+        <small class="sq-boot__build">web %SQUAD_BUILD%</small>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var failed = false;
+        function fail(why) {
+          if (failed) return;
+          var el = document.querySelector('#root .sq-boot');
+          if (!el) return; // React has taken over: its own boundaries and watchdog handle the rest
+          failed = true;
+          try {
+            console.error(
+              'Squad boot guard: app did not start (' + why + ') on ' + location.pathname,
+            );
+          } catch (e) {}
+          el.querySelector('.sq-boot__msg').hidden = true;
+          el.querySelector('.sq-boot__err').hidden = false;
+          document.title = 'Squad did not start';
+        }
+        // A module that 404s/504s (stale optimized deps after a branch switch) or a failed preload: reload once
+        // on its own (a restarted dev server usually fixes it), then show the error.
+        function once(why) {
+          try {
+            if (!sessionStorage.getItem('squad.bootRetry')) {
+              sessionStorage.setItem('squad.bootRetry', '1');
+              return location.reload();
+            }
+          } catch (e) {}
+          fail(why);
+        }
+        window.addEventListener('vite:preloadError', function () {
+          once('preload');
+        });
+        window.addEventListener(
+          'error',
+          function (e) {
+            var t = e && e.target;
+            if (t && t.tagName === 'SCRIPT') once('script ' + (t.src || ''));
+          },
+          true,
+        );
+        setTimeout(function () {
+          fail('no render after 8s');
+        }, 8000);
+        window.addEventListener('squad:booted', function () {
+          try {
+            sessionStorage.removeItem('squad.bootRetry');
+          } catch (e) {}
+        });
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import type { Citation } from '@squad/core';
 import { z } from 'zod';
 import type { QuizPayload, QuizResult } from '../../overlays/types';
@@ -53,7 +54,7 @@ export const chapterLabel = (c: string) => (/^ch\d+$/i.test(c) ? `Ch${c.slice(2)
 
 export async function fetchQuiz(c: HubCtx, quizId: string): Promise<QuizPayload> {
   const res = await ok(
-    await fetch(`${base(c)}/v1/quiz/${encodeURIComponent(quizId)}`, { headers: auth(c) }),
+    await timedFetch(`${base(c)}/v1/quiz/${encodeURIComponent(quizId)}`, { headers: auth(c) }),
     'quiz',
   );
   const q = parseOrThrow(HubQuiz, await res.json());
@@ -75,7 +76,7 @@ export async function answerQuiz(
   quizId: string,
   answer: { choice?: string; text?: string },
 ): Promise<QuizResult> {
-  const res = await fetch(`${base(c)}/v1/quiz/${encodeURIComponent(quizId)}/answer`, {
+  const res = await timedFetch(`${base(c)}/v1/quiz/${encodeURIComponent(quizId)}/answer`, {
     method: 'POST',
     headers: { ...json, ...auth(c) },
     body: JSON.stringify(answer),
@@ -114,7 +115,7 @@ export interface ConfirmTarget {
 export async function previewConfirm(c: HubCtx, taskId: string): Promise<ConfirmTarget> {
   const tripId = taskId.replace(/^task_/, '');
   const res = await ok(
-    await fetch(`${base(c)}/v1/trips/${encodeURIComponent(tripId)}`, { headers: auth(c) }),
+    await timedFetch(`${base(c)}/v1/trips/${encodeURIComponent(tripId)}`, { headers: auth(c) }),
     'trip',
   );
   const trip = parseOrThrow(Trip, await res.json());
@@ -138,7 +139,7 @@ export async function resolveConfirm(
   yes: boolean,
 ): Promise<void> {
   await ok(
-    await fetch(`${base(c)}/v1/confirms/${encodeURIComponent(target.taskId)}`, {
+    await timedFetch(`${base(c)}/v1/confirms/${encodeURIComponent(target.taskId)}`, {
       method: 'POST',
       headers: { ...json, ...auth(c) },
       body: JSON.stringify({ optionId: target.optionId, yes }),
@@ -151,7 +152,7 @@ export async function resolveConfirm(
 
 const CallStart = z.object({ callId: z.string(), wsUrl: z.string(), ticket: z.string() });
 export async function startCall(c: HubCtx, agentId: string) {
-  const res = await fetch(`${base(c)}/v1/call/start`, {
+  const res = await timedFetch(`${base(c)}/v1/call/start`, {
     method: 'POST',
     headers: { ...json, ...auth(c) },
     body: JSON.stringify({ agentId }),

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { timedFetch } from '../../lib/http';
 import { useEventFeed, useLiveConfig, type Connection } from '../../overlays/kit';
 import {
   parseTripEvent,
@@ -32,9 +33,15 @@ export function useTrip(tripId: string) {
   const refresh = useCallback(async () => {
     if (cfg.mode !== 'live' || !cfg.hubUrl) return;
     try {
-      const res = await fetch(`${cfg.hubUrl}/v1/trips/${encodeURIComponent(tripId)}`, {
+      const res = await timedFetch(`${cfg.hubUrl}/v1/trips/${encodeURIComponent(tripId)}`, {
         headers: auth,
       });
+      if (res.status === 404) {
+        // no trip for this squad yet: an empty state, not an error
+        setBase(undefined);
+        setStatus('ready');
+        return;
+      }
       if (!res.ok) throw new Error(String(res.status));
       const parsed = tripFromHub(await res.json(), cfg.userId);
       if (!parsed) throw new Error('trip shape');
@@ -81,7 +88,7 @@ export function useTrip(tripId: string) {
   const post = useCallback(
     async (path: string, body: unknown) => {
       if (cfg.mode !== 'live' || !cfg.hubUrl) return true;
-      const res = await fetch(`${cfg.hubUrl}/v1/trips/${encodeURIComponent(tripId)}/${path}`, {
+      const res = await timedFetch(`${cfg.hubUrl}/v1/trips/${encodeURIComponent(tripId)}/${path}`, {
         method: 'POST',
         headers: auth,
         body: JSON.stringify(body),
