@@ -47,7 +47,7 @@
         "t": "agent.message",
         "from": "student:s_ana",
         "to": "commons",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "kind": "task.open",
         "shared": ["study plan opened", "3 members"]
       }
@@ -82,7 +82,7 @@
         "t": "agent.message",
         "from": "student:s_ana",
         "to": "commons",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "kind": "psi.blind",
         "shared": ["168 blinded tokens (padded)"]
       }
@@ -91,7 +91,7 @@
       "at": 8300,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "student": "s_ana",
         "field": "calendar",
         "shared": "168 blinded tokens (padded)",
@@ -104,7 +104,7 @@
         "t": "agent.message",
         "from": "student:s_ben",
         "to": "commons",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "kind": "psi.blind",
         "shared": ["168 blinded tokens (padded)"]
       }
@@ -113,7 +113,7 @@
       "at": 8900,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "student": "s_ben",
         "field": "calendar",
         "shared": "168 blinded tokens (padded)",
@@ -126,7 +126,7 @@
         "t": "agent.message",
         "from": "student:s_chi",
         "to": "commons",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "kind": "psi.blind",
         "shared": ["168 blinded tokens (padded)"]
       }
@@ -135,7 +135,7 @@
       "at": 9500,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "student": "s_chi",
         "field": "calendar",
         "shared": "168 blinded tokens (padded)",
@@ -148,7 +148,7 @@
         "t": "agent.message",
         "from": "student:s_ana",
         "to": "mediator",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "kind": "psi.tokens",
         "shared": ["168 blinded tokens"]
       }
@@ -159,7 +159,7 @@
         "t": "agent.message",
         "from": "student:s_ben",
         "to": "mediator",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "kind": "psi.tokens",
         "shared": ["168 blinded tokens"]
       }
@@ -170,7 +170,7 @@
         "t": "agent.message",
         "from": "student:s_chi",
         "to": "mediator",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "kind": "psi.tokens",
         "shared": ["168 blinded tokens"]
       }
@@ -181,7 +181,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "kind": "psi.common",
         "shared": ["0 common slots"]
       }
@@ -192,7 +192,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "kind": "conflict",
         "shared": ["no slot works for everyone"]
       }
@@ -203,7 +203,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "kind": "result",
         "shared": ["plan proposed"]
       }
@@ -221,7 +221,7 @@
       "event": {
         "t": "confirm.pending",
         "student": "s_ben",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "question": "Move gym to make Wed 7 PM work?"
       }
     },
@@ -230,7 +230,7 @@
       "event": {
         "t": "confirm.done",
         "student": "s_ben",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "question": "Move gym to make Wed 7 PM work?"
       }
     },
@@ -248,7 +248,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "kind": "result",
         "shared": ["plan found"]
       }
@@ -281,7 +281,7 @@
       "at": 33000,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "student": "s_ana",
         "field": "calendar",
         "shared": "busy 3",
@@ -292,7 +292,7 @@
       "at": 34500,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "student": "s_ben",
         "field": "calendar",
         "shared": "busy 4",
@@ -303,7 +303,7 @@
       "at": 36000,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_study_midterm",
+        "taskId": "task_study_ch5",
         "student": "s_chi",
         "field": "calendar",
         "shared": "busy 2",
@@ -366,7 +366,7 @@
         "t": "agent.message",
         "from": "student:s_ana",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "task.open",
         "shared": ["trip plan opened", "3 members"]
       }
@@ -401,7 +401,7 @@
         "t": "agent.message",
         "from": "student:s_ana",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "psi.blind",
         "shared": ["64 blinded tokens (padded)"]
       }
@@ -410,7 +410,7 @@
       "at": 60250,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "student": "s_ana",
         "field": "calendar",
         "shared": "64 blinded tokens (padded)",
@@ -423,7 +423,7 @@
         "t": "agent.message",
         "from": "student:s_ben",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "psi.blind",
         "shared": ["64 blinded tokens (padded)"]
       }
@@ -432,7 +432,7 @@
       "at": 60750,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "student": "s_ben",
         "field": "calendar",
         "shared": "64 blinded tokens (padded)",
@@ -445,7 +445,7 @@
         "t": "agent.message",
         "from": "student:s_chi",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "psi.blind",
         "shared": ["64 blinded tokens (padded)"]
       }
@@ -454,7 +454,7 @@
       "at": 61250,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "student": "s_chi",
         "field": "calendar",
         "shared": "64 blinded tokens (padded)",
@@ -467,7 +467,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "psi.common",
         "shared": ["3 common slots"]
       }
@@ -478,7 +478,7 @@
         "t": "agent.message",
         "from": "student:s_ana",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "share.vec",
         "shared": ["secret share of 3 values (cantAfford)"]
       }
@@ -487,7 +487,7 @@
       "at": 64250,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "student": "s_ana",
         "field": "budget",
         "shared": "secret share of 3 values (cantAfford)",
@@ -500,7 +500,7 @@
         "t": "agent.message",
         "from": "student:s_ben",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "share.vec",
         "shared": ["secret share of 3 values (cantAfford)"]
       }
@@ -509,7 +509,7 @@
       "at": 64750,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "student": "s_ben",
         "field": "budget",
         "shared": "secret share of 3 values (cantAfford)",
@@ -522,7 +522,7 @@
         "t": "agent.message",
         "from": "student:s_chi",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "share.vec",
         "shared": ["secret share of 3 values (cantAfford)"]
       }
@@ -531,7 +531,7 @@
       "at": 65250,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "student": "s_chi",
         "field": "budget",
         "shared": "secret share of 3 values (cantAfford)",
@@ -544,7 +544,7 @@
         "t": "agent.message",
         "from": "student:s_chi",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "share.vec",
         "shared": ["secret share of 3 values (veto)"]
       }
@@ -553,7 +553,7 @@
       "at": 66250,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "student": "s_chi",
         "field": "hardNo",
         "shared": "secret share of 3 values (veto)",
@@ -566,7 +566,7 @@
         "t": "agent.message",
         "from": "student:s_ana",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "share.vec",
         "shared": ["secret share of 3 values (veto)"]
       }
@@ -575,7 +575,7 @@
       "at": 66750,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "student": "s_ana",
         "field": "hardNo",
         "shared": "secret share of 3 values (veto)",
@@ -588,7 +588,7 @@
         "t": "agent.message",
         "from": "student:s_ben",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "share.vec",
         "shared": ["secret share of 3 values (veto)"]
       }
@@ -597,7 +597,7 @@
       "at": 67250,
       "event": {
         "t": "ledger.entry",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "student": "s_ben",
         "field": "hardNo",
         "shared": "secret share of 3 values (veto)",
@@ -610,7 +610,7 @@
         "t": "agent.message",
         "from": "student:s_ana",
         "to": "mediator",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "share.sum",
         "shared": ["secret share of 3 values (cantAfford)"]
       }
@@ -621,7 +621,7 @@
         "t": "agent.message",
         "from": "student:s_ben",
         "to": "mediator",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "share.sum",
         "shared": ["secret share of 3 values (cantAfford)"]
       }
@@ -632,7 +632,7 @@
         "t": "agent.message",
         "from": "student:s_chi",
         "to": "mediator",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "share.sum",
         "shared": ["secret share of 3 values (cantAfford)"]
       }
@@ -643,7 +643,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "option_dropped",
         "shared": ["option dropped: budget"]
       }
@@ -654,7 +654,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "option_dropped",
         "shared": ["dropped: veto"]
       }
@@ -665,7 +665,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "result",
         "shared": ["top options ranked"]
       }
@@ -676,7 +676,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "result",
         "shared": ["plan proposed"]
       }
@@ -694,7 +694,7 @@
       "event": {
         "t": "confirm.pending",
         "student": "s_ana",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "question": "Hold the Flagstaff cabin at $64/person?"
       }
     },
@@ -711,7 +711,7 @@
       "event": {
         "t": "confirm.pending",
         "student": "s_ben",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "question": "Hold the Flagstaff cabin at $64/person?"
       }
     },
@@ -728,7 +728,7 @@
       "event": {
         "t": "confirm.pending",
         "student": "s_chi",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "question": "Hold the Flagstaff cabin at $64/person?"
       }
     },
@@ -737,7 +737,7 @@
       "event": {
         "t": "confirm.done",
         "student": "s_ana",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "question": "Hold the Flagstaff cabin at $64/person?"
       }
     },
@@ -754,7 +754,7 @@
       "event": {
         "t": "confirm.done",
         "student": "s_ben",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "question": "Hold the Flagstaff cabin at $64/person?"
       }
     },
@@ -771,7 +771,7 @@
       "event": {
         "t": "confirm.done",
         "student": "s_chi",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "question": "Hold the Flagstaff cabin at $64/person?"
       }
     },
@@ -789,7 +789,7 @@
         "t": "agent.message",
         "from": "mediator",
         "to": "commons",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "kind": "result",
         "shared": ["plan found"]
       }
@@ -798,7 +798,7 @@
       "at": 108500,
       "event": {
         "t": "trip.confirmed",
-        "taskId": "task_trip_flagstaff",
+        "taskId": "task_trip_cabo",
         "squadId": "sq_demo"
       }
     }
