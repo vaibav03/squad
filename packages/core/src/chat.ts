@@ -107,6 +107,10 @@ export const ChatSendBodySchema = z.strictObject({
     .array(z.strictObject({ id: z.string() }))
     .max(4)
     .optional(),
+  /** Client-generated id: a retry of the same send returns the first message instead of posting a duplicate. */
+  clientId: z.string().min(1).max(64).optional(),
+  /** Set when this text answers a confirm card: rejected with 409 `stale_confirm` unless that card is still pending. */
+  confirmTaskId: z.string().min(1).max(200).optional(),
 });
 export type ChatSendBody = z.infer<typeof ChatSendBodySchema>;
 
