@@ -311,6 +311,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
         );
       return;
     }
+    handles.set(userId, m.sender); // lets a private reply (the unknown-tag help DM) reach this person's own 1:1
     await relay(m, userId, `group:${bound.squadId}`, bound.squadId);
   }
 

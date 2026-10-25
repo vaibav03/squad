@@ -6,7 +6,9 @@ import { parseMentions } from '@squad/core';
  * (case-insensitive, word-bounded, not in code/quotes/links/emails), or a leading `cubbie,` / `cubbie:` / `hey|hi|yo|ok cubbie`.
  * Every DM counts as a mention. "cubbies", "scrubbie", "@cub" and plain mid-sentence "cubbie" do not.
  */
-const LEAD = /^\s*(?:(?:hey|hi|hello|yo|ok|okay)[\s,]+)?cubbie?(?:[\s]*[,:!?]|\s|$)/i;
+// "hey cubbie ...", "cubbie, ...", "cubbie:" or a lone "cubbie". A bare leading "cubbie is slow" is chatter about the bot, not a mention.
+const LEAD =
+  /^\s*(?:(?:hey|hi|hello|yo|ok|okay)[\s,]+cubbie?(?![\p{L}\p{N}_])|cubbie?\s*[,:!?]|cubbie?\s*$)/iu;
 
 export function detectMention(text: string, isGroup: boolean): boolean {
   if (!isGroup) return true;
