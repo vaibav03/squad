@@ -6,6 +6,7 @@ import { LivePanel } from './LivePanel';
 import { liveErrorCopy } from './live-client';
 import { groundingLine } from './TakeawaysPanel';
 import { useLiveTransport } from './transport';
+import { ModeBadge } from '../council/board/ModeBadge';
 import './live.css';
 
 type Load = { s: 'loading' } | { s: 'error'; msg: string } | { s: 'ready'; snap: LiveSnapshot };
@@ -69,7 +70,7 @@ export function LiveChatCard({
       <div className="ld-row">
         <span className="ld-eyebrow">Live discussion</span>
         <span className="ld-tag">AI-generated discussion</span>
-        {s.demo && <span className="ld-tag ld-tag--demo">Demo mode</span>}
+        <ModeBadge mode={s.demo ? 'demo' : 'live'} />
         {running && <span className="ld-tag ld-tag--live">Live now</span>}
       </div>
       <h4 className="ld-card__topic">{s.topic || topic}</h4>

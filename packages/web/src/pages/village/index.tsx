@@ -22,13 +22,20 @@ import { InspectorPanel } from '../../overlays/inspector';
 import { setInspectorStore } from '../../overlays/inspector/bridge';
 import { SourceViewerHost } from '../../components/source-viewer';
 import { createInspectorStore, type InspectorStore } from '@squad/village/inspector';
-import { CouncilHall } from '../../council';
+import { createCouncilBoardStore } from '@squad/village/council';
+import { CouncilHall, CouncilBoardHost, setBoardStore } from '../../council';
 import { useToast } from '../../primitives/Toast';
 import { sendPhraseToChat } from './chat-send';
 import { OverlayHost } from './OverlayHost';
 import { DEFAULT_WORLD, loadWorld, type WorldHandle } from './worlds';
 import './village.css';
 
+/** Short names for the council replays (`?replay=track4`); the hub serves them by file name. */
+const REPLAY_ALIAS: Record<string, string> = {
+  track4: 'track4-council-a2a',
+  track4b: 'track4b-council-degraded',
+  track4c: 'track4c-council-private',
+};
 const LOAD_TIMEOUT_MS = 15000;
 
 interface Feed {
@@ -94,7 +101,10 @@ export default function VillagePage({ world }: { world?: string }) {
         const baseUrl = cfg.hubUrl!.replace(/\/+$/, '');
         const me = cfg.userId ? hubStudentId(cfg.userId) : undefined;
         if (replayName) {
-          const r = await loadReplay(replayName, { baseUrl, opts: { autoplay: true } });
+          const r = await loadReplay(REPLAY_ALIAS[replayName] ?? replayName, {
+            baseUrl,
+            opts: { autoplay: true },
+          });
           feed = { source: r, me: r.cast.me, close: () => r.close() };
         } else {
           const token = cfg.token ?? undefined;
@@ -113,6 +123,17 @@ export default function VillagePage({ world }: { world?: string }) {
           offStore();
           prevClose();
         };
+        // The council board folds the same stream (a2a.message, council.stage and the legacy council.* events).
+        const board = createCouncilBoardStore({
+          defaultMode: replayName || !live ? 'demo' : 'live',
+        });
+        const offBoard = board.attach(feed.source);
+        const prevClose2 = feed.close;
+        feed.close = () => {
+          offBoard();
+          prevClose2();
+        };
+        setBoardStore(board);
         setInspector(store);
         setInspectorStore(store);
         const mount = await loadWorld(worldId);
@@ -127,6 +148,7 @@ export default function VillagePage({ world }: { world?: string }) {
           calm,
           onOverlay: setEvent,
           inspector: store,
+          councilBoard: board,
         });
         handle.current = h;
         if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__world = h;
@@ -147,6 +169,7 @@ export default function VillagePage({ world }: { world?: string }) {
       setEvent(null);
       setInspector(null);
       setInspectorStore(null);
+      setBoardStore(null);
     };
     // calm is applied live through setCalm; the world is not remounted for it.
   }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable, attempt]);
@@ -271,6 +294,12 @@ export default function VillagePage({ world }: { world?: string }) {
       )}
       <SourceViewerHost />
       <ChatDock enabled={live && !replayName} />
+      <CouncilBoardHost
+        hub={hub}
+        replay={!!replayName}
+        calm={calm}
+        returnFocusTo={stage.current?.querySelector<HTMLElement>('.sqv-stage')}
+      />
       <CouncilHall
         hub={hub}
         calm={calm}

@@ -93,6 +93,7 @@ export class WorldScene extends Phaser.Scene {
     const interactables = createInteractables();
     const inspector = I.opts.inspector ?? createInspectorStore({ me: I.opts.me });
     this.registry.set('inspector', inspector);
+    if (I.opts.councilBoard) this.registry.set('councilBoard', I.opts.councilBoard);
     const layout = createLayout();
     const calm = I.calm;
     const getCalm = () => calm.value;
