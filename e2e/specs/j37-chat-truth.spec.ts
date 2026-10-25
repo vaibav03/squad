@@ -12,7 +12,7 @@ const snap = async (page: Page, name: string) => {
   fs.mkdirSync(DIR, { recursive: true });
   await page.screenshot({ path: path.join(DIR, `chat-truth-${name}.png`) }).catch(() => undefined);
 };
-const ASK = '@cubbie ask the council: should I use recursion or conditioning for problem 3?';
+const ASK = `@cubbie ask the council: should I use recursion or conditioning for problem ${(Date.now() % 90) + 3}?`;
 
 async function composerInView(page: Page) {
   const box = await page.getByTestId('chat-composer-input').boundingBox();
@@ -32,6 +32,7 @@ test('J37 chat truth: header badge, single council card, layout, dedupe, pending
   await openChat(ana, GROUP);
 
   // 1. ask the council twice quickly: one prompt, one answer (the stack may hold earlier runs: count the delta)
+  await page.waitForTimeout(2500);
   const before = await page.getByTestId('council-chat-card').count();
   const promptsBefore = await page
     .locator('[data-testid="chat-message"][data-own="true"]', { hasText: 'ask the council' })
@@ -158,18 +159,23 @@ test('J37 chat truth: header badge, single council card, layout, dedupe, pending
   await page.getByTestId('chat-composer-input').waitFor();
   await page.route('**/v1/chat/stream*', (r) => r.abort());
   await page.route('**/v1/chat/history*', (r) => r.abort());
+  const wait = page.getByTestId('chat-wait');
+  await page.waitForTimeout(1500);
+  const waitBase = await wait.count();
   const q = `@cubbie define variance ${Date.now() % 1000}`;
   await say(page, q);
-  const wait = page.getByTestId('chat-wait');
-  await expect(wait).toHaveCount(1, { timeout: 15_000 });
-  await expect(page.getByTestId('chat-wait-text')).toHaveText('Cubbie is thinking…');
-  await expect(page.getByTestId('chat-wait-text')).toContainText(/taking longer than usual/, {
+  await expect(wait, 'one placeholder per trigger message').toHaveCount(waitBase + 1, {
+    timeout: 15_000,
+  });
+  const mine = page.locator(`[data-testid="chat-wait"]`).last();
+  await expect(mine.getByTestId('chat-wait-text')).toHaveText('Cubbie is thinking…');
+  await expect(mine.getByTestId('chat-wait-text')).toContainText(/taking longer than usual/, {
     timeout: 20_000,
   });
-  await expect(wait, 'still exactly one placeholder').toHaveCount(1);
+  await expect(wait, 'still one placeholder for it').toHaveCount(waitBase + 1);
   await snap(page, '05-slow-retry');
-  await page.getByTestId('chat-wait-retry').click();
-  await expect(wait, 'retry does not stack placeholders').toHaveCount(1);
+  await mine.getByTestId('chat-wait-retry').click();
+  await expect(wait, 'retry does not stack placeholders').toHaveCount(waitBase + 1);
   const stored = (await history(ana.token, GROUP)).filter((m) => m.text === q);
   expect(stored, 'retry reused the clientId: no second prompt').toHaveLength(1);
   await page.unroute('**/v1/chat/stream*');

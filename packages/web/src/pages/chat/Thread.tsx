@@ -30,6 +30,7 @@ import { MemberStack, TypingIndicator } from './parts';
 import { AnswerWait } from './AnswerWait';
 import {
   dropRedelivered,
+  foldCouncilProse,
   QUICK_PROMPTS_DM,
   QUICK_PROMPTS_GROUP,
   buildRows,
