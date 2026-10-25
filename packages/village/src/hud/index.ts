@@ -17,7 +17,8 @@ export interface HudDeps {
   assetUrl(repoPath: string): string;
 }
 
-const FONT_PATH = 'assets/pixel/ui/fonts/NinjaAdventure-NormalFont.ttf';
+const FONT_PATH = 'assets/fonts/jersey-10/Jersey10-latin.woff2';
+const FONT_MICRO = 'assets/fonts/silkscreen/Silkscreen-latin.woff2';
 const MODES: Array<[CameraMode, string]> = [['left', 'Left'], ['mid', 'Mid'], ['right', 'Right'], ['zoom', 'Zoom']];
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, attrs: Record<string, string> = {}, text?: string): HTMLElementTagNameMap[K] {
@@ -30,15 +31,14 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, attrs: 
 
 export function createHud(d: HudDeps): { update(): void; destroy(): void } {
   const style = el('style', undefined, { 'data-sqv-hud': '' });
-  style.textContent = `@font-face{font-family:'Squad Pixel';src:url('${d.assetUrl(FONT_PATH)}') format('truetype');font-display:swap}` + HUD_CSS;
+  style.textContent = `@font-face{font-family:'Jersey 10';src:url('${d.assetUrl(FONT_PATH)}') format('woff2');font-display:swap}@font-face{font-family:'Silkscreen';src:url('${d.assetUrl(FONT_MICRO)}') format('woff2');font-display:swap}` + HUD_CSS;
   document.head.appendChild(style);
 
-  const root = el('div', 'sqv-hud', { role: 'group', 'aria-label': 'Village controls' });
-  const top = el('div', 'sqv-top');
+  const root = el('div', 'sqv-hud', { role: 'group', 'aria-label': 'Village controls', 'data-layout': 'wide' });
+  const mid = el('div', 'sqv-mid');
   const bottom = el('div', 'sqv-bottom');
-  root.append(top, bottom);
 
-  // top-left: camera segmented control
+  // camera segmented control
   const seg = el('div', 'sqv-panel sqv-seg', { role: 'group', 'aria-label': 'Camera' });
   const modeBtns = new Map<CameraMode, HTMLButtonElement>();
   for (const [m, label] of MODES) {
@@ -46,13 +46,6 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
     b.addEventListener('click', () => { d.camera.setMode(d.camera.mode === m && m !== 'follow' ? 'follow' : m); syncCamera(); });
     modeBtns.set(m, b); seg.appendChild(b);
   }
-  // top-right: clock, calm, help
-  const right = el('div', 'sqv-right');
-  const clock = el('div', 'sqv-panel sqv-clock', { role: 'timer', 'aria-label': 'Village clock' });
-  const moon = el('span', 'sqv-moon', { 'aria-hidden': 'true' });
-  const clockText = el('span');
-  const badge = el('span', 'sqv-badge', { 'data-badge': '', 'aria-live': 'polite' });
-  clock.append(moon, clockText, badge);
   const calmWrap = el('div', 'sqv-panel sqv-seg');
   const calm = el('button', 'sqv-btn', { type: 'button', role: 'switch', 'aria-checked': 'false', 'aria-label': 'Calm mode' }, 'Calm');
   calm.addEventListener('click', () => { d.calm.set(!d.calm.get()); syncCalm(); });
@@ -60,26 +53,73 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
   const helpWrap = el('div', 'sqv-panel sqv-seg');
   const helpBtn = el('button', 'sqv-btn', { type: 'button', 'aria-expanded': 'false', 'aria-controls': 'sqv-help', 'aria-label': 'Controls' }, '?');
   helpWrap.appendChild(helpBtn);
-  right.append(clock, calmWrap, helpWrap);
-  top.append(seg, right);
 
-  // bottom: chips + prompt + trip
+  // clock + badge slot
+  const clockWrap = el('div', 'sqv-clock-wrap');
+  const clock = el('div', 'sqv-panel sqv-clock', { role: 'timer', 'aria-label': 'Village clock' });
+  const moon = el('span', 'sqv-moon', { 'aria-hidden': 'true' });
+  const clockText = el('span');
+  const badge = el('span', 'sqv-badge', { 'data-badge': '', 'aria-live': 'polite' });
+  clock.append(moon, clockText, badge);
+  clockWrap.appendChild(clock);
+
+  const ctrl = el('div', 'sqv-ctrl');
+  ctrl.append(seg, calmWrap, helpWrap);
+
+  // narrow layout: menu button + popover that adopts the controls
+  const menuWrap = el('div', 'sqv-menu');
+  const menuPanel = el('div', 'sqv-panel sqv-seg');
+  const menuBtn = el('button', 'sqv-btn', { type: 'button', 'aria-expanded': 'false', 'aria-controls': 'sqv-pop' }, 'Menu');
+  menuPanel.appendChild(menuBtn);
+  menuWrap.appendChild(menuPanel);
+  const pop = el('div', 'sqv-panel sqv-pop', { id: 'sqv-pop', role: 'group', 'aria-label': 'Camera and calm' });
+  menuBtn.addEventListener('click', () => { const o = pop.dataset.open !== 'true'; pop.dataset.open = String(o); menuBtn.setAttribute('aria-expanded', String(o)); });
+
+  // chips
   const chips = el('div', 'sqv-panel sqv-chips', { role: 'list', 'aria-label': 'Agents' });
-  const bottomRow = el('div', undefined, { style: 'display:flex;gap:8px;align-items:flex-end;justify-content:space-between;width:100%;flex-wrap:wrap' });
+
+  // prompt (Enter to open the nearest place) and trip door live over the canvas
   const prompt = el('button', 'sqv-panel sqv-prompt', { type: 'button', 'data-show': 'false', tabindex: '-1' });
   const key = el('span', 'sqv-key', {}, 'Enter');
   const promptText = el('span');
   prompt.append(key, promptText);
   const trip = el('button', 'sqv-trip', { type: 'button', 'data-show': 'false' }, 'Trip');
-  trip.addEventListener('click', () => { const s = d.layout.slot('trip-road'); void d.player.walkTo(s.x - 40); });
-  bottomRow.append(chips, trip);
-  bottom.append(bottomRow, prompt);
+  trip.addEventListener('click', () => { const s = d.layout.slot('trip-road'); void d.player.walkTo(s.x - 60); });
+  mid.append(prompt, trip);
 
   const help = el('div', 'sqv-panel sqv-help', { id: 'sqv-help', role: 'dialog', 'aria-label': 'Controls' });
   help.innerHTML = '<b>Walk</b> arrow keys or A / D<br><b>Enter</b> open the nearest place<br><b>Tab</b> cycle places<br><b>Esc</b> leave a building<br><b>Tap</b> the world to walk<br><b>Calm</b> softens all motion';
   helpBtn.addEventListener('click', () => { const o = help.dataset.open !== 'true'; help.dataset.open = String(o); helpBtn.setAttribute('aria-expanded', String(o)); });
-  root.appendChild(help);
+  mid.appendChild(help);
+
+  root.append(chips, clockWrap, ctrl, menuWrap, mid, bottom);
   d.parent.appendChild(root);
+  mid.appendChild(pop);
+
+  // Layout: wide = chips | clock | controls on top. Narrow = clock + menu on top, chips in a bottom dock, controls in the menu.
+  const stageEl = d.parent;
+  let layoutKey = '';
+  const relayout = () => {
+    const w = stageEl.clientWidth;
+    const narrow = w < 560;
+    const outer = stageEl.parentElement;
+    const roomY = outer ? Math.max(0, (outer.clientHeight - stageEl.clientHeight) / 2) : 0;
+    const outTop = narrow && roomY >= 60;
+    const outBottom = narrow && roomY >= 80;
+    const k = `${narrow}|${outTop}|${outBottom}`;
+    if (k === layoutKey) return;
+    layoutKey = k;
+    root.dataset.layout = narrow ? 'narrow' : 'wide';
+    root.dataset.outTop = String(outTop);
+    root.dataset.outBottom = String(outBottom);
+    root.style.setProperty('--top-h', outTop ? '60px' : 'auto');
+    root.style.setProperty('--bottom-h', narrow ? (outBottom ? '80px' : 'auto') : 'auto');
+    if (narrow) { pop.append(seg, calmWrap, helpWrap); bottom.appendChild(chips); } else { ctrl.append(seg, calmWrap, helpWrap); root.insertBefore(chips, clockWrap); }
+  };
+  const ro = new ResizeObserver(relayout);
+  ro.observe(stageEl);
+  if (stageEl.parentElement) ro.observe(stageEl.parentElement);
+  relayout();
 
   const syncCamera = () => modeBtns.forEach((b, m) => b.setAttribute('aria-pressed', String(d.camera.mode === m)));
   const syncCalm = () => { calm.setAttribute('aria-checked', String(d.calm.get())); root.classList.toggle('sqv-calm', d.calm.get()); };
@@ -137,6 +177,6 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
         prompt.tabIndex = near ? 0 : -1;
       }
     },
-    destroy() { unsubs.forEach((u) => u()); root.remove(); style.remove(); },
+    destroy() { unsubs.forEach((u) => u()); ro.disconnect(); root.remove(); style.remove(); },
   };
 }
