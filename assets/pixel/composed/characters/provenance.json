@@ -1,0 +1,115 @@
+{
+ "license_note": "Characters are hand-pixeled/procedurally drawn for Squad Village (original art, palette-only). Proportions, outline weight and chibi head/body ratio studied from Autumn Town player/NPC sheets (assets/pixel/characters/autumn-town-*, see assets/pixel/LICENSES.md); no source pixels copied.",
+ "cell": [
+  32,
+  32
+ ],
+ "anchor": {
+  "x": 16,
+  "y": 31
+ },
+ "facing": "right",
+ "walk": {
+  "frames": 4,
+  "pattern": "contact,passing,contact,passing",
+  "stride_px_per_frame": 3,
+  "note": "planted foot moves 3px/frame: set ground speed = 3*fps px/s (24 px/s @8fps) to avoid foot sliding"
+ },
+ "animations": {
+  "idle": {
+   "frames": 2,
+   "fps": 2
+  },
+  "walk": {
+   "frames": 4,
+   "fps": 8
+  },
+  "talk": {
+   "frames": 2,
+   "fps": 8
+  },
+  "sit": {
+   "frames": 2,
+   "fps": 2
+  },
+  "wave": {
+   "frames": 2,
+   "fps": 4
+  }
+ },
+ "portrait": {
+  "size": [
+   32,
+   32
+  ],
+  "note": "opaque tile (sky-mid bg, ink frame), show at 2x/3x"
+ },
+ "characters": {
+  "student": {
+   "skin": "wood-lit",
+   "hair": "wood",
+   "outfit": "roof-wine",
+   "role": "player"
+  },
+  "dean": {
+   "skin": "skin-lt",
+   "hair": "wall-mid",
+   "outfit": "wood-lit",
+   "role": "dean"
+  },
+  "expert": {
+   "skin": "wood",
+   "hair": "wood-dark",
+   "outfit": "hill-far",
+   "role": "chapter expert"
+  },
+  "council-chill": {
+   "skin": "skin-lt",
+   "hair": "wood-dark",
+   "outfit": "wall-mid",
+   "role": "council member (chill)"
+  },
+  "council-hard": {
+   "skin": "wood-lit",
+   "hair": "wood-dark",
+   "outfit": "roof-shade",
+   "role": "council member (hard)"
+  },
+  "council-balance": {
+   "skin": "wood",
+   "hair": "wall-lit",
+   "outfit": "leaf-lit",
+   "role": "council member (balance)"
+  },
+  "chairman": {
+   "skin": "skin-lt",
+   "hair": "cloud-hi",
+   "outfit": "sky-mid",
+   "role": "chairman"
+  },
+  "examiner": {
+   "skin": "wood-lit",
+   "hair": "wood-dark",
+   "outfit": "hill-near",
+   "role": "examiner"
+  },
+  "freshman": {
+   "skin": "skin-lt",
+   "hair": "glow",
+   "outfit": "ok",
+   "role": "freshman NPC"
+  },
+  "mediator": {
+   "skin": "wood",
+   "hair": "wood-dark",
+   "outfit": "wall-lit",
+   "role": "mediator"
+  },
+  "ta": {
+   "skin": "wood-lit",
+   "hair": "wood-dark",
+   "outfit": "ember",
+   "role": "teaching assistant"
+  }
+ }
+}
