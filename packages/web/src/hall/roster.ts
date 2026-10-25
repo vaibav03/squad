@@ -21,7 +21,18 @@ export interface HallAgent {
   slot: string | null;
   /** A starter message for the composer chips. Never sent for the student. */
   prompt: string;
+  /** When this agent speaks in council runs: the inspector's agent id and the speaker key its lines carry. */
+  voice?: { agent: string; who: string };
 }
+
+/** Council seats whose lines the room transcript carries (the inspector shows them as a chat). */
+const VOICE: Record<string, { agent: string; who: string }> = {
+  chair: { agent: 'council:quizkey', who: 'chair' },
+  chairman: { agent: 'council:planner', who: 'chair' },
+  chill: { agent: 'council:planner', who: 'chill' },
+  grind: { agent: 'council:planner', who: 'grind' },
+  advisor: { agent: 'council:planner', who: 'advisor' },
+};
 
 const GROUP: Record<string, HallGroup> = {
   cubbie: 'cubbie',
@@ -117,6 +128,7 @@ function toAgent(a: AgentAlias): HallAgent {
     panelId: PANEL_ID[a.id] ?? `expert:${a.id}`,
     slot: SLOT[a.id] ?? null,
     prompt: PROMPT[a.id] ?? `@${alias} `,
+    ...(VOICE[a.id] ? { voice: VOICE[a.id]! } : {}),
   };
 }
 

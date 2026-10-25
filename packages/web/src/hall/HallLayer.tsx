@@ -86,13 +86,15 @@ function Seat({
 export interface HallLayerProps {
   snap: RoomSnapshot;
   calm?: boolean;
+  /** The room's bottom dock (council status, what they said), shown under the seats. */
+  children?: React.ReactNode;
 }
 
 /**
  * The Agent Hall: every agent seated on a tidy double arc, one card for the one you picked, and the council tools. The
  * conversation itself is the squad group chat, docked on the right by the chat dock (same thread, same transport).
  */
-export function HallLayer({ snap, calm }: HallLayerProps) {
+export function HallLayer({ snap, calm, children }: HallLayerProps) {
   const focus = useHallFocus();
   const canBoard = useCanOpenBoard();
   const canInspect = useCanInspect();
@@ -232,7 +234,14 @@ export function HallLayer({ snap, calm }: HallLayerProps) {
                   <button
                     type="button"
                     className="lv-btn"
-                    onClick={() => openAgentPanel(picked.panelId, { slot: HALL_SLOT })}
+                    onClick={() =>
+                      picked.voice
+                        ? openAgentPanel(picked.voice.agent, {
+                            slot: HALL_SLOT,
+                            who: picked.voice.who,
+                          })
+                        : openAgentPanel(picked.panelId)
+                    }
                   >
                     <LvIcon name="users" size={16} />
                     Open {picked.name}&rsquo;s panel
@@ -247,6 +256,7 @@ export function HallLayer({ snap, calm }: HallLayerProps) {
           )}
         </div>
       </div>
+      {children}
     </section>
   );
 }

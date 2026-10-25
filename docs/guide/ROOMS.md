@@ -1,5 +1,8 @@
 # The 13 rooms
 
+> **Update:** the separate rooms described below are scenery now. Every agent meets in one place, the Agent Hall (the former Council Hall), with one chat. The old room ids still work as links and open the hall with that agent selected. See `docs/village.md`, section Agent Hall.
+
+
 Squad Village is a pixel campus. Each building is a **room**: a place where one kind of study help happens in the open, so your squad can see that it is happening without seeing your private answers. This page is the room reference. It is kept in step with `packages/village/src/scenes/roomInfo.ts` (the copy the app shows) and `docs/qa/ROOMS-AUDIT.md` (the engineering audit). Where code and audit disagree, the code on `origin/main` wins and this page says so.
 
 For the step-by-step student view see [USER-GUIDE.md](USER-GUIDE.md).

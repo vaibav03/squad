@@ -56,7 +56,7 @@
       color-mix(in srgb, var(--lv-accent) 14%, transparent),
       transparent 70%
     ),
-    color-mix(in srgb, var(--sq-sky-deep, #0b1d38) 90%, transparent);
+    color-mix(in srgb, var(--sq-sky-deep, #0b1d38) 80%, transparent);
   border: 1px solid var(--hud-border);
   backdrop-filter: blur(6px);
 }
@@ -211,10 +211,18 @@
 }
 
 /* the room's bottom dock (council status + transcript) lives under the stage while the hall is open */
-.rr-layer[data-room='council-hall'] .rr-dock {
-  right: calc(var(--hall-chat-w, 408px) + var(--lv-s4));
+.hall .rr-dock {
+  position: static;
+  flex: none;
   max-width: none;
-  margin-inline: 0;
+  margin: 0;
+  inset: auto;
+}
+.hall .rr-dock:empty {
+  display: none;
+}
+.hall .rr-strip__log {
+  max-height: 16vh;
 }
 
 @media (max-width: 899px) {

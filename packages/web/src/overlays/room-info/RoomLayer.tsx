@@ -113,9 +113,71 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
   const phrase = info?.how.phrase;
   const conveneRoundTable = run && phrase ? () => run(phrase) : undefined;
 
+  // The room's bottom dock (plan card, council status, what they said). In the hall it sits under the seats.
+  const dock = (
+    <div className="rr-dock">
+      {outcome ? (
+        <div className="rr-dock__plan">
+          {planShown ? (
+            <OutcomeCard
+              outcome={outcome}
+              info={info}
+              calm={calm}
+              action={
+                <button
+                  type="button"
+                  className="lv-btn rr-toggle"
+                  aria-expanded
+                  onClick={() => setPlanShown(false)}
+                >
+                  <LvIcon name="chevron-down" size={16} />
+                  Hide
+                </button>
+              }
+            />
+          ) : (
+            <div className="rr-dock__bar">
+              <button
+                type="button"
+                className="lv-btn rr-toggle"
+                aria-expanded={false}
+                onClick={() => setPlanShown(true)}
+              >
+                <LvIcon name="sparkle" size={16} />
+                Show plan
+              </button>
+            </div>
+          )}
+        </div>
+      ) : null}
+      {slot === 'council-hall' ? (
+        <CouncilRoomStatus keys={HALL_KEYS} councilIds={['council:ask']} hideEmpty />
+      ) : slot === 'round-table' ? (
+        <CouncilRoomStatus
+          keys={ROUND_TABLE_KEYS}
+          councilIds={['council:roundtable', 'council:planner']}
+          noun="Round Table"
+          onConvene={conveneRoundTable}
+        />
+      ) : null}
+      {showsTranscript(slot) && (entries.length > 0 || outcome) ? (
+        <RoomTranscript
+          entries={entries}
+          outcome={outcome}
+          info={info}
+          compact={!!outcome && planShown}
+        />
+      ) : null}
+    </div>
+  );
+
   return (
     <div className="rr-layer sq-scene" data-room={slot}>
-      {slot === 'council-hall' ? <HallLayer snap={snap} {...(calm ? { calm: true } : {})} /> : null}
+      {slot === 'council-hall' ? (
+        <HallLayer snap={snap} {...(calm ? { calm: true } : {})}>
+          {dock}
+        </HallLayer>
+      ) : null}
       {skin ? (
         <p className="rr-skin" data-testid="skin-credit">
           Skin: Modern Interiors. {skin.credit}
@@ -136,60 +198,7 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
         </button>
       ) : null}
 
-      <div className="rr-dock">
-        {outcome ? (
-          <div className="rr-dock__plan">
-            {planShown ? (
-              <OutcomeCard
-                outcome={outcome}
-                info={info}
-                calm={calm}
-                action={
-                  <button
-                    type="button"
-                    className="lv-btn rr-toggle"
-                    aria-expanded
-                    onClick={() => setPlanShown(false)}
-                  >
-                    <LvIcon name="chevron-down" size={16} />
-                    Hide
-                  </button>
-                }
-              />
-            ) : (
-              <div className="rr-dock__bar">
-                <button
-                  type="button"
-                  className="lv-btn rr-toggle"
-                  aria-expanded={false}
-                  onClick={() => setPlanShown(true)}
-                >
-                  <LvIcon name="sparkle" size={16} />
-                  Show plan
-                </button>
-              </div>
-            )}
-          </div>
-        ) : null}
-        {slot === 'council-hall' ? (
-          <CouncilRoomStatus keys={HALL_KEYS} councilIds={['council:ask']} hideEmpty />
-        ) : slot === 'round-table' ? (
-          <CouncilRoomStatus
-            keys={ROUND_TABLE_KEYS}
-            councilIds={['council:roundtable', 'council:planner']}
-            noun="Round Table"
-            onConvene={conveneRoundTable}
-          />
-        ) : null}
-        {showsTranscript(slot) && (entries.length > 0 || outcome) ? (
-          <RoomTranscript
-            entries={entries}
-            outcome={outcome}
-            info={info}
-            compact={!!outcome && planShown}
-          />
-        ) : null}
-      </div>
+      {slot === 'council-hall' ? null : dock}
 
       {info ? (
         <RoomInfoPanel

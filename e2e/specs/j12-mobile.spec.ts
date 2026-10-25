@@ -70,7 +70,7 @@ test('J12 keyboard only: skip link, tab to the village, camera buttons, back out
   );
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/squad\/village/, { timeout: 15_000 });
-  await expect(page.locator('[aria-label^="Council Hall"]').first()).toBeVisible({
+  await expect(page.locator('[aria-label^="Agent Hall"]').first()).toBeVisible({
     timeout: 30_000,
   });
   await page.getByRole('button', { name: 'Zoom', exact: true }).focus();

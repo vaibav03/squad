@@ -1,12 +1,9 @@
-import type { Page } from '@playwright/test';
 import { actor, expect, shot, test } from '../lib/helpers';
 import { HUB, SECRET } from '../lib/env';
 
 const J = 'j17-room-inspector';
 
 interface WorldCtx {
-  scene: { scale: { width: number; height: number } };
-  game: { scale: { zoom: number }; canvas: HTMLCanvasElement };
   interactables: { list(): Array<{ id: string; onActivate(): void }> };
 }
 type W = { __world?: { debug: { ctx(): WorldCtx | undefined } } };
@@ -39,6 +36,13 @@ const SAY = [
     text: 'Verified: all solvers agree on choice 1.',
     dissent: false,
   },
+  // another council in the village: the one hall hears it too
+  {
+    t: 'council.opinion',
+    councilId: 'council:planner',
+    member: 'chill',
+    text: 'Rest matters too, so keep the week light.',
+  },
 ];
 
 async function seedCouncil() {
@@ -55,21 +59,7 @@ async function seedCouncil() {
   }
 }
 
-/** Page coordinates of a character in the open room: the interior is centred in the game, 224x128 art px. */
-const seatAt = (page: Page, x: number, y: number) =>
-  page.evaluate(
-    ([sx, sy]) => {
-      const c = (window as unknown as W).__world!.debug.ctx()!;
-      const z = c.game.scale.zoom;
-      const rc = c.game.canvas.getBoundingClientRect();
-      const gx = Math.round(c.scene.scale.width / 2) - 112 + sx!;
-      const gy = Math.round(c.scene.scale.height / 2) - 64 + sy! - 17;
-      return { x: rc.left + gx * z, y: rc.top + gy * z };
-    },
-    [x, y],
-  );
-
-test('J17 Council Hall: click the chair and a member, the popup opens on the chat, Esc closes', async ({
+test('J17 Agent Hall: press the chair and a council member, the panel opens on the chat, Esc closes', async ({
   browser,
 }) => {
   test.setTimeout(120_000);
@@ -100,36 +90,33 @@ test('J17 Council Hall: click the chair and a member, the popup opens on the cha
     if (await dialog.isVisible().catch(() => false)) await page.keyboard.press('Escape');
     await page.waitForTimeout(600);
 
-    // clicking the floor opens nothing
-    const floor = await seatAt(page, 20, 60);
-    await page.mouse.click(floor.x, floor.y);
-    await expect(page.getByTestId('agent-focus-panel')).toHaveCount(0);
-
-    // the chair (112, 89)
-    const chair = await seatAt(page, 112, 89);
-    await page.mouse.click(chair.x, chair.y);
+    // everyone sits in the hall as a seat; pressing a seat aims the chat, and its card opens the focused panel
     const panel = page.getByTestId('agent-focus-panel');
+    await expect(panel).toHaveCount(0);
+    await page.locator('.hall-seat[data-agent="chair"]').click();
+    await expect(panel, 'pressing a seat only aims the chat').toHaveCount(0);
+    await page.getByRole('button', { name: /^Open Chair.s panel$/ }).click();
     await expect(panel).toBeVisible();
     await expect(panel.getByRole('tab', { name: 'Conversation', selected: true })).toBeVisible();
     await expect(panel.getByRole('heading', { name: /^Chair/ })).toBeVisible();
     await expect(panel.getByText('Verified: all solvers agree on choice 1.')).toBeVisible();
-    await expect(panel.getByText('MSE averages squared errors, so choice 1.')).toBeVisible();
     await shot(page, J, 'chair');
     await page.keyboard.press('Escape');
     await expect(panel).toHaveCount(0);
 
-    // a member (left seat 50, 103)
-    const member = await seatAt(page, 50, 103);
-    await page.mouse.click(member.x, member.y);
+    // a council member from another council: heard in the same hall
+    await page.locator('.hall-seat[data-agent="chill"]').click();
+    await page.getByRole('button', { name: /^Open Chill.s panel$/ }).click();
     await expect(panel).toBeVisible();
-    await expect(panel.getByText('Squaring then averaging gives choice 1 too.')).toBeVisible();
+    await expect(panel.getByText('Rest matters too, so keep the week light.')).toBeVisible();
     await shot(page, J, 'member');
     await page.keyboard.press('Escape');
     await expect(panel).toHaveCount(0);
 
-    // keyboard: Tab to a character, Enter opens it, Esc closes and the room is still open
-    await page.locator('.sqv-stage').focus();
-    await page.keyboard.press('Tab');
+    // keyboard: the card's button opens the panel, Esc closes it and the hall is still open
+    await page.locator('.hall-seat[data-agent="chair"]').focus();
+    await page.keyboard.press('Enter');
+    await page.getByRole('button', { name: /^Open Chair.s panel$/ }).focus();
     await page.keyboard.press('Enter');
     await expect(panel).toBeVisible();
     await page.keyboard.press('Escape');

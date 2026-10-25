@@ -104,7 +104,7 @@ test('J8 shuttle cutscene deep link plays once and is skippable', async ({ brows
   const ben = await actor(browser, 's_ben', { reducedMotion: 'no-preference' });
   const task = tripTask || 'task_e2e_cut';
   await ben.page.goto(`/squad/village?cutscene=trip&task=${encodeURIComponent(task)}`);
-  await expect(ben.page.locator('[aria-label^="Council Hall"]').first()).toBeVisible({
+  await expect(ben.page.locator('[aria-label^="Agent Hall"]').first()).toBeVisible({
     timeout: 30_000,
   });
   await ben.page.waitForTimeout(2500);
