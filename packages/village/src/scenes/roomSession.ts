@@ -1,5 +1,11 @@
-import type { RoomOutcome, VillageEvent } from '@squad/core';
-import type { RoomSession, RoomSnapshot, TranscriptEntry, TranscriptKind } from './roomTypes';
+import type { Citation, RoomOutcome, VillageEvent } from '@squad/core';
+import type {
+  RoomSeatInfo,
+  RoomSession,
+  RoomSnapshot,
+  TranscriptEntry,
+  TranscriptKind,
+} from './roomTypes';
 
 /** 08-village-motion: bubbles stay at least 1.2 s per 20 characters, within 1.2..9 s. */
 export function holdMsFor(text: string): number {
@@ -17,6 +23,7 @@ interface Words {
   kind: TranscriptKind;
   text: string;
   dissent?: boolean;
+  cite?: Citation;
 }
 
 /** The public words an event carries, or null when it carries none. Never reads withheld fields. */
@@ -47,7 +54,9 @@ export function wordsOf(e: VillageEvent): Words | null {
     }
     case 'call.caption': {
       const text = (e.text ?? '').trim();
-      return text ? { who: e.agent, kind: 'caption', text } : null;
+      return text
+        ? { who: e.agent, kind: 'caption', text, ...(e.cite ? { cite: e.cite } : {}) }
+        : null;
     }
     case 'quiz.question': {
       const text = (e.text ?? '').trim();
@@ -73,13 +82,15 @@ export function createRoomSession(
   const transcripts: Record<string, TranscriptEntry[]> = {};
   const outcomes: Record<string, RoomOutcome> = {};
   const subs = new Set<(s: RoomSnapshot) => void>();
-  let snap: RoomSnapshot = { entered, transcripts: {}, outcomes: {} };
+  let seats: readonly RoomSeatInfo[] = [];
+  let snap: RoomSnapshot = { entered, transcripts: {}, outcomes: {}, seats };
 
   const publish = (): void => {
     snap = {
       entered,
       transcripts: Object.fromEntries(Object.entries(transcripts).map(([k, v]) => [k, [...v]])),
       outcomes: { ...outcomes },
+      seats,
     };
     for (const fn of subs) fn(snap);
   };
@@ -98,6 +109,18 @@ export function createRoomSession(
     leave() {
       if (entered === null) return;
       entered = null;
+      seats = [];
+      publish();
+    },
+    setSeats(next) {
+      const same =
+        next.length === seats.length &&
+        next.every(
+          (n, i) =>
+            n.agent === seats[i]!.agent && n.who === seats[i]!.who && n.label === seats[i]!.label,
+        );
+      if (same) return;
+      seats = [...next];
       publish();
     },
     record(slot, e, now) {
@@ -124,6 +147,8 @@ export function createRoomSession(
           text,
           at: now,
           holdMs: holdMsFor(text),
+          ts: Date.now(),
+          ...(w.cite ? { cite: w.cite } : {}),
           ...(w.dissent ? { dissent: true } : {}),
         });
         if (list.length > MAX_PER_ROOM) list.splice(0, list.length - MAX_PER_ROOM);

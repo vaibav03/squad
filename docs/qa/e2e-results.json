@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T07:40:51.605Z",
+  "at": "2026-10-25T09:20:32.701Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -211,6 +211,12 @@
     "status": "pass",
     "note": "",
     "ms": 8361
+   },
+   {
+    "title": "J17 Council Hall: click the chair and a member, the popup opens on the chat, Esc closes",
+    "status": "pass",
+    "note": "",
+    "ms": 4867
    }
   ]
  }
