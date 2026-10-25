@@ -9,6 +9,7 @@ import type {
   Llm,
   OutboundMessage,
   Persona,
+  Skill,
   Student,
   StudentId,
   VillageEvent,
@@ -122,7 +123,7 @@ export interface BotCtx extends Ctx {
 export type { Db, Llm };
 
 export interface BotOptions {
-  skills: import('@squad/core').Skill[];
+  skills: Skill[];
   llm: Llm;
   transport: Transport;
   db: Db;

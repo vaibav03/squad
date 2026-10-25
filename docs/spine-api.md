@@ -47,8 +47,20 @@ interface Transport {
 ```
 Selected by `TRANSPORT=imessage|discord|cli` (default `cli`). Adapters drop their own messages, map unknown senders to `s_<last4 of handle>`, and rate limit sends to 1/s. `ChatId` for iMessage is the imessage-kit chat id, for Discord the channel id, for the CLI `group:<name>` and `dm:<student>`.
 
-## 4. Fake-chat CLI (use it to test your Skills with no iMessage)
-`pnpm --filter @squad/bot chat` starts the real router + policy + confirm on the CLI transport with `FakeLlm` (set `FAKE_LLM=0` and `GEMINI_API_KEY` for real Gemini). Commands: `/as <student>`, `/group <name> <ids...>`, `/dm`, `/script <file>` (run a scripted multi-student session), `/record <file>` (write a replay JSON validated by `@squad/core` `validateReplay`), `/decisions` (print the glass-box log), `/quit`. In code: `createBot({ skills, llm, transport, db })` from `@squad/bot/testing` (headless harness: `bot.say('s_ana', 'group:test', '@cubbie hi')`, `bot.sent`, `bot.events`, `bot.answerConfirm(...)`).
+## 4. Fake-chat CLI and test harness (use them to test your Skills with no iMessage)
+`pnpm --filter @squad/bot chat` starts the real router + policy + confirm on the CLI transport (FakeLlm when there is no `GEMINI_API_KEY` or `FAKE_LLM=1`; `STUB_SKILLS=1` adds demo skills). Commands: `/as <student>`, `/group <name>`, `/dm`, `/script <file>`, `/record <file>` ... `/record stop` (replay JSON validated by `@squad/core` `validateReplay`), `/checkpoint <name>`, `/decisions [n]`, `/help`, `/quit`.
+
+Headless harness for vitest, from `@squad/bot/testing` (add `"@squad/bot": "workspace:*"` as a devDependency of your package to use it):
+```ts
+import { createTestBot } from '@squad/bot/testing';
+const t = createTestBot({ skills: [mySkill] });           // chat skill included unless { chat: false }
+await t.say('s_ana', 'group:test', '@cubbie quiz me');    // 'dm' as chat means the DM with the bot
+t.sent;                                                   // OutboundMessage[] (persona-prefixed), t.events: VillageEvent[]
+t.advance(120_000);                                       // virtual clock (cooldowns, timeouts)
+const p = t.bot.ctx.askConfirm('s_ana', 'Q?', ['Yes', 'No'], 'task1'); await t.answerConfirm('s_ana', '1');
+t.decisions();                                            // the glass-box log read from messages.decision_json
+```
+`runScript(loadScript('apps/bot/fixtures/scripts/group-banter.json'))` drives a scripted multi-student session on a virtual clock. Tiers for `ctx.llm` are `'fast' | 'main' | 'chair'` (see `@squad/core`); use `FakeLlm` in tests.
 
 ## 5. Memory
 `ctx.memory.get/set/delete/list(scope: 'student'|'chat', scopeId, key)`, JSON values, backed by the `memory` table (UNIQUE(scope, scope_id, key)). Namespace your keys (`brain.chapter`, `mesh.availability`).

@@ -5,11 +5,12 @@ import type { Logger } from './types';
 
 const REDACT = ['*key*', '*secret*', '*token*', '*.apiKey', '*.password'];
 
-export function createLogger(opts: { file?: string; level?: string } = {}): Logger {
+export function createLogger(opts: { file?: string | false; level?: string } = {}): Logger {
   const quiet = !!process.env.VITEST || process.env.NODE_ENV === 'test';
   const level = opts.level ?? process.env.LOG_LEVEL ?? (quiet ? 'silent' : 'info');
   const redact = { paths: REDACT, censor: '[redacted]' };
-  const file = opts.file ?? (quiet ? undefined : 'logs/bot.log');
+  const file =
+    opts.file === false ? undefined : (opts.file ?? (quiet ? undefined : 'logs/bot.log'));
   if (!file) return pino({ level, redact }) as unknown as Logger;
   mkdirSync(dirname(file), { recursive: true });
   return pino(

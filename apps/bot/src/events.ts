@@ -29,6 +29,7 @@ export function guardEvent(e: VillageEvent, sentinels: readonly string[] = []): 
 export function createEventPublisher(opts: PublisherOptions = {}): EventPublisher {
   const post = opts.post ?? postEvent;
   const log = opts.log ?? nullLogger;
+  let failures = 0;
   return {
     async publish(e) {
       const parsed = VillageEventSchema.safeParse(e);
@@ -46,8 +47,13 @@ export function createEventPublisher(opts: PublisherOptions = {}): EventPublishe
       }
       try {
         const r = await post(parsed.data, { baseUrl: opts.baseUrl, secret: opts.secret });
-        if (!r.ok)
-          log.warn({ t: parsed.data.t, status: r.status, attempts: r.attempts }, 'hub post failed');
+        if (r.ok) failures = 0;
+        else if (failures++ % 25 === 0) {
+          log.warn(
+            { t: parsed.data.t, status: r.status, attempts: r.attempts },
+            'hub post failed (logging every 25th)',
+          );
+        }
       } catch (err) {
         log.error({ t: parsed.data.t, err: (err as Error).message }, 'event post threw');
       }
