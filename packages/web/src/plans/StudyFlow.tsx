@@ -65,6 +65,27 @@ export function StudyFlow({ hub }: { hub: PlanHub | null }) {
 
   return (
     <div data-testid="study-flow" data-step={step}>
+      <p className="sqp-note" data-testid="study-mode-header">
+        {badge ? (
+          <>
+            <span
+              className={`sqp-truth sqp-truth--${modeTone(badge.mode)}`}
+              data-testid="study-mode"
+              data-mode={badge.mode}
+            >
+              {modeWord(badge.mode)}
+            </span>{' '}
+            {badge.kindLabel}
+          </>
+        ) : (
+          <>
+            <span className="sqp-truth" data-testid="study-mode" data-mode="none">
+              Not drafted yet
+            </span>{' '}
+            Live, Demo or Degraded is shown once the draft is built.
+          </>
+        )}
+      </p>
       <Stepper
         steps={STUDY_FLOW.steps.map((s) => ({ id: s.id, label: s.label }))}
         current={step}
@@ -268,6 +289,9 @@ export function StudyFlow({ hub }: { hub: PlanHub | null }) {
     </div>
   );
 }
+
+const modeWord = (m: string) => (m === 'live' ? 'Live' : m === 'demo' ? 'Demo' : 'Degraded');
+const modeTone = (m: string) => (m === 'live' ? 'live' : m === 'demo' ? 'practice' : 'partly');
 
 function PlanSummary({ plan }: { plan: PlanView }) {
   const squad = plan.availability.squad;
