@@ -8,7 +8,8 @@ import {
   type CouncilVerdict,
   type Llm,
 } from '@squad/core';
-import { createCoursePorts } from '../agents/course-port';
+import { createCoursePorts, withContextPorts } from '../agents/course-port';
+import type { RetrieveContext } from '../context/retrieve';
 import type { CouncilAgents } from '../agents/factory';
 import type { AgentRun } from '../agents/runtime';
 import type { AgentTurn, CouncilDataPorts } from '../agents/types';
@@ -39,6 +40,8 @@ import { aggregateRankings, normaliseText } from './pure';
 export interface AskViewerData {
   calendarSummary?: CouncilDataPorts['calendarSummary'];
   masterySummary?: CouncilDataPorts['masterySummary'];
+  /** The asker's imported Canvas/Google context (viewer-bound; squad-visible runs see only what the squad may read). */
+  context?: RetrieveContext;
   /** Private strings (event titles, amounts) that must never reach public text. */
   needles?: string[];
 }
@@ -152,8 +155,11 @@ export async function runAskV2(
 
     // data ports: verified course retrieval + the asker's own data through the gate
     let grounded = false;
-    const course = d.brain ? createCoursePorts(d.brain, input.courseId ?? d.courseId) : undefined;
     const viewer = d.viewer?.(input.askedBy, r.visibility);
+    const course = withContextPorts(
+      d.brain ? createCoursePorts(d.brain, input.courseId ?? d.courseId) : undefined,
+      viewer?.context,
+    );
     const ports: CouncilDataPorts = {
       ...(course
         ? {

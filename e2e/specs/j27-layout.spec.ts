@@ -79,8 +79,7 @@ async function overlaps(page: Page): Promise<string[]> {
   for (let i = 0; i < ps.length; i++) {
     for (let j = i + 1; j < ps.length; j++)
       if (hit(ps[i]!, ps[j]!)) bad.push(`${ps[i]!.name} overlaps ${ps[j]!.name}`);
-    for (const k of keep)
-      if (hit(ps[i]!, k)) bad.push(`${ps[i]!.name} covers ${k.name}`);
+    for (const k of keep) if (hit(ps[i]!, k)) bad.push(`${ps[i]!.name} covers ${k.name}`);
   }
   // a panel must stay inside the window
   const vp = page.viewportSize()!;

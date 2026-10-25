@@ -50,11 +50,21 @@ export function canvasAnswer(
   now: number,
   courseNames: ReadonlyMap<string, string> = new Map(),
 ): string | null {
+  return canvasAnswerWithSources(text, sources, now, courseNames)?.text ?? null;
+}
+
+/** Same reply plus the synced sources it was built from (for citation chips). `used` is empty for the honest "not synced" reply. */
+export function canvasAnswerWithSources(
+  text: string,
+  sources: ContextSource[],
+  now: number,
+  courseNames: ReadonlyMap<string, string> = new Map(),
+): { text: string; used: ContextSource[] } | null {
   const wantsFiles = FILES_RE.test(text);
   const wantsDeadlines = DEADLINE_RE.test(text);
   if (!wantsFiles && !wantsDeadlines) return null;
   const canvas = sources.filter((s) => CANVAS_KINDS.has(s.kind));
-  if (canvas.length === 0) return NOT_SYNCED;
+  if (canvas.length === 0) return { text: NOT_SYNCED, used: [] };
   const courseOf = (id: string | null) => (id ? (courseNames.get(id) ?? '') : '');
   const suffix = (id: string | null) => (courseOf(id) ? ` (${courseOf(id)})` : '');
 
@@ -69,23 +79,32 @@ export function canvasAnswer(
     );
     if (named.length) files = files.filter((f) => named.some(([id]) => id === f.courseId));
     if (files.length === 0)
-      return type
-        ? `No ${type === 'ppt' ? 'slides' : 'PDFs'} found in your synced Canvas files.`
-        : 'No files found in your synced Canvas.';
+      return {
+        text: type
+          ? `No ${type === 'ppt' ? 'slides' : 'PDFs'} found in your synced Canvas files.`
+          : 'No files found in your synced Canvas.',
+        used: [],
+      };
     files.sort((a, b) => (b.modifiedAt ?? 0) - (a.modifiedAt ?? 0));
     const lines = files
       .slice(0, 5)
       .map((f) => `- ${f.title}${suffix(f.courseId)}${f.url ? `\n  ${f.url}` : ''}`);
-    return `${files.length} file${files.length === 1 ? '' : 's'}${files.length > 5 ? ', latest 5' : ''}:\n${lines.join('\n')}`;
+    return {
+      text: `${files.length} file${files.length === 1 ? '' : 's'}${files.length > 5 ? ', latest 5' : ''}:\n${lines.join('\n')}`,
+      used: files.slice(0, 5),
+    };
   }
 
   const upcoming = canvas
     .filter((s) => s.kind === 'canvas_assignment')
     .filter((a) => a.dueAt === null || a.dueAt >= now - 24 * 3_600_000)
     .sort((a, b) => (a.dueAt ?? Infinity) - (b.dueAt ?? Infinity));
-  if (upcoming.length === 0) return "Nothing due. You're all caught up.";
+  if (upcoming.length === 0) return { text: "Nothing due. You're all caught up.", used: [] };
   const lines = upcoming
     .slice(0, 5)
     .map((a) => `- ${a.title}${suffix(a.courseId)}: ${fmtDue(a.dueAt, now)}`);
-  return `Next ${Math.min(5, upcoming.length)} due:\n${lines.join('\n')}`;
+  return {
+    text: `Next ${Math.min(5, upcoming.length)} due:\n${lines.join('\n')}`,
+    used: upcoming.slice(0, 5),
+  };
 }

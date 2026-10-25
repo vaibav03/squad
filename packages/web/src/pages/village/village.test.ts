@@ -7,6 +7,7 @@ import {
   fetchQuiz,
   previewConfirm,
   resolveConfirm,
+  confirmErrorMessage,
   userMessage,
   HubError,
 } from './hub';
@@ -56,6 +57,7 @@ describe('hub helpers', () => {
   it('confirms the leading unvetoed trip option', async () => {
     const f = vi
       .fn()
+      .mockResolvedValueOnce(reply(404, {})) // no generic preview: falls back to the trip lookup by task id
       .mockResolvedValueOnce(
         reply(200, {
           tripId: 'trip_x',
@@ -69,16 +71,67 @@ describe('hub helpers', () => {
     const target = await previewConfirm(ctx, 'task_trip_x');
     expect(target).toMatchObject({ taskId: 'task_trip_x', tripId: 'trip_x', optionId: 'o1' });
     await resolveConfirm(ctx, target, true);
-    expect(f.mock.calls[0]![0]).toBe('http://hub.test/v1/trips/trip_x');
-    expect(f.mock.calls[1]![0]).toBe('http://hub.test/v1/confirms/task_trip_x');
-    expect(JSON.parse((f.mock.calls[1]![1] as RequestInit).body as string)).toEqual({
+    expect(f.mock.calls[1]![0]).toBe('http://hub.test/v1/trips/trip_x');
+    expect(f.mock.calls[2]![0]).toBe('http://hub.test/v1/confirms/task_trip_x');
+    expect(JSON.parse((f.mock.calls[2]![1] as RequestInit).body as string)).toEqual({
       optionId: 'o1',
       yes: true,
     });
   });
-  it('fails closed when the confirm endpoint rejects', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(404, {})));
-    await expect(previewConfirm(ctx, 'task_other')).rejects.toThrow();
+  it('a non-trip confirm never needs a trip and a 404 preview does not block answering', async () => {
+    const f = vi
+      .fn()
+      .mockResolvedValueOnce(reply(404, {}))
+      .mockResolvedValueOnce(reply(200, { ok: true }));
+    vi.stubGlobal('fetch', f);
+    const target = await previewConfirm(ctx, 'task_debate_1', {
+      question: 'Debate: x?',
+      options: ['For: a', 'Against: b'],
+    });
+    expect(target).toEqual({
+      taskId: 'task_debate_1',
+      question: 'Debate: x?',
+      options: ['For: a', 'Against: b'],
+    });
+    expect(f).toHaveBeenCalledTimes(1); // no /v1/trips lookup
+    await resolveConfirm(ctx, target, true, 'For: a');
+    expect(f.mock.calls[1]![0]).toBe('http://hub.test/v1/confirms/task_debate_1');
+    expect(JSON.parse((f.mock.calls[1]![1] as RequestInit).body as string)).toEqual({
+      yes: true,
+      optionId: 'For: a',
+    });
+  });
+  it('uses the hub confirm preview (options, question) when it exists', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        reply(200, {
+          taskId: 't1',
+          question: 'Q?',
+          options: ['A', 'B'],
+          kind: 'bot',
+          mode: 'pick',
+        }),
+      ),
+    );
+    expect(await previewConfirm(ctx, 't1')).toEqual({
+      taskId: 't1',
+      question: 'Q?',
+      options: ['A', 'B'],
+    });
+  });
+  it.each([
+    [401, 'Your session ended. Sign in again.'],
+    [404, 'This question expired: ask again.'],
+    [409, 'Already answered.'],
+    [500, 'The village could not pass your answer on. Try again. Nothing was shared yet.'],
+  ])('maps a %i answer to its own message', async (status, text) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(status, {})));
+    const e = await resolveConfirm(ctx, { taskId: 't' }, true).catch((x: unknown) => x);
+    expect(confirmErrorMessage(e)).toBe(text);
+  });
+  it('a network failure says it could not reach the village', () => {
+    expect(confirmErrorMessage(new TypeError('fetch failed'))).toMatch(/Could not reach/);
   });
   it('never shows status lines or schema errors to the student', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(200, { nonsense: true })));

@@ -1,3 +1,5 @@
+import { plural } from '../../lib/plural';
+
 /** Pure helpers for the connections page: honest state labels, plain-word scopes, error copy. */
 
 export const STATES = ['live', 'fixture', 'expired', 'revoked', 'rate_limited', 'error'] as const;
@@ -13,17 +15,27 @@ export const STATE_TONE: Record<ConnState, StateTone> = {
   error: 'alert',
 };
 
+/** The one-line state a card leads with: real | fixture | disconnected, never a generic success badge. */
+export const STATE_HEADLINE: Record<ConnState, string> = {
+  live: 'Real account',
+  fixture: 'Fixture',
+  expired: 'Expired',
+  revoked: 'Disconnected',
+  rate_limited: 'Rate limited',
+  error: 'Error',
+};
+
 /** Fallback copy when the hub sends no `stateLabel`. */
 export const STATE_COPY: Record<ConnState, string> = {
   live: 'Connected',
-  fixture: 'Demo data',
+  fixture: 'Fixture (simulated, not your account)',
   expired: 'Expired: reconnect to resume syncing',
   revoked: 'Disconnected: imported data deleted',
   rate_limited: 'Paused: the provider asked us to slow down',
   error: 'Error: showing the last imported data',
 };
 
-export const FIXTURE_LABEL = 'Demo data, not a real account';
+export const FIXTURE_LABEL = 'Fixture (simulated, not your account)';
 
 export const SCOPE_WORDS: Record<string, string> = {
   'https://www.googleapis.com/auth/calendar.readonly':
@@ -37,25 +49,56 @@ export const SCOPE_WORDS: Record<string, string> = {
   'canvas.api_token.read': 'Your Canvas courses, assignments and files, read only. No grades.',
   'canvas.browser_session.read':
     'Your Canvas courses, assignments and files, read through your own browser session. No grades.',
+  'canvas.demo_workspace': 'A simulated Canvas workspace (demo data): courses, pages, assignments, events.',
 };
-export const scopeWords = (s: string): string =>
-  SCOPE_WORDS[s] ?? 'Read-only access to one data type.';
+/** The hub reports short scope names (`calendar.readonly`); the words are keyed by the full scope, so match either. */
+export const scopeWords = (s: string): string => {
+  const hit =
+    SCOPE_WORDS[s] ??
+    Object.entries(SCOPE_WORDS).find(([k]) => k === s || k.endsWith(`/${s}`))?.[1];
+  return hit ?? `Read-only access (${s}).`;
+};
 
+/** Singular noun per kind; `plural()` makes the count line ('1 Classroom item', '2 Classroom items'). */
 export const KIND_LABEL: Record<string, string> = {
-  canvas_assignment: 'assignments',
-  canvas_file: 'files',
-  canvas_event: 'Canvas events',
-  gdoc: 'Docs',
-  gdrive_file: 'Drive files',
-  gcal_event: 'calendar events',
-  classroom_item: 'Classroom items',
-  pdf: 'PDFs',
+  canvas_course: 'course',
+  canvas_module: 'module',
+  canvas_assignment: 'assignment',
+  canvas_page: 'page',
+  canvas_file: 'file',
+  canvas_event: 'calendar event',
+  gdoc: 'Drive doc',
+  gdrive_file: 'Drive doc',
+  gcal_event: 'calendar event',
+  classroom_item: 'Classroom item',
+  classroom_coursework: 'Classroom item',
+  classroom_course: 'Classroom course',
+  pdf: 'PDF',
 };
-export const kindCounts = (byKind: Record<string, number>): string[] =>
-  Object.entries(byKind)
-    .filter(([, n]) => n > 0)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, n]) => `${n} ${KIND_LABEL[k] ?? k}`);
+export const kindCounts = (byKind: Record<string, number>): string[] => {
+  const byLabel = new Map<string, number>();
+  for (const [k, n] of Object.entries(byKind).sort(([a], [b]) => a.localeCompare(b)))
+    if (n > 0) {
+      const l = KIND_LABEL[k] ?? k.replace(/_/g, ' ');
+      byLabel.set(l, (byLabel.get(l) ?? 0) + n);
+    }
+  return [...byLabel].map(([l, n]) => plural(n, l));
+};
+
+const ITEM_TYPE: Record<string, string> = {
+  canvas_assignment: 'Canvas assignment',
+  canvas_file: 'Canvas file',
+  canvas_event: 'Canvas calendar event',
+  canvas_page: 'Canvas page',
+  gcal_event: 'Calendar event',
+  classroom_coursework: 'Classroom coursework',
+  classroom_course: 'Classroom course',
+  classroom_item: 'Classroom item',
+  gdrive_file: 'Drive file',
+  gdoc: 'Google Doc',
+  pdf: 'PDF',
+};
+export const itemTypeLabel = (k: string): string => ITEM_TYPE[k] ?? k.replace(/_/g, ' ');
 
 export const CALENDAR_KINDS = new Set(['gcal_event', 'canvas_event']);
 

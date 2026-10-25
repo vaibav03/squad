@@ -5,9 +5,10 @@ import type {
   ConfirmAnswer,
   InboundMessage,
   OutboundMessage,
+  ProvenanceHint,
   StudentId,
 } from '@squad/core';
-import type { ChatId } from '@squad/core';
+import type { ChatContextRef, ChatId } from '@squad/core';
 import { detectMention } from '../mention';
 import { getPersona } from '../persona';
 import type { Transport } from '../types';
@@ -18,6 +19,17 @@ import {
   parseQuizCard,
   stripPersonaPrefix,
 } from './web-format';
+
+/** Structured citations first (they carry non-PDF sources), then the ones parsed from the text, without duplicates. */
+function mergeCitations(structured: readonly ChatCitation[], parsed: readonly ChatCitation[]): ChatCitation[] {
+  const key = (c: ChatCitation) =>
+    c.source ? `${c.source.kind}/${c.source.id}#${c.source.anchor ?? ''}` : `${c.file}#${c.page}`;
+  const out: ChatCitation[] = [];
+  for (const c of [...structured, ...parsed])
+    if (!out.some((x) => key(x) === key(c) || (!x.source && !c.source && x.file === c.file && x.page === c.page)))
+      out.push(c);
+  return out;
+}
 
 /** What the web host receives for every bot message (structured; the persona prefix is already removed). */
 export interface WebOutbound {
@@ -30,6 +42,8 @@ export interface WebOutbound {
   /** Absolute local paths: the host copies them behind unguessable URLs. */
   attachments: Attachment[];
   card?: ChatCard;
+  /** What the skill said about its own provenance when it has no citations (the hub's composer decides the rest). */
+  provenance?: ProvenanceHint;
 }
 
 export interface WebTransportOptions {
@@ -42,6 +56,7 @@ export interface WebTransportOptions {
 
 export type WebInbound = Pick<InboundMessage, 'chatId' | 'from' | 'text'> & {
   attachments?: Attachment[];
+  context?: ChatContextRef[];
 };
 
 /**
@@ -84,7 +99,8 @@ export class WebTransport implements Transport {
       personaName: persona.name,
       ...(persona.emoji ? { emoji: persona.emoji } : {}),
       text,
-      citations: quiz ? [] : citations,
+      citations: quiz ? [] : mergeCitations(o.citations ?? [], citations),
+      ...(o.provenance ? { provenance: o.provenance } : {}),
       attachments: o.attachments ?? [],
       ...(council
         ? { card: council.card }
@@ -135,6 +151,7 @@ export class WebTransport implements Transport {
       from: m.from,
       text: m.text,
       attachments: m.attachments ?? [],
+      ...(m.context?.length ? { context: m.context } : {}),
       mentionsBot: detectMention(m.text, isGroup),
       ts: this.now(),
     });

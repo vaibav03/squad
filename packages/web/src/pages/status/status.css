@@ -119,21 +119,6 @@
   background: var(--lv-surface-2);
   font: 600 var(--text-xs) / 1 var(--lv-font-ui);
 }
-.st-pill__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--state-idle);
-}
-.st-pill[data-tone='ok'] .st-pill__dot {
-  background: var(--lv-ok);
-}
-.st-pill[data-tone='warn'] .st-pill__dot {
-  background: var(--lv-warn);
-}
-.st-pill[data-tone='bad'] .st-pill__dot {
-  background: var(--lv-alert);
-}
 .st-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));

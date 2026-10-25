@@ -8,6 +8,7 @@ import {
   chapterProviderFromStore,
   createBrain,
   createCanvasAnswerSkill,
+  createContextAskSkill,
   type ContextStore,
   type ContextViewer,
   type Brain,
@@ -69,6 +70,8 @@ export interface SkillDeps {
   env?: Record<string, string | undefined>;
   /** The asker's own data (calendar/mastery summaries) through the privacy gate, for council agents' tools. */
   viewer?: (askedBy: string, visibility: 'squad' | 'private') => AskViewerData | undefined;
+  /** The asker's imported planner catalogue (stored JSON) for `semester plan`; undefined means the labelled sample fallback. */
+  catalogueFor?: (student: string) => unknown | undefined;
   /** Hub-level model health at run start (ResilientLlm.status()). */
   health?: () => { llm: 'real' | 'fake'; reason?: string } | undefined;
   /** Receives the council service the skills use, so the hub's HTTP routes can share it. */
@@ -79,7 +82,12 @@ export interface SkillDeps {
    * Connected-source store plus the asker -> viewer resolver (squad membership verified by the caller). With both,
    * doubts cite the asker's own and squad-shared Canvas/Drive sources and "what's due?" is answered from Canvas.
    */
-  context?: { store: ContextStore; viewerFor: (m: { from: string }) => ContextViewer | undefined };
+  context?: {
+    store: ContextStore;
+    viewerFor: (m: { from: string }) => ContextViewer | undefined;
+    /** True when a real model (not the demo one) is answering: "Ask Cubbie" answers are then phrased by it, still only from the source. */
+    llmIsReal?: () => boolean;
+  };
   /** Starts a live agent discussion through the hub; omit and `discuss:` is not registered. */
   live?: LiveStarter;
   /** The hub's shared study plan. When given, `study plan` in a group creates a shared plan instead of the private DM flow. */
@@ -150,6 +158,16 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
     createCouncilSkill(council, { courseId: courseIdFor }),
     ...(d.live ? [createLiveSkill(d.live)] : []),
     ...(d.context
+      ? [
+          createContextAskSkill(d.context.store, {
+            viewerFor: d.context.viewerFor,
+            llm: d.llm,
+            ...(d.context.llmIsReal ? { llmIsReal: d.context.llmIsReal } : {}),
+            ...now,
+          }),
+        ]
+      : []),
+    ...(d.context
       ? [createCanvasAnswerSkill(d.context.store, { viewerFor: d.context.viewerFor, ...now })]
       : []),
     ...answerSkills(brain, course, d.context?.viewerFor),
@@ -169,6 +187,7 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
       emit,
       llm: d.llm,
       agents,
+      ...(d.catalogueFor ? { catalogueFor: d.catalogueFor } : {}),
       ...(d.viewer ? { viewerFor: (student) => d.viewer!(student, 'squad') } : {}),
       ...now,
     }),

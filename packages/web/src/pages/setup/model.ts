@@ -32,7 +32,6 @@ export function validatePhone(s: string): string | null {
 export function validateCode(s: string): string | null {
   const d = s.replace(/\D/g, '');
   if (d.length < 6) return 'Enter all 6 digits.';
-  if (d === '000000') return 'That code did not match. Check the text and try again.';
   return null;
 }
 export function validateFile(f: { name: string; size: number; type: string }): string | null {

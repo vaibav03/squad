@@ -12,7 +12,12 @@ export { registerPersonas, getPersona, formatPersonaText } from './persona';
 export { createSkills, type SkillDeps, type MediaWiring } from './skills';
 export { buildMedia, registerMediaPersonas } from './wiring';
 export { WebTransport, type WebOutbound, type WebInbound } from './transports/web';
-export { extractCitations, parseQuizCard, stripPersonaPrefix } from './transports/web-format';
+export {
+  citationLabel,
+  extractCitations,
+  parseQuizCard,
+  stripPersonaPrefix,
+} from './transports/web-format';
 export {
   createDemoLlm,
   DemoLlm,

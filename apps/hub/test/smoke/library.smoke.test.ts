@@ -373,7 +373,7 @@ describe('course library', () => {
     expect(s.json.catalogue.sample).toBe(true);
     expect(s.json.catalogue.name).toContain('SAMPLE DATA');
     const csv =
-      'id,title,credits,prereqs,coreqs,workload,offered,area\nCSL 101,Intro,3,,,6,fall;spring,core\nCSL 102,Next,3,CSL 101,,7,fall|spring,core\n';
+      'id,title,credits,prereqs,coreqs,workload,offered,area,days,start,end\nCSL 101,Intro,3,,,6,fall;spring,core,MW,09:00,10:15\nCSL 102,Next,3,CSL 101,,7,fall|spring,core,TR,09:00,10:15\n';
     const put = await fetch(`${url}/v1/library/catalogue`, {
       method: 'PUT',
       headers: H(ana, { 'content-type': 'text/csv' }),

@@ -8,7 +8,7 @@ export {
 export { createStreamTextTransport } from './stream-transport';
 export { createLiveTextTransport } from './live-transport';
 export { createDemoTransport, registerDemoScript } from './demo-transport';
-export { createCoursePorts } from './course-port';
+export { createCoursePorts, withContextPorts } from './course-port';
 export {
   decideRunMode,
   modeInputsFromEnv,

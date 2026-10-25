@@ -1,6 +1,6 @@
 {
  "demo": {
-  "at": "2026-10-25T15:34:53.482Z",
+  "at": "2026-10-25T14:59:36.889Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
@@ -435,6 +435,12 @@
     "ms": 8322
    },
    {
+    "title": "J16 clicking the ground never moves the player; clicking a character opens the inspector",
+    "status": "pass",
+    "note": "",
+    "ms": 10501
+   },
+   {
     "title": "J11 mastery: no tab, redirect opens the in-village panel",
     "status": "pass",
     "note": "",
@@ -453,64 +459,88 @@
     "ms": 71697
    },
    {
-    "title": "J17 Council Hall: click the chair and a member, the popup opens on the chat, Esc closes",
+    "title": "the stack is served on a non-5173 origin",
+    "status": "pass",
+    "note": "",
+    "ms": 30
+   },
+   {
+    "title": "Google fixture consent lands back on the origin the browser started on",
+    "status": "pass",
+    "note": "",
+    "ms": 12059
+   },
+   {
+    "title": "Google denial also returns to the served origin, with an honest error",
+    "status": "pass",
+    "note": "",
+    "ms": 13848
+   },
+   {
+    "title": "Canvas: the extension route is honest and the calendar feed (.ics) route connects",
+    "status": "pass",
+    "note": "",
+    "ms": 5390
+   },
+   {
+    "title": "0 non-5173 origins; LIVE column is BLOCKED without own credentials",
+    "status": "pass",
+    "note": "",
+    "ms": 4
+   },
+   {
+    "title": "1 empty state: disconnected is honest, health says what is missing",
+    "status": "pass",
+    "note": "",
+    "ms": 579
+   },
+   {
+    "title": "2 connect Canvas by calendar feed (no password/token asked)",
+    "status": "pass",
+    "note": "",
+    "ms": 731
+   },
+   {
+    "title": "3 connect Google (fixture consent) and return to the served origin",
+    "status": "pass",
+    "note": "",
+    "ms": 2109
+   },
+   {
+    "title": "4 imported items are visible with timestamps, type and sharing state",
+    "status": "pass",
+    "note": "",
+    "ms": 1051
+   },
+   {
+    "title": "5 Ask Cubbie: group chat opens with a removable context chip, prompt prefilled, not sent",
+    "status": "pass",
+    "note": "",
+    "ms": 2722
+   },
+   {
+    "title": "6 @cubbie answers from the attached context with provenance + the source viewer opens",
+    "status": "pass",
+    "note": "",
+    "ms": 229
+   },
+   {
+    "title": "7 shared study plan seeded from imports persists across reload; trip availability leaks nothing",
     "status": "fail",
     "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
-    "ms": 15746
+    "ms": 20425
    },
    {
-    "title": "J16 clicking the ground never moves the player; clicking a character opens the inspector",
-    "status": "pass",
+    "title": "8 health page: every link is a real probe; breaking links flips the exact check",
+    "status": "skipped",
     "note": "",
-    "ms": 11177
+    "ms": 0
    },
    {
-    "title": "J20 council board on the track4 replay: org chart, feed filters, verdict with dissent, Demo badge",
-    "status": "pass",
+    "title": "9 disconnect purges and flips the chain; reconnect works",
+    "status": "skipped",
     "note": "",
-    "ms": 16221
-   },
-   {
-    "title": "J20 degraded replay says Degraded with its reason, in a word and a glyph",
-    "status": "pass",
-    "note": "",
-    "ms": 13886
-   },
-   {
-    "title": "J20 Calm: the board is static and still complete",
-    "status": "pass",
-    "note": "",
-    "ms": 14110
-   },
-   {
-    "title": "J20 fixture session: action buttons call the hub and say plainly when it does not know the item",
-    "status": "pass",
-    "note": "",
-    "ms": 1783
-   },
-   {
-    "title": "J20 arrows: messages between council agents draw links in the Council Hall room (static in Calm)",
-    "status": "pass",
-    "note": "",
-    "ms": 14733
-   },
-   {
-    "title": "J20 Hierarchy tab in the Agent Inspector shows position, delegations and opens the board",
-    "status": "pass",
-    "note": "",
-    "ms": 15739
-   },
-   {
-    "title": "J32 village: a sprite and a HUD chip each open ONE focused panel that swaps; Escape returns focus",
-    "status": "fail",
-    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
-    "ms": 12242
-   },
-   {
-    "title": "J32 council board on the track4 replay: card and timeline chip open one panel; Conversation shows only that agent",
-    "status": "pass",
-    "note": "",
-    "ms": 16246
+    "ms": 0
    }
   ]
  }

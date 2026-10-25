@@ -14,6 +14,8 @@ export interface CodeMessage {
 export interface CodeSender {
   readonly name: string;
   send(msg: CodeMessage): Promise<void>;
+  /** Optional strict delivery (no console fallback): true only when the transport accepted the message. */
+  sendStrict?(msg: CodeMessage): Promise<boolean>;
 }
 
 /** Dev default: prints the code next to the masked contact on the hub console (stderr JSON line). */
@@ -55,6 +57,26 @@ export function createImessageCodeSender(opts: {
   const f = opts.fetch ?? fetch;
   return {
     name: 'imessage',
+    async sendStrict(m) {
+      if (m.channel !== 'phone') return false;
+      try {
+        const res = await f(opts.url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            to: m.to,
+            text: `Your Squad code is ${m.code}. It expires in 10 minutes.`,
+          }),
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        opts.log.info('auth.code.sent', { to: m.hint, via: 'imessage' });
+        return true;
+      } catch (e) {
+        opts.log.warn('auth.code.imessage_failed', { to: m.hint, err: (e as Error).name });
+        return false;
+      }
+    },
     async send(m) {
       if (m.channel !== 'phone') return fallback.send(m);
       try {

@@ -1,6 +1,7 @@
 import { isAbsolute, resolve } from 'node:path';
 import { findRepoRoot } from '@squad/core/node';
 import type { LogLevel } from './log';
+import { normalizeOrigin } from './web-origin';
 
 export interface HubConfig {
   port: number;
@@ -24,10 +25,14 @@ export interface HubConfig {
   sessionDays: number;
   /** Base of invite links (HUB_WEB_URL). */
   webUrl: string;
-  /** The web URL only when someone configured it (HUB_WEB_URL, the same variable that bases invite links); null otherwise. Used for links in outbound iMessage text. */
-  publicWebUrl: string | null;
+  /** Explicitly configured public web origin (PUBLIC_WEB_URL, WEB_URL or HUB_WEB_URL); null when none was set. */
+  publicWebUrl?: string | null;
   codeSender: 'console' | 'imessage';
   imessageSendUrl: string | null;
+  /** IMESSAGE_ALLOWED_HANDLES (same list the bot uses): the only numbers a phone-link code may be iMessaged to. */
+  imessageAllowedHandles: string[];
+  /** IMESSAGE_ALLOW_ALL=1 */
+  imessageAllowAll: boolean;
   /** SSE tuning (overridable in tests) */
   sse: { bufferSize: number; maxQueue: number; pingMs: number };
 }
@@ -78,14 +83,22 @@ export function loadHubConfig(env: Record<string, string | undefined> = process.
     squadMax: Math.max(3, Number(env.HUB_SQUAD_MAX) || 12),
     sessionDays: Math.max(1, Number(env.HUB_SESSION_DAYS) || 30),
     webUrl: (
+      env.PUBLIC_WEB_URL ||
+      env.WEB_URL ||
       env.HUB_WEB_URL ||
       corsOrigins.find((o) => o !== '*') ||
       'http://localhost:5180'
     ).replace(/\/+$/, ''),
-    publicWebUrl:
-      (env.HUB_WEB_URL || corsOrigins.find((o) => o !== '*') || '').replace(/\/+$/, '') || null,
+    publicWebUrl: normalizeOrigin(
+      env.PUBLIC_WEB_URL || env.WEB_URL || env.HUB_WEB_URL || undefined,
+    ),
     codeSender: env.CODE_SENDER === 'imessage' ? 'imessage' : 'console',
     imessageSendUrl: env.IMESSAGE_SEND_URL || null,
+    imessageAllowedHandles: (env.IMESSAGE_ALLOWED_HANDLES ?? '')
+      .split(',')
+      .map((x) => x.trim())
+      .filter(Boolean),
+    imessageAllowAll: env.IMESSAGE_ALLOW_ALL === '1',
     sse: { bufferSize: 5000, maxQueue: 256, pingMs: 15_000 },
   };
 }

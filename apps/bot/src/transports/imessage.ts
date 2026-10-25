@@ -54,7 +54,11 @@ export interface IMessageSdkLike {
   }): Promise<readonly IMessageMessageLike[]>;
   /** Optional: delivery receipts for sends whose guid `send` returned. Returns an unsubscribe. */
   watchReceipts?(
-    cb: (r: { guid: string; state: 'delivered' | 'failed'; reason?: string }) => void,
+    cb: (r: {
+      guid: string;
+      state: 'sent' | 'delivered' | 'read' | 'failed';
+      reason?: string;
+    }) => void,
   ): void | (() => void);
   listChats(q?: {
     kind?: 'group' | 'dm';

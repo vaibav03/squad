@@ -48,7 +48,7 @@ export default function WelcomePage() {
       />
     );
   else if (account.status === 'offline' && account.user === null)
-    body = <OfflineState onRetry={() => void account.refresh().catch(() => {})} />;
+    body = <OfflineState onRetry={() => void account.reconnect()} />;
   else if (
     account.status === 'signed-in' ||
     account.status === 'offline' ||

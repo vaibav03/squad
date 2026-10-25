@@ -7,15 +7,35 @@ import { runStep, type StepDef } from './lib/runner';
 import { disposeCtx, makeCtx } from './lib/world';
 import type { GateCtx } from './lib/ctx';
 import { S1, S2, S3 } from './steps/s01-s03';
-import { S4, S5, S5b, S6, S7 } from './steps/s04-s07';
+import { S4, S5, S6, S7 } from './steps/s04-s07';
 import { S5b } from './steps/s05b-focus';
 import { S8, S9, S10 } from './steps/s08-s10';
+import { S0, S1B, S1C } from './steps/home-onboarding';
+import { S3e, S9b, S10b } from './steps/provplan';
 
-const JOURNEY: StepDef<GateCtx>[] = [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10];
+const JOURNEY: StepDef<GateCtx>[] = [
+  S0,
+  S1,
+  S1B,
+  S1C,
+  S2,
+  S3,
+  S3e,
+  S4,
+  S5,
+  S5b,
+  S6,
+  S7,
+  S8,
+  S9,
+  S9b,
+  S10,
+  S10b,
+];
 
 // One test, ten steps: a failing step must not restart the worker (that would drop the journey's shared state),
 // and a FAIL never stops the later steps: each records its own result; Playwright goes red through soft expects.
-test('release gate journey S1..S10', async ({ browser }) => {
+test('release gate journey S0..S10', async ({ browser }) => {
   test.setTimeout(JOURNEY.length * 300_000);
   const ctx: GateCtx = await makeCtx(browser, { kind: 'journey' });
   try {

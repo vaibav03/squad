@@ -121,7 +121,12 @@ export const usePanelDock = (): PanelDockStore | null => useContext(Ctx);
  * Registers a panel with the dock while `open` is true. `onYield` closes it (a stable or fresh callback both work).
  * Outside a PanelDockRoot (gallery, tests of a single panel) it does nothing, so many panels can show at once there.
  */
-export function useDockPanel(id: string, size: PanelSize, open: boolean, onYield: () => void): void {
+export function useDockPanel(
+  id: string,
+  size: PanelSize,
+  open: boolean,
+  onYield: () => void,
+): void {
   const store = useContext(Ctx);
   const cb = useRef(onYield);
   cb.current = onYield;
@@ -178,7 +183,9 @@ function useDockTop(root: RefObject<HTMLDivElement | null>): void {
       raf = 0;
       const top = el.getBoundingClientRect().top;
       const bottoms = Array.from(
-        el.querySelectorAll<HTMLElement>('.sqv-hud .sqv-chips, .sqv-hud .sqv-seg, .sqv-hud .sqv-clock, .sqv-hud .sqv-menu'),
+        el.querySelectorAll<HTMLElement>(
+          '.sqv-hud .sqv-chips, .sqv-hud .sqv-seg, .sqv-hud .sqv-clock, .sqv-hud .sqv-menu',
+        ),
       )
         .map((n) => n.getBoundingClientRect())
         .filter((r) => r.height > 0)

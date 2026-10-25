@@ -218,13 +218,26 @@ Blocker code `no_google_client`. Google requires you to register the client:
    (never commit it), and `GATE_OWN_GOOGLE_EMAIL` for the own-account guard. Until then the hub runs its labelled
    simulator, which is a fixture.
 
-### Canvas institution token or feed
+### Canvas session or feed
 
-Blocker code `no_canvas_feed` / `token_disabled_or_missing`. Many institutions disable student access tokens. The feed
-needs no admin: Canvas, Calendar, "Calendar Feed" gives your secret `.ics` URL. Set `GATE_CANVAS_FEED_URL` and
-`GATE_OWN_CANVAS_HOST` (only the host is ever compared or shown). If your school allows it, Account, Settings, "New Access
-Token" gives a token for the REST path (`GATE_CANVAS_TOKEN`). The URL is a secret: it is encrypted at rest by the hub and
-shown only as host plus last four characters.
+Blocker code `no_canvas_session_or_feed`. Real Canvas needs **your signed-in Canvas session through the extension** OR
+**an `.ics` calendar-feed URL**. A student API token is **optional** (only some institutions allow it) and is never the
+blocker.
+
+Route A, the extension (Nook-style, signed-in browser; no institution approval and no admin):
+1. `pnpm --filter @squad/extension build`, then `chrome://extensions`, Developer mode, Load unpacked, `apps/extension/dist`
+   (source in `apps/extension`; set `SQUAD_WEB_ORIGIN` at build time to the web app origin you serve).
+2. Sign in to your school's Canvas in the same Chrome profile.
+3. In Squad, Connections, "Connect Canvas": pair the extension. Until it is installed and paired the page honestly says
+   "Extension not detected".
+4. Set `GATE_CANVAS_SESSION_VERIFIED=1` once the extension has synced your own Canvas.
+
+Route B, the calendar feed: Canvas, Calendar, "Calendar Feed" gives your secret `.ics` URL. Set `GATE_CANVAS_FEED_URL` and
+`GATE_OWN_CANVAS_HOST` (only the host is ever compared or shown). The URL is a secret: it is encrypted at rest by the hub
+and shown only as host plus last four characters.
+
+Optional: if your school allows it, Account, Settings, "New Access Token" gives a token for the REST path
+(`GATE_CANVAS_TOKEN`). Missing token never blocks anything.
 
 ### Apple behaviour and permissions
 

@@ -262,6 +262,9 @@ export function createAuthRoutes(deps: HubDeps): HubApp {
       user: acct,
       squads: deps.squads.list(id, activeSquadId),
       activeSquadId,
+      // True only for a phone the hub verified (signed up with it, or linked via /v1/me/phone/verify).
+      phoneVerified:
+        deps.accounts.user(id)?.channel === 'phone' || deps.imessage.linksOf(id).length > 0,
     });
   });
 

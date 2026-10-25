@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import type { ReactElement } from 'react';
 import { ConnectionsView, type ViewProps } from './ConnectionsView';
 import { toConnection, type Connection, type HubClient } from './api';
 import { errorCopy, oauthReturn, STATES } from './model';
 import { EXT_ATTR, MSG, extensionPresent, onExtensionReady } from './bridge';
+
+const render = (ui: ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
 
 afterEach(() => {
   cleanup();
@@ -31,6 +35,8 @@ const conn = (o: Partial<Connection> = {}): Connection => ({
   sources: { total: 3, byKind: { canvas_assignment: 2, canvas_file: 1 } },
   sharedWithSquads: [],
   needsReconnect: false,
+  account: null,
+  grantedScopes: ['canvas.browser_session.read'],
   ...o,
 });
 function props(over: Partial<ViewProps> = {}, client: Partial<HubClient> = {}): ViewProps {
@@ -65,9 +71,11 @@ describe('state badges', () => {
         })}
       />,
     );
-    expect(screen.getByText(`label-${state}`)).toBeTruthy();
-    if (state === 'fixture') expect(screen.getByText('Demo data, not a real account')).toBeTruthy();
-    else expect(screen.queryByText('Demo data, not a real account')).toBeNull();
+    expect(screen.getByTestId('conn-state').textContent).toBe(
+      { live: 'Live', fixture: 'Demo data', expired: 'Reauth required', revoked: 'Disconnected', rate_limited: 'Degraded', error: 'Degraded' }[state],
+    );
+    if (state === 'fixture') expect(screen.getByTestId('conn-fixture-note').textContent).toContain('Fixture (simulated, not your account)');
+    else expect(screen.queryByTestId('conn-fixture-note')).toBeNull();
     if (state === 'rate_limited') expect(screen.getByText(/Will retry in/)).toBeTruthy();
   });
   it('derives state when the hub has not sent one yet', () => {
@@ -94,7 +102,7 @@ describe('state badges', () => {
     );
     expect(screen.getByText('Syncing')).toBeTruthy();
     expect(screen.getByText('2 min ago')).toBeTruthy();
-    expect(screen.getByText('2 assignments, 1 files')).toBeTruthy();
+    expect(screen.getByText('2 assignments, 1 file')).toBeTruthy();
     expect(screen.getByText('Bio Crew')).toBeTruthy();
     expect(screen.getByText(/through your own browser session/)).toBeTruthy();
   });
@@ -156,7 +164,7 @@ describe('actions', () => {
         })}
       />,
     );
-    expect(screen.getAllByRole('button', { name: 'Reconnect' }).length).toBe(2);
+    expect(screen.getAllByRole('button', { name: 'Reconnect' }).length).toBe(1);
     expect(screen.getByRole('button', { name: 'Remove from list' })).toBeTruthy();
   });
   it('google button navigates to the authorization url the hub returns', async () => {
@@ -165,7 +173,7 @@ describe('actions', () => {
       .mockResolvedValue({ authorization_url: 'https://accounts.example/auth', mode: 'live' });
     const navigate = vi.fn();
     render(<ConnectionsView {...props({ navigate }, { googleAuthorize })} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to Google' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Connect Google' }));
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('https://accounts.example/auth'));
     expect(googleAuthorize).toHaveBeenCalledWith('/squad/connections');
     expect(screen.getByText(/only busy times unless you/)).toBeTruthy();
@@ -331,7 +339,7 @@ describe('revoked / expired grants offer Reconnect with an honest message (V3, V
       />,
     );
     expect(screen.getAllByText(msg)).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Reconnect' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Connect Google' })).toBeTruthy();
   });
   it('expired: keeps the data, flags it, shows Reconnect', () => {
     render(
@@ -351,5 +359,42 @@ describe('revoked / expired grants offer Reconnect with an honest message (V3, V
       />,
     );
     expect(screen.getByRole('button', { name: 'Reconnect' })).toBeTruthy();
+  });
+});
+
+describe('Canvas routes: extension first, token optional', () => {
+  afterEach(() => document.documentElement.removeAttribute(EXT_ATTR));
+  it('orders extension, then .ics feed, then collapsed Advanced; token never required', async () => {
+    const connectFeed = vi.fn(async () => conn());
+    const connectToken = vi.fn(async () => conn());
+    render(<ConnectionsView {...props({}, { connectFeed, connectToken })} />);
+    const text = document.body.textContent ?? '';
+    const ext = text.indexOf('Connect with the Squad browser extension');
+    const ics = text.indexOf('Or paste your Canvas calendar feed (.ics) URL');
+    const adv = text.indexOf('Advanced (optional)');
+    expect(ext).toBeGreaterThan(-1);
+    expect(ics).toBeGreaterThan(ext);
+    expect(adv).toBeGreaterThan(ics);
+    expect(text).toContain('Recommended: uses your signed-in Canvas session');
+    expect(text).toContain('Some schools do not allow');
+    const details = screen.getByText('Advanced (optional)').closest('details')!;
+    expect(details.hasAttribute('open')).toBe(false);
+    const tokenField = screen.getByLabelText(/Student API token \(optional\)/) as HTMLInputElement;
+    expect(tokenField.required).toBe(false);
+    expect(text).not.toMatch(/token (is )?required|requires a token/i);
+    // feed connect works with an empty token field
+    fireEvent.change(screen.getByLabelText('Canvas calendar feed URL'), {
+      target: { value: 'https://canvas.school.test/feeds/calendars/user_x.ics' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Connect feed' }));
+    await waitFor(() => expect(connectFeed).toHaveBeenCalled());
+    expect(connectToken).not.toHaveBeenCalled();
+  });
+  it('Check again re-detects the extension', async () => {
+    render(<ConnectionsView {...props()} />);
+    expect(screen.getByText('Extension not detected')).toBeTruthy();
+    document.documentElement.setAttribute(EXT_ATTR, '1');
+    fireEvent.click(screen.getByRole('button', { name: 'Check again' }));
+    await waitFor(() => expect(screen.queryByText('Extension not detected')).toBeNull());
   });
 });

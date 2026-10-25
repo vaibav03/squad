@@ -64,3 +64,18 @@
     gap: var(--space-8);
   }
 }
+
+.sq-page__lede {
+  margin: var(--space-2) 0 0;
+  color: var(--muted-foreground);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+  max-width: 44rem;
+}
+.sq-page__next {
+  margin: var(--space-1) 0 0;
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+  max-width: 44rem;
+}

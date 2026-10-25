@@ -10,6 +10,49 @@ export type PlanResponse = 'pending' | 'accepted' | 'declined';
 /** Honest label for what produced the plan: `live` (real model and mesh agents), `degraded` (fell back), `demo` (scripted). */
 export type PlanMode = 'live' | 'degraded' | 'demo';
 
+/**
+ * Who produced the plan. `agent`: a real planner agent read the context and wrote the items with citations.
+ * `fallback`: the deterministic generator (chapter assignment plus busy-day avoidance); never presented as agent output.
+ */
+export interface PlanGenerator {
+  mode: PlanMode;
+  source: string;
+  note: string;
+  kind?: 'agent' | 'fallback';
+  /** Why the plan is `degraded` or `demo` (fallback after an agent failure, no key, ...). */
+  reason?: string;
+  /** Model that wrote an `agent` plan. */
+  model?: string;
+  /** Token counts and the estimated cost of the agent call (agent plans only). */
+  usage?: { inputTokens?: number; outputTokens?: number; costUsd?: number };
+}
+
+export interface PlanBadge {
+  mode: PlanMode;
+  /** The badge text: `Live`, `Degraded: <reason>` or `Demo: sample data, scripted`. */
+  label: string;
+  /** `Planner agent` or `Fallback sample plan`. */
+  kindLabel: string;
+  fallback: boolean;
+}
+
+/** The ONE mapping from a plan's generator to the badge words shown on the chat card, the panel and iMessage. */
+export function planBadge(g: PlanGenerator): PlanBadge {
+  const fallback = g.kind !== 'agent';
+  const label =
+    g.mode === 'live'
+      ? 'Live'
+      : g.mode === 'degraded'
+        ? `Degraded: ${g.reason ?? 'part of the live stack is unavailable'}`
+        : 'Demo: sample data, scripted';
+  return {
+    mode: g.mode,
+    label,
+    kindLabel: fallback ? 'Fallback sample plan' : 'Planner agent',
+    fallback,
+  };
+}
+
 export interface PlanSource {
   /** What the item used: course material, a due item, or a syllabus line. */
   kind: 'material' | 'due' | 'syllabus';
@@ -17,6 +60,8 @@ export interface PlanSource {
   file?: string;
   page?: number;
   chapter?: string;
+  /** Imported Canvas / Google Classroom item this was seeded from (only when its owner shared it with the squad). */
+  source?: { kind: string; id: string; anchor?: string; title?: string };
 }
 
 export interface PlanItem {
@@ -35,6 +80,8 @@ export interface PlanItem {
   rev: number;
   updatedBy?: string;
   sources: PlanSource[];
+  /** One sentence on why this item is here (written by the planner agent; absent on fallback plans). */
+  why?: string;
 }
 
 /** The fields a member may edit on an item. */
@@ -103,7 +150,11 @@ export interface Plan {
   conflicts: PlanConflict[];
   /** Materials and due items the plan was built from. */
   citations: PlanSource[];
-  generator: { mode: PlanMode; source: string; note: string };
+  generator: PlanGenerator;
+  /** The planner's written rationale for the whole plan (agent plans only). */
+  rationale?: string;
+  /** The last plan message posted to the squad chat (hub message id, time, first words). */
+  posted?: { messageId: string; at: number; text: string };
   /** Present when `status` is `failed`. */
   error?: string;
   createdAt: number;
@@ -127,6 +178,13 @@ export interface PlanView extends Omit<Plan, 'log'> {
   myWeakTopics: string[];
   /** Chat note for numbered replies. */
   replyHelp: string;
+  /** Persistence: the plan is stored in the hub and survives reloads; who edited it last and when. */
+  saved: { rev: number; lastEditedBy: string; lastEditedAt: number };
+  /** Where the last decision went: said in the squad chat, and how its iMessage mirror is doing. */
+  sync: {
+    posted: { at: number; text: string } | null;
+    imessage: 'off' | 'web_only' | 'queued' | 'sent' | 'delivered' | 'read' | 'dry_run' | 'failed';
+  };
 }
 
 export const PlanProposeBodySchema = z.strictObject({

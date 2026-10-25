@@ -33,7 +33,7 @@ import {
   workloadWords,
   type PlanContext,
 } from './rules';
-import { extractCourseIds, loadCatalog, type CatalogBundle } from './schema';
+import { extractCourseIds, loadCatalog, scheduleLabel, type CatalogBundle } from './schema';
 
 export const ROUNDTABLE_KEY = 'roundtable';
 export const ROUNDTABLE_V2_PROMPT_VERSION = 'courseplan-v2';
@@ -449,14 +449,14 @@ export async function runCoursePlanAgents(
     const outcome: RoomOutcome = {
       title: clip(`${termName} plan: ${credits} credits`, 120),
       summary: clip(
-        `${courses.length} course${courses.length === 1 ? '' : 's'}, ${word} workload. Every course is checked against prerequisites, offerings and credit limits.`,
+        `${courses.length} course${courses.length === 1 ? '' : 's'}, ${word} workload. Every course is checked against prerequisites, offerings, meeting times and credit limits.`,
         400,
       ),
       items: courses.map((id) => {
         const c = byId.get(id)!;
         return {
           label: clip(`${c.id} ${c.title}`, 120),
-          detail: `${c.credits} cr, ${workloadWords(c.workload, 'course')} workload`,
+          detail: `${c.credits} cr, ${scheduleLabel(c)}, ${workloadWords(c.workload, 'course')} workload`,
         };
       }),
       facts: [
