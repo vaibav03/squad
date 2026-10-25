@@ -20,6 +20,7 @@ import type { CallPanelProps, QuizCardProps, ConfirmSheetProps } from '@squad/we
 | `onClose` | `() => void` | Esc, scrim, close button |
 | `returnFocusTo?` | `HTMLElement \| null` | focus target on close |
 | `calm?` | boolean | village Calm mode |
+| `fixed?` | boolean | cover the viewport (pages) instead of the nearest positioned ancestor; the village leaves it off |
 
 ## CallPanel
 Events in, state out. Typical wiring in village-mesh: `call.start` -> `open`, `status:'connecting'` then `'live'`; `call.caption` -> append `{id, speaker:'agent', text, cite}` (the `student` echo, if any, as `speaker:'you'`); `call.end` -> `status:'ended'`. A pure helper does this for you:
@@ -52,6 +53,8 @@ No scores, ever. Correctness is shown only when `result.correct` is present (squ
 | `quiz?` | `{quizId, chapter, label?, question, choices?: {id,label}[]}` | no `choices` = free text |
 | `result?` | `{recorded:true, correct?, explanation?}` | `phase:'done'` |
 | `message?`, `onRetry?` | | `phase:'error'` |
+| `quiz.index?`, `quiz.total?` | number | renders "Q2 of 5" and 5 progress pills (never a score) |
+| `onNext?()` | | when given, the done state shows Next instead of Done |
 | `onSubmit({choice?, text?})` | | host POSTs `/v1/quiz/:quizId/answer`, then sets `phase`/`result` |
 Wiring: `quiz.question` (target = viewer) -> fetch `GET /v1/quiz/:quizId` -> `phase:'loading'` until it lands -> `'answering'`.
 
@@ -70,4 +73,4 @@ Wiring: `quiz.question` (target = viewer) -> fetch `GET /v1/quiz/:quizId` -> `ph
 `packages/web/src/overlays/fixtures.ts` exports ready-made props for every state (`callPanelFixtures`, `quizCardFixtures`, `confirmSheetFixtures`) for the gallery and for village-side tests.
 
 ## Status
-Types and this doc: landed. Components: landing on `ws/web-live` in stages; the prop contract above is frozen, additions will be optional props only.
+All three components, `callReducer`, fixtures and stories are on `ws/web-live`. The prop contract above is frozen; additions are optional props only (`fixed`, `quiz.index/total`, `onNext` were added after the first publish). Overlays import nothing from the shell; they style through `src/overlays/kit/bridge.css` (aliases of docs/design/tokens.css). Mount inside a `.sq-scene` stage; each overlay adds `sq-scene` on its own root too.

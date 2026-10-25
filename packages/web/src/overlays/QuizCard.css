@@ -79,9 +79,11 @@
   }
 }
 .lv-quiz__choice[data-selected] {
-  border-color: var(--lv-accent);
-  background: var(--lv-surface-3);
-  box-shadow: var(--lv-glow);
+  border-color: var(--sq-sky-low);
+  border-width: 2px;
+  padding: calc(var(--lv-s2) - 1px) calc(var(--lv-s4) - 1px) calc(var(--lv-s2) - 1px)
+    calc(var(--lv-s3) - 1px);
+  background: var(--lv-hover);
 }
 .lv-quiz__choice[data-locked] {
   cursor: default;
@@ -104,16 +106,16 @@
     color var(--dur-fast) var(--lv-ease-out);
 }
 .lv-quiz__choice[data-selected] .lv-quiz__key {
-  background: var(--lv-accent);
+  background: var(--sq-sky-low);
   border-color: transparent;
-  color: var(--lv-accent-ink);
+  color: #fff;
 }
 .lv-quiz__text {
   font: 500 var(--text-base) / var(--lh-base) var(--lv-font-ui);
   overflow-wrap: anywhere;
 }
 .lv-quiz__mark {
-  color: var(--lv-accent);
+  color: var(--lv-text);
 }
 .lv-quiz__free {
   display: flex;
@@ -160,7 +162,9 @@
   border-radius: var(--lv-r3);
   border: 1px solid var(--lv-line);
   background: var(--lv-surface-2);
-  transition: border-color var(--dur-fast) var(--lv-ease-out), color var(--dur-fast) var(--lv-ease-out);
+  transition:
+    border-color var(--dur-fast) var(--lv-ease-out),
+    color var(--dur-fast) var(--lv-ease-out);
 }
 .lv-quiz__verdict {
   display: flex;
@@ -221,4 +225,19 @@
   margin: 0;
   color: var(--lv-alert-text);
   font: 500 var(--text-sm) / var(--lh-sm) var(--lv-font-ui);
+}
+
+.lv-quiz__pills {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.lv-quiz__pills i {
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--lv-line);
+}
+.lv-quiz__pills i[data-on] {
+  background: var(--lv-accent);
 }

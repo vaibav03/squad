@@ -18,6 +18,8 @@ export interface OverlayFrameProps {
   /** Close on scrim click. Default true. */
   dismissOnScrim?: boolean;
   initialFocus?: () => HTMLElement | null | undefined;
+  /** Cover the viewport (pages) instead of the nearest positioned ancestor (village stage). */
+  fixed?: boolean;
   className?: string;
   children: ReactNode;
 }
@@ -37,6 +39,7 @@ export function OverlayFrame(props: OverlayFrameProps) {
     dismissOnScrim = true,
     initialFocus,
     className,
+    fixed,
     children,
   } = props;
   const reduced = usePrefersReducedMotion(calm);
@@ -55,8 +58,13 @@ export function OverlayFrame(props: OverlayFrameProps) {
       data-state={shown && open ? 'open' : 'closed'}
       data-reduced={reduced ? 'true' : undefined}
       data-placement={placement}
+      data-fixed={fixed ? 'true' : undefined}
     >
-      <div className="lv-ovl__scrim" onClick={dismissOnScrim ? onClose : undefined} aria-hidden="true" />
+      <div
+        className="lv-ovl__scrim"
+        onClick={dismissOnScrim ? onClose : undefined}
+        aria-hidden="true"
+      />
       <div
         ref={ref}
         className={['lv-ovl__panel', className].filter(Boolean).join(' ')}

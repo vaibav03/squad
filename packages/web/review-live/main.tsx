@@ -4,9 +4,12 @@ import { MemoryRouter } from 'react-router-dom';
 import '../src/styles/index.css';
 import type { GalleryStory } from '../src/overlays/kit';
 
-const modules = import.meta.glob<{ stories: GalleryStory[] }>('../src/{overlays,pages/ledger,pages/trip,pages/mastery}/gallery.tsx', {
-  eager: true,
-});
+const modules = import.meta.glob<{ stories: GalleryStory[] }>(
+  '../src/{overlays,pages/ledger,pages/trip,pages/mastery}/gallery.tsx',
+  {
+    eager: true,
+  },
+);
 const stories = Object.values(modules).flatMap((m) => m.stories);
 
 function Shell({ children }: { children: ReactNode }) {

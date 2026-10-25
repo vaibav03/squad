@@ -87,8 +87,19 @@ export function Segmented<T extends string>({
   return (
     <div className="lv-seg" role="radiogroup" aria-label={label}>
       {options.map((o) => (
-        <label key={o.value} className="lv-seg__opt" data-on={o.value === value || undefined} title={o.hint}>
-          <input type="radio" name={label} value={o.value} checked={o.value === value} onChange={() => onChange(o.value)} />
+        <label
+          key={o.value}
+          className="lv-seg__opt"
+          data-on={o.value === value || undefined}
+          title={o.hint}
+        >
+          <input
+            type="radio"
+            name={label}
+            value={o.value}
+            checked={o.value === value}
+            onChange={() => onChange(o.value)}
+          />
           <span>{o.label}</span>
         </label>
       ))}
@@ -106,7 +117,14 @@ export interface StateBlockProps {
 }
 
 /** Designed empty / loading / error / offline block. Sprite sits on a sky-deep plate at an integer scale. */
-export function StateBlock({ kind, title, body, art, onRetry, retryLabel = 'Try again' }: StateBlockProps) {
+export function StateBlock({
+  kind,
+  title,
+  body,
+  art,
+  onRetry,
+  retryLabel = 'Try again',
+}: StateBlockProps) {
   const a = art ? propArt[art] : undefined;
   const scale = a ? Math.max(1, Math.min(4, Math.floor(96 / Math.max(a.w, a.h)))) : 1;
   return (
@@ -138,14 +156,27 @@ export function StateBlock({ kind, title, body, art, onRetry, retryLabel = 'Try 
   );
 }
 
-export function Avatar({ name, size = 32, tone }: { name: string; size?: number; tone?: 'you' | 'other' }) {
+export function Avatar({
+  name,
+  size = 32,
+  tone,
+}: {
+  name: string;
+  size?: number;
+  tone?: 'you' | 'other';
+}) {
   const ini = name
     .split(/\s+/)
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() ?? '')
     .join('');
   return (
-    <span className="lv-av" data-tone={tone} style={{ width: size, height: size, fontSize: size >= 40 ? 'var(--text-pixel-sm)' : '14px' }} aria-hidden="true">
+    <span
+      className="lv-av"
+      data-tone={tone}
+      style={{ width: size, height: size, fontSize: size >= 40 ? 'var(--text-pixel-sm)' : '14px' }}
+      aria-hidden="true"
+    >
       {ini}
     </span>
   );

@@ -6,7 +6,19 @@ import './QuizCard.css';
 const KEYS = 'ABCDEFGH';
 
 export function QuizCard(props: QuizCardProps) {
-  const { open, onClose, returnFocusTo, calm, phase, quiz, result, message, onSubmit, onRetry } = props;
+  const {
+    open,
+    onClose,
+    returnFocusTo,
+    calm,
+    phase,
+    quiz,
+    result,
+    message,
+    onSubmit,
+    onRetry,
+    onNext,
+  } = props;
   const titleId = useId();
   const textId = useId();
   const [choice, setChoice] = useState<string | null>(null);
@@ -24,7 +36,12 @@ export function QuizCard(props: QuizCardProps) {
   const choices = quiz?.choices;
   const isChoice = !!choices && choices.length > 0;
   const locked = phase === 'submitting' || phase === 'done';
-  const canSubmit = phase === 'answering' || phase === 'error' ? (isChoice ? choice !== null : text.trim().length > 0) : false;
+  const canSubmit =
+    phase === 'answering' || phase === 'error'
+      ? isChoice
+        ? choice !== null
+        : text.trim().length > 0
+      : false;
 
   const submit = () => {
     if (!canSubmit || !quiz) return;
@@ -48,7 +65,8 @@ export function QuizCard(props: QuizCardProps) {
   };
 
   const showFeedback = phase === 'done' && result;
-  const verdict = result?.correct === true ? 'correct' : result?.correct === false ? 'incorrect' : 'recorded';
+  const verdict =
+    result?.correct === true ? 'correct' : result?.correct === false ? 'incorrect' : 'recorded';
 
   return (
     <OverlayFrame
@@ -59,19 +77,41 @@ export function QuizCard(props: QuizCardProps) {
       labelledBy={titleId}
       size="md"
       className="lv-quiz"
-      initialFocus={() => radios.current.find((r) => r?.checked) ?? radios.current[0] ?? area.current}
+      initialFocus={() =>
+        radios.current.find((r) => r?.checked) ?? radios.current[0] ?? area.current
+      }
     >
       <span className="lv-grip" aria-hidden="true" />
       <button type="button" className="lv-btn lv-close" onClick={onClose} aria-label="Close quiz">
         <LvIcon name="x" size={20} />
       </button>
 
-      <div className="lv-quiz__body" onKeyDown={onKey} aria-busy={phase === 'loading' || phase === 'submitting' || undefined}>
+      <div
+        className="lv-quiz__body"
+        onKeyDown={onKey}
+        aria-busy={phase === 'loading' || phase === 'submitting' || undefined}
+      >
         <header className="lv-quiz__head">
           {quiz ? (
             <>
               <span className="lv-quiz__chip">{quiz.chapter}</span>
-              {quiz.label && <span className="lv-quiz__label">{quiz.label}</span>}
+              {quiz.label && (
+                <span className="lv-quiz__label">
+                  {quiz.label}
+                  {quiz.total ? ` of ${quiz.total}` : ''}
+                </span>
+              )}
+              {quiz.total && quiz.index ? (
+                <span
+                  className="lv-quiz__pills"
+                  role="img"
+                  aria-label={`Question ${quiz.index} of ${quiz.total}`}
+                >
+                  {Array.from({ length: quiz.total }, (_, i) => (
+                    <i key={i} data-on={i < quiz.index! || undefined} />
+                  ))}
+                </span>
+              ) : null}
             </>
           ) : (
             <span className="lv-skel" style={{ width: 96 }} />
@@ -102,7 +142,12 @@ export function QuizCard(props: QuizCardProps) {
                 {choices!.map((c, i) => {
                   const selected = choice === c.id;
                   return (
-                    <label key={c.id} className="lv-quiz__choice" data-selected={selected || undefined} data-locked={locked || undefined}>
+                    <label
+                      key={c.id}
+                      className="lv-quiz__choice"
+                      data-selected={selected || undefined}
+                      data-locked={locked || undefined}
+                    >
                       <input
                         ref={(el) => {
                           radios.current[i] = el;
@@ -118,7 +163,9 @@ export function QuizCard(props: QuizCardProps) {
                         {KEYS[i] ?? i + 1}
                       </span>
                       <span className="lv-quiz__text">{c.label}</span>
-                      {selected && phase === 'done' && <LvIcon name="check" size={18} className="lv-quiz__mark" />}
+                      {selected && phase === 'done' && (
+                        <LvIcon name="check" size={18} className="lv-quiz__mark" />
+                      )}
                     </label>
                   );
                 })}
@@ -154,11 +201,17 @@ export function QuizCard(props: QuizCardProps) {
             {showFeedback && (
               <div className="lv-quiz__feedback" data-verdict={verdict} role="status">
                 <p className="lv-quiz__verdict">
-                  <LvIcon name={verdict === 'correct' ? 'check' : verdict === 'incorrect' ? 'info' : 'check'} size={18} />
-                  {verdict === 'correct' ? 'Correct' : verdict === 'incorrect' ? 'Not quite' : 'Answer recorded'}
+                  <LvIcon name={verdict === 'incorrect' ? 'x' : 'check'} size={18} />
+                  {verdict === 'correct'
+                    ? 'Recorded: correct'
+                    : verdict === 'incorrect'
+                      ? 'Not quite'
+                      : 'Answer recorded'}
                 </p>
                 {verdict === 'recorded' && !result?.explanation && (
-                  <p className="lv-quiz__explain">Your answer is in. Your squad keeps results private.</p>
+                  <p className="lv-quiz__explain">
+                    Your answer is in. Your squad keeps results private.
+                  </p>
                 )}
                 {result?.explanation && <p className="lv-quiz__explain">{result.explanation}</p>}
               </div>
@@ -166,8 +219,12 @@ export function QuizCard(props: QuizCardProps) {
 
             <footer className="lv-quiz__foot">
               {phase === 'done' ? (
-                <button type="button" className="lv-btn lv-btn--primary" onClick={onClose}>
-                  Done
+                <button
+                  type="button"
+                  className="lv-btn lv-btn--primary"
+                  onClick={onNext ?? onClose}
+                >
+                  {onNext ? 'Next' : 'Done'}
                 </button>
               ) : (
                 <button
@@ -195,7 +252,15 @@ export function QuizCard(props: QuizCardProps) {
   );
 }
 
-function ErrorBlock({ message, onRetry, inline }: { message?: string; onRetry?: () => void; inline?: boolean }) {
+function ErrorBlock({
+  message,
+  onRetry,
+  inline,
+}: {
+  message?: string;
+  onRetry?: () => void;
+  inline?: boolean;
+}) {
   return (
     <div className="lv-quiz__error" role="alert" data-inline={inline || undefined}>
       <p>
