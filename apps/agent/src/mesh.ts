@@ -1,7 +1,7 @@
 // Spin up several agent servers in one process (dev-mesh, demos, integration tests).
 import { serve, type ServerType } from '@hono/node-server';
 import { FakeLlm, type AskConfirm, type Llm } from '@squad/core';
-import type { Emitter, PrivateProfile } from '@squad/mesh';
+import type { Emitter, HubPort, PrivateProfile } from '@squad/mesh';
 import { scriptedConfirm } from './confirm';
 import { createHttpNet } from './net';
 import { createAgentApp } from './server';
@@ -25,6 +25,8 @@ export async function startMesh(o: {
   timeouts?: { peerMs?: number; confirmMs?: number };
   /** Per-student confirm bridge (the live demo routes DMs through the bot); default is the scripted answerer. */
   askConfirm?: (student: string) => AskConfirm;
+  /** Owner-only hub channel (x.trip.upsert, x.trip.limits, x.ledger.private), shared by all agents in this process. */
+  hub?: HubPort;
 }): Promise<RunningMesh> {
   const secret = o.secret ?? 'dev-secret';
   const urls: Record<string, string> = {};
@@ -44,6 +46,7 @@ export async function startMesh(o: {
           ...(o.answers ? { answers: o.answers } : {}),
         }),
       llm: o.llm ?? new FakeLlm(),
+      ...(o.hub ? { hub: o.hub } : {}),
       url: '',
       secret,
       ...(o.seed !== undefined ? { seed: `${o.seed}|${p.id}` } : {}),

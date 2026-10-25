@@ -18,7 +18,7 @@ import {
   type VillageEvent,
 } from '@squad/core';
 import { createHttpCoordinator, createMeshScheduler } from '@squad/mesh';
-import { createHubEmitter, parseProfile, startMesh } from '@squad/agent';
+import { createHubEmitter, createHubPort, parseProfile, startMesh } from '@squad/agent';
 import { createMasteryStore, runStudyPlan } from '@squad/brain';
 import { startHub } from '@squad/hub';
 import { wireRealPorts } from '@squad/hub/real';
@@ -140,6 +140,7 @@ async function main(): Promise<void> {
   const mesh = await startMesh({
     profiles,
     emitter,
+    hub: createHubPort(), // x.trip.upsert / x.trip.limits / x.ledger.private to the hub (HUB_BASE_URL + secret from env)
     basePort: 4101,
     secret: SECRET,
     llm: new FakeLlm({ fallback: 'ok' }),
@@ -202,6 +203,18 @@ async function main(): Promise<void> {
       `trip: outcome ${JSON.stringify(outcome)}`,
     );
     await new Promise((r) => setTimeout(r, 500)); // let the last events fan out
+
+    // ---- the hub's own trip record: every agent posted its own limits (x.trip.limits), the coordinator via x.trip.upsert
+    const rec = hub.deps.trips.get('task_trip_demo');
+    check(rec !== undefined, 'hub: trip record exists (x.trip.upsert reached the hub)');
+    check(
+      STUDENTS.every((s) => Object.keys(rec?.limits[s] ?? {}).length > 0),
+      `hub: trip limits merged for every student (${Object.keys(rec?.limits ?? {}).join(',')})`,
+    );
+    check(
+      rec?.status === 'confirmed',
+      `hub: trip record status confirmed (saw ${rec?.status ?? 'none'})`,
+    );
 
     // ---- assertions over each viewer's stream
     for (const [i, id] of STUDENTS.entries()) {
