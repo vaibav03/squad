@@ -7,6 +7,9 @@ import {
   chapterIdsFromStore,
   chapterProviderFromStore,
   createBrain,
+  createCouncilService,
+  createCouncilSkill,
+  type CouncilService,
   type Brain,
   type MasteryStore,
   createFeynmanSkill,
@@ -43,7 +46,7 @@ export interface SkillDeps {
   seedFixtureCourse?: boolean;
   now?: () => number;
   /** Share the hub's brain and mastery store so chat, quiz and the village use one instance. */
-  shared?: { brain?: Brain; mastery?: MasteryStore };
+  shared?: { brain?: Brain; mastery?: MasteryStore; council?: CouncilService };
 }
 
 // Static, dependency-free fallback (chat only). The full registry is built by `createSkills`.
@@ -69,8 +72,12 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
   const feynman = new FeynmanEngine({ db: d.db, llm: d.llm, emit, mastery, chapters, ...now });
   const stepDiff = new StepDiffEngine({ db: d.db, llm: d.llm, emit, mastery, ...now });
   const courseIdFor = () => course();
+  const council =
+    d.shared?.council ??
+    createCouncilService({ llm: d.llm, db: d.db, emit, brain, courseId: course, ...now });
 
   const brainSkills: Skill[] = [
+    createCouncilSkill(council, { courseId: courseIdFor }),
     ...answerSkills(brain, course),
     createQuizSkill({ engine, courseIdFor }),
     createFeynmanSkill({ engine: feynman, courseIdFor }),

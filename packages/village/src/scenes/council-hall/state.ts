@@ -12,10 +12,15 @@ const PINNED: Record<string, number> = {
   chill: 0,
   grind: 1,
   advisor: 2,
+  // the general-purpose ask council: Skeptic left, Teacher centre, Practitioner right
+  skeptic: 0,
+  teacher: 1,
+  practitioner: 2,
 };
 
 export function isChair(member: string): boolean {
-  return member === 'chair' || member === 'chairman';
+  const m = member.toLowerCase();
+  return m === 'chair' || m === 'chairman';
 }
 
 export interface CouncilHallState extends BaseState {
@@ -25,6 +30,8 @@ export interface CouncilHallState extends BaseState {
   slots: { from: string[]; to: string[]; since: number } | null;
   /** Who last ranked, and when: that member talks for a moment. */
   speaker: { who: string; since: number } | null;
+  /** Every council.rank of the current session, in arrival order (each shows its own rank bubble). */
+  ranks: { by: string; order: string[]; since: number }[];
 }
 
 export function initCouncilHall(
@@ -35,6 +42,7 @@ export function initCouncilHall(
     seats: {},
     slots: null,
     speaker: null,
+    ranks: [],
   };
 }
 
@@ -43,7 +51,7 @@ export function seatOf(seats: Readonly<Record<string, number>>, member: string):
   if (isChair(member)) return CHAIR_SEAT;
   const have = seats[member];
   if (have !== undefined) return have;
-  const pinned = PINNED[member];
+  const pinned = PINNED[member] ?? PINNED[member.toLowerCase()];
   const taken = new Set(Object.values(seats));
   if (pinned !== undefined && !taken.has(pinned)) return pinned;
   for (let i = 0; i < 3; i++) if (!taken.has(i)) return i;
@@ -71,15 +79,19 @@ export function reduceCouncil(
     case 'bubble':
       return seat(reduceBase(s, cmd, at), cmd.bubble.who);
     case 'rank': {
-      let n = reduceBase(seat(s, cmd.by), cmd, at);
-      for (const m of cmd.order) n = seat(n, m);
-      const order = cmd.order.filter((m) => !isChair(m));
+      // only seated members may appear in a ranking: free text in `order` never enters state
+      const known = cmd.order.filter((m) => s.seats[m] !== undefined || m === cmd.by);
+      const safe = { ...cmd, order: known };
+      let n = reduceBase(seat(s, cmd.by), safe, at);
+      for (const m of known) n = seat(n, m);
+      const order = known.filter((m) => !isChair(m));
       const cur = n.slots?.to ?? seated(n);
       const rest = seated(n).filter((m) => !order.includes(m));
       return {
         ...n,
         slots: { from: cur, to: [...order, ...rest], since: at },
         speaker: { who: cmd.by, since: at },
+        ranks: [...n.ranks, { by: cmd.by, order: [...known], since: at }],
       };
     }
     case 'verdict': {
@@ -92,14 +104,17 @@ export function reduceCouncil(
           // the dissenter's own bubble becomes the lone red-lined one, and stays
           n = {
             ...n,
-            bubbles: n.bubbles.map((b) => (b.who === d ? { ...b, style: 'dissent' as const } : b)),
+            // since = now: the red-lined bubble re-enters (160 ms) even if the opinion had timed out
+            bubbles: n.bubbles.map((b) =>
+              b.who === d ? { ...b, style: 'dissent' as const, since: at } : b,
+            ),
           };
         }
       }
       return n;
     }
     case 'clearBubbles':
-      return { ...reduceBase(s, cmd, at), slots: null, speaker: null };
+      return { ...reduceBase(s, cmd, at), slots: null, speaker: null, ranks: [] };
     default:
       return reduceBase(s, cmd, at);
   }

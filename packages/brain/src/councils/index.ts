@@ -2,3 +2,17 @@ export * from './pure';
 export * from './council';
 export * from './quizkey';
 export * from './planner';
+export * from './ask-types';
+export * from './ask-prompts';
+export {
+  runAskCouncil,
+  anonymise,
+  withTimeout,
+  outcomeOf,
+  REFUSE_GRADED,
+  REFUSE_OFF_TOPIC,
+  NOT_COVERED_NOTE,
+  COUNCIL_AGENT,
+} from './ask-run';
+export * from './service';
+export { createDemoCouncilLlm } from './demo';

@@ -13,6 +13,7 @@ export * from './captions';
 export * from './skills/doubt';
 export * from './skills/behind';
 export * from './skills/hwpolicy';
+export * from './skills/council';
 export * from './create';
 export * from './quiz';
 export * from './studyplan';
