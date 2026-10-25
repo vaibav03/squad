@@ -1,0 +1,19 @@
+{
+  "name": "@squad/live-verify",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "verify": "tsx verify.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "@squad/core": "workspace:*",
+    "@squad/brain": "workspace:*",
+    "@squad/media": "workspace:*",
+    "@squad/hub": "workspace:*",
+    "zod": "^4.0.0"
+  }
+}
