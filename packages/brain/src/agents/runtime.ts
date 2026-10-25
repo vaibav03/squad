@@ -1,5 +1,6 @@
 import {
   A2aMessageSchema,
+  registerCouncilRun,
   scripted,
   worstMode,
   type A2aKind,
@@ -72,6 +73,8 @@ export interface StartRunOptions {
   privateNeedles?: string[];
   /** Chair of the roster (parent of the specialists). Default: the first role 'chair'. */
   chairKey?: string;
+  /** Who asked: registers the run for the hub's per-viewer A2A filter (unknown runs are dropped, default deny). */
+  owner?: { askedBy: string };
   /** Called after every published envelope and stage change (the caller syncs its snapshot). Must not throw. */
   onChange?: () => void;
 }
@@ -181,6 +184,11 @@ export function createCouncilRuntime(deps: RuntimeDeps): {
       if (!isDemo && transport.kind === 'demo')
         throw new Error('council runtime: scripted transport under a live mode');
       const councilId = `council:${o.councilKey}`;
+      if (o.owner)
+        registerCouncilRun(o.correlationId, {
+          askedBy: o.owner.askedBy,
+          private: o.visibility === 'private',
+        });
       const guard = new BudgetGuard(budgetLimits, now);
       const roster = new Map(o.roster.map((s) => [s.key, s]));
       const chair = o.roster.find((s) => s.key === (o.chairKey ?? '') || s.role === 'chair');

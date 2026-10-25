@@ -100,7 +100,13 @@ export function createCoursePlanSkill(deps: CoursePlanSkillDeps): Skill {
       const res =
         deps.agents && deps.agents.flag === 'v2'
           ? await runCoursePlanAgents(
-              { emit: deps.emit, bundle, agents: deps.agents, ...(viewer ? { viewer } : {}) },
+              {
+                emit: deps.emit,
+                bundle,
+                agents: deps.agents,
+                askedBy: m.from,
+                ...(viewer ? { viewer } : {}),
+              },
               planInput,
             )
           : await runCoursePlan({ llm: deps.llm ?? ctx.llm, emit: deps.emit, bundle }, planInput);

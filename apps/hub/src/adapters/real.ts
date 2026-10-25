@@ -11,6 +11,7 @@ import {
   type StudentId,
   VoicesUnavailableError,
   type VillageEvent,
+  type AgentMode,
 } from '@squad/core';
 import {
   BrainUnavailableError,
@@ -149,7 +150,7 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
 
   const quiz = createRealQuizPort(deps, engine, courseId);
   const brainPort = createRealBrainPort(deps, brain, mastery, o);
-  const { media, call } = createAudioPorts(brain, courseId, o);
+  const { media, call } = createAudioPorts(brain, courseId, o, () => councilAgents.decideMode());
 
   return {
     ports: { quiz, call, brain: brainPort, media },
@@ -399,6 +400,7 @@ function createAudioPorts(
   brain: Brain,
   defaultCourse: string,
   o: RealPortsOptions,
+  mode: () => AgentMode,
 ): { media: MediaPort; call: Ports['call'] } {
   let n = 0;
   const answer: AnswerFn = async ({ agent, student, text }) => {
@@ -430,7 +432,12 @@ function createAudioPorts(
 
   // Oral Exam Hut: `expert:oral` and `expert:examiner` run the scripted examiner through the same call
   // machinery (call.start / call.caption / call.end). Works with typed `user.text`, no mic and no TTS needed.
-  const examiner = createOralExaminer({ store: brain.store, llm: o.llm, courseId: defaultCourse });
+  const examiner = createOralExaminer({
+    store: brain.store,
+    llm: o.llm,
+    courseId: defaultCourse,
+    mode,
+  });
   const isOral = (agent: string) => {
     const a = parseAgentId(agent);
     return a.kind === 'expert' && (a.ref === 'oral' || a.ref === 'examiner');

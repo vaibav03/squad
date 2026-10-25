@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { openDb } from '@squad/core/node';
-import type { Db, StudentId } from '@squad/core';
+import { councilRunOwner, type Db, type StudentId } from '@squad/core';
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { mkdtempSync } from 'node:fs';
@@ -124,7 +124,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     // per-viewer A2A filtering: who owns a council run (the service is attached later, read lazily)
     councils: {
       ownerOf: (correlationId) => {
-        const o = deps.council?.ownerOf?.(correlationId);
+        const o = deps.council?.ownerOf?.(correlationId) ?? councilRunOwner(correlationId);
         if (!o) return undefined;
         const squadId = deps.directory.squadOf(o.askedBy as StudentId);
         return squadId ? { askedBy: o.askedBy, squadId, private: o.private } : undefined;

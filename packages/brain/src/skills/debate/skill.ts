@@ -141,7 +141,7 @@ export function createDebateSkill(deps: DebateSkillDeps): Skill {
         };
         const res =
           deps.agents && deps.agents.flag === 'v2'
-            ? await runDebateV2({ agents: deps.agents, emit: deps.emit }, input)
+            ? await runDebateV2({ agents: deps.agents, emit: deps.emit, askedBy: m.from }, input)
             : await runDebate({ llm: deps.llm ?? ctx.llm, emit: deps.emit }, input);
         // The arguments already went to chat; the final message is the vote, verdict and dissent.
         return out(res.closingText);

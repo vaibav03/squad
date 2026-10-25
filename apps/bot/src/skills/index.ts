@@ -156,6 +156,7 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
       llm: d.llm,
       courseIdFor,
       defaultChapter: () => chapterIdsFromStore(brain.store)(course())[0],
+      mode: () => agents.decideMode(),
       ...now,
     }),
     // Debate Stage: '@cubbie debate <question>' / 'debate this'. Course questions are grounded in the
@@ -173,9 +174,24 @@ export async function createSkills(d: SkillDeps): Promise<Skill[]> {
       },
     }),
     // Anchored phrases only ('exam oracle', 'rubric check'); both score 0 unless addressed.
-    createOracleSkill({ store: brain.store, mastery, emit, llm: d.llm, courseIdFor, ...now }),
+    createOracleSkill({
+      store: brain.store,
+      mastery,
+      emit,
+      llm: d.llm,
+      courseIdFor,
+      mode: () => agents.decideMode(),
+      ...now,
+    }),
     createOralSkill({ emit }),
-    createRubricSkill({ store: brain.store, emit, llm: d.llm, courseIdFor, ...now }),
+    createRubricSkill({
+      store: brain.store,
+      emit,
+      llm: d.llm,
+      courseIdFor,
+      mode: () => agents.decideMode(),
+      ...now,
+    }),
   ];
   const mediaSkills = d.media
     ? createMediaSkills({

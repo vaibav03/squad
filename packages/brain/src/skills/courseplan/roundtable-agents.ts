@@ -46,6 +46,8 @@ export interface CoursePlanAgentsDeps {
   newRunId?: () => string;
   /** Asker's calendar / mastery summaries through the privacy gate. */
   viewer?: AskViewerData;
+  /** Who asked (registers the run for the hub's per-viewer A2A filter). */
+  askedBy?: string;
 }
 
 const RULES = [
@@ -192,6 +194,7 @@ export async function runCoursePlanAgents(
       councilKey: ROUNDTABLE_KEY,
       mode,
       visibility: 'squad',
+      ...(deps.askedBy ? { owner: { askedBy: deps.askedBy } } : {}),
       roster,
       ports,
       ...(deps.viewer?.needles?.length ? { privateNeedles: deps.viewer.needles } : {}),

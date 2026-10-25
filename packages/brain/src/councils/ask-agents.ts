@@ -43,7 +43,7 @@ export function askRoster(o: AskRosterOptions = {}): AgentSpec[] {
     displayName: CHAIR_NAME,
     stance: 'Coordinates the council and weighs the answers',
     system: CHAIR_V2_SYSTEM,
-    tools: ['delegate', 'retrieve_course'],
+    tools: ['delegate'],
     tier: 'chair',
     limits: { maxModelCalls: 6, maxOutputTokens: 3000 },
   };

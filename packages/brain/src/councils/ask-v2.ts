@@ -175,6 +175,7 @@ export async function runAskV2(
       councilKey: 'ask',
       mode,
       visibility: r.visibility,
+      owner: { askedBy: input.askedBy },
       roster,
       ports,
       ...(viewer?.needles?.length ? { privateNeedles: viewer.needles } : {}),

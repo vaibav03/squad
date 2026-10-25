@@ -31,6 +31,8 @@ const JUDGE_ID = agentId.council(`${DEBATE_COUNCIL}-judge`);
 export interface DebateAgentsDeps {
   agents: CouncilAgents;
   emit: EmitEvent;
+  /** Who started the debate (registers the run for the hub's per-viewer A2A filter). */
+  askedBy?: string;
 }
 
 const JUDGE_SYSTEM = [
@@ -192,6 +194,7 @@ export async function runDebateV2(
     councilKey: DEBATE_COUNCIL,
     mode,
     visibility: 'squad',
+    ...(deps.askedBy ? { owner: { askedBy: deps.askedBy } } : {}),
     roster,
     ports,
     chairKey: 'judge',
