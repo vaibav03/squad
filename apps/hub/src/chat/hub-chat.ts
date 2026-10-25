@@ -10,9 +10,7 @@ import type {
   ChatSummary,
   ChatTyping,
   ChatUpdate,
-  HubStatus,
 } from '@squad/core';
-import { DEMO_NOTICE } from '@squad/core';
 import type { HubDeps, Viewer } from '../types';
 import { canAccessChat, chatIdsOf, dmChatId, groupChatId } from './access';
 import { createChatFiles, type ChatFiles } from './files';
@@ -65,8 +63,6 @@ export type SendResult =
 export interface ChatHub {
   store: ChatStore;
   files: ChatFiles;
-  status(): HubStatus;
-  setStatus(s: HubStatus | (() => HubStatus)): void;
   engine?: ChatEngine;
   setEngine(e: ChatEngine): void;
   subscribe(viewer: Viewer, afterSeq?: number): ChatSub;
@@ -130,7 +126,7 @@ class Sub implements ChatSub {
 }
 
 export function createChatHub(
-  deps: Pick<HubDeps, 'db' | 'directory' | 'ledger' | 'log' | 'now' | 'config'>,
+  deps: Pick<HubDeps, 'db' | 'directory' | 'ledger' | 'log' | 'now' | 'config' | 'runtime'>,
   filesDir: string,
 ): ChatHub {
   const store = createChatStore(deps.db);
@@ -139,13 +135,8 @@ export function createChatHub(
   const rate = new Map<string, number[]>();
   const typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
   const typingCount = new Map<string, number>();
-  let statusFn: () => HubStatus = () => ({
-    llm: 'fake',
-    tts: 'none',
-    demo: true,
-    reason: 'no_key',
-    notice: DEMO_NOTICE,
-  });
+  /** Replies are labelled demo whenever the hub's runtime says the real model is not answering. */
+  const isDemo = () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : true);
 
   /** The ONE fan-out: nobody gets an item for a chat they cannot access. */
   const fan = (chatId: string, w: ChatWire) => {
@@ -184,10 +175,6 @@ export function createChatHub(
   const hub: ChatHub = {
     store,
     files,
-    status: () => statusFn(),
-    setStatus(s) {
-      statusFn = typeof s === 'function' ? s : () => s;
-    },
     setEngine(e) {
       hub.engine = e;
     },
@@ -295,7 +282,7 @@ export function createChatHub(
         attachments,
         citations,
         ...(card ? { card } : {}),
-        demo: statusFn().demo,
+        demo: isDemo(),
       });
       publish(m);
       return m;

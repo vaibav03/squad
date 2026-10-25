@@ -41,6 +41,27 @@ export const ConfirmEvent = z.strictObject({
   question: z.string(),
 });
 
+/**
+ * OUTCOME card shown at the end of a room session (round table: the recommended term plan). Only
+ * text that is already shared with the squad may go in here: never a withheld value, never a grade.
+ */
+export const RoomOutcomeSchema = z.strictObject({
+  title: z.string().max(120),
+  summary: z.string().max(400).optional(),
+  /** The main list (e.g. the recommended courses). */
+  items: z
+    .array(z.strictObject({ label: z.string().max(120), detail: z.string().max(160).optional() }))
+    .max(40),
+  /** Short label/value facts (e.g. credits, workload in words). */
+  facts: z.array(z.strictObject({ label: z.string().max(40), value: z.string().max(80) })).max(8),
+  /** The dissent in one line. */
+  dissent: z.string().max(240).optional(),
+  /** One bullet per member that argued (e.g. chill / grind / advisor). */
+  why: z.array(z.strictObject({ who: z.string().max(40), text: z.string().max(280) })).max(6),
+  notes: z.array(z.string().max(200)).max(6).optional(),
+});
+export type RoomOutcome = z.infer<typeof RoomOutcomeSchema>;
+
 export const CouncilEvent = z.strictObject({
   t: z.enum(['council.opinion', 'council.rank', 'council.verdict']),
   councilId: z.string(),
@@ -49,6 +70,8 @@ export const CouncilEvent = z.strictObject({
   dissent: z.boolean().optional(),
   order: z.array(z.string()).optional(),
   dissenter: z.string().optional(),
+  /** Optional structured result of the session, carried on `council.verdict` (public text only). */
+  outcome: RoomOutcomeSchema.optional(),
 });
 
 export const QuizEvent = z.strictObject({
@@ -58,6 +81,8 @@ export const QuizEvent = z.strictObject({
   target: StudentId.optional(),
   student: StudentId.optional(),
   correct: z.boolean().optional(),
+  /** Optional public words: the question prompt on `quiz.question` (never the key or a grade). */
+  text: z.string().max(600).optional(),
 });
 
 export const CallEvent = z.strictObject({

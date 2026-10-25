@@ -267,6 +267,35 @@ describe('confirm and quiz cards', () => {
     });
   });
 
+  it('the generic confirm endpoint (village sheet) answers the same chat card, only for its owner', async () => {
+    const p = engine.bot.ctx.askConfirm(
+      's_dev',
+      'Share your calendar blocks?',
+      ['Yes', 'No'],
+      'task_confirm_2',
+    );
+    await waitMsg(
+      streams.s_dev!,
+      (m) => m.card?.type === 'confirm' && m.card.taskId === 'task_confirm_2',
+    );
+    expect((await post(url, '/v1/confirms/task_confirm_2', { yes: true }, tok.s_ben)).status).toBe(
+      404,
+    );
+    const r = await post(url, '/v1/confirms/task_confirm_2', { yes: true }, tok.s_dev);
+    expect(r.status).toBe(200);
+    expect(await p).toBe('Yes');
+    await streams.s_dev!.waitFor(
+      (f) =>
+        f.some(
+          (x) =>
+            x.event === 'chat.update' &&
+            (x.data ?? '').includes('task_confirm_2') &&
+            (x.data ?? '').includes('"status":"answered"'),
+        ),
+      3000,
+    );
+  });
+
   it('a quiz question is a card in the group; feedback comes privately', async () => {
     await send('s_chi', GROUP, '@cubbie quiz me on chapter 6');
     await waitMsg(streams.s_dev!, (m) => m.card?.type === 'quiz', 12_000);
@@ -275,11 +304,12 @@ describe('confirm and quiz cards', () => {
     if (q.card?.type !== 'quiz') throw new Error('no quiz card');
     expect(q.card.input).toBe('choice');
     expect(q.card.choices!.length).toBeGreaterThanOrEqual(2);
-    const dmsBefore = msgs(streams.s_dev!).filter((m) => m.chatId.startsWith('dm:')).length;
+    const mark = Math.max(...msgs(streams.s_dev!).map((m) => m.seq));
     await send('s_dev', GROUP, q.card.choices![0]!.id);
-    await waitMsg(streams.s_dev!, (m) => m.chatId === 'dm:s_dev' && botText(m), 12_000);
-    expect(msgs(streams.s_dev!).filter((m) => m.chatId.startsWith('dm:')).length).toBeGreaterThan(
-      dmsBefore,
+    await waitMsg(
+      streams.s_dev!,
+      (m) => m.seq > mark && m.chatId === 'dm:s_dev' && botText(m),
+      12_000,
     );
     for (const id of ['s_ana', 's_ben', 's_chi'])
       expect(msgs(streams[id]!).some((m) => m.chatId === 'dm:s_dev')).toBe(false);

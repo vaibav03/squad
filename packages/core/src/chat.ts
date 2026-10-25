@@ -119,15 +119,17 @@ export const ChatCitationExcerptSchema = z.strictObject({
 });
 export type ChatCitationExcerpt = z.infer<typeof ChatCitationExcerptSchema>;
 
-/** `GET /v1/status`: how honest the UI must be about answers. */
-export const HubStatusSchema = z.strictObject({
+/** `GET /v1/status` (served by routes/status.ts): how honest the UI must be about answers. Tolerates additions. */
+export const HubStatusSchema = z.object({
   llm: z.enum(['gemini', 'fake']),
   tts: z.enum(['elevenlabs', 'none']),
   demo: z.boolean(),
   /** Copy to show when demo is true. */
   notice: z.string().optional(),
-  /** Why the demo model is answering: no key configured, Gemini credits depleted (402/429), or a transient error. */
-  reason: z.enum(['no_key', 'credits_depleted', 'error']).optional(),
+  /** Why the demo model is answering. */
+  reason: z.enum(['no_key', 'credits_depleted', 'auth', 'forced_fake']).optional(),
+  ports: z.enum(['real', 'stub']).optional(),
+  since: z.number().optional(),
 });
 export type HubStatus = z.infer<typeof HubStatusSchema>;
 

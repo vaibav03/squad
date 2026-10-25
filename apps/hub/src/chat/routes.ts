@@ -30,8 +30,6 @@ export function createChatRoutes(deps: HubDeps): HubApp {
   const need = requireViewer(deps);
   const chat = () => deps.chat;
 
-  r.get('/v1/status', (c) => c.json(chat().status(), 200, { 'cache-control': 'no-store' }));
-
   r.get('/v1/chat/chats', need, (c) => c.json({ chats: chat().summaries(c.get('viewer')) }));
 
   r.get('/v1/chat/history', need, (c) => {

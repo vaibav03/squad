@@ -8,6 +8,7 @@ import type {
   Persona,
   Student,
   StudentId,
+  LlmStatus,
   VillageEvent,
 } from '@squad/core';
 import type { HubConfig } from './config';
@@ -150,6 +151,8 @@ export interface SquadState {
   apply(e: LoggedEvent): void;
   /** Re-derive agent states and pending confirms from the (persisted) event log; used at boot. */
   rebuild(): void;
+  /** The open confirm.pending card for this student and task, if any. */
+  pendingConfirm(student: StudentId, taskId: string): { question: string } | undefined;
   snapshot(viewer: Viewer): Promise<Snapshot>;
   reset(): void;
 }
@@ -259,6 +262,20 @@ export interface HubDeps {
   projector: Set<StudentId>;
   filterCtx: FilterCtx;
   now(): number;
+  /** What GET /v1/status reports; set by `main.ts` after wiring (defaults to stub/fake when absent). */
+  runtime?: HubRuntime;
+  /** Generic confirm answers (POST /v1/confirms/:taskId). */
+  confirms: ConfirmRouter;
+}
+
+import type { ConfirmRouter } from './confirms';
+
+/** Which providers are live right now; read lazily so a mid-run credits switch shows up. */
+export interface HubRuntime {
+  llm(): LlmStatus;
+  /** true when an ElevenLabs engine is wired */
+  tts(): boolean;
+  ports(): 'real' | 'stub';
 }
 
 export type { Citation, Persona, Student, StudentId, VillageEvent, LedgerEntry, AgentId };

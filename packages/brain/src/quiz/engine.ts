@@ -202,14 +202,31 @@ export class QuizEngine {
     return quizId;
   }
 
+  /**
+   * The question prompt only (never choices, key or explanation), clipped to the event limit. Omitted
+   * when a free-text key would leak through the stem.
+   */
+  private publicPrompt(quizId: string, idx: number): string | undefined {
+    const it = this.item(quizId, idx);
+    const stem = it.question.trim();
+    if (!stem) return undefined;
+    if (it.kind === 'free') {
+      const key = String(JSON.parse(it.key_json)).trim().toLowerCase();
+      if (key.length >= 3 && stem.toLowerCase().includes(key)) return undefined;
+    }
+    return stem.length > 600 ? `${stem.slice(0, 599)}…` : stem;
+  }
+
   /** asking -> collecting, announcing the current question. */
   private async pose(quizId: string): Promise<void> {
     const r = this.round(quizId);
     this.setPhase(quizId, nextPhase(r.phase, 'posed'));
+    const text = this.publicPrompt(quizId, r.idx);
     await this.emit({
       t: 'quiz.question',
       quizId,
       chapter: r.chapter,
+      ...(text ? { text } : {}),
       ...(r.target ? { target: r.target } : {}),
     });
     await this.emit({

@@ -1,6 +1,12 @@
 // Mounts the bot in-process: the SAME router, speaking policy, confirm flow and skills as iMessage, over the web
 // Transport. One process serves chat: shared db, one emit (the hub's own ingest), one brain and mastery store.
-import { type Llm, type Student, type VillageEvent } from '@squad/core';
+import {
+  createResilientLlm,
+  type Llm,
+  type ResilientLlm,
+  type Student,
+  type VillageEvent,
+} from '@squad/core';
 import { GeminiLlm, loadConfig } from '@squad/core/node';
 import { createCourseStore, type Brain, type MasteryStore } from '@squad/brain';
 import {
@@ -18,10 +24,14 @@ import {
 import { COURSE_ID } from '../cast';
 import type { HubDeps } from '../types';
 import { wireRealPorts } from '../wire';
-import { createFallbackLlm, statusOf, type FallbackLlm } from './llm';
+import { dmChatId } from './access';
 
 export interface ChatEngineOptions {
   env?: Record<string, string | undefined>;
+  /** An already-built resilient model (main.ts shares one with the real ports). Overrides `real`/`demo`. */
+  llm?: ResilientLlm;
+  /** Where each student's mesh agent listens (passed to the real ports). */
+  agentUrls?: Record<string, string>;
   /** The real model. Omit to build Gemini from GEMINI_API_KEY; pass `null` to force demo mode. Tests inject a failing client here. */
   real?: Llm | null;
   /** Override the deterministic demo model (default `createDemoLlm()`). */
@@ -42,7 +52,7 @@ export interface ChatEngineOptions {
 
 export interface ChatEngineHandle {
   bot: Bot;
-  llm: FallbackLlm;
+  llm: ResilientLlm;
   stop(): Promise<void>;
 }
 
@@ -63,27 +73,35 @@ export async function attachChatEngine(
   const cfg = loadConfig({ env, ...(o.envFile !== undefined ? { envFile: o.envFile } : {}) });
   const courseId = o.courseId ?? COURSE_ID;
 
-  const forceDemo = o.real === null || env.CHAT_FORCE_DEMO === '1';
+  const forced = env.CHAT_FORCE_DEMO === '1' || env.FORCE_FAKE_LLM === '1';
+  const forceDemo = forced || o.real === null;
   const real: Llm | undefined = forceDemo
     ? undefined
     : (o.real ??
       (cfg.geminiApiKey
         ? new GeminiLlm({ apiKey: cfg.geminiApiKey, models: cfg.geminiModels })
         : undefined));
-  const demo = o.demo ?? createDemoLlm();
   const useEleven = !!cfg.elevenLabsApiKey && !forceDemo;
-  const tts = useEleven ? ('elevenlabs' as const) : ('none' as const);
-  const llm = createFallbackLlm({
-    ...(real ? { real } : {}),
-    demo,
-    ...(o.now ? { now: o.now } : {}),
-    ...(o.reprobeMs !== undefined ? { reprobeMs: o.reprobeMs } : {}),
-  });
-  deps.chat.setStatus(() => {
-    // topped-up credits are noticed without a restart: a stale quota failure re-probes in the background
-    if (real && llm.mode().mode === 'fake') void llm.probe();
-    return statusOf(llm.mode(), tts);
-  });
+  // A quota failure serves the demo model and re-probes the real one at most once a minute.
+  const llm =
+    o.llm ??
+    createResilientLlm({
+      ...(real ? { real } : {}),
+      fake: o.demo ?? createDemoLlm(),
+      forceFake: forced,
+      reprobeMs: o.reprobeMs ?? 60_000,
+      ...(o.now ? { now: o.now } : {}),
+    });
+  const wantRealPorts = !!o.realPorts && (!!real || env.FORCE_FAKE_LLM === '1' || !!o.llm);
+  deps.runtime ??= {
+    // topped-up credits are noticed without a restart: a stale failure re-probes in the background
+    llm: () => {
+      void llm.probe();
+      return llm.status();
+    },
+    tts: () => useEleven,
+    ports: () => (wantRealPorts ? 'real' : 'stub'),
+  };
   if (real && !o.noProbe) void llm.probe();
 
   registerMediaPersonas();
@@ -95,8 +113,12 @@ export async function attachChatEngine(
     },
   };
   let shared = o.shared;
-  if (o.realPorts && real) {
-    const rp = await wireRealPorts(hub as Parameters<typeof wireRealPorts>[0], { llm, courseId });
+  if (wantRealPorts) {
+    const rp = await wireRealPorts(hub as Parameters<typeof wireRealPorts>[0], {
+      llm,
+      courseId,
+      ...(o.agentUrls ? { agentUrls: o.agentUrls } : {}),
+    });
     shared = { brain: rp.brain, mastery: rp.mastery };
   }
   const skills = await createSkills({
@@ -136,6 +158,27 @@ export async function attachChatEngine(
     log: quietLog(deps),
   });
   await bot.start();
+
+  // The village ConfirmSheet and POST /v1/confirms/:taskId can answer a chat confirm card too: a yes/no is typed into
+  // the student's DM, exactly as if they had answered in the chat (the bot's own confirm manager resolves it).
+  const pending = (student: string, taskId: string) => {
+    const m = deps.chat.store.findConfirm(dmChatId(student), taskId);
+    return m?.card?.type === 'confirm' ? m.card : undefined;
+  };
+  deps.confirms.register({
+    kind: 'bot',
+    owns: (taskId, v) => pending(v.studentId, taskId)?.status === 'pending',
+    async answer(v, taskId, a) {
+      await transport.inject({
+        chatId: dmChatId(v.studentId),
+        from: v.studentId,
+        text: a.yes ? 'yes' : 'no',
+      });
+      return pending(v.studentId, taskId)?.status === 'answered'
+        ? { ok: true }
+        : { ok: false, code: 'invalid_request', message: 'answer this one by number in the chat' };
+    },
+  });
 
   const store = createCourseStore(deps.db);
   deps.chat.setEngine({

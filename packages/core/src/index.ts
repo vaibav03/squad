@@ -9,3 +9,5 @@ export * from './internal-events';
 export * from './sentinel';
 export * from './llm';
 export * from './chat';
+export { parseIcsBusy } from './ics';
+export type { BusyBlock } from './ics';

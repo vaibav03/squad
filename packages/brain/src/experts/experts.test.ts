@@ -3,7 +3,8 @@ import { FakeLlm, VillageEventSchema, type LlmJsonRequest, type LlmRequest } fro
 import { createDean, bm25Chapters } from '../dean';
 import { BrainUnavailableError } from './errors';
 import { assembleBrain } from './brain';
-import { createContextProvider } from './context';
+import { MIN_CACHE_CHARS, createContextProvider } from './context';
+import type { CourseStore } from '../ingest/types';
 import { createChapterExpert } from './expert';
 import { PAGE_MSE, makeKit } from './testkit';
 import { NOT_IN_MATERIALS } from './types';
@@ -76,6 +77,18 @@ describe('chapter expert', () => {
       expect(r.system).toBeUndefined();
     }
     expect(JSON.stringify((llm.calls[0] as LlmRequest).messages)).toContain('Student question: a');
+  });
+
+  it('default cache threshold matches the 4,096-token Gemini minimum (~4 chars/token)', async () => {
+    expect(MIN_CACHE_CHARS).toBeGreaterThanOrEqual(4096 * 4);
+    const llm = new FakeLlm({ fallback: good });
+    const pages = [{ file: 'f.pdf', page: 1, text: 'x' }];
+    const store = (block: string) =>
+      ({ getPages: () => pages, chapterContext: () => block }) as unknown as CourseStore;
+    await createContextProvider(store('a'.repeat(10_000)), llm).get('c', 'ch');
+    expect(llm.caches).toHaveLength(0);
+    await createContextProvider(store('a'.repeat(MIN_CACHE_CHARS)), llm).get('c', 'ch');
+    expect(llm.caches).toHaveLength(1);
   });
 
   it('tiny chapters skip the cache and put the chapter block in the system prompt', async () => {

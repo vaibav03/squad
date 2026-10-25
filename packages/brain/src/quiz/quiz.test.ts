@@ -145,6 +145,44 @@ describe('engine', () => {
     expect(events.filter((e) => e.t === 'quiz.question')).toHaveLength(3);
   });
 
+  it('quiz.question carries the public prompt only, never choices, key or explanation', async () => {
+    const { engine, events } = makeEngine({ squadSettings: () => ({ revealCorrectness: true }) });
+    const id = await engine.start('c', 'ch3', 'village', { students: ['s_a'] });
+    await engine.answer(id, 's_a', { choice: 1 });
+    await engine.answer(id, 's_a', { text: 'no idea' });
+    await engine.answer(id, 's_a', { choice: 0 });
+    const qs = events.filter((e) => e.t === 'quiz.question') as { text?: string }[];
+    expect(qs.map((e) => e.text)).toEqual(QUESTIONS.questions.map((q) => q.question));
+    for (const e of qs) expect(VillageEventSchema.safeParse(e).success).toBe(true);
+    const secrets = [
+      'derivative of the square',
+      'MSE averages squared errors',
+      'It comes from differentiating the square',
+      'MSE is smooth at zero',
+      'squared errors',
+    ];
+    for (const e of qs) for (const s of secrets) expect(e.text ?? '').not.toContain(s);
+  });
+
+  it('a free-text key that leaks through the stem drops the text instead of the key', async () => {
+    const llm = new FakeLlm({
+      fallback: () => ({
+        questions: [
+          {
+            kind: 'free',
+            question: 'Is it the derivative of the square?',
+            key: 'derivative of the square',
+          },
+        ],
+      }),
+    });
+    const { engine, events } = makeEngine({ llm });
+    await engine.start('c', 'ch3', 'village', { students: ['s_a'] });
+    const q = events.find((e) => e.t === 'quiz.question') as { text?: string } | undefined;
+    expect(q).toBeDefined();
+    expect(q?.text).toBeUndefined();
+  });
+
   it('double answer is idempotent; bad payloads and outsiders are rejected', async () => {
     const { engine, mastery } = makeEngine({ autoAdvance: false });
     const id = await engine.start('c', 'ch3', 'village', { students: ['s_a', 's_b'] });
