@@ -32,7 +32,7 @@ const anon = new Map<string, number>();
 
 /** Ids that are generated hashes (u_a193aba6d4e4, s_9f3c...), never shown. Demo ids like s_ana are fine. */
 export function looksLikeHash(ref: string): boolean {
-  const body = ref.replace(/^[us]_/i, '');
+  const body = ref.replace(/^(?:[us]_)+/i, '');
   return /^[0-9a-f]{6,}$/i.test(body) && /\d/.test(body);
 }
 
@@ -75,7 +75,7 @@ export function studentLabel(studentId: string): string {
     }
     return `Squadmate ${n}`;
   }
-  return title(studentId.replace(/^s_/, ''));
+  return title(studentId.replace(/^(?:[us]_)+/i, ''));
 }
 
 /** Display name for an AgentId, e.g. 'student:s_ana' -> 'Ana', 'expert:ch5' -> 'Chapter 5 expert'. */
@@ -94,8 +94,11 @@ export function agentName(id: string): string {
       return 'Dean';
     case 'mediator':
       return 'Mediator';
-    default:
-      return title(id);
+    default: {
+      // never title-case an id that carries a hash
+      const bare = id.replace(/^[a-z]+:/i, '');
+      return looksLikeHash(bare) || /\d{4,}/.test(bare) ? studentLabel(bare) : title(id);
+    }
   }
 }
 
