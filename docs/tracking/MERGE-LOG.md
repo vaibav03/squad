@@ -124,3 +124,11 @@ Looked at two. `village-track2-desk.png`: populated night village (moon, stars, 
 - Council Hall, chapter houses and round table were recorded from the engines with FakeLlm, not a real model. The mic path and ElevenLabs for the Oral Exam Hut are not verified live (no keys here).
 - `cache/audio/` is written at the repo root by media or hub tests; now ignored, but the tests should use a temp dir (owner: media lead).
 - Still unmerged: chat/web, qa/web, council/ask.
+
+### Landing (batch 2)
+
+- Landing merge commit on main: `89eb85df65045b41c1d04070d79b91939f7885e1` (true `--no-ff` merge, tree identical to `origin/merge/batch2`, `git diff` empty).
+- Parent 1 (old main, = tag `pre-merge-batch2`): `39aa87e95725833f6846f2bace2db967b53d0598`.
+- Parent 2 (batch tip, `origin/merge/batch2`): `3bbb819343843d513705d0721d7f047800dc787b`.
+- Rollback: `git revert -m 1 89eb85df65045b41c1d04070d79b91939f7885e1` (keeps history). Reset to `pre-merge-batch2` only with the owner's explicit approval.
+- Operational note: in fresh worktrees `git merge` fails with `fatal: stash failed` while the index has stat-dirty entries (`git diff-index HEAD` lists many files); loop `git update-index --really-refresh` until `git diff-index HEAD` is empty, then merge.
