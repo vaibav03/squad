@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLiveConfig } from '../../overlays/kit';
 import { sampleEmpty, sampleReal, sampleStatus } from './fixtures';
@@ -34,7 +35,7 @@ export function useStatus(preview?: string) {
     busy.current = true;
     try {
       const bearer = token || cfg.token;
-      const res = await fetch(`${cfg.hubUrl}/v1/admin/status`, {
+      const res = await timedFetch(`${cfg.hubUrl}/v1/admin/status`, {
         headers: bearer ? { Authorization: `Bearer ${bearer}` } : {},
         cache: 'no-store',
       });

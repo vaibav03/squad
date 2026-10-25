@@ -30,7 +30,7 @@ export function MasteryView({ status, connection, data, onRetry }: MasteryViewPr
       className="lv-mastery"
       eyebrow="Mastery"
       title={data?.courseTitle ?? 'Mastery'}
-      actions={<ConnectionBadge connection={connection} />}
+      actions={<ConnectionBadge connection={connection} onRetry={onRetry} />}
     >
       <p className="lv-lede">
         How well each idea has stuck for you. This is a study map, not a grade.

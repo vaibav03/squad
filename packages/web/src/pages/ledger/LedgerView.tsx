@@ -81,7 +81,7 @@ export function LedgerView(props: LedgerViewProps) {
       title={title}
       actions={
         <>
-          <ConnectionBadge connection={connection} />
+          <ConnectionBadge connection={connection} onRetry={onRetry} />
           <Segmented
             label="Viewing mode"
             value={projector ? 'projector' : 'me'}

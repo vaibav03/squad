@@ -100,15 +100,21 @@ export function createAccountsClient(opts: ClientOptions): AccountsClient {
     if (body !== undefined) headers['content-type'] = 'application/json';
     if (auth && token) headers.authorization = `Bearer ${token}`;
     let res: Response;
+    // A request that never answers (hub stalled, connection pool starved) must fail, or sign-in hangs on "loading".
+    const ctl = typeof AbortController === 'undefined' ? null : new AbortController();
+    const timer = ctl ? setTimeout(() => ctl.abort(), method === 'GET' ? 8000 : 20000) : undefined;
     try {
       res = await doFetch(`${base}${path}`, {
         method,
         headers,
         credentials: 'include',
+        ...(ctl ? { signal: ctl.signal } : {}),
         ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
       });
     } catch {
       throw new AccountApiError('network', 0);
+    } finally {
+      if (timer) clearTimeout(timer);
     }
     const rotated = res.headers?.get?.('x-squad-token');
     if (rotated) {

@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import { normalizeLimits } from './model';
 import type {
   CatalogueRow,
@@ -103,7 +104,7 @@ export function createHttpApi(ctx: HttpCtx): LibraryApi {
   async function call(path: string, init: RequestInit = {}, json = true): Promise<Response> {
     let res: Response;
     try {
-      res = await fetch(`${base}${path}`, {
+      res = await timedFetch(`${base}${path}`, {
         ...init,
         headers: {
           ...auth,

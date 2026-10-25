@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import { z } from 'zod';
 import { pixelPortrait } from '../../pixel/portraits';
 import type { PersonaDraft, VoiceOption } from './fixtures';
@@ -44,7 +45,7 @@ const headers = (c: Ctx): Record<string, string> =>
   c.token ? { Authorization: `Bearer ${c.token}` } : {};
 
 export async function fetchPersonas(c: Ctx, fallback: PersonaDraft[]): Promise<PersonaDraft[]> {
-  const res = await fetch(`${c.hubUrl}/v1/personas`, { headers: headers(c) });
+  const res = await timedFetch(`${c.hubUrl}/v1/personas`, { headers: headers(c) });
   if (!res.ok) throw new Error(`personas ${res.status}`);
   const parsed = HubPersonas.parse(await res.json());
   return parsed.map((p) => {
@@ -58,7 +59,7 @@ export async function fetchPersonas(c: Ctx, fallback: PersonaDraft[]): Promise<P
   });
 }
 export async function fetchVoices(c: Ctx, fallback: VoiceOption[]): Promise<VoiceOption[]> {
-  const res = await fetch(`${c.hubUrl}/v1/voices`, { headers: headers(c) });
+  const res = await timedFetch(`${c.hubUrl}/v1/voices`, { headers: headers(c) });
   if (!res.ok) throw new Error(`voices ${res.status}`);
   const parsed = HubVoices.parse(await res.json());
   return parsed.map((v, i) => ({

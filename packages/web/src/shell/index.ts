@@ -1,3 +1,5 @@
+export * from './RouteTitle';
+export * from './ErrorBoundary';
 export * from './types';
 export * from './context';
 export * from './routes';

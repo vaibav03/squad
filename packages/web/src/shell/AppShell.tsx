@@ -7,7 +7,7 @@ import { Sheet } from '../primitives/Sheet';
 import { StatusDot, type Status } from '../primitives/StatusDot';
 import { Switch } from '../primitives/Switch';
 import { useCalmMode } from '../hooks/useCalmMode';
-import { squadNav } from './routes';
+import { routeTitleFor, squadNav } from './routes';
 import { ShellContext } from './shell-context';
 import type { NavItem } from './types';
 import { useTheme, type ThemeChoice } from './useTheme';
@@ -75,7 +75,13 @@ export function AppShell({
   pathname,
   children,
 }: AppShellProps) {
-  const [title, setTitleState] = useState('');
+  // A page may refine the title (for example "Trip: Cabo"); the override only applies to the pathname it was set on,
+  // so a navigation always falls back to the title of the destination route.
+  const [override, setOverride] = useState<{ path: string; title: string } | null>(null);
+  const pathRef = useRef(pathname);
+  pathRef.current = pathname;
+  const routeTitle = routeTitleFor(pathname);
+  const title = (override && override.path === pathname && override.title) || routeTitle;
   const [actions, setActions] = useState<ReactNode>(null);
   const [fullBleedState, setFullBleed] = useState<boolean | null>(null);
   const fullBleed = fullBleedState ?? fullBleedProp;
@@ -85,10 +91,10 @@ export function AppShell({
   const [calm, setCalm] = useCalmMode();
   const mainRef = useRef<HTMLElement>(null);
 
-  const setTitle = useCallback((t: string) => {
-    setTitleState(t);
-    if (typeof document !== 'undefined') document.title = t ? `${t} · Squad` : 'Squad';
-  }, []);
+  const setTitle = useCallback((t: string) => setOverride({ path: pathRef.current, title: t }), []);
+  useEffect(() => {
+    if (typeof document !== 'undefined') document.title = title ? `${title} · Squad` : 'Squad';
+  }, [title]);
   const api = useMemo(() => ({ setTitle, setActions, setFullBleed }), [setTitle]);
 
   // route change: move focus to main without scrolling; reset page-provided state
@@ -178,6 +184,7 @@ export function AppShell({
           tabIndex={-1}
           className="sq-shell__main"
           aria-label={title || undefined}
+          data-route={pathname}
         >
           {children}
         </main>

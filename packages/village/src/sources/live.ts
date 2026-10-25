@@ -103,6 +103,10 @@ export function snapshotToEvents(s: SquadSnapshot, me?: string): VillageEvent[] 
  * state polling (GET /v1/squad/state) after repeated errors while the stream keeps retrying.
  * Nothing here runs at import time.
  */
+const REQUEST_TIMEOUT_MS = 8000;
+/** A tab hidden this long releases its stream: HTTP/1.1 allows ~6 connections per host and idle tabs would starve the active one. */
+const HIDDEN_PAUSE_MS = 20_000;
+
 export function createLiveSource(opts: LiveSourceOptions): LiveSource {
   const clock = opts.clock ?? systemClock;
   const log = opts.logger ?? consoleLogger;
@@ -151,7 +155,16 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
     status = s;
     for (const fn of [...statusSubs]) call(fn, s);
   };
-  const f = () => opts.fetch ?? fetch;
+  /** Requests give up after 8 s so a starved connection pool surfaces as an error (and a retry), not a silent hang. */
+  const f = () => {
+    const inner = opts.fetch ?? fetch;
+    return ((input: RequestInfo | URL, init?: RequestInit) => {
+      if (typeof AbortController === 'undefined' || init?.signal) return inner(input, init);
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), REQUEST_TIMEOUT_MS);
+      return inner(input, { ...init, signal: ctl.signal }).finally(() => clearTimeout(t));
+    }) as typeof fetch;
+  };
   const headers = async (): Promise<Record<string, string>> => {
     const t = await opts.getToken?.();
     return t
@@ -354,6 +367,39 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
     pollTimer = undefined;
   }
 
+  let hiddenTimer: ReturnType<typeof setTimeout> | undefined;
+  let paused = false;
+  const onVisibility = () => {
+    if (closed || !started) return;
+    if (document.hidden) {
+      hiddenTimer = setTimeout(() => {
+        paused = true;
+        clock.clearTimeout(retryTimer);
+        stopPolling();
+        es?.close();
+        es = undefined;
+      }, HIDDEN_PAUSE_MS);
+    } else {
+      if (hiddenTimer) clearTimeout(hiddenTimer);
+      hiddenTimer = undefined;
+      if (paused) {
+        paused = false;
+        backoff = 1000;
+        void loadSnapshot(true).then(() => openStream());
+      }
+    }
+  };
+  const offVisibility =
+    typeof document === 'undefined'
+      ? undefined
+      : (() => {
+          document.addEventListener('visibilitychange', onVisibility);
+          return () => {
+            document.removeEventListener('visibilitychange', onVisibility);
+            if (hiddenTimer) clearTimeout(hiddenTimer);
+          };
+        })();
+
   return {
     subscribe(fn) {
       subs.add(fn);
@@ -386,6 +432,7 @@ export function createLiveSource(opts: LiveSourceOptions): LiveSource {
     close() {
       closed = true;
       status = 'closed';
+      offVisibility?.();
       clock.clearTimeout(retryTimer);
       clock.clearTimeout(snapTimer);
       stopPolling();

@@ -1,3 +1,4 @@
+import { timedFetch } from '../../lib/http';
 import { z } from 'zod';
 
 const ErrorBody = z.object({ error: z.object({ code: z.string() }) });
@@ -33,7 +34,7 @@ async function call<T>(
 ): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${ctx.hubUrl}${path}`, {
+    res = await timedFetch(`${ctx.hubUrl}${path}`, {
       ...init,
       headers: {
         ...(init?.headers ?? {}),
