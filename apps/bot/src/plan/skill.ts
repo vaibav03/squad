@@ -66,7 +66,13 @@ export function createSharedPlanSkill(deps: SharedPlanSkillDeps): Skill {
     async handle(m, ctx): Promise<OutboundMessage[]> {
       const squadId = squadOf(m, ctx);
       const say = (o: PlanSayOut): OutboundMessage[] => [
-        { chatId: m.chatId, text: o.text, ...(o.card ? { card: o.card } : {}) },
+        {
+          chatId: m.chatId,
+          text: o.text,
+          ...(o.card ? { card: o.card } : {}),
+          ...(o.citations?.length ? { citations: o.citations } : {}),
+          ...(o.provenance ? { provenance: o.provenance } : {}),
+        },
       ];
       if (!squadId)
         return [

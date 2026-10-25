@@ -41,6 +41,8 @@ export interface BridgeOptions {
   now?: () => number;
   /** false: no retry/backfill timers (tests drive `sync.drain()` and `sync.backfillAll()` themselves). */
   timers?: boolean;
+  /** The transport is a scripted stand-in (tests, demo), not Apple's Messages: the status says so. */
+  fixture?: boolean;
 }
 
 export interface IMessageBridge {
@@ -99,6 +101,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
     store,
     now,
     timers: o.timers ?? true,
+    ...(o.fixture ? { fixture: true } : {}),
     resolveTo: (target) => (target.startsWith('dm:') ? handles.get(target.slice(3)) : target),
     dmChats: () =>
       [...handles.values()].flatMap((h) => {

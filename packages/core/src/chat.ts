@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import { CitationSourceSchema } from './context';
 import { ChatSyncFieldsSchema } from './chat-sync';
+import { ProvenanceSchema } from './provenance';
 
 /** Chat ids: `group:<squadId>` for the squad group chat, `dm:<studentId>` for a private chat with Cubbie. */
 export const ChatIdSchema = z.string().regex(/^(group|dm):[A-Za-z0-9_-]{1,64}$/);
@@ -97,6 +98,8 @@ export const ChatMessageSchema = ChatSyncFieldsSchema.extend({
   replyTo: z.string().max(64).optional(),
   /** Read-time dedupe only: this prompt+answer pair was sent N times in a short window and is shown once (N >= 2). */
   repeat: z.number().int().min(2).optional(),
+  /** Where a bot reply came from (docs/provenance.md). Absent on student messages and on messages stored before it existed. */
+  provenance: ProvenanceSchema.optional(),
 });
 export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 

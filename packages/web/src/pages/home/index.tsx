@@ -14,6 +14,7 @@ import { resolveHomeLinks, useCurrentTrip } from './home-links';
 import { useHubReady } from './bootstrap';
 import { OfflineState } from '../../primitives/EmptyState';
 import { useSetupChecklist } from './setup-state';
+import { HomePlanCard } from './PlanCard';
 import './home.css';
 
 export default function HomePage() {
@@ -121,6 +122,10 @@ export default function HomePage() {
               ) : null}
             </Card>
           )}
+        </PageSection>
+
+        <PageSection title="Study plan">
+          <HomePlanCard />
         </PageSection>
 
         <PageSection title="Around the village">
