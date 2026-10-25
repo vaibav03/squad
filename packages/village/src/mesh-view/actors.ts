@@ -61,6 +61,7 @@ export interface Actor {
 export interface ActorManager {
   get(agentId: string, homeX: number): Actor;
   peek(agentId: string): Actor | undefined;
+  list(): Actor[];
   update(): void;
   destroy(): void;
 }
@@ -247,6 +248,7 @@ export function createActors(ctx: VillageContext): ActorManager {
       return a;
     },
     peek: (id) => actors.get(id),
+    list: () => [...actors.values()],
     update() {
       for (const a of actors.values()) a.update();
     },
