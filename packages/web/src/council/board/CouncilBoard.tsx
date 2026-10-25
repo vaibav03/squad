@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ASK_FIXTURE,
   STEPS,
   messageHeadline,
   statusLine,
-  playCouncilFixture,
   type BoardRun,
   type CouncilBoardStore,
 } from '@squad/village/council';
@@ -19,6 +17,10 @@ import { OrgChart } from './OrgChart';
 import { Stepper } from './Stepper';
 import { VerdictCard } from './VerdictCard';
 import { useBoardVersion } from './bridge';
+import { CouncilStatusStrip } from '../status/CouncilStatusStrip';
+import { useCouncilStatus } from '../status/useCouncilStatus';
+import { EmptyCouncilState, LastRunLabel } from '../last-run/components';
+import { useLastRunsState } from '../last-run/store';
 import './board.css';
 
 export interface CouncilBoardProps {
@@ -80,6 +82,9 @@ export function CouncilBoard({
   const [jump, setJump] = useState<{ id: string; n: number } | undefined>();
   const announce = useAnnouncer(open ? run : undefined);
   const jumpN = useRef(0);
+  const { status: hubStatus } = useCouncilStatus(hub);
+  const stored = useLastRunsState();
+  const record = run ? stored.runs.find((r) => r.id === run.runId) : undefined;
 
   useEffect(() => {
     if (open) setFilter(NO_FILTER);
@@ -127,6 +132,7 @@ export function CouncilBoard({
             {run ? run.councilName : 'Council board'}
           </h2>
           {run?.question ? <p className="cb-question">{run.question}</p> : null}
+          <LastRunLabel runId={run?.runId} />
           {run ? (
             <p className="cb-status" data-stage={run.stage} role="status">
               <span className="cb-status__k">{run.stage === 'done' ? 'Result' : 'Now'}</span>{' '}
@@ -135,7 +141,7 @@ export function CouncilBoard({
           ) : null}
         </div>
         <div className="cb-head__side">
-          {run ? <ModeBadge mode={run.mode} /> : <ModeBadge mode="demo" />}
+          {run ? <ModeBadge mode={run.mode} /> : null}
           {runs.length > 1 ? (
             <label className="cb-field">
               <span className="cb-field__k">Session</span>
@@ -160,6 +166,26 @@ export function CouncilBoard({
           </button>
         </div>
       </header>
+      <div className="cb-strip-row">
+        <CouncilStatusStrip
+          status={hubStatus}
+          variant="compact"
+          {...(run
+            ? {
+                run: {
+                  mode: run.mode,
+                  transport: record?.transport,
+                  agents: run.agents.map((a) => ({ mode: a.mode })),
+                  counters: {
+                    messages: run.messages.filter((m) => !m.to.startsWith('tool:')).length,
+                    delegations: run.delegations.length,
+                    stage: run.stage,
+                  },
+                },
+              }
+            : {})}
+        />
+      </div>
       {run ? (
         <>
           <Stepper stage={run.stage} />
@@ -188,22 +214,7 @@ export function CouncilBoard({
           </div>
         </>
       ) : (
-        <div className="cb-none">
-          <p className="cb-none__title">No council session yet</p>
-          <p className="cb-dim">
-            Ask the council in the Council Hall and its members appear here, with every message they
-            send each other.
-          </p>
-          <button
-            type="button"
-            className="lv-btn"
-            onClick={() =>
-              playCouncilFixture(ASK_FIXTURE, (e) => store.apply(e), { instant: true })
-            }
-          >
-            Show a sample (Demo)
-          </button>
-        </div>
+        <EmptyCouncilState hub={hub} store={store} hideStrip />
       )}
       <p className="cb-sr" role="status" aria-live="polite" aria-atomic="true">
         {announce}

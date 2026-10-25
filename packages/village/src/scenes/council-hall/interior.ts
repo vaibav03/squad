@@ -8,6 +8,8 @@ import { blitBubble, placeRow } from '../art/bubbleLayout';
 import { paintPlanSheet } from '../art/planSheet';
 import { easeInOut, easeOut, progress } from '../curves';
 import { frameAt, lanternFrame, triangle, visibleBubbles } from '../model/base';
+import type { LoadedSkin } from '../skins/runtime';
+import type { SkinLayout } from '../skins/types';
 import { isChair, seatOf, type CouncilHallState } from './state';
 
 export const INT_W = 224;
@@ -24,6 +26,22 @@ export const SEATS = [
 export const CHAIR_AT = { x: 112, y: 89 };
 const ROW_X = [50, 112, 174] as const; // bubble row slots (rank positions)
 const ROW_TIP = 66; // bubble row: tail tip y (all seats share one row; the verdict banner sits above)
+
+/** Anchors the painter uses. The classic art's values, or the active skin's (data in its recipe, never a code fork). */
+export type HallLayout = Pick<
+  SkinLayout,
+  'seats' | 'chair' | 'rowX' | 'rowTip' | 'lantern' | 'planSheet' | 'floorRing'
+>;
+export const CLASSIC_LAYOUT: HallLayout = {
+  seats: [SEATS[0], SEATS[1], SEATS[2]] as unknown as HallLayout['seats'],
+  chair: CHAIR_AT,
+  rowX: [...ROW_X],
+  rowTip: ROW_TIP,
+  lantern: [112, 13],
+  planSheet: [37, 4],
+  floorRing: true,
+};
+export const hallLayout = (skin?: LoadedSkin): HallLayout => skin?.layout ?? CLASSIC_LAYOUT;
 
 /** Cast persona per member (03: solvers and planners). Unknown members borrow by seat. */
 const PERSONA: Record<string, string> = {
@@ -58,7 +76,9 @@ function cast(r: Raster, a: AssetInfo, x: number, y: number, flip: boolean): voi
 export function paintInterior(s: CouncilHallState, o: PaintOpts): Raster {
   const A = o.assets;
   const r = new Raster(INT_W, INT_H);
-  const room = A.image('interior.council');
+  const skin = A.skin?.('council-hall');
+  const L = hallLayout(skin);
+  const room = skin ? { r: skin.layers.bg! } : A.image('interior.council');
   r.blit(s.access === 'open' ? room.r : dimmed(room.r), 0, 0);
 
   const breathe = frameAt(o.t, 2, o.calm);
@@ -68,7 +88,7 @@ export function paintInterior(s: CouncilHallState, o: PaintOpts): Raster {
   const standing = s.verdict !== null && o.t - s.verdict.since < 9000;
 
   // floor pulse: a faint violet ring echoing the inscription, 2 s loop (steady in calm)
-  if (s.access === 'open') {
+  if (s.access === 'open' && L.floorRing) {
     const p = o.calm ? 0.5 : triangle(o.t, 2000);
     r.ring(112, 110, 70, 12, 'violet', 0.18 + 0.2 * p);
   }
@@ -76,8 +96,8 @@ export function paintInterior(s: CouncilHallState, o: PaintOpts): Raster {
   // dissent lantern from the composed lantern slot [112,13]
   if (s.lantern !== 'off') {
     const f = lanternFrame(s, o);
-    put(r, { ...A.sheet('ui.lantern-dissent', f), ax: 5, ay: 0 }, 112, 13);
-    r.glow(112, 24, 14, s.lantern === 'flicker' ? 'alert' : 'glow', f === 0 ? 0.12 : 0.38, 3);
+    put(r, { ...A.sheet('ui.lantern-dissent', f), ax: 5, ay: 0 }, L.lantern[0], L.lantern[1]);
+    r.glow(L.lantern[0], L.lantern[1] + 11, 14, s.lantern === 'flicker' ? 'alert' : 'glow', f === 0 ? 0.12 : 0.38, 3);
   }
   if (s.lantern === 'flicker') {
     const t = 'UNCERTAIN, ASK YOUR TA';
@@ -93,13 +113,18 @@ export function paintInterior(s: CouncilHallState, o: PaintOpts): Raster {
     : 0;
   const chairAnim = standing ? 'talk' : 'sit';
   const chairN = standing ? frameAt(o.t, 8, o.calm) : breathe;
-  cast(r, A.frame('chairman', chairAnim, chairN), CHAIR_AT.x, CHAIR_AT.y - rise, false);
+  cast(r, A.frame('chairman', chairAnim, chairN), L.chair.x, L.chair.y - rise, false);
+  // skin only: the table sits between the chairman (behind it) and the members (in front of it)
+  if (skin?.layers.mid) {
+    const mid = skin.layers.mid;
+    r.blit(s.access === 'open' ? mid : dimmed(mid), 0, 0);
+  }
 
   // members: draw in z order (back first: left/right at y 103, then the front seat)
   const bySeat = new Map<number, string>();
   for (const [m, seat] of Object.entries(s.seats)) bySeat.set(seat, m);
   for (const seat of [0, 2, 1]) {
-    const pos = SEATS[seat]!;
+    const pos = L.seats[seat]!;
     const member = bySeat.get(seat) ?? '';
     const talking = member !== '' && speakerWho === member;
     const anim = talking ? 'talk' : 'sit';
@@ -110,8 +135,9 @@ export function paintInterior(s: CouncilHallState, o: PaintOpts): Raster {
     if (dissenting) put(r, A.image('ui.marker-alert'), pos.x, pos.y - 30);
   }
 
-  paintPlanSheet(r, s, o.t, o.calm, 37, 4);
-  paintBubbles(r, s, o, bubbles);
+  paintPlanSheet(r, s, o.t, o.calm, L.planSheet[0], L.planSheet[1]);
+  if (skin?.layers.fg) r.blit(skin.layers.fg, 0, 0);
+  paintBubbles(r, s, o, bubbles, L);
   paintVerdict(r, s, o);
   return r;
 }
@@ -121,6 +147,7 @@ function paintBubbles(
   s: CouncilHallState,
   o: PaintOpts,
   bubbles: ReturnType<typeof visibleBubbles>,
+  L: HallLayout,
 ): void {
   const row = bubbles.filter((v) => v.b.style !== 'announce');
   const ranked = s.slots !== null;
@@ -128,30 +155,30 @@ function paintBubbles(
     isChair(who) ? 1 : (s.seats[who] ?? seatOf(s.seats, who));
   const items = row.map((v) => {
     const seat = seatOfWho(v.b.who);
-    let x: number = ROW_X[seat] ?? 112;
+    let x: number = L.rowX[seat] ?? 112;
     if (ranked && s.slots) {
       const from = s.slots.from.indexOf(v.b.who);
       const to = s.slots.to.indexOf(v.b.who);
-      const fx = ROW_X[from < 0 ? seat : from] ?? x;
-      const tx = ROW_X[to < 0 ? seat : to] ?? x;
+      const fx = L.rowX[from < 0 ? seat : from] ?? x;
+      const tx = L.rowX[to < 0 ? seat : to] ?? x;
       x = Math.round(fx + (tx - fx) * (o.calm ? 1 : easeInOut(progress(o.t, s.slots.since, 320))));
     }
     const style = ranked && v.b.style === 'thought' ? ('speech' as const) : v.b.style;
     return { cx: x, text: v.b.text, style, tail: !ranked };
   });
   // one shared row (widths shrink to fit, pushed apart), banner for the verdict sits above it
-  const placed = placeRow(items, INT_W, ROW_TIP);
+  const placed = placeRow(items, INT_W, L.rowTip);
   row.forEach((v, i) => {
     const { x: bx, y: by, art } = placed[i]!;
     blitBubble(r, art.r, bx, by, v.alpha, v.b.who);
     const seat = seatOfWho(v.b.who);
     if (!ranked) {
       // thought trail: dots from the bubble down to the member's head
-      const head = SEATS[seat]!;
+      const head = L.seats[seat]!;
       const sx = items[i]!.cx;
       for (let k = 1; k <= 3; k++) {
         const px = Math.round(sx + ((head.x - sx) * k) / 4);
-        const py = Math.round(ROW_TIP + 2 + ((head.y - 31 - ROW_TIP) * k) / 4);
+        const py = Math.round(L.rowTip + 2 + ((head.y - 31 - L.rowTip) * k) / 4);
         r.px(px, py, 'cloud-hi', v.alpha > 0.5 ? 1 : 0);
         r.px(px, py + 1, 'ink', v.alpha > 0.5 ? 1 : 0);
       }

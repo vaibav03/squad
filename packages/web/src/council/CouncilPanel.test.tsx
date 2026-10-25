@@ -157,9 +157,11 @@ describe('CouncilPanel: a run', () => {
       within(card).getByText('Explains from the course materials, one step at a time.'),
     ).toBeTruthy();
     expect(within(card).getByText('ch6.pdf p.4')).toBeTruthy();
-    expect(screen.getByRole('status', { name: '' }).textContent).toMatch(
-      /Teacher answered: Recursion on states/,
-    );
+    expect(
+      screen
+        .getAllByRole('status')
+        .find((el) => /Teacher answered: Recursion on states/.test(el.textContent ?? '')),
+    ).toBeTruthy();
     // the second member waits for the first one's reading time
     expect(screen.queryByText(/Conditioning on the first toss is safer/)).toBeNull();
     // the other seats still say they are thinking
@@ -274,11 +276,12 @@ describe('CouncilPanel: verdict variants', () => {
 
   it('demo: shows the demo badge', () => {
     render(<CouncilCard result={f.demo} />);
-    expect(screen.getByText('Demo')).toBeTruthy();
+    expect(screen.getAllByText('Demo').length).toBeGreaterThan(0);
+    expect(screen.getByTestId('cs-banner').textContent).toContain('DEMO: scripted, not Gemini');
     cleanup();
     render(<CouncilCard result={f.done} />);
     expect(screen.queryByText('Demo')).toBeNull();
-    expect(screen.getByText('Live')).toBeTruthy();
+    expect(screen.getAllByText('Live').length).toBeGreaterThan(0);
   });
 
   it('a verdict without dissent renders no dissent block', () => {

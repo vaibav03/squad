@@ -47,10 +47,12 @@ describe('council voices in the inspector', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /Chill.*Open in the inspector/ }));
     await settle();
-    expect(screen.getByRole('tab', { name: 'Thinking', selected: true })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Conversation', selected: true })).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Activity' }));
     expect(screen.getByText('Light plan if the quiz went well')).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Decisions' }));
     expect(screen.getByText('Regression needs a third pass.')).toBeTruthy(); // other members' positions
-    fireEvent.click(screen.getByRole('tab', { name: 'Chat' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Conversation' }));
     expect(screen.getByRole('button', { name: /^Just Chill/ })).toBeTruthy();
     expect(screen.getByText('Two short evenings are enough.')).toBeTruthy();
     expect(screen.getByText('Regression needs a third pass.')).toBeTruthy();
@@ -71,11 +73,11 @@ describe('council voices in the inspector', () => {
       store.select('council:planner', { slot: 'round-table', who: 'chill', initialTab: 'chat' }),
     );
     await settle();
-    expect(screen.getByRole('tab', { name: 'Chat', selected: true })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Conversation', selected: true })).toBeTruthy();
     act(() => store.select(null));
     act(() => store.select('council:planner', { slot: 'round-table', who: 'chill' }));
     await settle();
-    expect(screen.getByRole('tab', { name: 'Thinking', selected: true })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Conversation', selected: true })).toBeTruthy();
   });
 
   it('a voice with nothing yet opens on Chat; thinking dots show on the tag', async () => {
@@ -94,7 +96,7 @@ describe('council voices in the inspector', () => {
     act(() => store.setVoiceThinking('advisor', false));
     fireEvent.click(screen.getByRole('button', { name: /Advisor/ }));
     await settle();
-    expect(screen.getByRole('tab', { name: 'Chat', selected: true })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Conversation', selected: true })).toBeTruthy();
   });
 
   it('renders no button without a village inspector', () => {

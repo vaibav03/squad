@@ -28,6 +28,7 @@ import { createMemberRoutes } from './routes/members';
 import { createSquadRoutes } from './routes/squads';
 import { createCallRoutes } from './routes/call';
 import { createCouncilRoutes } from './routes/council';
+import { createCouncilRunStore } from './council/run-store';
 import { createDomainRoutes } from './routes/domain';
 import { createInternalRoutes } from './routes/internal';
 import { createLiveRoutes } from './routes/live';
@@ -129,6 +130,12 @@ export function createHub(opts: HubOptions = {}): Hub {
   deps.ledger = createLedgerStore(deps.db);
   deps.trips = createTripStore(deps.db);
   deps.calls = createCallRegistry(now);
+  deps.councilRuns = createCouncilRunStore(
+    deps.db,
+    () => deps.filterCtx,
+    (student) => deps.directory.squadOf(student as StudentId),
+    now,
+  );
   deps.filterCtx = {
     directory: deps.directory,
     calls: deps.calls,
@@ -137,7 +144,7 @@ export function createHub(opts: HubOptions = {}): Hub {
     councils: {
       ownerOf: (correlationId) => {
         const o = deps.council?.ownerOf?.(correlationId) ?? councilRunOwner(correlationId);
-        if (!o) return undefined;
+        if (!o) return deps.councilRuns?.ownerOf(correlationId); // persisted runs survive a restart
         const squadId = deps.directory.squadOf(o.askedBy as StudentId);
         return squadId ? { askedBy: o.askedBy, squadId, private: o.private } : undefined;
       },

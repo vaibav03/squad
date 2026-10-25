@@ -34,6 +34,9 @@ import {
 import { contextServiceFor } from '../context/service';
 import { contextBusyBlocks } from '../context/busy';
 import { councilContext } from '../context/council';
+import { createCouncilViewerData } from '../council/viewer-data';
+import { createCouncilLiveHub } from '../council/live/hub';
+import { createLiveCouncilFactory } from '../council/live/factory';
 import {
   createAudioServices,
   createCallPort,
@@ -129,7 +132,13 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     emit,
   });
   const councilDemo = () => (deps.runtime ? deps.runtime.llm().llm !== 'real' : false);
+  const mastery = createMasteryStore({ db, emit: quizEmit });
   deps.council = createCouncilService({
+    viewer: createCouncilViewerData(deps, {
+      courseId: () => courseId,
+      mastery,
+      chapters: (id) => brain.store.listChapters(id).map((c) => ({ id: c.id, title: c.title })),
+    }),
     llm: councilLlmFor(o.llm, councilDemo),
     db,
     emit,
@@ -139,12 +148,18 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     agents: councilAgents,
     // The council's retrieve tool also reads the asker's imported Canvas/Google context, scoped to the asker.
     viewer: (askedBy, visibility) => ({ context: councilContext(deps, askedBy, visibility) }),
+    defaultTransport: () => deps.councilLive?.defaultTransport ?? 'stream',
+    live: createLiveCouncilFactory({
+      hub: (deps.councilLive ??= createCouncilLiveHub(o.env ?? process.env, () => deps.now())),
+      env: o.env ?? process.env,
+      emit,
+      health: () => (deps.runtime ? deps.runtime.llm() : undefined),
+    }),
     ...(o.rawLlm ? { triageLlm: o.rawLlm } : {}),
   });
 
   deps.liveWiring = { brain, courseId: () => courseId, llm: o.llm };
 
-  const mastery = createMasteryStore({ db, emit: quizEmit });
   const engine = new QuizEngine({
     db,
     llm: o.llm,

@@ -7,6 +7,9 @@ import {
 } from '@squad/village/council';
 import { openBoard, useBoardVersion } from '../../council/board/bridge';
 import { ModeBadge } from '../../council/board/ModeBadge';
+import { EmptyCouncilState, LastRunLabel } from '../../council/last-run/components';
+import { useCouncilHub } from '../../council/last-run/hub';
+import { useLastRunsState } from '../../council/last-run/store';
 
 const STATE_WORD = {
   pending: { glyph: '…', word: 'Pending' },
@@ -82,7 +85,23 @@ export function HierarchyTab({
   inspector: InspectorStore;
 }) {
   useBoardVersion(board);
-  const empty = <p className="ai-empty">No council is running for this agent.</p>;
+  const hub = useCouncilHub();
+  const stored = useLastRunsState();
+  const lastBoard = board?.run();
+  // Honest empty state: say what the last council was, or that none ever ran, with a way to convene one.
+  const empty = (
+    <div data-testid="hierarchy-empty">
+      <p className="ai-empty">
+        {lastBoard || stored.runs.length
+          ? 'This agent was not on the last council.'
+          : 'Not part of a council run yet.'}
+      </p>
+      <LastRunLabel runId={lastBoard?.runId ?? stored.runs[0]?.id} />
+      {lastBoard || stored.runs.length || !hub ? null : (
+        <EmptyCouncilState hub={hub} store={board} hideStrip heading="No council has met yet" />
+      )}
+    </div>
+  );
   if (!board) return <div className="ai-tabpanel">{empty}</div>;
   const h = board.hierarchy(agentId);
   if (!h) {
@@ -102,6 +121,7 @@ export function HierarchyTab({
           <p>
             <ModeBadge mode={run.mode} />
           </p>
+          <LastRunLabel runId={run.runId} />
           <dl className="ai-facts">
             <dt>Chair</dt>
             <dd className="ai-chips">
@@ -135,6 +155,7 @@ export function HierarchyTab({
         <p>
           <ModeBadge mode={h.agent.mode} />
         </p>
+        <LastRunLabel runId={h.run.runId} />
         <dl className="ai-facts">
           <dt>Council</dt>
           <dd>{h.run.councilName}</dd>

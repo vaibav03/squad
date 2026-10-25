@@ -7,6 +7,7 @@ import {
   type CouncilResult,
 } from '@squad/core';
 import type { HubCtx } from '../pages/village/hub';
+import { announceCouncilStarted } from './started-event';
 
 /** Pure fetch helpers for `POST /v1/council/ask`, `GET /v1/council/:id` and the SSE stream. No React, no secrets in errors. */
 
@@ -77,7 +78,7 @@ async function readJson(res: Response): Promise<unknown> {
 
 export async function askCouncil(
   hub: HubCtx,
-  body: { question: string; chatId?: string },
+  body: { question: string; chatId?: string; transport?: 'stream' | 'live' },
   signal?: AbortSignal,
 ): Promise<CouncilAskResponse> {
   const res = await send(`${base(hub)}/v1/council/ask`, {
@@ -208,14 +209,26 @@ export function openCouncilStream(
 
 /** Everything the run hook needs from a backend; `hubTransport` is the real one, fixtures bring their own. */
 export interface CouncilTransport {
-  ask(question: string, chatId?: string): Promise<CouncilAskResponse>;
+  ask(
+    question: string,
+    chatId?: string,
+    transport?: 'stream' | 'live',
+  ): Promise<CouncilAskResponse>;
   get(id: string): Promise<CouncilResult>;
   stream(resp: CouncilAskResponse, h: CouncilStreamHandlers): () => void;
 }
 
 export function hubTransport(hub: HubCtx, factory?: EventSourceFactory): CouncilTransport {
   return {
-    ask: (question, chatId) => askCouncil(hub, { question, ...(chatId ? { chatId } : {}) }),
+    ask: async (question, chatId, transport) => {
+      const res = await askCouncil(hub, {
+        question,
+        ...(chatId ? { chatId } : {}),
+        ...(transport ? { transport } : {}),
+      });
+      announceCouncilStarted(res.id, transport);
+      return res;
+    },
     get: (id) => getCouncil(hub, id),
     stream: (resp, h) => openCouncilStream(hub, resp.streamUrl, h, factory),
   };

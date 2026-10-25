@@ -6,6 +6,8 @@ import { LvIcon } from '../overlays/kit/icons';
 import { usePrefersReducedMotion } from '../overlays/kit/hooks';
 import { councilErrorCopy, getCouncil } from './council-client';
 import { ResultBoardButton, RunStrip } from './RunStrip';
+import { ResultStatusStrip } from './status/CouncilStatusStrip';
+import { announceCouncilStarted } from './started-event';
 import { ErrorBlock, MemberCard, MessageBlock, RankingBlock, VerdictBlock } from './parts';
 
 /**
@@ -42,6 +44,7 @@ export function CouncilCard({
         {result.question}
       </p>
       <RunStrip result={result} compact showMode={!result.verdict || stopped} />
+      <ResultStatusStrip result={result} hub={hub ?? null} />
       {stopped ? (
         <MessageBlock result={result} onRetry={onRetry} />
       ) : result.verdict ? (
@@ -111,6 +114,8 @@ export function CouncilChatCard({
         const r = await getCouncil(hub, runId, ac.signal);
         if (ac.signal.aborted) return;
         setLoad({ s: 'ready', r });
+        // a council the chat started (`@cubbie ask the council`): let the Council Hall open its stage
+        if (r.status === 'running') announceCouncilStarted(r.id);
         // A run that is still going is polled gently until it is done.
         if (r.status === 'running' && polls < 150)
           timer = setTimeout(() => void run(polls + 1), 1500);
