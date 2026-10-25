@@ -160,7 +160,7 @@ export interface InputImpl {
 }
 
 const CONTROLS =
-  'Arrow keys or A and D walk. Enter opens the nearest place. Tab cycles places. I inspects the next character; click a character to see what it is doing. Escape leaves. Tap the world to walk.';
+  'Arrow keys or A and D walk. Enter opens the nearest place. Tab cycles places. I inspects the next character; click a character to see what it is doing. Escape leaves. Walking is keyboard-only.';
 
 export function createInput(scene: Phaser.Scene, d: InputDeps): InputImpl {
   const down = new Set<string>();
@@ -267,6 +267,7 @@ export function createInput(scene: Phaser.Scene, d: InputDeps): InputImpl {
   let markerT = -1;
   let markerX = 0;
   let held = false;
+  const isTouch = (p: Phaser.Input.Pointer): boolean => !!p.wasTouch;
   const toWorld = (p: Phaser.Input.Pointer) => d.camera.getWorldPoint(p.x, p.y).x;
   const onDown = (p: Phaser.Input.Pointer, over?: Phaser.GameObjects.GameObject[]) => {
     if (overlayOpen) return;
@@ -276,6 +277,8 @@ export function createInput(scene: Phaser.Scene, d: InputDeps): InputImpl {
       return;
     }
     d.focusEl.focus({ preventScroll: true });
+    // Laptop: walking is keyboard-only. A mouse click on the ground never moves the player (touch keeps tap-to-walk).
+    if (!isTouch(p)) return;
     held = true;
     const x = toWorld(p);
     const hit = nearestInteractable(

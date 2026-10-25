@@ -174,7 +174,7 @@ export function createHud(d: HudDeps): { update(): void; destroy(): void } {
     'aria-label': 'Controls',
   });
   help.innerHTML =
-    '<b>Walk</b> arrow keys or A / D<br><b>Enter</b> open the nearest place<br><b>Tab</b> cycle places<br><b>Esc</b> leave a building<br><b>Tap</b> the world to walk<br><b>Calm</b> softens all motion';
+    '<b>Walk</b> arrow keys or A / D<br><b>Enter</b> open the nearest place<br><b>Tab</b> cycle places<br><b>Esc</b> leave a building<br><b>Click</b> an agent to see what it is doing<br><b>I</b> cycle through agents<br><b>Calm</b> softens all motion';
   helpBtn.addEventListener('click', () => {
     const o = help.dataset.open !== 'true';
     help.dataset.open = String(o);

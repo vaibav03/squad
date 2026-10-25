@@ -34,6 +34,7 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
   const wired = new WeakSet<object>();
   let hover: Spot | undefined;
   let zoomSeen = -1;
+  let sideFor: string | null = null;
   let followAt = 0;
   const me = ctx.me ? `student:${ctx.me}` : undefined;
 
@@ -89,6 +90,15 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
   };
   const st = stage();
   st?.addEventListener('keydown', onKey);
+  // A click on empty ground does nothing to the player; it only closes the inspector.
+  const onGround = (_p: Phaser.Input.Pointer, over?: Phaser.GameObjects.GameObject[]) => {
+    if (over?.some((o) => o.getData?.('inspect'))) return;
+    if (store.selected !== null) {
+      store.select(null);
+      store.setFollow(false);
+    }
+  };
+  scene.input.on('pointerdown', onGround);
 
   const drawOutline = (sp: Phaser.GameObjects.Sprite, color: number) => {
     const b = sp.getBounds();
@@ -111,6 +121,14 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
       const calm = ctx.calm;
       // selected ring under the feet (static in Calm mode; slow pulse otherwise)
       const selSprite = store.selected ? spriteOf(store.selected) : undefined;
+      if (store.selected !== sideFor) {
+        // Dock the panel on the side opposite the selected character (decided once per selection).
+        sideFor = store.selected;
+        if (selSprite) {
+          const cam = scene.cameras.main;
+          store.setSide((selSprite.x - cam.scrollX) / cam.width > 0.5 ? 'left' : 'right');
+        }
+      }
       if (selSprite) {
         const pulse = calm ? 1 : 0.75 + 0.25 * Math.sin(now / 420);
         const x = snap(selSprite.x);
@@ -146,6 +164,7 @@ export function createInspectorView(ctx: VillageContext, store: InspectorStore):
     },
     destroy() {
       st?.removeEventListener('keydown', onKey);
+      scene.input.off('pointerdown', onGround);
       ctx.game.canvas.style.cursor = '';
       gfx.destroy();
       ring.destroy();

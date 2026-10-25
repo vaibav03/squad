@@ -79,6 +79,7 @@ const SAFE_GENERIC = 'Something is happening in the village';
 const HEADING_WINDOW_MS = 12_000;
 const LOG_MAX = 10;
 const THOUGHT_HISTORY_MAX = 4;
+const FRESH_THOUGHT_MS = 6000;
 
 /* ------------------------------------------------------------------ privacy */
 
@@ -570,7 +571,9 @@ export function describeActivity(
     if (c) ctxLine = { at: recent[i]!.at, text: c };
   }
   // The newer of what the agent said and what the stream shows wins (a tie goes to the agent's own words).
-  if (lastShared && (!ctxLine || lastShared.at >= ctxLine.at))
+  // A thought only counts as current while it belongs to the latest burst of activity; older ones become history.
+  const fresh = lastShared !== undefined && (!latest || latest.at - lastShared.at <= FRESH_THOUGHT_MS);
+  if (lastShared && fresh && (!ctxLine || lastShared.at >= ctxLine.at))
     thought = { text: lastShared.text, source: 'shared' };
   else if (ctxLine) thought = { text: ctxLine.text, source: 'stream' };
   else
@@ -581,6 +584,7 @@ export function describeActivity(
   const thoughtHistory = shared
     .map((s) => s.text)
     .filter((t, i, a) => !(i === a.length - 1 && thought.source === 'shared' && t === thought.text))
+    .filter((t, i, a) => a.indexOf(t) === i)
     .slice(-THOUGHT_HISTORY_MAX)
     .reverse();
 

@@ -50,6 +50,14 @@
     padding-bottom: 0;
     transform: translateX(8px);
   }
+  .ai-panel[data-side='left'] {
+    right: auto;
+    left: var(--lv-s4, 16px);
+    transform: translateX(-8px);
+  }
+  .ai-panel[data-state='open'] {
+    transform: none;
+  }
 }
 .ai-grip {
   align-self: center;

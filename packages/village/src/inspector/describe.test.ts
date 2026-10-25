@@ -144,6 +144,13 @@ describe('thinking', () => {
     expect(v.thoughtHistory).toEqual(['thought 2', 'thought 1']);
     expect(v.thinking).toBe(false);
   });
+  it('an old thought moves to history once the agent has moved on', () => {
+    const old = at({ ...base, thought: 'old idea' } as VillageEvent, 1000);
+    const next = at({ ...base, state: 'idle' } as VillageEvent, 30000);
+    const v = describeActivity({ id: 'student:s_ana', state: 'idle' }, [old, next], { me: 's_ana' });
+    expect(v.thought.source).toBe('none');
+    expect(v.thoughtHistory).toEqual(['old idea']);
+  });
   it('is honest when no reasoning was shared', () => {
     const v = describeActivity({ id: 'student:s_ana', state: 'studying' }, [at(base as VillageEvent)], { me: 's_ana' });
     expect(v.thought).toEqual({ text: NO_REASONING, source: 'none' });

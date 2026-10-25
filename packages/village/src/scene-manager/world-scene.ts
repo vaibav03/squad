@@ -211,7 +211,9 @@ export class WorldScene extends Phaser.Scene {
             focusAgent: (id) => {
               if (I.opts.inspector) {
                 inspector.select(id);
-                stage.focus({ preventScroll: true });
+                // keyboard users stay on the chip so the panel can take focus; mouse users keep the stage
+                const a = stage.ownerDocument.activeElement as HTMLElement | null;
+                if (!a?.matches?.(':focus-visible')) stage.focus({ preventScroll: true });
                 return;
               }
               const a = agents.get(id);

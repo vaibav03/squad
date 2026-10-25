@@ -65,7 +65,7 @@ export function InspectorPanel({ store, calm, returnFocusTo }: InspectorPanelPro
   useEffect(() => {
     if (!openedId) return;
     const a = document.activeElement as HTMLElement | null;
-    if (a && root.current && !root.current.contains(a) && a.closest('.sqv-hud, .sq-world__feed')) {
+    if (a && root.current && !root.current.contains(a) && a.matches(':focus-visible') && a.closest('.sqv-hud')) {
       root.current.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true });
     }
   }, [openedId]);
@@ -83,6 +83,7 @@ export function InspectorPanel({ store, calm, returnFocusTo }: InspectorPanelPro
       data-state={shown && open ? 'open' : 'closed'}
       data-reduced={reduced ? 'true' : undefined}
       data-kind={v.kind}
+      data-side={store.side}
       aria-labelledby={titleId}
       onTransitionEnd={(e) => {
         if (e.target === e.currentTarget) onExited();

@@ -42,6 +42,9 @@ export interface InspectorStore {
   cycle(from: string | null, dir: 1 | -1): string | null;
   follow: boolean;
   setFollow(v: boolean): void;
+  /** Side of the screen the selected character stands on, so the panel can dock opposite. */
+  readonly side: 'left' | 'right';
+  setSide(s: 'left' | 'right'): void;
   subscribe(fn: () => void): () => void;
   /** Bumps on every change (for useSyncExternalStore). */
   readonly version: number;
@@ -70,6 +73,7 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
   let version = 0;
   let selected: string | null = null;
   let follow = false;
+  let side: 'left' | 'right' = 'right';
 
   const rec = (id: string): Rec => {
     let r = recs.get(id);
@@ -202,6 +206,14 @@ export function createInspectorStore(opts: InspectorStoreOptions = {}): Inspecto
     setFollow(v) {
       if (follow === v) return;
       follow = v;
+      notify();
+    },
+    get side() {
+      return side;
+    },
+    setSide(s) {
+      if (side === s) return;
+      side = s;
       notify();
     },
     subscribe(fn) {
