@@ -41,7 +41,13 @@ describe('collapseRepeatedPairs', () => {
   });
   it('collapses repeated quiz prompts whose cards differ only by ids, and folds unanswered copies', () => {
     const quiz = (qid: string) =>
-      ({ type: 'quiz', index: 0, question: 'What is a z-score?', input: 'free', _id: qid }) as never;
+      ({
+        type: 'quiz',
+        index: 0,
+        question: 'What is a z-score?',
+        input: 'free',
+        _id: qid,
+      }) as never;
     const out = collapseRepeatedPairs([
       msg('student', '@cubbie quiz me', 1000),
       msg('student', '@cubbie quiz me', 1500),
@@ -81,6 +87,29 @@ describe('collapseRepeatedPairs', () => {
       msg('persona', 'p', 1100, { card }),
       msg('student', 'show', 2000),
       msg('persona', 'p', 2100, { card }),
+    ]);
+    expect(out).toHaveLength(4);
+  });
+
+  it('collapses a z-score question delivered three times (case and punctuation differ) into one with x3', () => {
+    const out = collapseRepeatedPairs([
+      msg('student', '@cubbie What is a z-score?', 1000),
+      msg('persona', 'A z-score says how many standard deviations a value is from the mean.', 1100),
+      msg('student', '@cubbie what is a z-score', 1500),
+      msg('persona', 'A z-score says how many standard deviations a value is from the mean.', 1600),
+      msg('student', '@cubbie  what is a  z-score?', 2000),
+      msg('persona', 'A z-score says how many standard deviations a value is from the mean.', 2100),
+    ]);
+    expect(out).toHaveLength(2);
+    expect(out[0]!.repeat).toBe(3);
+  });
+
+  it('keeps a z-score re-ask whose answer genuinely differs', () => {
+    const out = collapseRepeatedPairs([
+      msg('student', '@cubbie what is a z-score?', 1000),
+      msg('persona', 'Answer one.', 1100),
+      msg('student', '@cubbie what is a z-score?', 2000),
+      msg('persona', 'A different explanation.', 2100),
     ]);
     expect(out).toHaveLength(4);
   });

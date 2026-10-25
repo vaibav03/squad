@@ -124,7 +124,9 @@ export function createQuizSkill(deps: QuizSkillDeps): Skill {
           // everyone answered: the engine moved on, so the chat gets the next question
           replies.push({
             ...out(renderQuestion(engine.payload(quizId))),
-            provenance: { label: `Question written from ${engine.payload(quizId).chapter} course material; the page is cited after you answer` },
+            provenance: {
+              label: `Question written from ${engine.payload(quizId).chapter} course material; the page is cited after you answer`,
+            },
           });
         }
         return replies;
@@ -140,7 +142,9 @@ export function createQuizSkill(deps: QuizSkillDeps): Skill {
         return [
           {
             ...out(renderQuestion(engine.payload(id))),
-            provenance: { label: `Question written from ${chapter} course material; the page is cited after you answer` },
+            provenance: {
+              label: `Question written from ${chapter} course material; the page is cited after you answer`,
+            },
           },
         ];
       } catch (e) {

@@ -324,7 +324,11 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
         </p>
       ) : null}
       <div className="sqc-composer__row">
-        {leading ? <div className="sqc-composer__lead" data-slot="composer-leading">{leading}</div> : null}
+        {leading ? (
+          <div className="sqc-composer__lead" data-slot="composer-leading">
+            {leading}
+          </div>
+        ) : null}
         <input
           ref={file}
           type="file"

@@ -29,4 +29,9 @@ export {
 export { ChatCouncilCard, summarize } from './ChatCouncilCard';
 export { ChatCardActionsContext, useChatCardActions } from './card-actions';
 export type { ChatCardActions } from './card-actions';
-export { councilTruthFor, noteCouncilTruth, useCouncilTruthVersion, councilTruthOf } from './truth-store';
+export {
+  councilTruthFor,
+  noteCouncilTruth,
+  useCouncilTruthVersion,
+  councilTruthOf,
+} from './truth-store';

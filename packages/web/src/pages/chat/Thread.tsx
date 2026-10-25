@@ -8,7 +8,13 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { headerTruth, type ChatCitation, type ChatCitationExcerpt, type ChatSummary, type CouncilTruth } from '@squad/core';
+import {
+  headerTruth,
+  type ChatCitation,
+  type ChatCitationExcerpt,
+  type ChatSummary,
+  type CouncilTruth,
+} from '@squad/core';
 import { ChatCardActionsContext, councilTruthFor, useCouncilTruthVersion } from '../../council';
 import { EmptyState, ErrorState } from '../../primitives/EmptyState';
 import { Icon } from '../../primitives/Icon';
@@ -21,7 +27,15 @@ import { chatErrorText } from './api';
 import { MessageBubble } from './Bubble';
 import { Composer, type ComposerHandle } from './Composer';
 import { MemberStack, TypingIndicator } from './parts';
-import { QUICK_PROMPTS_DM, QUICK_PROMPTS_GROUP, buildRows, dmIdFor, type ThreadRow } from './model';
+import { AnswerWait } from './AnswerWait';
+import {
+  dropRedelivered,
+  QUICK_PROMPTS_DM,
+  QUICK_PROMPTS_GROUP,
+  buildRows,
+  dmIdFor,
+  type ThreadRow,
+} from './model';
 import type { ChatController } from './useChat';
 import { ImessageIndicator } from './sync/ImessageIndicator';
 import { useImessageStatus } from './sync/useImessageStatus';
@@ -118,7 +132,14 @@ export function useHeaderTruth(ctl: ChatController, chatId: string) {
   const items = ctl.thread(chatId);
   const councils = useMemo(() => visibleCouncils(ctl, chatId), [items, v, chatId]); // eslint-disable-line react-hooks/exhaustive-deps
   const t = headerTruth({
-    conn: ctl.conn === 'expired' ? 'expired' : ctl.conn === 'offline' ? 'offline' : ctl.conn === 'connecting' ? 'connecting' : 'live',
+    conn:
+      ctl.conn === 'expired'
+        ? 'expired'
+        : ctl.conn === 'offline'
+          ? 'offline'
+          : ctl.conn === 'connecting'
+            ? 'connecting'
+            : 'live',
     online: ctl.online,
     status: ctl.status,
     councils,
@@ -251,7 +272,7 @@ function MessageList({
   onOpenChat?: (id: string) => void;
 }) {
   const bucket = ctl.bucket(chat.id);
-  const items = useMemo(() => ctl.thread(chat.id), [ctl.thread, chat.id]);
+  const items = useMemo(() => dropRedelivered(ctl.thread(chat.id)), [ctl.thread, chat.id]);
   const rows = useMemo(() => buildRows(items, ctl.me), [items, ctl.me]);
   const el = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
@@ -373,7 +394,8 @@ function MessageList({
   useEffect(() => {
     const w = wrap.current;
     if (!w) return;
-    const apply = () => w.style.setProperty('--sqc-card-max', `${Math.round(w.clientHeight * 0.4)}px`);
+    const apply = () =>
+      w.style.setProperty('--sqc-card-max', `${Math.round(w.clientHeight * 0.4)}px`);
     apply();
     if (typeof ResizeObserver === 'undefined') return;
     const ro = new ResizeObserver(apply);
@@ -383,134 +405,136 @@ function MessageList({
 
   return (
     <ChatCardActionsContext.Provider value={cardActions}>
-    <div className="sqc-log-wrap" ref={wrap}>
-      <div
-        ref={el}
-        className="sqc-log"
-        role="log"
-        tabIndex={0}
-        aria-label={`Messages in ${chat.title}`}
-        aria-live={quiet || quietOlder ? 'off' : 'polite'}
-        aria-relevant="additions text"
-        aria-busy={(!bucket.loaded && !bucket.error) || undefined}
-        data-testid="chat-thread"
-        data-chat-id={chat.id}
-        onScroll={onScroll}
-      >
-        {!bucket.loaded && !bucket.error ? (
-          <div className="sqc-skeletons" role="status" aria-label="Loading messages">
-            {[70, 45, 82, 38].map((w, i) => (
-              <div key={i} className={`sqc-skel${i % 3 === 1 ? ' is-own' : ''}`}>
-                <Skeleton shape="block" width={32} height={32} />
-                <Skeleton shape="block" width={`${w}%`} height={i % 2 ? 40 : 56} />
-              </div>
-            ))}
-          </div>
-        ) : bucket.error && !bucket.loaded ? (
-          <ErrorState
-            title="Messages did not load"
-            error={bucket.errorText}
-            retryLabel="Retry"
-            onRetry={() => void ctl.loadHistory(chat.id)}
-          />
-        ) : rows.length === 0 ? (
-          <EmptyState
-            icon="message"
-            title={chat.kind === 'dm' ? 'A private chat with Cubbie' : 'No messages yet, say hi'}
-            body={
-              chat.kind === 'dm'
-                ? 'Only you can see this. Ask about your progress, your notes, or a chapter.'
-                : 'Start the conversation, or ask Cubbie something.'
-            }
-            action={
-              <div className="sqc-prompts" role="group" aria-label="Suggestions">
-                {prompts.map((t) => (
+      <div className="sqc-log-wrap" ref={wrap}>
+        <div
+          ref={el}
+          className="sqc-log"
+          role="log"
+          tabIndex={0}
+          aria-label={`Messages in ${chat.title}`}
+          aria-live={quiet || quietOlder ? 'off' : 'polite'}
+          aria-relevant="additions text"
+          aria-busy={(!bucket.loaded && !bucket.error) || undefined}
+          data-testid="chat-thread"
+          data-chat-id={chat.id}
+          onScroll={onScroll}
+        >
+          {!bucket.loaded && !bucket.error ? (
+            <div className="sqc-skeletons" role="status" aria-label="Loading messages">
+              {[70, 45, 82, 38].map((w, i) => (
+                <div key={i} className={`sqc-skel${i % 3 === 1 ? ' is-own' : ''}`}>
+                  <Skeleton shape="block" width={32} height={32} />
+                  <Skeleton shape="block" width={`${w}%`} height={i % 2 ? 40 : 56} />
+                </div>
+              ))}
+            </div>
+          ) : bucket.error && !bucket.loaded ? (
+            <ErrorState
+              title="Messages did not load"
+              error={bucket.errorText}
+              retryLabel="Retry"
+              onRetry={() => void ctl.loadHistory(chat.id)}
+            />
+          ) : rows.length === 0 ? (
+            <EmptyState
+              icon="message"
+              title={chat.kind === 'dm' ? 'A private chat with Cubbie' : 'No messages yet, say hi'}
+              body={
+                chat.kind === 'dm'
+                  ? 'Only you can see this. Ask about your progress, your notes, or a chapter.'
+                  : 'Start the conversation, or ask Cubbie something.'
+              }
+              action={
+                <div className="sqc-prompts" role="group" aria-label="Suggestions">
+                  {prompts.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      className="sqc-prompt"
+                      data-testid="chat-prompt"
+                      onClick={() => onPrompt(t)}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              }
+            />
+          ) : (
+            <>
+              {bucket.hasMore ? (
+                <div className="sqc-older">
                   <button
-                    key={t}
                     type="button"
-                    className="sqc-prompt"
-                    data-testid="chat-prompt"
-                    onClick={() => onPrompt(t)}
+                    className="sqc-link"
+                    onClick={() => void ctl.loadOlder(chat.id)}
+                    disabled={bucket.loadingOlder}
                   >
-                    {t}
+                    {bucket.loadingOlder ? 'Loading earlier messages' : 'Show earlier messages'}
                   </button>
-                ))}
-              </div>
-            }
-          />
-        ) : (
-          <>
-            {bucket.hasMore ? (
-              <div className="sqc-older">
-                <button
-                  type="button"
-                  className="sqc-link"
-                  onClick={() => void ctl.loadOlder(chat.id)}
-                  disabled={bucket.loadingOlder}
-                >
-                  {bucket.loadingOlder ? 'Loading earlier messages' : 'Show earlier messages'}
-                </button>
-              </div>
-            ) : null}
-            <ol className="sqc-rows">
-              {rows.map((r) =>
-                r.kind === 'day' ? (
-                  <li key={r.key} className="sqc-day" aria-label={r.label}>
-                    <span>{r.label}</span>
-                  </li>
-                ) : (
-                  <li key={r.key} className="sqc-rowitem" data-head={r.head || undefined}>
-                    <MessageBubble
-                      row={r}
-                      api={ctl.api}
-                      status={ctl.status}
-                      me={ctl.me}
-                      isNew={fresh.has(r.message.id)}
-                      reduced={reduced}
-                      scene={scene}
-                      compact={compact}
-                      paused={paused}
-                      onCite={(c, t) => {
-                        setCite(c);
-                        setCiteCtx(t);
-                      }}
-                      onRetry={(id) => void ctl.retry(chat.id, id)}
-                      onDiscard={(id) => ctl.discard(chat.id, id)}
-                      onRetryDelivery={(id) => void ctl.retryDelivery(id)}
-                      quizAnswer={ctl.quizAnswer}
-                      onQuizAnswer={(m, choice) => ctl.answerQuiz(m.chatId, m.id, choice)}
-                      onConfirm={(m, n) =>
-                        m.card?.type === 'confirm'
-                          ? ctl.confirm(m.chatId, m.card.taskId, n)
-                          : Promise.resolve('failed' as const)
-                      }
-                      onOpenDm={onOpenChat && chat.id !== dmId ? () => onOpenChat(dmId) : undefined}
-                    />
-                  </li>
-                ),
-              )}
-            </ol>
+                </div>
+              ) : null}
+              <ol className="sqc-rows">
+                {rows.map((r) =>
+                  r.kind === 'day' ? (
+                    <li key={r.key} className="sqc-day" aria-label={r.label}>
+                      <span>{r.label}</span>
+                    </li>
+                  ) : (
+                    <li key={r.key} className="sqc-rowitem" data-head={r.head || undefined}>
+                      <MessageBubble
+                        row={r}
+                        api={ctl.api}
+                        status={ctl.status}
+                        me={ctl.me}
+                        isNew={fresh.has(r.message.id)}
+                        reduced={reduced}
+                        scene={scene}
+                        compact={compact}
+                        paused={paused}
+                        onCite={(c, t) => {
+                          setCite(c);
+                          setCiteCtx(t);
+                        }}
+                        onRetry={(id) => void ctl.retry(chat.id, id)}
+                        onDiscard={(id) => ctl.discard(chat.id, id)}
+                        onRetryDelivery={(id) => void ctl.retryDelivery(id)}
+                        quizAnswer={ctl.quizAnswer}
+                        onQuizAnswer={(m, choice) => ctl.answerQuiz(m.chatId, m.id, choice)}
+                        onConfirm={(m, n) =>
+                          m.card?.type === 'confirm'
+                            ? ctl.confirm(m.chatId, m.card.taskId, n)
+                            : Promise.resolve('failed' as const)
+                        }
+                        onOpenDm={
+                          onOpenChat && chat.id !== dmId ? () => onOpenChat(dmId) : undefined
+                        }
+                      />
+                    </li>
+                  ),
+                )}
+              </ol>
+              <AnswerWait chat={chat} ctl={ctl} items={items} reduced={reduced} typing={typing} />
+            </>
+          )}
+          {rows.length === 0 && typing.length ? (
             <TypingIndicator names={typing} reduced={reduced} />
-          </>
-        )}
-        {rows.length === 0 && typing.length ? (
-          <TypingIndicator names={typing} reduced={reduced} />
+          ) : null}
+        </div>
+        {!atBottom && newCount > 0 ? (
+          <button type="button" className="sqc-pill" data-testid="chat-new-pill" onClick={toBottom}>
+            <Icon name="arrow-down" size={14} />
+            New messages
+          </button>
         ) : null}
+        <CitationSheet
+          cite={cite}
+          context={citeCtx}
+          ctl={ctl}
+          scene={scene}
+          onClose={() => setCite(null)}
+        />
       </div>
-      {!atBottom && newCount > 0 ? (
-        <button type="button" className="sqc-pill" data-testid="chat-new-pill" onClick={toBottom}>
-          <Icon name="arrow-down" size={14} />
-          New messages
-        </button>
-      ) : null}
-      <CitationSheet
-        cite={cite}
-        context={citeCtx}
-        ctl={ctl}
-        scene={scene}
-        onClose={() => setCite(null)}
-      />
-    </div>
     </ChatCardActionsContext.Provider>
   );
 }
@@ -590,7 +614,11 @@ export function ThreadPane({
               </span>
             </span>
           ) : null}
-          {headerActions ? <span className="sqc-head__actions" data-slot="header-actions">{headerActions}</span> : null}
+          {headerActions ? (
+            <span className="sqc-head__actions" data-slot="header-actions">
+              {headerActions}
+            </span>
+          ) : null}
           <ImessageIndicator status={imsg} chatId={chat.id} compact={compact} />
           <span className="sqc-head__conn">
             <span data-testid="chat-header-badge" data-tone={st.tone} title={st.detail}>

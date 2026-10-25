@@ -74,11 +74,18 @@ export function headerTruth(i: HeaderTruthInput): HeaderTruth {
   }
   // the model backend is not answering for real
   const notSet = /key|unset|missing|none/i.test(reason) || reason === '';
-  if (fixture)
-    return { label: 'Fixture council', tone: 'info', detail: TRUTH_LABELS.practice };
+  if (fixture) return { label: 'Fixture council', tone: 'info', detail: TRUTH_LABELS.practice };
   if (notSet)
-    return { label: TRUTH_SHORT.notset, tone: 'idle', detail: `${TRUTH_LABELS.notset}. ${TRUTH_LABELS.practice}` };
-  return { label: TRUTH_SHORT.partial, tone: 'warn', detail: `${TRUTH_LABELS.partial}. ${TRUTH_LABELS.practice}` };
+    return {
+      label: TRUTH_SHORT.notset,
+      tone: 'idle',
+      detail: `${TRUTH_LABELS.notset}. ${TRUTH_LABELS.practice}`,
+    };
+  return {
+    label: TRUTH_SHORT.partial,
+    tone: 'warn',
+    detail: `${TRUTH_LABELS.partial}. ${TRUTH_LABELS.practice}`,
+  };
 }
 
 /** Per-message / per-card badge: its OWN truth, independent of the header. */

@@ -1666,9 +1666,15 @@
   background: var(--muted-foreground);
   box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--card) 70%, transparent);
 }
-.sqc-crest[data-member='skeptic'] { background: #c0554a; }
-.sqc-crest[data-member='teacher'] { background: #3f7fbf; }
-.sqc-crest[data-member='practitioner'] { background: #4a9a64; }
+.sqc-crest[data-member='skeptic'] {
+  background: #c0554a;
+}
+.sqc-crest[data-member='teacher'] {
+  background: #3f7fbf;
+}
+.sqc-crest[data-member='practitioner'] {
+  background: #4a9a64;
+}
 /* thinking / retry placeholder */
 .sqc-wait {
   display: flex;
@@ -1678,5 +1684,9 @@
   color: var(--muted-foreground);
   font-size: var(--text-sm);
 }
-.sqc-wait.is-slow { color: var(--foreground); }
-.sqc-wait.is-failed { color: var(--destructive, #b3261e); }
+.sqc-wait.is-slow {
+  color: var(--foreground);
+}
+.sqc-wait.is-failed {
+  color: var(--destructive, #b3261e);
+}

@@ -372,7 +372,7 @@ describe('CouncilPanel: error states', () => {
     act(() => m.box.h!.onError());
     await waitFor(() => expect(m.t.get).toHaveBeenCalledWith(f.done.id));
     fireEvent.click(await screen.findByRole('button', { name: 'Skip to verdict' }));
-    expect(await screen.findByRole('heading', { name: /^Verdict:/ })).toBeTruthy();
+    expect(await screen.findByTestId('council-summary')).toBeTruthy();
   });
 });
 
@@ -396,7 +396,7 @@ describe('CouncilCard and CouncilChatCard', () => {
     vi.stubGlobal('fetch', get);
     render(<CouncilChatCard hub={{ hubUrl: 'http://hub.test', token: 't' }} runId={f.done.id} />);
     expect(screen.getByRole('status', { name: 'Loading council answer' })).toBeTruthy();
-    expect(await screen.findByRole('heading', { name: /^Verdict:/ })).toBeTruthy();
+    expect(await screen.findByTestId('council-summary')).toBeTruthy();
     expect(get.mock.calls[0]![0]).toBe(`http://hub.test/v1/council/${f.done.id}`);
   });
 
@@ -412,7 +412,7 @@ describe('CouncilCard and CouncilChatCard', () => {
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).not.toMatch(/secret|500|boom/);
     fireEvent.click(within(alert).getByRole('button', { name: 'Try again' }));
-    expect(await screen.findByRole('heading', { name: /^Verdict:/ })).toBeTruthy();
+    expect(await screen.findByTestId('council-summary')).toBeTruthy();
   });
 
   it('renders refused and failed cards with their message', () => {

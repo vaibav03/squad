@@ -36,12 +36,7 @@ export const ImessageStatusSchema = z.object({
 export type ImessageStatus = z.infer<typeof ImessageStatusSchema>;
 
 export type ImessageIndicatorState =
-  | 'web_only'
-  | 'not_connected'
-  | 'dry_run'
-  | 'connected'
-  | 'degraded'
-  | 'fixture';
+  'web_only' | 'not_connected' | 'dry_run' | 'connected' | 'degraded' | 'fixture';
 
 export interface ImessageIndicator {
   state: ImessageIndicatorState;
@@ -95,7 +90,10 @@ export function imessageIndicator(
     return {
       state: 'not_connected',
       label: 'iMessage: not connected (setup)',
-      detail: status.killSwitch === false ? 'The bridge is not running.' : 'The bridge is switched off (kill switch).',
+      detail:
+        status.killSwitch === false
+          ? 'The bridge is not running.'
+          : 'The bridge is switched off (kill switch).',
       setup: true,
     };
   const queued = status.queued ?? 0;

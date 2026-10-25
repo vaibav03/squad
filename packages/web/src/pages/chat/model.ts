@@ -119,6 +119,31 @@ export interface ThreadItem {
   error?: string;
 }
 
+/**
+ * Hides answers created by redelivery: a bot message with the same trigger (`replyTo`) and the same text as an earlier
+ * one, or an identical bot text straight after an identical one (no replyTo, e.g. history from before triggers were
+ * recorded). Cards are compared by type and run/plan id. Never touches student messages or differing answers.
+ */
+export function dropRedelivered(items: readonly ThreadItem[]): ThreadItem[] {
+  const seen = new Set<string>();
+  let lastBot: string | undefined;
+  return items.filter((it) => {
+    const m = it.message;
+    if (m.sender.kind !== 'persona') {
+      lastBot = undefined;
+      return true;
+    }
+    const card = m.card ? `${m.card.type}:${JSON.stringify(m.card)}` : '';
+    const text = m.text.trim().replace(/\s+/g, ' ');
+    const sig = `${m.sender.id}|${text}|${card}`;
+    const k = m.replyTo ? `${m.replyTo}|${sig}` : undefined;
+    const dup = (k && seen.has(k)) || (!m.replyTo && lastBot === sig && !m.card);
+    if (k) seen.add(k);
+    lastBot = sig;
+    return !dup;
+  });
+}
+
 /** Date separators plus runs of consecutive messages from one sender (same day, within 5 minutes). */
 export function buildRows(
   items: readonly ThreadItem[],
@@ -440,3 +465,52 @@ export function linkHost(text: string, href: string): string | null {
 }
 
 export const dmIdFor = (me: string): string => `dm:${me}`;
+
+// ------------------------------------------------------------------ waiting for an answer
+
+export const SLOW_AFTER_MS = 8_000;
+export const GIVE_UP_AFTER_MS = 90_000;
+/** Older unanswered messages are history, not "still waiting". */
+export const WAIT_WINDOW_MS = 5 * 60_000;
+
+export interface Waiting {
+  /** the student message the answer is for (the trigger) */
+  id: string;
+  /** reused on retry so no second prompt is created */
+  clientId: string | undefined;
+  text: string;
+  since: number;
+}
+
+/** Own sent messages that address the bot and have no answer yet: ONE entry per trigger message. */
+export function waitingTriggers(
+  items: readonly ThreadItem[],
+  me: string,
+  isDm: boolean,
+  now: number,
+  startedAt: (id: string, ts: number) => number = (_id, ts) => ts,
+): Waiting[] {
+  const out: Waiting[] = [];
+  for (const [i, it] of items.entries()) {
+    const m = it.message;
+    if (it.state !== 'sent' || m.sender.kind !== 'student' || m.sender.id !== me) continue;
+    if (!isDm && !mentionsBot(m.text)) continue;
+    if (now - m.ts > WAIT_WINDOW_MS) continue;
+    const answered = items.some(
+      (o, j) =>
+        o.message.sender.kind === 'persona' &&
+        (o.message.replyTo === m.id || (!o.message.replyTo && j > i)),
+    );
+    if (answered) continue;
+    out.push({ id: m.id, clientId: m.clientId, text: m.text, since: startedAt(m.id, m.ts) });
+  }
+  return out;
+}
+
+export type WaitPhase = 'thinking' | 'slow' | 'failed';
+export const waitPhase = (elapsedMs: number, failed: boolean): WaitPhase =>
+  failed || elapsedMs >= GIVE_UP_AFTER_MS
+    ? 'failed'
+    : elapsedMs >= SLOW_AFTER_MS
+      ? 'slow'
+      : 'thinking';
