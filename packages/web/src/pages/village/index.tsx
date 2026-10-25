@@ -25,7 +25,7 @@ import { setInspectorStore } from '../../overlays/inspector/bridge';
 import { SourceViewerHost } from '../../components/source-viewer';
 import { createInspectorStore, type InspectorStore } from '@squad/village/inspector';
 import { createCouncilBoardStore } from '@squad/village/council';
-import { CouncilHall, CouncilBoardHost, setBoardStore } from '../../council';
+import { CouncilHall, CouncilBoardHost, setBoardStore, setRoomOpener } from '../../council';
 import { useToast } from '../../primitives/Toast';
 import { createPhraseRunner } from './chat-send';
 import { OverlayHost } from './OverlayHost';
@@ -165,6 +165,8 @@ export default function VillagePage({ world }: { world?: string }) {
           councilBoard: board,
         });
         handle.current = h;
+        // council surfaces open a room (walk to the door and enter; at once in Calm) through the world's own interactables
+        setRoomOpener(async (slot, o) => (await h.openRoom?.(slot, o)) ?? false);
         if (import.meta.env.DEV) (window as unknown as Record<string, unknown>).__world = h;
         await h.ready;
         h.setCalm?.(calmRef.current);
@@ -185,6 +187,7 @@ export default function VillagePage({ world }: { world?: string }) {
       setInspector(null);
       setInspectorStore(null);
       setBoardStore(null);
+      setRoomOpener(null);
     };
     // calm is applied live through setCalm; the world is not remounted for it.
   }, [cfg.hubUrl, cfg.token, cfg.userId, replayName, worldId, runnable, attempt]);
@@ -291,7 +294,7 @@ export default function VillagePage({ world }: { world?: string }) {
         hub={hub}
         calm={calm}
         onRun={runPhrase}
-        initialOpen={q.get('mastery') === '1'}
+        initialOpen={q.get('mastery') === '1' || q.get('panel') === 'mastery'}
         returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
       />
       {live && !replayName && <PlanPill />}
@@ -299,7 +302,7 @@ export default function VillagePage({ world }: { world?: string }) {
         hub={hub}
         calm={calm}
         onRun={runPhrase}
-        initialOpen={q.get('plan') === '1'}
+        initialOpen={q.get('plan') === '1' || q.get('panel') === 'plan'}
         returnFocusTo={() => stage.current?.querySelector<HTMLElement>('.sqv-stage')}
       />
       <OverlayHost

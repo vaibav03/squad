@@ -121,6 +121,8 @@ export type SceneCommand =
   /** Polite live-region text for the a11y feed ("Council verdict: start with chapter 5"). */
   | {
       readonly type: 'announce';
+      /** Agent the text is about (a state change); lets a host drop it while another agent is focused. */
+      readonly agent?: string;
       readonly text: string;
       readonly politeness: 'polite' | 'assertive';
     };

@@ -49,9 +49,15 @@ export const SCOPE_WORDS: Record<string, string> = {
   'canvas.api_token.read': 'Your Canvas courses, assignments and files, read only. No grades.',
   'canvas.browser_session.read':
     'Your Canvas courses, assignments and files, read through your own browser session. No grades.',
+  'canvas.demo_workspace': 'A simulated Canvas workspace (demo data): courses, pages, assignments, events.',
 };
-export const scopeWords = (s: string): string =>
-  SCOPE_WORDS[s] ?? 'Read-only access to one data type.';
+/** The hub reports short scope names (`calendar.readonly`); the words are keyed by the full scope, so match either. */
+export const scopeWords = (s: string): string => {
+  const hit =
+    SCOPE_WORDS[s] ??
+    Object.entries(SCOPE_WORDS).find(([k]) => k === s || k.endsWith(`/${s}`))?.[1];
+  return hit ?? `Read-only access (${s}).`;
+};
 
 /** Singular noun per kind; `plural()` makes the count line ('1 Classroom item', '2 Classroom items'). */
 export const KIND_LABEL: Record<string, string> = {

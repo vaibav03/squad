@@ -27,6 +27,10 @@ export type {
   AgentSpec,
   AgentTransport,
   AgentSession,
+  OpenSessionOptions,
+  SendOptions,
+  StepResult,
+  ToolResultInput,
   CouncilDataPorts,
   TransportKind,
 } from './types';

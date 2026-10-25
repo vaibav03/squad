@@ -131,6 +131,19 @@ describe('Google OAuth callback redirects to the origin that started the flow', 
   });
 });
 
+describe('demo consent page', () => {
+  it('Allow and Cancel both go through the same state record', async () => {
+    const { hub, authorize } = setup();
+    const state = await authorize({ origin: 'http://localhost:5290' });
+    const html = await (
+      await hub.app.request(`/v1/connections/google/sim-consent?state=${encodeURIComponent(state)}`)
+    ).text();
+    expect(html).toContain('Allow (demo)');
+    expect(html.match(new RegExp(encodeURIComponent(state), 'g'))?.length).toBe(2);
+    expect(html).not.toMatch(/code_verifier|5173/);
+  });
+});
+
 describe('invite links use the asking web origin when allowed', () => {
   it('web-origin helpers', async () => {
     const { webBaseFor, isAllowedWebOrigin } = await import('../web-origin');

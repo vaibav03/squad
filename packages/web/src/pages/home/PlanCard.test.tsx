@@ -21,8 +21,10 @@ describe('HomePlanCard', () => {
     );
     render(<HomePlanCard />);
     await screen.findByText(/No study plan yet/);
-    expect(screen.getByTestId('home-plan-open').getAttribute('href')).toBe('/squad/village?plan=1');
-    expect(screen.getByTestId('home-plan-open').textContent).toBe('Propose a plan');
+    expect(screen.getByTestId('home-plan-open').getAttribute('href')).toBe(
+      '/squad/chat?wizard=study',
+    );
+    expect(screen.getByTestId('home-plan-open').textContent).toBe('Create a study plan');
   });
   it('shows badge, countdown, progress and saved version', async () => {
     vi.stubGlobal(

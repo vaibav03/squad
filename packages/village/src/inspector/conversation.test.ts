@@ -125,7 +125,6 @@ const silent = new Set([
   'discussion.started',
   'discussion.takeaway',
   'discussion.ended',
-  'a2a.message',
   'council.stage',
 ]);
 

@@ -71,6 +71,7 @@ async function signUp(hub: Hub, name: string, phone: string) {
 async function boot(
   cfg: Partial<IMessageConfig> = {},
   env: Record<string, string> = {},
+  publicWeb: string | null = 'https://squad.test',
 ): Promise<Ctx> {
   const clock = { t: T0 };
   const hub = createHub({
@@ -82,6 +83,7 @@ async function boot(
       logLevel: 'silent',
       production: false,
       webUrl: 'https://squad.test',
+      publicWebUrl: publicWeb,
     },
   });
   const tok: Record<string, string> = {};
@@ -474,6 +476,42 @@ describe('privacy: DM sentinels never reach the group', () => {
         history(`group:${c.squadId}`).filter((m) => m.sender.kind === 'persona'),
       ).toLowerCase(),
     ).not.toContain('therapy');
+  });
+
+  it('relative app links in bot replies go out as plain text with an absolute URL', async () => {
+    await bind();
+    c.hub.deps.chat.postBot({
+      chatId: `group:${c.squadId}`,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      text: 'Nothing is connected yet: connect Canvas or Google in [Connections](/squad/connections). See /squad?council=cn_abc123def456',
+      citations: [],
+      attachments: [],
+    });
+    await settle();
+    const t = sentTo(G1).find((x) => x.includes('Nothing is connected yet'))!;
+    expect(t).toContain('in Connections https://squad.test/squad/connections');
+    expect(t).toContain('https://squad.test/squad?council=cn_abc123def456');
+    expect(t).not.toMatch(/\]\(|\(\/squad/);
+  });
+
+  it('without a public web URL the reply names the page and carries no link', async () => {
+    await c.im.stop();
+    c = await boot({}, {}, null);
+    await bind();
+    c.hub.deps.chat.postBot({
+      chatId: `group:${c.squadId}`,
+      personaId: 'cubbie',
+      personaName: 'Cubbie',
+      text: 'connect Canvas or Google in [Connections](/squad/connections). Board: /squad?council=cn_abc123def456',
+      citations: [],
+      attachments: [],
+    });
+    await settle();
+    const t = sentTo(G1).find((x) => x.includes('connect Canvas'))!;
+    expect(t).toContain('in Connections.');
+    expect(t).toContain('Board: the Council board');
+    expect(t).not.toMatch(/\]\(|\/squad/);
   });
 
   it("a private reply goes to the student's own 1:1, never to the group", async () => {

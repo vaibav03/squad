@@ -2,7 +2,12 @@ import { existsSync } from 'node:fs';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
-import type { InboundMessage, OutboundMessage, StudentId } from '@squad/core';
+import {
+  absolutizeLinks,
+  type InboundMessage,
+  type OutboundMessage,
+  type StudentId,
+} from '@squad/core';
 import { detectMention } from '../mention';
 import { nullLogger } from '../log';
 import type { Logger, Roster, Transport } from '../types';
@@ -51,6 +56,8 @@ export interface DiscordTransportOptions {
   fetch?: typeof fetch;
   maxAttachmentBytes?: number;
   fileExists?: (p: string) => boolean;
+  /** Public web URL (HUB_WEB_URL / PUBLIC_WEB_URL): relative app links in replies are sent absolute, else as the page name. */
+  webUrl?: string | null;
 }
 
 export const DISCORD_MAX = 2000;
@@ -220,7 +227,10 @@ export function createDiscordTransport(opts: DiscordTransportOptions): Transport
       await client?.destroy();
       client = undefined;
     },
-    async send(o) {
+    async send(msg) {
+      const o: OutboundMessage = msg.text
+        ? { ...msg, text: absolutizeLinks(msg.text, opts.webUrl) }
+        : msg;
       if (!o.text && !(o.attachments && o.attachments.length)) throw new Error('nothing to send');
       await limiter.run(async () => {
         for (let attempt = 1; ; attempt++) {

@@ -148,9 +148,9 @@ describe('Home checklist', () => {
     mount();
     await waitFor(() => expect(screen.getByText('4 of 4 done')).toBeTruthy());
     for (const t of [
-      'Link your phone',
-      'Add your course PDFs',
-      'Share your busy times',
+      'Connect iMessage via Sendblue',
+      'Connect Canvas or Google Classroom',
+      'Connect Google Calendar',
       'Pick your study buddy',
     ])
       expect(within(row(t)).getByText('Done')).toBeTruthy();
@@ -163,8 +163,10 @@ describe('Home checklist', () => {
       '/v1/library/courses': { courses: [course({ sample: true, role: 'viewer' })] },
     };
     mount();
-    await waitFor(() => expect(within(row('Link your phone')).getByText('Done')).toBeTruthy());
-    expect(within(row('Add your course PDFs')).getByText('To do')).toBeTruthy();
+    await waitFor(() =>
+      expect(within(row('Connect iMessage via Sendblue')).getByText('Done')).toBeTruthy(),
+    );
+    expect(within(row('Connect Canvas or Google Classroom')).getByText('To do')).toBeTruthy();
   });
 
   it('a hanging read does not block the others; Retry re-reads only the failed item', async () => {
@@ -177,15 +179,19 @@ describe('Home checklist', () => {
     await waitFor(() =>
       expect(within(row('Pick your study buddy')).getByText('To do')).toBeTruthy(),
     );
-    expect(within(row('Add your course PDFs')).getByText('Checking…')).toBeTruthy();
+    expect(within(row('Connect Canvas or Google Classroom')).getByText('Checking…')).toBeTruthy();
     await waitFor(() =>
-      expect(within(row('Link your phone')).getByText('Could not check')).toBeTruthy(),
+      expect(
+        within(row('Connect iMessage via Sendblue')).getByText('Could not check'),
+      ).toBeTruthy(),
     );
     expect(screen.getByRole('alert')).toBeTruthy();
     answers['/v1/imessage/link'] = { links: [{ hint: 'x', linkedAt: 1 }] };
     const before = calls.filter((c) => c === '/v1/me').length;
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
-    await waitFor(() => expect(within(row('Link your phone')).getByText('Done')).toBeTruthy());
+    await waitFor(() =>
+      expect(within(row('Connect iMessage via Sendblue')).getByText('Done')).toBeTruthy(),
+    );
     expect(calls.filter((c) => c === '/v1/me').length).toBe(before);
     expect(screen.queryByRole('alert')).toBeNull();
   });

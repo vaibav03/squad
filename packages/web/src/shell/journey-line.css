@@ -1,0 +1,19 @@
+.sq-nextline {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-1) var(--space-4);
+  background: var(--secondary);
+  border-bottom: 1px solid var(--border);
+  font: 500 var(--text-xs) / var(--lh-xs) var(--font-sans);
+}
+.sq-nextline__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 24px;
+  color: var(--foreground);
+  text-decoration: none;
+}
+a.sq-nextline__link:hover {
+  text-decoration: underline;
+}

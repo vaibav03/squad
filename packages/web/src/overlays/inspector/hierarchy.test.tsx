@@ -24,8 +24,8 @@ describe('Hierarchy tab', () => {
     render(<InspectorPanel store={store} />);
     act(() => store.select('council:ask-chair'));
     await settle();
-    fireEvent.click(screen.getByRole('tab', { name: 'Hierarchy' }));
-    expect(screen.getByText('No council is running for this agent.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Structure' }));
+    expect(screen.getByText('Not part of a council run yet.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Board' })).toBeNull();
   });
 
@@ -46,7 +46,7 @@ describe('Hierarchy tab', () => {
     );
     act(() => store.select(chair.id));
     await settle();
-    fireEvent.click(screen.getByRole('tab', { name: 'Hierarchy' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Structure' }));
     expect(screen.getByText('Chair, top of the tree')).toBeTruthy();
     expect(screen.getByText('Demo')).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Delegations out' })).toBeTruthy();
@@ -61,7 +61,7 @@ describe('Hierarchy tab', () => {
     expect(store.selected).toBe(spec.id);
     await settle();
     if (!screen.queryByTestId('hierarchy'))
-      fireEvent.click(screen.getByRole('tab', { name: 'Hierarchy' }));
+      fireEvent.click(screen.getByRole('tab', { name: 'Structure' }));
     expect(screen.getByText(/Specialist under/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Open council board' }));
     expect(screen.getByTestId('open').textContent).toBe(`open:${spec.id}`);
@@ -77,7 +77,7 @@ describe('Hierarchy tab', () => {
     render(<InspectorPanel store={store} />);
     act(() => store.select('council:ask'));
     await settle();
-    fireEvent.click(screen.getByRole('tab', { name: 'Hierarchy' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Structure' }));
     expect(screen.getByText('Chair', { selector: 'dt' })).toBeTruthy();
     expect(screen.getByText('Specialists')).toBeTruthy();
   });

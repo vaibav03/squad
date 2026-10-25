@@ -8,6 +8,7 @@ import { useChat } from './useChat';
 import { hubStudentId } from '../../shell/dev-login';
 import { useSquadConfig, useAuth } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
+import { ContextGateFrame } from './ContextGate';
 
 /** `/squad/chat`: the squad group chat and your private chat with Cubbie. Live over SSE; `?c=<chatId>` deep-links a chat. */
 export default function ChatPage() {
@@ -47,9 +48,9 @@ export default function ChatPage() {
     [setParams],
   );
   return (
-    <>
+    <ContextGateFrame>
       <ChatView ctl={ctl} activeId={active} onActiveChange={setActive} onSignInAgain={signOut} />
       <SourceViewerHost />
-    </>
+    </ContextGateFrame>
   );
 }

@@ -10,6 +10,8 @@ import {
   ConnectorRateLimitError,
   GOOGLE_SCOPES,
   buildGoogleAuthorizationUrl,
+  createDemoCanvasConnector,
+  createDemoGoogleConnector,
   createLiveCanvasConnector,
   createLiveGoogleConnector,
   createPushedCanvasConnector,
@@ -52,6 +54,9 @@ export interface ContextService {
     /** Real upstreams (mode `live`): Canvas REST with a student token, Google Calendar / Drive / Classroom. */
     canvasLive: CanvasConnector;
     googleLive: GoogleConnector;
+    /** Demo workspaces (variant `demo`): original synthetic content relative to today, always labelled Demo data. */
+    canvasDemo: CanvasConnector;
+    googleDemo: GoogleConnector;
   };
   /**
    * `fixture` while Google has no configured OAuth client (the hub then runs a labelled consent simulator);
@@ -204,6 +209,8 @@ export function createContextService(
         ? (opts.googleOAuth ?? (envOAuth as GoogleOAuthConfig))
         : undefined;
   const connectors = {
+    canvasDemo: createDemoCanvasConnector(deps.now),
+    googleDemo: createDemoGoogleConnector(deps.now),
     canvas: opts.canvas ?? createFakeCanvasConnector(),
     google: opts.google ?? createFakeGoogleConnector(),
     canvasLive:
@@ -242,8 +249,8 @@ export function createContextService(
 
   const authFor = (c: ContextConnection, s: TokenSecrets): CanvasAuth | GoogleAuth =>
     c.provider === 'canvas'
-      ? c.variant === 'feed'
-        ? { variant: 'feed', feedUrl: s.feedUrl ?? '' }
+      ? c.variant === 'feed' || c.variant === 'demo'
+        ? { variant: 'feed', feedUrl: s.feedUrl ?? 'demo://workspace' }
         : c.variant === 'session'
           ? { variant: 'session', origin: '', canvasUserId: '' }
           : { variant: 'token', token: s.apiToken ?? '', baseUrl: s.baseUrl ?? '' }
@@ -254,9 +261,9 @@ export function createContextService(
           pickedFileIds: s.pickedFileIds ?? [],
         };
   const googleConnector = (c: ContextConnection) =>
-    isLive(c) ? connectors.googleLive : connectors.google;
+    c.variant === 'demo' ? connectors.googleDemo : isLive(c) ? connectors.googleLive : connectors.google;
   const canvasConnector = (c: ContextConnection) =>
-    isLive(c) ? connectors.canvasLive : connectors.canvas;
+    c.variant === 'demo' ? connectors.canvasDemo : isLive(c) ? connectors.canvasLive : connectors.canvas;
   const emptyReport = (outcome: SyncReport['outcome'], note?: string): SyncReport => ({
     outcome,
     added: 0,
@@ -322,15 +329,18 @@ export function createContextService(
       const live =
         input.mode === 'live' && input.provider === 'canvas' && input.variant === 'token';
       if (input.provider === 'canvas') {
-        variant = input.variant === 'token' ? 'token' : 'feed';
-        const wantScope = variant === 'feed' ? CANVAS_SCOPES.feed : CANVAS_SCOPES.token;
+        variant = input.variant === 'token' ? 'token' : input.variant === 'demo' ? 'demo' : 'feed';
+        const wantScope =
+          variant === 'feed' ? CANVAS_SCOPES.feed : variant === 'demo' ? CANVAS_SCOPES.demo : CANVAS_SCOPES.token;
         if (!input.scopes.includes(wantScope) || input.scopes.length !== 1)
           return {
             ok: false,
             code: 'invalid_request',
             message: `Scopes for a Canvas ${variant} connection must be exactly [${wantScope}].`,
           };
-        if (variant === 'feed') {
+        if (variant === 'demo') {
+          auth = { variant: 'feed', feedUrl: 'demo://workspace' };
+        } else if (variant === 'feed') {
           const u = safeHttps(input.feedUrl);
           if (!u)
             return {
@@ -353,7 +363,7 @@ export function createContextService(
           auth = { variant: 'token', token: input.token, baseUrl: b.origin };
         }
       } else {
-        variant = 'oauth';
+        variant = input.variant === 'demo' ? 'demo' : 'oauth';
         // Fixture Google: placeholder tokens, nothing real is requested. Real Google goes through startGoogleAuth.
         secrets.accessToken = `fixture-access-${randomBytes(8).toString('hex')}`;
         secrets.refreshToken = `fixture-refresh-${randomBytes(8).toString('hex')}`;
@@ -369,8 +379,12 @@ export function createContextService(
         input.provider === 'canvas'
           ? live
             ? connectors.canvasLive
-            : connectors.canvas
-          : connectors.google;
+            : variant === 'demo'
+              ? connectors.canvasDemo
+              : connectors.canvas
+          : variant === 'demo'
+            ? connectors.googleDemo
+            : connectors.google;
       let externalAccount: string;
       try {
         externalAccount = await (connector as { accountId(a: unknown): Promise<string> }).accountId(

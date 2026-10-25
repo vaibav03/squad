@@ -18,3 +18,6 @@ export function getRoomSession(): RoomSession | undefined {
 
 export * from './mastery';
 export * from './plan';
+
+export { getActiveSkins } from './skins/runtime';
+export type { ActiveSkin } from './skins/runtime';

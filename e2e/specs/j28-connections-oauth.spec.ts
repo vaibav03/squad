@@ -68,13 +68,13 @@ test('Google fixture consent lands back on the origin the browser started on', a
   expect(q.get('status')).toBe('connected');
   expect(q.get('mode')).toBe('fixture');
 
-  await expect(page.getByText('Google connected')).toBeVisible();
+  await expect(page.getByTestId('oauth-return-text')).toContainText('Google connected');
   const card = page
     .getByRole('article', { name: 'google connection' })
     .filter({ hasNotText: /revoked/i });
   await expect(card).toBeVisible({ timeout: 20_000 });
   await expect(card).toContainText('Fixture (simulated, not your account)'); // honest fixture label
-  await expect(card).toContainText('1 Classroom items');
+  await expect(card).toContainText('1 Classroom item');
   await expect(card).toContainText('2 calendar events');
   await expect(card).toContainText('nobody (private to you)'); // sharing default is private
   await expect(card).toContainText('Your own Classroom coursework. No grades.');
@@ -123,7 +123,7 @@ test('Canvas: the extension route is honest and the calendar feed (.ics) route c
   await expect(canvas.getByText('Extension not detected')).toBeVisible({ timeout: 15_000 });
   await expect(canvas).toContainText('Install the unpacked extension');
   // a student API token is never demanded: no token field, and the card says none is given to Squad
-  await expect(canvas.getByLabel(/token/i)).toHaveCount(0);
+  await expect(canvas.getByLabel(/token/i).first()).toBeHidden(); // the optional student token is collapsed under Advanced
   await expect(canvas).toContainText('No Canvas password or API token is given to Squad');
   await snap(ana, 'oauth-3-canvas-extension-not-detected');
 
@@ -134,7 +134,7 @@ test('Canvas: the extension route is honest and the calendar feed (.ics) route c
     .filter({ hasNotText: /revoked/i });
   await expect(card).toBeVisible({ timeout: 20_000 });
   await expect(card).toContainText('Fixture (simulated, not your account)');
-  await expect(card).toContainText(/3 (Canvas events|assignments)|assignments|Canvas events/);
+  await expect(card).toContainText(/Imported.*(assignment|calendar event)/);
   await expect(card).toContainText('nobody (private to you)');
   // the feed URL is a secret: never rendered back
   expect(await page.content()).not.toContain(SECRET_PART);

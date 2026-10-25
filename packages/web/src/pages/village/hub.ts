@@ -100,19 +100,26 @@ const Trip = z.object({
 export interface ConfirmTarget {
   /** The confirm.pending task id; the answer goes to POST /v1/confirms/:taskId. */
   taskId: string;
-  tripId: string;
-  optionId: string;
-  label: string;
+  /** Present only when the task belongs to a trip (enrichment, never required). */
+  tripId?: string;
+  /** Option sent with the answer; for a trip it is the leading option, otherwise the chosen one. */
+  optionId?: string;
+  label?: string;
   cost?: string;
+  /** Real choices the bot offered (a debate verdict has two sides), shown as the sheet buttons. */
+  options?: string[];
+  question?: string;
 }
-/**
- * Answers go to the generic `POST /v1/confirms/:taskId {optionId, yes}` (fails closed for unknown tasks). The preview below still reads the trip to name the option. A `confirm.pending` task id
- * maps to its trip by the hub's naming (`task_trip_x` -> `trip_x`); the leading unvetoed option is the one being
- * confirmed. The sheet shows it BEFORE the student answers, and the answer reuses exactly that option. Other task kinds
- * have no endpoint yet, so they reject and the sheet shows its error state (contract request: a generic
- * `POST /v1/confirms/:taskId`).
- */
-export async function previewConfirm(c: HubCtx, taskId: string): Promise<ConfirmTarget> {
+
+const Preview = z.object({
+  taskId: z.string(),
+  question: z.string(),
+  options: z.array(z.string()),
+  kind: z.string(),
+  mode: z.enum(['pick', 'yesno']),
+});
+
+async function tripTarget(c: HubCtx, taskId: string): Promise<Partial<ConfirmTarget>> {
   const tripId = taskId.replace(/^task_/, '');
   const res = await ok(
     await timedFetch(`${base(c)}/v1/trips/${encodeURIComponent(tripId)}`, { headers: auth(c) }),
@@ -126,23 +133,84 @@ export async function previewConfirm(c: HubCtx, taskId: string): Promise<Confirm
     trip.options[0];
   if (!leading) throw new HubError(409, 'trip has no options');
   return {
-    taskId,
     tripId: trip.tripId,
     optionId: leading.id,
     label: leading.label ?? leading.id,
     ...(leading.estCost ? { cost: leading.estCost } : {}),
   };
 }
+
+/**
+ * Builds what the sheet shows for a `confirm.pending` task. It NEVER requires a trip: the base target is the event's own
+ * data (`fallback`), enriched by the hub's viewer-scoped `GET /v1/confirms/:taskId` when it exists, and by the trip
+ * lookup only for trip tasks. Every lookup failure falls back silently, so a failed preview can never block answering.
+ */
+export async function previewConfirm(
+  c: HubCtx,
+  taskId: string,
+  fallback: { question?: string; options?: string[] } = {},
+): Promise<ConfirmTarget> {
+  let target: ConfirmTarget = {
+    taskId,
+    ...(fallback.question ? { question: fallback.question } : {}),
+    ...(fallback.options?.length ? { options: fallback.options } : {}),
+  };
+  let kind: string | undefined;
+  try {
+    const res = await ok(
+      await timedFetch(`${base(c)}/v1/confirms/${encodeURIComponent(taskId)}`, {
+        headers: auth(c),
+      }),
+      'confirm preview',
+    );
+    const p = parseOrThrow(Preview, await res.json());
+    kind = p.kind;
+    target = {
+      ...target,
+      question: p.question,
+      ...(p.mode === 'pick' && p.options.length ? { options: p.options } : {}),
+    };
+  } catch {
+    /* no preview endpoint / unknown to the preview: use the event's data */
+  }
+  if (kind === 'trip' || (kind === undefined && /^task_trip_/.test(taskId))) {
+    try {
+      target = { ...target, ...(await tripTarget(c, taskId)) };
+    } catch {
+      /* not a trip after all: still answerable */
+    }
+  }
+  return target;
+}
+
+/** Distinct, honest copy per failure. 'Nothing was shared' appears only when the answer demonstrably did not go out. */
+export function confirmErrorMessage(e: unknown): string {
+  if (e instanceof HubError) {
+    if (e.status === 401 || e.status === 403) return 'Your session ended. Sign in again.';
+    if (e.status === 404) return 'This question expired: ask again.';
+    if (e.status === 409) return 'Already answered.';
+    if (e.status === 422)
+      return 'This one can only be answered in the chat. Nothing was shared from here.';
+    if (e.status === 429) return 'Too many tries. Wait a moment and try again.';
+    if (e.status >= 500)
+      return 'The village could not pass your answer on. Try again. Nothing was shared yet.';
+  }
+  return 'Could not reach the village. Check your connection and try again. Nothing was shared.';
+}
+
+/** Posts the answer. 409 (already answered) is surfaced as a HubError so the sheet can say so. */
 export async function resolveConfirm(
   c: HubCtx,
   target: ConfirmTarget,
   yes: boolean,
+  optionId?: string,
 ): Promise<void> {
+  const opt = optionId ?? target.optionId;
   await ok(
     await timedFetch(`${base(c)}/v1/confirms/${encodeURIComponent(target.taskId)}`, {
       method: 'POST',
       headers: { ...json, ...auth(c) },
-      body: JSON.stringify({ optionId: target.optionId, yes }),
+      body: JSON.stringify({ yes, ...(opt ? { optionId: opt } : {}) }),
     }),
     'confirm',
   );
