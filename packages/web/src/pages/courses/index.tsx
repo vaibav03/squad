@@ -23,7 +23,7 @@ export default function CoursesPage() {
       const c = await api.createCourse(title);
       setCreating(false);
       void list.refresh();
-      toast({ title: `Created ${c.title}`, body: 'Add your files next.', tone: 'ok' });
+      toast({ title: `Created ${c.title}`, body: 'Add your files next.', tone: 'ok', durationMs: 2500 });
       navigate(`/squad/courses/${encodeURIComponent(c.id)}`);
     },
     [api, list, navigate, toast],
