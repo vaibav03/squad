@@ -452,11 +452,11 @@ function MessageList({
           ) : rows.length === 0 ? (
             <EmptyState
               icon="message"
-              title={chat.kind === 'dm' ? 'A private chat with Cubbie' : 'No messages yet, say hi'}
+              title={chat.kind === 'dm' ? 'A private chat with Squad' : 'No messages yet, say hi'}
               body={
                 chat.kind === 'dm'
                   ? 'Only you can see this. Ask about your progress, your notes, or a chapter.'
-                  : 'Start the conversation, or ask Cubbie something.'
+                  : 'Start the conversation, or ask Squad something.'
               }
               action={
                 <div className="sqc-prompts" role="group" aria-label="Suggestions">
@@ -616,8 +616,8 @@ export function ThreadPane({
   const names = chat.members.map((m) => m.name);
   const subtitle =
     chat.kind === 'dm'
-      ? 'Cubbie, your study buddy'
-      : `Shared with your squad · ${chat.subtitle ?? `${names.join(', ')} and Cubbie`}`;
+      ? 'Squad, your study buddy'
+      : `Shared with your squad · ${chat.subtitle ?? `${names.join(', ')} and Squad`}`;
   const paused = pausedCopy(ctl);
   const cfg = useSquadConfig();
   const liveHub = cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token ?? null } : null;
@@ -730,7 +730,12 @@ export function ThreadPane({
                 {headerActions}
               </span>
             ) : null}
-            <ImessageIndicator status={imsg} chatId={chat.id} compact={compact} />
+            <ImessageIndicator
+              status={imsg}
+              chatId={chat.id}
+              compact={compact}
+              viaImessage={ctl.thread(chat.id).some((i) => i.message.transport === 'imessage')}
+            />
             <span className="sqc-head__conn">
               <span data-testid="chat-header-badge" data-tone={st.tone} title={st.detail}>
                 <StatusDot status={st.status} label={st.label} hideLabel={compact} />

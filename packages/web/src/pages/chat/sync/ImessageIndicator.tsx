@@ -7,6 +7,8 @@ export interface ImessageIndicatorProps {
   chatId: string;
   /** compact (the dock) drops the setup link text to a short word */
   compact?: boolean;
+  /** true when any message in this thread came over iMessage (so a private thread is not "web only") */
+  viaImessage?: boolean;
   now?: () => number;
 }
 
@@ -24,6 +26,7 @@ export function ImessageIndicator({
   status,
   chatId,
   compact,
+  viaImessage,
   now = Date.now,
 }: ImessageIndicatorProps) {
   const [, tick] = useState(0);
@@ -33,7 +36,7 @@ export function ImessageIndicator({
   }, []);
   const kind = chatId.startsWith('dm:') ? 'dm' : 'group';
   const squadId = chatId.startsWith('group:') ? chatId.slice(6) : undefined;
-  const ind = imessageIndicator(status, { kind, squadId }, now());
+  const ind = imessageIndicator(status, { kind, squadId, viaImessage }, now());
   return (
     <span
       className={`sqs-ind sqs-ind--${ind.state}`}

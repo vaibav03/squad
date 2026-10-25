@@ -35,9 +35,16 @@ const cardSig = (m: ChatMessage): unknown => {
   return undefined; // confirm cards carry state: never merged
 };
 
+/**
+ * Delivery identity: a dry-run send and a real send of the same text (or two iMessage handles, or web vs iMessage) are
+ * different events with their own time and status, never one collapsed row.
+ */
+const deliverySig = (m: ChatMessage): string =>
+  [m.transport ?? '', m.provider ?? '', m.externalId ?? '', m.deliveryState?.state ?? ''].join('~');
+
 const promptKey = (m: ChatMessage): string | undefined =>
   m.sender.kind === 'student' && !m.attachments.length
-    ? `${m.sender.id}|${norm(m.text)}`
+    ? `${m.sender.id}|${norm(m.text)}|${deliverySig(m)}`
     : undefined;
 
 const sig = (p: Pair): string | undefined => {
@@ -51,6 +58,7 @@ const sig = (p: Pair): string | undefined => {
       m.sender.kind === 'persona' ? m.sender.id : m.sender.kind,
       norm(m.text),
       cards[i],
+      deliverySig(m),
     ]),
   ]);
 };

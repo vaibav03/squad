@@ -20,6 +20,24 @@ const base: ImessageStatus = {
 const show = (status: ImessageStatus | null, chatId = 'group:sq1') =>
   render(<ImessageIndicator status={status} chatId={chatId} now={() => NOW} />);
 
+describe('ImessageIndicator on a private thread fed by iMessage', () => {
+  const dm = (status: ImessageStatus | null) =>
+    render(<ImessageIndicator status={status} chatId="dm:s_ana" viaImessage now={() => NOW} />);
+  it('is not "Web only": synced, dry run or demo link', () => {
+    dm(base);
+    expect(screen.getByTestId('chat-imessage-indicator').textContent).toContain('iMessage synced');
+    cleanup();
+    dm({ ...base, mode: 'dry_run', dryRun: true });
+    expect(screen.getByTestId('chat-imessage-indicator').textContent).toContain('dry run');
+    cleanup();
+    dm({ ...base, mode: 'fixture', fixture: true });
+    expect(screen.getByTestId('chat-imessage-indicator').textContent).toContain('iMessage (demo link)');
+    cleanup();
+    dm(null);
+    expect(screen.getByTestId('chat-imessage-indicator').textContent).not.toContain('Web only');
+  });
+});
+
 describe('ImessageIndicator states', () => {
   it.each([
     ['DM is web only', null, 'dm:s_ana', 'web_only', 'Web only'],

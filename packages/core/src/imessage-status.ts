@@ -94,14 +94,45 @@ export function agoWords(ts: number, now: number): string {
  */
 export function imessageIndicator(
   status: ImessageStatus | null | undefined,
-  thread: { kind: 'group' | 'dm'; squadId?: string | undefined },
+  thread: { kind: 'group' | 'dm'; squadId?: string | undefined; viaImessage?: boolean | undefined },
   now: number,
 ): ImessageIndicator {
+  // A private thread that has messages that came over iMessage is not "web only": say how it is synced.
+  if (thread.kind === 'dm' && thread.viaImessage) {
+    const dry = !!(status?.dryRun || status?.mode === 'dry_run' || status?.bridge?.state === 'dry_run');
+    if (dry)
+      return {
+        state: 'dry_run',
+        label: 'iMessage: dry run',
+        detail: 'Messages are parsed and routed but nothing is sent to Messages.',
+        setup: false,
+      };
+    if (status?.fixture || status?.mode === 'fixture' || status?.bridge?.demo || status?.bridge?.state === 'fixture')
+      return {
+        state: 'fixture',
+        label: 'iMessage (demo link)',
+        detail: 'A scripted demo link. Nothing here reaches a real phone.',
+        setup: false,
+      };
+    if (status?.transport === 'degraded' || status?.bridge?.state === 'degraded')
+      return {
+        state: 'degraded',
+        label: `iMessage: degraded${status?.degradedReason ? `: ${status.degradedReason}` : ''}`,
+        detail: 'This chat is linked to iMessage, but the bridge is having trouble.',
+        setup: false,
+      };
+    return {
+      state: 'connected',
+      label: 'iMessage synced',
+      detail: 'This private chat is linked to your iMessage 1:1 with Squad. Group chats are not affected.',
+      setup: false,
+    };
+  }
   if (thread.kind === 'dm')
     return {
       state: 'web_only',
       label: 'Web only',
-      detail: 'Private chats with Cubbie stay on the web and are never sent to iMessage.',
+      detail: 'Private chats with Squad stay on the web and are never sent to iMessage.',
       setup: false,
     };
   if (!status)
@@ -175,7 +206,7 @@ export function imessageIndicator(
     label: `${fixture ? `${FIXTURE_LABEL}: ` : 'iMessage: '}connected to ${sq?.name ?? 'this squad'}, ${when}, ${queued} queued`,
     detail: fixture
       ? 'A scripted transport is connected. Nothing here reaches a real phone.'
-      : 'Bot replies and @cubbie messages are mirrored to the bound iMessage group.',
+      : 'Bot replies and @squad messages are mirrored to the bound iMessage group.',
     setup: false,
   };
 }
