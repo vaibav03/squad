@@ -17,9 +17,11 @@ for (const id of STUDENTS) {
     await page.getByRole('button', { name: new RegExp(`as ${NAMES[id]}`) }).click();
     await page.waitForURL(/\/squad/);
     await expect(page.getByText(new RegExp(`Good (evening|morning|afternoon), ${NAMES[id]}`))).toBeVisible();
-    const session = JSON.parse((await page.evaluate(() => localStorage.getItem('squad.session'))) ?? '{}');
-    expect(session.live, 'session should come from the real hub dev-login, not mock').toBe(true);
-    const me = await (await api(session.token, '/v1/me')).json();
+    await expect(page.getByRole('button', { name: /Account menu for/ })).toBeVisible();
+    const cookies = await ctx.cookies();
+    note(`cookies after sign-in: ${cookies.map((c) => c.name).join(',') || 'none'}`);
+    // the hub knows this student: dev-login for the same id succeeds and /v1/me answers for its token
+    const me = await (await api(await apiLogin(id), '/v1/me')).json();
     expect(me.student.id).toBe(id);
     expect(errs).toEqual([]);
     await shot(page, J, `home-${id}`);

@@ -61,22 +61,13 @@ export async function actor(
     isMobile: !!opts.viewport && opts.viewport.width < 500,
     hasTouch: !!opts.viewport && opts.viewport.width < 500,
   });
-  const session = {
-    userId: id,
-    name: NAMES[id],
-    token,
-    avatarUrl: `/avatars/${WEB_ID(id)}.png`,
-    live: true,
-  };
-  await ctx.addInitScript((s) => {
-    try {
-      if (!localStorage.getItem('squad.session')) localStorage.setItem('squad.session', JSON.stringify(s));
-    } catch {
-      /* ignore */
-    }
-  }, session);
   const page = await ctx.newPage();
   const a: Actor = { id, ctx, page, token, bodies: [], assets: [], consoleErrors: [], pageErrors: [] };
+  // live hub: accounts layer; sign in through the real screen (dev-login -> adoptToken)
+  await page.goto('/signin');
+  await page.getByRole('radio', { name: new RegExp(`^${NAMES[id]}`) }).click();
+  await page.getByRole('button', { name: new RegExp(`as ${NAMES[id]}`) }).click();
+  await page.waitForURL(/\/squad/, { timeout: 20_000 });
   page.on('console', (m) => {
     if (m.type() === 'error') a.consoleErrors.push(m.text());
   });
