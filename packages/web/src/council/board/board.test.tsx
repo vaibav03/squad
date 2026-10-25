@@ -79,8 +79,9 @@ describe('Council board', () => {
   it('an empty store offers a labelled sample instead of a blank dialog', async () => {
     const store = createCouncilBoardStore();
     await open(store);
-    expect(screen.getByText('No council session yet')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Show a sample (Demo)' }));
+    expect(screen.getByText('No council has met yet')).toBeTruthy();
+    // no hub here: Convene plays the scripted sample, and the strip says so out loud
+    fireEvent.click(screen.getByRole('button', { name: 'Convene the council' }));
     await settle();
     expect(screen.getByTestId('cb-verdict')).toBeTruthy();
   });
@@ -230,11 +231,12 @@ describe('Council board', () => {
     });
     await settle();
     expect(within(v).getByRole('status').textContent).toBe('Added to the study plan.');
-    expect(calls.map((c) => c.url)).toEqual([
+    const acts = calls.filter((c) => c.url.includes('/actions/'));
+    expect(acts.map((c) => c.url)).toEqual([
       `http://hub.test/v1/council/${store.run()!.runId}/actions/chat`,
       `http://hub.test/v1/council/${store.run()!.runId}/actions/plan`,
     ]);
-    expect(JSON.parse(calls[1]!.body!)).toEqual({ actionId: first.id });
+    expect(JSON.parse(acts[1]!.body!)).toEqual({ actionId: first.id });
     // the old chat-phrase workaround is gone: nothing goes through /v1/chat/send
     expect(calls.some((c) => c.url.includes('/v1/chat/'))).toBe(false);
   });
