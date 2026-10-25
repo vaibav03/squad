@@ -4,7 +4,7 @@ Owner: workstream `web-shell` (branch `ws/web-shell`). Consumers: `web-live` (pa
 
 ## Packages and entry points
 - `@squad/web` (`packages/web`) exports from `src/index.ts`: `primitives`, `shell`, `routes`, hub client types. SSR-safe: no `window`/`document` at module top level.
-- `@squad/web/styles.css` is the single stylesheet (`src/styles/index.css`), which imports `docs/design/tokens.css` (copied at build to `src/styles/tokens.css`) and every primitive's CSS. Hosts import it once. Component CSS uses only token variables (`--sq-*`), never raw hex.
+- `@squad/web/styles.css` is the single stylesheet (`src/styles/index.css`): fonts (Inter Variable, Jersey 10, Silkscreen from assets/fonts), `docs/design/tokens.css` (imported by relative path, never copied), a small base layer, and every primitive's CSS (imported by its module). Hosts import it once. Component CSS uses only design tokens (`--card`, `--primary`, `--border`, `--space-*`, `--radius-*`, `--ease-*`, `--dur-*`, `--sq-*` palette); never raw hex. Pixel font only for labels per DESIGN.md section 6; UI sans for everything read. Pages that sit over the canvas wrap in `.sq-scene` (always night).
 - `apps/web-host` is a Vite + React app: `pnpm --filter @squad/web-host dev` (port 5180), `build`, `preview`.
 
 ## Primitives (`import { Button, ... } from '@squad/web'`)
@@ -101,4 +101,4 @@ The registry (`import.meta.glob('./*/meta.ts', { eager: true })` plus a lazy `./
 
 ## Stability notes
 - Names and props above are the contract. Additive changes only after this commit; breaking changes will be announced via SendMessage to main.
-- Draft: exact token names come from docs/design/tokens.css; consumers should not read raw tokens, use primitives.
+- Tokens are the real docs/design/tokens.css (shadcn-style names). Icons are Lucide (`lucide-react`), wrapped by `Icon` so names stay stable. Specs for each component follow DESIGN.md section 8 (8.12 toasts, 8.13 buttons and inputs, 8.14 empty/loading/error/offline).

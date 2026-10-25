@@ -1,13 +1,19 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
-  margin: 0; background: var(--sq-bg); color: var(--sq-text);
-  font-family: var(--sq-font-body); font-size: var(--sq-text-md); line-height: var(--sq-leading-body);
+  margin: 0; background: var(--background); color: var(--foreground);
+  font-family: var(--font-sans); font-size: var(--text-base); line-height: var(--lh-base);
+  letter-spacing: var(--tracking-ui); font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
 }
-:focus-visible { outline: 2px solid var(--sq-focus); outline-offset: 2px; }
-button { font: inherit; color: inherit; }
+h1, h2, h3, h4, p { margin: 0; }
+button, input, textarea, select { font: inherit; letter-spacing: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 img { max-width: 100%; display: block; }
+.sq-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* Calm mode: every transition and animation is reduced to opacity-only and short. Pages should also read useReducedMotion(). */
+:root[data-calm='true'] *, :root[data-calm='true'] *::before, :root[data-calm='true'] *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }
