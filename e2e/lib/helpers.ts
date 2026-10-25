@@ -73,6 +73,7 @@ export async function actor(
   };
   await ctx.addInitScript((s) => {
     try {
+      if (!localStorage.getItem('squad.token')) localStorage.setItem('squad.token', s.token);
       if (!localStorage.getItem('squad.session'))
         localStorage.setItem('squad.session', JSON.stringify(s));
     } catch {

@@ -15,6 +15,9 @@ Click any character in the village (the viewer's own character and every agent s
 
 In the village a hover shows an outline and name tag, the selected agent has a ring under its feet, `Follow` eases the camera to it (integer zoom, no fractional zoom), and while two agents exchange messages a soft violet link fades between their sprites (static in Calm mode).
 
+## Inside a room
+Every character in a room interior (council members and chair, debaters, the expert in a chapter house, landmark or booth) is a click target: hover shows a small name tag (no outline), click opens the inspector on the **Chat** tab with the room's whole conversation in order (speaker, time, kind, dissent flag, citation chips), the clicked character's lines marked, and a `Just <name>` switch. Tab or the arrow keys move between characters in the room, Enter opens, Esc closes (then Esc again leaves the room); Prev/Next in the popup stay inside the room. Clicking the floor does nothing; only the dark area around the room walks you out. Seats: `packages/village/src/scenes/roomSeats.ts`; words come from the room session (`council.*`, `call.caption`, `quiz.question` text), so a real council run shows the same text. Test: `e2e/specs/j17-room-inspector.spec.ts`.
+
 ## Walking is keyboard-only (mouse movement removed)
 Arrow keys or A/D walk, Enter enters, Esc leaves. A mouse click on the ground never moves the player, and nothing follows the mouse. Removed: click-to-walk, drag-to-walk, click-a-door-to-walk-and-enter (`packages/village/src/character/index.ts`). Touch devices keep tap-to-walk as before (there is no on-screen d-pad), so phones can still move. The HUD "Trip" door button still walks to the trip road (a button, not a pointer move).
 

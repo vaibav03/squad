@@ -85,3 +85,23 @@ describe('inspector store', () => {
     for (const id of s.ids()) assertNoLeak(s.view(id), undefined, id);
   });
 });
+
+describe('room selection', () => {
+  it('select with a room focus keeps it until another select or null', () => {
+    const s = store();
+    let n = 0;
+    s.subscribe(() => n++);
+    s.select('council:quizkey', { slot: 'council-hall', who: 'chair' });
+    expect(s.room).toEqual({ slot: 'council-hall', who: 'chair' });
+    s.select('council:quizkey', { slot: 'council-hall', who: 'solver-a' });
+    expect(s.room?.who).toBe('solver-a'); // same agent, other seat: still a change
+    expect(n).toBe(2);
+    s.select('council:quizkey', { slot: 'council-hall', who: 'solver-a' });
+    expect(n).toBe(2);
+    s.select('council:quizkey'); // from the village: no room
+    expect(s.room).toBeNull();
+    s.select('council:quizkey', { slot: 'council-hall', who: 'chair' });
+    s.select(null);
+    expect(s.room).toBeNull();
+  });
+});
