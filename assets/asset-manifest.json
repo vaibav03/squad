@@ -5667,15 +5667,7 @@
  },
  "verification": {
   "mismatches": [
-   "assets/pixel/composed/ui/notes.png: provenance frame [9, 8] x2 is wrong for a 17x9 PNG; real layout is 2 frames of 8x9 separated by a 1px gap (manifest uses frame 8x9, spacing 1)",
-   "characters/cast-chill/idle.png: 128x32 but expected 64x32 (2 frames)",
-   "characters/cast-chill/talk.png: 128x32 but expected 64x32 (2 frames)",
-   "characters/cast-grind/idle.png: 128x32 but expected 64x32 (2 frames)",
-   "characters/cast-grind/talk.png: 128x32 but expected 64x32 (2 frames)",
-   "characters/cast-advisor/idle.png: 128x32 but expected 64x32 (2 frames)",
-   "characters/cast-advisor/talk.png: 128x32 but expected 64x32 (2 frames)",
-   "characters/cast-chair/idle.png: 128x32 but expected 64x32 (2 frames)",
-   "characters/cast-chair/talk.png: 128x32 but expected 64x32 (2 frames)"
+   "assets/pixel/composed/ui/notes.png: provenance frame [9, 8] x2 is wrong for a 17x9 PNG; real layout is 2 frames of 8x9 separated by a 1px gap (manifest uses frame 8x9, spacing 1)"
   ],
   "missingFiles": [],
   "offPalette": [],

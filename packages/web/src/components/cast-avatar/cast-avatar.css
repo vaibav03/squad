@@ -1,0 +1,48 @@
+/* CastAvatar: 32x32 bust, 4 frames per row (idle / talk / think), 5 fps via steps(4).
+   Frame stepping moves background-position only; outline colours are the state tokens; nothing eases except the 1px hover nudge. */
+.ca {
+  --ca-s: 2;
+  --ca-row: 0;
+  flex: none;
+  display: inline-block;
+  box-sizing: content-box;
+  width: calc(32px * var(--ca-s));
+  height: calc(32px * var(--ca-s));
+  background-repeat: no-repeat;
+  background-size: calc(128px * var(--ca-s)) calc(96px * var(--ca-s));
+  background-position: 0 calc(-32px * var(--ca-s) * var(--ca-row));
+  image-rendering: pixelated;
+  image-rendering: pixelated;
+  animation: ca-frames 800ms steps(4) infinite;
+  --ca-line: var(--state-idle, #6fa3b8);
+}
+.ca[data-state='talk'] {
+  --ca-line: var(--state-studying, #ffc857);
+}
+.ca[data-state='think'] {
+  --ca-line: var(--sq-violet, #8f7bff);
+}
+.ca[data-outline='true'] {
+  outline: 2px solid var(--ca-line);
+  outline-offset: 1px;
+}
+@keyframes ca-frames {
+  from {
+    background-position-x: 0;
+  }
+  to {
+    background-position-x: calc(-128px * var(--ca-s));
+  }
+}
+/* Calm mode and reduced motion: static first frame, no loop. */
+.ca[data-calm='true'],
+:root[data-calm='true'] .ca {
+  animation: none;
+  background-position-x: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ca {
+    animation: none;
+    background-position-x: 0;
+  }
+}

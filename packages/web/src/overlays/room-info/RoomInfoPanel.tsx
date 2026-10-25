@@ -1,7 +1,8 @@
-import { useId, useRef, useState } from 'react';
+import { useId, useRef, useState, type CSSProperties } from 'react';
 import type { RoomInfo } from '@squad/village/rooms';
 import { OverlayFrame, LvIcon } from '../kit';
 import { SpeakerDot } from './RoomTranscript';
+import { CastAvatar, CAST_STATE_LABEL, castName } from '../../components/cast-avatar';
 import './room-info.css';
 
 export interface RoomInfoPanelProps {
@@ -12,6 +13,8 @@ export interface RoomInfoPanelProps {
   onRun?: (phrase: string) => void;
   returnFocusTo?: HTMLElement | null;
   calm?: boolean;
+  /** Who is speaking right now in the live room ('chill', 'Grind', 'chair'...); that member's avatar plays its talking loop. */
+  speaking?: string | null;
 }
 
 /** Copy to the clipboard; falls back to a hidden textarea. Never throws. Resolves true on success. */
@@ -41,7 +44,8 @@ export async function copyText(text: string): Promise<boolean> {
 }
 
 export function RoomInfoPanel(props: RoomInfoPanelProps) {
-  const { info, open, onClose, onRun, returnFocusTo, calm } = props;
+  const { info, open, onClose, onRun, returnFocusTo, calm, speaking } = props;
+  const speakingId = speaking ? castName(speaking) : undefined;
   const titleId = useId();
   const [copied, setCopied] = useState<'idle' | 'ok' | 'fail'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -86,14 +90,30 @@ export function RoomInfoPanel(props: RoomInfoPanelProps) {
         <section className="rr-sec">
           <h3 className="rr-sec__h">Who is in here and what they do for you</h3>
           <ul className="rr-who">
-            {info.who.map((w) => (
-              <li key={w.name} className="rr-who__row">
-                <SpeakerDot who={w.name} />
-                <span>
-                  <strong>{w.name}</strong> <span className="rr-dim">{w.does}</span>
-                </span>
-              </li>
-            ))}
+            {info.who.map((w, i) => {
+              const id = castName(w.name);
+              const state = id && id === speakingId ? 'talk' : 'idle';
+              return (
+                <li
+                  key={w.name}
+                  className="rr-who__row"
+                  data-cast={id}
+                  data-calm={calm ? 'true' : undefined}
+                  style={{ '--i': i } as CSSProperties}
+                >
+                  {id ? (
+                    <CastAvatar name={id} state={state} size={2} calm={calm} className="rr-who__avatar" />
+                  ) : (
+                    <SpeakerDot who={w.name} />
+                  )}
+                  <span>
+                    <strong>{w.name}</strong>
+                    {id ? <span className="rr-who__state">{CAST_STATE_LABEL[state]}</span> : null}{' '}
+                    <span className="rr-dim">{w.does}</span>
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </section>
 

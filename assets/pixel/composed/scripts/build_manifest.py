@@ -557,7 +557,7 @@ for lid, lay in BG['layers'].items():
     w, h = dims(C(f'backgrounds/{lay["file"]}'))
     if list(lay['size']) != [w, h]:
         VERIFY['mismatches'].append(f'backgrounds/{lay["file"]}: provenance size {lay["size"]} != PNG {[w, h]}')
-CH_CAST = PROV.get('council_cast_animations', {})
+CH_CAST = CH.get('council_cast_animations', {})
 for pid in CH['characters']:
     for a, spec in ({**ANIMS, **CH_CAST} if pid.startswith('cast-') else ANIMS).items():
         w, h = dims(C(f'characters/{pid}/{a}.png'))

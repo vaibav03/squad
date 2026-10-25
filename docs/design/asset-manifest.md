@@ -681,16 +681,8 @@ for (const [persona, anims] of Object.entries(atlas.animations)) {
 
 Computed from PNGs with PIL; provenance was cross-checked, not trusted.
 
-- mismatches: **9**
+- mismatches: **1**
   - assets/pixel/composed/ui/notes.png: provenance frame [9, 8] x2 is wrong for a 17x9 PNG; real layout is 2 frames of 8x9 separated by a 1px gap (manifest uses frame 8x9, spacing 1)
-  - characters/cast-chill/idle.png: 128x32 but expected 64x32 (2 frames)
-  - characters/cast-chill/talk.png: 128x32 but expected 64x32 (2 frames)
-  - characters/cast-grind/idle.png: 128x32 but expected 64x32 (2 frames)
-  - characters/cast-grind/talk.png: 128x32 but expected 64x32 (2 frames)
-  - characters/cast-advisor/idle.png: 128x32 but expected 64x32 (2 frames)
-  - characters/cast-advisor/talk.png: 128x32 but expected 64x32 (2 frames)
-  - characters/cast-chair/idle.png: 128x32 but expected 64x32 (2 frames)
-  - characters/cast-chair/talk.png: 128x32 but expected 64x32 (2 frames)
 - missing files: **0**
 - off-palette PNGs: **0**
 - note: atlas.json: 227 frames = 11 personas x (12 animation frames + 1 portrait); 212 animation frame refs, all inside the 672x480 atlas.
