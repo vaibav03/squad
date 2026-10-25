@@ -18,6 +18,7 @@ import {
   sendblueConfigFromEnv,
   type ImessageProvider,
 } from './sendblue/config';
+import { DemoTransport, ensureDemoLink, type DemoHandle } from './demo';
 import { createMediaSigner } from './sendblue/media';
 import { createSendblueRuntime } from './sendblue/runtime';
 import { createSendblueSdk, GROUP_PREFIX } from './sendblue/sdk';
@@ -38,6 +39,8 @@ export interface AttachIMessageOptions {
   config?: IMessageConfig;
   /** sendblue | local | fake | off. Default: IMESSAGE_PROVIDER, else local when IMESSAGE_ENABLED=1, else off. */
   provider?: ImessageProvider;
+  /** Demo bridge: bind the fixture group to this squad (default: the first seeded squad). */
+  fixtureSquadId?: string;
   /** Tests: the fetch the Sendblue client and media download use (default: the global fetch). */
   fetch?: (url: string, init?: RequestInit) => Promise<Response>;
   now?: () => number;
@@ -100,9 +103,7 @@ export async function attachIMessage(
     // fixture transport (also IMESSAGE_FIXTURE=1): nothing real is ever read or sent. Without an allowlist
     // the fixture needs none; with one (IMESSAGE_ALLOWED_CHATS naming FIXTURE_CHAT) it is honoured.
     fixture = !o.sdk;
-    sdk ??= new FakeIMessageTransport([
-      { chatId: FIXTURE_CHAT, name: 'Fixture group', kind: 'group' },
-    ]);
+    sdk ??= new DemoTransport([{ chatId: FIXTURE_CHAT, name: 'Fixture group', kind: 'group' }]);
     if (!o.config && config.allowedChats.length + config.allowedHandles.length === 0)
       config = { ...config, enabled: true, dryRun: false, allowAll: true };
   }
@@ -167,8 +168,24 @@ export async function attachIMessage(
   });
   if (fixture) {
     const squad = env.IMESSAGE_FIXTURE_SQUAD ?? deps.directory.students()[0]?.id;
-    const squadId = env.IMESSAGE_FIXTURE_SQUAD ?? (squad ? deps.directory.squadOf(squad) : undefined);
-    if (squadId && !deps.imessage.binding(FIXTURE_CHAT)) deps.imessage.bind(FIXTURE_CHAT, squadId, 'fixture');
+    const squadId =
+      o.fixtureSquadId ??
+      env.IMESSAGE_FIXTURE_SQUAD ??
+      (squad ? deps.directory.squadOf(squad) : undefined);
+    if (squadId && !deps.imessage.binding(FIXTURE_CHAT))
+      deps.imessage.bind(FIXTURE_CHAT, squadId, 'fixture');
+    if (sdk instanceof DemoTransport) {
+      const demo = sdk;
+      const handle: DemoHandle = {
+        async emit(userId, text) {
+          const phone = ensureDemoLink(deps, userId);
+          if (!phone) return false;
+          await demo.group(FIXTURE_CHAT, phone, text);
+          return true;
+        },
+      };
+      deps.imessageInfo = { ...deps.imessageInfo!, demo: handle };
+    }
   }
   deps.imessageSync = bridge.sync;
   await gateway.start((m) => bridge.handleInbound(m));
@@ -191,6 +208,7 @@ export async function attachIMessage(
       deps.imessageSync = undefined;
       deps.sendblue = undefined;
       deps.imessageInfo = undefined;
+      if (fixture) deps.imessage.unbind(FIXTURE_CHAT);
       await gateway.stop();
     },
   };

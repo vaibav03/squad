@@ -17,6 +17,9 @@ export function ConfirmSheet(props: ConfirmSheetProps) {
     details,
     phase = 'idle',
     message,
+    closed,
+    onAskAgain,
+    askAgainPhase = 'idle',
     onChoose,
   } = props;
   const titleId = useId();
@@ -47,7 +50,7 @@ export function ConfirmSheet(props: ConfirmSheetProps) {
     >
       <span className="lv-grip" aria-hidden="true" />
       <div className="lv-confirm__body">
-        <p className="lv-eyebrow">Waiting for your yes</p>
+        <p className="lv-eyebrow">{closed ? 'Closed' : 'Waiting for your yes'}</p>
         <h2 id={titleId} ref={heading} tabIndex={-1} className="lv-confirm__q">
           {question}
         </h2>
@@ -78,7 +81,31 @@ export function ConfirmSheet(props: ConfirmSheetProps) {
           </p>
         )}
 
-        {done ? (
+        {closed ? (
+          <div className="lv-confirm__done" role="status" data-testid="confirm-closed">
+            <span>
+              {closed.state === 'expired'
+                ? 'This question expired.'
+                : `Already answered.${closed.answer ? ` You chose: ${closed.answer}` : ''}`}
+            </span>
+            {closed.state === 'expired' && onAskAgain && askAgainPhase === 'done' ? (
+              <span>Asked again. A new question is on its way.</span>
+            ) : closed.state === 'expired' && onAskAgain ? (
+              <button
+                type="button"
+                className="lv-btn lv-btn--primary"
+                disabled={askAgainPhase === 'busy'}
+                aria-busy={askAgainPhase === 'busy' || undefined}
+                onClick={onAskAgain}
+              >
+                Ask again
+              </button>
+            ) : null}
+            <button type="button" className="lv-btn lv-btn--ghost" onClick={onClose}>
+              Close
+            </button>
+          </div>
+        ) : done ? (
           <div className="lv-confirm__done" role="status">
             <svg
               width="20"

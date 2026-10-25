@@ -352,6 +352,71 @@ describe('confirm and quiz cards', () => {
     );
   });
 
+  it('an expired confirm says so (404 expired, buttons-worthy state), keeps viewer scoping, and an answered one is 409 with its answer', async () => {
+    const p = engine.bot.ctx.askConfirm(
+      's_dev',
+      'Debate: should labs be graded?\nWhich side argued better?',
+      ['For: graded', 'Against: graded'],
+      'task_expiry_1',
+    );
+    await waitMsg(
+      streams.s_dev!,
+      (m) => m.card?.type === 'confirm' && m.card.taskId === 'task_expiry_1',
+    );
+    const card = msgs(streams.s_dev!).find(
+      (m) => m.card?.type === 'confirm' && m.card.taskId === 'task_expiry_1',
+    )!;
+    // the card carries its own expiry
+    expect(card.card).toMatchObject({ type: 'confirm', status: 'pending' });
+    expect((card.card as { expiresAt?: number }).expiresAt).toBeGreaterThan(Date.now());
+    const open = await get<{ expiresAt?: number }>(url, '/v1/confirms/task_expiry_1', tok.s_dev);
+    expect(open.status).toBe(200);
+    expect(open.body.expiresAt).toBeGreaterThan(Date.now());
+    // the bot times it out (what the TTL timer does)
+    expect(engine.bot.confirms.cancel('s_dev', 'task_expiry_1')).toBe(true);
+    expect(await p).toBe('timeout');
+    const g = await get<{ error: { code: string } }>(url, '/v1/confirms/task_expiry_1', tok.s_dev);
+    expect(g.status).toBe(404);
+    expect(g.body.error.code).toBe('expired');
+    const r = await post(url, '/v1/confirms/task_expiry_1', { yes: true }, tok.s_dev);
+    expect(r.status).toBe(404);
+    expect((r.body as { error: { code: string } }).error.code).toBe('expired');
+    // another student learns nothing about it
+    const other = await get<{ error: { code: string } }>(
+      url,
+      '/v1/confirms/task_expiry_1',
+      tok.s_ben,
+    );
+    expect(other.status).toBe(404);
+    expect(other.body.error.code).toBe('unknown_task');
+
+    const options = ['For: lab', 'Against: lab'];
+    const p2 = engine.bot.ctx.askConfirm(
+      's_dev',
+      'Which side argued better?',
+      options,
+      'task_expiry_2',
+    );
+    await waitMsg(
+      streams.s_dev!,
+      (m) => m.card?.type === 'confirm' && m.card.taskId === 'task_expiry_2',
+    );
+    expect(
+      (
+        await post(
+          url,
+          '/v1/confirms/task_expiry_2',
+          { yes: true, optionId: options[1] },
+          tok.s_dev,
+        )
+      ).status,
+    ).toBe(200);
+    expect(await p2).toBe(options[1]);
+    const done = await get<{ answer?: string }>(url, '/v1/confirms/task_expiry_2', tok.s_dev);
+    expect(done.status).toBe(409);
+    expect(done.body.answer).toBe(options[1]);
+  });
+
   it('a quiz question is a card in the group; feedback comes privately', async () => {
     await send('s_chi', GROUP, '@cubbie quiz me on chapter 6');
     await waitMsg(streams.s_dev!, (m) => m.card?.type === 'quiz', 12_000);

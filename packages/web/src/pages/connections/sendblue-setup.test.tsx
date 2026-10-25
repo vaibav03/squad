@@ -47,6 +47,24 @@ describe('Sendblue setup in the iMessage card', () => {
     expect(screen.queryByTestId('connections-sendblue-missing')).toBeNull();
     expect(screen.queryByTestId('connections-sendblue-tunnel')).toBeNull();
   });
+  it('shows kill switch, dry run and allowlist status', () => {
+    render(
+      <ImessageCardView
+        status={{ enabled: false }}
+        now={0}
+        sendblue={info({
+          safety: {
+            dryRun: true,
+            killSwitch: false,
+            allowlist: { chats: 0, handles: 0, allowAll: false },
+          },
+        })}
+      />,
+    );
+    expect(screen.getByTestId('sb-kill-switch').textContent).toContain('off');
+    expect(screen.getByTestId('sb-dry-run').textContent).toContain('ON');
+    expect(screen.getByTestId('sb-allowlist').textContent).toContain('nothing is sent');
+  });
   it('an older hub (no setup info) renders exactly the old card', () => {
     render(<ImessageCardView status={{ enabled: false }} now={0} />);
     expect(screen.queryByTestId('connections-sendblue')).toBeNull();

@@ -169,3 +169,68 @@ async function realSmoke(_c: GateCtx, a: Asserts) {
   a.ok('Sendblue accepted exactly one message and returned a handle', !!res.handle);
   a.note('REAL SEND: one message to GATE_SENDBLUE_TEST_NUMBER (your own allowlisted number).');
 }
+
+// ---------- S4d: the Demo/Fixture bridge (no Sendblue credentials, nothing real sent) ----------
+import { createHub } from '../../../apps/hub/src/app';
+import { attachChatEngine } from '../../../apps/hub/src/chat/engine';
+
+async function s4d(_c: GateCtx, a: Asserts) {
+  const calls: string[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (u: unknown) => {
+    calls.push(String(u));
+    throw new Error('the demo bridge must not use the network');
+  }) as typeof fetch;
+  const hub = createHub({
+    config: { dbPath: ':memory:', seed: true, sim: false, logLevel: 'silent', production: false, webUrl: 'https://squad.gate' },
+  });
+  const engine = await attachChatEngine(hub, { real: null, env: { HUB_SCHEDULER: '1' }, envFile: false, noProbe: true });
+  try {
+    const req = async (method: string, path: string, token?: string, body?: unknown) => {
+      const r = await hub.app.request(path, {
+        method,
+        headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+      });
+      return { status: r.status, json: (await r.json().catch(() => ({}))) as any };
+    };
+    const s = await req('POST', '/v1/auth/start', undefined, { name: 'Dee', phone: '+15550300001' });
+    const v = await req('POST', '/v1/auth/verify', undefined, { challengeId: s.json.challengeId, code: s.json.devCode });
+    const tok = v.json.token as string;
+    const sq = await req('POST', '/v1/squads', tok, { name: 'Demo Gate' });
+    const gid = `group:${sq.json.squad.id}`;
+    const hist = () => hub.deps.chat.store.history(gid, { limit: 100 }).messages;
+    a.eq('the demo bridge is off by default', (await req('GET', '/v1/imessage/demo', tok)).json.on, false);
+    a.eq('...and a demo inbound is refused while off', (await req('POST', '/v1/imessage/demo/inbound', tok, { text: 'x' })).status, 409);
+    a.eq('switch on', (await req('POST', '/v1/imessage/demo', tok, { enabled: true })).json.on, true);
+    const bridge = (await req('GET', '/v1/imessage/status', tok)).json.bridge;
+    a.ok('status says Demo/Fixture, not live', bridge.demo === true && bridge.label === 'Fixture transport (no real iMessage)');
+    await req('POST', '/v1/imessage/demo/inbound', tok, { text: '@cubbie what is a z-score?' });
+    const inbound = hist().find((m) => m.sender.kind === 'student' && m.text.includes('z-score'));
+    a.ok('the inbound appears once in the same group thread, labelled demo', !!inbound && inbound.provider === 'fixture' && inbound.transport === 'imessage' && hist().filter((m) => m.text.includes('z-score') && m.sender.kind === 'student').length === 1);
+    const bot = await wait(() => hist().find((m) => m.sender.kind === 'persona'));
+    a.ok('@cubbie answered in the same thread (same chat path as web)', !!bot);
+    const read = await wait(() => hub.deps.chat.store.get(bot!.id)?.deliveryState?.state === 'read', 15_000);
+    a.ok('the mirrored answer walked sent, delivered, read', !!read);
+    const h = await req('GET', '/v1/connections/health', tok);
+    const by = Object.fromEntries((h.json.checks as any[]).map((x) => [x.id, x]));
+    a.ok('Integration Health shows a demo pass distinct from real Sendblue', by.imessage_demo_bridge?.status === 'pass' && by.imessage_demo_bridge?.mode === 'demo' && by.sendblue_outbound?.status === 'blocked');
+    a.eq('nothing touched the network', calls.length, 0);
+    (hub.deps.config as { production: boolean }).production = true;
+    a.eq('not available in a production config', (await req('POST', '/v1/imessage/demo', tok, { enabled: true })).status, 403);
+    (hub.deps.config as { production: boolean }).production = false;
+  } finally {
+    await hub.deps.imessageInfo?.gateway.stop();
+    await engine.stop();
+    await hub.close();
+    globalThis.fetch = realFetch;
+  }
+}
+export const S4d: StepDef<GateCtx> = {
+  id: 'S4d',
+  title: 'Demo bridge: inbound, same web group, @cubbie, mirrored out, delivery states (no credentials, no send)',
+  needs: [P.sendblue, P.imsync],
+  realNeeds: ['sendblue'],
+  label: 'DEMO/FIXTURE (scripted transport; not the real Sendblue, nothing is sent)',
+  fixture: s4d,
+};

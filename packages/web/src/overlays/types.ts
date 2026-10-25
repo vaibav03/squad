@@ -129,6 +129,12 @@ export interface ConfirmSheetProps extends OverlayBaseProps {
   details?: { label: string; value: string; tone?: 'shared' | 'private' }[];
   phase?: ConfirmPhase;
   message?: string;
+  /** The question can no longer be answered: no option buttons, a state line, and (expired) "Ask again". */
+  closed?: { state: 'expired' | 'answered'; answer?: string };
+  /** Present when the original question is known; shown as the "Ask again" button on an expired question. */
+  onAskAgain?: () => void;
+  /** 'busy' while re-sending, 'done' once the new question is on its way. */
+  askAgainPhase?: 'idle' | 'busy' | 'done';
   /** Resolves the confirm. Receives the chosen option string and its index. */
   onChoose: (option: string, index: number) => void;
 }

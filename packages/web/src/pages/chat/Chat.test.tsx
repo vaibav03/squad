@@ -554,7 +554,7 @@ describe('cards', () => {
         },
       }),
     );
-    expect(await screen.findByText('You chose: Not now')).toBeTruthy();
+    expect(await screen.findByText(/You chose: Not now/)).toBeTruthy();
     act(() =>
       api.pushUpdate({
         chatId: DM_ID,
@@ -568,7 +568,7 @@ describe('cards', () => {
         },
       }),
     );
-    expect(await screen.findByText(/timed out/)).toBeTruthy();
+    expect(await screen.findByText('This question expired.')).toBeTruthy();
   });
 });
 
@@ -685,7 +685,7 @@ describe('review fixes', () => {
     const { api } = setup(DM_ID);
     api.failNextSend(409, 'stale_confirm');
     fireEvent.click(await screen.findByTestId('chat-confirm-option-1'));
-    expect(await screen.findByText('That question is no longer open.')).toBeTruthy();
+    expect(await screen.findByText('This question expired.')).toBeTruthy();
     expect(api.sent[0]).toMatchObject({ text: '1', confirmTaskId: 'task_study_block' });
     // our answer is not left behind as a failed message
     expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();

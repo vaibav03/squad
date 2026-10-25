@@ -38,7 +38,10 @@ export interface ChatApi {
   send(body: ChatSendInput): Promise<ChatMessage>;
   upload(file: File): Promise<ChatAttachment>;
   /** A hub-verified context ref for "Ask Cubbie" (`groupView` is what a group chat may show). Rejects when unreadable. */
-  contextRef?(sourceId: string, anchor?: string): Promise<{ ref: ChatContextRef; groupView: ChatContextRef }>;
+  contextRef?(
+    sourceId: string,
+    anchor?: string,
+  ): Promise<{ ref: ChatContextRef; groupView: ChatContextRef }>;
   /** `context` is the answer text: the hub opens the page at the sentence that best matches it. */
   citation(file: string, page: number, context?: string): Promise<ChatCitationExcerpt>;
   /** Absolute URL an <img>/<audio> can load for an attachment. */

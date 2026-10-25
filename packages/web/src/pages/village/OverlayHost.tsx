@@ -15,11 +15,13 @@ import { openHubCall, openStubCall, type CallSession } from './call-session';
 import {
   answerQuiz,
   fetchQuiz,
+  askAgain,
   previewConfirm,
   resolveConfirm,
   userMessage,
   type ConfirmTarget,
   confirmErrorMessage,
+  HubError,
   type HubCtx,
 } from './hub';
 
@@ -353,6 +355,7 @@ function ConfirmController(
   const [phase, setPhase] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState<string>();
   const [target, setTarget] = useState<ConfirmTarget>();
+  const [askPhase, setAskPhase] = useState<'idle' | 'busy' | 'done'>('idle');
   const closer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(closer.current), []);
 
@@ -372,6 +375,31 @@ function ConfirmController(
     };
   }, [mode, hub, ev.taskId]);
 
+  // The question's own expiry: when it passes, the buttons go away even if no event arrives.
+  useEffect(() => {
+    const at = target?.expiresAt;
+    if (!at || target?.closed) return;
+    const t = setTimeout(
+      () => setTarget((x) => (x && !x.closed ? { ...x, closed: 'expired' } : x)),
+      Math.min(Math.max(at - Date.now(), 0) + 50, 2_147_000_000),
+    );
+    return () => clearTimeout(t);
+  }, [target?.expiresAt, target?.closed]);
+
+  const reask = async () => {
+    if (!hub || !target?.reask || askPhase !== 'idle') return;
+    setAskPhase('busy');
+    try {
+      await askAgain(hub, target.reask);
+      setAskPhase('done');
+      // the new confirm.pending opens its own sheet; this closed one steps aside
+      closer.current = setTimeout(onDone, 1200);
+    } catch (e) {
+      setMessage(confirmErrorMessage(e));
+      setAskPhase('idle');
+    }
+  };
+
   const choose = async (o: string, i: number) => {
     setPhase('submitting');
     try {
@@ -384,6 +412,17 @@ function ConfirmController(
       setPhase('done');
       closer.current = setTimeout(onDone, 700);
     } catch (e) {
+      // the hub is the authority: 404 = expired, 409 = already answered. Buttons go away; nothing is implied sent.
+      if (e instanceof HubError && e.status === 404) {
+        setTarget((x) => ({ ...(x ?? { taskId: ev.taskId }), closed: 'expired' }));
+        setPhase('idle');
+        return;
+      }
+      if (e instanceof HubError && e.status === 409) {
+        setTarget((x) => ({ ...(x ?? { taskId: ev.taskId }), closed: 'answered' }));
+        setPhase('idle');
+        return;
+      }
       setMessage(confirmErrorMessage(e));
       setPhase('error');
     }
@@ -409,6 +448,16 @@ function ConfirmController(
       }
       phase={phase}
       message={message}
+      {...(target?.closed
+        ? {
+            closed: {
+              state: target.closed,
+              ...(target.answer ? { answer: target.answer } : {}),
+            },
+          }
+        : {})}
+      {...(target?.reask && hub ? { onAskAgain: () => void reask() } : {})}
+      askAgainPhase={askPhase}
       onChoose={(o, i) => void choose(o, i)}
     />
   );

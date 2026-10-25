@@ -51,6 +51,10 @@ export const ChatCardSchema = z.discriminatedUnion('type', [
     options: z.array(z.string()).min(1).max(9),
     status: z.enum(['pending', 'answered', 'timeout']),
     answer: z.string().optional(),
+    /** Epoch ms after which the bot no longer accepts an answer (the card is then `timeout`). */
+    expiresAt: z.number().int().positive().optional(),
+    /** The student's own message that started this question; "Ask again" re-sends `text` to `chatId` (fresh clientId). */
+    reask: z.strictObject({ chatId: z.string(), text: z.string().max(4000) }).optional(),
   }),
   z.strictObject({
     type: z.literal('quiz'),

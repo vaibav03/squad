@@ -65,7 +65,27 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
   // registered kind). Unknown tasks fail closed with 404; handlers without wiring answer 422.
   r.get('/v1/confirms/:taskId', need, (c) => {
     const p = deps.confirms.preview(c.get('viewer'), c.req.param('taskId'));
-    return p ? c.json(p) : c.json(err('unknown_task'), 404);
+    if (p) return c.json(p);
+    // Visible to the viewer but closed: say why (404 expired / 409 already answered), never a generic unknown.
+    const closed = deps.confirms.closed(c.get('viewer'), c.req.param('taskId'));
+    if (closed?.state === 'expired')
+      return c.json(
+        { ...err('expired', 'This question expired.'), ...(closed.reask ? { reask: closed.reask } : {}) },
+        404,
+      );
+    if (closed?.state === 'answered')
+      return c.json(
+        { ...err('already_answered', 'Already answered.'), answer: closed.answer ?? null },
+        409,
+      );
+    return c.json(err('unknown_task'), 404);
+  });
+  // DEV/DEMO ONLY (like /v1/dev/reset-onboarding): times out the caller's own open confirms so E2E can exercise expiry
+  // without waiting out the TTL. Goes through the bot's real timeout path (card -> timeout, chat.update, confirm.done).
+  r.post('/v1/dev/expire-confirms', need, (c) => {
+    if (deps.config.production || !deps.config.devLogin)
+      return c.json({ error: { code: 'not_found' } }, 404);
+    return c.json({ expired: deps.confirms.expireAll(c.get('viewer')) });
   });
   r.post('/v1/confirms/:taskId', need, async (c) => {
     const body = ConfirmGeneric.safeParse(await c.req.json().catch(() => null));
@@ -77,6 +97,7 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
     if (out.ok) return c.json({ ok: true, ...(out.status ? { status: out.status } : {}) });
     const status = {
       unknown_task: 404,
+      expired: 404,
       unsupported_kind: 422,
       invalid_request: 400,
       upstream_failed: 502,

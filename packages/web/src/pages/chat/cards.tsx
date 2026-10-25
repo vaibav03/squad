@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ChatCard, ChatMessage } from '@squad/core';
 import { Icon } from '../../primitives/Icon';
 import type { ConfirmResult } from './useChat';
@@ -146,18 +146,41 @@ export function QuizMessageCard({
 export function ConfirmMessageCard({
   card,
   onChoose,
+  onReask,
   disabled,
 }: {
   card: Confirm;
   /** send the 1-based option number (with the task id) to the DM */
   onChoose: (n: number) => Promise<ConfirmResult>;
+  /** re-send the original question so the bot creates a NEW confirm (the old card stays closed) */
+  onReask?: () => Promise<boolean>;
   disabled?: boolean;
 }) {
   const [busy, setBusy] = useState<number | null>(null);
   const [sent, setSent] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
   const [stale, setStale] = useState(false);
-  const pending = card.status === 'pending' && !stale;
+  const [reasked, setReasked] = useState<'idle' | 'busy' | 'done' | 'failed'>('idle');
+  // the card's own expiry: a missed chat.update must not leave live-looking buttons
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (card.status !== 'pending' || !card.expiresAt) return;
+    const ms = card.expiresAt - Date.now();
+    if (ms <= 0) {
+      setNow(Date.now());
+      return;
+    }
+    const t = setTimeout(() => setNow(Date.now()), Math.min(ms + 50, 2_147_000_000));
+    return () => clearTimeout(t);
+  }, [card.status, card.expiresAt]);
+  const lapsed = card.status === 'pending' && card.expiresAt !== undefined && now >= card.expiresAt;
+  const expired = card.status === 'timeout' || stale || lapsed;
+  const pending = card.status === 'pending' && !expired;
+  const askAgain = async () => {
+    if (!onReask || reasked === 'busy' || reasked === 'done') return;
+    setReasked('busy');
+    setReasked((await onReask()) ? 'done' : 'failed');
+  };
 
   const choose = async (n: number) => {
     if (!pending || busy !== null || sent !== null || disabled) return;
@@ -180,11 +203,11 @@ export function ConfirmMessageCard({
       <header className="sqc-card__head">
         <span className="sqc-tag sqc-tag--warm">Your yes</span>
         <span className="sqc-card__eyebrow">
-          {card.status === 'pending'
+          {pending
             ? 'Waiting for your answer'
             : card.status === 'answered'
               ? 'Answered'
-              : 'Timed out'}
+              : 'Expired'}
         </span>
       </header>
       <p className="sqc-card__q">{card.question}</p>
@@ -218,12 +241,7 @@ export function ConfirmMessageCard({
           That did not go through. Try again.
         </p>
       ) : null}
-      {stale ? (
-        <p className="sqc-card__note is-warn" role="status">
-          <Icon name="alert" size={14} />
-          That question is no longer open.
-        </p>
-      ) : null}
+
       {pending && (busy !== null || sent !== null) ? (
         <p className="sqc-card__note" role="status">
           <Icon name="check" size={14} />
@@ -233,14 +251,41 @@ export function ConfirmMessageCard({
       {card.status === 'answered' ? (
         <p className="sqc-card__note" role="status">
           <Icon name="check" size={14} />
-          You chose: {card.answer ?? 'an option'}
+          Already answered. You chose: {card.answer ?? 'an option'}
         </p>
       ) : null}
-      {card.status === 'timeout' ? (
-        <p className="sqc-card__note is-warn" role="status">
-          <Icon name="alert" size={14} />
-          This question timed out and nothing was booked. Ask Cubbie again if you still want it.
-        </p>
+      {expired && card.status !== 'answered' ? (
+        <>
+          <p className="sqc-card__note is-warn" role="status" data-testid="chat-confirm-state">
+            <Icon name="alert" size={14} />
+            This question expired.
+          </p>
+          {onReask && card.reask ? (
+            reasked === 'done' ? (
+              <p className="sqc-card__note" role="status">
+                <Icon name="check" size={14} />
+                Asked again. A new question will show up.
+              </p>
+            ) : (
+              <button
+                type="button"
+                className="sqc-choice is-primary"
+                data-testid="chat-confirm-ask-again"
+                disabled={reasked === 'busy' || disabled}
+                aria-busy={reasked === 'busy' || undefined}
+                onClick={() => void askAgain()}
+              >
+                <span className="sqc-choice__text">Ask again</span>
+              </button>
+            )
+          ) : null}
+          {reasked === 'failed' ? (
+            <p className="sqc-card__note is-error" role="alert">
+              <Icon name="alert" size={14} />
+              Could not ask again. Try again.
+            </p>
+          ) : null}
+        </>
       ) : null}
     </section>
   );
