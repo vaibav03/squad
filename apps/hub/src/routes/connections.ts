@@ -16,6 +16,7 @@ import {
 } from '@squad/brain';
 import { requireUser } from '../auth';
 import { TokenKeyError } from '../context/tokens';
+import { mergeContextBusy, purgeContextBusy } from '../context/busy';
 import { contextServiceFor, type ContextService } from '../context/service';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 
@@ -245,6 +246,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
         res.code,
         res.message,
       );
+    mergeContextBusy(deps, c.get('user').id);
     deps.log.info('context.connected', {
       connectionId: res.connection.id,
       provider: res.connection.provider,
@@ -279,6 +281,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     if (conn.status === 'expired')
       return err(c, 409, 'connection_expired', 'Credential expired. Reconnect to resume syncing.');
     const sync = await svc.sync(c.get('user').id, conn.id);
+    mergeContextBusy(deps, c.get('user').id);
     return c.json({ connection: view(svc, svc.store.connection(conn.id)!), sync });
   });
 
@@ -318,6 +321,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
       svc.store.deleteConnection(conn.id);
       return c.json({ removed: true });
     }
+    purgeContextBusy(deps, c.get('user').id, conn.id);
     const out = await svc.disconnect(c.get('user').id, conn.id);
     return c.json({ status: 'revoked', purged: out?.purged ?? { sources: 0, chunks: 0 } });
   });
@@ -447,6 +451,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
       return err(c, 404, 'not_found');
     if (!p.success) return err(c, 422, 'invalid_request');
     const out = await svc.syncCanvasPayload(c.get('user').id, conn.id, p.data);
+    mergeContextBusy(deps, c.get('user').id);
     if ('error' in out) {
       if (out.error === 'canvas_session_mismatch')
         return err(c, 409, 'canvas_session_mismatch', 'Payload does not match this Canvas account');
@@ -571,6 +576,7 @@ export function createConnectionRoutes(deps: HubDeps): HubApp {
     });
     if ('error' in out)
       return err(c, 400, 'oauth_state_invalid', 'OAuth state is invalid or expired');
+    mergeContextBusy(deps, out.userId);
     return c.redirect(out.redirect);
   });
 

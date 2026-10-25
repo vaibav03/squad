@@ -83,7 +83,7 @@ export interface ContextService {
     state: string;
     code?: string | undefined;
     error?: string | undefined;
-  }): Promise<{ redirect: string } | { error: 'oauth_state_invalid' }>;
+  }): Promise<{ redirect: string; userId: string } | { error: 'oauth_state_invalid' }>;
   connect(userId: string, input: ConnectInput): Promise<ConnectResult>;
   sync(userId: string, connectionId: string): Promise<SyncReport | undefined>;
   /** Refreshes or expires credentials whose clock ran out; cheap, called before every listing. */
@@ -566,7 +566,10 @@ export function createContextService(
         return { error: 'oauth_state_invalid' };
       deps.db.prepare('UPDATE ctx_oauth_states SET consumed=1 WHERE state=?').run(state);
       const mode: 'live' | 'fixture' = oauth ? 'live' : 'fixture';
-      const fail = (msg: string) => ({ redirect: webRedirect(row.return_to, 'error', mode, msg) });
+      const fail = (msg: string) => ({
+        redirect: webRedirect(row.return_to, 'error', mode, msg),
+        userId: row.user_id,
+      });
       if (error || !code)
         return fail(error === 'access_denied' ? 'access_denied' : 'authorization_failed');
       const picked = JSON.parse(row.picked_json) as string[];
@@ -644,7 +647,7 @@ export function createContextService(
         store.patchSyncState(id, { retryAfter: null });
         await svc.sync(row.user_id, id);
         deps.log.info('context.google_connected', { connectionId: id, mode, scopes });
-        return { redirect: webRedirect(row.return_to, 'connected', mode) };
+        return { redirect: webRedirect(row.return_to, 'connected', mode), userId: row.user_id };
       } catch (e) {
         // Google's error code only: never a token, code or response body.
         deps.log.warn('context.google_oauth_failed', {

@@ -34,3 +34,19 @@ export function mergeContextBusy(deps: HubDeps, student: string): number {
     }
   ).n;
 }
+
+/**
+ * On disconnect: remove the busy blocks that were derived from this connection's calendar sources (matched by
+ * start/end), so revoking really purges what planning had derived from it. Call BEFORE the sources are purged.
+ */
+export function purgeContextBusy(deps: HubDeps, student: string, connectionId: string): number {
+  const del = deps.db.prepare('DELETE FROM hub_busy_blocks WHERE student=? AND start=? AND end=?');
+  let n = 0;
+  for (const s of contextServiceFor(deps).store.sourcesOfConnection(connectionId)) {
+    if ((s.kind !== 'gcal_event' && s.kind !== 'canvas_event') || s.startsAt === null) continue;
+    const start = new Date(s.startsAt).toISOString().replace('.000Z', 'Z');
+    const end = new Date(s.endsAt ?? s.startsAt).toISOString().replace('.000Z', 'Z');
+    n += Number(del.run(student, start, end).changes);
+  }
+  return n;
+}
