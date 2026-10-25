@@ -139,7 +139,10 @@ export const CouncilRunTransportSchema = z.strictObject({
   requested: z.enum(['stream', 'live']).optional(),
   why: z.string().max(80).optional(),
   /** Model ids actually used, per tier or participant (never keys). */
-  models: z.array(z.strictObject({ who: z.string().max(40), model: z.string().max(80) })).max(8).optional(),
+  models: z
+    .array(z.strictObject({ who: z.string().max(40), model: z.string().max(80) }))
+    .max(8)
+    .optional(),
 });
 export type CouncilRunTransport = z.infer<typeof CouncilRunTransportSchema>;
 

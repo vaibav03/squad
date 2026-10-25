@@ -2,7 +2,13 @@
 // every field is an enum, a count, a model id or a fixed sentence.
 import { z } from 'zod';
 import { A2aMessageSchema, AgentModeSchema } from './a2a';
-import { CouncilActionSchema, CouncilAgentInfoSchema, CouncilResultSchema, CouncilRunIdSchema, CouncilRunTransportSchema } from './council';
+import {
+  CouncilActionSchema,
+  CouncilAgentInfoSchema,
+  CouncilResultSchema,
+  CouncilRunIdSchema,
+  CouncilRunTransportSchema,
+} from './council';
 
 export const COUNCIL_PROVIDER_NAME = 'Google Gemini';
 
@@ -15,7 +21,8 @@ export const COUNCIL_KEY_FIX: Record<CouncilKeyState, string> = {
   no_key: 'Set GEMINI_API_KEY in the hub environment, then restart the hub.',
   credits_depleted:
     'Add prepayment credits to the Google AI project behind GEMINI_API_KEY (Google AI Studio, Billing), then retry.',
-  rate_limited: 'Gemini is rate limiting this key. Wait a minute and retry, or raise the quota in Google AI Studio.',
+  rate_limited:
+    'Gemini is rate limiting this key. Wait a minute and retry, or raise the quota in Google AI Studio.',
 };
 
 /** `GET /v1/council/status` (viewer-safe). */
@@ -81,17 +88,48 @@ export const CouncilRunRecordSchema = z.strictObject({
 });
 export type CouncilRunRecord = z.infer<typeof CouncilRunRecordSchema>;
 
-export const CouncilRunsResponseSchema = z.strictObject({ runs: z.array(CouncilRunRecordSchema).max(20) });
+export const CouncilRunsResponseSchema = z.strictObject({
+  runs: z.array(CouncilRunRecordSchema).max(20),
+});
 export type CouncilRunsResponse = z.infer<typeof CouncilRunsResponseSchema>;
 
 /** Live council side channel events (`GET /v1/council/:id/live`, SSE). Captions and audio only, never thinking text. */
 export const CouncilLiveEventSchema = z.discriminatedUnion('t', [
-  z.strictObject({ t: z.literal('speaker'), agent: z.string().max(80), name: z.string().max(40), turn: z.number().int() }),
-  z.strictObject({ t: z.literal('caption'), agent: z.string().max(80), name: z.string().max(40), turn: z.number().int(), text: z.string().max(400) }),
+  z.strictObject({
+    t: z.literal('speaker'),
+    agent: z.string().max(80),
+    name: z.string().max(40),
+    turn: z.number().int(),
+  }),
+  z.strictObject({
+    t: z.literal('caption'),
+    agent: z.string().max(80),
+    name: z.string().max(40),
+    turn: z.number().int(),
+    text: z.string().max(400),
+  }),
   /** Base64 16-bit LE PCM, mono, 24 kHz. Only sent to subscribers that asked for audio. */
-  z.strictObject({ t: z.literal('audio'), agent: z.string().max(80), turn: z.number().int(), seq: z.number().int(), pcm: z.string() }),
-  z.strictObject({ t: z.literal('turn_end'), agent: z.string().max(80), turn: z.number().int(), partial: z.boolean().optional(), chars: z.number().int(), audioChunks: z.number().int(), audioMs: z.number().int() }),
-  z.strictObject({ t: z.literal('interrupted'), agent: z.string().max(80), turn: z.number().int() }),
+  z.strictObject({
+    t: z.literal('audio'),
+    agent: z.string().max(80),
+    turn: z.number().int(),
+    seq: z.number().int(),
+    pcm: z.string(),
+  }),
+  z.strictObject({
+    t: z.literal('turn_end'),
+    agent: z.string().max(80),
+    turn: z.number().int(),
+    partial: z.boolean().optional(),
+    chars: z.number().int(),
+    audioChunks: z.number().int(),
+    audioMs: z.number().int(),
+  }),
+  z.strictObject({
+    t: z.literal('interrupted'),
+    agent: z.string().max(80),
+    turn: z.number().int(),
+  }),
   z.strictObject({ t: z.literal('transcript'), state: z.enum(['streaming', 'complete', 'none']) }),
 ]);
 export type CouncilLiveEvent = z.infer<typeof CouncilLiveEventSchema>;

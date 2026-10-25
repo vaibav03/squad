@@ -213,7 +213,10 @@ export async function runAskV2(
           why,
         };
     } else if (demo) {
-      tlabel = { label: 'Demo (scripted, not Gemini)', ...(requested === 'live' ? { requested } : {}) };
+      tlabel = {
+        label: 'Demo (scripted, not Gemini)',
+        ...(requested === 'live' ? { requested } : {}),
+      };
     }
     const liveSpeech = agents.kind === 'live-audio';
     resultTransport = {

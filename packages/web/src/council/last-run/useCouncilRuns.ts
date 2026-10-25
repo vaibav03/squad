@@ -5,6 +5,7 @@ import type { InspectorStore } from '@squad/village/inspector';
 import type { HubCtx } from '../../pages/village/hub';
 import { getCouncilRuns } from '../status/api';
 import {
+  fetchGate,
   historic,
   recordToEvents,
   runsFor,
@@ -15,21 +16,19 @@ import {
 
 const MIN_GAP_MS = 800;
 const RUNNING_POLL_MS = 4000;
-let inflight: Promise<void> | null = null;
-let lastAt = 0;
 
 /** One shared fetch of the stored runs (deduped), written to the module store. */
 export async function refreshCouncilRuns(hub: HubCtx, force = false): Promise<void> {
   const t = Date.now();
-  if (inflight) return inflight;
-  if (!force && t - lastAt < MIN_GAP_MS) return;
-  lastAt = t;
-  inflight = getCouncilRuns(hub)
+  if (fetchGate.inflight) return fetchGate.inflight;
+  if (!force && t - fetchGate.at < MIN_GAP_MS) return;
+  fetchGate.at = t;
+  fetchGate.inflight = getCouncilRuns(hub)
     .then((runs) => setLastRuns(runs))
     .finally(() => {
-      inflight = null;
+      fetchGate.inflight = null;
     });
-  return inflight;
+  return fetchGate.inflight;
 }
 
 export interface CouncilRunsApi extends LastRunsState {
@@ -61,7 +60,6 @@ export function useCouncilRuns(
     };
     window.addEventListener('squad:council-started', on);
     return () => window.removeEventListener('squad:council-started', on);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, token]);
   const running = s.runs.some((r) => r.status === 'running');
   useEffect(() => {
@@ -90,6 +88,10 @@ export function hydrateFromHistory(
       if ((e as { t?: string }).t === 'a2a.message') inspector?.apply(e);
     }
     if (rec.status !== 'running')
-      historic.set(rec.id, { startedAt: rec.startedAt, mode: rec.mode, councilKey: rec.councilKey });
+      historic.set(rec.id, {
+        startedAt: rec.startedAt,
+        mode: rec.mode,
+        councilKey: rec.councilKey,
+      });
   }
 }

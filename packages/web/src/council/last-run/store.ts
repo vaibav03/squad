@@ -27,8 +27,13 @@ export function setLastRuns(runs: readonly CouncilRunRecord[] | null): void {
     : { runs: state.runs, loaded: true, failed: true };
   subs.forEach((f) => f());
 }
+/** Shared by the fetch helper so tests (and a reset on sign-out) start clean. */
+export const fetchGate: { at: number; inflight: Promise<void> | null } = { at: 0, inflight: null };
+
 export function resetLastRuns(): void {
   state = INITIAL;
+  fetchGate.at = 0;
+  fetchGate.inflight = null;
   historic.clear();
   subs.forEach((f) => f());
 }
@@ -43,10 +48,7 @@ export const historic = new Map<string, { startedAt: number; mode: string; counc
 export const HALL_KEYS: readonly string[] = ['ask'];
 export const ROUND_TABLE_KEYS: readonly string[] = ['roundtable', 'planner', 'courseplan'];
 
-export function runsFor(
-  s: LastRunsState,
-  keys?: readonly string[],
-): readonly CouncilRunRecord[] {
+export function runsFor(s: LastRunsState, keys?: readonly string[]): readonly CouncilRunRecord[] {
   return keys ? s.runs.filter((r) => keys.includes(r.councilKey)) : s.runs;
 }
 export const lastRunOf = (

@@ -27,10 +27,7 @@ export interface LiveCouncilHandle {
   agents: CouncilAgents;
   prepare(
     roster: AgentSpec[],
-  ): Promise<
-    | { ok: true; models: { who: string; model: string }[] }
-    | { ok: false; why: string }
-  >;
+  ): Promise<{ ok: true; models: { who: string; model: string }[] } | { ok: false; why: string }>;
   close(): void;
 }
 export type LiveCouncilFactory = (run: {

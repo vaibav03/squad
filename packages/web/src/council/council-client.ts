@@ -206,7 +206,11 @@ export function openCouncilStream(
 
 /** Everything the run hook needs from a backend; `hubTransport` is the real one, fixtures bring their own. */
 export interface CouncilTransport {
-  ask(question: string, chatId?: string, transport?: 'stream' | 'live'): Promise<CouncilAskResponse>;
+  ask(
+    question: string,
+    chatId?: string,
+    transport?: 'stream' | 'live',
+  ): Promise<CouncilAskResponse>;
   get(id: string): Promise<CouncilResult>;
   stream(resp: CouncilAskResponse, h: CouncilStreamHandlers): () => void;
 }

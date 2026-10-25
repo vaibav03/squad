@@ -48,7 +48,10 @@ export function agentNoteFrom(
   return undefined;
 }
 
-export function useAgentNote(agent: string | undefined, keys?: readonly string[]): AgentNote | undefined {
+export function useAgentNote(
+  agent: string | undefined,
+  keys?: readonly string[],
+): AgentNote | undefined {
   const s = useLastRunsState();
   if (!agent) return undefined;
   return agentNoteFrom(keys ? { runs: runsFor(s, keys) } : s, agent, Date.now());

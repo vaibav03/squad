@@ -37,7 +37,6 @@ export function useCouncilStatus(hub: HubCtx | null | undefined): CouncilStatusS
       clearInterval(t);
       window.removeEventListener('squad:council-started', on);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, token, tick]);
   return { status, refresh };
 }

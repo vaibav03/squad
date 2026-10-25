@@ -143,9 +143,12 @@ export function deriveStrip(i: StripInput): StripView {
   let transport: string;
   // a scripted run never reads as Gemini, whatever transport label it carried
   if (demoRun) transport = transportWords('demo');
-  else if (i.run?.transport) transport = i.run.transport.label || transportWords(i.run.transport.kind);
+  else if (i.run?.transport)
+    transport = i.run.transport.label || transportWords(i.run.transport.kind);
   else if (i.run) transport = 'Transport not reported';
-  else if (st) transport = st.defaultTransport === 'live' ? st.transports.live.label : st.transports.stream.label;
+  else if (st)
+    transport =
+      st.defaultTransport === 'live' ? st.transports.live.label : st.transports.stream.label;
   else transport = 'Transport unknown';
 
   let models: { who: string; model: string }[] = [];
@@ -167,7 +170,8 @@ export function deriveStrip(i: StripInput): StripView {
   const mic: MicState = i.mic ?? (live ? 'idle' : 'unavailable');
   const audio: AudioState = i.audio ?? (live ? 'muted' : 'unavailable');
   const transcript: TranscriptState =
-    i.transcript ?? (live ? (i.run?.counters?.stage === 'done' ? 'complete' : 'streaming') : 'none');
+    i.transcript ??
+    (live ? (i.run?.counters?.stage === 'done' ? 'complete' : 'streaming') : 'none');
 
   const info = i.run ? modeInfo(i.run.mode) : null;
   const rt = i.run?.transport;
@@ -193,7 +197,11 @@ export function deriveStrip(i: StripInput): StripView {
           stage: STAGE_WORDS[i.run.counters.stage ?? ''] ?? i.run.counters.stage ?? 'Not started',
         }
       : st
-        ? { messages: st.a2a.messages, delegations: st.a2a.delegations, stage: STAGE_WORDS[st.a2a.lastStage ?? ''] ?? 'No run yet' }
+        ? {
+            messages: st.a2a.messages,
+            delegations: st.a2a.delegations,
+            stage: STAGE_WORDS[st.a2a.lastStage ?? ''] ?? 'No run yet',
+          }
         : null,
     fallback,
   };

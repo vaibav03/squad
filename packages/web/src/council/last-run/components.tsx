@@ -25,7 +25,11 @@ export function stripRunOf(rec: CouncilRunRecord): StripRun {
     mode: rec.mode,
     transport: rec.transport,
     agents: rec.agents,
-    counters: { messages: rec.counters.messages, delegations: rec.counters.delegations, stage: rec.stage },
+    counters: {
+      messages: rec.counters.messages,
+      delegations: rec.counters.delegations,
+      stage: rec.stage,
+    },
   };
 }
 
@@ -135,9 +139,7 @@ export function EmptyCouncilState({
         Convene the council and its members appear here with every message they send each other, the
         steps of the decision and the action items. The last council stays here afterwards.
       </p>
-      {hideStrip ? null : (
-        <CouncilStatusStrip status={hub ? status : null} variant="compact" />
-      )}
+      {hideStrip ? null : <CouncilStatusStrip status={hub ? status : null} variant="compact" />}
       {!hub ? (
         <p className="lr-dim" data-testid="empty-nohub">
           No hub is connected, so this plays a scripted sample. It is labelled DEMO.
@@ -241,7 +243,11 @@ export function CouncilRoomStatus({
       {none && asked ? (
         <EmptyCouncilState hub={hub} store={board} onConvene={onConvene} />
       ) : (
-        <CouncilStatusStrip status={hub ? status : null} run={run} variant={compact ? 'compact' : 'full'} />
+        <CouncilStatusStrip
+          status={hub ? status : null}
+          run={run}
+          variant={compact ? 'compact' : 'full'}
+        />
       )}
     </div>
   );

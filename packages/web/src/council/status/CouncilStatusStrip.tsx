@@ -72,9 +72,7 @@ export function CouncilStatusStrip({
         </li>
         <li data-testid="cs-models">
           <span className="cs-k">Models</span>{' '}
-          {v.models.length
-            ? v.models.map((x) => `${x.who} ${x.model}`).join(', ')
-            : v.modelsNote}
+          {v.models.length ? v.models.map((x) => `${x.who} ${x.model}`).join(', ') : v.modelsNote}
           {v.models.length && v.modelsNote ? ` (${v.modelsNote.toLowerCase()})` : ''}
         </li>
         <li data-testid="cs-mic" data-state={v.mic}>
