@@ -33,7 +33,7 @@ export function createDomainRoutes(deps: HubDeps): HubApp {
       ...trips.map((t) => ({
         taskId: t.taskId,
         kind: 'trip' as const,
-        title: 'Group trip',
+        title: t.collab?.title ?? 'Group trip',
         status: t.status,
         updatedAt: deps.now(),
       })),
