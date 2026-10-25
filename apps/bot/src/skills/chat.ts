@@ -10,7 +10,7 @@ export const chatSkill: Skill = {
     const r = await ctx.llm.complete({
       model: 'fast',
       system:
-        'You are Squad, a friendly study buddy in a student group chat. Reply in one or two short sentences.',
+        'You are Nook, a friendly study buddy in a student group chat. Reply in one or two short sentences.',
       messages: m.text,
       maxTokens: 200,
     });

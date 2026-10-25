@@ -1,10 +1,10 @@
 import { registerHealthCheck, type HealthCtx, type HealthResult } from '../registry';
 
 export function cubbieReachable(ctx: HealthCtx): HealthResult {
-  const label = 'Squad reachable';
+  const label = 'Nook reachable';
   if (!ctx.deps.chat.engine)
-    return { label, status: 'fail', reason: 'The bot engine is not attached to the chat hub; @squad will not answer.', fix: { label: 'Restart the hub', api: 'ops:restart-hub' } };
-  return { label, status: 'pass', reason: 'The hub chat has the Squad engine attached and answers @squad.' };
+    return { label, status: 'fail', reason: 'The bot engine is not attached to the chat hub; @nook will not answer.', fix: { label: 'Restart the hub', api: 'ops:restart-hub' } };
+  return { label, status: 'pass', reason: 'The hub chat has the Nook engine attached and answers @nook.' };
 }
 
 export function modelProvider(ctx: HealthCtx): HealthResult {

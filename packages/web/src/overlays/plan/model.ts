@@ -155,4 +155,4 @@ export const planApi = {
     ),
 };
 
-export const ASK_PHRASE = '@squad study plan';
+export const ASK_PHRASE = '@nook study plan';

@@ -137,7 +137,7 @@ export const fmtDate = (d: string): string =>
 const id10 = () => randomBytes(8).toString('hex').slice(0, 10);
 
 export const REPLY_HELP =
-  'Reply "@squad plan 1" to accept, "plan 2" to decline, "plan 3 <item> to <person or date>" to change an item, "plan 4" if you are the organizer to start it now, and "done <item>" when you finish one.';
+  'Reply "@nook plan 1" to accept, "plan 2" to decline, "plan 3 <item> to <person or date>" to change an item, "plan 4" if you are the organizer to start it now, and "done <item>" when you finish one.';
 
 export function createPlanService(
   deps: Pick<HubDeps, 'db' | 'directory' | 'chat' | 'now' | 'log' | 'ports' | 'runtime'> &
@@ -247,7 +247,7 @@ export function createPlanService(
     deps.chat.postBot({
       chatId: `group:${squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       emoji: '🐻',
       text: say.text,
       citations: say.citations ?? [],
@@ -562,7 +562,7 @@ export function createPlanService(
         return fail(
           409,
           'no_plan',
-          'There is no study plan yet. Ask Squad to make one first, then add this.',
+          'There is no study plan yet. Ask Nook to make one first, then add this.',
         );
       const me = p.members.find((m) => m.id === v.studentId);
       if (!me || !me.optedIn) return fail(403, 'forbidden', 'You are not part of this plan.');

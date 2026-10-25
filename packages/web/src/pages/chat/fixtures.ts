@@ -27,7 +27,7 @@ export const DM_ID = `dm:${ME}`;
 const MIN = 60_000;
 const NAMES: Record<string, string> = { s_ana: 'Ana', s_ben: 'Ben', s_chi: 'Chi', s_dev: 'Dev' };
 const student = (id: string) => ({ kind: 'student' as const, id, name: NAMES[id] ?? id });
-const cubbie = { kind: 'persona' as const, id: 'cubbie', name: 'Squad' };
+const cubbie = { kind: 'persona' as const, id: 'cubbie', name: 'Nook' };
 
 /** Tiny worked-solution "Step Diff" picture as an SVG data URI (no network, no binary fixtures). */
 const stepDiffSvg = () => {
@@ -202,7 +202,7 @@ export function buildFixtures(now: number = Date.now(), demo = true): FixtureDat
       id: GROUP_ID,
       kind: 'group',
       title: 'Stats squad',
-      subtitle: 'Ana, Ben, Chi, Dev and Squad',
+      subtitle: 'Ana, Ben, Chi, Dev and Nook',
       private: false,
       members: ['s_ana', 's_ben', 's_chi', 's_dev'].map((id) => ({ id, name: NAMES[id]! })),
       last: lastOf(group),
@@ -210,7 +210,7 @@ export function buildFixtures(now: number = Date.now(), demo = true): FixtureDat
     {
       id: DM_ID,
       kind: 'dm',
-      title: 'Squad',
+      title: 'Nook',
       subtitle: 'Only you can see this',
       private: true,
       members: [{ id: ME, name: 'Ana' }],
@@ -316,7 +316,7 @@ export function createFakeChatApi(o: FakeChatOptions = {}): FakeChatApi {
       ...extra,
     });
   const typing = (chatId: string, on: boolean) =>
-    subs.forEach((h) => h.onTyping({ chatId, personaId: 'cubbie', name: 'Squad', on }));
+    subs.forEach((h) => h.onTyping({ chatId, personaId: 'cubbie', name: 'Nook', on }));
 
   const bot = (body: ChatSendInput) => {
     if (o.bot === false) return;
@@ -351,7 +351,7 @@ export function createFakeChatApi(o: FakeChatOptions = {}): FakeChatApi {
       );
       return;
     }
-    const addressed = dm || /(^|\W)@(cubbie|squad)\b/i.test(t) || body.attachments?.length;
+    const addressed = dm || /(^|\W)@(nook|cubbie|squad)\b/i.test(t) || body.attachments?.length;
     if (!addressed) return;
     const think = o.thinkMs ?? 900;
     setTimeout(() => typing(body.chatId, true), latency + 150);

@@ -47,8 +47,8 @@ describe('mastery words and pips', () => {
       expect(t).not.toMatch(/\d|%|point|score|level|xp|streak/i);
   });
   it('builds the practise phrase from the chapter number', () => {
-    expect(practisePhrase(6, 'x')).toBe('@squad quiz me on chapter 6');
-    expect(practisePhrase(undefined, 'Glycolysis')).toBe('@squad quiz me on Glycolysis');
+    expect(practisePhrase(6, 'x')).toBe('@nook quiz me on chapter 6');
+    expect(practisePhrase(undefined, 'Glycolysis')).toBe('@nook quiz me on Glycolysis');
     expect(chapterNumber('ch12')).toBe(12);
     expect(chapterNumber('intro')).toBeUndefined();
   });

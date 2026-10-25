@@ -12,7 +12,7 @@ import { ContextGateFrame } from './ContextGate';
 import { LedgerDrawer, createGroupLedgerFetcher, useLedgerDrawer } from './ledger';
 import { fixtureLedger } from './ledger/fixtures';
 
-/** `/squad/chat`: the squad group chat and your private chat with Squad. Live over SSE; `?c=<chatId>` deep-links a chat. */
+/** `/squad/chat`: the squad group chat and your private chat with Nook. Live over SSE; `?c=<chatId>` deep-links a chat. */
 export default function ChatPage() {
   const cfg = useSquadConfig();
   const { signOut } = useAuth();

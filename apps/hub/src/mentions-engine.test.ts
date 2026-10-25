@@ -83,7 +83,7 @@ afterEach(async () => {
 });
 
 describe('web chat engine: typed mentions', () => {
-  it('every @cubbie / @cubbi mention is answered by Squad exactly once; banter and near-misses are silent', async () => {
+  it('every @cubbie / @cubbi mention is answered by Nook exactly once; banter and near-misses are silent', async () => {
     const lines: [string, string, boolean][] = [
       [ben, 'anyone done the reading?', false],
       [ana, 'hey @cubbie what is a z-score?', true],
@@ -106,7 +106,7 @@ describe('web chat engine: typed mentions', () => {
     }
     expect(bots(gid())).toHaveLength(want);
     for (const m of bots(gid())) {
-      expect(m.sender.name).toBe('Squad');
+      expect(m.sender.name).toBe('Nook');
       expect(m.chatId).toBe(gid());
     }
   });
@@ -137,13 +137,13 @@ describe('web chat engine: typed mentions', () => {
   });
 
   it.each(['@cubbie', '@Cubbie', '@CUBBIE', '@cubbi', '@Cubbi'])(
-    '%s what is a z-score? routes to Squad exactly once, in the same thread',
+    '%s what is a z-score? routes to Nook exactly once, in the same thread',
     async (tag) => {
       await say(ana, `${tag} what is a z-score?`, `v-${tag}`);
       await waitFor(() => bots(gid()).length >= 1);
       await settle();
       expect(bots(gid())).toHaveLength(1);
-      expect(bots(gid())[0]!.sender.name).toBe('Squad');
+      expect(bots(gid())[0]!.sender.name).toBe('Nook');
       expect(bots(`dm:${ana}`)).toHaveLength(0);
     },
   );

@@ -23,7 +23,7 @@ function fakeSdk() {
       stopWatching: vi.fn(async () => {}),
       close: vi.fn(async () => {}),
       async listChats() {
-        return [{ chatId: 'iMessage;+;chat1', name: 'Squad Test', kind: 'group' }];
+        return [{ chatId: 'iMessage;+;chat1', name: 'Nook Test', kind: 'group' }];
       },
       async send(r) {
         if (sdk.failSends > 0) {

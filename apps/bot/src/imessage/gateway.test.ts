@@ -140,7 +140,7 @@ describe('dedupe and loop protection', () => {
   });
   it('ignores a message that carries our own persona prefix (another bot or an echo)', async () => {
     const { sdk, got, gw } = await setup();
-    await sdk.group(GROUP, FRIEND, '\u{1F43B} Squad: hello there');
+    await sdk.group(GROUP, FRIEND, '\u{1F43B} Nook: hello there');
     await sdk.group(GROUP, FRIEND, '\u{1F916} HelperBot: beep');
     expect(got).toHaveLength(0);
     expect(gw.drops.bot_prefix).toBe(2);

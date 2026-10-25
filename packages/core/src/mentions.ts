@@ -24,9 +24,9 @@ export const AGENT_ALIASES: readonly AgentAlias[] = [
   {
     id: 'cubbie',
     kind: 'router',
-    name: 'Squad',
+    name: 'Nook',
     description: 'Your study buddy. Picks the right skill for what you ask.',
-    aliases: ['squad', 'cubbie', 'cubbi'],
+    aliases: ['nook', 'squad', 'cubbie', 'cubbi'],
   },
   {
     id: 'tutor',
@@ -346,7 +346,7 @@ export function parseMentions(text: string): ParsedMentions {
   return out;
 }
 
-/** Autocomplete: entries whose alias starts with `prefix` (no `@`), Squad first, then table order. */
+/** Autocomplete: entries whose alias starts with `prefix` (no `@`), Nook first, then table order. */
 export function suggestAliases(prefix: string, limit = 8): { alias: string; agent: AgentAlias }[] {
   const p = prefix.toLowerCase();
   const hits: { alias: string; agent: AgentAlias }[] = [];
@@ -364,7 +364,7 @@ export function mentionHelpText(unknown?: string): string {
   const skills = AGENT_ALIASES.filter((a) => a.kind === 'skill')
     .map((a) => `@${a.aliases[0]}`)
     .join(' ');
-  return `${lead}You can tag: @squad (picks the right helper), ${personas}. Shortcuts: ${skills}.`;
+  return `${lead}You can tag: @nook (picks the right helper), ${personas}. Shortcuts: ${skills}.`;
 }
 
 /** Plain-text reply to a bare mention. */

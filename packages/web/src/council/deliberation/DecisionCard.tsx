@@ -41,7 +41,7 @@ export function questionWithProof(question: string | undefined, proof: string): 
   return `${(question ?? '').trim()}${PROOF_PREFIX}${proof.trim()}`.trim();
 }
 export const followUpDraft = (runId: string): string =>
-  `@squad Follow-up on council run ${runId}: `;
+  `@nook Follow-up on council run ${runId}: `;
 
 /**
  * The pinned decision. Outcome, how much the council agreed, who dissented and why (linked to their turn), how sure it is

@@ -164,7 +164,7 @@ export function createChatRoutes(deps: HubDeps): HubApp {
     return new Response(buf, { headers: { ...headers, 'content-length': String(size) } });
   });
 
-  // The composer chip for "Ask Squad": a verified ChatContextRef (title/provenance come from the store, never the client).
+  // The composer chip for "Ask Nook": a verified ChatContextRef (title/provenance come from the store, never the client).
   r.get('/v1/chat/context-ref', need, (c) => {
     const q = z
       .object({

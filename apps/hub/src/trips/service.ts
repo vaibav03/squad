@@ -143,7 +143,7 @@ export function createTripService(
     deps.chat.postBot({
       chatId: `group:${t.squadId}`,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: `Trip: ${t.collab?.title ?? 'Group trip'}\n${text}\nOpen the plan in Squad: /squad/chat?plan=${t.tripId}`,
       card: { type: 'trip', tripId: t.tripId, rev: t.collab?.rev ?? 0, status: t.status },
       citations: [],

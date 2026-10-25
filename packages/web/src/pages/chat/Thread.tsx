@@ -452,11 +452,11 @@ function MessageList({
           ) : rows.length === 0 ? (
             <EmptyState
               icon="message"
-              title={chat.kind === 'dm' ? 'A private chat with Squad' : 'No messages yet, say hi'}
+              title={chat.kind === 'dm' ? 'A private chat with Nook' : 'No messages yet, say hi'}
               body={
                 chat.kind === 'dm'
                   ? 'Only you can see this. Ask about your progress, your notes, or a chapter.'
-                  : 'Start the conversation, or ask Squad something.'
+                  : 'Start the conversation, or ask Nook something.'
               }
               action={
                 <div className="sqc-prompts" role="group" aria-label="Suggestions">
@@ -616,8 +616,8 @@ export function ThreadPane({
   const names = chat.members.map((m) => m.name);
   const subtitle =
     chat.kind === 'dm'
-      ? 'Squad, your study buddy'
-      : `Shared with your squad · ${chat.subtitle ?? `${names.join(', ')} and Squad`}`;
+      ? 'Nook, your study buddy'
+      : `Shared with your squad · ${chat.subtitle ?? `${names.join(', ')} and Nook`}`;
   const paused = pausedCopy(ctl);
   const cfg = useSquadConfig();
   const liveHub = cfg.hubUrl ? { hubUrl: cfg.hubUrl, token: cfg.token ?? null } : null;

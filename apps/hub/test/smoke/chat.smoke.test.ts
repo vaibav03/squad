@@ -212,7 +212,7 @@ describe('DM privacy', () => {
     const m = hub.deps.chat.postBot({
       chatId: GROUP,
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'Ana budget is $180',
       citations: [],
       attachments: [],
@@ -222,7 +222,7 @@ describe('DM privacy', () => {
     const own = hub.deps.chat.postBot({
       chatId: 'dm:s_ana',
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'Your limit is $180',
       citations: [],
       attachments: [],
@@ -601,7 +601,7 @@ describe('hardening', () => {
     const m = hub.deps.chat.store.append({
       chatId: 'dm:s_dev',
       ts: Date.now(),
-      sender: { kind: 'persona', id: 'cubbie', name: 'Squad' },
+      sender: { kind: 'persona', id: 'cubbie', name: 'Nook' },
       text: 'old question',
       private: true,
       attachments: [],
@@ -624,7 +624,7 @@ describe('hardening', () => {
       hub.deps.chat.postBot({
         chatId: GROUP,
         personaId: 'cubbie',
-        personaName: 'Squad',
+        personaName: 'Nook',
         text,
         citations: [],
         attachments: [],

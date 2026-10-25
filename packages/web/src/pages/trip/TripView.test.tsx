@@ -34,7 +34,7 @@ describe('TripView states', () => {
     view({ trip: null }, { create });
     expect(screen.getByRole('heading', { name: 'No trip planned yet' })).toBeTruthy();
     expect(screen.getByText(/Plan one with your squad/)).toBeTruthy();
-    expect(screen.getByText(/@squad plan a trip to Cabo in March/)).toBeTruthy();
+    expect(screen.getByText(/@nook plan a trip to Cabo in March/)).toBeTruthy();
     expect(screen.queryByText(/hub did not answer/)).toBeNull();
     fireEvent.click(id('trip-create-open'));
     fireEvent.change(screen.getByLabelText('Destination'), { target: { value: 'Cabo' } });

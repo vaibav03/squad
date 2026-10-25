@@ -4,25 +4,25 @@ One alias table and one parser (`packages/core/src/mentions.ts`) are shared by t
 
 ## Alias table
 
-Squad is the default and first entry. `@squad` is the preferred mention; `@cubbie` and `@cubbi` (any case) stay as backward-compatible aliases and all mean Squad. Plain "squad" without the `@` is never a mention.
+Nook is the default and first entry. `@nook` is the preferred mention; `@squad`, `@cubbie` and `@cubbi` (any case) stay as backward-compatible aliases and all mean Nook. Plain "squad" without the `@` is never a mention.
 
 | Alias | Kind | Answers as | What it does |
 | --- | --- | --- | --- |
-| `@squad`, `@cubbie`, `@cubbi` | router | Squad | Your study buddy. Picks the right skill for the message. |
+| `@nook`, `@squad`, `@cubbie`, `@cubbi` | router | Nook | Your study buddy. Picks the right skill for the message. |
 | `@tutor`, `@teacher` | persona | Tutor | Explains the idea simply, then checks you got it. |
 | `@skeptic` | persona | Skeptic | Pokes holes and asks for evidence. |
 | `@planner` | persona | Planner | Steps, order and dates. Plan intents start the flows: `@planner plan a trip to Cabo` (any `@planner ... trip ...`) starts the trip flow, `@planner study plan for the exam on Nov 12` starts the study-plan flow; other messages get the persona answer. |
 | `@examiner` | persona | Examiner | Asks what a test would ask. |
 | `@chair` | persona | Chair | Keeps order, calls decisions. |
-| `@council` | council | Squad | Convenes the council (the `council` skill). |
+| `@council` | council | Nook | Convenes the council (the `council` skill). |
 | `@advisor`, `@chill`, `@grind`, `@chairman` | persona | Round Table member | Balanced, rest-first, max-hours, and the deciding voice. |
-| `@quiz` | skill | Squad | Runs the `quiz` skill. |
-| `@feynman` | skill | Squad | Runs `feynman`. |
-| `@stepdiff` | skill | Squad | Runs `stepDiff`. |
-| `@podcast`, `@explainer` | skill | Squad | Media skills (only when media is configured). |
-| `@debate`, `@oracle`, `@rubric`, `@devilta` | skill | Squad | The matching brain skills. |
-| `@studyplan`, `@plan` | skill | Squad | Study plan. |
-| `@discuss`, `@live` | skill | Squad | Live agent discussion. |
+| `@quiz` | skill | Nook | Runs the `quiz` skill. |
+| `@feynman` | skill | Nook | Runs `feynman`. |
+| `@stepdiff` | skill | Nook | Runs `stepDiff`. |
+| `@podcast`, `@explainer` | skill | Nook | Media skills (only when media is configured). |
+| `@debate`, `@oracle`, `@rubric`, `@devilta` | skill | Nook | The matching brain skills. |
+| `@studyplan`, `@plan` | skill | Nook | Study plan. |
+| `@discuss`, `@live` | skill | Nook | Live agent discussion. |
 
 A skill alias runs its skill even when its own score would be low: `@quiz chapter 6` is rewritten to `@cubbie quiz me chapter 6` for the skill.
 
@@ -56,4 +56,4 @@ The bridge reuses the same parser: an alias in a bound group is relayed to the s
 
 ## Web composer autocomplete
 
-`packages/web/src/components/mention-autocomplete` is standalone and not wired into `pages/chat` yet (that page is being fixed elsewhere). Integration point: render `<MentionAutocomplete text caret onSelect />` above the textarea and call `mentionKey(e.key, text, caret, index)` from `onKeyDown`. Squad is the first row for `@`, `@cub` and `@cubbi`. The page's own `mentionsBot` regex in `pages/chat/model.ts` should later be replaced by `parseMentions(text).mentions.length > 0`.
+`packages/web/src/components/mention-autocomplete` is standalone and not wired into `pages/chat` yet (that page is being fixed elsewhere). Integration point: render `<MentionAutocomplete text caret onSelect />` above the textarea and call `mentionKey(e.key, text, caret, index)` from `onKeyDown`. Nook is the first row for `@`, `@cub` and `@cubbi`. The page's own `mentionsBot` regex in `pages/chat/model.ts` should later be replaced by `parseMentions(text).mentions.length > 0`.

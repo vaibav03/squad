@@ -8,7 +8,7 @@ export const unpromptedQuiz: Skill = {
   },
   async handle(m) {
     return [
-      { chatId: m.chatId, text: 'Want a 3-question quiz on that chapter? Say @squad quiz me.' },
+      { chatId: m.chatId, text: 'Want a 3-question quiz on that chapter? Say @nook quiz me.' },
     ];
   },
 };

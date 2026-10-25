@@ -1,6 +1,6 @@
 # Squad user guide (for students)
 
-Squad gives your study group a bot, `@squad`, that lives in the group chat you already use, plus a private agent for each student and a pixel village that shows study help happening. This guide covers setting up, talking to Squad, every skill, every room, what is private, and what to do when something looks wrong.
+Nook gives your study group a bot, `@nook`, that lives in the group chat you already use, plus a private agent for each student and a pixel village that shows study help happening. This guide covers setting up, talking to Nook, every skill, every room, what is private, and what to do when something looks wrong.
 
 ![Squad home](../design/shots/integration/home-desk.png)
 
@@ -24,19 +24,19 @@ Without any keys Squad runs in **demo mode**: answers come from a scripted stand
 The setup flow at `/squad/setup` has four steps:
 
 1. **Phone**: link your mobile number with a 6-digit code.
-2. **Courses**: drop your course PDFs. Squad reads them and answers from them with citations.
+2. **Courses**: drop your course PDFs. Nook reads them and answers from them with citations.
 3. **Calendar**: upload an `.ics` file. Only free or busy blocks are kept; event titles never leave your device.
 4. **Study buddy**: pick a persona for your private agent (`/squad/personas`).
 
 ## 2. Join a squad
 
-Your squad is the group chat plus the people in it. Add Squad to the group chat (iMessage on a Mac signed into the bot Apple ID, Discord, or the command-line chat for testing: `pnpm bot:chat`). Everyone who set up Squad is a member. Squads of fewer than 3 people never get shared counts or totals (see section 5).
+Your squad is the group chat plus the people in it. Add Nook to the group chat (iMessage on a Mac signed into the bot Apple ID, Discord, or the command-line chat for testing: `pnpm bot:chat`). Everyone who set up Nook is a member. Squads of fewer than 3 people never get shared counts or totals (see section 5).
 
-## 3. Talk to Squad
+## 3. Talk to Nook
 
-In a group, Squad speaks only when you **mention** it. These all count: `@squad ...` anywhere in the message, or a message that starts with `cubbie,` / `cubbie:` / `hey cubbie` (also `hi`, `hello`, `yo`, `ok`, `okay`). Words like "cubbies" or a plain mid-sentence "cubbie" do not. In a DM with Squad every message counts as addressed.
+In a group, Nook speaks only when you **mention** it. These all count: `@nook ...` anywhere in the message, or a message that starts with `cubbie,` / `cubbie:` / `hey cubbie` (also `hi`, `hello`, `yo`, `ok`, `okay`). Words like "cubbies" or a plain mid-sentence "cubbie" do not. In a DM with Nook every message counts as addressed.
 
-If you do not mention it, Squad stays quiet, with one narrow exception: if a skill is very confident (score of at least 0.8) it may chip in, at most once every 2 minutes. Most skills score 0 unless you mention Squad, so in practice a quiet group stays quiet.
+If you do not mention it, Nook stays quiet, with one narrow exception: if a skill is very confident (score of at least 0.8) it may chip in, at most once every 2 minutes. Most skills score 0 unless you mention Nook, so in practice a quiet group stays quiet.
 
 Anything personal goes to a DM. Confirmations (nothing is booked or shared without a tap) arrive as a DM with options; reply with the number, the option text, or yes/no (also `yep`, `sure`, `ok`, `nope`, `cancel`).
 
@@ -46,30 +46,30 @@ Phrases are case-insensitive. Replace the examples with your own chapter or topi
 
 | Skill | Say this | What happens | Code |
 | --- | --- | --- | --- |
-| **Ask a doubt** (grounded answer) | `@squad why does the sample mean vary?` Any question: it needs a `?` or a word such as why, how, what, when, where, which, who, explain, define, `difference between`, `meaning of`, `tell me about`. | Answers from your course files with citations. | `packages/brain/src/skills/doubt/index.ts` |
-| **Am I behind?** | `@squad am I behind`, `how am I doing`, `where do I stand`, `how far behind` | Reads your own mastery and tells you, privately. | `skills/behind/index.ts` |
-| **Homework policy** | `@squad just do my homework`, `solve problem 3`, `give me the final answer`, `do hw 2` | Squad will not hand over graded answers. You get a hint and the course policy from your syllabus. | `skills/hwpolicy/index.ts` |
-| **Quiz me** | `@squad quiz me on ch1` (also `chapter 3`, `quiz on 3`, `quiz 3`) | A short quiz on that chapter. Answer with a letter such as `B`, or a few words. | `skills/quiz/quizSkill.ts` |
-| **Feynman** | `@squad feynman ch3 gradient descent` (chapter optional: `feynman gradient descent`) | You explain, a freshman asks up to two why questions, then written feedback. | `skills/feynman/feynmanSkill.ts` |
-| **Step diff** | In the group: `@squad diff`. Add the word `private` to compare without showing steps. Then two people DM Squad a photo of their steps. | Squad finds the first step where you split, not who is right. | `skills/stepdiff/stepDiffSkill.ts` |
-| **Study plan** | `@squad study plan`, `plan the midterm`, `plan the final`, `plan the exam` | A shared study plan built from each member's mastery and free time, by the agents, without exposing calendars. You confirm by DM. | `skills/studyplan/studyPlanSkill.ts` |
-| **Course planning** (Round Table) | `@squad plan my next semester`, `pick my classes`, `what classes should I take`, `register for next semester`. Say a season, "light", "graduate early", "max 15 credits" or what you have finished to steer it. | Three advisors argue; the chairman gives one plan with credits and workload in words. Phrases with study, exam, quiz or final go to Study plan instead. | `skills/courseplan/skill.ts` |
-| **Podcast** | `@squad podcast ch3`, `recap radio`. Add `my` or `for me` in a group for your personal cut (in a DM it is always personal). | A short audio recap of a chapter. Needs a voice key; otherwise you get "I couldn't make that just now". | `apps/bot/src/skills/media.ts` |
-| **Explainer picture** | `@squad picture it ch3`, `explainer`, `diagram`, `infographic` | An image that explains the chapter idea. | `apps/bot/src/skills/media.ts` |
-| **Plain chat** | Anything else, when you mention Squad | A short friendly reply. | `apps/bot/src/skills/chat.ts` |
+| **Ask a doubt** (grounded answer) | `@nook why does the sample mean vary?` Any question: it needs a `?` or a word such as why, how, what, when, where, which, who, explain, define, `difference between`, `meaning of`, `tell me about`. | Answers from your course files with citations. | `packages/brain/src/skills/doubt/index.ts` |
+| **Am I behind?** | `@nook am I behind`, `how am I doing`, `where do I stand`, `how far behind` | Reads your own mastery and tells you, privately. | `skills/behind/index.ts` |
+| **Homework policy** | `@nook just do my homework`, `solve problem 3`, `give me the final answer`, `do hw 2` | Nook will not hand over graded answers. You get a hint and the course policy from your syllabus. | `skills/hwpolicy/index.ts` |
+| **Quiz me** | `@nook quiz me on ch1` (also `chapter 3`, `quiz on 3`, `quiz 3`) | A short quiz on that chapter. Answer with a letter such as `B`, or a few words. | `skills/quiz/quizSkill.ts` |
+| **Feynman** | `@nook feynman ch3 gradient descent` (chapter optional: `feynman gradient descent`) | You explain, a freshman asks up to two why questions, then written feedback. | `skills/feynman/feynmanSkill.ts` |
+| **Step diff** | In the group: `@nook diff`. Add the word `private` to compare without showing steps. Then two people DM Nook a photo of their steps. | Nook finds the first step where you split, not who is right. | `skills/stepdiff/stepDiffSkill.ts` |
+| **Study plan** | `@nook study plan`, `plan the midterm`, `plan the final`, `plan the exam` | A shared study plan built from each member's mastery and free time, by the agents, without exposing calendars. You confirm by DM. | `skills/studyplan/studyPlanSkill.ts` |
+| **Course planning** (Round Table) | `@nook plan my next semester`, `pick my classes`, `what classes should I take`, `register for next semester`. Say a season, "light", "graduate early", "max 15 credits" or what you have finished to steer it. | Three advisors argue; the chairman gives one plan with credits and workload in words. Phrases with study, exam, quiz or final go to Study plan instead. | `skills/courseplan/skill.ts` |
+| **Podcast** | `@nook podcast ch3`, `recap radio`. Add `my` or `for me` in a group for your personal cut (in a DM it is always personal). | A short audio recap of a chapter. Needs a voice key; otherwise you get "I couldn't make that just now". | `apps/bot/src/skills/media.ts` |
+| **Explainer picture** | `@nook picture it ch3`, `explainer`, `diagram`, `infographic` | An image that explains the chapter idea. | `apps/bot/src/skills/media.ts` |
+| **Plain chat** | Anything else, when you mention Nook | A short friendly reply. | `apps/bot/src/skills/chat.ts` |
 
-If you ask for media on a chapter with no uploaded material, Squad says "I don't have course materials for that yet." Upload your PDFs in setup.
+If you ask for media on a chapter with no uploaded material, Nook says "I don't have course materials for that yet." Upload your PDFs in setup.
 
 ### Rooms and council skills (landed in batch 2 and 3)
 
 | Skill | Phrase | Source |
 | --- | --- | --- |
-| Debate | `@squad debate should we ...?`, or `debate this` | on `main` |
-| Devil's TA | `@squad devil's TA ch3 gradient descent`, `find the mistake` | on `main` |
-| Exam Oracle | `@squad exam oracle`, `what should I study next`, `predict my exam` | on `main` |
-| Rubric check | `@squad rubric check`, `check my answer against the rubric` | on `main` |
-| Oral exam | `@squad oral exam`, `practice an oral` | on `main` |
-| Council on demand | `@squad council <question>`, `ask the council ...` (council panel and chat card) | on `main` |
+| Debate | `@nook debate should we ...?`, or `debate this` | on `main` |
+| Devil's TA | `@nook devil's TA ch3 gradient descent`, `find the mistake` | on `main` |
+| Exam Oracle | `@nook exam oracle`, `what should I study next`, `predict my exam` | on `main` |
+| Rubric check | `@nook rubric check`, `check my answer against the rubric` | on `main` |
+| Oral exam | `@nook oral exam`, `practice an oral` | on `main` |
+| Council on demand | `@nook council <question>`, `ask the council ...` (council panel and chat card) | on `main` |
 
 ## 5. The rooms
 
@@ -77,16 +77,16 @@ The village has 13 rooms. You can walk into any of them at <http://localhost:518
 
 | Room | For | Try |
 | --- | --- | --- |
-| Chapter houses 1 to 4 | Quiz one chapter | `@squad quiz me on ch1` |
-| Council Hall | Blind check of quiz answer keys | `@squad council <question>` (on demand); the quiz-key check behind quizzes is still partial |
-| Debate Stage | Two sides of an argument | `@squad debate should we ...?` |
-| Round Table | Plan your next term | `@squad plan my next semester` |
-| Feynman Porch | Explain an idea simply | `@squad feynman ch3 gradient descent` |
-| Panic Line booth | Find where two solutions split | `@squad diff` |
-| Exam Oracle | What to study next | `@squad exam oracle` |
-| Oral Exam Hut | Practise aloud | `@squad oral exam` |
-| Rubric Courthouse | Check against criteria | `@squad rubric check` |
-| Devil's TA | Find the planted mistake | `@squad devil's TA ch3 gradient descent` |
+| Chapter houses 1 to 4 | Quiz one chapter | `@nook quiz me on ch1` |
+| Council Hall | Blind check of quiz answer keys | `@nook council <question>` (on demand); the quiz-key check behind quizzes is still partial |
+| Debate Stage | Two sides of an argument | `@nook debate should we ...?` |
+| Round Table | Plan your next term | `@nook plan my next semester` |
+| Feynman Porch | Explain an idea simply | `@nook feynman ch3 gradient descent` |
+| Panic Line booth | Find where two solutions split | `@nook diff` |
+| Exam Oracle | What to study next | `@nook exam oracle` |
+| Oral Exam Hut | Practise aloud | `@nook oral exam` |
+| Rubric Courthouse | Check against criteria | `@nook rubric check` |
+| Devil's TA | Find the planted mistake | `@nook devil's TA ch3 gradient descent` |
 
 ![Village](../design/shots/merge1/village-track2-desk.png)
 
@@ -111,7 +111,7 @@ What is never shared:
 
 How it works, and its limits, stated honestly: common free slots use private set intersection (ECDH on ristretto255); budget, veto, ranked-vote and topic counts use additive secret sharing so only totals are revealed. This is **not zero-knowledge**. It assumes participants follow the protocol; an agent that lies about its own numbers is not caught. Things you trust our code for: the privacy gate that drops any message containing a private value, each agent computing its own bits honestly, the ledger, and your DMs. The full table is in [`packages/mesh/README.md`](../../packages/mesh/README.md).
 
-Squad answers from your own course files and shows its citations. For graded homework it gives a hint and your syllabus policy, never the answer.
+Nook answers from your own course files and shows its citations. For graded homework it gives a hint and your syllabus policy, never the answer.
 
 ## 7. Troubleshooting
 
@@ -120,12 +120,12 @@ Squad answers from your own course files and shows its citations. For graded hom
 | Banner says "Demo mode" | No `GEMINI_API_KEY` was found, so answers come from the scripted stand-in. Add the key to `.env` and restart `pnpm dev:all`. Check <http://localhost:8788/v1/status>. |
 | `/v1/status` shows `"llm":"fake"` with a `reason` | `no_key` (no key), `forced_fake` (`FORCE_FAKE_LLM=1`), `credits_depleted` (Gemini billing out of credits; rechecked every minute), `invalid_key` (key rejected; rechecked every 10 minutes), `rate_limited` (Gemini is limiting you; recovers on its own). It switches back to the real model by itself once a probe succeeds; `nextProbeAt` shows when. |
 | `"tts":"none"` | No `ELEVENLABS_API_KEY`; podcasts are unavailable. Text features still work. |
-| Squad does not answer in the group | You did not mention it. Use `@squad ...` or start with `cubbie,`. |
+| Nook does not answer in the group | You did not mention it. Use `@nook ...` or start with `cubbie,`. |
 | "I don't have course materials for that yet." | Upload your PDFs in `/squad/setup`, and name a chapter that exists. |
 | Blank village | The village loads only on its own page. Hard reload `/squad/village`. For the offline demo use `/squad/village?replay=track2`. |
 | Port already in use | `pnpm dev:all` honours `DEV_ALL_HUB_PORT` and `DEV_ALL_WEB_PORT`. Free 8788 and 5180, or set those. |
 | Install or run errors | Use Node 20 or newer and pnpm 10 (`corepack enable`). Run `pnpm squad:doctor` to check your setup. |
 | A room says nothing in chat starts it yet | Check the phrase in [ROOMS.md](ROOMS.md); the status box there says which parts are still partial. |
-| Step diff waits | Both people must DM Squad their photo (or a multi-line text of their steps). |
+| Step diff waits | Both people must DM Nook their photo (or a multi-line text of their steps). |
 
 For the five-minute demo with no keys and no phones, use `pnpm demo:seed` then `pnpm demo:replay track2` (see the root README).

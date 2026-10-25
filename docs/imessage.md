@@ -78,7 +78,7 @@ The other direction: a signed-in student enters their number in Setup (`POST /v1
 
 ## 3. Binding a group
 
-In an iMessage group that has the bot (see limitations) a member sends `join ABCD-EFGH` or `@squad join ABCD-EFGH` (a
+In an iMessage group that has the bot (see limitations) a member sends `join ABCD-EFGH` or `@nook join ABCD-EFGH` (a
 pasted invite link works). The invite is validated by the existing invite logic (`squads.preview` then `squads.join`):
 wrong, expired, revoked and used-up codes get a plain-words refusal and bind nothing. The sender must be a known
 account. If the sender is not yet in the squad they join it with that invite; if they already are, the code is just the
@@ -86,8 +86,8 @@ proof. The chat is then bound and the bot tells the group who is linked, who sti
 never a full one) and which squad members it has not heard from in the chat yet.
 Note: Apple and imessage-kit expose no group member list, so participants are learned as they speak.
 
-- `@squad who is linked` repeats the summary.
-- `@squad leave squad` unbinds. Only the squad owner may.
+- `@nook who is linked` repeats the summary.
+- `@nook leave squad` unbinds. Only the squad owner may.
 - Unbound group: the bot only answers a mention, once per 10 minutes, with how to join. Banter is ignored.
 - Bound group: messages from squad members are relayed into the web squad chat. Messages from numbers that are not
   matched, or from accounts not in the squad, are not relayed; on a mention they get one short hint per 10 minutes.
@@ -125,7 +125,7 @@ handled by the web app (it opens the squad page); adjust `link` in `bridge.ts` i
 
 Fail closed: enabled with no allowlist and no `IMESSAGE_ALLOW_ALL=1` refuses to start (the hub logs why and continues
 without iMessage; the standalone bot exits). Loop protection: own messages (`isFromMe`), tapbacks and non-text are
-ignored; a message that starts with a persona prefix (`🐻 Squad: `) is ignored (another bot, or our own echo); the exact
+ignored; a message that starts with a persona prefix (`🐻 Nook: `) is ignored (another bot, or our own echo); the exact
 text we just sent is ignored for 60 s; a sender that sends more than 8 messages in 10 s is muted for 5 minutes. Dedupe by
 Apple's message guid is persistent (`imsg_seen`, 7 days), so a restart does not replay old messages.
 
@@ -172,17 +172,17 @@ spare ID and a second number or device that you own. Section 8.8 is the sync-spe
    `curl -X POST $HUB/v1/imessage/link -H "Authorization: Bearer <token>" -H 'content-type: application/json' -d '{"code":"ABC234"}'`.
    Then text again: the message is in your web DM thread (`dm:<you>`) and the answer comes back to the phone.
 8. **Live, group.** Create a squad on the web, make an invite (`Members > Invite`). In the `Squad Test` group send
-   `join ABCD-EFGH`. Expect: a message naming who is linked and who still needs to sign up. Then `@squad what is a
-   z-score?`: the answer appears in the group and in the web squad chat. Type in the web group chat: `@squad ...`: the
-   answer is mirrored into the iMessage group. Plain banter gets no reply. `@squad leave squad` (as owner) unbinds.
+   `join ABCD-EFGH`. Expect: a message naming who is linked and who still needs to sign up. Then `@nook what is a
+   z-score?`: the answer appears in the group and in the web squad chat. Type in the web group chat: `@nook ...`: the
+   answer is mirrored into the iMessage group. Plain banter gets no reply. `@nook leave squad` (as owner) unbinds.
 9. **Confirm and quiz.** In the 1:1 trigger a confirm (for example a pinky promise); expect `Reply 1 to confirm, 2 to
    cancel.` and a `1` reply to work. In the group ask for a quiz; reply with a number.
-10. **What to expect**: replies start with `🐻 Squad:`; long answers arrive as up to 5 short messages about a second apart;
+10. **What to expect**: replies start with `🐻 Nook:`; long answers arrive as up to 5 short messages about a second apart;
     no markdown; no attachments (podcasts and pictures arrive as a title and a link).
 
 Kill switch and rollback: unset `IMESSAGE_ENABLED` (or set it to `0`) and restart the hub; nothing is read or sent. To
 keep the hub running but stop all outbound without a restart, there is no hot switch: restart. To undo a binding use
-`@squad leave squad` or `DELETE FROM chat_bindings WHERE chat_guid=...`. If check 2 fails on macOS 27, use
+`@nook leave squad` or `DELETE FROM chat_bindings WHERE chat_guid=...`. If check 2 fails on macOS 27, use
 `TRANSPORT=discord` (`apps/bot/DISCORD.md`); nothing else changes. Remove the spare ID from Messages when done.
 
 ## 7. Verified and unverified
@@ -266,7 +266,7 @@ Failure reasons: `transport_error`, `chat_not_allowed`, `handle_not_allowed`, `k
 
 | Setting (per squad) | Web squad chat -> bound iMessage groups |
 |---|---|
-| `bot_and_mentions` (default) | bot replies, and student messages that @mention an agent (`@squad`, `@cubbi` and the aliases of the shared mention parser) |
+| `bot_and_mentions` (default) | bot replies, and student messages that @mention an agent (`@nook`, `@squad`, `@cubbi` and the aliases of the shared mention parser) |
 | `bot_only` | bot replies only |
 | `full` | every student message |
 
@@ -275,7 +275,7 @@ Always: DMs never cross threads in either direction (a web DM is not mirrored to
 in a squad chat); a mirrored text is checked against the sentinels and the ledger's private values and kept on the web
 (`web_only`, "Kept on the web: it contains private info") on a hit; several groups bound to one squad all receive the
 mirror, and each group only ever receives its own squad's messages; an unbound group is neither read nor written.
-The `@squad` / `@cubbi` detection is `detectMention` today; when `feature/typed-mentions` lands on main the bridge takes its
+The `@nook` / `@squad` / `@cubbi` detection is `detectMention` today; when `feature/typed-mentions` lands on main the bridge takes its
 aliases from that shared parser (one call site: `mirrorStudent` and `groupInbound` in `bridge.ts`).
 
 ### 8.5 Attachments
@@ -314,10 +314,10 @@ Own account and own chats only; never a third party; never read the real Message
 
 1. `IMESSAGE_ENABLED=1 IMESSAGE_DRY_RUN=1` with `IMESSAGE_ALLOWED_CHATS` set to one chat that only you are in and
    `IMESSAGE_ALLOWED_HANDLES` to your own number. Send yourself a message: it appears on the web with "via iMessage"; a web
-   `@squad` message shows "Dry run, not sent" and nothing arrives on the phone.
-2. Remove `IMESSAGE_DRY_RUN`, restart. Web `@squad ...`: the phone gets `<name> (via Squad): ...`, the web state goes
+   `@nook` message shows "Dry run, not sent" and nothing arrives on the phone.
+2. Remove `IMESSAGE_DRY_RUN`, restart. Web `@nook ...`: the phone gets `<name> (via Nook): ...`, the web state goes
    queued -> sent (and delivered if Apple reports receipts). Note whether Apple reports a GUID and a receipt at all.
-3. Quit Messages.app or sleep the Mac, send yourself three messages and one web `@squad`, wake: the three appear once, in
+3. Quit Messages.app or sleep the Mac, send yourself three messages and one web `@nook`, wake: the three appear once, in
    order, flagged late; the web message goes out after reconnect. Turn Wi-Fi off and send from the web: a failed send shows
    "Failed: ..." and Retry works.
 4. Send yourself a PNG and a `.mov`: the PNG shows, the `.mov` shows an "Attachment not shown" placeholder.

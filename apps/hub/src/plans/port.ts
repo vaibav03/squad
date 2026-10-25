@@ -60,7 +60,7 @@ export function createPlanPort(deps: Pick<HubDeps, 'plans' | 'log'>): PlanPort {
                 }
               : {
                   ok: false,
-                  text: 'There is no study plan yet. Say "@squad study plan for the exam on Nov 4" to start one.',
+                  text: 'There is no study plan yet. Say "@nook study plan for the exam on Nov 4" to start one.',
                 };
           case 'accept':
           case 'decline':

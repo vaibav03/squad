@@ -4,7 +4,7 @@ export type ImessageCommand =
   { kind: 'join'; code: string | null } | { kind: 'leave' } | { kind: 'who' };
 
 const MENTION =
-  /^\s*(?:hey\s+|hi\s+)?(?:@(?:cubbie|cubbi|squad)(?![\p{L}\p{N}_])[:,]?|cubbie\b[:,])\s*/iu;
+  /^\s*(?:hey\s+|hi\s+)?(?:@(?:nook|cubbie|cubbi|squad)(?![\p{L}\p{N}_])[:,]?|cubbie\b[:,])\s*/iu;
 
 /** Removes a leading @cubbie / `cubbie,` / `hey cubbie` and says whether there was one. */
 export function stripMention(text: string): { text: string; mentioned: boolean } {

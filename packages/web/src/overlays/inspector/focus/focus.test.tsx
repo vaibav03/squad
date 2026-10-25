@@ -148,7 +148,7 @@ describe('empty states carry time, source, mode and a way forward', () => {
     expect(meta.textContent).toMatch(/Mode/);
     expect(meta.querySelector('time')!.getAttribute('title')).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Start a council' }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: 'Ask Squad' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'Ask Nook' }).length).toBeGreaterThan(0);
   });
 });
 
@@ -302,14 +302,14 @@ describe('focused agent panel: keyboard', () => {
 });
 
 describe('focused agent panel: empty states', () => {
-  it('no run ever: "No messages involving <name> yet" with Start a council and Ask Squad', async () => {
+  it('no run ever: "No messages involving <name> yet" with Start a council and Ask Nook', async () => {
     const { store } = boot({ run: false });
     render(<InspectorPanel store={store} />);
     act(() => store.select(SK));
     await settle();
     expect(screen.getByText('No messages involving Skeptic yet')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Start a council' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Ask Squad' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Ask Nook' })).toBeTruthy();
     expect(screen.getByText('No council has run yet', { exact: false })).toBeTruthy();
     // no hub: honest example-mode badge
     expect(screen.getAllByTestId('af-help-badge')[0]!.textContent).toBe(
@@ -321,13 +321,13 @@ describe('focused agent panel: empty states', () => {
       expect(screen.queryAllByTestId('af-help').length, tab).toBeGreaterThan(0);
     }
   });
-  it('a non-council agent gets "Ask Squad about <topic>" instead of a dead end', async () => {
+  it('a non-council agent gets "Ask Nook about <topic>" instead of a dead end', async () => {
     const store = createInspectorStore({ me: 's_ana' });
     store.apply({ t: 'agent.state', agent: 'expert:ch6', state: 'studying' });
     render(<InspectorPanel store={store} />);
     act(() => store.select('expert:ch6'));
     await settle();
-    expect(screen.getByRole('button', { name: /^Ask Squad about Chapter 6 expert/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Ask Nook about Chapter 6 expert/ })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Start a council' })).toBeNull();
   });
   it('a persisted last run shows "Last council: <time>, <mode>" instead', async () => {

@@ -288,7 +288,7 @@ describe('Council board', () => {
     expect(dlg.querySelector('article.dl-turn[data-hl=true]')).toBeTruthy();
   });
 
-  it('Ask follow-up drafts a message mentioning @squad and the run id in the group chat composer', async () => {
+  it('Ask follow-up drafts a message mentioning @nook and the run id in the group chat composer', async () => {
     const store = loaded();
     const drafts: string[] = [];
     const on = (e: Event) => drafts.push((e as CustomEvent<{ text: string }>).detail.text);
@@ -299,7 +299,7 @@ describe('Council board', () => {
     );
     window.removeEventListener('squad:chat-prefill', on);
     expect(drafts).toHaveLength(1);
-    expect(drafts[0]).toContain('@squad');
+    expect(drafts[0]).toContain('@nook');
     expect(drafts[0]).toContain(store.run()!.runId);
     expect(onClose).toHaveBeenCalled();
   });

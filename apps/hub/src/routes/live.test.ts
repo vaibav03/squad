@@ -179,7 +179,7 @@ describe('live routes', () => {
     expect(out.ref).toMatch(/^m_/);
     const m = hub.deps.chat.store.get(out.ref);
     expect(m?.card).toMatchObject({ type: 'live', liveId: json.id });
-    expect(m?.sender.name).toBe('Squad');
+    expect(m?.sender.name).toBe('Nook');
     expect((await call(`/v1/live/${json.id}/actions/post-chat`, 's_ben', {})).status).toBe(403);
     const plan = await call(`/v1/live/${json.id}/actions/study-plan`, 's_ana', {});
     expect(plan.status).toBe(200);

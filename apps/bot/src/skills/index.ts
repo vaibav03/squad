@@ -85,7 +85,7 @@ export interface SkillDeps {
   context?: {
     store: ContextStore;
     viewerFor: (m: { from: string }) => ContextViewer | undefined;
-    /** True when a real model (not the demo one) is answering: "Ask Squad" answers are then phrased by it, still only from the source. */
+    /** True when a real model (not the demo one) is answering: "Ask Nook" answers are then phrased by it, still only from the source. */
     llmIsReal?: () => boolean;
   };
   /** Starts a live agent discussion through the hub; omit and `discuss:` is not registered. */

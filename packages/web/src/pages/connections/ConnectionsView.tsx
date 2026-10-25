@@ -298,7 +298,7 @@ function ConnectionCard({ c, p }: { c: Connection; p: ViewProps }) {
               data-testid="ask-cubbie-primary"
               onClick={() => askCubbie(p.squadId!, pickAskItems(rows, p.now), p.navigate)}
             >
-              Ask Squad with this
+              Ask Nook with this
             </Button>
           ) : null}
           {p.squadId ? (

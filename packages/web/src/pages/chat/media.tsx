@@ -14,7 +14,7 @@ export function ImageAttachment({
   att: ChatAttachment;
   url: string;
   scene?: boolean;
-  /** what the message says it is ("Picture from Squad"); falls back to the file name */
+  /** what the message says it is ("Picture from Nook"); falls back to the file name */
   label?: string;
 }) {
   const [open, setOpen] = useState(false);

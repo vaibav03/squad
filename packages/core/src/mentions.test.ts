@@ -15,9 +15,9 @@ const ids = (t: string) => parseMentions(t).mentions.map((m) => m.agent.id);
 const unknown = (t: string) => parseMentions(t).unknownMention.map((u) => u.word);
 
 describe('alias table', () => {
-  it('lists Squad first and every id/alias once', () => {
+  it('lists Nook first and every id/alias once', () => {
     expect(AGENT_ALIASES[0]!.id).toBe('cubbie');
-    expect(AGENT_ALIASES[0]!.aliases).toEqual(['squad', 'cubbie', 'cubbi']);
+    expect(AGENT_ALIASES[0]!.aliases).toEqual(['nook', 'squad', 'cubbie', 'cubbi']);
     const all = AGENT_ALIASES.flatMap((a) => a.aliases);
     expect(new Set(all).size).toBe(all.length);
     expect(new Set(AGENT_ALIASES.map((a) => a.id)).size).toBe(AGENT_ALIASES.length);
@@ -52,6 +52,11 @@ describe('alias table', () => {
 
 describe('parseMentions: positives', () => {
   it.each([
+    '@nook hi',
+    '@Nook hi',
+    '@NOOK hi',
+    '@squad hi',
+    '@Squad hi',
     '@cubbie hi',
     '@Cubbie hi',
     '@CUBBIE hi',
@@ -99,6 +104,9 @@ describe('parseMentions: not mentions', () => {
     'lol',
     'cubbie',
     'cubbie is slow',
+    'nook',
+    'a quiet nook in the library',
+    'squad goals',
     '@cubbies',
     '@cubb',
     '@cub',
@@ -144,7 +152,7 @@ describe('parseMentions: unknown tags', () => {
     expect(unknown('@nobodyhome help')).toEqual(['nobodyhome']);
     expect(unknown('hi @bob and @Alice and @bob')).toEqual(['bob', 'Alice']);
   });
-  it('a homoglyph lookalike is unknown, never Squad', () => {
+  it('a homoglyph lookalike is unknown, never Nook', () => {
     expect(ids('@\u0441ubbie hi')).toEqual([]);
     expect(unknown('@\u0441ubbie hi')).toHaveLength(1);
   });
@@ -161,7 +169,7 @@ describe('parseMentions: unknown tags', () => {
   });
   it('help text lists the agents and caps the echoed word', () => {
     const h = mentionHelpText('x'.repeat(60));
-    expect(h).toContain('@squad');
+    expect(h).toContain('@nook');
     expect(h).toContain('@tutor');
     expect(h).toContain('@quiz');
     expect(h).not.toContain('x'.repeat(30));
@@ -169,8 +177,9 @@ describe('parseMentions: unknown tags', () => {
 });
 
 describe('suggestAliases', () => {
-  it('lists Squad first and matches @cub and @cubbi', () => {
-    expect(suggestAliases('')[0]!.alias).toBe('squad');
+  it('lists Nook first and matches @cub and @cubbi', () => {
+    expect(suggestAliases('')[0]!.alias).toBe('nook');
+    expect(suggestAliases('no').map((s) => s.alias)).toEqual(['nook']);
     expect(suggestAliases('cub').map((s) => s.alias)).toEqual(['cubbie', 'cubbi']);
     expect(suggestAliases('cubbi').map((s) => s.alias)).toEqual(
       ['cubbie', 'cubbi'].filter((a) => a.startsWith('cubbi')),

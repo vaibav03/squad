@@ -28,7 +28,7 @@ function setup(skills: Skill[] = [], confirmTimeoutMs?: number) {
 
 describe('web-format', () => {
   it('strips the persona prefix only when it matches', () => {
-    expect(stripPersonaPrefix(undefined, '\u{1F43B} Squad: hi there')).toBe('hi there');
+    expect(stripPersonaPrefix(undefined, '\u{1F43B} Nook: hi there')).toBe('hi there');
     expect(stripPersonaPrefix(undefined, 'hi there')).toBe('hi there');
   });
 
@@ -77,7 +77,7 @@ describe('WebTransport through the real router', () => {
     expect(t.out[0]).toMatchObject({
       chatId: 'group:sq_demo',
       personaId: 'cubbie',
-      personaName: 'Squad',
+      personaName: 'Nook',
       text: 'hello from the bot',
     });
   });

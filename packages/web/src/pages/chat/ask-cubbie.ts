@@ -1,4 +1,4 @@
-// "Ask Squad" handoff between an imported-item UI (Connections, Home) and the chat composer.
+// "Ask Nook" handoff between an imported-item UI (Connections, Home) and the chat composer.
 // The item UI calls `queueAskCubbie` and navigates to the chat; the composer for that chat takes it on mount, asks the hub
 // for a VERIFIED context ref, shows a removable chip and prefills (never sends) the prompt.
 import { providerOfSourceKind, sourceChipLabel, type ChatContextRef } from '@squad/core';
@@ -6,7 +6,7 @@ import { providerOfSourceKind, sourceChipLabel, type ChatContextRef } from '@squ
 export const PENDING_CONTEXT_KEY = 'squad.pendingContext';
 
 export interface PendingAsk {
-  /** `group:<squad>` or `dm:<student>`; defaults to the DM with Squad when omitted. */
+  /** `group:<squad>` or `dm:<student>`; defaults to the DM with Nook when omitted. */
   chatId: string;
   sourceIds: { sourceId: string; anchor?: string }[];
   prefill?: string;
@@ -39,7 +39,7 @@ export function takePendingAsk(chatId: string): PendingAsk | null {
 }
 
 export const defaultPrefill = (title: string): string =>
-  `@squad what should I focus on for ${title}?`;
+  `@nook what should I focus on for ${title}?`;
 
 /** `Demo: Canvas` / `Demo: Google` for simulated sources, `Canvas` / `Google` for real imports. */
 export const provenanceBadge = (p: ChatContextRef['provenance'], kind = ''): string => {

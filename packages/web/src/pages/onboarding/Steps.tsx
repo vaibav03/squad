@@ -211,7 +211,7 @@ export function ConnectStep({ t }: { t: TourData }) {
   );
 }
 
-/** Step 3: what was imported, with citations and Ask Squad (the shared review component, embedded). */
+/** Step 3: what was imported, with citations and Ask Nook (the shared review component, embedded). */
 export function ReviewStep({ t }: { t: TourData }) {
   const counts = categoryCounts(t.connections, t.rows);
   return (

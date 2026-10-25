@@ -115,7 +115,7 @@ export function createPactSkill(deps: PactSkillDeps): Skill {
       }
 
       const c = parseCommitment(m.text);
-      if (!c) return reply('What are you promising? Try: @squad I will finish ch6 by Friday.');
+      if (!c) return reply('What are you promising? Try: @nook I will finish ch6 by Friday.');
       const d = scanDeadline(c.withDeadline, now, tz);
       if (!d)
         return reply(
@@ -126,7 +126,7 @@ export function createPactSkill(deps: PactSkillDeps): Skill {
           'I need a deadline between now and 60 days from now. Could you say it more clearly, like "by Friday 5pm"?',
         );
       const task = cleanTask(d.rest);
-      if (!task) return reply('What are you promising? Try: @squad I will finish ch6 by Friday.');
+      if (!task) return reply('What are you promising? Try: @nook I will finish ch6 by Friday.');
 
       const name =
         (

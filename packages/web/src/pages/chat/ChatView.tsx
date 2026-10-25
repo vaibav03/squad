@@ -107,7 +107,7 @@ export function ChatView({
         <EmptyState
           icon="message"
           title="Chat is offline"
-          body="Connect to a hub to talk with your squad and Squad. Sign in with a hub URL to start."
+          body="Connect to a hub to talk with your squad and Nook. Sign in with a hub URL to start."
         />
       </div>,
     );
@@ -203,7 +203,7 @@ export function ChatView({
             <EmptyState
               icon="message"
               title="Pick a chat"
-              body="Choose your squad or your private chat with Squad."
+              body="Choose your squad or your private chat with Nook."
             />
           )}
         </section>

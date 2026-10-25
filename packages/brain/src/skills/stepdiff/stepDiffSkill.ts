@@ -38,7 +38,7 @@ export function createStepDiffSkill(deps: StepDiffSkillDeps): Skill {
       }
       const open = engine.openFor(m.from);
       if (!open)
-        return to(m.chatId, 'There is no open diff for you. Ask in your group: "@squad diff".');
+        return to(m.chatId, 'There is no open diff for you. Ask in your group: "@nook diff".');
       const photo = m.attachments.find(isImage);
       const res = photo
         ? await engine.submitPhoto(open.id, m.from, photo)

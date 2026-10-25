@@ -66,7 +66,7 @@ interface Handling {
   storedId?: string;
 }
 
-const PREFIX = '\u{1F43B} Squad: ';
+const PREFIX = '\u{1F43B} Nook: ';
 const PRIVATE_FALLBACK = 'I kept that private. Ask me in a DM.';
 const WEB_DM_QUIET_MS = 10 * 60_000;
 const QUIZ_TTL_MS = 30 * 60_000;
@@ -207,7 +207,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       lines.push(
         `Squad members I have not heard from in this chat yet: ${missing.slice(0, 8).join(', ')}. Say hi so I can match you.`,
       );
-    lines.push('Say @squad plus your question and I will answer here and in the web chat.');
+    lines.push('Say @nook plus your question and I will answer here and in the web chat.');
     return lines.join('\n');
   }
 
@@ -352,7 +352,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       handles.set(DEMO_USER, m.sender);
       say(
         m.sender,
-        'This number is now linked to the Squad demo student (sample data, not a real account). Try: @squad what is due from Canvas this week and what Google files should I study?',
+        'This number is now linked to the Squad demo student (sample data, not a real account). Try: @nook what is due from Canvas this week and what Google files should I study?',
       );
       return;
     }
@@ -361,7 +361,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       if (!hintCooldown(`first:${id.hash}`))
         say(
           m.sender,
-          `Hi, I am Squad, the study bot. I do not know this number yet.\n1. Sign up or sign in at ${web}/welcome\n2. Enter this code to connect this number: ${code} (valid 30 minutes)\nIf you sign up with this exact number, I will recognise it on my own.`,
+          `Hi, I am Nook, the study bot. I do not know this number yet.\n1. Sign up or sign in at ${web}/welcome\n2. Enter this code to connect this number: ${code} (valid 30 minutes)\nIf you sign up with this exact number, I will recognise it on my own.`,
         );
       return;
     }
@@ -404,7 +404,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
         say(m.chatGuid, 'The demo squad is not available.');
         return;
       }
-      // demo only: this handle acts as the demo student, so @squad sees the same (Demo) context as the web
+      // demo only: this handle acts as the demo student, so @nook sees the same (Demo) context as the web
       deps.db
           .prepare(
             'INSERT INTO imsg_demo_links(handle_hash,user_id,linked_at) VALUES(?,?,?) ON CONFLICT(handle_hash) DO UPDATE SET user_id=excluded.user_id',
@@ -431,7 +431,7 @@ export function createIMessageBridge(o: BridgeOptions): IMessageBridge {
       if (bound) {
         say(
           m.chatGuid,
-          `This chat is already linked to ${squadName(bound.squadId)}. The squad owner can say @squad leave squad to unlink it first.`,
+          `This chat is already linked to ${squadName(bound.squadId)}. The squad owner can say @nook leave squad to unlink it first.`,
         );
         return;
       }

@@ -277,7 +277,7 @@ export function StudyFlow({ hub, seed }: { hub: PlanHub | null; seed?: PlanSeed 
           <PlanSummary plan={plan} />
           <p className="sqp-note" role="status">
             <Icon name="check" size={14} /> The shared plan card is in the group chat. Everyone can
-            edit, accept or ask Squad from it.
+            edit, accept or ask Nook from it.
           </p>
         </div>
       ) : null}

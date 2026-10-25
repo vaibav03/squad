@@ -178,7 +178,7 @@ export function dueReply(
     const upTo = win.kind === 'all' ? '' : ` ${win.label}`;
     const head = `Nothing due${upTo}${win.kind === 'week' ? ` (through ${exactDue(now + 7 * DAY, tz).replace(/, .*$/, '')})` : ''}.`;
     const nextLine = next
-      ? ` Next after that: ${next.title} (${courseOf(store, next, courseNames) || 'no course'}), due ${exactDue(next.dueAt!, tz)}. Ask "@squad what is due after this week?" to see later items.`
+      ? ` Next after that: ${next.title} (${courseOf(store, next, courseNames) || 'no course'}), due ${exactDue(next.dueAt!, tz)}. Ask "@nook what is due after this week?" to see later items.`
       : " You're all caught up.";
     return { text: head + nextLine, citations: next ? [cite(next)] : [] };
   }
@@ -189,7 +189,7 @@ export function dueReply(
   const more = laterAll.length - laterShown.length;
   const followUp = laterShown.length
     ? `\n\nNext after this week:\n${laterShown.map(line).join('\n')}${
-        more > 0 ? `\n(${more} more. Ask "@squad what is due after this week?" to list them.)` : ''
+        more > 0 ? `\n(${more} more. Ask "@nook what is due after this week?" to list them.)` : ''
       }`
     : '';
   return {
@@ -306,7 +306,7 @@ export function combinedDueStudyReply(
   const files = sources.filter((s) => STUDY_FILE_KINDS.has(s.kind));
   if (files.length === 0)
     return {
-      text: `${due.text}\n\nGoogle files to study: no Google Drive or Docs files are imported yet. Connect Google in Connections and pick the files you want Squad to read.`,
+      text: `${due.text}\n\nGoogle files to study: no Google Drive or Docs files are imported yet. Connect Google in Connections and pick the files you want Nook to read.`,
       citations: due.citations,
     };
   const win = dueWindow(q, now, tz);

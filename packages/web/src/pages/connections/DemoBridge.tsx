@@ -12,14 +12,14 @@ interface DemoState {
 }
 
 /**
- * The Demo/Fixture iMessage bridge switch. Runs the whole loop (iMessage in, same web group, @squad, mirrored out,
+ * The Demo/Fixture iMessage bridge switch. Runs the whole loop (iMessage in, same web group, @nook, mirrored out,
  * delivery states) on a scripted transport: no Sendblue credentials, nothing is ever sent. Off until you press Start.
  */
 export function DemoBridge() {
   const cfg = useSquadConfig();
   const [st, setSt] = useState<DemoState | null>(null);
   const [busy, setBusy] = useState(false);
-  const [text, setText] = useState('@squad what is due this week?');
+  const [text, setText] = useState('@nook what is due this week?');
   const [msg, setMsg] = useState('');
   const headers = useCallback(
     () => ({
