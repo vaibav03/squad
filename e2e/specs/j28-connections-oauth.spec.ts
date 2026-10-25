@@ -73,7 +73,7 @@ test('Google fixture consent lands back on the origin the browser started on', a
     .getByRole('article', { name: 'google connection' })
     .filter({ hasNotText: /revoked/i });
   await expect(card).toBeVisible({ timeout: 20_000 });
-  await expect(card).toContainText('Demo data, not a real account'); // honest fixture label
+  await expect(card).toContainText('Fixture (simulated, not your account)'); // honest fixture label
   await expect(card).toContainText('1 Classroom items');
   await expect(card).toContainText('2 calendar events');
   await expect(card).toContainText('nobody (private to you)'); // sharing default is private
@@ -127,14 +127,13 @@ test('Canvas: the extension route is honest and the calendar feed (.ics) route c
   await expect(canvas).toContainText('No Canvas password or API token is given to Squad');
   await snap(ana, 'oauth-3-canvas-extension-not-detected');
 
-  await canvas.getByText('No extension? Paste your Canvas calendar feed URL').click();
   await canvas.getByLabel('Canvas calendar feed URL').fill(FEED);
   await canvas.getByRole('button', { name: 'Connect feed' }).click();
   const card = page
     .getByRole('article', { name: 'canvas connection' })
     .filter({ hasNotText: /revoked/i });
   await expect(card).toBeVisible({ timeout: 20_000 });
-  await expect(card).toContainText('Demo data, not a real account');
+  await expect(card).toContainText('Fixture (simulated, not your account)');
   await expect(card).toContainText(/3 (Canvas events|assignments)|assignments|Canvas events/);
   await expect(card).toContainText('nobody (private to you)');
   // the feed URL is a secret: never rendered back

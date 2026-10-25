@@ -571,6 +571,7 @@ export function ThreadPane({
         key={`c-${chat.id}`}
         api={ctl.api}
         chatKind={chat.kind}
+        chatId={chat.id}
         compact={compact}
         paused={paused}
         onSend={(input) => ctl.send(chat.id, input)}

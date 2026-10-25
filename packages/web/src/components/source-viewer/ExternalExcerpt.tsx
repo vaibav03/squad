@@ -32,7 +32,7 @@ export function ExternalExcerptBody({ excerpt }: { excerpt: ExternalSourceExcerp
         <span className="sq-source__badge">{SOURCE_KIND_LABEL[excerpt.sourceKind]}</span>
         {fixture ? (
           <span className="sq-source__badge sq-source__badge--demo" data-testid="source-fixture">
-            Demo data, not a real account
+            Fixture (simulated, not your account)
           </span>
         ) : null}
         {excerpt.shared ? <span className="sq-source__badge">Shared by a squad member</span> : null}

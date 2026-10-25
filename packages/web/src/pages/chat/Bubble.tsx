@@ -264,6 +264,30 @@ export function MessageBubble(p: BubbleProps) {
           />
         ) : null}
 
+        {m.context?.length ? (
+          <ul className="sqc-ctxchips is-sent" aria-label="Attached context">
+            {m.context.map((c) => (
+              <li
+                key={c.sourceId}
+                className="sqc-ctxchip"
+                data-testid="message-context-chip"
+                data-provenance={c.provenance}
+              >
+                <span className="sqc-ctxchip__main">
+                  <Icon name="file" size={14} />
+                  <strong className="sqc-ctxchip__title">{c.title}</strong>
+                  <span className="sqc-ctxchip__meta">
+                    {[c.courseName, c.eventLabel, c.location?.label].filter(Boolean).join(' · ')}
+                  </span>
+                </span>
+                <span className={`sqc-ctxchip__prov is-${c.provenance}`}>
+                  {c.provenance === 'fixture' ? 'Fixture (simulated)' : 'Real'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
         {cites.length ? (
           <div className="sqc-sources" role="group" aria-label="Sources">
             {cites.map((c, i) => (
@@ -280,6 +304,20 @@ export function MessageBubble(p: BubbleProps) {
                   {i + 1}
                 </span>
                 {c.label}
+                {c.source?.provenance ? (
+                  <span
+                    className={`sqc-cite__prov is-${c.source.provenance}`}
+                    data-testid="chat-citation-provenance"
+                    data-provenance={c.source.provenance}
+                  >
+                    {c.source.provenance === 'fixture' ? 'Fixture (simulated)' : 'Real'}
+                  </span>
+                ) : null}
+                {c.source && (c.source.courseName || c.source.locationLabel) ? (
+                  <span className="sqc-cite__loc" data-testid="chat-citation-location">
+                    {[c.source.courseName, c.source.locationLabel].filter(Boolean).join(' · ')}
+                  </span>
+                ) : null}
               </button>
             ))}
           </div>

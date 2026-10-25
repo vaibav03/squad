@@ -3,6 +3,7 @@ import { timedFetch } from '../../lib/http';
 import {
   ChatAttachmentSchema,
   ChatCitationExcerptSchema,
+  ChatContextRefSchema,
   ChatMessageSchema,
   ChatSummarySchema,
   ChatSyncFieldsSchema,
@@ -12,6 +13,7 @@ import {
   ImessageStatusSchema,
   type ChatAttachment,
   type ChatCitationExcerpt,
+  type ChatContextRef,
   type ChatMessage,
   type ChatSendBody,
   type ChatSummary,
@@ -35,6 +37,8 @@ export interface ChatApi {
   ): Promise<{ messages: ChatMessage[]; hasMore: boolean }>;
   send(body: ChatSendInput): Promise<ChatMessage>;
   upload(file: File): Promise<ChatAttachment>;
+  /** A hub-verified context ref for "Ask Cubbie" (`groupView` is what a group chat may show). Rejects when unreadable. */
+  contextRef?(sourceId: string, anchor?: string): Promise<{ ref: ChatContextRef; groupView: ChatContextRef }>;
   /** `context` is the answer text: the hub opens the page at the sentence that best matches it. */
   citation(file: string, page: number, context?: string): Promise<ChatCitationExcerpt>;
   /** Absolute URL an <img>/<audio> can load for an attachment. */
@@ -87,6 +91,8 @@ export function chatLoadReason(e: unknown, online = true): string {
     if (e.timedOut) return 'The hub took too long to answer (over 8 seconds). Try again.';
     if (e.status === 0) return 'We could not reach the hub. Check your connection and try again.';
     if (e.status === 401) return 'Your session ended. Sign in again.';
+    if (e.code === 'context_unreadable')
+      return 'That imported item is not available to attach (removed, or not shared with you).';
     if (e.status === 403) return 'You do not have access to this chat.';
     if (e.status === 429) return 'Too many requests. Wait a few seconds, then try again.';
     if (e.status === 409) return 'Create or join a squad to chat with it.';
@@ -121,6 +127,7 @@ const StatusSchema = z.object({
   reason: z.string().optional(),
 });
 const ChatsSchema = z.object({ chats: z.array(ChatSummarySchema) });
+const ContextRefSchema = z.object({ ref: ChatContextRefSchema, groupView: ChatContextRefSchema });
 const SendSchema = z.object({ message: ChatMessageSchema });
 const UploadSchema = z.object({ attachment: ChatAttachmentSchema });
 const StreamTokenSchema = z.object({ st: z.string().min(1) });
@@ -248,6 +255,11 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
           { 'content-type': 'application/json' },
         )
       ).message,
+    contextRef: async (sourceId, anchor) => {
+      const p = new URLSearchParams({ sourceId });
+      if (anchor) p.set('anchor', anchor);
+      return call(ContextRefSchema, `/v1/chat/context-ref?${p}`);
+    },
     upload: async (file) => {
       const fd = new FormData();
       fd.append('file', file);

@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import type { ReactElement } from 'react';
 import { ConnectionsView, type ViewProps } from './ConnectionsView';
 import { toConnection, type Connection, type HubClient } from './api';
 import { errorCopy, oauthReturn, STATES } from './model';
 import { EXT_ATTR, MSG, extensionPresent, onExtensionReady } from './bridge';
+
+const render = (ui: ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
 
 afterEach(() => {
   cleanup();
@@ -31,6 +35,8 @@ const conn = (o: Partial<Connection> = {}): Connection => ({
   sources: { total: 3, byKind: { canvas_assignment: 2, canvas_file: 1 } },
   sharedWithSquads: [],
   needsReconnect: false,
+  account: null,
+  grantedScopes: ['canvas.browser_session.read'],
   ...o,
 });
 function props(over: Partial<ViewProps> = {}, client: Partial<HubClient> = {}): ViewProps {
@@ -66,8 +72,8 @@ describe('state badges', () => {
       />,
     );
     expect(screen.getByText(`label-${state}`)).toBeTruthy();
-    if (state === 'fixture') expect(screen.getByText('Demo data, not a real account')).toBeTruthy();
-    else expect(screen.queryByText('Demo data, not a real account')).toBeNull();
+    if (state === 'fixture') expect(screen.getAllByText('Fixture (simulated, not your account)').length).toBeGreaterThan(0);
+    else expect(screen.queryByText('Fixture (simulated, not your account)')).toBeNull();
     if (state === 'rate_limited') expect(screen.getByText(/Will retry in/)).toBeTruthy();
   });
   it('derives state when the hub has not sent one yet', () => {
