@@ -8,8 +8,8 @@ import {
 } from './api';
 
 /**
- * Hand-placed world map (spec 09 decision 2). Left = study district, Mid = council + commons,
- * Right = mesh neighbours and the trip road. Rhythm: a building every ~110-130 px, gaps with
+ * Hand-placed world map (spec 09 decision 2). Left = study district, Mid = council + landmark row,
+ * Right = mesh view (board, campfire commons, neighbours within ~300 px) and the trip road. Rhythm: a building every ~110-130 px, gaps with
  * lamps/trees between, so any 320 px window holds two or three silhouettes.
  */
 const S = (
@@ -30,22 +30,22 @@ export const SLOTS: readonly LayoutSlot[] = [
   S('chapter-4', 'chapter-house', 550, 64, 'left', 'Chapter 4 house'),
   S('exam-oracle', 'landmark', 680, 48, 'left', 'Exam Oracle'),
   S('feynman-porch', 'landmark', 790, 56, 'left', 'Feynman Porch'),
-  // Mid: council and commons
-  S('debate-stage', 'landmark', 930, 80, 'mid', 'Debate Stage'),
-  S('round-table', 'landmark', 1060, 64, 'mid', 'Course-Planning Round Table'),
-  S('council-hall', 'council-hall', 1230, 112, 'mid', 'Council Hall'),
-  S('commons', 'commons', 1400, 48, 'mid', 'Campfire commons', false),
-  S('panic-booth', 'landmark', 1530, 40, 'mid', 'Panic Line booth'),
-  S('devils-ta', 'landmark', 1650, 48, 'mid', "Devil's TA"),
-  // Right: oral exam, courthouse, mesh neighbours, board, road
-  S('oral-exam-hut', 'landmark', 1790, 56, 'right', 'Oral Exam Hut'),
-  S('rubric-courthouse', 'landmark', 1920, 96, 'right', 'Rubric Courthouse'),
-  S('notice-board', 'notice-board', 2050, 48, 'right', 'Notice board'),
-  S('home-1', 'student-home', 2160, 64, 'right', 'Neighbour house 1'),
-  S('home-2', 'student-home', 2280, 64, 'right', 'Neighbour house 2'),
-  S('home-3', 'student-home', 2400, 64, 'right', 'Neighbour house 3'),
+  // Mid: council and the landmark row (rhythm: a silhouette every ~110-130 px)
+  S('debate-stage', 'landmark', 920, 80, 'mid', 'Debate Stage'),
+  S('round-table', 'landmark', 1040, 64, 'mid', 'Course-Planning Round Table'),
+  S('council-hall', 'council-hall', 1190, 112, 'mid', 'Council Hall'),
+  S('panic-booth', 'landmark', 1320, 40, 'mid', 'Panic Line booth'),
+  S('devils-ta', 'landmark', 1430, 48, 'mid', "Devil's TA"),
+  S('oral-exam-hut', 'landmark', 1540, 56, 'mid', 'Oral Exam Hut'),
+  S('rubric-courthouse', 'landmark', 1670, 96, 'mid', 'Rubric Courthouse'),
+  // Right: mesh view in one 300 px window (board, campfire, neighbours), then the trip road
+  S('notice-board', 'notice-board', 1800, 48, 'right', 'Notice board'),
+  S('commons', 'commons', 1930, 48, 'right', 'Campfire commons', false),
+  S('home-1', 'student-home', 2060, 64, 'right', 'Neighbour house 1'),
+  S('home-2', 'student-home', 2180, 64, 'right', 'Neighbour house 2'),
+  S('home-3', 'student-home', 2300, 64, 'right', 'Neighbour house 3'),
   S('trip-road', 'road', 2500, 96, 'right', 'Trip road', false),
-  S('spawn', 'spawn', 1330, 8, 'mid', 'Village green', false),
+  S('spawn', 'spawn', 1255, 8, 'mid', 'Village green', false),
 ];
 
 export function createLayout(): WorldLayout {
@@ -61,6 +61,6 @@ export function createLayout(): WorldLayout {
       return s;
     },
     slotsOfKind: (kind) => SLOTS.filter((s) => s.kind === kind),
-    cameraPresets: { left: 400, mid: 1280, right: 2160 },
+    cameraPresets: { left: 400, mid: 1240, right: 2060 },
   };
 }
