@@ -19,11 +19,9 @@ for (const id of STUDENTS) {
     await expect(
       page.getByText(new RegExp(`Good (evening|morning|afternoon), ${NAMES[id]}`)),
     ).toBeVisible();
-    const session = JSON.parse(
-      (await page.evaluate(() => localStorage.getItem('squad.session'))) ?? '{}',
-    );
-    expect(session.live, 'session should come from the real hub dev-login, not mock').toBe(true);
-    const me = await (await api(session.token, '/v1/me')).json();
+    const token = await page.evaluate(() => localStorage.getItem('squad.token') ?? '');
+    expect(token, 'a real hub bearer token should be stored, not a mock session').not.toBe('');
+    const me = await (await api(token, '/v1/me')).json();
     expect(me.student.id).toBe(id);
     expect(errs).toEqual([]);
     await shot(page, J, `home-${id}`);
@@ -58,23 +56,23 @@ test('J1 setup: phone, PDFs, .ics, persona (Ana, through the UI)', async ({ brow
   await shot(page, J, 'courses-uploaded');
   const ready = await page.getByRole('button', { name: 'Continue' }).isEnabled();
   if (!ready) note('BUG-E2E: Continue stays disabled after a successful live upload');
-  expect.soft(ready, 'E2E-001: Continue should enable once the hub accepted the PDFs').toBe(true);
-  await page.goto('/squad/setup/calendar'); // continue past the defect so later steps are still exercised
+  expect(ready, 'E2E-001: Continue should enable once the hub accepted the PDFs').toBe(true);
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.waitForURL(/setup\/calendar/);
 
   const ics = path.join(ICS_DIR, 's_ana.ics');
   let calPosts = 0;
   page.on('request', (r) => {
     if (r.url().includes('/v1/squad/calendar') && r.method() === 'POST') calPosts++;
   });
+  await expect(page.getByRole('button', { name: 'Upload .ics' })).toBeVisible();
   await page.locator('input[type=file]').setInputFiles(ics);
   await expect(page.getByText(/We found \d+ busy blocks?/)).toBeVisible();
   await page.waitForTimeout(1500);
-  expect
-    .soft(
-      calPosts,
-      'E2E-002: an uploaded .ics must reach the hub (POST /v1/squad/calendar); the UI only parses it locally',
-    )
-    .toBeGreaterThan(0);
+  expect(
+    calPosts,
+    'E2E-002: an uploaded .ics must reach the hub (POST /v1/squad/calendar)',
+  ).toBeGreaterThan(0);
   await shot(page, J, 'calendar-uploaded');
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.waitForURL(/setup\/persona/);

@@ -76,6 +76,8 @@ export async function actor(
       if (!localStorage.getItem('squad.token')) localStorage.setItem('squad.token', s.token);
       if (!localStorage.getItem('squad.session'))
         localStorage.setItem('squad.session', JSON.stringify(s));
+      // the accounts layer reads its bearer from squad.token
+      if (!localStorage.getItem('squad.token')) localStorage.setItem('squad.token', s.token);
     } catch {
       /* ignore */
     }
