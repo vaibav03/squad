@@ -16,7 +16,7 @@ const post = async (path: string, body: unknown, token?: string) => {
     },
     body: JSON.stringify(body),
   });
-  return { status: r.status, json: (await r.json().catch(() => ({}))) as Record<string, any> };
+  return { status: r.status, json: (await r.json().catch(() => ({}))) as Record<string, unknown> };
 };
 
 test('J32 link a phone from Setup: dev code, wrong code refused, Home done only after verify', async ({

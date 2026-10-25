@@ -274,7 +274,6 @@ function PhoneStep({
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cfg.hubUrl, cfg.token]);
 
   const reset = () => {
