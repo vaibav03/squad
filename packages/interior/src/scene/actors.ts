@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import type { Goal } from '../agents/director';
 import type { Manifest } from '../assets/manifest';
 import { PathFollower } from '../nav/follower';
 import type { Vec } from '../nav/pathfinder';
