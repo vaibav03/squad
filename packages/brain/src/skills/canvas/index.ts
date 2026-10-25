@@ -1,7 +1,13 @@
 import type { OutboundMessage, Skill } from '@squad/core';
 import { isBehindIntent, isGradedGrab } from '../../experts/intent';
 import { canvasAnswerWithSources, isCanvasQuestion } from '../../context/answers';
-import { calendarReply, dueReply, isCalendarQuestion } from '../../context/answers-rich';
+import {
+  calendarReply,
+  combinedDueStudyReply,
+  dueReply,
+  isCalendarQuestion,
+  isCombinedDueStudyQuestion,
+} from '../../context/answers-rich';
 import { chatCitationForSource } from '../../citations/chat';
 import { ownSources } from '../../context/readable';
 import type { ContextStore } from '../../context/store';
@@ -57,6 +63,17 @@ export function createCanvasAnswerSkill(store: ContextStore, opts: CanvasAnswerO
             citations: cal.details.citations,
           });
         return out;
+      }
+      if (isCombinedDueStudyQuestion(m.text)) {
+        const both = combinedDueStudyReply(store, sources, t, new Map(), m.text, opts.tzFor?.(m) ?? 'UTC');
+        if (both)
+          return [
+            {
+              chatId: m.chatId,
+              text: both.text,
+              ...(both.citations.length ? { citations: both.citations } : {}),
+            },
+          ];
       }
       if (
         DEADLINE_ONLY.test(m.text) &&

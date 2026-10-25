@@ -247,6 +247,30 @@ const DRIVE = [
     name: 'BIO 120: osmosis lab plan',
     text: '# Osmosis lab plan\n\nCut 15 potato cores, weigh each, soak in five salt solutions, reweigh after 40 minutes.\n\n# Expected result\n\nCores in weak solutions gain mass; cores in strong solutions lose mass.',
   },
+  {
+    id: 'demo-guide-stat',
+    kind: 'gdoc' as const,
+    name: 'STAT 101: dataset and sampling study guide',
+    text: '# Describing a dataset\n\nReport the mean, median and standard deviation, and say which centre to quote for skewed data.\n\n# Sampling experiment\n\nSample means vary; the standard error shrinks with the square root of the sample size.',
+  },
+  {
+    id: 'demo-notes-hist',
+    kind: 'gdoc' as const,
+    name: 'HIST 140: caravan towns reading notes',
+    text: '# Caravan towns\n\nOasis towns grew wealthy by taxing and sheltering caravans, not by producing the goods they traded.\n\n# Reading response ideas\n\nRoute choice followed political stability, not geography alone.',
+  },
+  {
+    id: 'demo-guide-hist',
+    kind: 'gdrive_file' as const,
+    name: 'HIST 140: trading ports essay research',
+    text: '# Trading ports\n\nMonsoon winds set the trade calendar; port cities gained power through warehouses, credit and neutral courts.\n\n# Essay proposal\n\nPick one port and list three sources.',
+  },
+  {
+    id: 'demo-guide-bio',
+    kind: 'gdoc' as const,
+    name: 'BIO 120: osmosis and tonicity study guide',
+    text: '# Tonicity\n\nIn a hypotonic solution a cell gains water; in a hypertonic solution it loses water and shrinks.\n\n# Lab report\n\nState the salt concentration where potato cores show no net mass change.',
+  },
 ];
 
 const COURSEWORK = [

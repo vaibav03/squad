@@ -7,7 +7,7 @@ const SECRET = 'share-cat-secret-0123456789abcdef';
 const T0 = Date.UTC(2026, 10, 3, 9);
 
 describe('sharing categories over the Canvas demo + Google demo', () => {
-  it('Canvas files/modules/pages/announcements are Courses, Drive is Google only (2), counts agree with rows', async () => {
+  it('Canvas files/modules/pages/announcements are Courses, Drive is Google only (6), counts agree with rows', async () => {
     const hub = createHub({
       config: { seed: true, sim: false, authSecret: SECRET, logLevel: 'silent' },
       now: () => T0,
@@ -36,7 +36,7 @@ describe('sharing categories over the Canvas demo + Google demo', () => {
     const { connections } = await call('GET', '/v1/connections');
     const by = (provider: string) => connections.find((c: any) => c.provider === provider);
     expect(by('canvas').counts.courses).toBe(3);
-    expect(by('google').counts.driveDocs).toBe(2);
+    expect(by('google').counts.driveDocs).toBe(6);
     const tally = async (id: string) => {
       const { sources } = await call('GET', `/v1/connections/${id}/sources`);
       const t: Record<string, number> = { courses: 0, assignments: 0, calendar: 0, drive: 0 };
@@ -52,7 +52,7 @@ describe('sharing categories over the Canvas demo + Google demo', () => {
       calendar: 3,
       drive: 0,
     });
-    expect(google.drive).toBe(2);
-    expect((google.drive ?? 0) + (canvas.drive ?? 0)).toBe(2);
+    expect(google.drive).toBe(6);
+    expect((google.drive ?? 0) + (canvas.drive ?? 0)).toBe(6);
   });
 });
