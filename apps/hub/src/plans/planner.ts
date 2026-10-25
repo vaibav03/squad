@@ -254,6 +254,8 @@ export interface LlmPlannerOptions {
   /** Hard cap on the call (the chat skill guards the whole request at 20 s). */
   timeoutMs?: number;
   model?: string;
+  /** The concrete model id shown on the plan (the request itself uses the `main` tier unless `model` is set). */
+  modelLabel?: string;
 }
 
 /** The real planner: one call to the raw model (never the resilient demo fallback), checked in code. */
@@ -286,7 +288,7 @@ export function createLlmPlanner(llm: Llm, o: LlmPlannerOptions = {}): PlanPlann
       const outTok = res.usage?.outputTokens;
       return {
         ...checked,
-        model: o.model ?? 'main',
+        model: o.modelLabel ?? o.model ?? 'main',
         usage: {
           ...(inTok !== undefined ? { inputTokens: inTok } : {}),
           ...(outTok !== undefined ? { outputTokens: outTok } : {}),

@@ -124,7 +124,13 @@ export async function attachChatEngine(
   if (real && !o.noProbe) llm.status(); // starts a probe when a stale failure is on record
   // The study-plan planner agent talks to the RAW real model: a plan is only "agent output" when Gemini wrote it, never
   // when the resilient wrapper swapped in the demo model. Without a key the labelled fallback generator builds plans.
-  deps.plans.setPlanner(real ? createLlmPlanner(real) : undefined);
+  deps.plans.setPlanner(
+    real
+      ? createLlmPlanner(real, {
+          modelLabel: real instanceof GeminiLlm ? real.resolveModel('main') : 'main',
+        })
+      : undefined,
+  );
 
   registerMediaPersonas();
   const { media } = buildMedia({ cfg, llm, fake: !useEleven });

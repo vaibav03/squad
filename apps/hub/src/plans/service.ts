@@ -863,10 +863,14 @@ export function createPlanService(
           lastEditedBy: nameOf(p.log[p.log.length - 1]?.by ?? p.organizerId),
           lastEditedAt: p.updatedAt,
         },
-        sync: {
-          posted: p.posted ? { at: p.posted.at, text: p.posted.text } : null,
-          imessage: p.posted ? imessageStateOf(p.posted.messageId) : 'off',
-        },
+        sync: (() => {
+          // the posted message is recorded on the stored plan after the caller's copy was taken
+          const posted = store.get(p.id)?.posted ?? p.posted;
+          return {
+            posted: posted ? { at: posted.at, text: posted.text } : null,
+            imessage: posted ? imessageStateOf(posted.messageId) : ('off' as const),
+          };
+        })(),
       };
     },
 
