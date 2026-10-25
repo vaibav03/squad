@@ -117,10 +117,14 @@ export function parseDeadline(text: string, nowMs: number, tz: string): Deadline
 }
 
 export function stripAddress(text: string): string {
-  return text
-    .replace(/^\s*(?:hey\s+|hi\s+)?@?cubbie\b[\s,:-]*/i, '')
-    .replace(/\bpinky\s+promise\b[\s,:!-]*/i, '')
-    .trim();
+  return (
+    text
+      .replace(/^\s*(?:hey\s+|hi\s+)?@?cubbie\b[\s,:-]*/i, '')
+      // "I pinky promise to ..." must keep "I promise to ..." (the commitment phrase), not become "I to ..."
+      .replace(/\b(i(?:'ll|\s+will)?\s+)pinky\s+promise\b/i, '$1promise')
+      .replace(/\bpinky\s+promise\b[\s,:!-]*/i, '')
+      .trim()
+  );
 }
 
 export const COMMIT_RE =
@@ -132,6 +136,7 @@ export function parseCommitment(text: string): { task: string; withDeadline: str
   const m = COMMIT_RE.exec(t);
   const body = (m ? t.slice(m.index + m[0].length) : t)
     .replace(/[,;.]?\s*hold me to it\.?/i, '')
+    .replace(/^to\s+/i, '')
     .trim();
   if (!body) return undefined;
   return { task: body, withDeadline: body };
