@@ -7,9 +7,9 @@ import { easeOut } from '../curves';
 import { triangle, glowNow, type BaseState } from '../model/base';
 import { plankText, styleFor, type Remap } from './style';
 
-/** House sprite is 128x133; 16 px margins carry props, 43 px of headroom carry smoke and lanterns. */
+/** House sprite is 128x133; 16 px margins carry props, 30 px of headroom carry the chimney smoke. */
 export const EXT_W = 160;
-export const EXT_H = 176;
+export const EXT_H = 163;
 const SX = 16; // sprite left in the box
 const SY = EXT_H - 133; // sprite top in the box
 export const DOOR = { x: SX + 40, y: EXT_H - 1 } as const;
@@ -89,39 +89,21 @@ function rimGlow(r: Raster, spr: Raster, g: number, o: PaintOpts): void {
   }
 }
 
-/** Five sky lanterns above the roof: lit ones flicker, the rest hang cold. Progress, never a number. */
-function lanterns(r: Raster, o: PaintOpts, lit: number, flip: boolean): void {
-  const cx = EXT_W / 2 + (flip ? 14 : -14);
+/** Five small pips hung under the eave, inside the hut's width: mastery as progress, never a number. */
+function pips(r: Raster, o: PaintOpts, lit: number): void {
+  const y = SY + 40;
   for (let i = 0; i < 5; i++) {
-    const x = Math.round(cx + (i - 2) * 14);
-    const on = i < lit;
-    const bob = o.calm ? 0 : Math.floor(((o.t + i * 330) / 1000) * 2) % 2;
-    const y = 12 + bob + (i % 2);
-    const f = o.assets.sheet(
-      'ui.lantern-street',
-      on ? (o.calm ? 1 : (Math.floor(o.t / 330) + i) % 3) : 0,
-    );
-    put(r, on ? f : { ...f, r: dimmed(f.r) }, x, y, { alpha: on ? 1 : 0.85 });
-    if (on) r.glow(x, y + 9, 9, 'glow', 0.35, 3);
-  }
-}
-
-function sparkles(r: Raster, o: PaintOpts, g: number): void {
-  if (g < 0.6) return;
-  const spots: Array<[number, number]> = [
-    [6, 100],
-    [150, 90],
-    [20, 60],
-    [140, 62],
-    [8, 140],
-  ];
-  const n = g > 0.9 ? 5 : g > 0.75 ? 3 : 2;
-  for (let i = 0; i < n; i++) {
-    const f = o.assets.sheet(
-      `fx.star-${(i % 4) + 1}`,
-      o.calm ? 1 : (Math.floor(o.t / 500) + i) % 3,
-    );
-    put(r, f, spots[i]![0], spots[i]![1]);
+    const x = SX + 36 + (i - 2) * 7;
+    if (i >= lit) {
+      r.px(x, y + 1, 'wood-dark');
+      continue;
+    }
+    const tw = o.calm ? 1 : 0.8 + 0.2 * triangle(o.t + i * 380, 2000);
+    r.glow(x, y + 1, 5, 'glow', 0.4 * tw, 3);
+    r.rect(x - 1, y, 3, 3, 'ink');
+    r.rect(x, y, 1, 2, 'glow');
+    r.px(x, y, 'glow-core');
+    r.px(x, y + 2, 'glow');
   }
 }
 
@@ -139,7 +121,7 @@ export function paintExterior(s: BaseState, o: PaintOpts): Raster {
   const open = s.access === 'open';
   const lit = open && s.windowLit;
   const g = glowNow(s, o);
-  const pips = locked ? 0 : Math.max(0, Math.min(5, Math.round(g * 5)));
+  const nPips = Math.max(0, Math.min(5, Math.round(g * 5)));
 
   const darkI = A.image('house.hut', 'dark');
   const litI = A.image('house.hut', 'lit');
@@ -147,7 +129,7 @@ export function paintExterior(s: BaseState, o: PaintOpts): Raster {
   const bright = swapped(litI.r, key, st.roof);
   const base = locked ? dimmed(dark) : open ? dark : dimmed(bright);
 
-  if (!locked) rimGlow(r, base, g, o);
+  if (open) rimGlow(r, base, g, o);
 
   // props beside the house (behind it on the left, in front on the right)
   const prop = (id: string, x: number): void => {
@@ -182,9 +164,6 @@ export function paintExterior(s: BaseState, o: PaintOpts): Raster {
     const ring = A.sheet('ui.door-ring', Math.min(2, Math.floor(p * 3)));
     put(r, ring, DOOR.x, EXT_H - 4, { alpha: o.calm ? 0.8 : 1 - 0.7 * easeOut(p) });
   }
-  if (open) {
-    lanterns(r, o, pips, st.smokeFlip);
-    sparkles(r, o, g);
-  } else if (pips > 0) lanterns(r, o, 0, st.smokeFlip);
+  if (open) pips(r, o, nPips);
   return r;
 }

@@ -73,7 +73,7 @@ export function paintInterior(s: BaseState, o: PaintOpts): Raster {
   }
   const f = A.frame('expert', anim, n);
   put(r, { ...f, r: swapped(f.r, `x${st.look}`, st.shirt, 0) }, at.x, at.y - bob, { flipX: quiz });
-  if (!open) tint(r, 0.4);
+  if (!open) tint(r, s.access === 'locked' ? 0.55 : 0.4);
   else if (!awake) tint(r, 0.22);
 
   // lamp light and the mastery lanterns
@@ -82,8 +82,8 @@ export function paintInterior(s: BaseState, o: PaintOpts): Raster {
     const lamp = quiz ? { x: 193, y: 30 } : LAMP;
     r.glow(lamp.x, lamp.y, 26, 'glow', (awake ? 0.5 : 0.25) * flick, 4);
   }
-  const lit = s.access === 'locked' ? 0 : Math.max(0, Math.min(5, Math.round(glowNow(s, o) * 5)));
-  for (let i = 0; i < 5; i++) {
+  const lit = !open ? -1 : Math.max(0, Math.min(5, Math.round(glowNow(s, o) * 5)));
+  for (let i = 0; i < (lit < 0 ? 0 : 5); i++) {
     const x = 112 + (i - 2) * 13 - (quiz ? 0 : 6);
     const on = i < lit;
     const fr = A.sheet(

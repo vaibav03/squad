@@ -296,6 +296,18 @@ describe('chapter house paint', () => {
       );
     }
   });
+  it('dim and locked houses show no mastery; open ones do', () => {
+    const lo = { ...init(), glow: 0.2, glowFrom: 0.2 };
+    const hi = { ...init(), glow: 1, glowFrom: 1 };
+    for (const access of ['dim', 'locked'] as const) {
+      expect(def.paint({ ...lo, access }, 'exterior', o).hash()).toBe(
+        def.paint({ ...hi, access }, 'exterior', o).hash(),
+      );
+    }
+    expect(def.paint({ ...lo, access: 'open' }, 'exterior', o).hash()).not.toBe(
+      def.paint({ ...hi, access: 'open' }, 'exterior', o).hash(),
+    );
+  });
   it('glow tweens over 600 ms', () => {
     const s = run([st('studying'), mast(5)]);
     const mid = def.paint(s, 'exterior', po(10 + 100, false)).hash();

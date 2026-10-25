@@ -31,8 +31,8 @@ export interface ChapterStyle {
 const ROOFS: readonly Remap[] = [
   {},
   { 'roof-wine': 'roof-shade', 'roof-shade': 'roof-wine' },
-  { 'roof-wine': 'leaf-dark', 'roof-shade': 'ink' },
-  { 'roof-wine': 'violet', 'roof-shade': 'roof-wine' },
+  { 'roof-wine': 'wood', 'roof-shade': 'wood-dark' },
+  { 'roof-wine': 'roof-shade', 'roof-shade': 'wood-dark' },
 ];
 
 const SHIRTS: readonly Remap[] = [

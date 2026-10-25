@@ -65,6 +65,18 @@ export function shotBundles(
       script: [],
       sample: [1000],
     },
+    {
+      name: 'exterior-open-idle',
+      view: 'exterior',
+      instance: 'ch2',
+      title: 'Chapter 2',
+      script: [
+        { at: 0, event: state('ch2', 'studying') },
+        { at: 50, event: state('ch2', 'idle') },
+        { at: 50, event: mastery('ch2', 2) },
+      ],
+      sample: [2000],
+    },
     open('exterior-open-low', 'ch2', 'Chapter 2', 1),
     open('exterior-open-mid', 'ch3', 'Chapter 3', 3),
     open('exterior-open-high', 'ch4', 'Chapter 4', 5),
