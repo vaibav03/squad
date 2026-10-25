@@ -57,12 +57,7 @@ test('J8 trip planner: all four students (members as the hub knows them) reach a
   test.setTimeout(180_000);
   const out = await startTrip(`task_e2e_trip_${Date.now()}`, ['s_ana', 's_ben', 's_chi', 's_dev']);
   note(`trip with hub ids: ${JSON.stringify(out)}`);
-  expect
-    .soft(
-      out.status,
-      'E2E-003: dev:all starts agents for s_cam, but the hub squad member is s_chi; a trip with s_chi cannot complete',
-    )
-    .toBe('confirmed');
+  expect(out.status, 'trip with the hub ids (s_chi) completes').toBe('confirmed');
 });
 
 test('J8 trip flow end to end: slots negotiated, DM confirms, trip.confirmed exactly once, calendars never leave the device', async () => {
@@ -72,7 +67,7 @@ test('J8 trip flow end to end: slots negotiated, DM confirms, trip.confirmed exa
   const streams = await Promise.all(
     ['s_ana', 's_ben', 's_chi', 's_dev'].map((id) => collector(id)),
   );
-  const out = await startTrip(tripTask, ['s_ana', 's_ben', 's_cam', 's_dev']);
+  const out = await startTrip(tripTask, ['s_ana', 's_ben', 's_chi', 's_dev']);
   note(`trip outcome ${JSON.stringify(out)}`);
   expect(out.status).toBe('confirmed');
   await new Promise((r) => setTimeout(r, 2500));
@@ -82,14 +77,7 @@ test('J8 trip flow end to end: slots negotiated, DM confirms, trip.confirmed exa
       .events()
       .filter((e) => e.event === 'trip.confirmed' && e.data.includes(tripTask));
     note(`${names[i]} saw trip.confirmed x${confirmed.length}`);
-    if (names[i] !== 's_chi') expect(confirmed.length, `${names[i]} trip.confirmed count`).toBe(1);
-    else
-      expect
-        .soft(
-          confirmed.length,
-          'E2E-003: s_chi never gets trip.confirmed (hub knows s_chi, agents know s_cam)',
-        )
-        .toBe(1);
+    expect(confirmed.length, `${names[i]} trip.confirmed count`).toBe(1);
   });
   const sent = streams.map((s) => s.get()).join('\n');
   for (const f of fs.readdirSync(ICS_DIR)) {
@@ -190,7 +178,7 @@ test('J8 private study scheduling across 4 agents returns slots without exposing
     body: JSON.stringify({
       ...study,
       taskId: `task_e2e_study_${Date.now()}`,
-      members: ['s_ana', 's_ben', 's_cam', 's_dev'],
+      members: ['s_ana', 's_ben', 's_chi', 's_dev'],
       squadId: 'sq_demo',
     }),
   });
