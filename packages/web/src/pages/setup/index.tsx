@@ -24,7 +24,15 @@ import { TextField } from '../../primitives/TextField';
 import { useSquadConfig } from '../../shell/context';
 import { useShell } from '../../shell/shell-context';
 import { pixelPortrait } from '../../pixel/portraits';
-import { HubError, postCalendar, uploadCourse } from './api';
+import {
+  HubError,
+  phoneLinks,
+  phoneStart,
+  phoneVerify,
+  postCalendar,
+  uploadCourse,
+  type PhoneStartResult,
+} from './api';
 import { demoBlocks, PERSONA_CHOICES, SAMPLE_COURSES } from './fixtures';
 import { parseIcs, redactedIcs } from './ics';
 import { saveSetupDone } from './progress';
@@ -42,6 +50,7 @@ import {
   validateCode,
   validateFile,
   validatePhone,
+  phoneDigits,
   type CourseFile,
   type StepId,
 } from './model';
@@ -114,7 +123,7 @@ export default function SetupPage() {
   useEffect(() => {
     saveSetupDone(completedKey ? completedKey.split(',') : []);
   }, [completedKey]);
-  const canSkip = step === 'calendar' || step === 'persona';
+  const canSkip = step === 'phone' || step === 'calendar' || step === 'persona';
   const next = nextStep(step);
   const prev = prevStep(step);
 
@@ -124,7 +133,7 @@ export default function SetupPage() {
   if (done) {
     body = <DoneStep completed={completed} />;
   } else if (step === 'phone') {
-    body = <PhoneStep state={state} dispatch={dispatch} />;
+    body = <PhoneStep state={state} dispatch={dispatch} cfg={cfg} />;
     canContinue = state.phone.verified;
   } else if (step === 'courses') {
     body = (
@@ -230,45 +239,145 @@ const HEADINGS: Record<StepId, string> = {
 
 type StepProps = { state: SetupState; dispatch: React.Dispatch<Action> };
 
-function PhoneStep({ state, dispatch }: StepProps) {
+type PhoneInfo = Extract<PhoneStartResult, { challengeId: string }>;
+
+function PhoneStep({
+  state,
+  dispatch,
+  cfg,
+}: StepProps & { cfg: { mode: string; hubUrl: string | null; token: string | null } }) {
+  const live = cfg.mode !== 'mock' && !!cfg.hubUrl;
   const [code, setCode] = useState('');
   const [touched, setTouched] = useState(false);
   const [codeTouched, setCodeTouched] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [info, setInfo] = useState<PhoneInfo | null>(null);
+  const [unavailable, setUnavailable] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
   const phoneErr = touched ? validatePhone(state.phone.number) : null;
   const codeErr = codeTouched ? validateCode(code) : null;
+  const ctx = live ? { hubUrl: cfg.hubUrl as string, token: cfg.token } : null;
+
+  // A phone already linked on this account shows as linked (the hub is the source of truth).
+  useEffect(() => {
+    if (!ctx || state.phone.verified) return;
+    let alive = true;
+    phoneLinks(ctx).then(
+      (r) => {
+        if (!alive || r.links.length === 0) return;
+        setHint(r.links[0]!.hint);
+        dispatch({ type: 'phone/verified' });
+      },
+      () => undefined,
+    );
+    return () => {
+      alive = false;
+    };
+  }, [cfg.hubUrl, cfg.token]);
+
+  const reset = () => {
+    dispatch({ type: 'phone/edit' });
+    setCode('');
+    setCodeTouched(false);
+    setInfo(null);
+    setUnavailable(null);
+    setError(null);
+  };
+
+  if (!live)
+    return (
+      <div className="sq-setup__stack">
+        <Notice tone="info" title="Live hub needed">
+          Phone linking needs a signed-in hub. You are viewing demo data, so nothing is linked. You
+          can skip this step.
+        </Notice>
+      </div>
+    );
 
   if (state.phone.verified) {
     return (
       <div className="sq-setup__stack">
         <Notice tone="ok" title="Phone linked">
-          {state.phone.number} is connected. Your agent can now text you in iMessage.
+          {hint ? `The number ending ${hint.slice(-4)}` : 'Your number'} is verified and linked to
+          your account. Your agent can now text you in iMessage.
         </Notice>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            dispatch({ type: 'phone/edit' });
-            setCode('');
-          }}
-        >
+        <Button variant="secondary" onClick={reset}>
           Use a different number
         </Button>
       </div>
     );
   }
+
+  const send = async () => {
+    setTouched(true);
+    if (validatePhone(state.phone.number) || !ctx) return;
+    setBusy(true);
+    setError(null);
+    setUnavailable(null);
+    try {
+      const r = await phoneStart(ctx, `+1${phoneDigits(state.phone.number)}`);
+      if ('alreadyLinked' in r) {
+        setHint(r.to);
+        dispatch({ type: 'phone/verified' });
+      } else if (!r.ok) setUnavailable(r.message);
+      else {
+        setInfo(r);
+        dispatch({ type: 'phone/sent' });
+      }
+    } catch (e) {
+      setError(
+        e instanceof HubError && e.code === 'phone_in_use'
+          ? 'That number is already linked to another account.'
+          : e instanceof HubError && e.code === 'rate_limited'
+            ? 'Too many tries. Wait a little and try again.'
+            : e instanceof HubError && e.code === 'offline'
+              ? 'Cannot reach Squad right now. Try again.'
+              : 'We could not send a code. Check the number and try again.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verify = async () => {
+    setCodeTouched(true);
+    if (validateCode(code) || !ctx || !info) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await phoneVerify(ctx, info.challengeId, code);
+      setHint(r.hint);
+      dispatch({ type: 'phone/verified' });
+    } catch (e) {
+      const c = e instanceof HubError ? e.code : '';
+      setError(
+        c === 'code_invalid'
+          ? `That code is not right.${e instanceof HubError && e.triesLeft !== undefined ? ` ${e.triesLeft} tries left.` : ''}`
+          : c === 'code_expired'
+            ? 'That code expired. Change the number to get a new one.'
+            : c === 'too_many_attempts'
+              ? 'Too many tries. Change the number to get a new code.'
+              : 'We could not verify that code. Try again.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <form
       className="sq-setup__stack"
       onSubmit={(e) => {
         e.preventDefault();
+        void (state.phone.codeSent ? verify() : send());
       }}
       noValidate
     >
       <p className="sq-setup__lede">
-        Your number only connects iMessage to your own agent. Other students never see it.
+        Your number only connects iMessage to your own agent. Other students never see it, and Squad
+        keeps only a hash and the last four digits.
       </p>
-      <Notice tone="info" title="Demo step">
-        Phone linking is a demo for now: the number is not stored and no code is sent.
-      </Notice>
       <TextField
         label="Mobile number"
         type="tel"
@@ -282,50 +391,59 @@ function PhoneStep({ state, dispatch }: StepProps) {
         error={phoneErr ?? undefined}
         disabled={state.phone.codeSent}
       />
-      {state.phone.codeSent ? (
+      {unavailable ? (
+        <Notice tone="warn" title="Code delivery unavailable">
+          {unavailable}. Nothing was sent. You can skip this step and link your phone later.
+        </Notice>
+      ) : null}
+      {error ? (
+        <Notice tone="warn" title="Phone not linked">
+          {error}
+        </Notice>
+      ) : null}
+      {state.phone.codeSent && info ? (
         <>
+          <Notice
+            tone="info"
+            title={info.deliveryLabel}
+            // data-attribute lets tests and the gate assert the honest channel
+          >
+            <span data-testid="phone-delivery" data-delivery={info.delivery}>
+              {info.delivery === 'imessage'
+                ? `We texted a code by iMessage to the number ending ${info.to.slice(-4)}.`
+                : 'No text was sent. This hub is in developer mode, so the code is shown here.'}
+            </span>
+            {info.devCode ? (
+              <>
+                {' '}
+                <strong>
+                  {info.devCodeLabel ?? 'Dev code'}:{' '}
+                  <code data-testid="phone-dev-code">{info.devCode}</code>
+                </strong>
+              </>
+            ) : null}
+          </Notice>
           <TextField
             label="6-digit code"
             inputMode="numeric"
             autoComplete="one-time-code"
             maxLength={6}
             value={code}
-            hint="Demo mode: no text is sent. Enter any 6 digits."
             onChange={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
             onBlur={() => setCodeTouched(true)}
             error={codeErr ?? undefined}
           />
           <div className="sq-setup__inline">
-            <Button
-              variant="primary"
-              onClick={() => {
-                setCodeTouched(true);
-                if (!validateCode(code)) dispatch({ type: 'phone/verified' });
-              }}
-            >
+            <Button variant="primary" type="submit" loading={busy}>
               Verify
             </Button>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                dispatch({ type: 'phone/edit' });
-                setCode('');
-                setCodeTouched(false);
-              }}
-            >
+            <Button variant="ghost" onClick={reset}>
               Change number
             </Button>
           </div>
         </>
       ) : (
-        <Button
-          variant="primary"
-          type="submit"
-          onClick={() => {
-            setTouched(true);
-            if (!validatePhone(state.phone.number)) dispatch({ type: 'phone/sent' });
-          }}
-        >
+        <Button variant="primary" type="submit" loading={busy}>
           Send code
         </Button>
       )}

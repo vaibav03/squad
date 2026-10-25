@@ -58,15 +58,21 @@ describe('quiz skill over the shared engine', () => {
     const out = await t.skill.handle(msg({ text: 'B', mentionsBot: false }), t.ctx);
     // feedback is private (DM); the group gets nothing yet (bo has not answered)
     expect(out).toEqual([]);
-    expect(t.dms).toEqual([{ to: 's_ana', text: 'Right. MSE averages squared errors.' }]);
+    // the chat path adds the page the explanation came from as a citation marker (the web turns it into a chip)
+    expect(t.dms).toEqual([
+      { to: 's_ana', text: 'Right. MSE averages squared errors. [ch3.pdf p.1]' },
+    ]);
 
-    // village path on a second round with the same questions: same feedback string
+    // village path on a second round with the same questions: same feedback string, without the chat marker
     const vid = await t.engine.start('c', 'ch3', 'village', { students: ['s_x'] });
     const v = await t.engine.answer(vid, 's_x', { choice: 1 });
-    expect(v.feedback).toBe(t.dms[0]!.text);
+    expect(`${v.feedback} [ch3.pdf p.1]`).toBe(t.dms[0]!.text);
 
     const out2 = await t.skill.handle(msg({ text: 'a', mentionsBot: false, from: 's_bo' }), t.ctx);
-    expect(t.dms[1]).toEqual({ to: 's_bo', text: 'Not quite. MSE averages squared errors.' });
+    expect(t.dms[1]).toEqual({
+      to: 's_bo',
+      text: 'Not quite. MSE averages squared errors. [ch3.pdf p.1]',
+    });
     expect(out2[0]!.text).toContain('Q2.'); // everyone answered: next question to the group
   });
 

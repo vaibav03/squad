@@ -29,6 +29,10 @@ export interface HubConfig {
   publicWebUrl?: string | null;
   codeSender: 'console' | 'imessage';
   imessageSendUrl: string | null;
+  /** IMESSAGE_ALLOWED_HANDLES (same list the bot uses): the only numbers a phone-link code may be iMessaged to. */
+  imessageAllowedHandles: string[];
+  /** IMESSAGE_ALLOW_ALL=1 */
+  imessageAllowAll: boolean;
   /** SSE tuning (overridable in tests) */
   sse: { bufferSize: number; maxQueue: number; pingMs: number };
 }
@@ -90,6 +94,11 @@ export function loadHubConfig(env: Record<string, string | undefined> = process.
     ),
     codeSender: env.CODE_SENDER === 'imessage' ? 'imessage' : 'console',
     imessageSendUrl: env.IMESSAGE_SEND_URL || null,
+    imessageAllowedHandles: (env.IMESSAGE_ALLOWED_HANDLES ?? '')
+      .split(',')
+      .map((x) => x.trim())
+      .filter(Boolean),
+    imessageAllowAll: env.IMESSAGE_ALLOW_ALL === '1',
     sse: { bufferSize: 5000, maxQueue: 256, pingMs: 15_000 },
   };
 }

@@ -10,6 +10,8 @@ import {
   ConnectorRateLimitError,
   GOOGLE_SCOPES,
   buildGoogleAuthorizationUrl,
+  createDemoCanvasConnector,
+  createDemoGoogleConnector,
   createLiveCanvasConnector,
   createLiveGoogleConnector,
   createPushedCanvasConnector,
@@ -36,12 +38,15 @@ import {
 } from '@squad/brain';
 import type { HubDeps } from '../types';
 import { configuredWebOrigin, isAllowedWebOrigin } from '../web-origin';
+import { FIXTURE_ACCOUNT_LABEL, createAccountStore, maskEmail, type AccountStore } from './account';
 import { createExtensionAuth, type ExtensionAuth } from './extension-auth';
 import { createTokenStore, type TokenSecrets, type TokenStore } from './tokens';
 
 export interface ContextService {
   store: ContextStore;
   tokens: TokenStore;
+  /** Masked display identity per connection (label / name / Canvas host). */
+  accounts: AccountStore;
   connectors: {
     /** Synthetic upstreams (mode `fixture`). */
     canvas: CanvasConnector & { controls?: FakeControls };
@@ -49,6 +54,9 @@ export interface ContextService {
     /** Real upstreams (mode `live`): Canvas REST with a student token, Google Calendar / Drive / Classroom. */
     canvasLive: CanvasConnector;
     googleLive: GoogleConnector;
+    /** Demo workspaces (variant `demo`): original synthetic content relative to today, always labelled Demo data. */
+    canvasDemo: CanvasConnector;
+    googleDemo: GoogleConnector;
   };
   /**
    * `fixture` while Google has no configured OAuth client (the hub then runs a labelled consent simulator);
@@ -111,6 +119,8 @@ export interface ContextService {
 export interface CanvasRegisterInput {
   canvasUserId: string;
   origin: string;
+  /** The signed-in Canvas user's display name, as the extension read it. */
+  name?: string | null | undefined;
 }
 export type CanvasRegisterResult =
   | { ok: true; connection: ContextConnection; created: boolean }
@@ -199,6 +209,8 @@ export function createContextService(
         ? (opts.googleOAuth ?? (envOAuth as GoogleOAuthConfig))
         : undefined;
   const connectors = {
+    canvasDemo: createDemoCanvasConnector(deps.now),
+    googleDemo: createDemoGoogleConnector(deps.now),
     canvas: opts.canvas ?? createFakeCanvasConnector(),
     google: opts.google ?? createFakeGoogleConnector(),
     canvasLive:
@@ -208,8 +220,10 @@ export function createContextService(
       createLiveGoogleConnector({
         ...(opts.fetch ? { fetch: opts.fetch } : {}),
         ...(oauth ? { oauth } : {}),
+        now: deps.now,
       }),
   };
+  const accounts = createAccountStore(deps.db);
   const ext = createExtensionAuth(deps.db, deps.now);
   deps.db.exec(`CREATE TABLE IF NOT EXISTS ctx_oauth_states(
     state TEXT PRIMARY KEY, user_id TEXT NOT NULL, return_to TEXT NOT NULL, picked_json TEXT NOT NULL,
@@ -235,8 +249,8 @@ export function createContextService(
 
   const authFor = (c: ContextConnection, s: TokenSecrets): CanvasAuth | GoogleAuth =>
     c.provider === 'canvas'
-      ? c.variant === 'feed'
-        ? { variant: 'feed', feedUrl: s.feedUrl ?? '' }
+      ? c.variant === 'feed' || c.variant === 'demo'
+        ? { variant: 'feed', feedUrl: s.feedUrl ?? 'demo://workspace' }
         : c.variant === 'session'
           ? { variant: 'session', origin: '', canvasUserId: '' }
           : { variant: 'token', token: s.apiToken ?? '', baseUrl: s.baseUrl ?? '' }
@@ -247,9 +261,9 @@ export function createContextService(
           pickedFileIds: s.pickedFileIds ?? [],
         };
   const googleConnector = (c: ContextConnection) =>
-    isLive(c) ? connectors.googleLive : connectors.google;
+    c.variant === 'demo' ? connectors.googleDemo : isLive(c) ? connectors.googleLive : connectors.google;
   const canvasConnector = (c: ContextConnection) =>
-    isLive(c) ? connectors.canvasLive : connectors.canvas;
+    c.variant === 'demo' ? connectors.canvasDemo : isLive(c) ? connectors.canvasLive : connectors.canvas;
   const emptyReport = (outcome: SyncReport['outcome'], note?: string): SyncReport => ({
     outcome,
     added: 0,
@@ -293,6 +307,7 @@ export function createContextService(
   const svc: ContextService = {
     store,
     tokens,
+    accounts,
     connectors,
     ext,
     googleOAuth: oauth,
@@ -314,15 +329,18 @@ export function createContextService(
       const live =
         input.mode === 'live' && input.provider === 'canvas' && input.variant === 'token';
       if (input.provider === 'canvas') {
-        variant = input.variant === 'token' ? 'token' : 'feed';
-        const wantScope = variant === 'feed' ? CANVAS_SCOPES.feed : CANVAS_SCOPES.token;
+        variant = input.variant === 'token' ? 'token' : input.variant === 'demo' ? 'demo' : 'feed';
+        const wantScope =
+          variant === 'feed' ? CANVAS_SCOPES.feed : variant === 'demo' ? CANVAS_SCOPES.demo : CANVAS_SCOPES.token;
         if (!input.scopes.includes(wantScope) || input.scopes.length !== 1)
           return {
             ok: false,
             code: 'invalid_request',
             message: `Scopes for a Canvas ${variant} connection must be exactly [${wantScope}].`,
           };
-        if (variant === 'feed') {
+        if (variant === 'demo') {
+          auth = { variant: 'feed', feedUrl: 'demo://workspace' };
+        } else if (variant === 'feed') {
           const u = safeHttps(input.feedUrl);
           if (!u)
             return {
@@ -345,7 +363,7 @@ export function createContextService(
           auth = { variant: 'token', token: input.token, baseUrl: b.origin };
         }
       } else {
-        variant = 'oauth';
+        variant = input.variant === 'demo' ? 'demo' : 'oauth';
         // Fixture Google: placeholder tokens, nothing real is requested. Real Google goes through startGoogleAuth.
         secrets.accessToken = `fixture-access-${randomBytes(8).toString('hex')}`;
         secrets.refreshToken = `fixture-refresh-${randomBytes(8).toString('hex')}`;
@@ -361,8 +379,12 @@ export function createContextService(
         input.provider === 'canvas'
           ? live
             ? connectors.canvasLive
-            : connectors.canvas
-          : connectors.google;
+            : variant === 'demo'
+              ? connectors.canvasDemo
+              : connectors.canvas
+          : variant === 'demo'
+            ? connectors.googleDemo
+            : connectors.google;
       let externalAccount: string;
       try {
         externalAccount = await (connector as { accountId(a: unknown): Promise<string> }).accountId(
@@ -429,6 +451,18 @@ export function createContextService(
         expiresAt: input.provider === 'google' ? deps.now() + HOUR : null,
       };
       store.upsertConnection(conn);
+      const hostOf = (u: string | undefined) => {
+        try {
+          return u ? new URL(u).hostname : undefined;
+        } catch {
+          return undefined;
+        }
+      };
+      if (!live) accounts.set(id, { label: FIXTURE_ACCOUNT_LABEL });
+      else {
+        const host = hostOf(input.baseUrl);
+        accounts.set(id, { label: host ? `Canvas ${host} (student token)` : 'Canvas (student token)', ...(host ? { host } : {}) });
+      }
       const sync = (await svc.sync(userId, id)) as SyncReport;
       return { ok: true, connection: store.connection(id)!, sync };
     },
@@ -452,7 +486,15 @@ export function createContextService(
         .connectionsOf(userId)
         .filter((c) => c.provider === 'canvas' && c.variant === 'session');
       const same = mine.find((c) => c.accountHash === accountHash && c.status !== 'revoked');
+      const host = new URL(input.origin).hostname;
+      const nm = input.name?.trim().slice(0, 120);
+      const acct = {
+        label: nm ? `${nm} @ ${host}` : `Canvas user @ ${host}`,
+        ...(nm ? { name: nm } : {}),
+        host,
+      };
       if (same) {
+        accounts.set(same.id, acct);
         store.setStatus(same.id, 'live', null);
         return { ok: true, connection: store.connection(same.id)!, created: false };
       }
@@ -483,6 +525,7 @@ export function createContextService(
         expiresAt: null,
       });
       store.patchSyncState(id, { originHash });
+      accounts.set(id, acct);
       return { ok: true, connection: store.connection(id)!, created: true };
     },
 
@@ -610,6 +653,7 @@ export function createContextService(
         let scopes: string[];
         let externalAccount: string;
         let expiresAt: number;
+        let acct: { label: string; name?: string };
         if (oauth) {
           const tok = await exchangeGoogleCode(
             oauth,
@@ -619,6 +663,7 @@ export function createContextService(
           );
           const who = await googleUserinfo(tok.access_token, opts.fetch ?? fetch);
           externalAccount = who.sub;
+          acct = { label: maskEmail(who.email), ...(who.name ? { name: who.name } : {}) };
           scopes = grantedScopes(tok.scope, Object.values(GOOGLE_SCOPES));
           expiresAt = deps.now() + Math.max(30, tok.expires_in ?? 3600) * 1000;
           secrets = {
@@ -628,6 +673,7 @@ export function createContextService(
           };
         } else {
           if (code !== 'sim') return fail('authorization_failed');
+          acct = { label: FIXTURE_ACCOUNT_LABEL };
           externalAccount = await connectors.google.accountId({
             accessToken: '',
             scopes: [],
@@ -677,6 +723,7 @@ export function createContextService(
           expiresAt,
         });
         store.patchSyncState(id, { retryAfter: null });
+        accounts.set(id, acct);
         await svc.sync(row.user_id, id);
         deps.log.info('context.google_connected', { connectionId: id, mode, scopes });
         return {
@@ -803,6 +850,7 @@ export function createContextService(
         }
       }
       tokens.delete(c.id);
+      accounts.delete(c.id);
       const purged = store.revokeConnection(c.id, 'revoked', deps.now());
       deps.log.info('context.disconnect', {
         connectionId: c.id,

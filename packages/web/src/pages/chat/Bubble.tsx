@@ -4,12 +4,14 @@ import { Icon } from '../../primitives/Icon';
 import { Markdown } from '../../primitives/Markdown';
 import { ConfirmMessageCard, QuizMessageCard } from './cards';
 import { CouncilChatCard } from '../../council';
-import { PLAN_OPEN_EVENT } from '@squad/village/rooms';
 import { LiveChatCard } from '../../live/LiveChatCard';
 import { useSquadConfig } from '../../shell/context';
 import { AudioPlayer, ImageAttachment } from './media';
 import { ChatAvatar } from './parts';
 import { SyncBadge } from './sync/SyncBadge';
+import { ProvenanceRow } from './provenance/ProvenanceRow';
+import { PlanChatCard } from './PlanChatCard';
+import { openSource } from '../../components/source-viewer';
 import {
   attachmentLabel,
   citationSpeech,
@@ -96,12 +98,28 @@ export function MessageBubble(p: BubbleProps) {
   const showDemo = bot && !!status?.demo;
   // Only the bot's replies carry verified sources: a student typing `[x.pdf p.3]` stays plain text.
   const cites = bot ? resolveCitations(m.text, m.citations) : [];
+  // Non-PDF sources (Canvas, Drive, Calendar) have no page: they open the source viewer instead of the page sheet.
+  const cite = (c: ChatCitation) => {
+    if (c.source) {
+      const { title, url, ...ref } = c.source;
+      openSource({
+        file: c.file,
+        page: 1,
+        source: {
+          ...ref,
+          ...(title ? { title } : {}),
+          ...(url ? { url } : {}),
+        } as NonNullable<Parameters<typeof openSource>[0]['source']>,
+        ...(c.quote ? { quote: c.quote } : {}),
+      });
+    } else p.onCite(c, m.text);
+  };
   const onBubbleClick = (e: React.MouseEvent) => {
     const el = (e.target as HTMLElement).closest('.sq-md__cite');
     if (!el) return;
     const n = Number(el.textContent?.trim());
     const c = cites[n - 1];
-    if (c) p.onCite(c, m.text);
+    if (c) cite(c);
   };
   const text = m.card && textRepeatsCard(m.text, m.card) ? '' : m.text.trim();
   const attachments = m.attachments;
@@ -149,6 +167,15 @@ export function MessageBubble(p: BubbleProps) {
                 title="Demo mode answer"
               >
                 Demo
+              </span>
+            ) : null}
+            {sender.kind === 'student' ? (
+              <span
+                className="sqs__src"
+                data-testid="chat-source-label"
+                data-source={m.transport === 'imessage' ? 'imessage' : 'web'}
+              >
+                {m.transport === 'imessage' ? 'via iMessage' : 'via web'}
               </span>
             ) : null}
             {m.repeat ? (
@@ -218,22 +245,7 @@ export function MessageBubble(p: BubbleProps) {
           </div>
         ) : null}
         {m.card?.type === 'plan' ? (
-          <div className="sqc-plancard" data-testid="chat-plan-card">
-            <strong>Study plan</strong>
-            <span className="rr-dim"> {m.card.status ? `(${m.card.status})` : ''}</span>
-            <a
-              className="lv-btn"
-              href="/squad/village?plan=1"
-              onClick={(e) => {
-                if (location.pathname.includes('/village')) {
-                  e.preventDefault();
-                  globalThis.dispatchEvent(new Event(PLAN_OPEN_EVENT));
-                }
-              }}
-            >
-              Open plan
-            </a>
-          </div>
+          <PlanChatCard hub={hub} planId={m.card.planId} status={m.card.status} rev={m.card.rev} />
         ) : null}
         {m.card?.type === 'live' ? (
           <div data-testid="chat-live-card">
@@ -253,28 +265,69 @@ export function MessageBubble(p: BubbleProps) {
           />
         ) : null}
 
+        {m.context?.length ? (
+          <ul className="sqc-ctxchips is-sent" aria-label="Attached context">
+            {m.context.map((c) => (
+              <li
+                key={c.sourceId}
+                className="sqc-ctxchip"
+                data-testid="message-context-chip"
+                data-provenance={c.provenance}
+              >
+                <span className="sqc-ctxchip__main">
+                  <Icon name="file" size={14} />
+                  <strong className="sqc-ctxchip__title">{c.title}</strong>
+                  <span className="sqc-ctxchip__meta">
+                    {[c.courseName, c.eventLabel, c.location?.label].filter(Boolean).join(' · ')}
+                  </span>
+                </span>
+                <span className={`sqc-ctxchip__prov is-${c.provenance}`}>
+                  {c.provenance === 'fixture' ? 'Fixture (simulated)' : 'Real'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
         {cites.length ? (
           <div className="sqc-sources" role="group" aria-label="Sources">
             {cites.map((c, i) => (
               <button
-                key={`${c.file}-${c.page}`}
+                key={`${c.source ? `${c.source.kind}/${c.source.id}#${c.source.anchor ?? ''}` : c.file}-${c.page}`}
                 type="button"
                 className="sqc-cite"
                 data-testid="chat-citation-chip"
                 aria-haspopup="dialog"
                 aria-label={citationSpeech(c)}
-                onClick={() => p.onCite(c, m.text)}
+                onClick={() => cite(c)}
               >
                 <span className="sqc-cite__n" aria-hidden="true">
                   {i + 1}
                 </span>
                 {c.label}
+                {c.source?.provenance ? (
+                  <span
+                    className={`sqc-cite__prov is-${c.source.provenance}`}
+                    data-testid="chat-citation-provenance"
+                    data-provenance={c.source.provenance}
+                  >
+                    {c.source.provenance === 'fixture' ? 'Fixture (simulated)' : 'Real'}
+                  </span>
+                ) : null}
+                {c.source && (c.source.courseName || c.source.locationLabel) ? (
+                  <span className="sqc-cite__loc" data-testid="chat-citation-location">
+                    {[c.source.courseName, c.source.locationLabel].filter(Boolean).join(' · ')}
+                  </span>
+                ) : null}
               </button>
             ))}
           </div>
         ) : null}
 
+        {bot ? <ProvenanceRow message={m} /> : null}
+
         <SyncBadge
+          {...(row.head && sender.kind === 'student' ? { hideVia: true } : {})}
           {...(m.transport ? { transport: m.transport } : {})}
           {...(m.deliveryState ? { deliveryState: m.deliveryState } : {})}
           {...(m.senderLabel && m.senderLabel !== sender.name

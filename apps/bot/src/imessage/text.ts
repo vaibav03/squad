@@ -1,6 +1,12 @@
 // Plain-text fallbacks for everything the web chat renders as a card. iMessage cannot show cards, markdown or tables,
 // so every bot message becomes short plain text plus (where it helps) a link to the web card.
-import type { ChatAttachment, ChatCard, ChatCitation, CouncilResult } from '@squad/core';
+import type {
+  ChatAttachment,
+  ChatCard,
+  ChatCitation,
+  CouncilResult,
+  Provenance,
+} from '@squad/core';
 import { COUNCIL_CONFIDENCE_WORDS } from '@squad/core';
 
 export const MAX_PART = 900;
@@ -10,6 +16,8 @@ export interface RenderableMessage {
   text: string;
   card?: ChatCard | undefined;
   citations?: readonly ChatCitation[];
+  /** Where the reply came from; a reply without chips gets its label as one plain line (docs/provenance.md). */
+  provenance?: Provenance | undefined;
   attachments?: readonly Pick<ChatAttachment, 'kind' | 'name'>[];
 }
 
@@ -177,6 +185,9 @@ export function renderForIMessage(msg: RenderableMessage, o: RenderOptions = {})
     const labels = (missing.length ? missing : msg.citations).map((c) => `[${c.label}]`);
     if (missing.length) blocks.push(`Sources: ${labels.join(' ')}`);
   }
+  // No chips on a phone: a reply that is not grounded says so in words, so a bare answer never looks sourced.
+  if (msg.provenance && msg.provenance.kind !== 'grounded' && card?.type !== 'confirm')
+    blocks.push(`(${msg.provenance.label})`);
   for (const a of msg.attachments ?? [])
     blocks.push(`${titleOf(a)}${o.link ? `: ${o.link}` : ' (open it in the Squad app)'}`);
 

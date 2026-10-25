@@ -78,6 +78,16 @@ export const squadRouteMeta: SquadRouteMeta[] = [
     nav: { label: 'Connections', icon: 'link', order: 8 },
   },
   {
+    key: 'review-import',
+    path: '/squad/connections/review',
+    title: 'Review imported context',
+  },
+  {
+    key: 'health',
+    path: '/squad/connections/health',
+    title: 'Integration health',
+  },
+  {
     key: 'courses',
     path: '/squad/courses/:courseId?',
     title: 'Courses',

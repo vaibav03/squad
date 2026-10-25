@@ -1,19 +1,37 @@
 // Default plan inputs: course chapters and pages (course store), course-wide due items (syllabus / .ics imports) and
 // each student's own mastery boxes and busy days. A context store can implement the same interface and replace this.
 import type { Db } from '@squad/core';
-import { createCourseStore, readOwnMastery } from '@squad/brain';
+import {
+  createCourseStore,
+  deriveStudySeeds,
+  readOwnMastery,
+  type ContextStore,
+} from '@squad/brain';
 import { addDays } from './logic';
 import type { DueLite } from './logic';
 import type { PlanContext } from './service';
+import type { PlannerContextItem } from './planner';
 
 const isoDay = (s: string): string | undefined => {
   const d = /^(\d{4}-\d{2}-\d{2})/.exec(s)?.[1];
   return d;
 };
 
-export function createDefaultPlanContext(db: Db, defaultCourse: string): PlanContext {
+export interface PlanContextSources {
+  /** Lazily the hub's context store (Canvas/Google), so it is only built when a plan needs it. */
+  store(): ContextStore | undefined;
+  /** The viewer's squad memberships, from the hub directory (never from message text). */
+  squadsOf(studentId: string): string[];
+}
+
+export function createDefaultPlanContext(
+  db: Db,
+  defaultCourse: string,
+  sources?: PlanContextSources & Pick<PlanContext, 'contextDue'>,
+): PlanContext {
   const courses = createCourseStore(db);
   return {
+    ...(sources?.contextDue ? { contextDue: sources.contextDue } : {}),
     defaultCourse: () => defaultCourse,
     courseTitle: (id) => courses.getCourse(id)?.title ?? id,
     chapters: (id) =>
@@ -42,6 +60,24 @@ export function createDefaultPlanContext(db: Db, defaultCourse: string): PlanCon
         /* no calendar table yet */
       }
       return out;
+    },
+    pageText: (courseId, file, page) => courses.getPage(courseId, file, page)?.text,
+    contextItems(v): PlannerContextItem[] {
+      const store = sources?.store();
+      if (!store) return [];
+      try {
+        // the organizer's own readable Canvas/Drive sources only: due dates and lecture topics (study seeds)
+        return deriveStudySeeds(store, { studentId: v.studentId, squadIds: sources!.squadsOf(v.studentId) }, Date.now())
+          .slice(0, 20)
+          .map((s) => ({
+            kind: s.kind,
+            title: s.title,
+            dueAt: s.dueAt ? Date.parse(s.dueAt) : null,
+            uri: s.sourceUri,
+          }));
+      } catch {
+        return [];
+      }
     },
     due(courseId, from, to): DueLite[] {
       try {

@@ -108,7 +108,9 @@ export function createHwPolicySkill(brain: Brain, opts: HwPolicyOptions = {}): S
       const courseId = course(m);
       const request = stripMention(m.text);
       const policy = brain.store.getCourse(courseId)?.policy?.trim() ?? '';
-      const reply = (text: string): OutboundMessage[] => [{ chatId: m.chatId, text }];
+      const reply = (text: string, provenance?: OutboundMessage['provenance']): OutboundMessage[] => [
+        { chatId: m.chatId, text, ...(provenance ? { provenance } : {}) },
+      ];
 
       const cls = policy
         ? await classify(ctx.llm, policy, request)
@@ -155,7 +157,12 @@ export function createHwPolicySkill(brain: Brain, opts: HwPolicyOptions = {}): S
         parts.push("I can't do graded work for you, but I'm happy to go through the concept.");
       else if (hintOnly && policy)
         parts.push("I can't tell if this is graded, so I'm sticking to hints.");
-      return reply(parts.join('\n'));
+      return reply(
+        parts.join('\n'),
+        !hint && cls.line
+          ? { label: 'Policy line quoted from your syllabus; no course page cited' }
+          : undefined,
+      );
     },
   };
 }

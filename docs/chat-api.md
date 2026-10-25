@@ -49,3 +49,17 @@ No `GEMINI_API_KEY`: the hub uses a deterministic extractive demo model over the
 1. A student never receives, lists, fetches or is served a file from another student's DM (stream, history, chats, files).
 2. Sentinels `$180` and `therapy` (seeded private ledger rows, and any text a student DMs) never reach another viewer through any chat route.
 3. Group messages never carry private data; personal skill output goes to the DM only.
+
+## Ask Cubbie: structured context (journey)
+
+- `POST /v1/chat/send` accepts `context: ChatContextRef[]` (max 3, `packages/core/src/chat-context.ts`). The hub keeps only
+  `sourceId` and `location.anchor` from each ref and re-derives title, course, location, provenance (`real` | `fixture`) from
+  the context store through the viewer's read gate. Unreadable or other members' private sources: `404 context_unreadable`.
+- `GET /v1/chat/context-ref?sourceId=&anchor=` returns `{ ref, groupView }`: the verified ref for the owner's composer chip and
+  the redacted view a group chat may show (an unshared calendar event never shows title, time or location in a group).
+- The student message stores the group-safe `context`; the bot turn receives the full verified refs (`InboundMessage.context`).
+  Skill `context-ask` answers from exactly those sources; each reply carries one citation per source with
+  `source.provenance`, `source.courseName`, `source.locationLabel` and a verbatim `quote` (the source viewer verifies it).
+- Web: an item UI calls `queueAskCubbie({ chatId, sourceIds, prefill? })` (`sessionStorage['squad.pendingContext']`) and opens the
+  chat; the composer for that chat shows the removable chip (`composer-context-chip`, remove `composer-context-chip-remove`),
+  prefills the prompt, and never auto-sends.

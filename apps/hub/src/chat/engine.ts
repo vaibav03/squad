@@ -29,6 +29,7 @@ import {
 } from '@squad/bot';
 import { COURSE_ID } from '../cast';
 import { createPlanPort } from '../plans/port';
+import { createLlmPlanner } from '../plans/planner';
 import type { HubDeps } from '../types';
 import { wireRealPorts } from '../wire';
 import { dmChatId } from './access';
@@ -121,6 +122,15 @@ export async function attachChatEngine(
     ports: () => (wantRealPorts ? 'real' : 'stub'),
   };
   if (real && !o.noProbe) llm.status(); // starts a probe when a stale failure is on record
+  // The study-plan planner agent talks to the RAW real model: a plan is only "agent output" when Gemini wrote it, never
+  // when the resilient wrapper swapped in the demo model. Without a key the labelled fallback generator builds plans.
+  deps.plans.setPlanner(
+    real
+      ? createLlmPlanner(real, {
+          modelLabel: real instanceof GeminiLlm ? real.resolveModel('main') : 'main',
+        })
+      : undefined,
+  );
 
   registerMediaPersonas();
   const { media } = buildMedia({ cfg, llm, fake: !useEleven });
@@ -159,6 +169,7 @@ export async function attachChatEngine(
       store: contextServiceFor(deps).store,
       // membership comes from the hub directory, never from message text
       viewerFor: (m) => ({ studentId: m.from, squadIds: deps.directory.squadsOf(m.from) }),
+      llmIsReal: () => (deps.runtime ? deps.runtime.llm().llm === 'real' : false),
     },
     live: {
       start: async ({ topic, askedBy, chatId }) => {

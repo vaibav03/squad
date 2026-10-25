@@ -38,6 +38,10 @@ export interface AccountValue {
   online: boolean;
   /** epoch ms of the next automatic retry while `status` is `rate-limited`, else null. */
   retryAt: number | null;
+  /** True while the first bootstrap is retrying an unreachable hub (status stays `loading`; never shown as offline). */
+  connecting: boolean;
+  /** Runs the bootstrap again (with its bounded retries). Used by the offline state's Retry. */
+  reconnect(): Promise<void>;
   start(body: AuthStartBody): Promise<AuthStartResponse>;
   resend(challengeId: string): Promise<AuthStartResponse>;
   verify(challengeId: string, code: string): Promise<SessionResponse>;
@@ -59,6 +63,13 @@ interface Snapshot {
 }
 const EMPTY: Snapshot = { user: null, squads: [], activeSquadId: null };
 
+/**
+ * An unreachable hub on a cold load is retried a bounded number of times (3 attempts over about 8 s) before the
+ * account layer says offline: the web host and the hub rarely come up in the same instant.
+ */
+export const BOOT_RETRY_DELAYS_MS: readonly number[] = [2500, 3500];
+const isNetwork = (e: unknown) => !isApiError(e, 'unauthorized') && !isApiError(e, 'rate_limited');
+
 export function AuthProvider({
   client,
   children,
@@ -77,8 +88,10 @@ export function AuthProvider({
     if (snap.user) rememberName(snap.user.id, snap.user.name, true);
   }, [snap.user]);
   const [retryAt, setRetryAt] = useState<number | null>(null);
+  const [connecting, setConnecting] = useState(false);
   const limitTries = useRef(0);
   const alive = useRef(true);
+  const bootRun = useRef(0);
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -130,15 +143,15 @@ export function AuthProvider({
     [signedOut],
   );
 
-  /** Cookie first: GET /v1/me, then a rotating refresh when we have no bearer or the bearer is stale. */
-  const load = useCallback(async () => {
+  /** One bootstrap attempt: resolves undefined on success (state applied), else the error to classify. */
+  const loadOnce = useCallback(async (): Promise<unknown> => {
     client.setToken(loadToken());
     let me: Me | null = null;
     if (loadToken()) {
       try {
         me = await client.me();
       } catch (e) {
-        if (!isApiError(e, 'unauthorized')) return failed(e);
+        if (!isApiError(e, 'unauthorized')) return e;
         saveToken(null);
         client.setToken(null);
       }
@@ -146,13 +159,34 @@ export function AuthProvider({
     try {
       if (me && loadToken()) {
         apply(me);
-        return;
+        return undefined;
       }
       applySession(await client.refreshSession());
+      return undefined;
     } catch (e) {
-      failed(e);
+      return e;
     }
-  }, [apply, applySession, client, failed]);
+  }, [apply, applySession, client]);
+
+  /** Cookie first: GET /v1/me, then a rotating refresh when we have no bearer or the bearer is stale. */
+  const load = useCallback(async () => {
+    const run = ++bootRun.current;
+    for (let attempt = 0; ; attempt++) {
+      const err = await loadOnce();
+      if (err === undefined || run !== bootRun.current || !alive.current) {
+        if (alive.current) setConnecting(false);
+        return;
+      }
+      const delay = BOOT_RETRY_DELAYS_MS[attempt];
+      if (!isNetwork(err) || delay === undefined) {
+        if (alive.current) setConnecting(false);
+        return failed(err);
+      }
+      if (alive.current) setConnecting(true);
+      await new Promise((r) => setTimeout(r, delay));
+      if (run !== bootRun.current || !alive.current) return;
+    }
+  }, [loadOnce, failed]);
 
   useEffect(() => {
     void load();
@@ -225,6 +259,11 @@ export function AuthProvider({
       devLogin,
       online,
       retryAt,
+      connecting,
+      reconnect: async () => {
+        if (!snap.user) setStatus('loading');
+        await load();
+      },
       start: (b) => client.authStart(b),
       resend: (id) => client.authResend(id),
       async verify(challengeId, code) {
@@ -264,6 +303,8 @@ export function AuthProvider({
       devLogin,
       online,
       retryAt,
+      connecting,
+      load,
       applySession,
       signedOut,
       refresh,

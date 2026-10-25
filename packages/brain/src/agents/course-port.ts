@@ -1,6 +1,7 @@
 import { quoteOnPage } from '../citations';
 import type { Brain } from '../experts/types';
 import type { Page } from '../ingest/types';
+import type { RetrieveContext, RetrievedChunk } from '../context/retrieve';
 import type { CouncilDataPorts, RetrievedPage, RetrievedQuote } from './types';
 
 const PAGE_CHARS = 9000;
@@ -55,6 +56,72 @@ export function createCoursePorts(
         out.push({ file: c.file, page: c.page, label: `${c.file} p.${c.page}` });
       }
       return out;
+    },
+  };
+}
+
+const CALENDAR_KINDS = new Set(['gcal_event', 'canvas_event']);
+const pageOfAnchor = (anchor: string, fallback: number): number => {
+  const n = /(\d+)/.exec(anchor)?.[1];
+  return n ? Math.max(1, Number(n)) : fallback;
+};
+
+/**
+ * Adds the viewer's imported context (Canvas files and assignments, Google Docs/Drive files, Classroom items) to the
+ * council's `retrieve_course` tool. `ctx` is bound to ONE viewer (visibility is decided in SQL before any text is
+ * loaded), calendar events never go through here (the privacy-gated `calendar_summary` tool owns them), and every
+ * citation is re-verified against exactly the chunk text the agent was shown: file = the source title, page = the
+ * chunk's page number (or its section ordinal), so the cite reads `[Lecture 3 notes p.2]`.
+ */
+export function withContextPorts(
+  course: Required<Pick<CouncilDataPorts, 'retrieve' | 'verify'>> | undefined,
+  ctx: RetrieveContext | undefined,
+  opts: { keep?: (c: RetrievedChunk) => boolean } = {},
+): Required<Pick<CouncilDataPorts, 'retrieve' | 'verify'>> | undefined {
+  if (!ctx) return course;
+  const seen = new Map<string, string>();
+  return {
+    async retrieve(query) {
+      const base = course
+        ? await course.retrieve(query)
+        : { grounded: false, quotes: [], pages: [] as RetrievedPage[] };
+      const chunks = (await ctx(query)).filter(
+        (c) => !CALENDAR_KINDS.has(c.kind) && (opts.keep ? opts.keep(c) : true),
+      );
+      if (chunks.length === 0) return base;
+      const pages = [...base.pages];
+      const quotes = [...base.quotes];
+      chunks.forEach((c, i) => {
+        const page = pageOfAnchor(c.anchor, i + 1);
+        const key = `${c.title}\u0000${page}`;
+        const prev = seen.get(key);
+        const text = prev && !prev.includes(c.text) ? `${prev}\n${c.text}` : c.text;
+        seen.set(key, text);
+        const at = pages.findIndex((p) => p.file === c.title && p.page === page);
+        if (at >= 0) pages[at] = { file: c.title, page, text };
+        else pages.push({ file: c.title, page, text });
+        if (c.citation.quote) quotes.push({ file: c.title, page, quote: c.citation.quote });
+      });
+      return { grounded: true, quotes, pages };
+    },
+    verify(cs) {
+      const imported: RetrievedQuote[] = [];
+      const rest: RetrievedQuote[] = [];
+      for (const c of cs) {
+        const t = seen.get(`${c.file}\u0000${c.page}`);
+        if (t !== undefined) imported.push(c);
+        else rest.push(c);
+      }
+      const ok = imported
+        .filter((c) => quoteOnPage(c.quote, seen.get(`${c.file}\u0000${c.page}`)!))
+        .map((c) => ({ file: c.file, page: c.page, label: `${c.file} p.${c.page}` }));
+      const seenKeys = new Set<string>();
+      return [...(course ? course.verify(rest) : []), ...ok].filter((c) => {
+        const k = `${c.file}#${c.page}`;
+        if (seenKeys.has(k)) return false;
+        seenKeys.add(k);
+        return true;
+      });
     },
   };
 }
