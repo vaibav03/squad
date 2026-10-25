@@ -781,3 +781,25 @@ describe('reliable turns: forced tool use, nudges and one retry', () => {
     expect(h.msgs().some((m) => m.to === 'tool:retrieve' && m.source === 'code')).toBe(true);
   });
 });
+
+describe('live status for the board', () => {
+  it('onChange fires when an agent starts working, so snapshots show who is on it', async () => {
+    const real = new FakeTransport();
+    real.script(idOf('alpha'), ans('A'));
+    const states: string[] = [];
+    let runRef: { agents(): { id: string; status: string }[] } | undefined;
+    const h = makeHarness({
+      real,
+      start: {
+        onChange: () => {
+          const a = runRef?.agents().find((x) => x.id === idOf('alpha'));
+          if (a) states.push(a.status);
+        },
+      },
+    });
+    runRef = h.run;
+    await h.run.callAgent(h.specs.alpha!, opinion());
+    expect(states).toContain('working');
+    expect(states.at(-1)).toBe('done');
+  });
+});

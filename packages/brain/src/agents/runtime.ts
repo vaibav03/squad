@@ -598,6 +598,7 @@ export function createCouncilRuntime(deps: RuntimeDeps): {
         if (halt) return failStatus(spec, halt, co, 'skipped');
         const limits: AgentLimits = { ...DEFAULT_AGENT_LIMITS, ...spec.limits };
         agentStatus.set(spec.id, 'working');
+        changed(); // the board shows who is working right now, not only who has spoken
         const session = sessionFor(spec, sessionKey, [...extraTools, ...(co.extraTools ?? [])]);
         const allowed = new Set<ToolName>([
           ...spec.tools,
@@ -814,6 +815,7 @@ export function createCouncilRuntime(deps: RuntimeDeps): {
           // scripted text is branded: it can only be published as a demo-labelled `script` envelope
           turn.summary = scripted(turn.summary, startMode as NonLiveMode).text;
         }
+        agentStatus.set(spec.id, 'done'); // before publish: its snapshot must already say so
         const message =
           co.publish === false
             ? undefined
@@ -834,7 +836,6 @@ export function createCouncilRuntime(deps: RuntimeDeps): {
                 source,
                 redaction: co.redaction ?? 'public',
               });
-        agentStatus.set(spec.id, 'done');
         const done: AgentTurn = {
           agent: spec,
           status: 'done',

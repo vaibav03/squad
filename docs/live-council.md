@@ -14,7 +14,7 @@ migrations that rode along). Envelope contract: `docs/a2a.md`.
   `redaction: asker_only`, denied -> failed `tool:calendar` message), and `submit_turn`, the ONLY way to produce visible
   output (summary <= 280, stance <= 80, answer <= 240, order, confidence word, citations, dissent). Text outside a tool call
   is discarded (nudged once, then the turn fails `no_turn`).
-* **Caps**: delegation depth 2, fan-out 3, one `ask_peer` per specialist, cycle check, per-agent 6 model calls. Run budget
+* **Caps**: delegation depth 2, fan-out 3, one `ask_peer` per specialist, cycle check, per-agent 6 model calls (tool rounds <= 2). Run budget
   (`agents/budget.ts`, env `COUNCIL_MAX_TURNS=30 COUNCIL_MAX_TOKENS=80000 COUNCIL_MAX_WALL_MS=120000
   COUNCIL_MAX_CONCURRENCY=3 COUNCIL_MAX_RUNS_HOUR=40 COUNCIL_CALL_TIMEOUT_MS=30000`).
 * **Transport**: default `stream-text` (`agents/stream-transport.ts`) over the raw `GeminiLlm` (never the ResilientLlm, so a live
@@ -71,6 +71,83 @@ Observations: the two-specialist run gave `uncertain` confidence because the com
 is a possible improvement. A model reply that is empty after a tool result is the typical failure of a too-tight
 `maxOutputTokens`: keep the raw cap generous (public text is capped in code, not by the model).
 
+## Reliability (council integration, 2026-10-25)
+
+How a participant now ends with a valid `submit_turn` (runtime `runTurn`, `agents/runtime.ts`):
+
+* **Forced function calling.** Every step is sent with Gemini mode ANY (`LlmRequest.toolChoice`, `StepResult` untouched):
+  the first step may call any of the agent's tools OR `submit_turn`; after 2 tool rounds, after a nudge, or when only two model
+  calls are left, ONLY `submit_turn` is offered and forced. A turn can no longer end as free text or as one more lookup, and a
+  retrieval loop cannot eat the call budget.
+* **Bounded retries.** An empty or text-only reply is nudged (twice at most, escalating wording, submit-only from the first nudge);
+  a bad `submit_turn` is re-asked once; a `timeout` or `model_error` is retried ONCE (the transport rolls the failed input back so
+  the conversation is clean) with thinking dropped to `minimal`. A second failure is an honest `degraded:<reason>`, never scripted.
+* **Thinking effort.** Council calls use `thinkingLevel: low` by default (`COUNCIL_THINKING=off|minimal|low|medium|high`). Thinking
+  time, not output tokens, was most of the latency (`high` took 79 s for the same tiny run that takes about 20 s on `low`).
+* **Course lookup once, by code, in parallel.** `prefetchQuery`: the verified retrieval (2 model calls inside `brain.ask`) starts
+  with the chair's first call; specialists get the verified pages in their prompt (so no model round just to ask for them) and a
+  `retrieve_course` call by anyone reuses the same result. A code envelope `Looked up the course pages.` (to `tool:retrieve`) shows it.
+* **Chair plan closed in code.** After the delegations the chair's plan summary is a code envelope (`Delegated to ...`, `source: code`)
+  instead of a model call (`CallOptions.endAfterTools`). Ask and Round Table.
+* **Parallelism** already held (delegations and rankings run in parallel, `COUNCIL_MAX_CONCURRENCY=3`); live status now flows: an
+  agent is `working` in the snapshot the moment its turn starts and `done` in the snapshot of its own envelope.
+* **Finished snapshot.** `CouncilResult.status` flips to `done` only after stage `done` (a stream that closes on the first
+  non-running snapshot used to freeze the board at step 7 of 7). The board store never moves a run to an earlier stage.
+
+Root cause of the merge captain's `(Degraded: no turn)` run: **not reproduced** in 6 real baseline runs (5 two-specialist smoke runs and
+1 three-specialist run, all `mode=live`, all answered, but slow: 43-80 s, median 54 s, 11 model calls each). The code allowed exactly
+the failure the captain saw: tool choice was AUTO (an empty reply or prose counted against a single nudge), a specialist that kept
+calling `retrieve_course` used its whole 5-call budget without submitting, a transient timeout or empty candidate had no retry, and
+every extra sequential model call (plan summary, retrieval round, 2 internal retrieval calls) pushed the run toward the 30 s
+per-call and 120 s wall limits. The fixes above remove each of those paths; I cannot prove which one hit that run.
+
+### Before / after on real Gemini (`LIVE=1 pnpm live:council-smoke`, committed OpenStax fixture)
+
+| Config | Runs | `mode=live`, everyone answered | Wall per run | Median | Model calls | Est. cost per run |
+|---|---|---|---|---|---|---|
+| Before, Chair + Skeptic + Teacher | 5 | 5 of 5 | 43, 43, 54, 55, 80 s | **54 s** | 11 | $0.009 to 0.011 |
+| Before, Chair + 3 specialists | 1 | 1 of 1 | 57 s | 57 s | 11 | $0.012 |
+| After, Chair + Skeptic + Teacher | 5 | **5 of 5** | 17, 20, 23, 36, 50 s | **23 s** | 6 | $0.004 to 0.007 |
+| After, Chair + 3 specialists (hub default) | 5 | **5 of 5** | 19, 23, 27, 31, 39 s | **27 s** | 10 | $0.008 to 0.017 |
+
+All 10 "after" runs were `status=done mode=live` with all stages (question, delegation, opinions, critiques where 3 answered,
+dissent, verdict, actions, done) and every participant answering. Latency has a long tail from Gemini itself (one 50 s run with the
+same 6 calls). Cost is an ESTIMATE from placeholder prices (0.5/3 USD per M tokens), pessimistic.
+
+## Thinking-text scan on the real stream
+
+`LIVE=1 pnpm live:council-scan` (`scripts/live/council-stream-scan.ts`, pure scanner `scripts/live/lib/thinking-scan.ts` with unit
+tests): boots an in-process hub, runs one real Ask council through `POST /v1/council/ask`, and captures what viewers actually
+receive: the squad SSE stream `/v1/squad/stream` (stream token from `/v1/squad/stream-token`) for the asker AND a squadmate, the
+council SSE `/v1/council/:id/stream`, and `GET /v1/council/:id`. A DEBUG-ONLY Gemini client wrapper (never used by hub or bot) asks the
+model for its thought parts (`includeThoughts`) and records thought text, thought signatures and everything the model was legitimately
+given or said publicly (prompts, tool results, its own function-call arguments). The scan then asserts: (1) no key in any payload is
+named thought/reasoning/scratch/chain-of-thought/signature (the one allowed exception is the public `thought` summary, <= 240 chars);
+(2) no 8-word window of raw thinking that is not also authorized public text appears in any payload; (3) no raw thought signature
+appears anywhere.
+
+| Run | Thinking | Frames scanned | Raw thought parts / signatures captured | Result |
+|---|---|---|---|---|
+| 1 | low (default) | 71 (22 a2a.message frames across two viewers) | 1 / 6 | clean |
+| 2 | high | 69 | 5 / 6 | clean |
+
+Limits, said plainly: with `low` thinking Gemini returns few thought parts, so the text diff is thin; the `high` run stresses it.
+A model that copy-pastes its thinking into its own `submit_turn` text is indistinguishable from a deliberate answer and is allowed.
+
+## Other councils on real agents
+
+`LIVE=1 pnpm live:council-others` (`scripts/live/council-others.ts`, hard cap 40 calls / $0.15 estimate, one run each):
+
+| Council | Result | Wall | Calls | Tokens in/out | Est. cost |
+|---|---|---|---|---|---|
+| Round Table (course planning, Chairman + Chill, Grind, Advisor, fall term, mock completed courses) | `mode=live`, plan CSL 240, 310, 320, 331, 370 (15 cr), all 3 members answered and ranked, 0 repairs, 13 envelopes (`code`+`model`) | 22 s | 10 | 13,076 / 1,026 | ~$0.010 |
+| Debate (Judge + Pro, Con, ungrounded) | `mode=live`, winner `pro`, framed positions by the Judge (no fallback labels), 5 envelopes | 13 s | 4 | 3,307 / 347 | ~$0.002 |
+
+Quiz-key: the quiz engine now passes the first student of the round as the run owner (`KeyVerifier.verify(..., { askedBy })`), the runtime
+registers it, and the hub's per-viewer A2A filter keeps the quiz-key envelopes for that student's squad (test:
+`apps/hub/src/routes/council-a2a.test.ts`). Without a student the run stays unowned and its envelopes are still dropped (default deny),
+legacy events flow either way. A real quiz-key run was not made (budget: the quiz generation needs a larger real flow).
+
 ## Failure matrix (what the tests prove)
 
 All FakeTransport/FakeLive, no network: `agents/*.test.ts`, `councils/ask-v2.test.ts`, `skills/courseplan/roundtable-agents.test.ts`,
@@ -97,14 +174,15 @@ says the model is unusable at start). Single-agent judges' fallbacks (oracle/rub
 
 ## Gaps
 
-* Web UI: the board (W5) and voice (W7) are separate workstreams; existing Council Hall panel reads `CouncilResult`, which now
-  carries `mode`, `stage`, `agents`, `messages`, but the panel does not yet render the badge/org chart.
+* The Council Hall, Round Table panels, chat card and the board header are wired to `CouncilResult.mode|stage|agents|messages`
+  (`packages/web/src/council/RunStrip.tsx`, `docs/council-board.md`); only the Round Table room panel is covered by component tests
+  rather than a live e2e.
 * `calendar_summary` / `mastery_summary` ports exist and are tested, but the hub does not supply the viewer ports in
   production yet (needs the nook-parity context retrieval); the tools are only offered to agents when a port exists.
-* Quiz-key envelopes have no registered owner, so the hub filter drops them (legacy events still flow).
-* Debate/Round Table runs register the starter of the chat message as owner (squad visibility).
+* Round Table and Debate do not emit action items yet (Ask does); the Debate chair plan still costs one model call (it frames the positions).
+* A real quiz-key run was not made; its owner registration is covered by tests only.
 * Live transport is probe-only (TEXT modality unsupported on `gemini-3.8-live`, AUDIO setup gave 1011).
-* Live-council smoke covers Ask only; Round Table/debate/quiz-key real runs were not made (budget).
+* Gemini latency has a long tail (one of ten runs took 50 s with the same 6 calls); the median target holds, the maximum does not.
 
 ## Transport probe
 
