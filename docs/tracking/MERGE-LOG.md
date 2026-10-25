@@ -492,3 +492,16 @@ Branch `merge/batch14` (worktree `squad-wt/merge14`), landed as a true `--no-ff`
 - Landing merge commit: `3790e2cb7f7dce98a67c57ac40705073681e1645` (parents `96328ebaa89c54f79c9a59f1141ec2d71bbb9540` = tag `pre-merge-batch14`, `9bacde0a3222c3440504b66cf4f56c44b77a0f51` = origin/merge/batch14; only tracker docs differ).
 - Rollback: `git revert -m 1 3790e2cb7f7dce98a67c57ac40705073681e1645` (reverts both branches).
 - The demo stack was not restarted in this batch (the coordinator restarts it).
+
+## Batch 15: fix/names-council-inspect (remaining commits) into main
+
+Branch `merge/batch15` (worktree `squad-wt/merge15`), landed as a true `--no-ff` merge. These are the commits the names lead pushed after batch 14: hash-like ids never title-cased (announcer, ledger, call panel), a no-raw-ids regression scan (`scripts/dev/scan-raw-ids.mjs`) over every inspector tab, lint and prettier fixes.
+
+- One conflict, `packages/web/src/live/LivePanel.test.tsx`: both sides raised the scripted-discussion test timeout (the names branch to 20 s, main from batch 14 to 30 s overall plus 25 s for the run to end); main's values kept.
+- `pnpm check` exit status 0, `pnpm demo:live` OK, `pnpm test:smoke hub` 102 of 102.
+- Browser, demo mode (hub :18915, web :15315): new account "Maya Tester": inspector shows "Maya Tester (you)" with Doing/Thinking/Chat/Agents, no raw `u_...` id on the chat page, `@cubbie` question answered, 0 page errors. Frames in `docs/design/shots/merge15/`.
+
+### Landing (batch 15)
+
+- Landing merge commit: `ef8fbf2c06ce39553034adee36dd7e5db0c6e213` (parents `449ae511cbe474aec9e25a2919032914187a63fd` = tag `pre-merge-batch15`, `18d0ca662211eee9588335da72cadbdb68b89ac0` = origin/merge/batch15; diff empty).
+- Rollback: `git revert -m 1 ef8fbf2c06ce39553034adee36dd7e5db0c6e213`.
