@@ -27,6 +27,8 @@
     "live:images": "python3 scripts/live/make_images.py",
     "doctor": "tsx scripts/doctor.ts",
     "squad:doctor": "tsx scripts/doctor.ts",
+    "e2e": "node e2e/run.mjs",
+    "e2e:live": "LIVE=1 node e2e/run.mjs",
     "build": "pnpm -r --if-present run build",
     "build:web": "pnpm --filter @squad/web-host build",
     "bundle:report": "tsx scripts/deploy/bundle-size.ts",
@@ -37,9 +39,7 @@
     "perf:runtime": "node scripts/perf/runtime.mjs",
     "perf:hub": "tsx scripts/perf/hub-bench.ts",
     "perf:psi": "tsx scripts/perf/psi-profile.ts",
-    "a11y:check": "tsx scripts/a11y/check.ts",
-    "e2e": "node e2e/run.mjs",
-    "e2e:live": "LIVE=1 node e2e/run.mjs"
+    "a11y:check": "tsx scripts/a11y/check.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

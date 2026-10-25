@@ -1,204 +1,426 @@
 {
  "demo": {
-  "at": "2026-10-25T09:20:32.701Z",
+  "at": "2026-10-25T09:26:17.673Z",
   "rows": [
    {
     "title": "J1 sign in as Ana through the sign-in screen",
     "status": "pass",
-    "note": "",
-    "ms": 1188
+    "note": "cookies after sign-in: none",
+    "ms": 1219
    },
    {
     "title": "J1 sign in as Ben through the sign-in screen",
     "status": "pass",
-    "note": "",
-    "ms": 1135
+    "note": "cookies after sign-in: none",
+    "ms": 1276
    },
    {
     "title": "J1 sign in as Chi through the sign-in screen",
     "status": "pass",
-    "note": "",
-    "ms": 1148
+    "note": "cookies after sign-in: none",
+    "ms": 1178
    },
    {
     "title": "J1 sign in as Dev through the sign-in screen",
     "status": "pass",
-    "note": "",
-    "ms": 1153
+    "note": "cookies after sign-in: none",
+    "ms": 1177
    },
    {
     "title": "J1 setup: phone, PDFs, .ics, persona (Ana, through the UI)",
     "status": "fail",
     "note": "Error: E2E-001: Continue should enable once the hub accepted the PDFsBUG-E2E: Continue stays disabled after a successful live upload",
-    "ms": 6956
+    "ms": 6788
    },
    {
     "title": "J1 chapters appear after ingest (hub courses + mastery)",
     "status": "pass",
     "note": "courses: [{\"courseId\":\"demo\",\"title\":\"Introductory Statistics (OpenStax excerpt)\",\"file\":\"ch2-descriptive-statistics.pdf\",\"status\":\"ready\",\"pct\":100},{\"courseId\":\"ch3_probability_topics\",\"title\":\"ch3_probability_topics\",\"file\":\"ch3_probability_topics.pdf\",\"status\":\"ready\",\"pct\":100},{\"courseId\":\"ch12_linear_; mastery 200: {\"courseId\":\"demo\",\"concepts\":[\"ch2\",\"ch3\",\"ch6\",\"ch12\"],\"mine\":[0,0,0,0],\"squadAvg\":[0,0,0,0]}",
-    "ms": 21
+    "ms": 26
    },
    {
     "title": "J1 other students ingest + calendars through the API (needed by later journeys)",
     "status": "pass",
     "note": "",
-    "ms": 160
+    "ms": 102
    },
    {
     "title": "J2 group chat: grounded cubbie answer with citation chip, visible to Ana and Ben",
-    "status": "blocked",
-    "note": "blocked: not merged yet: chat/web",
-    "ms": 3
+    "status": "pass",
+    "note": "",
+    "ms": 2985
    },
    {
     "title": "J3 private DM: \"am I behind?\" goes to Ana's DM only, group gets a pointer",
-    "status": "blocked",
-    "note": "blocked: not merged yet: chat/web",
-    "ms": 2
+    "status": "pass",
+    "note": "",
+    "ms": 2934
    },
    {
     "title": "J3 privacy sentinels: Ana's \"$180 therapy\" never reaches Ben, Chi or Dev",
-    "status": "blocked",
-    "note": "blocked: not merged yet: chat/web",
-    "ms": 2
+    "status": "pass",
+    "note": "",
+    "ms": 22128
    },
    {
     "title": "J4 quiz round in group chat: card, private plain feedback, no gamification words",
-    "status": "blocked",
-    "note": "blocked: not merged yet: chat/web",
-    "ms": 2
+    "status": "pass",
+    "note": "village classroom quiz overlay (canvas) not driven: happy-path scope; chat quiz only",
+    "ms": 3614
    },
    {
     "title": "J5 ask the council in chat: three members, ranking, verdict, copy button",
-    "status": "blocked",
-    "note": "blocked: not merged yet: chat/web",
-    "ms": 1
+    "status": "pass",
+    "note": "",
+    "ms": 2964
+   },
+   {
+    "title": "J6 walk into Council Hall (desktop 1280x800): panel appears, Esc closes",
+    "status": "fail",
+    "note": "Error: J6: room panel \"Council Hall\" appears on first entry",
+    "ms": 19569
+   },
+   {
+    "title": "J6 walk into Course-Planning Round Table (desktop 1280x800): panel appears, Esc closes",
+    "status": "pass",
+    "note": "",
+    "ms": 10702
+   },
+   {
+    "title": "J6 walk into Chapter 1 house (desktop 1280x800): panel appears, Esc closes",
+    "status": "pass",
+    "note": "",
+    "ms": 41503
+   },
+   {
+    "title": "J6 walk into Feynman Porch (desktop 1280x800): panel appears, Esc closes",
+    "status": "pass",
+    "note": "",
+    "ms": 19596
+   },
+   {
+    "title": "J6 walk into Council Hall (phone 390x844): panel appears, Esc closes",
+    "status": "fail",
+    "note": "Error: J6: room panel \"Council Hall\" appears on first entry",
+    "ms": 19595
+   },
+   {
+    "title": "J6 walk into Course-Planning Round Table (phone 390x844): panel appears, Esc closes",
+    "status": "pass",
+    "note": "",
+    "ms": 10401
+   },
+   {
+    "title": "J6 walk into Chapter 1 house (phone 390x844): panel appears, Esc closes",
+    "status": "pass",
+    "note": "",
+    "ms": 41130
+   },
+   {
+    "title": "J6 walk into Feynman Porch (phone 390x844): panel appears, Esc closes",
+    "status": "pass",
+    "note": "",
+    "ms": 19799
+   },
+   {
+    "title": "J6 Ask the council in the Council Hall returns a transcript and verdict",
+    "status": "fail",
+    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
+    "ms": 92494
+   },
+   {
+    "title": "J6 plan my next semester: outcome card with a plan that respects prerequisites",
+    "status": "pass",
+    "note": "{\"id\":\"m_15\",\"seq\":15,\"chatId\":\"group:sq_demo\",\"ts\":1792919456534,\"sender\":{\"kind\":\"persona\",\"id\":\"cubbie\",\"name\":\"Cubbie\",\"emoji\":\"🐻\"},\"text\":\"Round table plan for Spring (chill, grind and advisor argued, then the chair checked it):\\n- CSL 310 Databases (3 cr, steady workload)\\n- CSL 370 Intro to AI (3 cr, heavy workload)\\n- CSL 383 Human-Computer Interaction (3 cr, light workload)\\n- CSL 360 Compilers (3 cr, crushing workload)\\nTotal: 12 credits, steady workload.\\nDissent: grind wanted 12 credits (steady workload), adding CSL 382 and skipping CSL 383.\\nFixed along the way: chill: added CSL ",
+    "ms": 1621
+   },
+   {
+    "title": "J7 Feynman: the freshman asks me to explain, then reacts",
+    "status": "pass",
+    "note": "",
+    "ms": 1424
+   },
+   {
+    "title": "J7 Devil's TA plants a mistake and asks to find it",
+    "status": "pass",
+    "note": "",
+    "ms": 1476
+   },
+   {
+    "title": "J7 Debate: both sides argued, I get a private vote prompt",
+    "status": "pass",
+    "note": "",
+    "ms": 1455
+   },
+   {
+    "title": "J7 Exam Oracle ranks chapters and gives a mock question each",
+    "status": "pass",
+    "note": "",
+    "ms": 1444
+   },
+   {
+    "title": "J7 Rubric: criterion-by-criterion feedback, no grade numbers",
+    "status": "pass",
+    "note": "bot messages before 9; rubric reply: The rubric checker is unavailable right now (demo mode), so I can't check your answer.\nYou can self-check against the rubric yourself:\n1. Clarity: explains in s",
+    "ms": 1355
+   },
+   {
+    "title": "J7 Step Diff: two students each DM a photo, the group sees where the steps split, never a verdict",
+    "status": "fail",
+    "note": "Error: photo acknowledged privately",
+    "ms": 32339
+   },
+   {
+    "title": "J7 Oral exam: the Hut opens and states the typed fallback and feedback-only policy",
+    "status": "pass",
+    "note": "",
+    "ms": 1632
+   },
+   {
+    "title": "J8 podcast / explainer card in chat: blocked, chat/web not merged into e2e/rooms",
+    "status": "skipped",
+    "note": "",
+    "ms": 0
    },
    {
     "title": "J8 trip planner: all four students (members as the hub knows them) reach a confirmed trip",
     "status": "fail",
     "note": "Error: E2E-003: dev:all starts agents for s_cam, but the hub squad member is s_chi; a trip with s_chi cannot completetrip with hub ids: {\"flow\":\"trip\",\"status\":\"no_plan\",\"reason\":\"offline\"}",
-    "ms": 63
+    "ms": 165
    },
    {
     "title": "J8 trip flow end to end: slots negotiated, DM confirms, trip.confirmed exactly once, calendars never leave the device",
     "status": "pass",
     "note": "trip outcome {\"flow\":\"trip\",\"status\":\"confirmed\",\"optionId\":\"flagstaff\",\"dates\":[\"2026-11-22\",\"2026-11-23\",\"2026-11-24\"],\"perPerson\":142,\"venmo\":[\"https://venmo.com/ana-s?txn=charge&amount=142.00&note=Flagstaff%20trip\",\"https://venmo.com/ana-s?txn=charge&amount=142.00&note=Flagstaff%20trip\",\"https://venmo.com/ana-s?txn=charge&amount=142.00&note=Flagstaff%20trip\"]}; s_ana saw trip.confirmed x1; s_ben saw trip.confirmed x1; s_chi saw trip.confirmed x1; s_dev saw trip.confirmed x1",
-    "ms": 3834
+    "ms": 4140
    },
    {
     "title": "J8 trip page shows options and confirmations from the hub",
     "status": "pass",
     "note": "",
-    "ms": 2783
+    "ms": 2973
    },
    {
     "title": "J8 shuttle cutscene deep link plays once and is skippable",
     "status": "pass",
-    "note": "session flags [\"squad:trip-played:task_e2e_trip_1792913772390_ok\"]",
-    "ms": 8764
+    "note": "session flags [\"squad:trip-played:task_e2e_trip_1792919507061_ok\"]",
+    "ms": 10087
    },
    {
     "title": "J8 hub trip: secret vote then every student confirms, trip.confirmed fires exactly once",
     "status": "pass",
     "note": "trip view keys tripId,taskId,status,options,dates,myVote,voteProgress,vetoed,confirmations,myLimits",
-    "ms": 2020
+    "ms": 2053
    },
    {
     "title": "J8 private study scheduling across 4 agents returns slots without exposing calendars",
     "status": "pass",
     "note": "study 200 {\"flow\":\"study\",\"status\":\"scheduled\",\"slot\":\"2026-11-02T12\",\"coverage\":[{\"topic\":\"dynamic-programming\",\"weak\":3,\"lead\":null},{\"topic\":\"graphs\",\"weak\":3,\"lead\":n",
-    "ms": 2272
+    "ms": 2853
    },
    {
     "title": "J9 ledger: others see static withheld bars, never the values",
     "status": "pass",
     "note": "",
-    "ms": 1870
+    "ms": 2223
    },
    {
     "title": "J9 ledger: the owner sees their own rows unblurred and marked as kept private",
     "status": "pass",
     "note": "",
-    "ms": 1027
+    "ms": 1494
+   },
+   {
+    "title": "J10 replay track2 carries trip proposals, a confirm preview, then trip.confirmed",
+    "status": "pass",
+    "note": "",
+    "ms": 48
+   },
+   {
+    "title": "J10 village Replay track2 plays: Replay badge, trip beat, confirmation beat",
+    "status": "pass",
+    "note": "",
+    "ms": 116065
    },
    {
     "title": "J10 village loads live and the camera presets change the view",
     "status": "pass",
     "note": "",
-    "ms": 10976
+    "ms": 11292
    },
    {
     "title": "J10 enter every room, read it, leave with Esc",
     "status": "fail",
-    "note": "Error: walk prompt for Exam Oracledemo-run 200; still inside after Esc: Council Hall; still inside after Esc: Debate Stage; still inside after Esc: Round Table; still inside after Esc: Feynman Porch; still inside after Esc: Panic Line",
-    "ms": 170797
+    "note": "\u001b[31mTest timeout of 600000ms exceeded.\u001b[39mdemo-run 200; chat send \"@cubbie exam oracle\" -> 202; chat send \"@cubbie devil's TA c\" -> 202; chat send \"@cubbie rubric check\" -> 202; chat send \"@cubbie oral exam\" -> 202; no walk prompt (locked or unreachable): Council Hall, Debate Stage, Round Table, Feynman Porch, Panic Line, Exam Oracle, Oral Exam Hut, Rubric Courthouse, Devil's TA",
+    "ms": 600002
    },
    {
     "title": "J10 replay track2 plays with a Replay badge",
     "status": "pass",
     "note": "replays: {\"replays\":[{\"name\":\"track2\",\"durationMs\":108500,\"eventCount\":80},{\"name\":\"track3\",\"durationMs\":114300,\"eventCount\":50}]",
-    "ms": 6722
+    "ms": 7529
    },
    {
     "title": "J10 replay track3 plays with a Replay badge",
     "status": "pass",
     "note": "replays: {\"replays\":[{\"name\":\"track2\",\"durationMs\":108500,\"eventCount\":80},{\"name\":\"track3\",\"durationMs\":114300,\"eventCount\":50}]",
-    "ms": 6828
+    "ms": 6811
    },
    {
     "title": "J10 overlays (call, quiz, confirm) appear when the hub emits events",
     "status": "pass",
     "note": "demo-run 200",
-    "ms": 3391
+    "ms": 3354
+   },
+   {
+    "title": "J11 mastery shows pips with words and no squad numbers under 3 members",
+    "status": "pass",
+    "note": "",
+    "ms": 2619
+   },
+   {
+    "title": "J11 podcast in demo mode delivers an audio file that opens (m4a)",
+    "status": "pass",
+    "note": "ffprobe duration 139.300000s",
+    "ms": 3825
+   },
+   {
+    "title": "J11 explainer picture in demo mode delivers a valid PNG",
+    "status": "pass",
+    "note": "",
+    "ms": 2218
+   },
+   {
+    "title": "J11 personas page: voice preview without an ElevenLabs key does not crash",
+    "status": "pass",
+    "note": "tts status: none; Voice picker is empty (no voice has a Play button)",
+    "ms": 1313
+   },
+   {
+    "title": "J12a sign up at /welcome with name and email, verify the devCode, land signed in",
+    "status": "pass",
+    "note": "",
+    "ms": 760
+   },
+   {
+    "title": "J12b create a squad at /squad/new and copy the invite link",
+    "status": "pass",
+    "note": "",
+    "ms": 1040
+   },
+   {
+    "title": "J12c second student opens the invite, signs up, joins, and both show on /squad/members",
+    "status": "pass",
+    "note": "",
+    "ms": 3555
+   },
+   {
+    "title": "J12d switch squads from the account sheet, sign out, sign back in",
+    "status": "pass",
+    "note": "",
+    "ms": 2604
+   },
+   {
+    "title": "J12e squad isolation: a student in another squad cannot read squad one",
+    "status": "pass",
+    "note": "",
+    "ms": 628
+   },
+   {
+    "title": "J12f phone-width pass at 390x844 for the account screens",
+    "status": "pass",
+    "note": "",
+    "ms": 2139
    },
    {
     "title": "J12 every page fits a 390x844 phone with no horizontal scroll and no page errors",
     "status": "pass",
-    "note": "pages checked: home, village, setup, personas, ledger, trip, mastery",
-    "ms": 16252
+    "note": "pages checked: home, village, setup, personas, ledger, trip, mastery, chat",
+    "ms": 18191
    },
    {
     "title": "J12 keyboard only: skip link, tab to the village, camera buttons, back out",
-    "status": "fail",
-    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeFocused\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed",
-    "ms": 10265
+    "status": "pass",
+    "note": "tab order: Enter the Village; focused before Enter: A//squad/village/sq-btn sq-btn--primary sq-btn--lg",
+    "ms": 2305
+   },
+   {
+    "title": "J13a open /squad/courses and see the OpenStax sample with CC BY and chapters",
+    "status": "pass",
+    "note": "",
+    "ms": 2959
+   },
+   {
+    "title": "J13b upload a PDF through the dropzone, see ingest progress, then chapters",
+    "status": "pass",
+    "note": "",
+    "ms": 2622
+   },
+   {
+    "title": "J13c open the chapter editor and rename a chapter",
+    "status": "pass",
+    "note": "",
+    "ms": 1423
+   },
+   {
+    "title": "J13d open a chapter source in the source viewer",
+    "status": "pass",
+    "note": "",
+    "ms": 1377
+   },
+   {
+    "title": "J13f a second student cannot GET the first student private course (404)",
+    "status": "pass",
+    "note": "",
+    "ms": 3
+   },
+   {
+    "title": "J13e delete the uploaded course through the confirm sheet",
+    "status": "pass",
+    "note": "",
+    "ms": 1445
+   },
+   {
+    "title": "J13 mobile pass (390x844): library and sample detail",
+    "status": "pass",
+    "note": "",
+    "ms": 2942
    },
    {
     "title": "J13 hub killed mid-session: state persists and the stream resumes with Last-Event-ID, no duplicates",
-    "status": "fail",
-    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m",
-    "ms": 9553
+    "status": "pass",
+    "note": "pre-restart token after restart -> 200; seq before 43 after restart 43",
+    "ms": 14720
    },
    {
     "title": "J13 agent offline: hub stays healthy when the owner agent cannot be reached",
     "status": "pass",
     "note": "calendar upload with agent offline -> 200",
-    "ms": 1063
+    "ms": 25
    },
    {
     "title": "J13 credits depleted (HTTP 402): banner status, then recovery path",
-    "status": "fail",
-    "note": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22mstatus at boot: fake no_key; status after traffic: fake no_key",
-    "ms": 9072
+    "status": "blocked",
+    "note": "blocked: no model call happens without the chat feature (not merged yet); status stays gemini until the first call / status at boot: fake probing; status after traffic: gemini ",
+    "ms": 9085
    },
    {
     "title": "J14 /v1/status reflects reality",
     "status": "pass",
     "note": "status {\"llm\":\"fake\",\"demo\":true,\"reason\":\"forced_fake\",\"tts\":\"none\"}",
-    "ms": 17
+    "ms": 2
    },
    {
     "title": "J14 pnpm run doctor prints a sane report and never a key value",
     "status": "pass",
     "note": "",
-    "ms": 833
+    "ms": 1884
    },
    {
     "title": "J15 unauthenticated and forged requests are rejected",
     "status": "pass",
     "note": "",
-    "ms": 10
+    "ms": 6
    },
    {
     "title": "J15 CORS does not reflect a foreign origin",
@@ -210,13 +432,13 @@
     "title": "J15 no secrets in responses, bundles, source maps or logs",
     "status": "pass",
     "note": "",
-    "ms": 8361
+    "ms": 8322
    },
    {
-    "title": "J17 Council Hall: click the chair and a member, the popup opens on the chat, Esc closes",
+    "title": "J16 clicking the ground never moves the player; clicking a character opens the inspector",
     "status": "pass",
     "note": "",
-    "ms": 4867
+    "ms": 10501
    }
   ]
  }
