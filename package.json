@@ -23,7 +23,8 @@
     "demo:live": "tsx scripts/demo/live.ts",
     "dev:all": "tsx scripts/dev/all.ts",
     "doctor": "tsx scripts/doctor.ts",
-    "squad:doctor": "tsx scripts/doctor.ts"
+    "squad:doctor": "tsx scripts/doctor.ts",
+    "a11y:check": "tsx scripts/a11y/check.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
