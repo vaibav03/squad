@@ -389,8 +389,7 @@ const nameTokens = (names: readonly string[]): Set<string> =>
 
 /**
  * Should an unknown `@word` get the help DM? Human-name tags ("@jamie are you coming") stay silent.
- * Never when the word is a member's name (first, last or full). Otherwise only when it is a typo of an alias, is the very
- * first token of the message, or is the whole message.
+ * Never when the word is a member's name (first, last or full). Otherwise only when it is a typo of an alias or is the whole message.
  */
 export function shouldHelpUnknown(
   text: string,
@@ -400,9 +399,5 @@ export function shouldHelpUnknown(
   const w = word.toLowerCase();
   if (nameTokens(memberNames).has(w)) return false;
   if (isNearAlias(w)) return true;
-  const t = text.trim();
-  return (
-    t.toLowerCase() === `@${w}` ||
-    (t.toLowerCase().startsWith(`@${w}`) && !/^[\p{L}\p{N}_]/u.test(t.slice(w.length + 1)))
-  );
+  return text.trim().toLowerCase() === `@${w}`;
 }

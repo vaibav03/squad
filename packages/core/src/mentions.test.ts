@@ -189,8 +189,9 @@ describe('shouldHelpUnknown', () => {
     for (const w of ['jamie', 'priya', 'bob', 'sam', 'chris', 'maria'])
       expect(isNearAlias(w)).toBe(false);
   });
-  it('first token, whole message, or silent', () => {
-    expect(shouldHelpUnknown('@zork help', 'zork')).toBe(true);
+  it('whole message only, otherwise silent', () => {
+    expect(shouldHelpUnknown('@zork help', 'zork')).toBe(false);
+    expect(shouldHelpUnknown('@jamie are you coming', 'jamie')).toBe(false);
     expect(shouldHelpUnknown('@zork', 'zork')).toBe(true);
     expect(shouldHelpUnknown('hello @zork', 'zork')).toBe(false);
   });

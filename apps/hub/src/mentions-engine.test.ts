@@ -127,14 +127,36 @@ describe('web chat engine: typed mentions', () => {
   });
 
   it('an unknown tag gets help in the sender DM and only "Sent you a DM" in the group', async () => {
-    await say(ana, '@nobodyhome help');
+    await say(ana, '@tutr help');
     await waitFor(() => bots(`dm:${ana}`).length >= 1);
     await waitFor(() => bots(gid()).length >= 1);
-    expect(bots(`dm:${ana}`)[0]!.text).toContain("I don't know @nobodyhome");
+    expect(bots(`dm:${ana}`)[0]!.text).toContain("I don't know @tutr");
     expect(bots(`dm:${ana}`)[0]!.private).toBe(true);
     expect(bots(gid())[0]!.text).toContain('Sent you a DM');
     expect(bots(`dm:${ben}`)).toHaveLength(0);
   });
+
+  it.each(['@cubbie', '@Cubbie', '@CUBBIE', '@cubbi', '@Cubbi'])(
+    '%s what is a z-score? routes to Cubbie exactly once, in the same thread',
+    async (tag) => {
+      await say(ana, `${tag} what is a z-score?`, `v-${tag}`);
+      await waitFor(() => bots(gid()).length >= 1);
+      await settle();
+      expect(bots(gid())).toHaveLength(1);
+      expect(bots(gid())[0]!.sender.name).toBe('Cubbie');
+      expect(bots(`dm:${ana}`)).toHaveLength(0);
+    },
+  );
+
+  it.each(['@jamie are you coming', '@priya can you send notes'])(
+    'human-name tag stays silent: %s',
+    async (text) => {
+      await say(ana, text);
+      await settle();
+      expect(bots(gid())).toHaveLength(0);
+      expect(bots(`dm:${ana}`)).toHaveLength(0);
+    },
+  );
 
   it('a bare @cubbi asks what is needed', async () => {
     await say(ana, '@cubbi');

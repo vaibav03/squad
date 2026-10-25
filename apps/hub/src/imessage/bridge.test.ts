@@ -780,6 +780,32 @@ describe('typed mentions in a bound group', () => {
     for (const m of personaPosts(gid)) expect(m.sender.name).toBe('Cubbie');
   });
 
+  it.each(['@cubbie', '@Cubbie', '@CUBBIE', '@cubbi', '@Cubbi'])(
+    '%s routes to Cubbie exactly once, in the group thread',
+    async (tag) => {
+      await bind();
+      const gid = `group:${c.squadId}`;
+      await c.sdk.group(G1, ANA, `${tag} what is a z-score?`, { id: `V-${tag}` });
+      await waitFor(() => personaPosts(gid).length >= 1);
+      await settle();
+      expect(personaPosts(gid)).toHaveLength(1);
+      expect(personaPosts(gid)[0]!.sender.name).toBe('Cubbie');
+      expect(c.sdk.sent.filter((x) => x.to !== G1)).toEqual([]);
+    },
+  );
+
+  it.each(['@jamie are you coming', '@priya can you send notes'])(
+    'human-name tag stays silent: %s',
+    async (text) => {
+      await bind();
+      const gid = `group:${c.squadId}`;
+      await c.sdk.group(G1, ANA, text);
+      await settle();
+      expect(personaPosts(gid)).toHaveLength(0);
+      expect(sentTo(ANA)).toHaveLength(0);
+    },
+  );
+
   it('the same message GUID redelivered does not answer twice', async () => {
     await bind();
     const gid = `group:${c.squadId}`;
@@ -814,18 +840,18 @@ describe('typed mentions in a bound group', () => {
   it('an unknown tag gets a help DM to the sender, and the group only sees "Sent you a DM"', async () => {
     await bind();
     const gid = `group:${c.squadId}`;
-    await c.sdk.group(G1, ANA, '@nobodyhome help');
+    await c.sdk.group(G1, ANA, '@tutr help');
     await waitFor(() => sentTo(ANA).length > 0);
     await settle();
-    expect(sentTo(ANA)[0]).toContain("I don't know @nobodyhome");
+    expect(sentTo(ANA)[0]).toContain("I don't know @tutr");
     expect(sentTo(ANA)[0]).toContain('@tutor');
     const groupTexts = sentTo(G1).filter((t) => !t.includes('linked to Stats Crew'));
     expect(groupTexts.join('\n')).toContain('Sent you a DM');
-    expect(groupTexts.join('\n')).not.toContain('nobodyhome');
+    expect(groupTexts.join('\n')).not.toContain('tutr help');
     expect(groupTexts.join('\n')).not.toContain('@tutor');
     // rate limited: a second unknown tag right away stays quiet
     const n = sentTo(ANA).length;
-    await c.sdk.group(G1, ANA, '@whoever hello');
+    await c.sdk.group(G1, ANA, '@cubie hello');
     await settle();
     expect(sentTo(ANA)).toHaveLength(n);
     expect(personaPosts(gid).filter((m) => m.text.includes('Sent you a DM'))).toHaveLength(1);

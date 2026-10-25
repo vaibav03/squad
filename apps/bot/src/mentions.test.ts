@@ -118,28 +118,28 @@ describe('explicit agent mentions', () => {
 describe('unknown tags', () => {
   it('in a group: help goes to the sender DM, the group only sees "Sent you a DM"', async () => {
     const t = mk();
-    await t.say('s_ana', G, '@nobodyhome help');
+    await t.say('s_ana', G, '@tutr help');
     expect(texts(t, 'dm:s_ana')).toHaveLength(1);
-    expect(texts(t, 'dm:s_ana')[0]).toContain("I don't know @nobodyhome");
+    expect(texts(t, 'dm:s_ana')[0]).toContain("I don't know @tutr");
     expect(texts(t, 'dm:s_ana')[0]).toContain('@tutor');
     expect(texts(t, G)).toHaveLength(1);
     expect(texts(t, G)[0]).toContain('Sent you a DM');
-    expect(texts(t, G)[0]).not.toContain('nobodyhome');
+    expect(texts(t, G)[0]).not.toContain('tutr help');
   });
   it('is rate limited per sender, and other senders still get help', async () => {
     const t = mk();
-    await t.say('s_ana', G, '@zzz one');
-    await t.say('s_ana', G, '@yyy two');
+    await t.say('s_ana', G, '@tutr one');
+    await t.say('s_ana', G, '@cubie two');
     expect(texts(t, 'dm:s_ana')).toHaveLength(1);
-    await t.say('s_ben', G, '@yyy two');
+    await t.say('s_ben', G, '@cubie two');
     expect(texts(t, 'dm:s_ben')).toHaveLength(1);
     t.advance(61_000);
-    await t.say('s_ana', G, '@www three');
+    await t.say('s_ana', G, '@skeptik three');
     expect(texts(t, 'dm:s_ana')).toHaveLength(2);
   });
   it('in a DM the help is the reply, once', async () => {
     const t = mk();
-    await t.say('s_ana', 'dm', '@nobodyhome help');
+    await t.say('s_ana', 'dm', '@tutr help');
     expect(texts(t, 'dm:s_ana')).toHaveLength(1);
     expect(texts(t, 'dm:s_ana')[0]).toContain("I don't know");
   });
@@ -194,10 +194,7 @@ describe('who gets the help DM', () => {
     await t.say('s_0', G, '@ben');
     expect(t.sent).toEqual([]);
   });
-  it('the first token or the whole message being an unknown, non-member tag gets help', async () => {
-    const t = mk2();
-    await t.say('s_0', G, '@nobodyhome help');
-    expect(texts(t, 'dm:s_0')).toHaveLength(1);
+  it('the whole message being an unknown, non-member tag gets help', async () => {
     const u = mk2();
     await u.say('s_0', G, '@zork');
     expect(texts(u, 'dm:s_0')).toHaveLength(1);
