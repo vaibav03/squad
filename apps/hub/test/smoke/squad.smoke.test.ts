@@ -78,7 +78,10 @@ describe('ingest and stream', () => {
     }
     await s.waitFor((f) => f.some((x) => x.event === 'trip.confirmed'));
     const seen = new Set(s.frames.map((f) => f.event));
-    for (const t of VILLAGE_EVENT_TYPES) expect(seen.has(t), `missing ${t}`).toBe(true);
+    // discussion.* events are scoped to a live run's squad (ingest drops them for an unknown run), so they never
+    // reach a plain stream or the demo log; their delivery is covered by src/live/engine.test.ts and routes/live.test.ts
+    for (const t of VILLAGE_EVENT_TYPES.filter((x) => !x.startsWith('discussion.')))
+      expect(seen.has(t), `missing ${t}`).toBe(true);
     s.stop();
   });
 

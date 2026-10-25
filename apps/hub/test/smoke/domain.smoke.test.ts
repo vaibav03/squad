@@ -213,7 +213,10 @@ describe('sim and shutdown', () => {
     const log = ev.since(before);
     if (log === 'too_old') throw new Error('unexpected');
     for (const e of log) seen.add(e.type);
-    for (const type of VILLAGE_EVENT_TYPES) expect(seen.has(type), type).toBe(true);
+    // discussion.* events are scoped to a live run's squad (ingest drops them for an unknown run), so they never
+    // reach a plain stream or the demo log; their delivery is covered by src/live/engine.test.ts and routes/live.test.ts
+    for (const type of VILLAGE_EVENT_TYPES.filter((x) => !x.startsWith('discussion.')))
+      expect(seen.has(type), type).toBe(true);
     expect(log.filter((e) => e.type === 'trip.confirmed')).toHaveLength(1);
     // running it twice works: the stage is reset at the start of each run
     await playDemoRun(hub.deps, { speed: 1000 });
