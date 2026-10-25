@@ -1,4 +1,5 @@
 import type { VillageEvent } from '@squad/core';
+import { studentLabel } from '@squad/village/inspector';
 import type { CallAgent, CallCaption, CallStatus } from './types';
 
 export interface CallState {
@@ -71,7 +72,7 @@ export function agentFromId(
   persona?: { name?: string; role?: string; portrait?: string; emoji?: string },
 ): CallAgent {
   const [kind, rest = ''] = agentId.split(':');
-  const pretty = rest ? rest.charAt(0).toUpperCase() + rest.slice(1) : '';
+  const pretty = rest ? (kind === 'student' ? studentLabel(rest) : rest.charAt(0).toUpperCase() + rest.slice(1)) : '';
   let name = persona?.name;
   let role = persona?.role;
   if (!name) {

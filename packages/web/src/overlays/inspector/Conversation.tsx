@@ -132,8 +132,8 @@ export function AgentsTab({
         <h3 className="ai-label">Thread</h3>
         {convo.thread.length === 0 ? (
           <p className="ai-empty">
-            {view.name} has not exchanged anything with other agents yet. Agents trade typed
-            messages, not free chat; this fills in live.
+            {view.isMe ? 'Your study agent has' : `${view.name} has`} not exchanged anything with
+            other agents yet. Agents trade typed messages, not free chat; this fills in live.
           </p>
         ) : (
           <ol className="ai-thread">
