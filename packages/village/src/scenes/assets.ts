@@ -100,6 +100,12 @@ export function createAssetLib(
 }
 
 /** Draw an asset with its anchor on (x, y). */
-export function put(dst: Raster, a: AssetInfo, x: number, y: number, opts: { flipX?: boolean; alpha?: number } = {}): void {
+export function put(
+  dst: Raster,
+  a: AssetInfo,
+  x: number,
+  y: number,
+  opts: { flipX?: boolean; alpha?: number } = {},
+): void {
   dst.blit(a.r, x - (opts.flipX ? a.r.w - 1 - a.ax : a.ax), y - a.ay, opts);
 }

@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { VillageEvent } from '@squad/core';
 import { DEFAULT_CTX, step, type SceneCtx } from '../contract';
-import { offPalette, paintShot, runScript } from '../testkit';
-import { paintChapterExterior } from '../art/chapter-house-exterior';
-import { paintChapterInterior } from '../art/chapter-house-interior';
-import { styleFor } from '../art/chapter-house-kit';
+import { offPalette, paintShot, po, runScript } from '../testkit';
+import { dimmed, swapped } from './exterior';
+import { styleFor } from './style';
 import { bundles, chapterHouse as def, chapterHouseBundle } from './index';
 import { clampLevel } from './map';
 
@@ -172,7 +171,7 @@ const mast = (box: number): VillageEvent => ({
 });
 
 describe('chapter house paint', () => {
-  const o = { t: 2000, calm: false };
+  const o = po(2000, false);
   it('is deterministic and state-sensitive in both views', () => {
     const dim = init();
     const lit = run([st('studying')]);
@@ -192,8 +191,8 @@ describe('chapter house paint', () => {
     ]);
     const noBubble = run([st('in_call')]);
     for (const view of ['exterior', 'interior'] as const) void view;
-    expect(def.paint(withBubble, 'interior', { t: 600, calm: false }).hash()).not.toBe(
-      def.paint(noBubble, 'interior', { t: 600, calm: false }).hash(),
+    expect(def.paint(withBubble, 'interior', po(600, false)).hash()).not.toBe(
+      def.paint(noBubble, 'interior', po(600, false)).hash(),
     );
     const tick = run([{ t: 'quiz.result', quizId: 'q', chapter: 'ch5', correct: true }]);
     const cross = run([{ t: 'quiz.result', quizId: 'q', chapter: 'ch5', correct: false }]);
@@ -202,28 +201,27 @@ describe('chapter house paint', () => {
   it('exterior window flickers only when awake; typing animates at 8 fps', () => {
     const idle = run([st('idle')]);
     const study = run([st('studying')]);
-    expect(def.paint(study, 'exterior', { t: 0, calm: false }).hash()).not.toBe(
-      def.paint(study, 'exterior', { t: 2000, calm: false }).hash(),
+    expect(def.paint(study, 'exterior', po(0, false)).hash()).not.toBe(
+      def.paint(study, 'exterior', po(2000, false)).hash(),
     );
-    expect(def.paint(study, 'interior', { t: 0, calm: false }).hash()).not.toBe(
-      def.paint(study, 'interior', { t: 130, calm: false }).hash(),
+    expect(def.paint(study, 'interior', po(0, false)).hash()).not.toBe(
+      def.paint(study, 'interior', po(130, false)).hash(),
     );
-    expect(def.paint(idle, 'interior', { t: 0, calm: false }).hash()).not.toBe(
-      def.paint(idle, 'interior', { t: 500, calm: false }).hash(),
+    expect(def.paint(idle, 'interior', po(0, false)).hash()).not.toBe(
+      def.paint(idle, 'interior', po(500, false)).hash(),
     );
   });
-  it('base art is palette-locked in every state', () => {
-    const states = [
-      init(),
-      { ...init(), access: 'locked' as const },
-      run([st('studying'), mast(4)]),
-      run([st('waiting_for_student')]),
-      run([st('in_call')]),
-    ];
-    for (const s of states) {
-      expect(offPalette(paintChapterExterior(s, o, false))).toBe(0);
-      expect(offPalette(paintChapterInterior(s, o, false))).toBe(0);
+  it('derived art stays on the master palette', () => {
+    const A = o.assets;
+    for (const v of ['lit', 'dark'] as const) {
+      const base = A.image('house.hut', v).r;
+      expect(offPalette(dimmed(base))).toBe(0);
+      for (const k of [0, 1, 2, 3]) {
+        expect(offPalette(swapped(base, `t${k}`, styleFor(`ch${k}`).roof))).toBe(0);
+      }
     }
+    expect(offPalette(swapped(A.frame('expert', 'sit', 0).r, 'x', styleFor('ch2').shirt))).toBe(0);
+    expect(styleFor('ch2').propL).not.toBe(styleFor('ch2').propR);
   });
   it('sizes and distinct chapters', () => {
     expect(def.paint(init(), 'exterior', o).w).toBe(def.exterior.w);
@@ -235,7 +233,7 @@ describe('chapter house paint', () => {
     );
     expect(hashes.size).toBe(4);
     expect(
-      new Set(['ch1', 'ch2', 'ch3', 'ch4'].map((c) => JSON.stringify(styleFor(c).npc))).size,
+      new Set(['ch1', 'ch2', 'ch3', 'ch4'].map((c) => JSON.stringify(styleFor(c).roof))).size,
     ).toBe(4);
   });
   it('never leaks a withheld sentinel into paint or describe', () => {
@@ -264,8 +262,8 @@ describe('chapter house paint', () => {
         shared: ['zzz'],
       },
     ]);
-    expect(def.paint(s, 'interior', { t: 300, calm: false }).hash()).toBe(
-      def.paint(same, 'interior', { t: 300, calm: false }).hash(),
+    expect(def.paint(s, 'interior', po(300, false)).hash()).toBe(
+      def.paint(same, 'interior', po(300, false)).hash(),
     );
   });
   it('describe is a plain sentence per state and never a number', () => {
@@ -293,15 +291,15 @@ describe('chapter house paint', () => {
       { t: 'agent.state', agent: 'expert:ch5', state: 'waiting_for_student' },
     ]);
     for (const view of ['exterior', 'interior'] as const) {
-      expect(def.paint(s, view, { t: 0, calm: true }).hash()).toBe(
-        def.paint(s, view, { t: 1000, calm: true }).hash(),
+      expect(def.paint(s, view, po(0, true)).hash()).toBe(
+        def.paint(s, view, po(1000, true)).hash(),
       );
     }
   });
   it('glow tweens over 600 ms', () => {
     const s = run([st('studying'), mast(5)]);
-    const mid = def.paint(s, 'exterior', { t: 10 + 100, calm: false }).hash();
-    const end = def.paint(s, 'exterior', { t: 10 + 700, calm: false }).hash();
+    const mid = def.paint(s, 'exterior', po(10 + 100, false)).hash();
+    const end = def.paint(s, 'exterior', po(10 + 700, false)).hash();
     expect(mid).not.toBe(end);
   });
   it('bundles paint every shot', () => {

@@ -1,9 +1,9 @@
 import type { VillageEvent } from '@squad/core';
 import type { SceneBundle, SceneDef, SceneCommand, SceneCtx, ShotDef } from '../contract';
 import { initBase, reduceBase, type BaseState } from '../model/base';
-import { chapterLabel } from '../art/chapter-house-kit';
-import { CH_DOOR, CH_EXT_H, CH_EXT_W, paintChapterExterior } from '../art/chapter-house-exterior';
-import { CH_ENTRY, CH_INT_H, CH_INT_W, paintChapterInterior } from '../art/chapter-house-interior';
+import { chapterLabel } from './style';
+import { DOOR, EXT_H, EXT_W, paintExterior } from './exterior';
+import { ENTRY, INT_H, INT_W, paintInterior } from './interior';
 import { handlesChapter, mapChapterEvent } from './map';
 import { shotBundles } from './shots';
 
@@ -17,10 +17,10 @@ export const chapterHouse: SceneDef<ChapterHouseState> = {
   id: 'chapter-house',
   kind: 'chapter-house',
   title: 'Chapter house',
-  exterior: { w: CH_EXT_W, h: CH_EXT_H },
-  interior: { w: CH_INT_W, h: CH_INT_H },
-  door: { x: CH_DOOR.x, y: CH_DOOR.y },
-  entry: { x: CH_ENTRY.x, y: CH_ENTRY.y },
+  exterior: { w: EXT_W, h: EXT_H },
+  interior: { w: INT_W, h: INT_H },
+  door: { x: DOOR.x, y: DOOR.y },
+  entry: { x: ENTRY.x, y: ENTRY.y },
   init(opts) {
     const instance = opts?.instance ?? 'ch1';
     const title = opts?.title?.trim() || chapterLabel(instance);
@@ -36,7 +36,7 @@ export const chapterHouse: SceneDef<ChapterHouseState> = {
     return reduceBase(state, cmd, at);
   },
   paint(state, view, o) {
-    return view === 'exterior' ? paintChapterExterior(state, o) : paintChapterInterior(state, o);
+    return view === 'exterior' ? paintExterior(state, o) : paintInterior(state, o);
   },
   describe(state) {
     const name = `${state.title || chapterLabel(state.instance)} house`;

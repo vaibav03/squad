@@ -211,7 +211,7 @@ const mod = {
       const tex = scene.textures.createCanvas(key, def.exterior.w, def.exterior.h);
       const image = scene.add
         .image(slot.x, layout.groundY + 1, key)
-        .setOrigin(def.door.x / def.exterior.w, 1)
+        .setOrigin(0.5, 1) // the sprite box is centred on its slot; the door may sit off-centre
         .setDepth(depth.buildings)
         .setVisible(false);
       const live: Live = {
@@ -228,7 +228,7 @@ const mod = {
       };
       live.unregister = ctx.interactables.register({
         id: `enter-${p.slotId}`,
-        x: slot.door?.x ?? slot.x,
+        x: Math.round(slot.x + def.door.x - def.exterior.w / 2),
         radius: 24,
         label: `Open ${(live.state as { title?: string }).title || p.title}`,
         enabled: () => (live.state as { access: string }).access !== 'locked',
