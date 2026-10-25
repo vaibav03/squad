@@ -9,6 +9,8 @@ export interface SyncBadgeProps {
   receivedLate?: boolean;
   onRetry?: () => void;
   compact?: boolean;
+  /** the message head already says `via iMessage`: do not repeat the chip */
+  hideVia?: boolean;
 }
 
 const SKIP_REASON: Record<SkippedAttachment['reason'], string> = {
@@ -23,10 +25,11 @@ export function SyncBadge(p: SyncBadgeProps) {
   const skipped = p.skippedAttachments ?? [];
   const viaIm = p.transport === 'imessage';
   const showSender = !p.compact && viaIm && !!p.senderLabel;
-  if (!viaIm && !ds && skipped.length === 0 && !p.receivedLate) return null;
+  if (!(viaIm && (!p.hideVia || showSender)) && !ds && skipped.length === 0 && !p.receivedLate)
+    return null;
   return (
     <div className="sqs" role="status" aria-label="iMessage sync">
-      {viaIm && <span className="sqs__chip">via iMessage</span>}
+      {viaIm && !p.hideVia && <span className="sqs__chip">via iMessage</span>}
       {showSender && <span className="sqs__from">{p.senderLabel}</span>}
       {ds && (
         <span className={`sqs__state sqs__state--${ds.state}`} data-state={ds.state}>

@@ -8,6 +8,7 @@ import {
   ChatTypingSchema,
   ChatUpdateSchema,
   HubStatusSchema,
+  ImessageStatusSchema,
   type ChatAttachment,
   type ChatCitationExcerpt,
   type ChatMessage,
@@ -16,6 +17,7 @@ import {
   type ChatTyping,
   type ChatUpdate,
   type HubStatus,
+  type ImessageStatus,
 } from '@squad/core';
 import { z } from 'zod';
 
@@ -42,6 +44,8 @@ export interface ChatApi {
   subscribe(h: StreamHandlers, lastEventId?: number): () => void;
   /** Asks the hub to retry a failed iMessage send (POST /v1/imessage/messages/:id/retry). */
   retryImessage?(messageId: string): Promise<boolean>;
+  /** GET /v1/imessage/status; null when the hub has no such route or cannot say (never throws). */
+  imessageStatus?(): Promise<ImessageStatus | null>;
 }
 
 export type StreamState = 'connecting' | 'live' | 'offline' | 'expired';
@@ -247,6 +251,16 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
       const fd = new FormData();
       fd.append('file', file);
       return (await call(UploadSchema, '/v1/chat/upload', { method: 'POST', body: fd })).attachment;
+    },
+    imessageStatus: async () => {
+      try {
+        const res = await fetchWithin(f, `${base}/v1/imessage/status`, { headers: auth }, ms);
+        if (!res.ok) return null;
+        const parsed = ImessageStatusSchema.safeParse(await res.json().catch(() => null));
+        return parsed.success ? parsed.data : null;
+      } catch {
+        return null;
+      }
     },
     citation: (file, page, context) =>
       call(
