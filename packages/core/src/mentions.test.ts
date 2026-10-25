@@ -3,7 +3,9 @@ import {
   AGENT_ALIASES,
   MAX_MENTION_FANOUT,
   isNearMiss,
+  isNearAlias,
   mentionHelpText,
+  shouldHelpUnknown,
   parseMentions,
   resolveAlias,
   suggestAliases,
@@ -175,5 +177,26 @@ describe('suggestAliases', () => {
     );
     expect(suggestAliases('TU')[0]!.agent.id).toBe('tutor');
     expect(suggestAliases('zzz')).toEqual([]);
+  });
+});
+
+describe('shouldHelpUnknown', () => {
+  it.each(['tutr', 'cubie', 'skeptik', 'plannr', 'examinr', 'Chairmn'])('typo @%s', (w) => {
+    expect(isNearAlias(w)).toBe(true);
+    expect(shouldHelpUnknown(`so @${w} hi`, w, [])).toBe(true);
+  });
+  it('human names are not near aliases', () => {
+    for (const w of ['jamie', 'priya', 'bob', 'sam', 'chris', 'maria'])
+      expect(isNearAlias(w)).toBe(false);
+  });
+  it('first token, whole message, or silent', () => {
+    expect(shouldHelpUnknown('@zork help', 'zork')).toBe(true);
+    expect(shouldHelpUnknown('@zork', 'zork')).toBe(true);
+    expect(shouldHelpUnknown('hello @zork', 'zork')).toBe(false);
+  });
+  it('a member name always wins, even for a near alias', () => {
+    expect(shouldHelpUnknown('@jamie hi', 'jamie', ['Jamie Lee'])).toBe(false);
+    expect(shouldHelpUnknown('@lee hi', 'lee', ['Jamie Lee'])).toBe(false);
+    expect(shouldHelpUnknown('@tutu hi', 'tutu', ['Tutu'])).toBe(false);
   });
 });

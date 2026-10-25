@@ -831,6 +831,23 @@ describe('typed mentions in a bound group', () => {
     expect(personaPosts(gid).filter((m) => m.text.includes('Sent you a DM'))).toHaveLength(1);
   });
 
+  it('a thread member name or a human-name tag never triggers help', async () => {
+    await bind();
+    const gid = `group:${c.squadId}`;
+    await c.sdk.group(G1, ANA, '@ben can you send notes');
+    await c.sdk.group(G1, ANA, 'hi @jamie are you coming');
+    await settle();
+    expect(personaPosts(gid)).toHaveLength(0);
+    expect(sentTo(ANA)).toHaveLength(0);
+  });
+
+  it('a typo of an alias gets the help DM', async () => {
+    await bind();
+    await c.sdk.group(G1, ANA, 'so @tutr explain z');
+    await waitFor(() => sentTo(ANA).length > 0);
+    expect(sentTo(ANA)[0]).toContain("I don't know @tutr");
+  });
+
   it('near-misses, emails and code stay silent', async () => {
     await bind();
     const gid = `group:${c.squadId}`;

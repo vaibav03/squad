@@ -355,3 +355,54 @@ export function mentionHelpText(unknown?: string): string {
 export const BARE_MENTION_REPLY =
   'What do you need? Ask me a question, or say "quiz me", "make a plan" or "explain <topic>".';
 export const MENTION_DM_NOTICE = 'Sent you a DM';
+
+/** Levenshtein distance (small strings only). */
+export function editDistance(a: string, b: string): number {
+  const x = a.toLowerCase();
+  const y = b.toLowerCase();
+  let prev = Array.from({ length: y.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= x.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= y.length; j++)
+      cur[j] = Math.min(
+        prev[j]! + 1,
+        cur[j - 1]! + 1,
+        prev[j - 1]! + (x[i - 1] === y[j - 1] ? 0 : 1),
+      );
+    prev = cur;
+  }
+  return prev[y.length]!;
+}
+
+/** A typo of a real alias (`@tutr`, `@cubie`, `@skeptik`): distance 2 for aliases of 6+ letters, 1 for shorter ones. */
+export function isNearAlias(word: string): boolean {
+  if (word.length < 3) return false;
+  for (const a of ALL_ALIAS_WORDS)
+    if (editDistance(word, a) <= (a.length >= 6 ? 2 : 1)) return true;
+  return false;
+}
+
+const nameTokens = (names: readonly string[]): Set<string> =>
+  new Set(
+    names.flatMap((n) => n.toLowerCase().split(/[^\p{L}\p{N}]+/u)).filter((t) => t.length > 0),
+  );
+
+/**
+ * Should an unknown `@word` get the help DM? Human-name tags ("@jamie are you coming") stay silent.
+ * Never when the word is a member's name (first, last or full). Otherwise only when it is a typo of an alias, is the very
+ * first token of the message, or is the whole message.
+ */
+export function shouldHelpUnknown(
+  text: string,
+  word: string,
+  memberNames: readonly string[] = [],
+): boolean {
+  const w = word.toLowerCase();
+  if (nameTokens(memberNames).has(w)) return false;
+  if (isNearAlias(w)) return true;
+  const t = text.trim();
+  return (
+    t.toLowerCase() === `@${w}` ||
+    (t.toLowerCase().startsWith(`@${w}`) && !/^[\p{L}\p{N}_]/u.test(t.slice(w.length + 1)))
+  );
+}

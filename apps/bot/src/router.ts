@@ -3,6 +3,7 @@ import {
   MAX_MENTION_FANOUT,
   MENTION_DM_NOTICE,
   mentionHelpText,
+  shouldHelpUnknown,
   parseMentions,
   type AgentAlias,
   type ChatId,
@@ -39,6 +40,8 @@ export interface RouterDeps {
   now: () => number;
   policy?: Partial<PolicyConfig>;
   scoreTimeoutMs?: number;
+  /** Display names of the people in a chat (a human-name tag like `@jamie` must never get a help DM). */
+  memberNames?: (chatId: ChatId, from: string) => string[];
 }
 
 const DEDUPE_WINDOW_MS = 60_000;
@@ -261,7 +264,8 @@ export function createRouter(d: RouterDeps) {
       const targets = pm.mentions.slice(0, MAX_MENTION_FANOUT);
       const sent: OutboundMessage[] = [];
       for (const t of targets) sent.push(...(await runTarget(m, t, pm.rest, messageId)));
-      const unk = pm.unknownMention[0];
+      const names = d.memberNames?.(m.chatId, m.from) ?? [];
+      const unk = pm.unknownMention.find((u) => shouldHelpUnknown(m.text, u.word, names));
       if (unk) sent.push(...(await unknownHelp(m, unk.word)));
       const decision: Decision = targets.length
         ? {

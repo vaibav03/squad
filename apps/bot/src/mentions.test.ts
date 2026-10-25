@@ -143,9 +143,9 @@ describe('unknown tags', () => {
     expect(texts(t, 'dm:s_ana')).toHaveLength(1);
     expect(texts(t, 'dm:s_ana')[0]).toContain("I don't know");
   });
-  it('known plus unknown: the known agent answers and help is sent', async () => {
+  it('known plus a typo of an alias: the known agent answers and help is sent', async () => {
     const t = mk();
-    await t.say('s_ana', G, '@tutor and @bob explain z');
+    await t.say('s_ana', G, '@tutor and @cubie explain z');
     expect(texts(t, G).some((x) => /Tutor: /.test(x))).toBe(true);
     expect(texts(t, 'dm:s_ana')).toHaveLength(1);
   });
@@ -154,6 +154,61 @@ describe('unknown tags', () => {
     await t.say('s_ana', G, '@a1_<b>');
     const h = texts(t, 'dm:s_ana')[0] ?? '';
     expect(h).not.toContain('<');
+  });
+});
+
+describe('who gets the help DM', () => {
+  const roster = {
+    students: ['Ana', 'Ben', 'Jamie', 'Priya Nair'].map((n, i) => ({
+      id: `s_${i}`,
+      name: n,
+      handle: `+1555000020${i}`,
+    })),
+    chats: [{ id: G, name: 'T', members: ['s_0', 's_1', 's_2', 's_3'] }],
+  };
+  const mk2 = () => createTestBot({ roster, skills: [quizSkill] });
+  it.each(['@tutr explain z', '@cubie hi', '@skeptik is this right', 'so @examinr what now'])(
+    'a typo of an alias gets the help DM: %s',
+    async (line) => {
+      const t = mk2();
+      await t.say('s_0', G, line);
+      expect(texts(t, 'dm:s_0')).toHaveLength(1);
+      expect(texts(t, G)).toEqual([expect.stringContaining('Sent you a DM')]);
+    },
+  );
+  it.each([
+    '@jamie are you coming',
+    '@Priya can you send notes',
+    'hi @jamie',
+    '@nair did you see',
+    'ask @bob about it',
+    'hey @prof, question',
+  ])('a human-name tag stays silent: %s', async (line) => {
+    const t = mk2();
+    await t.say('s_0', G, line);
+    expect(t.sent.map((x) => x.text)).toEqual([]);
+  });
+  it('a member name never triggers, even as the whole message', async () => {
+    const t = mk2();
+    await t.say('s_0', G, '@jamie');
+    await t.say('s_0', G, '@ben');
+    expect(t.sent).toEqual([]);
+  });
+  it('the first token or the whole message being an unknown, non-member tag gets help', async () => {
+    const t = mk2();
+    await t.say('s_0', G, '@nobodyhome help');
+    expect(texts(t, 'dm:s_0')).toHaveLength(1);
+    const u = mk2();
+    await u.say('s_0', G, '@zork');
+    expect(texts(u, 'dm:s_0')).toHaveLength(1);
+  });
+  it('silent tags do not use up the one-per-minute help limit', async () => {
+    const t = mk2();
+    await t.say('s_0', G, 'hi @jamie');
+    await t.say('s_0', G, '@tutr explain z');
+    expect(texts(t, 'dm:s_0')).toHaveLength(1);
+    await t.say('s_0', G, '@cubie again');
+    expect(texts(t, 'dm:s_0')).toHaveLength(1);
   });
 });
 

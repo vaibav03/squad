@@ -43,7 +43,8 @@ A skill alias runs its skill even when its own score would be low: `@quiz chapte
 - A bare `@cubbi` replies "What do you need?".
 - `@council` and skill aliases run that skill; if the skill is not registered the reply says it is not available.
 - `@cubbie <text>` alone keeps the classic scored path (recorded decision with scores).
-- An unknown tag sends a short help (the list of agents) to the sender only. In a group it goes to the sender's DM and the group only sees `Sent you a DM`. Rate limit: one help per sender per minute (silent after that). In a DM the help is the reply.
+- An unknown tag is only helped when it is probably a mistake, not a person. The help goes out when the word is a typo of an alias (edit distance 2 for aliases of 6+ letters, 1 for shorter ones: `@tutr`, `@cubie`, `@skeptik`), or it is the very first token of the message, or it is the whole message. It never goes out when the word is the first, last or full name of a member of the squad/thread (the hub passes the squad directory; the bot also uses its roster). `hi @jamie are you coming` is always silent. Silent tags do not use up the rate limit. Known gap: a first-token `@name` of someone who is not in the squad directory (for example `@prof question`) still gets the help once.
+- The help goes to the sender only. In a group it goes to the sender's DM and the group only sees `Sent you a DM`. Rate limit: one help per sender per minute (silent after that). In a DM the help is the reply.
 - Banter without a tag stays silent (the 50-line banter suite plus 30 near-miss lines).
 - Privacy: persona and skill replies only see the tagged message. Help text lists public agent names only and never echoes more than 24 sanitised characters of the unknown tag. DM-only content stays in DMs.
 - Inspector: each addressed agent emits an `agent.state` (`studying`, then `idle`) with `thought: "Addressed @tutor (Tutor)"` and `work.skill: "tutor"`. No new event kinds.
