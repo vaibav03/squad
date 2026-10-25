@@ -28,7 +28,7 @@ for (const [n, path, full] of pages) {
     p.on('response', (r) => r.status() >= 400 && console.log(n, r.status(), r.url().replace(HUB, '')));
     await p.goto(BASE + path);
     await p.waitForTimeout(3500);
-    await p.screenshot({ path: `${OUT}/${n}-${vn}-${t}${R}.png`, fullPage: full });
+    await p.screenshot({ path: `${OUT}/${n}-${vn}-${t}${R}.png`, fullPage: false });
     await c.close();
   }
 }

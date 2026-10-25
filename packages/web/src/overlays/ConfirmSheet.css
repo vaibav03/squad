@@ -4,6 +4,12 @@
   gap: var(--lv-s4);
   padding: var(--lv-s4) var(--lv-s5) var(--lv-s5);
 }
+@media (min-width: 640px) {
+  .lv-confirm__body {
+    padding: var(--lv-s6);
+    gap: var(--lv-s5);
+  }
+}
 .lv-confirm__q {
   font: 600 var(--text-xl) / var(--lh-xl) var(--lv-font-ui);
   letter-spacing: var(--tracking-ui);
