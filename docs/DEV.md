@@ -63,3 +63,7 @@ build or start the web with `VITE_HUB_URL=http://localhost:4815`, and use `--con
 (`PROXY=http://localhost:4815`). `PW_MODULE` / `CHROME` point at a scratch Playwright install and a Chrome for Testing binary.
 
 The hub allows 20 sign-ups per hour per IP (in memory): restart the hub to reset it when you run many batches.
+
+## Web origin knobs (OAuth return, invite and iMessage links)
+
+The hub sends the browser back to the web origin that started the flow (Origin header or `return_origin`), never a hard-coded port. Allowed: `HUB_CORS_ORIGINS` entries, `PUBLIC_WEB_URL` / `WEB_URL` / `HUB_WEB_URL`, and localhost / 127.0.0.1 on any port only when not production. Otherwise it falls back to the configured web URL, else a plain "Connected, return to the app" page. `pnpm dev:all` sets `HUB_WEB_URL` to its own `DEV_ALL_WEB_PORT` origin and adds that origin to the CORS list. See `.env.example`. There is no Sendblue code in this repo; the Canvas extension bakes its web origin at build (`SQUAD_WEB_ORIGIN`).

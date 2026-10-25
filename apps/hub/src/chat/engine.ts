@@ -244,13 +244,34 @@ export async function attachChatEngine(
   };
   deps.confirms.register({
     kind: 'bot',
-    owns: (taskId, v) => pending(v.studentId, taskId)?.status === 'pending',
+    // Any card in the viewer's own DM (never another student's, so in a group thread only the asker may answer);
+    // answered/timed-out cards are still owned so a late tap says 409/404 instead of looking like an unknown task.
+    owns: (taskId, v) => {
+      const c = pending(v.studentId, taskId);
+      return c?.status === 'pending' || (c !== undefined && !deps.trips.byTask(taskId));
+    },
+    preview(v, taskId) {
+      const card = pending(v.studentId, taskId);
+      if (card?.status !== 'pending') return undefined;
+      const yn = card.options.length === 2 && /^yes$/i.test(card.options[0] ?? '');
+      return {
+        taskId,
+        question: card.question,
+        options: card.options,
+        kind: 'bot',
+        mode: yn ? 'yesno' : 'pick',
+      };
+    },
     async answer(v, taskId, a) {
-      await transport.inject({
-        chatId: dmChatId(v.studentId),
-        from: v.studentId,
-        text: a.yes ? 'yes' : 'no',
-      });
+      const card = pending(v.studentId, taskId);
+      if (!card) return { ok: false, code: 'unknown_task' };
+      if (card.status === 'answered') return { ok: false, code: 'already_answered' };
+      if (card.status !== 'pending') return { ok: false, code: 'unknown_task' };
+      // The option the student picked goes in as its number, so any option text resolves; a bare yes/no
+      // (no optionId) maps to the first option / the typed word.
+      const idx = a.optionId ? card.options.indexOf(a.optionId) : -1;
+      const text = idx >= 0 ? String(idx + 1) : a.yes ? (a.optionId ? '1' : 'yes') : 'no';
+      await transport.inject({ chatId: dmChatId(v.studentId), from: v.studentId, text });
       return pending(v.studentId, taskId)?.status === 'answered'
         ? { ok: true }
         : { ok: false, code: 'invalid_request', message: 'answer this one by number in the chat' };
