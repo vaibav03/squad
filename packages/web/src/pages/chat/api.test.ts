@@ -54,10 +54,18 @@ describe('http chat api', () => {
     expect(chatErrorText(new Error('secret'), 'Fallback')).toBe('Fallback');
   });
 
-  it('builds file urls with the token and leaves data urls alone', () => {
-    const api = createChatApi({ hubUrl: 'http://hub', token: 'a b', fetchImpl: fetch });
+  it('builds file urls with a file-scoped token (never the bearer token) and leaves data urls alone', async () => {
+    const fetchImpl = (async (u: string) => {
+      expect(String(u)).toContain('/v1/chat/file-token');
+      return new Response(JSON.stringify({ ft: 'ft 1', expiresAt: Date.now() + 7_200_000 }), {
+        headers: { 'content-type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+    const api = createChatApi({ hubUrl: 'http://hub', token: 'bearer-secret', fetchImpl });
     const att = { id: 'a', kind: 'image' as const, mime: 'image/png', url: '/v1/chat/files/abc' };
-    expect(api.fileUrl(att)).toBe('http://hub/v1/chat/files/abc?st=a%20b');
+    expect(api.fileUrl(att)).not.toContain('bearer-secret');
+    await api.prepare!();
+    expect(api.fileUrl(att)).toBe('http://hub/v1/chat/files/abc?ft=ft%201');
     expect(api.fileUrl({ ...att, url: 'data:image/png;base64,xx' })).toBe(
       'data:image/png;base64,xx',
     );

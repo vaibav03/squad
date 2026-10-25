@@ -101,13 +101,28 @@ function connStatus(ctl: ChatController): { status: Status; label: string } {
 type Excerpt =
   { s: 'loading' } | { s: 'error'; msg: string } | { s: 'ok'; data: ChatCitationExcerpt };
 
+/** The excerpt with the matched sentence highlighted (a quiet underline-tint, not a loud marker). */
+function ExcerptText({ data }: { data: ChatCitationExcerpt }) {
+  const i = data.highlight ? data.excerpt.indexOf(data.highlight) : -1;
+  if (!data.highlight || i < 0) return <>{data.excerpt}</>;
+  return (
+    <>
+      {data.excerpt.slice(0, i)}
+      <mark className="sqc-excerpt__mark">{data.highlight}</mark>
+      {data.excerpt.slice(i + data.highlight.length)}
+    </>
+  );
+}
+
 function CitationSheet({
   cite,
+  context,
   ctl,
   scene,
   onClose,
 }: {
   cite: ChatCitation | null;
+  context?: string;
   ctl: ChatController;
   scene?: boolean;
   onClose: () => void;
@@ -122,7 +137,7 @@ function CitationSheet({
     if (!cite || !ctl.api) return;
     let dead = false;
     setEx({ s: 'loading' });
-    ctl.api.citation(cite.file, cite.page).then(
+    ctl.api.citation(cite.file, cite.page, context).then(
       (data) => !dead && setEx({ s: 'ok', data }),
       (e) =>
         !dead &&
@@ -137,7 +152,7 @@ function CitationSheet({
     return () => {
       dead = true;
     };
-  }, [cite, ctl.api, attempt]);
+  }, [cite, context, ctl.api, attempt]);
   return (
     <Sheet
       open={!!cite}
@@ -172,7 +187,9 @@ function CitationSheet({
                 {[ex.data.chapter, ex.data.title].filter(Boolean).join(' · ')}
               </p>
             ) : null}
-            <blockquote className="sqc-excerpt__text">{ex.data.excerpt}</blockquote>
+            <blockquote className="sqc-excerpt__text">
+              <ExcerptText data={ex.data} />
+            </blockquote>
             <p className="sqc-excerpt__src">
               <Icon name="file" size={14} />
               {ex.data.file}, page {ex.data.page}
@@ -211,6 +228,7 @@ function MessageList({
   const [atBottom, setAtBottom] = useState(true);
   const [newCount, setNewCount] = useState(0);
   const [cite, setCite] = useState<ChatCitation | null>(null);
+  const [citeCtx, setCiteCtx] = useState<string | undefined>();
   const [quiet, setQuiet] = useState(true);
   const first = useRef<{ chat: string; baseSeq: number } | null>(null);
   const prev = useRef<{
@@ -370,7 +388,10 @@ function MessageList({
                       scene={scene}
                       compact={compact}
                       paused={paused}
-                      onCite={setCite}
+                      onCite={(c, t) => {
+                        setCite(c);
+                        setCiteCtx(t);
+                      }}
                       onRetry={(id) => void ctl.retry(chat.id, id)}
                       onDiscard={(id) => ctl.discard(chat.id, id)}
                       quizAnswer={ctl.quizAnswer}
@@ -395,7 +416,13 @@ function MessageList({
           New messages
         </button>
       ) : null}
-      <CitationSheet cite={cite} ctl={ctl} scene={scene} onClose={() => setCite(null)} />
+      <CitationSheet
+        cite={cite}
+        context={citeCtx}
+        ctl={ctl}
+        scene={scene}
+        onClose={() => setCite(null)}
+      />
     </div>
   );
 }

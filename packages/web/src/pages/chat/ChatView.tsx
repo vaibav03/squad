@@ -149,6 +149,7 @@ export function ChatView({
             activeId={activeId}
             unread={ctl.unread}
             loading={loading}
+            meName={chats.flatMap((c) => c.members).find((m) => m.id === ctl.me)?.name}
             onSelect={(id) => setPicked(id)}
           />
         </aside>

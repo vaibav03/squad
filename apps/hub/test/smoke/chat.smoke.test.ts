@@ -94,6 +94,15 @@ describe('chat basics', () => {
     );
     expect(ex.status).toBe(200);
     expect(ex.body.excerpt.length).toBeGreaterThan(40);
+    // with the answer as context the page opens at the matching sentence and says which one
+    const answer = msgs(streams.s_ben!).find((m) => m.citations.length)!.text;
+    const hit = await get<{ excerpt: string; highlight?: string }>(
+      url,
+      `/v1/chat/citation?file=${encodeURIComponent(c.file)}&page=${c.page}&q=${encodeURIComponent(answer)}`,
+      tok.s_ben,
+    );
+    expect(hit.body.highlight).toBeTruthy();
+    expect(hit.body.excerpt).toContain(hit.body.highlight);
   });
 
   it('@squad works as a mention too; typing indicators are streamed to the chat only', async () => {
@@ -353,6 +362,13 @@ describe('uploads and files', () => {
     expect(sent.body.message.attachments[0]).toMatchObject({ kind: 'image', mime: 'image/png' });
     expect((await fetch(`${url}${a.url}?st=${tok.s_ben}`)).status).toBe(404);
     expect((await fetch(`${url}${a.url}`)).status).toBe(401);
+    // a file-scoped token reads files (own chats only) and is useless for anything else
+    const ft = (await post<{ ft: string }>(url, '/v1/chat/file-token', {}, tok.s_ana)).body.ft;
+    expect((await fetch(`${url}${a.url}?ft=${ft}`)).status).toBe(200);
+    const ftBen = (await post<{ ft: string }>(url, '/v1/chat/file-token', {}, tok.s_ben)).body.ft;
+    expect((await fetch(`${url}${a.url}?ft=${ftBen}`)).status).toBe(404);
+    expect((await fetch(`${url}/v1/chat/chats?st=${ft}`)).status).toBe(401);
+    expect((await fetch(`${url}/v1/chat/stream?st=${ft}`)).status).toBe(401);
     const r = await fetch(`${url}${a.url}?st=${tok.s_ana}`, { headers: { range: 'bytes=0-3' } });
     expect(r.status).toBe(206);
     // an upload cannot be reused by someone else or twice

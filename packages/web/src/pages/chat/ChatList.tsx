@@ -10,9 +10,11 @@ export interface ChatListProps {
   unread: Record<string, number>;
   onSelect: (id: string) => void;
   loading?: boolean;
+  /** The viewer's display name: their own last messages read "You: ...". */
+  meName?: string;
 }
 
-export function ChatList({ chats, activeId, unread, onSelect, loading }: ChatListProps) {
+export function ChatList({ chats, activeId, unread, onSelect, loading, meName }: ChatListProps) {
   if (loading)
     return (
       <div className="sqc-list" data-testid="chat-list" aria-busy="true">
@@ -60,7 +62,7 @@ export function ChatList({ chats, activeId, unread, onSelect, loading }: ChatLis
                   {c.last ? <time className="sqc-row__time">{listTime(c.last.ts)}</time> : null}
                 </span>
                 <span className="sqc-row__bottom">
-                  <span className="sqc-row__preview">{previewLine(c)}</span>
+                  <span className="sqc-row__preview">{previewLine(c, meName)}</span>
                   {n > 0 ? (
                     <span className="sqc-unread" data-testid={`chat-unread-${c.id}`}>
                       <span aria-hidden="true">{n > 9 ? '9+' : n}</span>

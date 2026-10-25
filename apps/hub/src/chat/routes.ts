@@ -2,9 +2,11 @@ import { readFileSync, statSync } from 'node:fs';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { ChatIdSchema, ChatSendBodySchema } from '@squad/core';
-import { requireViewer } from '../auth';
+import type { MiddlewareHandler } from 'hono';
+import { requireViewer, signToken, verifyToken, viewerFor } from '../auth';
 import type { HubApp, HubDeps, HubEnv } from '../types';
 import { canAccessChat } from './access';
+import { excerptWindow } from './excerpt';
 import { MAX_UPLOAD_BYTES, UPLOAD_TYPES } from './files';
 
 const enc = new TextEncoder();
@@ -75,7 +77,30 @@ export function createChatRoutes(deps: HubDeps): HubApp {
     return c.json({ attachment: chat().files.saveUpload(v.studentId, bytes, sniffed, f.name) });
   });
 
-  r.get('/v1/chat/files/:token', requireViewer(deps, { allowQuery: true }), (c) => {
+  // A file-scoped token (`ft`, 2 h) can read chat files and nothing else, so it is safe in an <img src>.
+  const FILE_TTL = 2 * 60 * 60 * 1000;
+  r.post('/v1/chat/file-token', need, (c) => {
+    const { token, expiresAt } = signToken(
+      deps.config.authSecret,
+      { kind: 'file', sub: c.get('viewer').studentId, ttlMs: FILE_TTL },
+      deps.now(),
+    );
+    return c.json({ ft: token, expiresAt });
+  });
+  const fileViewer: MiddlewareHandler<HubEnv> = async (c, next) => {
+    const h = c.req.header('authorization');
+    const sub = h?.startsWith('Bearer ')
+      ? verifyToken(deps.config.authSecret, h.slice(7), ['bearer'], deps.now())?.sub
+      : (verifyToken(deps.config.authSecret, c.req.query('ft'), ['file'], deps.now())?.sub ??
+        verifyToken(deps.config.authSecret, c.req.query('st'), ['stream', 'bearer'], deps.now())
+          ?.sub);
+    const viewer = sub ? viewerFor(deps, sub) : null;
+    if (!viewer) return c.json(err('unauthorized'), 401);
+    c.set('viewer', viewer);
+    await next();
+  };
+
+  r.get('/v1/chat/files/:token', fileViewer, (c) => {
     const file = chat().files.open(c.req.param('token'), c.get('viewer'));
     if (!file) return c.json(err('not_found'), 404);
     const size = statSync(file.path).size;
@@ -109,18 +134,23 @@ export function createChatRoutes(deps: HubDeps): HubApp {
 
   r.get('/v1/chat/citation', need, (c) => {
     const q = z
-      .object({ file: z.string().min(1).max(200), page: z.coerce.number().int().positive() })
+      .object({
+        file: z.string().min(1).max(200),
+        page: z.coerce.number().int().positive(),
+        q: z.string().max(2000).optional(),
+      })
       .safeParse(c.req.query());
     if (!q.success) return c.json(err('invalid'), 400);
     const ex = chat().engine?.excerpt(q.data.file, q.data.page);
     if (!ex) return c.json(err('not_found'), 404);
-    const excerpt = ex.text.replace(/\s+/g, ' ').trim().slice(0, 700);
+    const w = excerptWindow(ex.text, q.data.q);
     return c.json({
       file: q.data.file,
       page: q.data.page,
       ...(ex.chapter ? { chapter: ex.chapter } : {}),
       ...(ex.title ? { title: ex.title } : {}),
-      excerpt,
+      excerpt: w.excerpt,
+      ...(w.highlight ? { highlight: w.highlight } : {}),
     });
   });
 

@@ -9,6 +9,7 @@ import { createBrain, loadFixtureCourse, normalizeText } from '@squad/brain';
 import { createSkills } from '../skills';
 import { createTestBot, type TestBot } from '../testing';
 import { buildMedia } from '../wiring';
+import { kin } from './handlers';
 import { createDemoLlm, DEMO_CHAT_REPLY, DemoLlm, isDemoLlm } from './demo-llm';
 
 if (!process.env.PATH?.includes('/opt/homebrew/bin'))
@@ -138,6 +139,26 @@ describe('call captions', () => {
     expect(lines.some((l) => l.cite?.file === 'ch6-the-normal-distribution.pdf')).toBe(true);
     const none = await run('c2', 'who won the world cup?');
     expect(none).toEqual([{ seq: 0, text: "That isn't in the materials for this chapter." }]);
+  });
+});
+
+describe('quiz question quality', () => {
+  it('never offers two choices from the same word family, in any chapter', async () => {
+    const brain = createBrain({ llm: createDemoLlm(), db: openMemoryDb(), emit: async () => {} });
+    await loadFixtureCourse({ store: brain.store }, 'demo');
+    for (const ch of ['ch2', 'ch3', 'ch6', 'ch12']) {
+      const ctx = brain.store.chapterContext('demo', ch);
+      const r = (await createDemoLlm().json({
+        system: 'quizgen-v1',
+        messages: `Chapter material:\n${ctx}\n\nWrite 8 questions (x). Avoid repeating: none.\nReturn {}.`,
+        schema: z.object({ questions: z.array(z.any()) }),
+      })) as { questions: { question: string; choices: string[]; key: number }[] };
+      expect(r.questions.length, ch).toBeGreaterThanOrEqual(3);
+      for (const q of r.questions)
+        for (const [i, a] of q.choices.entries())
+          for (const b of q.choices.slice(i + 1))
+            expect(kin(a, b), `${ch}: ${q.question}`).toBe(false);
+    }
   });
 });
 

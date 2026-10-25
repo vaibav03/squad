@@ -27,9 +27,12 @@ export interface ChatApi {
   ): Promise<{ messages: ChatMessage[]; hasMore: boolean }>;
   send(body: ChatSendBody): Promise<ChatMessage>;
   upload(file: File): Promise<ChatAttachment>;
-  citation(file: string, page: number): Promise<ChatCitationExcerpt>;
+  /** `context` is the answer text: the hub opens the page at the sentence that best matches it. */
+  citation(file: string, page: number, context?: string): Promise<ChatCitationExcerpt>;
   /** Absolute URL an <img>/<audio> can load for an attachment. */
   fileUrl(att: ChatAttachment): string;
+  /** Fetches the file-scoped token that `fileUrl` puts in <img>/<audio> URLs (never the bearer token). */
+  prepare?(): Promise<void>;
   /** Opens the live stream; returns a closer. `lastEventId` is a chat seq to resume after. */
   subscribe(h: StreamHandlers, lastEventId?: number): () => void;
 }
@@ -80,6 +83,7 @@ const ChatsSchema = z.object({ chats: z.array(ChatSummarySchema) });
 const SendSchema = z.object({ message: ChatMessageSchema });
 const UploadSchema = z.object({ attachment: ChatAttachmentSchema });
 const StreamTokenSchema = z.object({ st: z.string().min(1) });
+const FileTokenSchema = z.object({ ft: z.string().min(1), expiresAt: z.number() });
 const ResyncSchema = z.object({ seq: z.number() });
 
 export interface HttpChatApiOptions {
@@ -117,6 +121,20 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
     return parsed.data;
   }
   const q = encodeURIComponent;
+  let fileToken: { ft: string; exp: number } | null = null;
+  let refreshing: Promise<void> | null = null;
+  function refreshFileToken(): Promise<void> {
+    refreshing ??= call(
+      FileTokenSchema,
+      '/v1/chat/file-token',
+      { method: 'POST', body: '{}' },
+      { 'content-type': 'application/json' },
+    )
+      .then((r) => void (fileToken = { ft: r.ft, exp: r.expiresAt }))
+      .catch(() => undefined)
+      .finally(() => void (refreshing = null));
+    return refreshing;
+  }
 
   return {
     status: () =>
@@ -152,13 +170,18 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
       fd.append('file', file);
       return (await call(UploadSchema, '/v1/chat/upload', { method: 'POST', body: fd })).attachment;
     },
-    citation: (file, page) =>
-      call(ChatCitationExcerptSchema, `/v1/chat/citation?file=${q(file)}&page=${page}`),
-    // Files accept the bearer token as `st`; it is cacheable per URL (private, max-age 1h).
-    fileUrl: (att) =>
-      /^(data|blob):/.test(att.url) || /^https?:/.test(att.url)
-        ? att.url
-        : `${base}${att.url}${att.url.includes('?') ? '&' : '?'}st=${q(o.token)}`,
+    citation: (file, page, context) =>
+      call(
+        ChatCitationExcerptSchema,
+        `/v1/chat/citation?file=${q(file)}&page=${page}${context ? `&q=${q(context.slice(0, 1500))}` : ''}`,
+      ),
+    // <img>/<audio> cannot send headers: files take a file-scoped token (`ft`, 2 h), never the bearer token.
+    prepare: refreshFileToken,
+    fileUrl: (att) => {
+      if (/^(data|blob):/.test(att.url) || /^https?:/.test(att.url)) return att.url;
+      if (fileToken && fileToken.exp - Date.now() < 15 * 60_000) void refreshFileToken();
+      return `${base}${att.url}${fileToken ? `${att.url.includes('?') ? '&' : '?'}ft=${q(fileToken.ft)}` : ''}`;
+    },
 
     subscribe(h, lastEventId) {
       const ES =

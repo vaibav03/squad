@@ -134,6 +134,24 @@ const QUIZ_STOP = new Set(
   ),
 );
 
+/** Same word family: equal stem or a shared 5-letter prefix ("distributed" / "distribution"). */
+export function kin(a: string, b: string): boolean {
+  const [x, y] = [a.toLowerCase(), b.toLowerCase()];
+  return stem(x) === stem(y) || x.slice(0, 5) === y.slice(0, 5);
+}
+
+function suffixClass(w: string): string {
+  return /(?:tion|sion|ment|ness|ity)$/.test(w)
+    ? 'noun'
+    : /(?:ed|ing)$/.test(w)
+      ? 'verb'
+      : /(?:ly)$/.test(w)
+        ? 'adv'
+        : /(?:al|ive|ous|ic|ble)$/.test(w)
+          ? 'adj'
+          : 'other';
+}
+
 interface Cand {
   sent: Sent;
   word: string;
@@ -168,7 +186,7 @@ export function quizQuestions(user: string) {
   for (const s of prose) {
     const words = [...s.text.matchAll(/[A-Za-z]+/g)];
     // cross-references and title-case runs ("Descriptive Statistics: Measures of ...") make poor quiz stems
-    if (/\d|=/.test(s.text)) continue; // worked examples with numbers make poor stems
+    if (/\d|=|[μσ<>–]|\b[xyzr]\b/.test(s.text)) continue; // worked examples with numbers make poor stems
     if (/\b(?:discussed|chapter|section|figure|table|example|exercise)\b/i.test(s.text)) continue;
     if ((s.text.slice(1).match(/\b[A-Z][a-z]+/g) ?? []).length >= 3) continue;
     const defn = /\b(?:is|are|means?|called|defined|known as|measure[sd]?)\b/i.test(s.text) ? 4 : 0;
@@ -212,12 +230,39 @@ export function quizQuestions(user: string) {
             o.stems.includes(stem(w)) &&
             o.stems.filter((t) => sentStems.has(t) && t !== aStem && t !== stem(w)).length >= 2,
         );
-      const pool = vocab
-        .filter((w) => w !== c.word && stem(w) !== aStem && !sentStems.has(stem(w)) && !related(w))
-        .sort((a, b) => Math.abs(a.length - c.word.length) - Math.abs(b.length - c.word.length))
-        .slice(0, 9);
-      if (pool.length < 3) continue;
-      const distractors = shuffle(pool, rand).slice(0, 3);
+      // words that read naturally next to the blank's neighbours anywhere in the chapter
+      const lower = c.sent.text.toLowerCase();
+      const at = lower.indexOf(c.word);
+      const prev = /([a-z]+)\W+$/.exec(lower.slice(0, at))?.[1];
+      const next = /^\W+([a-z]+)/.exec(lower.slice(at + c.word.length))?.[1];
+      const fits = (w: string) =>
+        prose.some((o) => {
+          const t = o.text.toLowerCase();
+          return (
+            (prev !== undefined && t.includes(`${prev} ${w}`)) ||
+            (next !== undefined && t.includes(`${w} ${next}`))
+          );
+        });
+      const cls = suffixClass(c.word);
+      const ranked = vocab
+        .filter(
+          (w) =>
+            !kin(w, c.word) && !sentStems.has(stem(w)) && !related(w) && !fits(w) && w.length >= 5,
+        )
+        .sort(
+          (a, b) =>
+            Number(suffixClass(b) === cls) - Number(suffixClass(a) === cls) ||
+            Math.abs(a.length - c.word.length) - Math.abs(b.length - c.word.length) ||
+            a.localeCompare(b),
+        )
+        .slice(0, 12);
+      const distractors: string[] = [];
+      for (const w of shuffle(ranked, rand)) {
+        if (distractors.length === 3) break;
+        if (distractors.some((d) => kin(d, w))) continue;
+        distractors.push(w);
+      }
+      if (distractors.length < 3) continue;
       const choices = shuffle([c.word, ...distractors], rand);
       used.add(c.sent.text);
       used.add(c.word);

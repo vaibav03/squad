@@ -30,7 +30,12 @@ const check = (name, ok, extra = '') => {
   }
 };
 function start(label, cmd, args, env) {
-  const c = spawn(cmd, args, { cwd: ROOT, env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'] });
+  const c = spawn(cmd, args, {
+    cwd: ROOT,
+    env: { ...process.env, ...env },
+    stdio: ['ignore', 'pipe', 'pipe'],
+    detached: true,
+  });
   c.stdout.on('data', () => {});
   c.stderr.on('data', (d) => {
     const t = d.toString();
@@ -51,7 +56,14 @@ async function until(url, ms = 60000) {
     await new Promise((r) => setTimeout(r, 400));
   }
 }
-const stopAll = () => children.forEach((c) => !c.killed && c.kill('SIGTERM'));
+const stopAll = () =>
+  children.forEach((c) => {
+    try {
+      process.kill(-c.pid, 'SIGTERM'); // the whole process group: pnpm spawns node
+    } catch {
+      /* already gone */
+    }
+  });
 process.on('exit', stopAll);
 
 const hubEnv = {
@@ -66,14 +78,21 @@ const hubEnv = {
 };
 if (!process.env.E2E_NO_SERVERS) {
   start('hub', 'pnpm', ['--filter', '@squad/hub', 'start'], hubEnv);
-  start('web', 'pnpm', ['--filter', '@squad/web-host', 'exec', 'vite', '--port', String(WEB_PORT), '--strictPort'], {
-    VITE_HUB_URL: HUB,
-  });
+  start(
+    'web',
+    'pnpm',
+    ['--filter', '@squad/web-host', 'exec', 'vite', '--port', String(WEB_PORT), '--strictPort'],
+    {
+      VITE_HUB_URL: HUB,
+    },
+  );
 }
 await until(`${HUB}/health`);
 await until(WEB);
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({
+  args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'],
+});
 const consoleErrors = [];
 
 async function signIn(vp, name, phone = false) {
@@ -101,11 +120,18 @@ async function signIn(vp, name, phone = false) {
   await page.getByRole('button', { name: new RegExp(`as ${name}`) }).click();
   await page.waitForURL(/\/squad/);
   await page.goto(`${WEB}/squad/chat`);
-  await page.getByTestId('chat-thread').waitFor({ timeout: 20000 });
+  await page
+    .locator('[data-testid="chat-list"],[data-testid="chat-thread"]')
+    .first()
+    .waitFor({ timeout: 20000 });
   return { ctx, page };
 }
 
-const shot = (page, name) => page.screenshot({ path: `${OUT}/e2e-${name}.png` });
+// let the 160-280 ms entrances finish so the captures show the settled state
+const shot = async (page, name) => {
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: `${OUT}/e2e-${name}.png` });
+};
 const botMsgs = (page) => page.locator('[data-testid="chat-message"][data-sender-id="cubbie"]');
 async function say(page, text) {
   const box = page.getByTestId('chat-composer-input');
@@ -122,16 +148,27 @@ try {
 
   // 1. group: cited answer for both students
   await say(ana.page, '@cubbie what is a z-score?');
-  for (const [who, p] of [['ana', ana.page], ['ben', ben.page]]) {
-    await p.locator('[data-testid="chat-message"][data-sender-id="cubbie"] [data-testid="chat-citation-chip"]').first().waitFor({ timeout: 30000 });
+  for (const [who, p] of [
+    ['ana', ana.page],
+    ['ben', ben.page],
+  ]) {
+    await p
+      .locator(
+        '[data-testid="chat-message"][data-sender-id="cubbie"] [data-testid="chat-citation-chip"]',
+      )
+      .first()
+      .waitFor({ timeout: 30000 });
     check(`${who} sees a cited Cubbie answer in the group`, true);
   }
   const benSeesAnaQuestion = await ben.page.getByText('what is a z-score?').first().isVisible();
-  check('Ben sees Ana\'s question', benSeesAnaQuestion);
+  check("Ben sees Ana's question", benSeesAnaQuestion);
   check('demo mode is labelled', await ana.page.getByTestId('chat-demo-notice').isVisible());
   await shot(ana.page, 'desk-group-cited');
   await ana.page.getByTestId('chat-citation-chip').first().click();
-  await ana.page.getByText(/z-score/i).first().waitFor({ timeout: 8000 });
+  await ana.page
+    .getByText(/z-score/i)
+    .first()
+    .waitFor({ timeout: 8000 });
   await shot(ana.page, 'desk-citation-excerpt');
   await ana.page.keyboard.press('Escape');
 
@@ -145,13 +182,23 @@ try {
   await botMsgs(ana.page).first().waitFor({ timeout: 15000 });
   check('Ana receives the private reply in her DM', (await botMsgs(ana.page).count()) > 0);
   await shot(ana.page, 'desk-dm-private');
-  check('Ben has no row for Ana\'s DM', (await ben.page.getByTestId('chat-row-dm:s_ana').count()) === 0);
+  check(
+    "Ben has no row for Ana's DM",
+    (await ben.page.getByTestId('chat-row-dm:s_ana').count()) === 0,
+  );
   await ben.page.getByTestId('chat-row-dm:s_ben').click();
   await ben.page.waitForTimeout(800);
-  check('Ben\'s DM thread has no bot reply from Ana\'s question', (await botMsgs(ben.page).count()) === 0);
-  const benToken = await ben.page.evaluate(() => JSON.parse(localStorage.getItem('squad.session') || '{}').token);
-  const peek = await fetch(`${HUB}/v1/chat/history?chatId=dm:s_ana`, { headers: { authorization: `Bearer ${benToken}` } });
-  check('Ben cannot read Ana\'s DM history through the API (403)', peek.status === 403);
+  check(
+    "Ben's DM thread has no bot reply from Ana's question",
+    (await botMsgs(ben.page).count()) === 0,
+  );
+  const benToken = await ben.page.evaluate(
+    () => JSON.parse(localStorage.getItem('squad.session') || '{}').token,
+  );
+  const peek = await fetch(`${HUB}/v1/chat/history?chatId=dm:s_ana`, {
+    headers: { authorization: `Bearer ${benToken}` },
+  });
+  check("Ben cannot read Ana's DM history through the API (403)", peek.status === 403);
   await ben.page.getByTestId('chat-row-group:sq_demo').click();
 
   // 3. confirm card (study plan) arrives in Ana's DM only
@@ -162,7 +209,10 @@ try {
   await shot(ana.page, 'desk-confirm-card');
   await ana.page.getByTestId('chat-confirm-option-1').click();
   await ana.page.waitForTimeout(800);
-  check('confirm card was answered by Ana only', (await ben.page.getByTestId('chat-confirm-option-1').count()) === 0);
+  check(
+    'confirm card was answered by Ana only',
+    (await ben.page.getByTestId('chat-confirm-option-1').count()) === 0,
+  );
   await shot(ana.page, 'desk-confirm-answered');
 
   // 4. quiz card in the group
@@ -186,13 +236,43 @@ try {
   await phone.page.waitForTimeout(300);
   await shot(phone.page, 'phone-mention');
   await phone.page.getByTestId('chat-composer-input').fill('');
-  const overflow = await phone.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+  const overflow = await phone.page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth + 1,
+  );
   check('no horizontal overflow at 390px', !overflow);
+  await phone.page.goto(`${WEB}/squad/village`);
+  await phone.page.getByTestId('chat-dock-open').waitFor({ timeout: 30000 });
+  await phone.page.waitForTimeout(2500);
+  await shot(phone.page, 'phone-village-dock-closed');
+  await phone.page.getByTestId('chat-dock-open').click();
+  await phone.page.getByTestId('chat-composer-input').waitFor();
+  await shot(phone.page, 'phone-village-dock-open');
   await phone.ctx.close();
+
+  // village mini dock on desktop: ask without leaving the world
+  await ben.page.goto(`${WEB}/squad/village`);
+  await ben.page.getByTestId('chat-dock-open').waitFor({ timeout: 30000 });
+  await ben.page.waitForTimeout(2500);
+  await ben.page.getByTestId('chat-dock-open').click();
+  await say(ben.page, '@cubbie what is the mean?');
+  await ben.page
+    .locator('[data-testid="chat-message"][data-sender-id="cubbie"]')
+    .last()
+    .waitFor({ timeout: 30000 });
+  await ben.page.waitForTimeout(600);
+  await shot(ben.page, 'desk-village-dock');
+  check('the village dock answers a question without leaving the world', true);
+  await ben.page.keyboard.press('Escape');
 
   // 6. mentions autocomplete and keyboard on desktop
   await ana.page.getByTestId('chat-composer-input').fill('@cu');
-  check('@ autocomplete offers cubbie', await ana.page.getByRole('option', { name: /cubbie/i }).first().isVisible());
+  check(
+    '@ autocomplete offers cubbie',
+    await ana.page
+      .getByRole('option', { name: /cubbie/i })
+      .first()
+      .isVisible(),
+  );
   await shot(ana.page, 'desk-mention');
   await ana.page.getByTestId('chat-composer-input').fill('');
 

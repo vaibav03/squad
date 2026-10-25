@@ -186,6 +186,9 @@ describe('small helpers', () => {
       'Ben: hi',
     );
     expect(previewLine({ ...base, id: 'dm:s_ana', kind: 'dm' })).toBe('Only you and Cubbie');
+    expect(
+      previewLine({ ...base, last: { text: 'hi', ts: 1, senderName: 'Ana', seq: 1 } }, 'Ana'),
+    ).toBe('You: hi');
     const items = [msg(1, 's_ben', 3), msg(2, 's_ana', 2), msg(3, 's_chi', 1)].map(
       (i) => i.message,
     );

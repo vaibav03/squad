@@ -116,6 +116,8 @@ export const ChatCitationExcerptSchema = z.strictObject({
   chapter: z.string().optional(),
   title: z.string().optional(),
   excerpt: z.string(),
+  /** The sentence of the excerpt that best matches the answer being checked (shown highlighted). */
+  highlight: z.string().optional(),
 });
 export type ChatCitationExcerpt = z.infer<typeof ChatCitationExcerptSchema>;
 

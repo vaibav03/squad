@@ -28,7 +28,7 @@ export interface BubbleProps {
   compact?: boolean;
   /** sending is paused (offline / expired) */
   paused?: boolean;
-  onCite: (c: ChatCitation) => void;
+  onCite: (c: ChatCitation, answerText?: string) => void;
   onRetry: (localId: string) => void;
   onDiscard: (localId: string) => void;
   quizAnswer: (messageId: string) => string | undefined;
@@ -66,7 +66,7 @@ export function MessageBubble(p: BubbleProps) {
     if (!el) return;
     const n = Number(el.textContent?.trim());
     const c = cites[n - 1];
-    if (c) p.onCite(c);
+    if (c) p.onCite(c, m.text);
   };
   const text = m.card && textRepeatsCard(m.text, m.card) ? '' : m.text.trim();
   const attachments = m.attachments;
@@ -169,7 +169,7 @@ export function MessageBubble(p: BubbleProps) {
                 className="sqc-cite"
                 data-testid="chat-citation-chip"
                 aria-haspopup="dialog"
-                onClick={() => p.onCite(c)}
+                onClick={() => p.onCite(c, m.text)}
               >
                 <span className="sqc-cite__n" aria-hidden="true">
                   {i + 1}

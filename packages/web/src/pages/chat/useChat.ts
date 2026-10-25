@@ -336,7 +336,11 @@ export function useChat(api: ChatApi | null, { me, onExpired }: UseChatOptions):
     let replyTimer: ReturnType<typeof setTimeout> | undefined;
     void (async () => {
       try {
-        const [status, chats] = await Promise.all([api.status().catch(() => null), api.chats()]);
+        const [status, chats] = await Promise.all([
+          api.status().catch(() => null),
+          api.chats(),
+          api.prepare?.(),
+        ]).then(([a, b]) => [a, b] as const);
         if (dead) return;
         const unread: Record<string, number> = {};
         for (const c of chats) {

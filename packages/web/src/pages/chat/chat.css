@@ -786,6 +786,12 @@
   font: 400 var(--text-base) / var(--lh-base) var(--font-sans);
   text-wrap: pretty;
 }
+.sqc-excerpt__mark {
+  background: color-mix(in srgb, var(--primary) 30%, transparent);
+  color: inherit;
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 30%, transparent);
+}
 .sqc-excerpt__src {
   display: flex;
   align-items: center;

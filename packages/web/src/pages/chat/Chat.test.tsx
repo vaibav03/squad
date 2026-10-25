@@ -279,6 +279,8 @@ describe('composer', () => {
     expect(within(await screen.findByRole('listbox')).getAllByRole('option')).toHaveLength(1);
     await userEvent.keyboard('{Tab}');
     expect(box.value).toBe('@cubbie ');
+    // the caret is restored on the next frame; a person cannot type faster than that
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
     await userEvent.type(box, ' and @');
     await screen.findByRole('listbox');
     await userEvent.keyboard('{Escape}');
