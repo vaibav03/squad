@@ -42,8 +42,9 @@
   display: flex;
   flex-direction: column;
   width: min(360px, var(--sq-dock-w, 360px));
-  /* between the HUD (dock top) and the launcher pill below it (dock bottom), see shell/panel-dock.css */
-  height: min(480px, calc(100% - var(--sq-dock-top, 0px) - var(--sq-dock-bottom, 72px)));
+  /* between the HUD (dock top) and the launcher pill below it (44px + the 12px gap), see shell/panel-dock.css.
+     100% is the content box of .sqd, which already stops 72px above the bottom edge. */
+  height: min(480px, calc(100% - var(--sq-dock-top, 0px) - var(--touch-min) - var(--space-3)));
   border-radius: var(--radius-xl);
   border: 1px solid var(--hud-border);
   background: var(--card);
@@ -155,15 +156,15 @@
     padding-bottom: calc(var(--space-4) + 56px);
   }
 }
-/* A short window (laptop at 200% zoom): no room above the pill, so the panel sits to its left, aligned to its foot. */
+/* A short window (laptop at 200% zoom): no room above the pill, so the panel sits to its left, aligned to its foot.
+   The pill is last in the DOM, so a plain row keeps it at the right edge. */
 @media (min-width: 640px) and (max-height: 639px) {
   .sqd {
-    flex-direction: row-reverse;
-    justify-content: flex-start;
+    flex-direction: row;
     align-items: flex-end;
   }
   .sqd-panel {
-    height: min(480px, calc(100% - var(--sq-dock-top, 0px) - var(--space-4) - 56px));
+    height: min(480px, calc(100% - var(--sq-dock-top, 0px)));
   }
 }
 /* folded while a large panel is open (the pill stays); it comes back when that panel closes */
