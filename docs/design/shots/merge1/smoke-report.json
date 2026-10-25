@@ -1,0 +1,142 @@
+[
+  {
+    "route": "/squad",
+    "viewport": "desk",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 2934,
+    "canvases": [],
+    "file": "../../docs/design/shots/merge1/squad-desk.png"
+  },
+  {
+    "route": "/squad",
+    "viewport": "phone",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 2269,
+    "canvases": [],
+    "file": "../../docs/design/shots/merge1/squad-phone.png"
+  },
+  {
+    "route": "/squad/village?replay=track2",
+    "viewport": "desk",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 3605,
+    "canvases": [
+      "426x250"
+    ],
+    "file": "../../docs/design/shots/merge1/village-track2-desk.png"
+  },
+  {
+    "route": "/squad/village?replay=track2",
+    "viewport": "phone",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 2115,
+    "canvases": [
+      "195x270"
+    ],
+    "file": "../../docs/design/shots/merge1/village-track2-phone.png"
+  },
+  {
+    "route": "/squad/village?replay=track3",
+    "viewport": "desk",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 2717,
+    "canvases": [
+      "426x250"
+    ],
+    "file": "../../docs/design/shots/merge1/village-track3-desk.png"
+  },
+  {
+    "route": "/squad/village?replay=track3",
+    "viewport": "phone",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 1780,
+    "canvases": [
+      "195x270"
+    ],
+    "file": "../../docs/design/shots/merge1/village-track3-phone.png"
+  },
+  {
+    "route": "/squad/ledger",
+    "viewport": "desk",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 1374,
+    "canvases": [],
+    "file": "../../docs/design/shots/merge1/ledger-desk.png"
+  },
+  {
+    "route": "/squad/ledger",
+    "viewport": "phone",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 1157,
+    "canvases": [],
+    "file": "../../docs/design/shots/merge1/ledger-phone.png"
+  },
+  {
+    "route": "/squad/personas",
+    "viewport": "desk",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 1803,
+    "canvases": [],
+    "file": "../../docs/design/shots/merge1/personas-desk.png"
+  },
+  {
+    "route": "/squad/personas",
+    "viewport": "phone",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 1104,
+    "canvases": [],
+    "file": "../../docs/design/shots/merge1/personas-phone.png"
+  },
+  {
+    "route": "/__gallery",
+    "viewport": "desk",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 1798,
+    "canvases": [],
+    "file": "../../docs/design/shots/merge1/gallery-desk.png"
+  },
+  {
+    "route": "/__gallery",
+    "viewport": "phone",
+    "pageErrors": [],
+    "consoleErrors": [],
+    "failedRequests": [],
+    "badStatus": [],
+    "distinctColours": 936,
+    "canvases": [],
+    "file": "../../docs/design/shots/merge1/gallery-phone.png"
+  }
+]

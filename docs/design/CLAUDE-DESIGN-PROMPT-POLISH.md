@@ -1,0 +1,22 @@
+# Claude Design prompt: polish the Squad Village UI that is already built
+
+Attach: screenshots of the running demo (replay track2 and track3 at 1280x800 and 390x844: village with bubbles and envelopes, the call panel open, the quiz card, the ledger page, the trip page, home, personas, setup), docs/design/DESIGN.md, docs/design/tokens.css, your reference collage, and design-checklist.md. Do not attach the Modern Interiors pack.
+
+---
+
+R: Here are screenshots of my working app "Squad": a walkable side-view pixel-art night village (Phaser) wrapped in a web app shell, plus DESIGN.md and tokens.css that the build already follows. Here is my reference collage (the cozy side-view night landscape is the primary look) and design-checklist.md. The product lives in students' iMessage; this web app is where a student walks the village, joins study agents' calls and quizzes, and watches private agents coordinate without exposing schedules or budgets.
+
+I: Do a design polish pass on the existing screens, not a redesign. Keep the structure, the tokens and the pixel art; raise the craft. First write a short critique of what I have, as an art director would (composition, hierarchy, spacing rhythm, palette harmony, legibility at 1x and 2x pixel scale, empty/loading/error states). Show me 2 directions for the HUD and the call panel only, then wait for my pick. After I pick, redesign these, desktop (1280px) first, then phone (390px):
+1. Village HUD: the agent chips currently show a single letter; replace them with 32x32 pixel portraits with a state ring (idle, studying, in a call, waiting for you) and a tiny glyph. Camera buttons (Left / Mid / Right / Zoom), a Calm toggle, the clock, and a Live/Replay badge that does not collide with anything. On phone: a compact top bar and a bottom dock, with no dead band between the world and the controls.
+2. Loading state: the first frame is a blank dark panel while the game loads. Design a night-gradient loading screen with the pixel logo and a progress bar.
+3. Call panel over the village: portrait with a glow ring, waveform, running captions with citations ("[ch12.pdf p.13]"), mute, raise hand, leave. Make it feel part of the world (night palette, pixel font only for labels) while staying readable.
+4. Quiz card: question, plain answer choices, instant feedback. No bets, scores or streaks.
+5. Notice board / Glass Box ledger and the trip planner: shared versus withheld rows (withheld is a static black bar), secret-vote progress with no names, confirmations, and the moment the trip is confirmed (a button to watch the shuttle cutscene in the village).
+6. Home, Personas and Setup pages: use the pixel portraits everywhere (no glossy 3D avatars), keep the Nook-style panels, fix any fixed bars that overlap content on phone.
+7. In-world speech bubbles, envelopes, the red "!" conflict marker, door ring, and notice-board signs: check legibility at 1x, bubble tails, text clipping, and contrast against the sky.
+
+S: Keep: cozy pixel art at one integer scale, the master palette in tokens.css, the three easing curves, Jersey 10 for in-world and HUD labels, Inter for panels, dark chrome with a light variant. Never add gradients or glossy effects that fight the pixel art, never scale pixel art by a fractional amount, never show grades, budgets or who is behind. Every screen needs designed empty, loading, error and "agent offline" states. Plain, friendly student-voice copy; no jargon like "PSI" or "mesh". Credits line for all art.
+
+MOTION: follow docs/specs/08-village-motion.md exactly (gate every animation by frequency and purpose; --ease-out cubic-bezier(0.23, 1, 0.32, 1), --ease-in-out cubic-bezier(0.77, 0, 0.175, 1), --ease-drawer cubic-bezier(0.32, 0.72, 0, 1); walking is never eased; words never move for style; DOM animates only transform and opacity; every animation has a reduced-motion/Calm variant). Do not add new animations; only fix timing or add a missing reduced variant, and deliver an updated motion table listing what you changed.
+
+E: Before you call it done, run design-checklist.md with 5 read-only subagents (layout and phone, type and rhythm, colour and states, motion and access, message and action) plus a read-only pixel-art reviewer. Check at 390px and 1280px, keyboard-only play (arrow keys to walk, Enter to enter or join, Esc to leave), a text alternative for every scene, and flag dead buttons and placeholder text. Merge into one fix list and show me. Change nothing until I say go. Then fix it yourself and show before and after screenshots.

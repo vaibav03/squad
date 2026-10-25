@@ -67,9 +67,10 @@ describe('hub helpers', () => {
       .mockResolvedValueOnce(reply(200, {}));
     vi.stubGlobal('fetch', f);
     const target = await previewConfirm(ctx, 'task_trip_x');
-    expect(target).toMatchObject({ tripId: 'trip_x', optionId: 'o1' });
+    expect(target).toMatchObject({ taskId: 'task_trip_x', tripId: 'trip_x', optionId: 'o1' });
     await resolveConfirm(ctx, target, true);
     expect(f.mock.calls[0]![0]).toBe('http://hub.test/v1/trips/trip_x');
+    expect(f.mock.calls[1]![0]).toBe('http://hub.test/v1/confirms/task_trip_x');
     expect(JSON.parse((f.mock.calls[1]![1] as RequestInit).body as string)).toEqual({
       optionId: 'o1',
       yes: true,

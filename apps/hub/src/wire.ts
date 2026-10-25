@@ -24,11 +24,12 @@ export function llmFromEnv(env: Record<string, string | undefined> = process.env
 
 /**
  * Always returns a resilient LLM: Gemini when `GEMINI_API_KEY` is set, FakeLlm otherwise (status reason
- * `no_key`), `FORCE_FAKE_LLM=1` pins the fake. HTTP 402/credits errors switch to the fake once, for good.
+ * `no_key`), `FORCE_FAKE_LLM=1` pins the fake. HTTP 402/429/401 serve the fake and re-probe the real model (60 s; 10 min for a bad key).
  */
 export function resilientLlmFromEnv(
   env: Record<string, string | undefined> = process.env,
   onSwitch?: (reason: string | undefined) => void,
+  onRecover?: () => void,
 ): ResilientLlm {
   const real = llmFromEnv(env);
   return createResilientLlm({
@@ -36,6 +37,7 @@ export function resilientLlmFromEnv(
     fake: new FakeLlm(),
     forceFake: env.FORCE_FAKE_LLM === '1',
     ...(onSwitch ? { onSwitch: (s) => onSwitch(s.reason) } : {}),
+    ...(onRecover ? { onRecover: () => onRecover() } : {}),
   });
 }
 
