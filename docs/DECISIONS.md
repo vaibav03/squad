@@ -1,0 +1,11 @@
+# Decisions (from the questionnaire, Sat Oct 24)
+- One project with all features; one repo; submitted to Track 2 and Track 3 with two demo scripts.
+- Demo cast: 3 real phones for Track 3, simulated students for Track 2, Replay mode as backup for both.
+- Course material: 3-4 chapters of an OpenStax textbook (PDF). No Canvas in the demo.
+- Art: Autumn Town (https://nirva.itch.io/autumntown) for cast and buildings, plus CC0 packs; recolour missing buildings; no generated art.
+- Phaser 3.90. Stakes Pact and Handicap League removed. Action layer builds: calendar invites and Lock-In Lobby only.
+- Deadline: ignore the clock and build everything in parallel; submit when done.
+- Repo: private GitHub repo `squad`; push regularly; git worktrees to parallelize workstreams.
+- Web UI is a library (`@squad/web`) plus a small standalone host; the hub is a standalone server with a base URL setting. Everything is later integrated into the Nook clone.
+- LLM provider for bot, agents, experts and council: Gemini (key in `.env`, never committed). Voices: ElevenLabs.
+- Solo team. Sign-in for submission is done by the owner with the Exam Mode email.
