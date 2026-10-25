@@ -14,6 +14,7 @@ import {
   flicker,
   lerp,
   millAlpha,
+  parallaxWorldX,
   modeClockHours,
   targetNightness,
   tileOffset,
