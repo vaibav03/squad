@@ -6,6 +6,8 @@ import { ChatIdSchema, ChatSendBodySchema } from '@squad/core';
 import type { MiddlewareHandler } from 'hono';
 import { requireViewer, signToken, verifyToken, viewerFor } from '../auth';
 import type { HubApp, HubDeps, HubEnv } from '../types';
+import { buildContextRef, publicView } from './context-ref';
+import { contextServiceFor } from '../context/service';
 import { canAccessChat } from './access';
 import { collapseRepeatedPairs } from './dedupe';
 import { excerptWindow } from './excerpt';
@@ -160,6 +162,24 @@ export function createChatRoutes(deps: HubDeps): HubApp {
       });
     }
     return new Response(buf, { headers: { ...headers, 'content-length': String(size) } });
+  });
+
+  // The composer chip for "Ask Cubbie": a verified ChatContextRef (title/provenance come from the store, never the client).
+  r.get('/v1/chat/context-ref', need, (c) => {
+    const q = z
+      .object({
+        sourceId: z.string().min(1).max(200),
+        anchor: z.string().max(120).optional(),
+        chatId: ChatIdSchema.optional(),
+      })
+      .safeParse(c.req.query());
+    if (!q.success) return c.json(err('invalid'), 400);
+    const v = c.get('viewer');
+    const out = buildContextRef(contextServiceFor(deps).store, { studentId: v.studentId, squadIds: [v.squadId] }, q.data.sourceId, q.data.anchor);
+    if (!out.ok) return c.json(err(out.code === 'not_found' ? 'context_unreadable' : out.code), 404);
+    // the owner sees their own item in full; a group chat shows only what the squad may see
+    c.header('Cache-Control', 'no-store');
+    return c.json({ ref: out.ref, groupView: publicView(out.ref, true) });
   });
 
   r.get('/v1/chat/citation', need, (c) => {

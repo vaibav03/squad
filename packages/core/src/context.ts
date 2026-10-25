@@ -22,6 +22,12 @@ export const CitationSourceSchema = z.strictObject({
   title: z.string().max(300).optional(),
   /** Deep link into the origin system (Canvas, Drive, Calendar), when one exists. */
   url: z.string().max(2000).optional(),
+  /** `fixture` = simulated data, not the person's account; `real` = imported from their own account. Absent: unknown. */
+  provenance: z.enum(['real', 'fixture']).optional(),
+  /** Course / event the item belongs to, shown on the chip. */
+  courseName: z.string().max(300).optional(),
+  /** Page or item location inside the source (`Due Fri 12 Oct`, `p.3`, `section 2`). */
+  locationLabel: z.string().max(200).optional(),
 });
 export type CitationSource = z.infer<typeof CitationSourceSchema>;
 
