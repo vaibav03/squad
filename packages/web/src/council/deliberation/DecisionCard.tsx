@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { CouncilStatus } from '@squad/core';
 import { COUNCIL_QUESTION_MAX } from '@squad/core';
 import type { BoardRun } from '@squad/village/council';
@@ -13,7 +13,7 @@ import type { ActionKind, ActionOutcome } from '../board/actions-api';
 import { confidenceWord } from '../board/common';
 import { consensusOf, missingEvidence, provenanceOf } from './evidence';
 import { PortraitButton } from './Portrait';
-import { resolveParticipant } from './participants';
+import { agentIdFor, resolveParticipant } from './participants';
 
 export interface DecisionCardProps {
   run: BoardRun;
@@ -69,6 +69,20 @@ export function DecisionCard(props: DecisionCardProps) {
   const [note, setNote] = useState('');
   const proofBtn = useRef<HTMLButtonElement | null>(null);
   const area = useRef<HTMLTextAreaElement | null>(null);
+  const proofBox = useRef<HTMLDivElement | null>(null);
+  // Esc closes just the composer. A native listener on the composer runs before the dialog's focus trap sees the key.
+  useEffect(() => {
+    const el = proofBox.current;
+    if (!proofOpen || !el) return;
+    const on = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      setProofOpen(false);
+      proofBtn.current?.focus();
+    };
+    el.addEventListener('keydown', on);
+    return () => el.removeEventListener('keydown', on);
+  }, [proofOpen]);
 
   if (!v) {
     return (
@@ -92,7 +106,8 @@ export function DecisionCard(props: DecisionCardProps) {
   const consensus = consensusOf(run);
   const missing = missingEvidence(run);
   const prov = provenanceOf(run, councilStatus);
-  const chair = resolveParticipant('chair', run.agents.find((a) => a.role === 'chair')?.name);
+  const chairAgent = run.agents.find((a) => a.role === 'chair');
+  const chair = resolveParticipant(chairAgent?.id ?? 'chair', chairAgent?.name);
   const items = v.actionItems.filter((a) => a.id);
   const canSend = !!act && items.length > 0;
   const outcome = v.answer && v.answer !== v.summary ? v.answer : v.summary;
@@ -115,6 +130,7 @@ export function DecisionCard(props: DecisionCardProps) {
       const out = await act(a.id!, kind);
       if (out.ok) ok++;
       last = out.message;
+      if (!out.ok) break; // the same reason (no plan, signed out) would repeat for every item
     }
     setBusy(null);
     setNote(
@@ -231,7 +247,7 @@ export function DecisionCard(props: DecisionCardProps) {
             v.dissents.map((d, i) => (
               <div key={d.messageId ?? i} className="dl-dissent">
                 <PortraitButton
-                  who={resolveParticipant(d.whoId ?? d.who, d.who)}
+                  who={resolveParticipant(agentIdFor(run.agents, d.whoId ?? d.who), d.who)}
                   runId={run.runId}
                 />
                 <p>
@@ -336,13 +352,7 @@ export function DecisionCard(props: DecisionCardProps) {
           role="group"
           aria-label="Add proof text"
           data-testid="dl-proof"
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.stopPropagation();
-              setProofOpen(false);
-              proofBtn.current?.focus();
-            }
-          }}
+          ref={proofBox}
         >
           <label className="dl-proof__label" htmlFor={`${proofId}-t`}>
             Paste text or attach a text file. The council is asked again with it as evidence.

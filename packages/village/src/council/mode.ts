@@ -1,17 +1,19 @@
-/** Honest mode badge words. A glyph AND a word, never colour alone. Missing or unknown modes read as Demo. */
+/** Honest mode badge words. An icon AND a word, never colour alone. Missing or unknown modes read as Fixture (scripted, wire tier `demo`). */
 export type ModeTier = 'live' | 'degraded' | 'demo';
 export interface ModeInfo {
   tier: ModeTier;
-  /** Visible word: 'Live', 'Degraded: credits depleted', 'Demo'. */
+  /** Visible word: 'Live', 'Degraded: credits depleted', 'Fixture'. */
   word: string;
-  /** Short word without the reason: 'Live' | 'Degraded' | 'Demo'. */
+  /** Short word without the reason: 'Live' | 'Degraded' | 'Fixture'. */
   short: string;
+  /** Icon name: 'radio' | 'alert' | 'fixture'. */
   glyph: string;
   /** Plain sentence for a title/tooltip/screen reader. */
   detail: string;
 }
 
-const GLYPH: Record<ModeTier, string> = { live: '●', degraded: '▲', demo: '◆' };
+/** Icon names (Lucide family, rendered by the web `Icon` primitive). Never a text glyph. */
+const GLYPH: Record<ModeTier, string> = { live: 'radio', degraded: 'alert', demo: 'fixture' };
 const reasonWords = (r: string): string => r.replace(/[_-]+/g, ' ').trim();
 
 export function modeInfo(mode: string | undefined | null): ModeInfo {
@@ -37,12 +39,12 @@ export function modeInfo(mode: string | undefined | null): ModeInfo {
   const r = m.startsWith('demo') ? reasonWords(m.slice('demo'.length).replace(/^:/, '')) : '';
   return {
     tier: 'demo',
-    word: 'Demo',
-    short: 'Demo',
+    word: 'Fixture',
+    short: 'Fixture',
     glyph: GLYPH.demo,
     detail: r
-      ? `Demo (${r}): scripted example text, not a live model.`
-      : 'Demo: scripted example text, not a live model.',
+      ? `Fixture (${r}): scripted example text, not a live model.`
+      : 'Fixture: scripted example text, not a live model.',
   };
 }
 

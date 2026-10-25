@@ -1,9 +1,10 @@
 import { modeInfo } from '@squad/village/council';
+import { Glyph } from '../deliberation/Glyph';
 import './mode-badge.css';
 
 /**
- * Honest mode badge for every council surface: a glyph AND a word (Live | Degraded: reason | Demo). `mode` is the
- * event `mode` field; anything missing or unknown reads as Demo, so scripted output can never look live.
+ * Honest mode badge for every council surface: an icon AND a word (Live | Degraded: reason | Fixture). `mode` is the
+ * event `mode` field; anything missing or unknown reads as Fixture, so scripted output can never look live.
  */
 export function ModeBadge({
   mode,
@@ -23,7 +24,7 @@ export function ModeBadge({
       title={m.detail}
     >
       <span className="cb-mode__glyph" aria-hidden="true">
-        {m.glyph}
+        <Glyph name={m.glyph} size={12} />
       </span>
       <span className="cb-mode__word">{compact ? m.short : m.word}</span>
     </span>

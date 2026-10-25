@@ -81,7 +81,7 @@ describe('RunStrip', () => {
   it('legacy runs (no mode/stage/agents) fall back to the member-based badge and no list', () => {
     const { mode: _m, stage: _s, agents: _a, messages: _x, ...legacy } = v2();
     render(<RunStrip result={{ ...legacy, demo: true } as CouncilResult} />);
-    expect(screen.getByText('Demo')).toBeTruthy();
+    expect(screen.getByText('Fixture')).toBeTruthy();
     expect(screen.queryByRole('list')).toBeNull();
     expect(stageWords({ stage: undefined, status: 'done' })).toBeUndefined();
     expect(stageWords({ stage: 'done', status: 'done' })).toBe('All steps done');
@@ -112,10 +112,14 @@ describe('council chat card', () => {
     render(<CouncilChatCard hub={{} as never} runId={f.done.id} />);
     await act(async () => void (await vi.advanceTimersByTimeAsync(10)));
     fireEvent.click(screen.getByRole('button', { name: 'Open council board' }));
-    expect(screen.getByRole('dialog').textContent).toContain('Step 3 of 7');
+    expect(
+      screen.getByRole('dialog').querySelector('.dl-phase[aria-current=step]')!.textContent,
+    ).toContain('Gather evidence');
     await act(async () => void (await vi.advanceTimersByTimeAsync(1600)));
     vi.useRealTimers();
-    expect(screen.getByRole('dialog').textContent).toMatch(/All 7 steps done/);
+    expect(screen.getByRole('dialog').querySelectorAll('.dl-phase[data-state=done]')).toHaveLength(
+      4,
+    );
   });
 });
 

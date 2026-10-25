@@ -19,6 +19,7 @@ import {
   type CouncilStartedDetail,
 } from './room-opener';
 import { SEAT_GLYPH, SEAT_WORDS, deriveSeats } from './seat-state';
+import { Glyph } from '../deliberation/Glyph';
 import './stage.css';
 
 const SPEAK_MS = 3500;
@@ -244,16 +245,10 @@ export function CouncilStage({ hub, calm }: { hub: HubCtx | null; calm?: boolean
             data-seat-state={s.state}
             data-seat-name={s.name}
           >
-            <span aria-hidden="true">{SEAT_GLYPH[s.state]}</span>
+            <span className="cn-seat__icon" data-seat-icon={s.state}>
+              <Glyph name={SEAT_GLYPH[s.state]} size={14} />
+            </span>
             <span>{s.name}</span>
-            {s.state === 'thinking' && (
-              <span className="cn-dots" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-            )}
-            {s.state === 'speaking' && <span className="cn-mouth" aria-hidden="true" />}
             <span className="cn-seat__word">{SEAT_WORDS[s.state]}</span>
           </li>
         ))}
@@ -261,7 +256,9 @@ export function CouncilStage({ hub, calm }: { hub: HubCtx | null; calm?: boolean
       <ul className="cn-arrows" aria-label="Messages between members">
         {arrows.map((m) => (
           <li key={m.id} className="cn-arrow" data-testid="council-arrow">
-            {speakerName(m.from)} → {speakerName(m.to)}: {KIND_LABEL[m.kind]}
+            {speakerName(m.from)} <Glyph name="arrow-right" size={12} />{' '}
+            <span className="cb-sr">to </span>
+            {speakerName(m.to)}: {KIND_LABEL[m.kind]}
           </li>
         ))}
       </ul>

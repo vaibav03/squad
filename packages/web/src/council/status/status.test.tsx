@@ -180,7 +180,7 @@ describe('CouncilStatusStrip', () => {
     expect(text('cs-fix')).toContain(COUNCIL_KEY_FIX.ok);
     expect(screen.getByTestId('cs-banner').getAttribute('role')).toBe('status');
   });
-  it('demo: an unmissable banner with a glyph, and no models claimed', () => {
+  it('demo: an unmissable banner with an icon, and no models claimed', () => {
     render(
       <CouncilStatusStrip
         status={status({ key: 'no_key' })}
@@ -188,7 +188,7 @@ describe('CouncilStatusStrip', () => {
       />,
     );
     expect(text('cs-banner')).toContain('DEMO: scripted, not Gemini');
-    expect(text('cs-banner')).toContain('◆');
+    expect(screen.getByTestId('cs-banner').querySelector('svg')).toBeTruthy();
     expect(text('cs-models')).toContain('No model used (scripted)');
     expect(text('cs-key')).toContain('No key');
     expect(text('cs-fix')).toContain('GEMINI_API_KEY');
@@ -204,7 +204,7 @@ describe('CouncilStatusStrip', () => {
     expect(text('cs-key')).toContain('Credits depleted');
     expect(text('cs-fix')).toContain('prepayment credits');
   });
-  it('every mic, audio and transcript state has words and a glyph', () => {
+  it('every mic, audio and transcript state has words and an icon', () => {
     const cases: Array<['mic' | 'audio' | 'transcript', string, string]> = [
       ['mic', 'idle', 'Mic idle'],
       ['mic', 'listening', 'Mic listening'],
@@ -222,7 +222,7 @@ describe('CouncilStatusStrip', () => {
       render(<CouncilStatusStrip status={status()} run={live} {...{ [k]: v }} />);
       const li = screen.getByTestId(`cs-${k}`);
       expect(li.textContent).toContain(w);
-      expect(li.querySelector('[aria-hidden="true"]')?.textContent).toBeTruthy();
+      expect(li.querySelector('svg[aria-hidden="true"]')).toBeTruthy();
     }
   });
   it('rate limited and the Live fallback are said in words', () => {

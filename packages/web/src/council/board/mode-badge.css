@@ -12,7 +12,7 @@
   background: color-mix(in srgb, currentColor 10%, transparent);
 }
 .cb-mode__glyph {
-  font-size: 0.625rem;
+  display: inline-flex;
 }
 .cb-mode[data-mode='live'] {
   color: var(--success-text, var(--success));

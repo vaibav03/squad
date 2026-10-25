@@ -18,9 +18,11 @@ export const S5b: StepDef<GateCtx> = {
       await page.goto('/squad/village?replay=track4&board=1');
       const board = page.locator('[aria-labelledby="cb-title"]');
       await board.waitFor({ timeout: 30_000 });
-      const nodes = board.locator('.cb-node');
+      // roster rows carry the portrait buttons that open the one selected-agent panel
+      const nodes = board.getByTestId('dl-member');
       await nodes.nth(3).waitFor({ timeout: 30_000 });
-      const skeptic = nodes.filter({ hasText: 'Skeptic' }).first();
+      const portrait = (n: string) => nodes.filter({ hasText: n }).first().getByTestId('dl-portrait-btn');
+      const skeptic = portrait('Skeptic');
       await skeptic.focus();
       await skeptic.click();
       const panel = page.getByTestId('agent-focus-panel');
@@ -41,7 +43,7 @@ export const S5b: StepDef<GateCtx> = {
       await panel.getByRole('button', { name: 'All communication' }).click();
       a.ok('All communication lists more', (await panel.getByTestId('af-row').count()) > whos.length);
       a.noRawIds('panel', (await panel.textContent()) ?? '');
-      await nodes.filter({ hasText: 'Teacher' }).first().click();
+      await portrait('Teacher').click();
       a.ok('swapping replaces the panel (still one)', (await page.getByTestId('agent-focus-panel').count()) === 1);
       a.ok('now Teacher', /^Teacher — /.test((await panel.getByRole('heading', { level: 2 }).textContent()) ?? ''));
       await panel.getByRole('heading', { level: 2 }).focus();

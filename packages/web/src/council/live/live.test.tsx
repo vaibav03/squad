@@ -73,7 +73,7 @@ describe('CouncilCaptions', () => {
     expect(screen.getByTestId('council-captions').getAttribute('data-state')).toBe('streaming');
     expect(screen.getByText('Live')).toBeTruthy();
   });
-  it('Demo mode is labelled and the fallback line is used without a live channel', () => {
+  it('Fixture mode is labelled and the fallback line is used without a live channel', () => {
     render(
       <CouncilCaptions
         live={initialCouncilLive}
@@ -83,7 +83,7 @@ describe('CouncilCaptions', () => {
     );
     expect(screen.getByTestId('caption-speaker').textContent).toBe('Skeptic');
     expect(screen.getByTestId('caption-text').textContent).toBe('Not so fast.');
-    expect(screen.getByText(/Demo/)).toBeTruthy();
+    expect(screen.getByText(/Fixture/)).toBeTruthy();
   });
 });
 

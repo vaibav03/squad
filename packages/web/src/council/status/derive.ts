@@ -59,7 +59,7 @@ export function deriveRunBadge(
   const keyNo = status !== null && status !== 'unknown' && status.key.state === 'no_key';
   if (!run) {
     return keyNo
-      ? { tier: 'demo', glyph: '◆', text: DEMO_BANNER }
+      ? { tier: 'demo', glyph: 'fixture', text: DEMO_BANNER }
       : { tier: 'none', glyph: '', text: '' };
   }
   const modes = [run.mode, ...(run.agents ?? []).map((a) => a.mode)];
@@ -67,37 +67,37 @@ export function deriveRunBadge(
     modes.some((m) => modeInfo(m).tier === 'demo') ||
     run.transport?.kind === 'demo' ||
     (keyNo && run.mode !== 'live');
-  if (demo) return { tier: 'demo', glyph: '◆', text: DEMO_BANNER };
+  if (demo) return { tier: 'demo', glyph: 'fixture', text: DEMO_BANNER };
   const bad = modes.find((m) => modeInfo(m).tier === 'degraded');
   if (bad) {
     const why = modeInfo(bad).word.replace(/^Degraded:?\s*/, '');
-    return { tier: 'degraded', glyph: '▲', text: why ? `DEGRADED: ${why}` : 'DEGRADED' };
+    return { tier: 'degraded', glyph: 'alert', text: why ? `DEGRADED: ${why}` : 'DEGRADED' };
   }
-  return { tier: 'live', glyph: '●', text: 'LIVE: Gemini' };
+  return { tier: 'live', glyph: 'radio', text: 'LIVE: Gemini' };
 }
 
 export const KEY_WORDS: Record<KeyView, { glyph: string; word: string }> = {
-  ok: { glyph: '✓', word: 'Key ok' },
-  credits_depleted: { glyph: '▲', word: 'Credits depleted' },
-  no_key: { glyph: '✕', word: 'No key' },
-  rate_limited: { glyph: '▲', word: 'Rate limited' },
-  unknown: { glyph: '?', word: 'Key state unknown' },
+  ok: { glyph: 'ok', word: 'Key ok' },
+  credits_depleted: { glyph: 'alert', word: 'Credits depleted' },
+  no_key: { glyph: 'error', word: 'No key' },
+  rate_limited: { glyph: 'alert', word: 'Rate limited' },
+  unknown: { glyph: 'help', word: 'Key state unknown' },
 };
 export const MIC_WORDS: Record<MicState, { glyph: string; word: string }> = {
-  idle: { glyph: '○', word: 'Mic idle' },
-  listening: { glyph: '●', word: 'Mic listening' },
-  permission_denied: { glyph: '✕', word: 'Mic permission denied' },
-  unavailable: { glyph: '–', word: 'Mic unavailable' },
+  idle: { glyph: 'mic', word: 'Mic idle' },
+  listening: { glyph: 'activity', word: 'Mic listening' },
+  permission_denied: { glyph: 'mic-off', word: 'Mic permission denied' },
+  unavailable: { glyph: 'ban', word: 'Mic unavailable' },
 };
 export const AUDIO_WORDS: Record<AudioState, { glyph: string; word: string }> = {
-  playing: { glyph: '♪', word: 'Audio playing' },
-  muted: { glyph: '✕', word: 'Audio muted' },
-  unavailable: { glyph: '–', word: 'Audio unavailable' },
+  playing: { glyph: 'volume', word: 'Audio playing' },
+  muted: { glyph: 'mute', word: 'Audio muted' },
+  unavailable: { glyph: 'ban', word: 'Audio unavailable' },
 };
 export const TRANSCRIPT_WORDS: Record<TranscriptState, { glyph: string; word: string }> = {
-  streaming: { glyph: '…', word: 'Transcript streaming' },
-  complete: { glyph: '✓', word: 'Transcript complete' },
-  none: { glyph: '–', word: 'No transcript' },
+  streaming: { glyph: 'activity', word: 'Transcript streaming' },
+  complete: { glyph: 'check', word: 'Transcript complete' },
+  none: { glyph: 'ban', word: 'No transcript' },
 };
 
 export interface StripView {

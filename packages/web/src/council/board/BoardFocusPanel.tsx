@@ -6,8 +6,6 @@ import {
   type CouncilBoardStore,
 } from '@squad/village/council';
 import type { CouncilRunRecord } from '@squad/core';
-import { CastAvatar } from '../../components/cast-avatar';
-import { castName } from '../../components/cast-avatar/busts';
 import { LvIcon } from '../../overlays/kit/icons';
 import { DecisionsView } from '../../overlays/inspector/focus/DecisionsView';
 import { FocusShell, type FocusTab } from '../../overlays/inspector/focus/FocusShell';
@@ -15,11 +13,19 @@ import { HandoffTimeline } from '../../overlays/inspector/focus/HandoffTimeline'
 import { EmptyHelp } from '../../overlays/inspector/focus/EmptyHelp';
 import '../../overlays/inspector/inspector.css';
 import '../../overlays/inspector/focus/focus.css';
-import { AgentPortraitTile } from './AgentCard';
+import { Portrait } from '../deliberation/Portrait';
+import { resolveParticipant } from '../deliberation/participants';
 import { ModeBadge } from './ModeBadge';
 import { ROLE_LABEL, STATUS_LABEL } from './common';
 
-const ICON = { queued: 'clock', working: 'refresh', done: 'check', failed: 'alert', skipped: 'x', partial: 'alert' } as const;
+const ICON = {
+  queued: 'clock',
+  working: 'refresh',
+  done: 'check',
+  failed: 'alert',
+  skipped: 'x',
+  partial: 'alert',
+} as const;
 
 export interface BoardFocusPanelProps {
   store: CouncilBoardStore;
@@ -36,7 +42,16 @@ export interface BoardFocusPanelProps {
  * The focused agent panel inside the Council board: the same Conversation | Activity | Decisions panel as the village
  * inspector, docked on the right of the board. One panel; picking another agent swaps its content in place.
  */
-export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onClose, onSelectAgent }: BoardFocusPanelProps) {
+export function BoardFocusPanel({
+  store,
+  run,
+  agentId,
+  record,
+  replay,
+  calm,
+  onClose,
+  onSelectAgent,
+}: BoardFocusPanelProps) {
   const agent = run.agents.find((a) => a.id === agentId);
   const [tab, setTab] = useState<FocusTab>('conversation');
   const titleId = useId();
@@ -62,7 +77,6 @@ export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onC
   if (!agent) return null;
   const is = (id: string) => id === agent.id;
   const h = store.hierarchy(agent.id);
-  const cast = agent.cast ? castName(agent.cast) : undefined;
   const provider = providerState(
     { mode: run.mode, agents: run.agents },
     { transport: record?.transport, fixture: !!replay },
@@ -100,12 +114,20 @@ export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onC
     <div className="ai-tabpanel">
       <h3 className="ai-label">Who {agent.name} works with</h3>
       {partners.size === 0 ? (
-        <EmptyHelp isCouncil topic={agent.name} title={`${agent.name} has not worked with anyone yet`} />
+        <EmptyHelp
+          isCouncil
+          topic={agent.name}
+          title={`${agent.name} has not worked with anyone yet`}
+        />
       ) : (
         <ul className="ai-partners">
           {[...partners].map(([id, n]) => (
             <li key={id}>
-              <button type="button" className="ai-party ai-party--btn" onClick={() => onSelectAgent(id)}>
+              <button
+                type="button"
+                className="ai-party ai-party--btn"
+                onClick={() => onSelectAgent(id)}
+              >
                 {a2aPartyName(id)}
               </button>
               <span className="ai-count">
@@ -163,11 +185,10 @@ export function BoardFocusPanel({ store, run, agentId, record, replay, calm, onC
         name={agent.name}
         role={agent.role === 'chair' ? 'Council chair' : ROLE_LABEL[agent.role]}
         portrait={
-          cast ? (
-            <CastAvatar name={cast} state="idle" size={1} {...(calm ? { calm: true } : {})} />
-          ) : (
-            <AgentPortraitTile agent={agent} />
-          )
+          <Portrait
+            who={resolveParticipant(agent.id, agent.name)}
+            {...(calm ? { calm: true } : {})}
+          />
         }
         provider={provider}
         status={

@@ -8,14 +8,6 @@ export const STATUS_LABEL: Record<A2aStatus, string> = {
   skipped: 'Skipped',
   partial: 'Partial',
 };
-export const STATUS_GLYPH: Record<A2aStatus, string> = {
-  queued: '○',
-  working: '◐',
-  done: '✓',
-  failed: '✕',
-  skipped: '–',
-  partial: '◑',
-};
 export const ROLE_LABEL: Record<BoardRole, string> = {
   chair: 'Chair',
   specialist: 'Specialist',
@@ -34,15 +26,6 @@ export function confidenceWord(c: string | undefined): string | undefined {
 
 /** Non-live messages carry a mode badge; live ones stay quiet. */
 export const showsMode = (mode: string | undefined): boolean => modeInfo(mode).tier !== 'live';
-
-export function StatusChip({ status }: { status: A2aStatus }) {
-  return (
-    <span className="cb-status" data-status={status}>
-      <span aria-hidden="true">{STATUS_GLYPH[status]}</span>
-      <span>{STATUS_LABEL[status]}</span>
-    </span>
-  );
-}
 
 /** Agent ids never reach the screen: a rank `order` entry that still looks like an id goes through the resolver. */
 export const displayName = (s: string): string => (/^[a-z]+:/i.test(s) ? a2aPartyName(s) : s);

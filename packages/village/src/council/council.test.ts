@@ -48,10 +48,10 @@ describe('council board model', () => {
     expect(v.actionItems.map((a) => a.text)).toEqual(v.actions);
     expect(v.actionItems.every((a) => !!a.id)).toBe(true);
   });
-  it('fixtures are Demo and say so', () => {
+  it('fixtures are Fixture and say so', () => {
     const run = load().store.run()!;
     expect(run.mode).toBe('demo');
-    expect(modeInfo(run.mode).word).toBe('Demo');
+    expect(modeInfo(run.mode).word).toBe('Fixture');
   });
   it('threads and headlines use display names', () => {
     const run = load().store.run()!;
@@ -121,7 +121,7 @@ describe('mode', () => {
   it('words and worst', () => {
     expect(modeInfo('live').word).toBe('Live');
     expect(modeInfo('degraded:credits_depleted').word).toBe('Degraded: credits depleted');
-    expect(modeInfo('demo:no_key').word).toBe('Demo');
+    expect(modeInfo('demo:no_key').word).toBe('Fixture');
     expect(modeInfo(undefined).tier).toBe('demo');
     expect(worstMode(['live', 'degraded:timeout'])).toBe('degraded:timeout');
     expect(worstMode(['live', 'demo'])).toBe('demo');

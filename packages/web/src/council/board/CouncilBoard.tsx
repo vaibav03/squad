@@ -14,17 +14,20 @@ import { DelegationCards } from './DelegationCards';
 import { BoardFocusPanel } from './BoardFocusPanel';
 import { FilterToggle } from '../../overlays/inspector/focus/parts';
 import { HandoffTimeline } from '../../overlays/inspector/focus/HandoffTimeline';
-import { Feed, NO_FILTER, type FeedFilter } from './Feed';
 import { ModeBadge } from './ModeBadge';
-import { OrgChart } from './OrgChart';
-import { Stepper } from './Stepper';
-import { VerdictCard } from './VerdictCard';
 import { useBoardVersion } from './bridge';
+import { BallotMatrix } from '../deliberation/BallotMatrix';
+import { DecisionCard } from '../deliberation/DecisionCard';
+import { PhaseStepper } from '../deliberation/PhaseStepper';
+import { Roster } from '../deliberation/Roster';
+import { NO_FILTER, TurnFeed, type FeedFilter } from '../deliberation/TurnFeed';
+import { registerAgentPanel } from '../deliberation/agent-panel';
 import { CouncilStatusStrip } from '../status/CouncilStatusStrip';
 import { useCouncilStatus } from '../status/useCouncilStatus';
 import { EmptyCouncilState, LastRunLabel } from '../last-run/components';
 import { useLastRunsState } from '../last-run/store';
 import './board.css';
+import '../deliberation/deliberation.css';
 
 export interface CouncilBoardProps {
   store: CouncilBoardStore;
@@ -83,7 +86,7 @@ export function CouncilBoard({
   const [filter, setFilter] = useState<FeedFilter>(NO_FILTER);
   // The focused agent: one panel, swapped in place. Esc or Close returns focus to the control that opened it.
   const [focus, setFocus] = useState<string | null>(null);
-  const [view, setView] = useState<'timeline' | 'feed'>('timeline');
+  const [view, setView] = useState<'timeline' | 'feed'>('feed');
   const origin = useRef<HTMLElement | null>(null);
   const openFocus = useCallback((id: string) => {
     const a = document.activeElement as HTMLElement | null;
@@ -109,6 +112,12 @@ export function CouncilBoard({
     setFocus(null);
   }, [open, run?.runId]);
   // An agent asked for by the opener (`openBoard({ agent })`) is only highlighted in the chart; a click focuses it.
+
+  // Every portrait on the deliberation surface opens the one selected-agent panel (Conversation, Activity, Decisions).
+  useEffect(
+    () => (open ? registerAgentPanel((id) => openFocus(id)) : undefined),
+    [open, openFocus],
+  );
 
   const onJump = useCallback((id: string) => {
     setSelectedMsg(id);
@@ -208,28 +217,28 @@ export function CouncilBoard({
       </div>
       {run ? (
         <>
-          <Stepper stage={run.stage} />
-          <div className="cb-body">
-            <div className="cb-col cb-col--left">
-              <OrgChart
+          <PhaseStepper run={run} />
+          <div className="cb-body dl-body">
+            <div className="cb-col dl-col dl-col--side">
+              <Roster
                 store={store}
                 run={run}
-                {...(calm ? { calm: true } : {})}
+                calm={calm}
+                councilStatus={hubStatus}
                 selected={focus || focusAgent || ''}
-                onSelect={(id) => (id ? openFocus(id) : closeFocus())}
               />
-              <VerdictCard run={run} onJump={onJump} act={act} sendOffReason={sendOff} />
+              <BallotMatrix run={run} />
               <DelegationCards delegations={run.delegations} onSeeAnswer={onJump} />
             </div>
-            <div className="cb-col cb-col--right">
+            <div className="cb-col dl-col dl-col--feed">
               <div className="cb-views">
                 <FilterToggle<'timeline' | 'feed'>
                   label="Communication view"
                   value={view}
                   onChange={setView}
                   options={[
+                    { id: 'feed', label: 'Turns' },
                     { id: 'timeline', label: 'Handoff timeline' },
-                    { id: 'feed', label: 'Message feed' },
                   ]}
                 />
               </div>
@@ -243,7 +252,7 @@ export function CouncilBoard({
                   />
                 </div>
               ) : (
-                <Feed
+                <TurnFeed
                   run={run}
                   filter={filter}
                   onFilter={setFilter}
@@ -252,6 +261,18 @@ export function CouncilBoard({
                   onSelect={(id) => setSelectedMsg((cur) => (cur === id ? null : id))}
                 />
               )}
+            </div>
+            <div className="cb-col dl-col dl-col--decision">
+              <DecisionCard
+                run={run}
+                onJump={onJump}
+                act={act}
+                sendOffReason={sendOff}
+                hub={hub}
+                councilStatus={hubStatus}
+                replay={replay}
+                onClose={onClose}
+              />
             </div>
           </div>
         </>

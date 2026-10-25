@@ -2,6 +2,10 @@
   "_doc": "Allowed exceptions for scripts/audit-chrome.mjs. path is a regex on the repo-relative file; kind is emoji|marker|dot (optional); match is a substring of the offending line (optional). 'pending' entries are known violations in surfaces being redesigned (council deliberation work); the script counts them and prints a reminder, delete them as each surface is converted.",
   "entries": [
     {
+      "path": "^packages/web/src/audit/",
+      "reason": "the detector's own character classes (regex definitions), not rendered text"
+    },
+    {
       "path": "^apps/hub/src/(plans/service|routes/council|routes/live)\\.ts$",
       "reason": "persona 'emoji' data field: an authored avatar value in API payloads, not rendered chrome"
     },
@@ -14,9 +18,10 @@
       "reason": "masked contact hint (bullets stand for hidden digits; user-authored contact data display)"
     },
     {
-      "path": "^packages/village/src/council/(mode|model)\\.ts$",
-      "pending": true,
-      "reason": "KIND_GLYPH / mode glyph tables feed the council board; replaced by icon names with the deliberation surface"
+      "path": "^packages/village/src/council/handoffs\\.ts$",
+      "kind": "marker",
+      "match": "label: `${fromName}",
+      "reason": "plain-text row label 'Sender to Recipient' kept for accessible names and tests; never rendered as a status marker"
     },
     {
       "path": "^packages/web/src/council/",
@@ -33,6 +38,10 @@
       "kind": "marker",
       "match": "\u2192",
       "reason": "the required 'Sender \u2192 Recipient' handoff label: a text arrow between two names, not a decorative marker"
+    },
+    {
+      "path": "^apps/hub/src/imessage/sendblue/config\\.ts$",
+      "reason": "masking characters for a phone number in a log/status string, not decoration"
     }
   ]
 }

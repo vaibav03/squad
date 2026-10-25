@@ -19,12 +19,13 @@ export const SEAT_WORDS: Record<SeatState, string> = {
   done: 'Done',
   failed: 'Could not answer',
 };
+/** Lucide icon names (rendered by `Glyph`), repeated beside the word. Never text glyphs. */
 export const SEAT_GLYPH: Record<SeatState, string> = {
-  speaking: '◔',
-  thinking: '…',
-  waiting: '○',
-  done: '✓',
-  failed: '×',
+  speaking: 'volume',
+  thinking: 'brain',
+  waiting: 'hourglass',
+  done: 'check',
+  failed: 'error',
 };
 
 export interface SeatInputs {

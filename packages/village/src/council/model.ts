@@ -26,16 +26,6 @@ export const KIND_LABEL: Record<A2aKind, string> = {
   verdict: 'Verdict',
   status: 'Status',
 };
-export const KIND_GLYPH: Record<A2aKind, string> = {
-  delegate: '→',
-  ask: '?',
-  answer: '✓',
-  critique: '!',
-  rank: '≡',
-  vote: '◐',
-  verdict: '⚖',
-  status: '·',
-};
 export const KINDS = Object.keys(KIND_LABEL) as A2aKind[];
 
 export type BoardRole = 'chair' | 'specialist' | 'code';

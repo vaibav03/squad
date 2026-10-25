@@ -73,3 +73,17 @@ export function resolveParticipant(id: string, name?: string): Participant {
     authority,
   };
 }
+
+/** The run's agent id for an id, display name or role word ('Skeptic', 'chair', 'council:ask-skeptic'); the input when none matches. */
+export function agentIdFor(
+  agents: readonly { id: string; name: string }[],
+  idOrName: string,
+): string {
+  const k = roleKey(idOrName);
+  return (
+    agents.find((a) => a.id === idOrName)?.id ??
+    agents.find((a) => roleKey(a.id) === k)?.id ??
+    agents.find((a) => a.name.toLowerCase() === idOrName.trim().toLowerCase())?.id ??
+    idOrName
+  );
+}

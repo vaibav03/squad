@@ -21,7 +21,7 @@ import { branchTable } from './lib/probes';
 import type { StepResult } from './lib/types';
 
 export const JOURNEY = [
-  'S0', 'S1', 'S1b', 'S1c', 'S2', 'S3', 'S3e', 'S4', 'S4s', 'S5', 'S5b', 'S6', 'S6s', 'S7', 'S7s', 'S8', 'S9', 'S9b', 'S10', 'S10b', 'S10s', 'S4d',
+  'S0', 'S0c', 'S1', 'S1b', 'S1c', 'S2', 'S3', 'S3e', 'S4', 'S4s', 'S4d', 'S5', 'S5b', 'S5c', 'S6', 'S6s', 'S7', 'S7s', 'S8', 'S9', 'S9b', 'S10', 'S10b', 'S10s',
 ];
 export const VARIANTS = Array.from({ length: 13 }, (_, i) => `V${i + 1}`);
 
