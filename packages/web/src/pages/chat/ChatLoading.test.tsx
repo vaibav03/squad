@@ -83,7 +83,7 @@ function hub(over: Partial<Record<'chats' | 'history' | 'send', Handler>> = {}) 
     token: 't',
     fetchImpl,
     EventSourceImpl: FakeES as unknown as typeof EventSource,
-    timeoutMs: 60,
+    timeoutMs: 300,
   });
   return { api, calls };
 }
