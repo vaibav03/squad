@@ -13,7 +13,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | `integration/` | 2 | 56 | 586 | Claude Sonnet 5.5 (39) |
 | `plan/` | 1 | 1 | 4 | Claude Sonnet 5.5 (1) |
 | `qa/` | 1 | 4 | 245 | Claude Sonnet 5.5 (3) |
-| `rooms/` | 2 | 10 | 108 | Claude Sonnet 5.5 (10) |
+| `rooms/` | 2 | 11 | 138 | Claude Sonnet 5.5 (11) |
 | `ux/` | 1 | 25 | 267 | Claude Sonnet 5.5 (23) |
 | `wire/` | 3 | 26 | 385 | Claude Sonnet 5.5 (26) |
 | `ws/` | 16 | 178 | 3470 | Claude Sonnet 5.5 (148) |
@@ -29,7 +29,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | `plan/interiors` | 1 | 4 | 2026-10-24 21:38 | 2026-10-24 21:38 | Vaibav Venkatapathy |
 | `qa/web` | 4 | 245 | 2026-10-24 22:54 | 2026-10-24 23:10 | Vaibav |
 | `rooms/a` | 7 | 60 | 2026-10-24 23:04 | 2026-10-24 23:13 | Vaibav |
-| `rooms/b` | 3 | 48 | 2026-10-24 23:07 | 2026-10-24 23:14 | Vaibav |
+| `rooms/b` | 4 | 78 | 2026-10-24 23:07 | 2026-10-24 23:17 | Vaibav |
 | `ux/rooms` | 25 | 267 | 2026-10-24 22:21 | 2026-10-24 23:02 | Vaibav |
 | `wire/bot` | 7 | 45 | 2026-10-24 20:48 | 2026-10-24 21:42 | Vaibav Venkatapathy |
 | `wire/hub` | 8 | 73 | 2026-10-24 20:50 | 2026-10-24 21:47 | Vaibav Venkatapathy |
@@ -56,7 +56,7 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Co-Authored-By | Commits |
 |---|---:|
 | (no trailer) | 56 |
-| Claude Sonnet 5.5 | 305 |
+| Claude Sonnet 5.5 | 306 |
 
 ## Commits landed on main by area (subject prefix)
 
@@ -74,5 +74,5 @@ Caveats: the author is the git identity of the machine owner for every commit, a
 | Author | Commits |
 |---|---:|
 | Vaibav Venkatapathy | 266 |
-| Vaibav | 69 |
+| Vaibav | 70 |
 | vaibav03 | 26 |
