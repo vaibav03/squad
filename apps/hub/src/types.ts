@@ -298,10 +298,13 @@ export interface HubDeps {
   live?: LiveService;
   /** Real-ports wiring for live grounding/takeaways (set by adapters/real.ts). */
   liveWiring?: LiveWiring;
+  /** Connected sources (Canvas/Google): store, encrypted tokens, connectors; built lazily by `contextServiceFor`. */
+  context?: ContextService;
 }
 
 import type { CodeSender } from './code-sender';
 import type { LiveService } from './live/service';
+import type { ContextService } from './context/service';
 import type { LiveWiring } from './live/wire';
 import type { ConfirmRouter } from './confirms';
 import type { AccountsStore } from './store/accounts';

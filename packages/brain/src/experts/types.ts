@@ -103,7 +103,11 @@ export interface Brain {
   ask(
     courseId: string,
     question: string,
-    opts?: { viewer?: { studentId: string; squadIds: string[] } },
+    opts?: {
+      viewer?: { studentId: string; squadIds: string[] };
+      /** Course filter for connected sources: defaults to `courseId`; `null` = any course the viewer can read. */
+      contextCourseId?: string | null;
+    },
   ): Promise<ExpertAnswer>;
   expert(courseId: string, chapter: string): ChapterExpert;
   dean: Dean;

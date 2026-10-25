@@ -27,6 +27,7 @@ import {
   type KeyVerifier,
   type MasteryStore,
 } from '@squad/brain';
+import { contextServiceFor } from '../context/service';
 import {
   createAudioServices,
   createCallPort,
@@ -102,7 +103,12 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
     if (e.t !== 'quiz.answer' && e.t !== 'quiz.result') emit(e);
   };
 
-  const brain = createBrain({ llm: o.llm, db, emit: brainEmit });
+  const brain = createBrain({
+    llm: o.llm,
+    db,
+    emit: brainEmit,
+    context: contextServiceFor(deps).store,
+  });
   if (o.loadFixture !== false && !brain.store.getCourse(courseId))
     await loadFixtureCourse({ store: brain.store }, courseId);
 
@@ -130,7 +136,7 @@ export async function createRealPorts(deps: HubDeps, o: RealPortsOptions): Promi
 
   const quiz = createRealQuizPort(deps, engine, courseId);
   const brainPort = createRealBrainPort(deps, brain, mastery, o);
-  const { media, call } = createAudioPorts(brain, courseId, o);
+  const { media, call } = createAudioPorts(brain, courseId, o, (s) => deps.directory.squadsOf(s));
 
   return {
     ports: { quiz, call, brain: brainPort, media },
@@ -380,6 +386,7 @@ function createAudioPorts(
   brain: Brain,
   defaultCourse: string,
   o: RealPortsOptions,
+  squadsOf: (student: StudentId) => string[],
 ): { media: MediaPort; call: Ports['call'] } {
   let n = 0;
   const answer: AnswerFn = async ({ agent, student, text }) => {
@@ -398,7 +405,10 @@ function createAudioPorts(
           ...(l.cite ? { cite: l.cite } : {}),
         }));
       }
-      const r = await brain.ask(defaultCourse, text);
+      const r = await brain.ask(defaultCourse, text, {
+        viewer: { studentId: student, squadIds: squadsOf(student) },
+        contextCourseId: null,
+      });
       return [{ text: r.text, ...(r.citations[0] ? { cite: r.citations[0] } : {}) }];
     } catch (e) {
       if (e instanceof BrainUnavailableError || e instanceof CaptionUnavailableError)
