@@ -38,7 +38,7 @@ import type {
   WireReply,
 } from './types';
 import { runStudy } from './study';
-import { runTrip } from './trip';
+import { runTrip, runTripConstraints } from './trip';
 
 export class FlowError extends Error {
   constructor(public readonly reason: 'offline' | 'timeout' | 'blocked') {
@@ -473,6 +473,7 @@ export function createAgent(deps: AgentDeps): FlowAgent {
       options?: TripOptionPublic[];
       topics?: string[];
       examAt?: string;
+      constraintsOnly?: boolean;
     },
   ): Promise<Coord> {
     const members = [...new Set([...a.members, id])].sort();
@@ -525,7 +526,8 @@ export function createAgent(deps: AgentDeps): FlowAgent {
     });
     if (!m.ok) throw new FlowError('blocked');
     const { taskId } = a;
-    if (flow === 'trip') {
+    if (flow === 'trip' && a.constraintsOnly) await postOwnLimits(taskId);
+    if (flow === 'trip' && !a.constraintsOnly) {
       tripRecs.set(taskId, {
         tripId: taskId,
         taskId,
@@ -639,7 +641,8 @@ export function createAgent(deps: AgentDeps): FlowAgent {
     let coord: Coord | undefined;
     try {
       coord = await openAsCoordinator(flow, a);
-      return flow === 'study' ? await runStudy(coord) : await runTrip(coord);
+      if (flow === 'study') return await runStudy(coord);
+      return a.constraintsOnly ? await runTripConstraints(coord) : await runTrip(coord);
     } catch (e) {
       const reason = e instanceof FlowError ? e.reason : 'blocked';
       log(`flow ${flow} failed: ${reason}`);
