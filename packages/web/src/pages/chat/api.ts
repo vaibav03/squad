@@ -1,3 +1,4 @@
+import { SharedEventSource } from '@squad/village/sources';
 import { timedFetch } from '../../lib/http';
 import {
   ChatAttachmentSchema,
@@ -250,7 +251,11 @@ export function createChatApi(o: HttpChatApiOptions): ChatApi {
 
     subscribe(h, lastEventId) {
       const ES =
-        o.EventSourceImpl ?? (typeof EventSource !== 'undefined' ? EventSource : undefined);
+        o.EventSourceImpl ??
+        (typeof EventSource !== 'undefined'
+          ? // one hub connection for every tab and channel (see @squad/village/sources shared-stream)
+            (SharedEventSource as unknown as typeof EventSource)
+          : undefined);
       let es: EventSource | null = null;
       let closed = false;
       let last = lastEventId ?? 0;
