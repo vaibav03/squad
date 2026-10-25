@@ -85,3 +85,10 @@ Merge order suggestion: spine, hub, brain-answers, brain-quiz, mesh-crypto, mesh
 - Canvas uses a 3x5 pixel font for signs, chalk and bubbles, not Jersey 10 (DESIGN.md asks for Jersey): deviation to resolve.
 - Open polish: oral-hut and Feynman chimney smoke are two large circles (should be single 2 px puffs); phone check showed the Enter prompt overlapping feet, HUD dock chips cropped, a doubled moon and cloud edge bands; call captions on one building replace each other before the 1.2 s/20 chars hold (single bubble key); `AssetLib.frame` cannot reach atlas portrait keys (landmark A cut portraits from frames); squad size defaults to 0 and viewer to '' until the world sets `ctx.me` and registry `squadSize` (fail-closed: no mastery or per-student marks until then).
 - No unit test for `scenes/module.ts` (needs a Phaser/DOM fake); verified through a live world run only. The layout/phone, type, colour and motion reviewers did not run.
+
+## Wire-bot (from the wire-bot handoff, branch wire/bot at c10cf72)
+- `pnpm check` exits 0 from the root on wire/bot; per-package unit and smoke results: core 30/2, bot 140/8, agent 6/4, hub 15/36, web-host 31/1, web 32/1, village 201/2, brain 152/4, mesh 55/46, media 65/1, demo-scripts 37/none.
+- All ten skills registered (chat, doubt, behind, hwpolicy, quiz, feynman, stepDiff, studyPlan, podcast, explainer) on one shared emit/db/MasteryStore; the 50-line banter suite passes with all registered. Without `ELEVENLABS_API_KEY` the podcast and explainer skills are not registered (the bot says so at startup).
+- Mesh exports no chat skill; the study plan uses brain's stub scheduler until wire-hub's `findSlots` is merged.
+- One mesh test (ring PSI) timed out at the 5 s default under parallel load: now 30 s, no behavior change. REPL exits with "readline closed" on piped stdin (cosmetic, pre-existing).
+- Multi-skill scripted session: `cd apps/bot && pnpm chat`, then `/script fixtures/scripts/multi-skill.json` (needs ffmpeg/ffprobe).
