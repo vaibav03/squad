@@ -118,8 +118,22 @@ export function useFocusTrap<T extends HTMLElement>(opts: FocusTrapOptions) {
       }
     };
     root.addEventListener('keydown', onKey);
+    // Focus can fall to <body> while the panel is open (a focused control got disabled or unmounted mid-run); the
+    // trap must still answer Esc, and Tab must pull focus back in rather than walk the page behind the panel.
+    const onDocKey = (e: KeyboardEvent) => {
+      const a = document.activeElement;
+      if (a && a !== document.body && a !== document.documentElement) return;
+      if (e.key === 'Escape') escRef.current?.();
+      else if (e.key === 'Tab') {
+        e.preventDefault();
+        const items = focusableIn(root);
+        (e.shiftKey ? items[items.length - 1] : items[0])?.focus({ preventScroll: true });
+      }
+    };
+    document.addEventListener('keydown', onDocKey);
     return () => {
       root.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onDocKey);
       const target = retRef.current ?? previous;
       if (target && typeof target.focus === 'function') target.focus({ preventScroll: true });
     };

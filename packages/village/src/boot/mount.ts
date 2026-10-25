@@ -171,6 +171,9 @@ export function mountVillage(
         fps: { target: 60, smoothStep: false },
         input: {
           keyboard: false,
+          // Clicks on DOM panels over the world (room info, council, chat dock) must not reach the world's pointer
+          // handlers: with window events on, a click on a panel hit the interior veil and made the player leave the room.
+          windowEvents: false,
           gamepad: false,
           mouse: { preventDefaultWheel: false },
           touch: { capture: true },

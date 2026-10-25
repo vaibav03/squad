@@ -19,21 +19,19 @@ for (const [w, h, touch, tag] of [[1280, 800, false, 'desk'], [390, 844, true, '
     const d = await vis(page);
     console.log(tag, name, JSON.stringify(d));
     await page.screenshot({ path: SHOTS + `walkin-${tag}-${name}.png` });
-    ok(d.length <= 1, `${tag} ${name}: at most one dialog open at a time (got ${d.length})`);
+    ok(d.length <= 1 && !(name === 'council' && d.length > 1), `${tag} ${name}: at most one dialog open at a time (got ${d.length})`);
     if (name === 'council') {
-      // Ask the council in demo mode
-      const ask = page.getByRole('button', { name: 'Ask the council' });
-      if (!(await page.getByPlaceholder('What do you want the council to settle?').isVisible().catch(() => false))) await ask.first().click().catch(() => {});
       const box = page.getByPlaceholder('What do you want the council to settle?');
       if (await box.isVisible().catch(() => false)) {
         await box.fill('Should we study chapter 3 or chapter 5 first?');
-        await page.getByRole('button', { name: 'Ask the council' }).last().click();
-        await page.waitForTimeout(9000);
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(12000);
         await page.screenshot({ path: SHOTS + `walkin-${tag}-council-answer.png` });
-        const t = await page.evaluate(() => document.querySelector('.cn-panel, [class*=cn-]')?.textContent?.slice(0, 200));
-        ok(!!t && t.length > 20, `${tag} council: panel renders a run (${(t || '').slice(0, 60)})`);
+        const t = await page.evaluate(() => document.querySelector('.cn-panel')?.textContent ?? '');
+        ok(/Teacher|Skeptic|Practitioner/.test(t) && /Start from|answer|verdict/i.test(t), `${tag} council: transcript and verdict render (${t.slice(0, 50)})`);
       } else ok(false, `${tag} council: ask input reachable`);
     }
+    if (name === 'devil' && d.length === 0) { console.log(tag, 'devil: locked room (rooms-b skill not landed), no panel expected'); }
     // Esc: close any dialog, then leave the room
     for (let i = 0; i < 3; i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(900); }
     const left = await page.evaluate(() => !document.querySelector('.rr-layer'));

@@ -124,6 +124,16 @@ export default function VillagePage({ world }: { world?: string }) {
     );
   }, []);
 
+  // The Council Hall opens its own "Ask the council" panel on entry. Mark its room-info panel as already seen so the
+  // two never stack on first entry; the info stays one tap away on the room's "?" button.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('squad:room-info-seen:council-hall', '1');
+    } catch {
+      /* private mode: the panels may both open once */
+    }
+  }, []);
+
   // A room's "say this in chat" button sends the phrase to the squad group chat. Not offered in replays.
   const { toast } = useToast();
   const runPhrase = useMemo(
@@ -187,10 +197,10 @@ export default function VillagePage({ world }: { world?: string }) {
         mode={mode}
         hub={hub}
         calm={calm}
-        returnFocusTo={stage.current?.querySelector('canvas')}
+        returnFocusTo={stage.current?.querySelector<HTMLElement>('.sqv-stage')}
         onClosed={onClosed}
       />
-      <CouncilHall hub={hub} calm={calm} returnFocusTo={stage.current?.querySelector('canvas')} />
+      <CouncilHall hub={hub} calm={calm} returnFocusTo={stage.current?.querySelector<HTMLElement>('.sqv-stage')} />
     </div>
   );
 }
