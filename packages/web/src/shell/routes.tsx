@@ -132,7 +132,14 @@ export function PageHost({ meta, loader }: { meta: SquadRouteMeta; loader: Loade
     <ErrorBoundary resetKey={attempt} onRetry={again} title={`${meta.title} could not load`}>
       <Suspense
         fallback={
-          <LoadingTimeout onRetry={again} what={meta.title}>
+          <LoadingTimeout
+            onRetry={again}
+            what={meta.title}
+            // the village ships a ~340 KB engine chunk: on a slow connection that legitimately takes a while,
+            // so it gets a longer budget (and says "Still loading" at 8 s) before it is called an error
+            timeoutMs={meta.key === 'village' ? 45000 : 12000}
+            slowWhat={meta.key === 'village' ? 'the village' : undefined}
+          >
             {loading}
           </LoadingTimeout>
         }

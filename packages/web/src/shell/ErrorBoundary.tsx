@@ -73,35 +73,86 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
+/** After `slowAfterMs` a loading state says so and offers Retry, without giving up on the load. */
+export function SlowNote({
+  what,
+  onRetry,
+}: {
+  /** "the village", "Squad", "your session" */
+  what: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="sq-slownote" role="status" aria-live="polite" data-testid="slow-note">
+      <span>Still loading {what}... this is taking longer than usual.</span>
+      <Button size="sm" variant="secondary" onClick={onRetry}>
+        Retry
+      </Button>
+    </div>
+  );
+}
+
+/** Staged wait: `children` -> (after slowAfterMs) children + "Still loading..." with Retry -> (after timeoutMs) error. */
+export function useLoadStage(timeoutMs: number, slowAfterMs: number, resetKey?: unknown) {
+  const [stage, setStage] = useState<'loading' | 'slow' | 'late'>('loading');
+  useEffect(() => {
+    setStage('loading');
+    const slow = setTimeout(() => setStage((s) => (s === 'loading' ? 'slow' : s)), slowAfterMs);
+    const late = setTimeout(() => setStage('late'), timeoutMs);
+    return () => {
+      clearTimeout(slow);
+      clearTimeout(late);
+    };
+  }, [timeoutMs, slowAfterMs, resetKey]);
+  return stage;
+}
+
 /**
  * Suspense fallback that turns into an error state with Retry when the wait runs past `timeoutMs`
- * (a chunk or request that never settles). Renders `children` (the loading visual) until then.
+ * (a chunk or request that never settles). Renders `children` (the loading visual) until then, plus a
+ * "Still loading..." note with Retry once it has taken `slowAfterMs`.
  */
 export function LoadingTimeout({
   children,
   timeoutMs = 12000,
+  slowAfterMs = 8000,
   onRetry,
   what = 'This page',
+  slowWhat,
 }: {
   children: ReactNode;
   timeoutMs?: number;
+  slowAfterMs?: number;
   onRetry: () => void;
   what?: string;
+  /** Noun for the slow note: "the village". Defaults to `what` in lower case. */
+  slowWhat?: string;
 }) {
-  const [late, setLate] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setLate(true), timeoutMs);
-    return () => clearTimeout(t);
-  }, [timeoutMs]);
-  if (!late) return <>{children}</>;
+  const [round, setRound] = useState(0);
+  const stage = useLoadStage(timeoutMs, Math.min(slowAfterMs, timeoutMs), round);
+  if (stage === 'late')
+    return (
+      <FailureState
+        title={`${what} is taking too long`}
+        body="The connection is slow or the page could not be fetched."
+        onRetry={() => {
+          setRound((n) => n + 1);
+          onRetry();
+        }}
+      />
+    );
   return (
-    <FailureState
-      title={`${what} is taking too long`}
-      body="The connection is slow or the page could not be fetched."
-      onRetry={() => {
-        setLate(false);
-        onRetry();
-      }}
-    />
+    <>
+      {children}
+      {stage === 'slow' && (
+        <SlowNote
+          what={slowWhat ?? what.toLowerCase()}
+          onRetry={() => {
+            setRound((n) => n + 1);
+            onRetry();
+          }}
+        />
+      )}
+    </>
   );
 }

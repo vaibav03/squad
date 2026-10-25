@@ -9,6 +9,11 @@ import { createRouter } from './router';
 
 const router = createRouter();
 
+// A direct load of the village is a waterfall (app -> account -> page chunk -> engine chunk). Start the engine chunk
+// now, in parallel with signing in, so a slow connection waits for the longest download instead of their sum.
+if (location.pathname.startsWith('/squad/village'))
+  void import('@squad/village').catch(() => undefined);
+
 // Never leave an empty root: a crash anywhere in the page host shows an error state with Retry, and the dev-only
 // feedback toolbar sits in its own boundary so a failure there cannot take the app down.
 createRoot(document.getElementById('root')!).render(

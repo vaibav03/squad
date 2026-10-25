@@ -53,6 +53,10 @@
            a failed chunk, a hub-less host) the guard below turns it into a visible error with Reload. -->
       <div class="sq-boot" role="status" data-build="%SQUAD_BUILD%">
         <p class="sq-boot__msg">Starting Squad&hellip;</p>
+        <p class="sq-boot__slow" hidden>
+          Still loading Squad... this connection is slow.
+          <button type="button" class="sq-boot__retry" onclick="location.reload()">Retry</button>
+        </p>
         <p class="sq-boot__err" hidden>
           Squad did not start.
           <button type="button" class="sq-boot__retry" onclick="location.reload()">Retry</button>
@@ -74,6 +78,7 @@
             );
           } catch (e) {}
           el.querySelector('.sq-boot__msg').hidden = true;
+          el.querySelector('.sq-boot__slow').hidden = true;
           el.querySelector('.sq-boot__err').hidden = false;
           document.title = 'Squad did not start';
         }
@@ -99,9 +104,16 @@
           },
           true,
         );
+        // 8 s: say so and offer Retry, but keep loading (a slow connection is not a failure and a reload would
+        // restart the download). 45 s: give up visibly.
         setTimeout(function () {
-          fail('no render after 8s');
+          var el = document.querySelector('#root .sq-boot');
+          if (!el || failed) return;
+          el.querySelector('.sq-boot__slow').hidden = false;
         }, 8000);
+        setTimeout(function () {
+          fail('no render after 45s');
+        }, 45000);
         window.addEventListener('squad:booted', function () {
           try {
             sessionStorage.removeItem('squad.bootRetry');

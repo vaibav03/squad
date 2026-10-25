@@ -384,3 +384,21 @@
 .sq-shell.is-bleed .sq-build__stale {
   pointer-events: auto;
 }
+
+.sq-slownote {
+  position: fixed;
+  left: 50%;
+  bottom: calc(88px + var(--safe-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: var(--z-dock, 20);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100vw - 32px);
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--sq-surface, #101a30);
+  color: var(--sq-text, #c9d3e8);
+  border: 1px solid var(--sq-line, #2a3a5c);
+  font-size: 14px;
+}

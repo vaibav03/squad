@@ -171,6 +171,9 @@ export function mountVillage(
           roundPixels: true,
           powerPreference: 'high-performance',
         },
+        // a file that never answers fails after 30 s (the loader reports it and carries on) instead of holding the
+        // whole village behind "Opening the village" forever
+        loader: { timeout: 30_000 },
         fps: { target: 60, smoothStep: false },
         input: {
           keyboard: false,
