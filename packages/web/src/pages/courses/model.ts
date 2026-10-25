@@ -154,6 +154,9 @@ export function errorMessage(code: string | undefined, fallback?: string): strin
       return 'We could not open this file. It may be damaged. Try exporting it again.';
     case 'duplicate':
       return 'Already in this course.';
+    case 'rate_limited':
+    case 'http_429':
+      return 'Too many requests. Wait a few seconds, then try again.';
     case 'offline':
       return 'You are offline. Check your connection and try again.';
     case 'not_found':

@@ -210,7 +210,8 @@ async function fresh(browser, token) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('response', (r) => {
-    if (r.status() === 429) RATE429[new URL(r.url()).pathname] = (RATE429[new URL(r.url()).pathname] ?? 0) + 1;
+    if (r.status() === 429)
+      RATE429[new URL(r.url()).pathname] = (RATE429[new URL(r.url()).pathname] ?? 0) + 1;
   });
   await applyCond(ctx, page);
   return { ctx, page, errors };
@@ -297,7 +298,9 @@ async function pool(items, par, fn) {
   return out;
 }
 
-const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
+const browser = await chromium.launch(
+  process.env.CHROME ? { executablePath: process.env.CHROME } : {},
+);
 try {
   const token = WHO === 'anon' ? null : WHO === 'seed' ? await seededToken() : await newAccount();
   const jobs = [];

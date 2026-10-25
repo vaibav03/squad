@@ -140,8 +140,7 @@ export function createAuthRoutes(deps: HubDeps): HubApp {
       ...(b.data.name ? { name: b.data.name } : {}),
     });
     if (!res.ok) {
-      if (res.error === 'rate_limited')
-        return rateLimited(c, res.retryAfterS ?? 1);
+      if (res.error === 'rate_limited') return rateLimited(c, res.retryAfterS ?? 1);
       return c.json(
         { error: { code: 'invalid_request', message: 'Add your name to create an account.' } },
         400,
@@ -164,8 +163,7 @@ export function createAuthRoutes(deps: HubDeps): HubApp {
     if (!b.ok) return b.res;
     const res = deps.accounts.resend(b.data.challengeId);
     if (!res.ok) {
-      if (res.error === 'rate_limited')
-        return rateLimited(c, res.retryAfterS ?? 1);
+      if (res.error === 'rate_limited') return rateLimited(c, res.retryAfterS ?? 1);
       return c.json(
         { error: { code: 'not_found', message: 'That request expired. Start again.' } },
         404,

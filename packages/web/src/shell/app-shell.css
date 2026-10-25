@@ -146,6 +146,9 @@
 .sq-shell__account:active {
   transform: scale(0.97);
 }
+.sq-shell__ratelimit {
+  padding: 8px var(--sq-gutter, 16px) 0;
+}
 .sq-shell__main {
   flex: 1;
   min-width: 0;

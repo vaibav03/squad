@@ -79,7 +79,12 @@ function rec(v: unknown): Record<string, unknown> | undefined {
 }
 
 /** Maps a failed HTTP response (status and parsed JSON body, either may be junk) to a typed error. */
-export function errorFromResponse(status: number, body: unknown): AccountApiError {
+export function errorFromResponse(
+  status: number,
+  body: unknown,
+  /** the `Retry-After` header, in seconds, when the response had one */
+  retryAfterHeader?: number,
+): AccountApiError {
   const root = rec(body);
   const err = rec(root?.error);
   const rawCode = str(err?.code);
@@ -94,7 +99,7 @@ export function errorFromResponse(status: number, body: unknown): AccountApiErro
   const squad = rec(err?.squad) ?? rec(root?.squad);
   const squadId = str(err?.squadId) ?? str(root?.squadId) ?? str(squad?.id);
   const triesLeft = num(err?.triesLeft) ?? num(root?.triesLeft);
-  const retryAfterS = num(err?.retryAfterS) ?? num(root?.retryAfterS);
+  const retryAfterS = num(err?.retryAfterS) ?? num(root?.retryAfterS) ?? retryAfterHeader;
   return new AccountApiError(code, status, {
     ...(triesLeft !== undefined ? { triesLeft } : {}),
     ...(retryAfterS !== undefined ? { retryAfterS } : {}),
