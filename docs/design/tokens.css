@@ -166,6 +166,39 @@
   --nook-accent-ink: var(--primary-foreground); --nook-ring: var(--ring); --nook-danger: var(--destructive);
   --nook-radius: calc(var(--radius) * 1.4); --nook-gap: 16px; --nook-font: var(--font-sans); }
 
+/* ---------- Council chamber (deliberation surface). Always nocturnal, in either theme.
+   Amber = authority (the Chair, decisions, primary CTAs). Cyan = participants. Rose = disagreement. Violet = revision.
+   Colour never carries meaning alone: every use has an icon and a word. Contrast is checked by scripts/check-contrast.mjs. */
+:root {
+  --cc-surface: #0d2142;                         /* solid fallback for glass */
+  --cc-glass: rgb(13 33 66 / 0.78);              /* panel glass; blur below */
+  --cc-glass-raised: rgb(18 51 90 / 0.82);       /* cards on glass */
+  --cc-glass-blur: 14px;
+  --cc-hairline: rgb(180 214 218 / 0.16);        /* 1px borders */
+  --cc-hairline-strong: rgb(180 214 218 / 0.3);
+  --cc-text: #eef3f8;
+  --cc-text-dim: #9db9cb;                        /* 7.1:1 on --cc-surface */
+  --cc-amber: #ffc857;                           /* = --sq-glow */
+  --cc-amber-ink: #1a1203;                       /* text on amber fills */
+  --cc-amber-soft: rgb(255 200 87 / 0.12);
+  --cc-amber-line: rgb(255 200 87 / 0.42);
+  --cc-cyan: #7fd6ea;                            /* derived: cool participant accent */
+  --cc-cyan-soft: rgb(127 214 234 / 0.12);
+  --cc-cyan-line: rgb(127 214 234 / 0.4);
+  --cc-rose: #ff8e9b;                            /* challenge / disagreement as text and outline */
+  --cc-rose-soft: rgb(255 142 155 / 0.12);
+  --cc-violet: #b3a5ff;                          /* revision */
+  --cc-violet-soft: rgb(179 165 255 / 0.12);
+  --cc-green: #7fe0a4;                           /* evidence / agreement */
+  --cc-green-soft: rgb(127 224 164 / 0.12);
+  --cc-shadow-card: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 6px 18px -8px rgb(7 15 31 / 0.85), 0 1px 3px rgb(7 15 31 / 0.5);
+  --cc-shadow-pinned: 0 1px 0 rgb(255 232 170 / 0.18) inset, 0 20px 40px -14px rgb(7 15 31 / 0.9), 0 0 0 1px var(--cc-amber-line), 0 0 28px -6px rgb(255 200 87 / 0.28);
+  --cc-handoff-ms: 200ms;                        /* A2A line focus: 160-240ms */
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --cc-glass: var(--cc-surface); --cc-glass-raised: #12335a; }
+}
+
 /* Global rules every surface inherits */
 .sq-pixelated, .sq-sprite { image-rendering: pixelated; image-rendering: crisp-edges; }
 .sq-pixel-text { font-family: var(--font-pixel); -webkit-font-smoothing: none; font-smooth: never; text-rendering: optimizeSpeed; letter-spacing: var(--tracking-pixel); }
