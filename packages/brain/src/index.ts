@@ -17,3 +17,6 @@ export * from './create';
 export * from './quiz';
 export * from './studyplan';
 export * from './skills/courseplan';
+export * from './skills/oracle';
+export * from './skills/rubric';
+export * from './skills/oral';

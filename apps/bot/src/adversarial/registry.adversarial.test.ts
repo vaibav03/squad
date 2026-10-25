@@ -46,6 +46,7 @@ describe('full registry on banter', () => {
         'feynman',
         'hwpolicy',
         'oracle',
+        'oral',
         'podcast',
         'quiz',
         'rubric',
