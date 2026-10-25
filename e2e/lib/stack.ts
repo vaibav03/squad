@@ -112,7 +112,7 @@ export async function stackUp(ms = 90_000): Promise<boolean> {
   return (await Promise.all(checks.map((u) => waitFor(u, ms)))).every(Boolean);
 }
 
-/** Kills the process groups this module started, then anything still listening on this stack's own ports. */
+/** Kills ONLY the process groups this module spawned (PIDs recorded in e2e/.tmp/stack.pids). Never port- or pattern-based. */
 export function stopStack(): void {
   try {
     const pids = JSON.parse(fs.readFileSync(path.join(TMP, 'stack.pids'), 'utf8')) as Record<
@@ -128,12 +128,5 @@ export function stopStack(): void {
     }
   } catch {
     /* never started */
-  }
-  for (const port of ownPorts()) {
-    try {
-      execSync(`lsof -tiTCP:${port} -sTCP:LISTEN | xargs kill 2>/dev/null || true`);
-    } catch {
-      /* ignore */
-    }
   }
 }

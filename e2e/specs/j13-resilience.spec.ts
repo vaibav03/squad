@@ -1,4 +1,4 @@
-import { spawn, execSync, type ChildProcess } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { REPO, TMP } from '../lib/env';
@@ -46,10 +46,13 @@ async function up(extra: Record<string, string> = {}) {
   throw new Error('j13 hub did not start');
 }
 function kill9() {
-  try {
-    execSync(`lsof -tiTCP:${PORT} -sTCP:LISTEN | xargs kill -9 || true`);
-  } catch {
-    /* gone */
+  // only the process group this spec spawned (the hub's own children included)
+  if (proc?.pid) {
+    try {
+      process.kill(-proc.pid, 'SIGKILL');
+    } catch {
+      /* gone */
+    }
   }
   proc = null;
 }
@@ -80,8 +83,8 @@ test.afterAll(() => kill9());
 
 test('J13 hub killed mid-session: state persists and the stream resumes with Last-Event-ID, no duplicates', async () => {
   test.setTimeout(180_000);
-  kill9(); // a hub left over from an aborted earlier run must not be adopted
-  await new Promise((r) => setTimeout(r, 500));
+  const stale = await fetch(`${BASE}/health`).then((r) => r.ok, () => false);
+  expect(stale, `port ${PORT} already answers: a hub from an earlier run is still alive (stop it yourself, or set E2E_J13_PORT)`).toBe(false);
   fs.rmSync(DB, { force: true });
   await up({ FORCE_FAKE_LLM: '1' });
   const tok = await login('s_ana');
