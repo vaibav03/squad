@@ -43,7 +43,10 @@ export function bestQuote(text: string, query: string): string {
   let bestN = -1;
   for (const s of sents) {
     const n = (s.toLowerCase().match(WORDS) ?? []).filter((w) => q.has(w)).length;
-    if (n > bestN) ((best = s), (bestN = n));
+    if (n > bestN) {
+      best = s;
+      bestN = n;
+    }
   }
   return best.length > 300 ? best.slice(0, 300) : best;
 }

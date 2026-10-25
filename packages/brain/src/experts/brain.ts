@@ -3,7 +3,6 @@ import type { Citation } from '@squad/core';
 import { createDean } from '../dean';
 import { claimToCitation } from '../citations';
 import { answerFromContext } from '../context/answer';
-import type { ContextStore } from '../context/store';
 import type { ContextViewer } from '../context/types';
 import type { CourseStore } from '../ingest/types';
 import { BrainUnavailableError } from './errors';

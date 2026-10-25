@@ -4,7 +4,11 @@ import { signToken } from '../auth';
 import { createLogger } from '../log';
 import { createTokenStore, parseTokenKey, TokenKeyError } from '../context/tokens';
 import { openMemoryDb } from '@squad/core/node';
-import { createFakeCanvasConnector, createFakeGoogleConnector, GOOGLE_SCOPES } from '@squad/brain';
+import {
+  GOOGLE_SCOPES,
+  type createFakeCanvasConnector,
+  type createFakeGoogleConnector,
+} from '@squad/brain';
 import { contextServiceFor } from '../context/service';
 
 const SECRET = 'auth-test';

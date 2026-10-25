@@ -17,7 +17,10 @@ function splitLong(text: string, max: number): string[] {
   let cur = '';
   for (const sent of text.split(/(?<=[.!?])\s+/)) {
     if (sent.length > max) {
-      if (cur) (out.push(cur), (cur = ''));
+      if (cur) {
+        out.push(cur);
+        cur = '';
+      }
       let rest = sent;
       while (rest.length > max) {
         const cut = rest.lastIndexOf(' ', max);
