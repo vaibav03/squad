@@ -129,7 +129,7 @@ export function RoomLayer({ session: given, onRun, calm, infoFor = roomInfo }: R
       ) : null}
 
       <div className="rr-dock">
-        {outcome ? (
+        {outcome && slot !== 'council-hall' && slot !== 'round-table' ? (
           <div className="rr-dock__plan">
             {planShown ? (
               <OutcomeCard

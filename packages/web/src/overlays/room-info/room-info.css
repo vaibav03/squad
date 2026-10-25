@@ -652,3 +652,9 @@
   line-height: 16px;
   pointer-events: none;
 }
+
+/* the one council dock: bottom sheet (<= 40% of the height) on narrow screens, right column (<= 38% width) on wide ones */
+.rr-dock { bottom: calc(var(--room-strip-bottom, 56px) + 20px + var(--safe-bottom)); max-height: 40vh; }
+@media (min-width: 1000px) {
+  .rr-dock { left: auto; right: 16px; top: 160px; bottom: auto; width: min(38vw, 440px); max-width: none; margin: 0; max-height: none; }
+}

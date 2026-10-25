@@ -59,3 +59,23 @@
 .cd-dock .rr-strip__head { display: none; }
 .cd-dock .rr-line__text, .cd-dock .rr-line__who { color: #f4f7ff; font-size: 14px; line-height: 1.45; }
 @media (max-width: 720px) { .cd-dock .cb-result__rows { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- the one docked council panel: right column on wide screens, bottom sheet (<= 40% height) on narrow ---- */
+.cd-dock { max-height: none; overflow: visible; gap: 0; border: 1px solid #ffc857; border-radius: 12px; background: #0b1730; box-shadow: 0 8px 24px rgb(0 0 0 / 0.35); }
+.cd-head { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 12px; flex: none; }
+.cd-head__line { flex: 1 1 auto; font: 650 14px/1.35 var(--font-sans); color: #fff; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.cd-head__btn { flex: none; width: 36px; height: 36px; border: 1px solid rgb(255 255 255 / 0.35); border-radius: 10px; background: rgb(255 255 255 / 0.08); cursor: pointer; display: grid; place-items: center; }
+.cd-head__chev { width: 9px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-2px, -2px); transition: transform 160ms; }
+.cd-dock[data-collapsed='true'] .cd-head__chev { transform: rotate(-135deg) translate(-2px, -2px); }
+.cd-body { display: flex; flex-direction: column; gap: 8px; padding: 0 8px 8px; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; max-height: var(--cd-body-max, 40vh); }
+.cd-body[hidden] { display: none; }
+.cd-dock .cd-card, .cd-dock .cd-more { box-shadow: none; border-color: rgb(255 255 255 / 0.18); padding: 8px 10px; }
+.cd-dock .cd-more { padding: 0 10px; }
+.cd-dock .cb-result__k { display: none; }
+.cd-dock .cb-result__headline { font-size: 15px; margin: 0 0 4px; }
+.cd-dock .cb-result__rows { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+.cd-dock .cb-result__stance { -webkit-line-clamp: 1; }
+.cd-dock .cd-meta .cd-link { margin-left: 0; }
+.cd-dock .cb-result__headline { display: none; } /* the header carries the headline */
+.cd-dock { --cd-body-max: calc(40vh - 52px); }
+@media (min-width: 1000px) { .cd-dock { --cd-body-max: calc(100dvh - 160px - 60px - 52px); } }
