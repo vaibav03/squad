@@ -27,7 +27,7 @@
    "id": "cubbie",
    "name": "Cubbie",
    "role": "cubbie",
-   "source": "CaveLion2",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -87,7 +87,7 @@
    "id": "examiner",
    "name": "The Examiner",
    "role": "examiner",
-   "source": "Inspector",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -147,7 +147,7 @@
    "id": "dean",
    "name": "The Dean",
    "role": "dean",
-   "source": "Master",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -207,7 +207,7 @@
    "id": "expert-ada",
    "name": "Prof. Ada",
    "role": "expert",
-   "source": "OldWoman",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -267,7 +267,7 @@
    "id": "expert-sage",
    "name": "Sage",
    "role": "expert",
-   "source": "OldMan",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -327,7 +327,7 @@
    "id": "expert-monk",
    "name": "Brother Bit",
    "role": "expert",
-   "source": "Monk2",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -387,7 +387,7 @@
    "id": "expert-mage",
    "name": "Mage Moda",
    "role": "expert",
-   "source": "SorcererBlack",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -447,7 +447,7 @@
    "id": "rival",
    "name": "The Rival",
    "role": "rival",
-   "source": "Hunter",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -507,7 +507,7 @@
    "id": "council-chill",
    "name": "Chill",
    "role": "council",
-   "source": "Villager6",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -567,7 +567,7 @@
    "id": "council-grind",
    "name": "Grind",
    "role": "council",
-   "source": "Samurai",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -627,7 +627,7 @@
    "id": "council-advisor",
    "name": "Advisor",
    "role": "council",
-   "source": "Noble",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -687,7 +687,7 @@
    "id": "chairman",
    "name": "The Chairman",
    "role": "council",
-   "source": "Sultan",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -747,7 +747,7 @@
    "id": "feynman",
    "name": "Feynman Freshman",
    "role": "feynman",
-   "source": "EggBoy",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -807,7 +807,7 @@
    "id": "student-01",
    "name": "Student 1",
    "role": "student",
-   "source": "Boy",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -867,7 +867,7 @@
    "id": "student-02",
    "name": "Student 2",
    "role": "student",
-   "source": "Villager3",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -927,7 +927,7 @@
    "id": "student-03",
    "name": "Student 3",
    "role": "student",
-   "source": "Villager4",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -987,7 +987,7 @@
    "id": "student-04",
    "name": "Student 4",
    "role": "student",
-   "source": "Woman",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -1047,7 +1047,7 @@
    "id": "student-05",
    "name": "Student 5",
    "role": "student",
-   "source": "Cavegirl2",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
@@ -1107,7 +1107,7 @@
    "id": "student-06",
    "name": "Student 6",
    "role": "student",
-   "source": "Villager5",
+   "source": "procedural (squad-art, CC0 pack for portraits)",
    "anims": {
     "idle_r": {
      "frames": [
