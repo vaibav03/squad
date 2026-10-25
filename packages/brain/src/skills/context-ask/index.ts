@@ -130,7 +130,7 @@ export function createContextAskSkill(store: ContextStore, opts: ContextAskOptio
       const out: OutboundMessage[] = [];
       if (publicParts.length || privateParts.length) {
         const aggregate = privateParts.length
-          ? `${privateParts.length} private calendar item${privateParts.length === 1 ? '' : 's'} attached: I sent the details to ${'the person who attached it'} privately.`
+          ? `${privateParts.length} private calendar item${privateParts.length === 1 ? '' : 's'} attached: I sent the details privately to whoever attached it, not here.`
           : '';
         out.push({
           chatId: m.chatId,
